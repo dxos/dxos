@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import minimatch from 'minimatch';
 import path from 'path';
 import readDir from 'recursive-readdir';
@@ -31,24 +30,18 @@ const main = async () => {
         const packages = dirContents
           .filter((file) => minimatch(path.relative(process.cwd(), file), glob))
           .map((pkg) => path.dirname(pkg));
-        const promises = packages.map(async (pkg) =>
-          template.execute({
+        console.log(`conforming ${packages.length} packages ...`);
+        const promises = packages.map(async (pkg) => {
+          const result = await template.execute({
             outputDirectory: pkg,
             overwrite: overwrite ? !!overwrite : false,
             input: await catFiles(['package.json', 'README.yml'], {
               relativeTo: pkg
             })
-          })
-        );
-        console.log(`conforming ${packages.length} packages ...`);
-        const results = await Promise.all(promises);
-        console.log(results.length, 'results');
-        const savePromises = results.flat().map(async (file) => {
-          const result = await file.save();
-          const msg = file.shortDescription(process.cwd());
-          console.log(result ? 'wrote' : 'skip', result ? msg : chalk.gray(msg));
+          });
+          return result.save();
         });
-        await Promise.all(savePromises);
+        await Promise.all(promises);
         console.log(packages.length, 'packages conformed');
       }
     })

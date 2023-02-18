@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Don't re-export.
+export * from '@dxos/client';
+
 export * from './client';
 export * from './echo';
 export * from './halo';

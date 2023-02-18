@@ -16,10 +16,11 @@ message LatLng {
 }
 
 message Address {
-  string city = 1;
-  string state = 2;
-  string zip = 3;
-  LatLng coordinates = 4;
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+  LatLng coordinates = 5;
 }
 
 //
@@ -87,12 +88,19 @@ message Project {
   string tag = 6;
 }
 
+message Kanban {
+  option (object) = true;
+
+  string title = 1;
+}
+
 message Document {
   option (object) = true;
 
-  TextObject description = 1;
+  string title = 1;
+  TextObject content = 2;
 //  repeated string tags = 2;
-  string tag = 2;
+  string tag = 3;
 }
 
 message Message {
@@ -116,3 +124,50 @@ message Event {
   repeated Contact members = 5;
 }
 
+message Sketch {
+  message SketchPoint {
+    int32 x = 1;
+    int32 y = 2;
+  }
+
+  // TODO(burdon): Should be sub-type but is compiled to top level.
+  message Path {
+    int32 timestamp = 1; // TODO(burdon): Is this required.
+    int32 width = 2;
+    string color = 3;
+    repeated SketchPoint points = 4;
+  }
+
+  option (object) = true;
+
+  string title = 1;
+  repeated Path paths = 2;
+}
+
+message File {
+  option (object) = true;
+
+  string name = 1;
+  string timestamp = 2;
+  string cid = 3;
+}
+
+message NoteBoard {
+  message Location { // TODO(burdon): Name collision.
+    string object_id = 1;
+    int32 x = 2;
+    int32 y = 3;
+  }
+
+  option (object) = true;
+
+  string title = 1;
+  repeated Location locations = 2;
+}
+
+message Note {
+  option (object) = true;
+
+  string title = 1;
+  TextObject content = 2;
+}

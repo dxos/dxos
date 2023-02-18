@@ -9,24 +9,32 @@ import { z } from 'zod';
 import {
   executeDirectoryTemplate,
   DirectoryTemplateOptions,
-  ExecuteDirectoryTemplateOptions
+  ExecuteDirectoryTemplateOptions,
+  DirectoryTemplateResult
 } from './executeDirectoryTemplate';
-import { TEMPLATE_FILE_IGNORE, TemplatingResult } from './executeFileTemplate';
+import { TEMPLATE_FILE_IGNORE, Files } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
 import { logger } from './util/logger';
-import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './util/zodInquire';
+import { InquirableZodType, InquirableZodObject, InquirablePrimitive, QuestionOptions } from './util/zodInquire';
+
+export { QuestionOptions };
+
+export type FilterExpression = string | RegExp;
+
+export type Filter<TInput = any> = FilterExpression[] | ((input: TInput) => FilterExpression[]);
 
 export type ConfigDeclaration<
-  TInput extends InquirableZodType = InquirableZodType,
-  TInherited extends InquirableZodType = InquirableZodType
+  TShape extends InquirableZodType = InquirableZodType,
+  TInheritedShape extends InquirableZodType = InquirableZodType
 > = {
-  include?: (string | RegExp)[];
-  exclude?: (string | RegExp)[];
-  inputShape?: TInput;
-  inherits?: ConfigDefinition<TInherited>;
+  inherits?: ConfigDefinition<TInheritedShape>;
+  include?: Filter<z.infer<TShape>>;
+  exclude?: Filter<z.infer<TShape>>;
+  inputShape?: TShape;
+  inputQuestions?: QuestionOptions<z.infer<TShape>>;
   message?: (
-    context: Required<DirectoryTemplateOptions<z.infer<TInput>>> & {
-      results: TemplatingResult;
+    context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
+      results: Files;
       inheritedMessage?: string;
     }
   ) => string;
@@ -37,7 +45,7 @@ export type ConfigDefinition<
   TInherited extends InquirableZodType = InquirableZodType
 > = ConfigDeclaration<TInput, TInherited> & {
   templateDirectory: string;
-  execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<TemplatingResult>;
+  execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<DirectoryTemplateResult>;
 };
 
 export type ExecuteSpecificDirectoryTemplateOptions<TInput> = Omit<
@@ -55,7 +63,8 @@ export const defineConfig = <
   const requester = stack[1].getFileName();
   const templateDirectory = path.dirname(requester);
   const merged = [defaultConfig, config?.inherits ?? {}, config].reduce(
-    (memo, next) => (next ? mergeConfigs(memo, next) : memo),
+    // TODO(zhenyasav): remove these any casts
+    (memo, next) => (next ? mergeConfigs(memo as any, next as any) : memo),
     {}
   );
   return {
@@ -107,6 +116,10 @@ export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape
   }
 };
 
+export const forceFilter = <TInput>(filter?: Filter<TInput>, input?: TInput) => {
+  return (typeof filter === 'function' ? filter({ ...(input ?? ({} as any)) }) : filter) ?? [];
+};
+
 export const mergeConfigs = (a: ConfigDeclaration, b: ConfigDeclaration) => {
   const { include, exclude } = b;
   const merged = {
@@ -114,10 +127,18 @@ export const mergeConfigs = (a: ConfigDeclaration, b: ConfigDeclaration) => {
     ...b
   };
   if (include?.length || a.include?.length) {
-    merged.include = [...(a.include ?? []), ...(include ?? [])];
+    if (typeof a.include === 'function' || typeof include === 'function') {
+      merged.include = (input: any) => [...forceFilter(a.include, input), ...forceFilter(include, input)];
+    } else {
+      merged.include = [...(a.include ?? []), ...(include ?? [])];
+    }
   }
   if (exclude?.length || a.exclude?.length) {
-    merged.exclude = [...(a.exclude ?? []), ...(exclude ?? [])];
+    if (typeof a.exclude === 'function' || typeof exclude === 'function') {
+      merged.exclude = (input: any) => [...forceFilter(a.exclude, input), ...forceFilter(exclude, input)];
+    } else {
+      merged.exclude = [...(a.exclude ?? []), ...(exclude ?? [])];
+    }
   }
   return merged as ConfigDeclaration;
 };

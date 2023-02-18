@@ -18,7 +18,7 @@ export default defineTemplate(
     const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
     
     const coreContent = text`
-    <${ClientProvider()} config={config} ${dxosUi ? `fallback={<${GenericFallback()} />}` : ''}>
+    <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
       ${render.content()}
       ${dxosUi && pwa && swToast()}
     </${ClientProvider()}>`;

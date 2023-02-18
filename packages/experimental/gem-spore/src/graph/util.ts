@@ -14,9 +14,16 @@ import { Point } from '@dxos/gem-core';
  * @param r2
  * @return {[Point, Point]}
  */
-export const getCircumferencePoints = (p1: Point, p2: Point, r1: number, r2: number): [Point, Point] => {
+export const getCircumferencePoints = (p1: Point, p2: Point, r1 = 0, r2 = 0): [Point, Point] => {
   const [x1, y1] = p1;
   const [x2, y2] = p2;
+
+  if (!r1 || !r2) {
+    return [
+      [x1, y1],
+      [x2, y2]
+    ];
+  }
 
   const theta = Math.atan2(x2 - x1, y2 - y1);
 

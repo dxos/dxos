@@ -6,23 +6,15 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { ItemID } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  MutationReceipt,
-  SubscribeEntitySetResponse,
-  SubscribeEntityStreamRequest,
-  SubscribeEntityStreamResponse
-} from '@dxos/protocols/proto/dxos/echo/service';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { ComplexMap } from '@dxos/util';
 
-import { EntityNotFoundError } from '../errors';
-import { Item } from './item';
+import { tagMutationsInBatch } from './builder';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -32,121 +24,85 @@ const log = debug('dxos:echo-db:data-service-host');
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
+  private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
+    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`
+  );
+
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   /**
-   * Returns a stream with a list of active entities in the space.
+   * Real-time subscription to data objects in a space.
    */
-  subscribeEntitySet(): Stream<SubscribeEntitySetResponse> {
-    return new Stream(({ next }) => {
-      const trackedSet = new Set<ItemID>();
+  subscribe(): Stream<EchoEvent> {
+    return new Stream(({ next, ctx }) => {
+      // send current state
+      const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
 
-      const entityInfo = (id: ItemID): EchoEnvelope => {
-        const entity = this._itemManager.entities.get(id) ?? failUndefined();
-        return {
-          itemId: id,
-          genesis: {
-            itemType: entity.type,
-            modelType: entity.modelType,
-            link:
-              entity instanceof Link
-                ? {
-                    source: entity.sourceId,
-                    target: entity.targetId
-                  }
-                : undefined
-          },
-          itemMutation:
-            entity instanceof Item
-              ? {
-                  parentId: entity.parent?.id
-                }
-              : undefined
-        };
-      };
-
-      const update = () => {
-        const added = new Set<ItemID>();
-        const deleted = new Set<ItemID>();
-
-        for (const entity of this._itemManager.entities.keys()) {
-          if (!trackedSet.has(entity)) {
-            added.add(entity);
-            trackedSet.add(entity);
-          }
+      next({
+        batch: {
+          objects
         }
+      });
 
-        for (const entity of trackedSet) {
-          if (!this._itemManager.entities.has(entity)) {
-            deleted.add(entity);
-            trackedSet.delete(entity);
-          }
-        }
+      // subscribe to mutations
 
-        next({
-          added: Array.from(added).map((id) => entityInfo(id)),
-          deleted: Array.from(added).map((id): EchoEnvelope => ({ itemId: id }))
-        });
-      };
+      this._itemDemuxer.mutation.on(ctx, (mutation) => {
+        log('Object update', { mutation });
 
-      update();
-      return this._itemManager.debouncedUpdate.on(update);
-    });
-  }
+        const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
-  /**
-   * Returns a stream of uppdates for a single entity.
-   *
-   * First message is a snapshot of the entity.
-   * Subsequent messages are updates.
-   */
-  subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
-    return new Stream(({ next }) => {
-      assert(request.itemId);
-      const entityItem = this._itemManager.items.find((item) => item.id === request.itemId);
-      let snapshot;
-      if (entityItem) {
-        snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
-      } else {
-        const entityLink = this._itemManager.links.find((link) => link.id === request.itemId);
-        if (entityLink) {
-          snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
-        } else {
-          raise(new EntityNotFoundError(request.itemId));
-        }
-      }
-
-      log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
-      next({ snapshot });
-
-      return this._itemDemuxer.mutation.on((mutation) => {
-        if (mutation.data.itemId !== request.itemId) {
-          return;
-        }
-
-        log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
-        next({
-          mutation: {
-            data: mutation.data,
-            meta: {
-              feedKey: PublicKey.from(mutation.meta.feedKey),
-              memberKey: PublicKey.from(mutation.meta.memberKey),
-              seq: mutation.meta.seq,
-              timeframe: mutation.meta.timeframe
+        // Assign feed metadata
+        const batch = {
+          objects: [
+            {
+              ...mutation.data,
+              mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
+                ...m,
+                meta: mutation.meta
+              })),
+              meta: mutation.meta
             }
-          }
+          ]
+        };
+
+        // Assign client tag metadata
+        if (clientTag) {
+          tagMutationsInBatch(batch, clientTag);
+        }
+
+        next({
+          clientTag,
+          feedKey: mutation.meta.feedKey,
+          seq: mutation.meta.seq,
+          batch
         });
       });
     });
   }
 
-  async write(request: EchoEnvelope): Promise<MutationReceipt> {
+  async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
+    assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
-    return this._writeStream.write(request);
+    const receipt = await this._writeStream.write({
+      object: {
+        ...request.batch.objects[0],
+        mutations: request.batch.objects[0].mutations?.map((m) => ({
+          ...m,
+          meta: undefined
+        })),
+        meta: undefined
+      }
+    });
+    if (request.clientTag) {
+      this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
+    }
+
+    return receipt;
   }
 }

@@ -3,12 +3,19 @@
 //
 
 import { EncodingOptions, WithTypeUrl } from '../common';
+import { TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {
-    encode: (value: WithTypeUrl<{}>, schema: Schema<any>, options: EncodingOptions): any => {
-      if (options.preserveAny) {
+    encode: (
+      value: WithTypeUrl<{}>,
+      context: TypeMapperContext,
+      schema: Schema<any>,
+      options: EncodingOptions
+    ): any => {
+      const field = schema.getCodecForType(context.messageName).protoType.fields[context.fieldName];
+      if (options.preserveAny || field.getOption('preserve_any')) {
         if (value['@type'] && value['@type'] !== 'google.protobuf.Any') {
           throw new Error(
             'Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.'
@@ -30,8 +37,14 @@ export const anySubstitutions = {
       return codec.encodeAsAny(value);
     },
 
-    decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
-      if (options.preserveAny) {
+    decode: (
+      value: any,
+      context: TypeMapperContext,
+      schema: Schema<any>,
+      options: EncodingOptions
+    ): WithTypeUrl<any> => {
+      const field = schema.getCodecForType(context.messageName).protoType.fields[context.fieldName];
+      if (options.preserveAny || field.getOption('preserve_any')) {
         return {
           '@type': 'google.protobuf.Any',
           type_url: value.type_url ?? '',

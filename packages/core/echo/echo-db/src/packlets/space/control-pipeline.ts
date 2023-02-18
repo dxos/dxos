@@ -37,7 +37,8 @@ export class ControlPipeline {
 
     this._spaceStateMachine = new SpaceStateMachine(spaceKey);
     this._spaceStateMachine.onFeedAdmitted.set(async (info) => {
-      log('feed admitted', { info });
+      // log('feed admitted', { info });
+      log('feed admitted', { key: info.key });
 
       // TODO(burdon): Check not stopping.
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
@@ -73,10 +74,11 @@ export class ControlPipeline {
     setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {
         try {
-          log('processing', { msg });
-          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
+          // log('processing', { msg });
+          log('processing', { key: msg.feedKey, seq: msg.seq });
+          if (msg.data.payload.credential) {
             const result = await this._spaceStateMachine.process(
-              msg.data.payload.credential,
+              msg.data.payload.credential.credential,
               PublicKey.from(msg.feedKey)
             );
             if (!result) {

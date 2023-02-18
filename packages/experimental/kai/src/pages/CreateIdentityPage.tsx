@@ -15,9 +15,9 @@ import { Generator } from '../proto';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const CreateIdentityPage = () => {
+const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
-  const { demo } = useAppState();
+  const { dev } = useAppState();
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayName] = useState('');
@@ -38,14 +38,15 @@ export const CreateIdentityPage = () => {
     try {
       await client.halo.createProfile({ displayName });
       const space = await client.echo.createSpace();
-      if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
-        await new Generator(space.experimental.db).generate();
+      if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
+        await new Generator(space.db).generate();
       }
+
       redirect();
     } catch {
       setPending(false);
     }
-  }, [displayName, redirect, demo]);
+  }, [displayName, redirect, dev]);
 
   useEffect(() => {
     if (identity) {
@@ -61,7 +62,7 @@ export const CreateIdentityPage = () => {
           pending,
           inputLabel: t('displayName label'),
           inputPlaceholder: t('displayName placeholder'),
-          onChange: setDisplayName,
+          onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
           onBack: () => history.back()
         }}
@@ -69,3 +70,5 @@ export const CreateIdentityPage = () => {
     </main>
   );
 };
+
+export default CreateIdentityPage;

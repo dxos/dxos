@@ -7,7 +7,7 @@ import { isNavigationFailure } from 'vue-router';
 
 const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 const DX_RELEASE = process.env.DX_RELEASE;
-const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
+const TELEMETRY_API_KEY = process.env.DX_TELEMETRY_API_KEY;
 
 // https://vuepress.github.io/advanced/cookbook/usage-of-client-config.html
 export default defineClientConfig({

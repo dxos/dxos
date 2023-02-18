@@ -19,7 +19,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-components'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -37,7 +37,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       }
     },
     build: {
-      outDir: 'out/app/${name}',
+      outDir: 'out/${name}',
       commonjsOptions: {
         include: [
           /packages/,
@@ -48,7 +48,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
     `;
   const basicConfig = text`
     build: {
-      outDir: 'out/app/${name}'
+      outDir: 'out/${name}'
     },
     `;
   return /* javascript */ text`
@@ -81,7 +81,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       ${
         pwa
           ? `${VitePWA()}({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000
         },

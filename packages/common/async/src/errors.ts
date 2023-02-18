@@ -10,7 +10,7 @@ export const toError = (err: any) => (err === undefined || typeof err === 'strin
 
 export class TimeoutError extends Error {
   constructor(timeout?: number, label?: string) {
-    super(timeout ? `Timeout [${timeout}ms]${label === undefined ? '' : ` :${label}`}` : 'Timeout');
+    super(timeout ? `Timeout [${timeout}ms]${label === undefined ? '' : `: ${label}`}` : 'Timeout');
   }
 }
 

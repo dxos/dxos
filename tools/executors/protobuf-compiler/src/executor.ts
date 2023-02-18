@@ -18,6 +18,9 @@ export interface GenerateExecutorOptions {
   srcPath: string;
   outputPath: string;
   substitutionsPath: string;
+  /**
+   * @deprecated use package.json exports instead.
+   */
   exportPath?: string;
 }
 

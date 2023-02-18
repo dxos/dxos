@@ -1,5 +1,5 @@
 # Interface `Runtime`
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/config.d.ts`]()
 
 Defined in:
    file://./../../dxos/config.proto
@@ -19,6 +19,8 @@ Type: <code>[Client](/api/@dxos/config/interfaces/Client)</code>
 
 Options:
   - proto3_optional = true
+### [keys]()
+Type: <code>[Keys](/api/@dxos/config/interfaces/Keys)[]</code>
 ### [kube]()
 Type: <code>[Kube](/api/@dxos/config/interfaces/Kube)</code>
 

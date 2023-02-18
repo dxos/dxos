@@ -4,18 +4,21 @@
 
 import * as d3 from 'd3';
 
-import { D3Callable, D3Selection } from '@dxos/gem-core';
+import { D3Callable, D3Selection, Point } from '@dxos/gem-core';
 
-import { Renderer } from '../scene';
 import { createBullets } from './bullets';
-import { GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import { Renderer, RendererOptions } from './renderer';
+import { GraphGuide, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
-export type LabelOptions<N extends GraphNode> = {
+export type LabelOptions<N> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
 };
 
-export type AttributesOptions<N extends GraphNode> = {
+/**
+ * @deprecated
+ */
+export type AttributesOptions<N> = {
   node?: (node: GraphLayoutNode<N>) => {
     class?: string;
   };
@@ -25,18 +28,20 @@ export type AttributesOptions<N extends GraphNode> = {
   };
 };
 
-export type GraphRendererOptions<N extends GraphNode> = {
-  drag?: D3Callable;
-  arrows?: {
-    start?: boolean; // TODO(burdon): Replace with marker id.
-    end?: boolean;
-  };
-  highlight?: boolean;
-  labels?: LabelOptions<N>;
-  attributes?: AttributesOptions<N>;
-  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-  onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
-};
+export type GraphRendererOptions<N> = RendererOptions &
+  Partial<{
+    drag?: D3Callable;
+    arrows?: {
+      start?: boolean; // TODO(burdon): Replace with marker id.
+      end?: boolean;
+    };
+    highlight?: boolean;
+    labels?: LabelOptions<N>;
+    attributes?: AttributesOptions<N>;
+    onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+    onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
+    transition?: () => any;
+  }>;
 
 const line = d3.line();
 
@@ -45,7 +50,15 @@ const line = d3.line();
  * @param group
  * @param options
  */
-const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  // Label.
+  if (options.labels) {
+    group
+      .append('text')
+      .style('dominant-baseline', 'middle')
+      .text((d) => options.labels.text(d));
+  }
+
   // Circle.
   const circle = group.append('circle');
 
@@ -85,14 +98,6 @@ const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
         }
       });
   }
-
-  // Label.
-  if (options.labels) {
-    group
-      .append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
-  }
 };
 
 /**
@@ -100,7 +105,7 @@ const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param group
  * @param options
  */
-const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
@@ -109,19 +114,30 @@ const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
     });
   }
 
+  // Optional transition.
+  const groupOrTransition: D3Selection = options.transition
+    ? (group.transition(options.transition()) as unknown as D3Selection)
+    : group;
+
   // Update circles.
-  group
+  groupOrTransition
     .select<SVGCircleElement>('circle')
+    .attr('class', function () {
+      return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
+    })
     .attr('cx', (d) => d.x)
     .attr('cy', (d) => d.y)
-    .attr('r', (d) => d.r);
+    .attr('r', (d) => d.r ?? 16);
 
   // Update labels.
   if (options.labels) {
-    group
+    groupOrTransition
       .select<SVGTextElement>('text')
-      .style('text-anchor', (d) => (d.x >= 0 ? 'start' : 'end'))
-      .attr('dx', (d) => (d.r + 6) * (d.x >= 0 ? 1 : -1))
+      .attr('class', function () {
+        return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
+      })
+      .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
+      // .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y);
   }
@@ -131,8 +147,9 @@ const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * Create link elements.
  * @param group
  * @param options
+ * @param nodes
  */
-const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
   // if (options.onLinkClick) {
   //   // Shadow path with wide stroke for click handler.
   //   group.append('path')
@@ -148,7 +165,34 @@ const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
     .attr('class', 'link')
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
-    .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined));
+    .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
+    .attr('class', function () {
+      return (d3.select(this.parentNode as any).datum() as GraphLayoutLink<N>).classes?.path;
+    })
+    .attr('d', (d) => {
+      const { source, target } = d;
+
+      // Get the current position if the node exists.
+      let initSource: Point;
+      let initTarget: Point;
+      const getPoint = (el): Point => [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
+      nodes.selectAll('g').each(function (d) {
+        if (options.idAccessor(d) === source.id) {
+          initSource = getPoint(d3.select(this).select('circle'));
+        } else if (options.idAccessor(d) === target.id) {
+          initTarget = getPoint(d3.select(this).select('circle'));
+        }
+      });
+
+      return line(
+        getCircumferencePoints(
+          initSource ?? source.last ?? [source.x, source.y],
+          initTarget ?? target.last ?? [target.x, target.y],
+          source.r,
+          target.r
+        )
+      );
+    });
 };
 
 /**
@@ -156,7 +200,7 @@ const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param group
  * @param options
  */
-const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   // Custom attributes.
   if (options.attributes?.link) {
     group.each((d, i, nodes) => {
@@ -165,7 +209,12 @@ const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
     });
   }
 
-  group.selectAll<SVGPathElement, GraphLayoutLink<N>>('path').attr('d', (d) => {
+  // Optional transition.
+  const groupOrTransition: D3Selection = options.transition
+    ? (group.transition(options.transition()) as unknown as D3Selection)
+    : group;
+
+  groupOrTransition.selectAll<SVGPathElement, GraphLayoutLink<N>>('path').attr('d', (d) => {
     const { source, target } = d;
     if (!source.initialized || !target.initialized) {
       return;
@@ -178,7 +227,7 @@ const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
 /**
  * Renders the Graph layout.
  */
-export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
+export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
   update(layout: GraphLayout<N>) {
     const root = d3.select(this.root);
 
@@ -191,14 +240,14 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .data([{ id: 'guides' }])
       .join('g')
       .attr('class', 'guides')
-      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle.guide')
-      .data(layout.guides ?? [])
+      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
+      .data(layout.guides ?? [], (d: GraphGuide) => d.id)
       .join(
         (enter) => enter.append('circle').attr('r', 0),
         (update) => update,
         (exit) => exit.transition().duration(500).attr('r', 0).remove()
       )
-      .attr('class', 'guide')
+      .attr('class', (d) => d.classes?.circle)
       .attr('cx', (d) => d.cx)
       .attr('cy', (d) => d.cy)
       .attr('r', (d) => d.r);
@@ -214,7 +263,7 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .attr('class', 'links')
       .selectAll<SVGPathElement, GraphLayoutLink<N>>('g')
       .data(layout.graph?.links ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').call(createLink, this.options))
+      .join((enter) => enter.append('g').call(createLink, this.options, root.selectAll('g.nodes')))
       .call(updateLink, this.options, layout.graph.nodes);
 
     //

@@ -4,14 +4,17 @@
 
 syntax = "proto3";
 
-import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
+import "dxos/devtools/swarm.proto";
 import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
 import "dxos/halo/keyring.proto";
 import "dxos/halo/signed.proto";
 import "dxos/keys.proto";
+import "dxos/mesh/signal.proto";
 import "dxos/rpc.proto";
 
 package dxos.devtools.host;
@@ -33,6 +36,7 @@ service DevtoolsHost {
 
   rpc ResetStorage(ResetStorageRequest) returns (google.protobuf.Empty);
 
+  // TODO(burdon): Single RPC with action.
   rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
   rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
 
@@ -41,7 +45,6 @@ service DevtoolsHost {
   //
 
   rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
-
   rpc SubscribeToCredentialMessages(SubscribeToCredentialMessagesRequest) returns (stream SubscribeToCredentialMessagesResponse);
 
   //
@@ -64,7 +67,7 @@ service DevtoolsHost {
   rpc GetNetworkPeers(GetNetworkPeersRequest) returns (GetNetworkPeersResponse);
   rpc SubscribeToNetworkTopics(google.protobuf.Empty) returns (stream SubscribeToNetworkTopicsResponse);
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
-  rpc SubscribeToSignalTrace(google.protobuf.Empty) returns (stream SubscribeToSignalTraceResponse);
+  rpc SubscribeToSignal(google.protobuf.Empty) returns (stream SignalResponse);
   rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
 }
 
@@ -81,7 +84,9 @@ message GetConfigResponse {
   string config = 1;
 }
 
-// EnableDebugLogging
+//
+// Logging
+//
 
 message EnableDebugLoggingRequest {
   optional string namespaces = 1;
@@ -91,8 +96,6 @@ message EnableDebugLoggingResponse {
   optional string enabled_namespaces = 1;
 }
 
-// DisableDebugLogging
-
 message DisableDebugLoggingRequest {
   optional string namespaces = 1;
 }
@@ -101,7 +104,9 @@ message DisableDebugLoggingResponse {
   optional string enabled_namespaces = 1;
 }
 
-// SubscribeToKeyringKeys
+//
+// Keys
+//
 
 message SubscribeToKeyringKeysRequest {}
 
@@ -109,7 +114,9 @@ message SubscribeToKeyringKeysResponse {
   repeated dxos.halo.keyring.KeyRecord keys = 1;
 }
 
-// SubscribeToCredential
+//
+// Credentials
+//
 
 message SubscribeToCredentialMessagesRequest {
   optional dxos.keys.PublicKey space_key = 1;
@@ -119,30 +126,15 @@ message SubscribeToCredentialMessagesResponse {
   repeated dxos.halo.signed.SignedMessage messages = 1;
 }
 
-// ResetStorage
+//
+// Storage
+//
 
 message ResetStorageRequest {}
 
-// GetNetworkPeers
-
-message GetNetworkPeersRequest {
-  bytes topic = 1;
-}
-
-message GetNetworkPeersResponse {
-  message PeerInfo {
-   dxos.keys.PublicKey id = 1;
-
-    // PeerState enum.
-    string state = 2;
-
-    repeated bytes connections = 3;
-  }
-
-  repeated PeerInfo peers = 1;
-}
-
-// SubscribeToSpaces
+//
+// Spaces
+//
 
 message SubscribeToSpacesRequest {
   repeated dxos.keys.PublicKey space_keys = 1;
@@ -153,15 +145,18 @@ message SubscribeToSpacesResponse {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
     optional dxos.echo.timeframe.TimeframeVector timeframe = 3;
-    dxos.keys.PublicKey genesisFeed = 4;
-    dxos.keys.PublicKey controlFeed = 5;
-    dxos.keys.PublicKey dataFeed = 6;
+    dxos.keys.PublicKey genesis_feed = 4;
+    dxos.keys.PublicKey control_feed = 5;
+    dxos.keys.PublicKey data_feed = 6;
+
   }
 
   repeated SpaceInfo spaces = 1;
 }
 
-// SubscribeToItems
+//
+// Items
+//
 
 message SubscribeToItemsRequest {}
 
@@ -170,22 +165,23 @@ message SubscribeToItemsResponse {
   string data = 1;
 }
 
-// SubscribeToFeeds
+//
+// Feeds
+//
 
+// TODO(burdon): How to filter by space?
 message SubscribeToFeedsRequest {
   repeated dxos.keys.PublicKey feed_keys = 1;
 }
 
 message SubscribeToFeedsResponse {
   message Feed {
-   dxos.keys.PublicKey feed_key = 1;
+    dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
   }
 
   repeated Feed feeds = 1;
 }
-
-// SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
   optional dxos.keys.PublicKey space_key = 1;
@@ -203,7 +199,9 @@ message SubscribeToFeedBlocksResponse {
   repeated Block blocks = 1;
 }
 
-// GetSpaceSnapshot
+//
+// Snapshots
+//
 
 message GetSpaceSnapshotRequest {
   dxos.keys.PublicKey space_key = 1;
@@ -213,8 +211,6 @@ message GetSpaceSnapshotResponse {
   optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
 }
 
-// SaveSpaceSnapshot
-
 message SaveSpaceSnapshotRequest {
   dxos.keys.PublicKey space_key = 1;
 }
@@ -223,11 +219,28 @@ message SaveSpaceSnapshotResponse {
   optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
 }
 
-// ClearSnapshots
-
 message ClearSnapshotsRequest {}
 
-// SubscribeToNetworkTopics
+//
+// Network
+//
+
+message GetNetworkPeersRequest {
+  bytes topic = 1;
+}
+
+message GetNetworkPeersResponse {
+  message PeerInfo {
+    dxos.keys.PublicKey id = 1;
+
+    // PeerState enum.
+    string state = 2;
+
+    repeated bytes connections = 3;
+  }
+
+  repeated PeerInfo peers = 1;
+}
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
@@ -238,7 +251,9 @@ message SubscribeToNetworkTopicsResponse {
   repeated Topic topics = 1;
 }
 
-// SubscribeToSignalStatus
+//
+// Signaling
+//
 
 message SubscribeToSignalStatusResponse {
   message SignalServer {
@@ -253,27 +268,29 @@ message SubscribeToSignalStatusResponse {
     // TODO(dmaretskyi): Represent as absolute timestamp.
     int32 reconnect_in = 4;
 
-    // TODO(dmaretskyi): Change to timestamp.
-    int32 connection_started = 5;
-    int32 last_state_change = 6;
+    google.protobuf.Timestamp connection_started = 5;
+    google.protobuf.Timestamp last_state_change = 6;
   }
 
   repeated SignalServer servers = 1;
 }
 
-// SubscribeToSignalTrace
-
-message SubscribeToSignalTraceResponse {
-  // JSON-encoded events.
-  repeated string events = 1;
+message SignalResponse {
+  oneof data {
+    dxos.mesh.signal.SwarmEvent swarm_event = 1;
+    dxos.mesh.signal.Message message = 2;
+  }
+  google.protobuf.Timestamp received_at = 3;
 }
 
-// SubscribeToSwarmInfo
+//
+// Swarm
+//
 
 message SubscribeToSwarmInfoRequest {}
 
 message SubscribeToSwarmInfoResponse {
-  repeated SwarmInfo data = 1;
+  repeated dxos.devtools.swarm.SwarmInfo data = 1;
 }
 
 //
@@ -284,8 +301,6 @@ service TracingService {
   rpc SetTracingOptions(SetTracingOptionsRequest) returns (google.protobuf.Empty);
   rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream dxos.rpc.RpcMessage);
 }
-
-// SetTracingOptions
 
 message SetTracingOptionsRequest {
   bool enable = 1;

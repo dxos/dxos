@@ -8,6 +8,7 @@ import { Page } from 'playwright';
 import { beforeAll, describe, setupPage, test } from '@dxos/test';
 
 // TODO(wittjosiah): Factor out.
+// TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
 const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 describe('Smoke test', function () {
@@ -19,8 +20,10 @@ describe('Smoke test', function () {
       return;
     }
 
-    const result = await setupPage(this, storybookUrl('react-client-clientcontext--primary'), async (page) => {
-      return await page.isVisible(':has-text("initialized")');
+    const result = await setupPage(this, {
+      url: storybookUrl('client-clientcontext--primary'),
+      timeout: 120_000, // TODO(wittjosiah): Storybook startup is slower than it should be.
+      waitFor: (page) => page.isVisible(':has-text("initialized")')
     });
 
     page = result.page;

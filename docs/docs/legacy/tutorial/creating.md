@@ -13,7 +13,7 @@ On our app the `items` that we are going to create are going to be Tasks.
 Add the following code to your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `space.database.createItem` function, sending some required information.
 
 ```jsx:title=src/components/TaskList.js
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { usespace } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
@@ -26,7 +26,7 @@ const TaskList = ({ space_key }) => {
   const handleCreateTask = async () => {
     await space.database.createItem({
       type: TASK_TYPE,
-      model: ObjectModel,
+      model: DocumentModel,
       props: { title: taskTitle },
     });
 

@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
-import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
+import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 import { ItemID, schema } from '@dxos/protocols';
 import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
@@ -16,11 +16,14 @@ class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
     return this._doc;
   }
 
-  process(mutation: Mutation, meta: MutationProcessMeta): void {
+  process(mutation: Mutation): void {
     const { update, clientId } = mutation;
     assert(update);
 
     if (clientId !== this._doc.clientID) {
+      // Passing empty buffer make the process hang: https://github.com/yjs/yjs/issues/498
+      assert(update.length > 0, 'update buffer is empty');
+
       applyUpdate(this._doc, update, { docClientId: clientId });
     }
   }

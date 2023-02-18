@@ -18,7 +18,7 @@ const Component = () => {
     const space = await client.echo.createspace();
 
     // TODO: shouldn't the title be set on createspace?
-    await space.setProperty('title', title);
+    await space.properties.name = title;
 
     console.log(space.key);
   };

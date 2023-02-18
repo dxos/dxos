@@ -31,6 +31,16 @@ function p () {
   nx $TARGET "${PWD##*/}" "$@"
 }
 
+# Build
+function pb () {
+  nx build "${PWD##*/}" "$@"
+}
+
+# Test
+function pt () {
+  nx test "${PWD##*/}" "$@"
+}
+
 # Break NX cache (e.g., `pc test`).
 function pc () {
   TARGET=$1
@@ -60,7 +70,7 @@ function pre () {
     git clean -xdf
   fi;
 
-#  export CI=true
+  # export CI=true
 
   pnpm i --no-frozen-lockfile
   CI=true pa build

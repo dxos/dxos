@@ -28,6 +28,10 @@ export const Dynamics = async () => {
     });
 };
 
-export const Envs = () => __CONFIG_ENVS__;
+export const Envs = () => {
+  return __CONFIG_ENVS__;
+};
 
-export const Defaults = () => __CONFIG_DEFAULTS__;
+export const Defaults = () => {
+  return __CONFIG_DEFAULTS__;
+};

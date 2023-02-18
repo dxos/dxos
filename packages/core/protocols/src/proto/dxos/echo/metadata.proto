@@ -46,8 +46,12 @@ message SpaceMetadata {
   /// Key of the wriatable data feed.
   optional dxos.keys.PublicKey data_feed_key = 3;
 
-  // Latest timeframe reached while processing space messages.
-  optional timeframe.TimeframeVector latest_timeframe = 5;
+
+  // Latest control timeframe reached while processing space messages.
+  optional timeframe.TimeframeVector control_timeframe = 8;
+
+  // Latest data timeframe reached while processing space messages.
+  optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional string snapshot = 7;
 }

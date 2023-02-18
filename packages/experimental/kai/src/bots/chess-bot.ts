@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-
 import { Game } from '@dxos/chess-app';
 import { EchoDatabase } from '@dxos/echo-schema';
 
@@ -12,6 +10,7 @@ import { Bot } from './bot';
 // TODO(burdon): Show bots in sidebar (DMG state).
 // TODO(burdon): Instantiate bot from fake bot selector (DMG view).
 // TODO(burdon): Add apps/bots from DMG grid view (Chess, Explorer, Calendar, Kanban, Maps).
+// TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine
 export class ChessBot extends Bot<Game> {
   private readonly _player = 'b';
 
@@ -20,8 +19,9 @@ export class ChessBot extends Bot<Game> {
   }
 
   // TODO(burdon): Only trigger if invited.
-  override onUpdate(game: Game) {
+  override async onUpdate(game: Game) {
     if (game.fen) {
+      const { Chess } = await import('chess.js');
       const chess = new Chess();
       chess.loadPgn(game.fen);
       if (chess.turn() === this._player) {

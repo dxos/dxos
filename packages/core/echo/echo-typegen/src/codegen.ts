@@ -103,11 +103,11 @@ export const createType = (field: pb.Field): string => {
 
   field.resolve();
   if (field.repeated) {
-    if (field.resolvedType) {
-      return `${scalar()}[]`;
-    } else {
-      return `Set<${scalar()}>`;
-    }
+    // if (field.resolvedType) {
+    return `${scalar()}[]`;
+    // } else {
+    //   return `Set<${scalar()}>`;
+    // }
   } else {
     return scalar();
   }
@@ -142,6 +142,10 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
  * Generate class definition.
  */
 export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
+  if (type.fields.id) {
+    throw new Error('Reserved name: id');
+  }
+
   const name = type.name;
   const fullName = type.fullName.slice(1);
   const initializer = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)}`).join(', ');
@@ -149,15 +153,17 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
 
   // prettier-ignore
   builder
+    .push(`export type ${name}Options = { ${initializer} };`).nl()
+
     .push(`export class ${name} extends DocumentBase {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
-    .push(`static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
+    .push(`static filter(opts?: ${name}Options): TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
     .push('}', 1).nl()
 
-    .push(`constructor(opts?: { ${initializer} }) {`, 1)
-    .push(`super({ ...opts, '@type': ${name}.type.name }, ${name}.type);`, 2)
+    .push(`constructor(opts?: ${name}Options) {`, 1)
+    .push(`super({ ...opts}, ${name}.type);`, 2)
     .push('}', 1).nl()
 
     .push(fields, 1)

@@ -7,17 +7,16 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromHost, fromIFrame, Config } from '@dxos/client';
-import { Defaults, Dynamics } from '@dxos/config';
+import { fromHost, fromIFrame } from '@dxos/client';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
+  appkitTranslations,
+  ClientFallback,
   ErrorProvider,
   Fallback,
   FatalError,
-  GenericFallback,
-  ServiceWorkerToast,
-  appkitTranslations,
-  StatusIndicator2
+  ServiceWorkerToast
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
@@ -27,13 +26,9 @@ import { captureException } from '@dxos/sentry';
 import { Routes } from './Routes';
 import tasksTranslations from './translations';
 
-log.config({
-  filter: process.env.LOG_FILTER ?? 'sdk:debug,warn',
-  prefix: process.env.LOG_BROWSER_PREFIX
-});
-
-const configProvider = async () => new Config(await Dynamics(), Defaults());
-const servicesProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+const servicesProvider = (config?: Config) =>
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const App = () => {
   const {
@@ -56,8 +51,7 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} services={servicesProvider} fallback={<GenericFallback />}>
-            <StatusIndicator2 />
+          <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
             <HashRouter>
               <Routes />
               {needRefresh ? (

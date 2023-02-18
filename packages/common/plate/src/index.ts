@@ -1,11 +1,11 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { TemplateResultMetadata } from './executeFileTemplate';
+import { TemplateContext } from './executeFileTemplate';
 import { File as BaseFile } from './file/index';
 
 export * from './file/index';
-export class File<R = string, M extends TemplateResultMetadata = TemplateResultMetadata> extends BaseFile<R, M> {}
+export class File<R = string, M extends TemplateContext<any> = TemplateContext<any>> extends BaseFile<R, M> {}
 export * from './util/templateLiterals';
 export * from './util/zodInquire';
 export * from './util/catFiles';

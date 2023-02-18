@@ -25,6 +25,7 @@ describe('SignalRPCClient', () => {
     broker.stop();
   });
 
+  // TODO(burdon): Convert to TestBuilder pattern.
   const setupClient = async () => {
     const client = new SignalRPCClient(broker.url());
     afterTest(async () => await client.close());

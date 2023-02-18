@@ -48,11 +48,11 @@ jobs:
         run: pnpm nx run-many --target=build --skip-nx-cache
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
-          DX_ENVIRONMENT: production
-          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           NODE_ENV: production
-          SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
-          TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+          DX_ENVIRONMENT: production
+          DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
+          DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
       - name: Publish to NPM
         run: |
@@ -64,17 +64,14 @@ jobs:
       - name: Bundle
         run: pnpm nx run-many --target=bundle --projects=devtools-extension
         env:
-          DX_ENVIRONMENT: production
-          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           NODE_ENV: production
-          SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
-          TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+          DX_ENVIRONMENT: production
 
       - name: Gather Artifacts
         run: |
           ROOT_CWD="$(pwd)"
           mkdir artifacts
-          pushd packages/devtools/devtools-extension/dist/ && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1

@@ -1,11 +1,11 @@
 # Class `TextModel`
-<sub>Declared in [packages/core/echo/text-model/src/text-model.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L41)</sub>
+<sub>Declared in [packages/core/echo/text-model/src/text-model.ts:44](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L44)</sub>
 
 
 
 
 ## Constructors
-### [constructor(meta, itemId, getState, \[writeStream\])](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L50)
+### [constructor(meta, itemId, getState, \[writeStream\])](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L53)
 
 
 Returns: <code>[TextModel](/api/@dxos/text-model/classes/TextModel)</code>
@@ -25,11 +25,11 @@ Arguments:
 Type: <code>function</code>
 ### [update]()
 Type: <code>Event&lt;Model&lt;[Doc](/api/@dxos/text-model/classes/Doc), Mutation&gt;&gt;</code>
-### [meta](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L42)
+### [meta](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L45)
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
-### [content](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L68)
+### [content](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L71)
 Type: <code>YXmlFragment</code>
-### [doc](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L64)
+### [doc](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L67)
 Type: <code>[Doc](/api/@dxos/text-model/classes/Doc)</code>
 ### [itemId]()
 Type: <code>string</code>
@@ -37,11 +37,11 @@ Type: <code>string</code>
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [readOnly]()
 Type: <code>boolean</code>
-### [textContent](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L73)
+### [textContent](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L76)
 Type: <code>string</code>
 
 ## Methods
-### [insert(text, index)](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L154)
+### [insert(text, index)](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L157)
 
 
 Returns: <code>void</code>
@@ -51,7 +51,7 @@ Arguments:
 `text`: <code>string</code>
 
 `index`: <code>number</code>
-### [insertTextNode(text, index)](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L158)
+### [insertTextNode(text, index)](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L161)
 
 
 Returns: <code>void</code>

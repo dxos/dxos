@@ -82,6 +82,7 @@ describe('spacetime', () => {
       const tf3 = Timeframe.dependencies(tf1, tf2);
       log(tf3.toString());
       expect(tf3.frames()).to.be.lengthOf(0);
+      expect(tf3.isEmpty()).to.be.true;
     }
 
     {

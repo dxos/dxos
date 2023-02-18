@@ -27,6 +27,12 @@
       "path": "../../common/sentry"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-typegen"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -37,9 +43,6 @@
     },
     {
       "path": "../patterns/react-appkit"
-    },
-    {
-      "path": "../patterns/react-list"
     },
     {
       "path": "../patterns/react-ui"

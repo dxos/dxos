@@ -7,7 +7,8 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
 import { TYPES } from './proto';
-import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
+import { FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
+import { EchoObject } from './proto/gen/dxos/echo/object';
 
 // TODO(burdon): Rename ProtocolMessage.
 export type TypedMessage = TypedProtoMessage<TYPES>;
@@ -43,7 +44,7 @@ export interface IHaloStream {
 // TODO(burdon): EchoMessageWrapper.
 export interface IEchoStream {
   meta: MutationMetaWithTimeframe;
-  data: EchoEnvelope;
+  data: EchoObject;
 }
 
 // TODO(burdon): Change to Buffer (same as key).

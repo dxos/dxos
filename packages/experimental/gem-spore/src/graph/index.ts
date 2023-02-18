@@ -9,4 +9,6 @@ export * from './graph-renderer';
 export * from './linker-renderer';
 export * from './markers';
 export * from './model';
+export * from './projector';
+export * from './renderer';
 export * from './types';

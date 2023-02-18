@@ -282,8 +282,8 @@ subgraph core [core]
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
     click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
-    dxos/object-model("@dxos/object-model"):::def
-    click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+    dxos/document-model("@dxos/document-model"):::def
+    click dxos/document-model "dxos/dxos/tree/main/packages/core/echo/document-model/docs"
   end
 
   subgraph halo [halo]
@@ -377,8 +377,8 @@ dxos/network-manager --> dxos/protocol-plugin-presence
 dxos/protocol-plugin-presence --> dxos/broadcast
 dxos/broadcast --> dxos/protocols
 dxos/protocol-plugin-presence --> dxos/mesh-protocol
-dxos/echo-db --> dxos/object-model
-dxos/object-model --> dxos/model-factory
+dxos/echo-db --> dxos/document-model
+dxos/document-model --> dxos/model-factory
 dxos/echo-db --> dxos/protocol-plugin-replicator
 dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
@@ -413,7 +413,7 @@ dxos/teleport-plugin-replicator --> dxos/teleport
 | [`@dxos/model-factory`](../../model-factory/docs/README.md) | &check; |
 | [`@dxos/network-generator`](../../../mesh/network-generator/docs/README.md) |  |
 | [`@dxos/network-manager`](../../../mesh/network-manager/docs/README.md) | &check; |
-| [`@dxos/object-model`](../../object-model/docs/README.md) | &check; |
+| [`@dxos/document-model`](../../document-model/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../../mesh/protocol-plugin-presence/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-replicator`](../../../mesh/protocol-plugin-replicator/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-rpc`](../../../mesh/protocol-plugin-rpc/docs/README.md) | &check; |

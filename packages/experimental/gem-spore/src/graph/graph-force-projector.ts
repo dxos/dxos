@@ -4,8 +4,8 @@
 
 import * as d3 from 'd3';
 
-import { Projector } from '../scene';
-import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import { Projector, ProjectorOptions } from './projector';
+import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.
@@ -94,22 +94,19 @@ export const defaultForceOptions: ForceOptions = {
   manyBody: true
 };
 
-export type GraphForceProjectorOptions = {
-  guides?: boolean;
-  forces?: ForceOptions;
-  attributes?: {
-    radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
-  };
-};
+export type GraphForceProjectorOptions = ProjectorOptions &
+  Partial<{
+    guides?: boolean;
+    forces?: ForceOptions;
+    attributes?: {
+      radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
+    };
+  }>;
 
 /**
  * D3 force layout.
  */
-export class GraphForceProjector<N extends GraphNode> extends Projector<
-  GraphData<N>,
-  GraphLayout<N>,
-  GraphForceProjectorOptions
-> {
+export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation<GraphLayoutNode<N>, GraphLayoutLink<N>>();
 
@@ -118,50 +115,21 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     graph: {
       nodes: [],
       links: []
-    },
-    guides: []
+    }
   };
 
-  numChildren = (node) => this._layout.graph.links.filter((link) => link.source.id === node.id).length;
+  numChildren = (node) =>
+    this._layout.graph.links.filter((link) => link.source.id === this.options.idAccessor(node)).length;
+
+  get layout() {
+    return this._layout;
+  }
 
   get simulation() {
     return this._simulation;
   }
 
-  /**
-   * Merge external data with internal representation (e.g., so force properties like position are preserved).
-   * @param data
-   */
-  mergeData(data: GraphData<N> = emptyGraph) {
-    // Merge nodes.
-    const nodes = data.nodes.map((node) => {
-      let current: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === node.id);
-      if (!current) {
-        current = {
-          id: node.id
-        };
-      }
-
-      current.data = node;
-      return current;
-    });
-
-    // Replace links.
-    const links = data.links.map((link) => ({
-      id: link.id,
-      source: nodes.find((n) => n.id === link.source),
-      target: nodes.find((n) => n.id === link.target)
-    }));
-
-    this._layout = {
-      graph: {
-        nodes,
-        links
-      }
-    };
-  }
-
-  onUpdate(data?: GraphData<N>) {
+  override onUpdate(data?: GraphData<N>) {
     this.mergeData(data);
     this.updateForces();
 
@@ -169,6 +137,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     this._layout.guides = this.options.guides
       ? [
           {
+            id: 'g-1',
             type: 'circle',
             cx: 0,
             cy: 0,
@@ -181,9 +150,9 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
         // Get starting point from linked element.
-        const link = this._layout.graph.links.find((link) => link.target.id === node.id);
+        const link = this._layout.graph.links.find((link) => link.target.id === this.options.idAccessor(node));
 
-        // Iniital positions.
+        // Initial positions.
         Object.assign(node, {
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
@@ -220,15 +189,19 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
               .forceLink()
               .id((d: GraphLayoutNode<N>) => d.id)
               .links(this._layout.graph.links);
+
             if (config.distance) {
               force.distance(config.distance);
             }
+
             if (config.strength) {
               force.strength(config.strength);
             }
+
             if (config.iterations) {
               force.iterations(config.iterations);
             }
+
             return force;
           },
           {}
@@ -238,6 +211,41 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
       .alphaTarget(0)
       .alpha(1)
       .restart();
+  }
+
+  /**
+   * Merge external data with internal representation (e.g., so force properties like position are preserved).
+   * @param data
+   */
+  private mergeData(data: GraphData<N> = emptyGraph): GraphLayout<N> {
+    // Merge nodes.
+    const nodes: GraphLayoutNode<N>[] = data.nodes.map((node) => {
+      let existing: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
+      if (!existing) {
+        existing = {
+          id: this.options.idAccessor(node)
+        };
+      }
+
+      existing.data = node;
+      return existing;
+    });
+
+    // Replace links.
+    const links = data.links.map((link) => ({
+      id: link.id,
+      source: nodes.find((n) => n.id === link.source),
+      target: nodes.find((n) => n.id === link.target)
+    }));
+
+    this._layout = {
+      graph: {
+        nodes,
+        links
+      }
+    };
+
+    return this._layout;
   }
 
   override async onStart() {

@@ -23,7 +23,7 @@ export const selectSpace = async (spaces: Space[]) => {
       type: 'list',
       message: 'Select a space:',
       choices: spaces.map((space) => ({
-        name: `[${truncateKey(space.key, 8)}] ${space.getProperty('name')}`,
+        name: `[${truncateKey(space.key, 8)}] ${space.properties.name}`,
         value: space.key
       }))
     }
@@ -35,7 +35,7 @@ export const selectSpace = async (spaces: Space[]) => {
 export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
   return spaces.map((space) => ({
     key: maybeTruncateKey(space.key, truncateKeys),
-    name: space.getProperty('name')
+    name: space.properties.name
   }));
 };
 

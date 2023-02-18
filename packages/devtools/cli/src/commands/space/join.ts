@@ -49,7 +49,7 @@ export default class Join extends BaseCommand {
 
       return {
         key: space.key.toHex(),
-        name: space.getProperty('name'),
+        name: space.properties.name,
         members: mapMembers(members)
       };
     });

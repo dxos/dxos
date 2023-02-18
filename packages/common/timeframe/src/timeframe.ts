@@ -27,9 +27,9 @@ export class Timeframe {
   }
 
   toString() {
-    return `([${this.frames()
-      .map(([key, seq]) => `${key.truncate()} => ${seq}`)
-      .join(', ')}])`;
+    return `(${this.frames()
+      .map(([key, seq]) => `${key.truncate()}[${seq}]`)
+      .join(', ')})`;
   }
 
   // TODO(burdon): Rename getFrame.

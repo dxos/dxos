@@ -7,8 +7,7 @@ import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
-import { LogProcessor, shouldLog } from '../context';
-import { gatherLogInfoFromScope } from '../scope';
+import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
@@ -75,7 +74,7 @@ export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => 
 const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
-  let { level, message, context, meta, error } = entry;
+  const { level, message, meta, error } = entry;
   if (!shouldLog(config, level, meta?.file ?? '')) {
     return;
   }
@@ -85,24 +84,10 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   if (meta) {
     parts.path = getRelativeFilename(meta.file);
     parts.line = meta.line;
-
-    // TODO(dmaretskyi): Add the same to the browser-processor.
-    const scopeInfo = gatherLogInfoFromScope(meta.scope);
-    if (Object.keys(scopeInfo).length > 0) {
-      context = Object.assign(context ?? {}, scopeInfo);
-    }
   }
 
-  if (context instanceof Error) {
-    // Additional context from Error.
-    const c = (context as any).context;
-    // If ERROR then show stacktrace.
-    parts.context = inspect(level === LogLevel.ERROR ? context : { error: context?.stack ?? String(context), ...c }, {
-      colors: true
-    });
-  } else if (context && Object.keys(context).length > 0) {
-    // Remove undefined fields.
-    // https://nodejs.org/api/util.html#utilinspectobject-options
+  const context = getContextFromEntry(entry);
+  if (context) {
     // Remove undefined fields.
     // https://nodejs.org/api/util.html#utilinspectobject-options
     parts.context = inspect(

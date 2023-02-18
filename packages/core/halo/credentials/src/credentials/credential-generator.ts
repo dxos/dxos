@@ -5,6 +5,7 @@
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, CredentialSigner } from './credential-factory';
@@ -168,13 +169,10 @@ export const createDeviceAuthorization = async (
 export const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
-  deviceKey: PublicKey,
   spaceKey: PublicKey,
-  controlFeedKey: PublicKey,
-  dataFeedKey: PublicKey,
   genesisFeedKey: PublicKey,
   profile?: ProfileDocument
-): Promise<TypedMessage[]> => {
+): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
@@ -185,33 +183,10 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey
       }
-    }),
-
-    await signer.createCredential({
-      subject: controlFeedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey,
-        deviceKey,
-        identityKey,
-        designation: AdmittedFeed.Designation.CONTROL
-      }
-    }),
-
-    await signer.createCredential({
-      subject: dataFeedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey,
-        deviceKey,
-        identityKey,
-        designation: AdmittedFeed.Designation.DATA
-      }
     })
   ]);
 
   return credentials.map((credential) => ({
-    '@type': 'dxos.echo.feed.CredentialsMessage',
-    credential
+    credential: { credential }
   }));
 };

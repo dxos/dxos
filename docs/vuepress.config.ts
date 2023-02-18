@@ -15,8 +15,6 @@ import { apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
-const DXOS_DEPS = ['@dxos/client', '@dxos/react-client', '@dxos/telemetry'];
-
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
@@ -69,7 +67,9 @@ const config: UserConfig = defineUserConfig({
       mdEnhance: {
         sub: true,
         sup: true,
-        attrs: true
+        attrs: true,
+        figure: true,
+        imageMark: true
       }
     }
   }),
@@ -89,20 +89,11 @@ const config: UserConfig = defineUserConfig({
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
-        'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY)
-      },
-      optimizeDeps: {
-        force: true,
-        include: DXOS_DEPS
+        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY)
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: DXOS_DEPS
-      },
-      build: {
-        commonjsOptions: {
-          include: [/packages/, /node_modules/]
-        }
+        external: ['@dxos/client', '@dxos/client/testing', '@dxos/react-client', '@dxos/echo-schema']
       }
     }
   })

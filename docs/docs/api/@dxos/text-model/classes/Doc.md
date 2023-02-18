@@ -1,5 +1,5 @@
 # Class `Doc`
-<sub>Declared in [node_modules/.pnpm/yjs@13.5.41/node_modules/yjs/dist/src/utils/Doc.d.ts:16]()</sub>
+<sub>Declared in [node_modules/.pnpm/yjs@13.5.44/node_modules/yjs/dist/src/utils/Doc.d.ts:16]()</sub>
 
 
 A Yjs instance handles the state of shared data.

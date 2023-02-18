@@ -5,11 +5,11 @@
 import inquirer, { Question } from 'inquirer';
 import { z } from 'zod';
 
-type MaybePromise<T> = T | Promise<T>;
+// type MaybePromise<T> = T | Promise<T>;
 
-const isPromise = <T = any>(o: any): o is Promise<T> => o?.then && typeof o.then === 'function';
+// const isPromise = <T = any>(o: any): o is Promise<T> => o?.then && typeof o.then === 'function';
 
-const promise = <T = any>(o: any): Promise<T> => (isPromise(o) ? o : Promise.resolve(o));
+// const promise = <T = any>(o: any): Promise<T> => (isPromise(o) ? o : Promise.resolve(o));
 
 export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
   let defaultValue;
@@ -64,9 +64,16 @@ export type InquirableZodType =
   | z.ZodEffects<z.ZodEffects<InquirableZodObject>>
   | z.ZodEffects<z.ZodEffects<z.ZodEffects<InquirableZodObject>>>;
 
+export type QuestionOptions<TInput> = {
+  [K in keyof TInput]?: {
+    when?: (inputs: TInput) => boolean;
+    default?: (inputs: TInput) => TInput[K];
+  };
+};
+
 export type InquireOptions<T extends InquirableZodType = InquirableZodType> = {
-  defaults?: Partial<z.infer<T>> | ((answers: Partial<z.infer<T>>) => MaybePromise<Partial<z.infer<T>>>);
-  questionGenerator?: QuestionGenerator<InquirableZodType>;
+  initialAnswers?: Partial<z.infer<T>>;
+  questions?: QuestionOptions<z.infer<T>>;
 };
 
 export const getQuestions = async <TShape extends InquirableZodType = InquirableZodType>(
@@ -74,30 +81,16 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
   options?: InquireOptions<TShape>
 ): Promise<Question[]> => {
   const questions: { [k: string]: Question } = {};
-  const defaultHook = (q: Question, key: string) => {
-    const d = q.default;
-    return async (answers: any) => {
-      if (typeof options?.defaults === 'function') {
-        return (await promise(options.defaults(answers)))?.[key] ?? d;
-      } else if (typeof options?.defaults === 'object') {
-        return (options.defaults as any)[key] ?? d;
-      }
-      return d;
-    };
-  };
   const extractFromObject = (shape: InquirableZodObject) => {
     const rawShape = shape._def.shape();
     for (const k in rawShape) {
       const v = rawShape[k];
       const qqn = getQuestion(v);
       if (qqn) {
-        qqn.default = defaultHook(qqn, k);
+        const qnOptions = options?.questions?.[k as keyof typeof options.questions];
+        qqn.default = qnOptions?.default;
+        qqn.when = qnOptions?.when as any;
         questions[k] = { ...qqn, name: k };
-      } else if (options?.questionGenerator) {
-        const qqns = options.questionGenerator?.(shape, k);
-        if (qqns) {
-          questions[k] = qqns;
-        }
       }
     }
   };
@@ -135,22 +128,18 @@ const noUndefined = <T extends object>(o: T) => {
   return r;
 };
 
-// export async function inquire<T extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>>(
-//   shape: T,
-//   options?: InquireOptions<T>
-// ): Promise<z.infer<T>> {
-//   const questions = await getQuestions(shape, options);
-//   const responses =
-//     (await inquirer.prompt(questions, typeof options?.defaults != 'function' ? options?.defaults : {})) ?? {};
-//   return noUndefined(responses);
-// }
-
 export const inquire = async <TShape extends InquirableZodType = InquirableZodType>(
   shape: TShape,
   options?: InquireOptions<TShape>
 ): Promise<z.infer<TShape>> => {
   const questions = await getQuestions(shape, options);
-  const responses =
-    (await inquirer.prompt(questions, typeof options?.defaults !== 'function' ? options?.defaults : {})) ?? {};
+  const responses = (await inquirer.prompt(questions, options?.initialAnswers)) ?? {};
+  for (const key in { ...responses, ...(options?.initialAnswers ?? {}), ...(options?.questions ?? {}) }) {
+    const defaultFn = options?.questions?.[key as keyof typeof options.questions]?.default;
+    if (defaultFn) {
+      const defaultVal = defaultFn?.(responses as z.infer<TShape>);
+      responses[key] = defaultVal;
+    }
+  }
   return noUndefined(responses) as z.infer<TShape>;
 };

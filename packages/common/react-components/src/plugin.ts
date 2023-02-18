@@ -5,6 +5,7 @@
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
+import type { ThemeConfig } from 'tailwindcss/types/config';
 import { Plugin } from 'vite';
 
 import { tailwindConfig } from './config';
@@ -19,7 +20,9 @@ export interface VitePluginTailwindOptions {
 // TODO: make this name such that it looks nice in consumer configs i.e.: DxosUiTheme()
 // TODO: make it easy to override the tailwind config
 // TODO: make it easy to add postcss plugins?
-export const ThemePlugin = (options: Pick<VitePluginTailwindOptions, 'content'>) => {
+export const ThemePlugin = (
+  options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
+) => {
   const config: VitePluginTailwindOptions = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
@@ -33,7 +36,17 @@ export const ThemePlugin = (options: Pick<VitePluginTailwindOptions, 'content'>)
       return {
         css: {
           postcss: {
-            plugins: [tailwindcss(tailwindConfig({ env: env.mode, root, content: options.content })), autoprefixer]
+            plugins: [
+              tailwindcss(
+                tailwindConfig({
+                  env: env.mode,
+                  root,
+                  content: options.content,
+                  extensions: options.extensions
+                })
+              ),
+              autoprefixer
+            ]
           }
         }
       };

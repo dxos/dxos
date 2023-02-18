@@ -7,7 +7,7 @@ import expect from 'expect';
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { TestBuilder } from '@dxos/teleport/testing';
+import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { PresenceExtension } from './presence-extension';
@@ -16,7 +16,8 @@ describe('PresenceExtension', () => {
   test('Two peers discover each other', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
+    const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
+    const [connection1, connection2] = await builder.connect(peer1, peer2);
 
     const trigger1 = new Trigger<PeerState>();
     const extension1 = new PresenceExtension({
@@ -24,7 +25,7 @@ describe('PresenceExtension', () => {
         trigger1.wake(peerState);
       }
     });
-    peer1.teleport!.addExtension('dxos.mesh.teleport.presence', extension1);
+    connection1.teleport.addExtension('dxos.mesh.teleport.presence', extension1);
 
     const trigger2 = new Trigger<PeerState>();
     const extension2 = new PresenceExtension({
@@ -32,7 +33,7 @@ describe('PresenceExtension', () => {
         trigger2.wake(peerState);
       }
     });
-    peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
+    connection2.teleport.addExtension('dxos.mesh.teleport.presence', extension2);
 
     await extension1.sendAnnounce({
       peerId: peer1.peerId,

@@ -63,28 +63,16 @@
   .font-system-black {
     font-variation-settings: 'wght' 900, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
   }
-  /* Elevations */
-  .button-elevation {
-    box-shadow: var(--button-elevation)
-  }
-  .elevated-buttons {
-    --button-elevation: theme(boxShadow.sm);
-  }
-  .grouped-buttons {
-    --button-elevation: theme(boxShadow.none);
-  }
 }
 
 :root {
   --surface-bg: theme(colors.neutral.50);
   --surface-text: theme(colors.neutral.900);
-  --button-elevation: theme(boxShadow.md);
 }
 
 .dark {
   --surface-bg: theme(colors.neutral.900);
   --surface-text: theme(colors.neutral.50);
-  --button-elevation: theme(boxShadow.lg);
 }
 
 html {

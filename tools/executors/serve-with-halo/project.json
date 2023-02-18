@@ -1,0 +1,34 @@
+{
+  "sourceRoot": "tools/executors/serve-with-halo/src",
+  "targets": {
+    "compile": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/serve-with-halo/src/index.ts",
+        "outputPath": "tools/executors/serve-with-halo/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/executors/serve-with-halo/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/executors/serve-with-halo/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "log-hook"
+  ]
+}

@@ -68,26 +68,6 @@ pnpm nx serve halo-app
 
 Packages may also declare scripts in their `package.json` `scripts` field as is traditional for an npm package. This is appropriate when `nx` caching is not suitable or necessary for the task, and when that script does not partake in the `nx` task dependency tree.
 
-## Branches
-
-In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
-
-Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
-
-PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
-
-Chages to `main` trigger automatic deploys to the `dev` environment e.g.: `docs.dev.dxos.org`.
-
-Periodically, release branches are created from `main` and merged to the production branches `production` or `staging` which causes deploys to those environments.
-
-| branch       | purpose                                                                               |
-| :----------- | :------------------------------------------------------------------------------------ |
-| `main`       | the only feature integration branch                                                   |
-| `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
-| `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
-| `release-*`  | release branches created from main and to merge with `production` or `stating`        |
-| `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
-
 ## Folders
 
 | Folder                  | Description                                                                                    |
@@ -110,6 +90,50 @@ Periodically, release branches are created from `main` and merged to the product
 | `docs/docs/api`         | API documentation generated from JSDoc comments in source                                      |
 | `docs/docs/design`      | Design documents for future features in research and development                               |
 | `docs/docs/specs`       | Descriptions of features currently being built                                                 |
+
+## Branches
+
+*   In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
+*   Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
+*   PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
+*   The default branch for development is `main`, if you are contributing this is where you make PRs to.
+*   Feature branches within the repo are prefixed with the contributors username.
+*   External contributors may contribute by forking the repo and sending PRs from their fork.
+*   All feature branches are squashed when being merged to `main`.
+*   When preparing a new release, a release candidate is cut from `main` using a Github action, these branches are prefixed with `rc-`.
+*   On `rc-` branches Release Please runs and calculates what the next version should be.
+*   Any further bug fixes merged to the `rc-` branch will also be pushed to `main`.
+*   Once the Release Please PR is merged and the release is tagged, the `rc-` branch is merged into `main` and `production` before the branch is deleted.
+*   The workflow for hotfixes is identical except it starts by branching from `production` and the branch is prefixed with `hotfix-`.
+*   The current workflow for `staging` is force pushing any branch there as needed, the expectation is that this would generally be only be done from `rc-` or `hotfix-` branches.
+
+## Publishing
+
+*   All merges to `main` automatically publish apps to dev.kube.dxos.org.
+*   All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
+*   All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
+
+## Branch Diagram
+
+![release flow diagram](../../design/diagrams/release-flow.drawio.svg)
+
+Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
+
+## Workflow:
+
+*   merge release candidates and hot fixes w/ `git merge --no-ff`
+*   merge feature branches by squashing
+*   staging is force pushed to from other branches
+*   main/production maintain history
+
+| branch       | purpose                                                                               |
+| :----------- | :------------------------------------------------------------------------------------ |
+| `main`       | the only feature integration branch                                                   |
+| `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
+| `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
+| `release-*`  | release branches created from main and to merge with `production` or `stating`        |
+| `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
+
 
 ## Formatting and linting
 
@@ -153,6 +177,14 @@ More custom shell aliases can be included in your shell config via:
 source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 ```
 
+### ESLint errors in vscode
+
+To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
+
+```json
+  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
+```
+
 ### Storybook
 
 ```
@@ -166,3 +198,40 @@ pnpm run storybook --no-manager-cache
 ```
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+
+### Mobile development
+
+Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough. For example, you may want other devices on your local network to be able to access your dev server (particularly useful when debugging issues on mobile devices). In this case you would be accessing the app via the ip address of your host machine rather than `localhost`. IP addresses are not a secure context unless they are served with https and a certificate. The apps in this repo are setup to serve the dev server with https when `HTTPS=true`. What follows are instructions on how to setup the certificate for your devices to make this work as expected:
+
+1.  Install mkcert following the [instructions in it's README](https://github.com/FiloSottile/mkcert#installation).
+2.  Run `mkcert -install` to create a new local CA.
+3.  Generate a cert by running `mkcert localhost <your local IP, i.e. 192.168.1.51>`.
+4.  In order for the certificate to be recognized by a mobile device the root CA must be installed on the device. Follow the [instructions from mkcert](https://github.com/FiloSottile/mkcert#mobile-devices) to enable this.
+5.  Rename the cert `cert.pem` and the key `key.pem` (all .pem files are gitignored).
+6.  The vite config uses a path relative from the CWD to load the key files and each app is setup with the following config:
+
+<!---->
+
+    {
+      server: {
+        https: process.env.HTTPS === 'true' ? {
+          key: './key.pem',
+          cert: './cert.pem'
+        } : false,
+        ...
+      },
+      ...
+    }
+
+Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there. Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
+
+### Proxying using https://srv.us
+
+`srv.us` is easier to setup but will lead to longer loading times.
+
+    pnpm -w nx serve kai
+    ssh srv.us -R 1:localhost:5173
+
+    # The session-specific link will be printed.
+
+> NOTE: The amount of files that are needed to be loaded (more then 800 in dev mode) is causing srv.us to bottlenek. On the first time the app takes just under a minute to load, and it might seem like nothing is happening.

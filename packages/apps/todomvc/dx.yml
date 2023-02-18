@@ -12,6 +12,10 @@ package:
         command: pnpm -w nx bundle todomvc
 
 runtime:
+  client:
+    storage:
+      persistent: true
+
   services:
     signal:
       server: wss://kube.dxos.org/.well-known/dx/signal

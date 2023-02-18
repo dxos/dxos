@@ -37,8 +37,7 @@ export const useTogglePanelSidebar = () => {
 
 export interface PanelSidebarProviderSlots {
   content?: ComponentProps<typeof DialogPrimitive.Content>;
-  fixedBlockStart?: ComponentProps<'div'>;
-  fixedBlockEnd?: ComponentProps<'div'>;
+  main?: ComponentProps<'div'>;
 }
 
 export interface PanelSidebarProviderProps {
@@ -46,13 +45,9 @@ export interface PanelSidebarProviderProps {
   slots?: PanelSidebarProviderSlots;
 }
 
-export const PanelSidebarProvider = ({
-  children,
-  inlineStart,
-  slots
-}: PropsWithChildren<PanelSidebarProviderProps>) => {
+export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
-  const [isLg] = useMediaQuery('lg');
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
   const isOpen = displayState === 'show';
   const [transitionShow, setTransitionShow] = useState(isOpen);
@@ -81,30 +76,23 @@ export const PanelSidebarProvider = ({
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
+        {/* Sidebar. */}
         <DialogPrimitive.Content
+          onOpenAutoFocus={(event) => isLg && event.preventDefault()}
+          onCloseAutoFocus={(event) => isLg && event.preventDefault()}
           {...slots?.content}
           className={mx(
-            'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
-            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]',
+            'fixed block-start-0 block-end-0 is-sidebar z-50 overscroll-contain overflow-x-hidden overflow-y-auto',
+            'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+            transitionShow ? 'inline-start-0' : '-inline-start-sidebar',
             slots?.content?.className
           )}
         >
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
           {slots?.content?.children}
         </DialogPrimitive.Content>
-        {slots?.fixedBlockStart && (
-          <div
-            role='none'
-            {...slots?.fixedBlockStart}
-            className={mx(
-              'fixed inline-end-0 block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-              transitionShow ? 'inline-start-[272px]' : 'inline-start-0',
-              slots?.fixedBlockStart?.className
-            )}
-          >
-            {slots?.fixedBlockStart?.children}
-          </div>
-        )}
+
+        {/* TODO(burdon): Simple comment required. */}
         {!isLg && (
           <DialogPrimitive.Overlay
             className={mx(
@@ -115,11 +103,15 @@ export const PanelSidebarProvider = ({
             onClick={internalHide}
           />
         )}
+
+        {/* Main content. */}
         <div
           role='none'
+          {...slots?.main}
           className={mx(
-            'bs-full transition-[padding-inline-start] duration-200 ease-in-out',
-            isLg && isOpen ? 'pis-[272px]' : 'pis-0'
+            'transition-[padding-inline-start] duration-200 ease-in-out',
+            isLg && isOpen ? 'pis-sidebar' : 'pis-0',
+            slots?.main?.className
           )}
         >
           {children}

@@ -10,11 +10,11 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
+import { clientServiceBundle, ClientServices } from '../services';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  getServices: () => Promise<ClientServicesHost>;
+  getService: <Service>(find: (services: Partial<ClientServices>) => Service | undefined) => Promise<Service>;
   systemPort: RpcPort;
   appPort: RpcPort;
   readySignal: Trigger<Error | undefined>;
@@ -30,7 +30,7 @@ export class WorkerSession {
   private readonly _clientRpc: ProtoRpcPeer<ClientServices>;
   private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
-  private readonly _getServices: () => Promise<ClientServicesHost>;
+  private readonly _getService: WorkerSessionParams['getService'];
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
 
@@ -42,7 +42,7 @@ export class WorkerSession {
   public bridgeService?: BridgeService;
 
   constructor({
-    getServices,
+    getService,
     systemPort,
     appPort,
     options = {
@@ -50,24 +50,24 @@ export class WorkerSession {
     }
   }: WorkerSessionParams) {
     assert(options);
-    assert(getServices);
+    assert(getService);
     this._options = options;
-    this._getServices = getServices;
+    this._getService = getService;
 
     this._clientRpc = createProtoRpcPeer({
       exposed: clientServiceBundle,
       handlers: {
-        HaloInvitationsService: async () => (await this._getServices()).services.HaloInvitationsService,
-        DevicesService: async () => (await this._getServices()).services.DevicesService,
-        SpaceInvitationsService: async () => (await this._getServices()).services.SpaceInvitationsService,
-        SpacesService: async () => (await this._getServices()).services.SpacesService,
-        NetworkService: async () => (await this._getServices()).services.NetworkService,
-        SpaceService: async () => (await this._getServices()).services.SpaceService,
-        DataService: async () => (await this._getServices()).services.DataService,
-        ProfileService: async () => (await this._getServices()).services.ProfileService,
-        SystemService: async () => (await this._getServices()).services.SystemService,
-        DevtoolsHost: async () => (await this._getServices()).services.DevtoolsHost,
-        TracingService: async () => (await this._getServices()).services.TracingService
+        DataService: async () => await this._getService((services) => services.DataService),
+        DevicesService: async () => await this._getService((services) => services.DevicesService),
+        DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
+        HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
+        NetworkService: async () => await this._getService((services) => services.NetworkService),
+        ProfileService: async () => await this._getService((services) => services.ProfileService),
+        SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
+        SpaceService: async () => await this._getService((services) => services.SpaceService),
+        SpacesService: async () => await this._getService((services) => services.SpacesService),
+        SystemService: async () => await this._getService((services) => services.SystemService),
+        TracingService: async () => await this._getService((services) => services.TracingService)
       },
       port: appPort
     });

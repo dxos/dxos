@@ -343,7 +343,7 @@ export class HumanHasher {
 const hasher = new HumanHasher();
 
 export const humanize = (value: PublicKeyLike): string => {
-  if (value instanceof Buffer || value instanceof Uint8Array) {
+  if (value instanceof Buffer || value instanceof Uint8Array || value instanceof ArrayBuffer) {
     value = PublicKey.stringify(value);
   } else if (value instanceof PublicKey) {
     value = value.toHex();
