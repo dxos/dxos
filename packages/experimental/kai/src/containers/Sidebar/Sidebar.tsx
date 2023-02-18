@@ -59,8 +59,8 @@ export const Sidebar = () => {
     setSpace(space.key);
   };
 
-  const handleJoinSpace = async () => {
-    shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
+  const handleJoinSpace = () => {
+    void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
   };
 
   const handleSelectSpace = (spaceKey: PublicKey) => {
@@ -92,7 +92,7 @@ export const Sidebar = () => {
       return;
     }
 
-    shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
+    void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
   };
 
   // TODO(burdon): Mobile slider (full width, no blur).
