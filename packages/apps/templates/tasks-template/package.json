@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-template",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "An application template demonstrating a working Task List using the ECHO database",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
