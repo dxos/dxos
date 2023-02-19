@@ -50,12 +50,15 @@ const SpacePage = () => {
   const { active } = useFrames();
   const { section } = useParams();
   const { space, frame } = useAppRouter();
+  if (!space) {
+    return null;
+  }
 
   return (
     <PanelSidebarProvider
       inlineStart
       slots={{
-        // TODO (thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
+        // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
         content: { className: '!block-start-appbar', children: <Sidebar /> },
         main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
       }}

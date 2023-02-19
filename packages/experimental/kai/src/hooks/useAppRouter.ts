@@ -59,6 +59,10 @@ export type AppRoute = {
   objectId?: string;
 };
 
+/**
+ * App Route:
+ *  /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
+ */
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
   const spaces = useSpaces();
@@ -66,16 +70,12 @@ export const useAppRouter = (): AppRoute => {
 
   // TODO(burdon): Remove SpaceSelector.
   // const [space] = useCurrentSpace();
-  const space = findSpace(spaces, spaceKey!);
+  const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
-
-  const currentFrameId = frame ? decodeFrame(frame) : undefined;
-  const frameDef =
-    currentFrameId && activeFrames.find((frameId) => frameId === currentFrameId)
-      ? frames.get(currentFrameId)
-      : undefined;
+  const frameId = frame ? decodeFrame(frame) : undefined;
+  const frameDef = frameId && activeFrames.find((id) => id === frameId) ? frames.get(frameId) : undefined;
 
   return { space, section, frame: frameDef, objectId };
 };

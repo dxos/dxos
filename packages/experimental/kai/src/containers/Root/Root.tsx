@@ -31,12 +31,12 @@ import { ShellProvider } from '../ShellProvider';
  * Main app container.
  */
 export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
+  const navigate = useNavigate();
+  const { spaceKey, frame } = useParams();
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
     client: new MetagraphClientFake([...botModules, ...frameModules])
   };
-  const navigate = useNavigate();
-  const { spaceKey, frame } = useParams();
 
   return (
     <ThemeProvider
