@@ -14,6 +14,12 @@ There are several open-source packages of UI components available:
 
 ## Installation
 
+To use components from any of the packages above, the main theme stylesheet needs to be imported from `@dxos/react-components`.
+
+::: note
+Apps based on the DXOS [application templates](../cli/app-templates) have DXOS UI Components built-in by default.
+:::
+
 ### With [Vite](https://vitejs.dev)
 
 Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
@@ -29,16 +35,13 @@ export default defineConfig({
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
       ]
     })
   ]
 })
 ```
+The content array should contain globs that match any other code which will contain `tailwind` css classes.
 
 Import the special DXOS theme stylesheet `@dxosTheme` anywhere in code such as `main.tsx`:
 
