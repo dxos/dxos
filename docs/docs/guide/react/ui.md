@@ -14,16 +14,34 @@ There are several open-source packages of UI components available:
 
 ## Installation
 
-### With Vite
+### With [Vite](https://vitejs.dev)
 
-Configure the `ThemePlugin` in `vite.config.js`:
+Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
 
 ```ts file=./snippets/vite-config.ts#L5-
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 
-// https://vitejs.dev/config/
+// //
+// Copyright 2020 DXOS.org
+//
+
+import '@dxosTheme';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import './main.scss';
+
+import { Config, Defaults } from '@dxos/config';
+import { initializeAppTelemetry } from '@dxos/react-appkit';
+
+import { App } from './App';
+import { namespace } from './Routes';
+
+void initializeAppTelemetry(namespace, new Config(Defaults()));
+
+createRoot(document.getElementById('root')!).render(<App />);
+
 export default defineConfig({
   plugins: [
     ThemePlugin({
@@ -40,10 +58,16 @@ export default defineConfig({
 })
 ```
 
-Import the DXOS theme stylesheet anywhere in code such as `main.tsx`:
-```tsx file=./snippets/vite-main.tsx#L5-
+Import the special DXOS theme stylesheet `@dxosTheme` anywhere in code such as `main.tsx`:
+
+```tsx{1} file=./snippets/vite-main.tsx#L5-
+import '@dxosTheme';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
+createRoot(document.getElementById('root')!).render(<main></main>);
 ```
 
 ::: tip Tip
-For best results, the DXOS theme stylesheet should be loaded ahead of any other stylesheets.
+For best results, load `@dxosTheme` ahead of any other stylesheets.
 :::
