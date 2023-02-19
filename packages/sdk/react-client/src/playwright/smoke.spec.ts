@@ -22,6 +22,7 @@ describe('Smoke test', function () {
 
     const result = await setupPage(this, {
       url: storybookUrl('client-clientcontext--primary'),
+      timeout: 120_000, // TODO(wittjosiah): Storybook startup is slower than it should be.
       waitFor: (page) => page.isVisible(':has-text("initialized")')
     });
 

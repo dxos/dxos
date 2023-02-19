@@ -59,7 +59,7 @@ export class BotManager {
     const def = defs.find((def) => def.module.id === botId);
     assert(def);
     const { constructor } = def.runtime;
-    const bot = constructor(space.experimental.db); // TODO(burdon): New API.
+    const bot = constructor(space.db); // TODO(burdon): New API.
     this._active.set(botId, bot);
     void bot.start();
   }

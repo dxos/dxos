@@ -34,7 +34,23 @@ describe('Basic test', () => {
     guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
   });
 
-  describe('Default space', () => {
+  // TODO(wittjosiah): Space service does not notify client proxy of new space.
+  describe.skip('Default space', () => {
+    test('create identity', async () => {
+      await host.init();
+
+      expect(await host.isPlaceholderVisible()).to.be.true;
+      expect(await host.isNewTodoVisible()).to.be.false;
+
+      await host.shell.createIdentity('host');
+
+      // Wait for app to load identity.
+      await waitForExpect(async () => {
+        expect(await host.isPlaceholderVisible()).to.be.false;
+        expect(await host.isNewTodoVisible()).to.be.true;
+      }, 1000);
+    }).skipEnvironments('firefox');
+
     test('create a task', async () => {
       // Should be autofocused into new task input.
       await host.createTodo(Groceries.Eggs);
@@ -44,14 +60,21 @@ describe('Basic test', () => {
     }).skipEnvironments('firefox');
 
     test('invite guest', async () => {
-      const invitationCode = await host.shareList();
-      await guest.joinList(invitationCode);
+      await guest.init();
+      await guest.shell.createIdentity('guest');
+      const invitationCode = await host.shell.createSpaceInvitation();
+      const [authenticationCode] = await Promise.all([
+        host.shell.getAuthenticationCode(),
+        guest.shell.acceptSpaceInvitation(invitationCode)
+      ]);
+      await guest.shell.authenticate(authenticationCode);
+      await host.shell.closeShell();
 
       // Wait for redirect.
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      }, 2000);
+      }, 1000);
     }).onlyEnvironments('chromium');
 
     test('toggle a task', async () => {

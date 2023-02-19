@@ -18,6 +18,10 @@
       "type": "string",
       "default": "substitutions.ts"
     },
+    "compress": {
+      "type": "boolean",
+      "default": true
+    },
     "exportPath": {
       "type": "string",
       "description": "Directory for compiled proto definitions.",

@@ -5,7 +5,7 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useForwardedRef, useIsFocused } from '../../hooks';
+import { useButtonShadow, useForwardedRef, useIsFocused } from '../../hooks';
 import { staticInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps } from './InputProps';
@@ -28,17 +28,22 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
     const width = getSegmentCssWidth('13px');
     const inputRef = useForwardedRef(ref);
     const inputFocused = useIsFocused(inputRef);
+    const shadow = useButtonShadow();
+
     const { disabled } = inputSlot;
 
     const renderSegment = useCallback<ComponentProps<typeof CodeInput>['renderSegment']>(
       ({ state, index }) => (
         <div
           key={index}
-          className={staticInput({
-            focused: inputFocused && !!state,
-            disabled,
-            ...(validationMessage && { validationValence })
-          })}
+          className={mx(
+            staticInput({
+              focused: inputFocused && !!state,
+              disabled,
+              ...(validationMessage && { validationValence })
+            }),
+            !disabled && variant !== 'subdued' && shadow
+          )}
           data-state={state}
           style={{ width, height: '100%' }}
         />

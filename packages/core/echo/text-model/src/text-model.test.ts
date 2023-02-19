@@ -51,7 +51,7 @@ describe.skip('TextModel', () => {
 
   test('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
-    const model1 = modelFactory.createModel<TextModel>(
+    const model1 = modelFactory.createModel(
       TextModel.meta.type,
       'test',
       { objectId: 'test' },
@@ -63,7 +63,7 @@ describe.skip('TextModel', () => {
     // model1.model.insert(text, 0);
 
     const snapshot = model1.createSnapshot();
-    const _model2 = modelFactory.createModel<TextModel>(
+    const _model2 = modelFactory.createModel(
       TextModel.meta.type,
       'test',
       snapshot,

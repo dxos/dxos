@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,6 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/keyring": "workspace:*",

@@ -2,17 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useCallback } from 'react';
+
 import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { fromLocal } from '@dxos/halo-app';
 
-import { Generator, schema } from '../proto';
+import { schema } from '../proto';
 
-export const useClientProvider = () => {
-  return async (dev: boolean) => {
+export const useClientProvider = (dev: boolean) => {
+  return useCallback(async () => {
     const config = new Config(await Dynamics(), await Envs(), Defaults());
     const client = new Client({
       config,
-      services: config.get('runtime.app.env.DX_VAULT') === 'true' ? fromIFrame(config) : fromHost(config)
+      services:
+        config.get('runtime.app.env.DX_VAULT') === 'true'
+          ? dev
+            ? fromLocal()
+            : fromIFrame(config, true)
+          : fromHost(config)
     });
 
     await client.initialize();
@@ -21,7 +29,7 @@ export const useClientProvider = () => {
     // TODO(burdon): Different modes (testing). ENV/Config?
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });
-    if (dev && !client.halo.profile && !location.href.includes('/identity/join')) {
+    if (dev && !client.halo.profile) {
       // TODO(burdon): Causes race condition.
       await client.halo.createProfile();
     }
@@ -29,14 +37,6 @@ export const useClientProvider = () => {
     // TODO(burdon): Document.
     client.echo.dbRouter.setSchema(schema);
 
-    if (dev && client.halo.profile && client.echo.querySpaces().value.length === 0) {
-      const space = await client.echo.createSpace();
-
-      // TODO(burdon): Create context.
-      const generator = new Generator(space.experimental.db);
-      await generator.generate();
-    }
-
     return client;
-  };
+  }, [dev]);
 };

@@ -8,11 +8,10 @@ import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from 'phosphor-react'
 import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 
 const gridSize = 300;
 
@@ -32,11 +31,11 @@ const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [pieces, setPieces] = useState(0);
   const [game, setGame] = useState<Game | undefined>();
-  const space = useSpace();
+  const { space } = useFrameState();
 
   const handleCreate = async () => {
     const game = new Game();
-    await space.experimental.db.save(game);
+    await space?.db.add(game);
     handleSelect(game);
   };
 
@@ -131,7 +130,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   onSelect,
   onCreate
 }) => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
@@ -154,7 +153,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
       <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 m-8'>
         {games.map((game) => (
           <div
-            key={game[id]}
+            key={game.id}
             className='shadow-1 border'
             style={{ width: gridSize, height: gridSize }}
             onClick={() => onSelect(game)}

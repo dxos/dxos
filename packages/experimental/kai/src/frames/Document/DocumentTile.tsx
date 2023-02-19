@@ -5,12 +5,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { id } from '@dxos/client';
 import { TextObject, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
-import { createSpacePath, useFrameState } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Document } from '../../proto';
+import { createSpacePath } from '../../router';
 
 export const DocumentTile = () => {
   const navigate = useNavigate();
@@ -25,16 +25,16 @@ export const DocumentTile = () => {
   };
 
   const handleUpdate = async (objectId: string, text: string) => {
-    const object = objects.find((object) => object[id] === objectId);
+    const object = objects.find((object) => object.id === objectId);
     if (object) {
       object.title = text;
     }
   };
 
   const handleCreate = async () => {
-    const object = await space.experimental.db.save(new Document());
+    const object = await space.db.add(new Document());
     object.content = new TextObject(); // TODO(burdon): Make automatic?
-    return object[id];
+    return object.id;
   };
 
   const Icon = frame!.runtime.Icon;

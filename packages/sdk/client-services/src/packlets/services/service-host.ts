@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DataServiceImpl } from '@dxos/echo-db';
+import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -50,8 +50,12 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _config: Config;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
-  private _serviceContext!: ServiceContext;
-  private _storage: Storage;
+  private readonly _storage: Storage;
+
+  /**
+   * @internal
+   */
+  _serviceContext!: ServiceContext;
   private _open = false;
 
   constructor({
@@ -77,9 +81,11 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     this._systemService = new SystemServiceImpl({
       config: this._config,
+
       onInit: async () => {
         await this._resourceLock?.acquire();
       },
+
       onStatus: async () => {
         if (!this.isOpen) {
           return { status: Status.INACTIVE };
@@ -87,6 +93,7 @@ export class ClientServicesHost implements ClientServicesProvider {
 
         return { status: Status.ACTIVE };
       },
+
       onReset: async () => {
         await this._serviceContext?.reset();
       }
@@ -123,6 +130,9 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
+      // TODO(burdon): Move to new protobuf definitions.
+      SystemService: this._systemService,
+
       HaloInvitationsService: new HaloInvitationsServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.haloInvitations
@@ -144,8 +154,10 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
+
+      // TODO(burdon): Port old SubscribeSpaces to QueryServices>
       SpaceService: new SpaceServiceImpl(this._serviceContext),
-      SystemService: this._systemService,
+
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),

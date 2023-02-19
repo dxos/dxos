@@ -5,6 +5,8 @@
 import protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
+import { compressSchema } from '@dxos/codec-protobuf';
+
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 import { serializeSchemaToJson } from '../protobuf-json';
 
@@ -13,9 +15,11 @@ const f = ts.factory;
 export const createSerializerDefinition = (
   substitutionsModule: ModuleSpecifier | undefined,
   root: protobufjs.Root,
-  outFileDir: string
+  outFileDir: string,
+  compress: boolean
 ): { imports: ts.Statement[]; exports: ts.Statement[] } => {
   const schemaIdentifier = f.createIdentifier('Schema');
+  const decompressIdentifier = f.createIdentifier('decompressSchema');
 
   const schemaImport = f.createImportDeclaration(
     [],
@@ -23,7 +27,12 @@ export const createSerializerDefinition = (
     f.createImportClause(
       false,
       undefined,
-      f.createNamedImports([f.createImportSpecifier(false, undefined, schemaIdentifier)])
+      f.createNamedImports(
+        [
+          f.createImportSpecifier(false, undefined, schemaIdentifier),
+          compress && f.createImportSpecifier(false, undefined, decompressIdentifier)
+        ].filter(Boolean) as ts.ImportSpecifier[]
+      )
     ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir))
   );
@@ -39,9 +48,17 @@ export const createSerializerDefinition = (
           schemaJsonIdentifier,
           undefined,
           undefined,
-          f.createCallExpression(f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'), undefined, [
-            f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))
-          ])
+          compress
+            ? f.createCallExpression(decompressIdentifier, undefined, [
+                f.createCallExpression(
+                  f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'),
+                  undefined,
+                  [f.createStringLiteral(JSON.stringify(compressSchema(serializeSchemaToJson(root))))]
+                )
+              ])
+            : f.createCallExpression(f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'), undefined, [
+                f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))
+              ])
         )
       ],
       ts.NodeFlags.Const

@@ -29,7 +29,7 @@ const ContactsPage = () => {
           children: t('empty contacts message'),
           className: mx('text-xl', defaultDisabled)
         }}
-        elevation={0}
+        elevation='base'
       />
     </>
   );

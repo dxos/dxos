@@ -14,7 +14,7 @@ export type SpacesPageProps = {};
 export const SpacesPage = (props: SpacesPageProps) => {
   const createListItem = useCallback(async (space: Space) => {
     const list = new TaskList();
-    await space.experimental.db.save(list);
+    await space.db.add(list);
   }, []);
   return <BaseSpacesPage onSpaceCreate={createListItem} />;
 };

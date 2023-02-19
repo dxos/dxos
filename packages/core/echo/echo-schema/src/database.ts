@@ -8,11 +8,12 @@ import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase, isDocument } from './document';
+import { base, db } from './defs';
+import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -25,13 +26,6 @@ export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
 
 export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
-
-export type Subscription = () => void;
-
-export type Query<T extends Document = Document> = {
-  getObjects(): T[];
-  subscribe(callback: (query: Query<T>) => void): Subscription;
-};
 
 export interface SubscriptionHandle {
   update: (selection: Selection) => void;
@@ -78,7 +72,7 @@ export class EchoDatabase {
     if (!obj) {
       return undefined;
     }
-    if ((obj as any)[deleted] === true) {
+    if ((obj as any).__deleted === true) {
       return undefined;
     }
 
@@ -86,14 +80,27 @@ export class EchoDatabase {
   }
 
   /**
-   * Flush mutations.
+   * Add object to th database.
+   * Restores the object if it was deleted.
    */
   // TODO(burdon): Batches?
-  async save<T extends EchoObject>(obj: T): Promise<T> {
-    log('save', { id: obj[id], type: (obj as any)[type] });
-    assert(obj[id]); // TODO(burdon): Undefined when running in test.
+  async add<T extends EchoObject>(obj: T): Promise<T> {
+    log('save', { id: obj.id, type: (obj as any).__typename });
+    assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._database) {
+      this._backend.mutate({
+        objects: [
+          {
+            objectId: obj[base]._id,
+            mutations: [
+              {
+                action: EchoObjectProto.Mutation.Action.RESTORE
+              }
+            ]
+          }
+        ]
+      });
       return obj;
     }
 
@@ -125,16 +132,21 @@ export class EchoDatabase {
   }
 
   /**
-   * Toggle deleted flag.
+   * Remove object.
    */
-  // TODO(burdon): Delete/restore.
-  async delete<T extends DocumentBase>(obj: T): Promise<T> {
-    if (obj[deleted]) {
-      (obj as any)[DELETED] = false;
-    } else {
-      (obj as any)[DELETED] = true;
-    }
-    return obj;
+  remove<T extends DocumentBase>(obj: T) {
+    this._backend.mutate({
+      objects: [
+        {
+          objectId: obj[base]._id,
+          mutations: [
+            {
+              action: EchoObjectProto.Mutation.Action.DELETE
+            }
+          ]
+        }
+      ]
+    });
   }
 
   /**
@@ -144,41 +156,7 @@ export class EchoDatabase {
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
-    // Current result.
-    let cache: Document[] | undefined;
-
-    const query = {
-      getObjects: () => {
-        if (!cache) {
-          // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter((obj): obj is DocumentBase => filterMatcher(filter, obj));
-        }
-
-        return cache;
-      },
-
-      // TODO(burdon): Trigger callback on call (not just update).
-      subscribe: (callback: (query: Query) => void) => {
-        return this._updateEvent.on((updated) => {
-          const changed = updated.some((object) => {
-            if (this._objects.has(object.id)) {
-              const match = filterMatcher(filter, this._objects.get(object.id)!);
-              const exists = cache?.find((obj) => obj[id] === object.id);
-              return match || (exists && !match);
-            } else {
-              return false;
-            }
-          });
-
-          if (changed) {
-            cache = undefined;
-            callback(query);
-          }
-        });
-      }
-    };
-
-    return query;
+    return new Query(this._objects, this._updateEvent, filter);
   }
 
   /**
@@ -210,8 +188,8 @@ export class EchoDatabase {
    * Create object with a proper prototype representing the given item.
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
-    if (item.modelMeta.type === DocumentModel.meta.type) {
-      const type = item._stateManager.state['@type'];
+    if (item.modelType === DocumentModel.meta.type) {
+      const type = item.state['@type'];
       if (!type) {
         return new Document();
       }
@@ -223,12 +201,52 @@ export class EchoDatabase {
       } else {
         return new Proto();
       }
-    } else if (item.modelMeta.type === TextModel.meta.type) {
+    } else if (item.modelType === TextModel.meta.type) {
       return new TextObject();
     } else {
-      log.warn('Unknown model type', { type: item.modelMeta.type });
+      log.warn('Unknown model type', { type: item.modelType });
       return undefined;
     }
+  }
+}
+
+export type Subscription = () => void;
+
+export class Query<T extends Document = Document> {
+  constructor(
+    private readonly _dbObjects: Map<string, EchoObject>,
+    private readonly _updateEvent: Event<Item[]>,
+    private readonly _filter: Filter<any>
+  ) {}
+
+  private _cache: T[] | undefined;
+
+  get objects(): T[] {
+    if (!this._cache) {
+      // TODO(burdon): Sort.
+      this._cache = Array.from(this._dbObjects.values()).filter((obj): obj is T => filterMatcher(this._filter, obj));
+    }
+
+    return this._cache;
+  }
+
+  subscribe(callback: (query: Query<T>) => void): Subscription {
+    return this._updateEvent.on((updated) => {
+      const changed = updated.some((object) => {
+        if (this._dbObjects.has(object.id)) {
+          const match = filterMatcher(this._filter, this._dbObjects.get(object.id)!);
+          const exists = this._cache?.find((obj) => obj.id === object.id);
+          return match || (exists && !match);
+        } else {
+          return false;
+        }
+      });
+
+      if (changed) {
+        this._cache = undefined;
+        callback(this);
+      }
+    });
   }
 }
 
@@ -237,11 +255,11 @@ const filterMatcher = (filter: Filter<any>, object: EchoObject): object is Docum
   if (!isDocument(object)) {
     return false;
   }
-  if (object[deleted]) {
+  if (object.__deleted) {
     return false;
   }
 
-  if (typeof filter === 'object' && filter['@type'] && object[type] !== filter['@type']) {
+  if (typeof filter === 'object' && filter['@type'] && object.__typename !== filter['@type']) {
     return false;
   }
 

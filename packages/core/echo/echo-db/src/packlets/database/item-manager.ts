@@ -2,39 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
-import { Event, trigger } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
-import { createId } from '@dxos/crypto';
-import { timed } from '@dxos/debug';
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { logInfo } from '@dxos/log';
-import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
+import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
+import { log, logInfo } from '@dxos/log';
+import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { createMappedFeedWriter } from '../common';
-import { UnknownModelError } from '../errors';
 import { Item } from './item';
 
-const log = debug('dxos:echo-db:item-manager');
-
-export interface ModelConstructionOptions {
+// TODO(dmaretskyi): Merge.
+export type ItemConstructionOptions = {
   itemId: ItemID;
   modelType: ModelType;
-  snapshot: EchoObject;
-}
-
-export interface ItemConstructionOptions extends ModelConstructionOptions {
-  parentId?: ItemID;
-}
-
-export type DbOptions = {
-  label?: string;
 };
 
 /**
@@ -49,23 +31,10 @@ export class ItemManager {
   readonly update = new Event<Item<Model>>();
 
   /**
-   * Update event.
-   * Contains a list of all entities changed from the last update.
-   * @deprecated Likely to cause race conditions.
-   */
-  readonly debouncedUpdate: Event<Item[]> = debounceItemUpdateEvent(this.update);
-
-  /**
    * Map of active items.
    * @private
    */
   private readonly _entities = new Map<ItemID, Item<Model>>();
-
-  /**
-   * Map of item promises (waiting for item construction after genesis message has been written).
-   * @private
-   */
-  private readonly _pendingItems = new Map<ItemID, (item: Item<Model>) => void>();
 
   @logInfo
   public _debugLabel: string | undefined;
@@ -73,11 +42,7 @@ export class ItemManager {
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
    */
-  constructor(
-    private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<DataMessage>
-  ) {}
+  constructor(private readonly _modelFactory: ModelFactory) {}
 
   get entities() {
     return this._entities;
@@ -90,108 +55,9 @@ export class ItemManager {
   async destroy() {
     log('destroying..');
     for (const item of this._entities.values()) {
-      await item._destroy();
+      await item.destroy();
     }
     this._entities.clear();
-  }
-
-  /**
-   * Creates an item and writes the genesis message.
-   * @param {ModelType} modelType
-   * @param {ItemType} [itemType]
-   * @param {ItemID} [parentId]
-   * @param initProps
-   * @deprecated
-   */
-  @timed(5_000)
-  async createItem(
-    modelType: ModelType,
-    itemId: ItemID = createId(),
-    parentId?: ItemID,
-    initProps?: { type?: string; obj?: Record<string, any> } // TODO(burdon): Remove/change to array of mutations.
-  ): Promise<Item<Model<unknown>>> {
-    assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
-    assert(modelType);
-
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    let mutation: Uint8Array | undefined;
-    if (initProps) {
-      const meta = this._modelFactory.getModelMeta(modelType);
-      if (!meta.getInitMutation) {
-        throw new Error('Model does not support initializer.');
-      }
-      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
-    }
-
-    // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
-
-    this._pendingItems.set(itemId, callback);
-
-    // Write Item Genesis block.
-    log('Item Genesis', { itemId });
-    await this._writeStream.write({
-      object: {
-        objectId: itemId,
-        genesis: {
-          modelType
-        },
-        mutations:
-          !mutation && !parentId
-            ? []
-            : [
-                {
-                  parentId,
-                  model: !mutation
-                    ? undefined
-                    : {
-                        '@type': 'google.protobuf.Any',
-                        type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-                        value: mutation
-                      }
-                }
-              ]
-      }
-    });
-
-    // Unlocked by construct.
-    log('Pending Item:', itemId);
-    const item = await waitForCreation();
-    assert(item instanceof Item);
-    return item;
-  }
-
-  private _constructModel({ modelType, itemId, snapshot }: ModelConstructionOptions): StateManager<Model> {
-    // Convert model-specific outbound mutation to outbound envelope message.
-    const outboundTransform =
-      this._writeStream &&
-      createMappedFeedWriter<Any, DataMessage>(
-        (mutation: Any) => ({
-          object: {
-            objectId: itemId,
-            mutations: [
-              {
-                model: mutation
-              }
-            ]
-          }
-        }),
-        this._writeStream
-      );
-
-    // Create the model with the outbound stream.
-    const stateManager = this._modelFactory.createModel<Model>(
-      modelType,
-      itemId,
-      snapshot,
-      this._memberKey,
-      outboundTransform
-    );
-    stateManager._debugLabel = this._debugLabel;
-    return stateManager;
   }
 
   /**
@@ -211,34 +77,25 @@ export class ItemManager {
     item.subscribe(() => {
       this.update.emit(item);
     });
-
-    // Notify pending creates.
-    this._pendingItems.get(item.id)?.(item);
   }
 
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
+  constructItem({ itemId, modelType }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
-
-    const parent = parentId ? this._entities.get(parentId) : null;
-    if (parentId && !parent) {
-      throw new Error(`Missing parent: ${parentId}`);
+    if (this.entities.has(itemId)) {
+      log.info('init twice');
+      return this.entities.get(itemId)!;
     }
-    assert(!parent || parent instanceof Item);
 
-    const modelStateManager = this._constructModel({
-      itemId,
-      modelType,
-      snapshot
-    });
+    const { constructor: modelConstructor } = this._modelFactory.getModel(modelType) ?? failUndefined();
 
-    const item = new Item(this, itemId, modelStateManager, this._writeStream, parent);
-    if (parent) {
-      this.update.emit(parent);
-    }
+    const item = new Item(this, itemId);
+    item._debugLabel = this._debugLabel;
+    item.initialize(modelConstructor);
+
     this._addItem(item);
 
     return item;
@@ -249,11 +106,11 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  async processModelMessage(itemId: ItemID, message: ModelMessage<Any>) {
+  processMutation(itemId: ItemID, mutation: EchoObject.Mutation) {
     const item = this._entities.get(itemId);
     assert(item);
 
-    await item._stateManager.processMessage(message.meta, message.mutation);
+    item.processMessage(mutation);
     this.update.emit(item);
   }
 
@@ -267,7 +124,7 @@ export class ItemManager {
   }
 
   getUninitializedEntities(): Item<Model>[] {
-    return Array.from(this._entities.values()).filter((Item) => !Item._stateManager.initialized);
+    return Array.from(this._entities.values()).filter((item) => !item.initialized);
   }
 
   /**
@@ -279,58 +136,21 @@ export class ItemManager {
     assert(item);
 
     this._entities.delete(itemId);
-
-    if (item instanceof Item) {
-      if (item.parent) {
-        item.parent._children.delete(item);
-      }
-
-      for (const child of item.children) {
-        this.deconstructItem(child.id);
-      }
-    }
   }
 
   /**
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async initializeModel(itemId: ItemID) {
+  initializeModel(itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
 
-    const model = this._modelFactory.getModel(item._stateManager.modelType);
+    const model = this._modelFactory.getModel(item.modelType);
     assert(model, 'Model not registered');
 
-    item._stateManager.initialize(model.constructor);
+    item.initialize(model.constructor);
 
     this.update.emit(item);
   }
 }
-
-/**
- * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
- */
-const debounceItemUpdateEvent = (event: Event<Item<any>>): Event<Item<any>[]> => {
-  const debouncedEvent = new Event<Item<any>[]>();
-
-  let firing = false;
-
-  const emittedSinceLastFired = new Set<Item<any>>();
-  debouncedEvent.addEffect(() =>
-    event.on((arg) => {
-      emittedSinceLastFired.add(arg);
-      if (!firing) {
-        firing = true;
-        setTimeout(() => {
-          firing = false;
-          const args = Array.from(emittedSinceLastFired);
-          emittedSinceLastFired.clear();
-          debouncedEvent.emit(args);
-        }, 0);
-      }
-    })
-  );
-
-  return debouncedEvent;
-};

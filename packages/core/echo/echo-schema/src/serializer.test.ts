@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { id } from './defs';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
@@ -22,14 +21,13 @@ describe('Serializer', () => {
       const db = await createDatabase();
       const obj = new Document();
       obj.title = 'Test';
-      await db.save(obj);
+      await db.add(obj);
       expect(db.objects).to.have.length(1);
 
       data = await serializer.export(db);
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
-        '@id': obj[id],
-        '@type': null,
+        '@id': obj.id,
         title: 'Test'
       });
     }
@@ -38,8 +36,7 @@ describe('Serializer', () => {
       const db = await createDatabase();
       await serializer.import(db, data);
 
-      const query = db.query();
-      const objects = query.getObjects();
+      const { objects } = db.query();
       expect(objects).to.have.length(1);
       expect(objects[0].title).to.eq('Test');
     }
@@ -63,7 +60,7 @@ describe('Serializer', () => {
           })
         ]
       });
-      await db.save(obj);
+      await db.add(obj);
 
       await sleep(100);
 
@@ -77,8 +74,7 @@ describe('Serializer', () => {
       const db = await createDatabase();
       await serializer.import(db, serialized);
 
-      const query = db.query();
-      const objects = query.getObjects();
+      const { objects } = db.query();
       expect(objects).to.have.length(3);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;

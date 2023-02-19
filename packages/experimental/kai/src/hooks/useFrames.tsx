@@ -23,7 +23,7 @@ import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useSpaces } from '@dxos/react-client';
+import { useCurrentSpace } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
@@ -242,10 +242,10 @@ export const defaultFrames = [
   'dxos.module.frame.stack',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  'dxos.module.frame.document'
+  'dxos.module.frame.document',
+  'dxos.module.frame.kanban'
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
-  // 'dxos.module.frame.kanban'
   // 'dxos.module.frame.explorer'
   // 'dxos.module.frame.notes'
 ];
@@ -279,14 +279,16 @@ export type FrameState = {
 // TODO(burdon): Combine frame hooks?
 // TODO(burdon): Better abstraction for app state hierarchy?
 export const useFrameState = (): FrameState => {
-  const { spaceKey, frame, objectId } = useParams();
-
-  const spaces = useSpaces();
-  const space = spaces.find((space) => space.key.truncate() === spaceKey);
+  const [space] = useCurrentSpace();
+  const { frame, objectId } = useParams();
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
-  const frameDef = frame && activeFrames.find((frameId) => frameId === frame) ? frames.get(frame) : undefined;
+  const currentFrameId = frame?.replaceAll('-', '.');
+  const frameDef =
+    currentFrameId && activeFrames.find((frameId) => frameId === currentFrameId)
+      ? frames.get(currentFrameId)
+      : undefined;
 
   return { space, frame: frameDef, objectId };
 };

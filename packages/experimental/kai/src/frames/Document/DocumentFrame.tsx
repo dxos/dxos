@@ -5,12 +5,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { id, useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { createSpacePath, useFrameState } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Document } from '../../proto';
+import { createSpacePath } from '../../router';
 
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();
@@ -18,10 +19,10 @@ export const DocumentFrame = withReactor(() => {
   const objects = useQuery(space, Document.filter());
 
   // Default to first.
-  const object = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
+  const object = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
     if (frame && !object && objects.length) {
-      navigate(createSpacePath(space!.key, frame?.module.id, objects[0][id]));
+      navigate(createSpacePath(space!.key, frame?.module.id, objects[0].id));
     }
   }, [frame, object, objects]);
 
@@ -31,7 +32,7 @@ export const DocumentFrame = withReactor(() => {
   }
 
   // TODO(burdon): Factor out container with fragment and scrolling.
-  const fragment = object.content.doc!.getXmlFragment('content');
+  // const fragment = object.content.doc!.getXmlFragment('content');
 
   // TODO(burdon): Spellcheck false in dev mode.
   const spellCheck = false;
@@ -43,6 +44,7 @@ export const DocumentFrame = withReactor(() => {
           {/* TODO(burdon): Why is label required? */}
           {/* TODO(burdon): Throttle input. */}
           <Input
+            variant='subdued'
             value={object.title}
             onChange={(event) => {
               object.title = event.target.value;
@@ -61,12 +63,12 @@ export const DocumentFrame = withReactor(() => {
           />
 
           <Composer
-            fragment={fragment}
+            document={object.content}
             slots={{
               root: { className: 'grow' },
               editor: {
                 className: mx(
-                  'z-0 bg-paper-bg text-black h-full w-full px-8 pb-16 min-bs-[12em]',
+                  'z-0 bg-paper-bg text-black h-full w-full min-h-[12em] px-8 pb-16 min-bs-[12em]',
                   'text-xl md:text-base bg-paper-bg'
                 ),
                 spellCheck

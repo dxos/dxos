@@ -1,6 +1,6 @@
 {
   "name": "@dxos/todomvc",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "private": true,
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",
@@ -21,13 +21,14 @@
     "classnames": "^2.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.0",
     "todomvc-app-css": "^2.4.2",
     "todomvc-common": "^1.0.5"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/halo-app": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",

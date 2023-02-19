@@ -32,17 +32,20 @@ export {
   type AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
+  ClientServicesProxy,
   type ClientServicesProvider,
   IFrameHostRuntime,
   IFrameProxyRuntime,
   WorkerRuntime,
-  WorkerSession
+  WorkerSession,
+  type ShellRuntime
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
 
 export { type Contact, type Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 // TODO(burdon): Remove.
 export { type KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
@@ -51,7 +54,7 @@ export type { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/clien
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
 
-export { SpaceMeta, SpaceMetaOptions } from './packlets/proto';
+export { Properties, PropertiesOptions } from './packlets/proto';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';

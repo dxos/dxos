@@ -41,7 +41,7 @@ const IdentityPage = () => {
         variant='circle'
         fallbackValue={profileHex}
         label={profile?.displayName ?? humanize(profileHex)}
-        slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
+        slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}

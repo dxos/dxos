@@ -5,7 +5,7 @@
 import { ItemID } from '@dxos/protocols';
 
 import { Item } from '../item';
-import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
+import { coerceToId, OneOrMultiple } from './util';
 
 //
 // Types
@@ -73,8 +73,8 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
     return (item) => item.id === filter.id;
   } else {
     return (item) =>
-      (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-      (!filter.parent || item.parent?.id === coerceToId(filter.parent));
+      // (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
+      !filter.parent || item.parent === coerceToId(filter.parent);
   }
 };
 

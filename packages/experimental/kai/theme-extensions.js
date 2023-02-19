@@ -19,11 +19,17 @@ module.exports = {
     }
   },
 
+  // Geometry:
+  // - Icons: 24x24
+  // - Default: 2.5rem/40px line-height.
+  // - Dense: 2rem/36px line-height.
+  // - 1.5rem/24px line-height for menus/compact buttons; 28px with padding.
+
   // https://tailwindcss.com/docs/theme#extending-the-default-theme
   kaiThemeExtension: {
     spacing: {
       appbar: '48px',
-      toolbar: '40px',
+      toolbar: '40px', // 32px line height + padding
       header: '88px', // Combined height of appbar and toolbar (pbs-header).
 
       // Standardize column width for tiles (based on iPhone Pro 12).
@@ -41,29 +47,30 @@ module.exports = {
     // https://m2.material.io/design/color/the-color-system.html#color-theme-creation
     // https://m3.material.io/styles/color/dynamic-color/overview
     colors: {
-      paper: {
-        bg: 'white',
-        1: {
-          bg: neutral[50],
-          text: 'black'
-        },
-        2: {
-          bg: neutral[100],
-          text: 'black'
-        },
-        3: {
-          bg: neutral[200],
-          text: 'black'
-        },
-        4: {
-          bg: neutral[300],
-          text: 'black'
-        }
-      },
-
       appbar: {
         header: primary[500],
         toolbar: primary[300]
+      },
+
+      paper: {
+        bg: 'white',
+        text: 'black',
+        1: {
+          bg: neutral[50],
+          text: neutral[700]
+        },
+        2: {
+          bg: neutral[100],
+          text: neutral[600]
+        },
+        3: {
+          bg: neutral[200],
+          text: neutral[500]
+        },
+        4: {
+          bg: neutral[300],
+          text: neutral[400]
+        }
       },
 
       sidebar: {
@@ -75,7 +82,7 @@ module.exports = {
         hover: secondary[100],
         bg: secondary[200],
         text: secondary[700],
-        border: secondary[400]
+        border: secondary[300]
       },
 
       secondary: {

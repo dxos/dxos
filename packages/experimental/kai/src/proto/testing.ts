@@ -121,43 +121,43 @@ export class Generator {
     const organization = createOrganization();
     const projects = await Promise.all(range(3).map(() => this.createProject()));
     projects.forEach((project) => organization.projects.push(project));
-    return await this._db.save(organization);
+    return await this._db.add(organization);
   };
 
   createProject = async (tag?: string) => {
     const project = createProject(tag);
-    return await this._db.save(project);
+    return await this._db.add(project);
   };
 
   createTask = async () => {
-    const contacts = this._db.query(Contact.filter()).getObjects();
+    const { objects: contacts } = this._db.query(Contact.filter());
     const contact =
       faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
 
     const task = createTask(contact);
-    return await this._db.save(task);
+    return await this._db.add(task);
   };
 
   createContact = async () => {
     const contact = createContact();
-    return await this._db.save(contact);
+    return await this._db.add(contact);
   };
 
   createEvent = async () => {
     const event = createEvent();
-    return await this._db.save(event);
+    return await this._db.add(event);
   };
 
   createDocument = async () => {
     const document = createDocument();
-    await this._db.save(document);
+    await this._db.add(document);
     createTextObjectContent(document.content, 5);
     return document;
   };
 
   createNote = async () => {
     const document = createNote();
-    await this._db.save(document);
+    await this._db.add(document);
     createTextObjectContent(document.content, 1);
     return document;
   };

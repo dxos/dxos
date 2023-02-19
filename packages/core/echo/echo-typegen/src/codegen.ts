@@ -142,6 +142,10 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
  * Generate class definition.
  */
 export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
+  if (type.fields.id) {
+    throw new Error('Reserved name: id');
+  }
+
   const name = type.name;
   const fullName = type.fullName.slice(1);
   const initializer = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)}`).join(', ');

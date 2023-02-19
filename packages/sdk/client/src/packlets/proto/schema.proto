@@ -9,7 +9,7 @@ package dxos.sdk.client;
 /**
  * Space metadata object.
  */
-message SpaceMeta {
+message Properties {
   option (object) = true;
 
   string title = 1;

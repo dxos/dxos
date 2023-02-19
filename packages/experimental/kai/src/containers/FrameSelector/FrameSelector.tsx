@@ -8,7 +8,8 @@ import { Link, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames, createSpacePath, Section, useFrameState } from '../../hooks';
+import { useFrames, useFrameState } from '../../hooks';
+import { createSectionPath, createSpacePath, Section } from '../../router';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
 const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
@@ -31,7 +32,6 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
 /**
  * Frame tabs.
  */
-// TODO(burdon): Factor out Caret.
 export const FrameSelector: FC = () => {
   const { space } = useFrameState();
   const { frames, active: activeFrames } = useFrames();
@@ -39,7 +39,7 @@ export const FrameSelector: FC = () => {
   const maxTabs = 8; // TODO(burdon): Media query?
 
   return (
-    <div className='flex flex-col-reverse w-full bg-appbar-toolbar'>
+    <div className='flex flex-col-reverse w-full'>
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {Array.from(activeFrames)
@@ -51,7 +51,7 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space!.key, id)}
+                link={createSpacePath(space?.key, id)}
                 compact={activeFrames.length > maxTabs}
               />
             ))}
@@ -62,7 +62,7 @@ export const FrameSelector: FC = () => {
             selected={section === Section.REGISTRY}
             label='Registry'
             Icon={Globe}
-            link={Section.REGISTRY}
+            link={createSectionPath(space?.key, Section.REGISTRY)}
             compact={activeFrames.length > maxTabs}
           />
         </div>

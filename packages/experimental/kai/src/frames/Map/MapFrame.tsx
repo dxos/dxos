@@ -10,11 +10,10 @@ import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { LatLng, Organization } from '../../proto';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
@@ -46,10 +45,10 @@ type MapPropsGetter<T> = {
  * https://react-leaflet.js.org/docs/api-map
  */
 export const MapControl = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const objects = useQuery(space, Organization.filter());
   const getter: MapPropsGetter<Organization> = {
-    id: (object: Organization) => object[id],
+    id: (object: Organization) => object.id,
     label: (object: Organization) => object.name,
     coordinates: (object: Organization) => object.address?.coordinates
   };
@@ -70,7 +69,7 @@ export const MapControl = () => {
   }, [objects]);
 
   const handleSelect = (object?: Organization) => {
-    setSelected(object?.[id]);
+    setSelected(object?.id);
     if (object) {
       const { lat, lng } = getter.coordinates(object) ?? {};
       if (lat !== undefined && lng !== undefined) {

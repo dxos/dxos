@@ -4,12 +4,24 @@
 import React from 'react';
 
 import { Profile, SpaceMember } from '@dxos/client';
-import { Avatar, useTranslation } from '@dxos/react-components';
+import { Avatar, mx, useTranslation } from '@dxos/react-components';
 
-export const IdentityListItem = ({ identity, presence }: { identity: Profile; presence?: SpaceMember['presence'] }) => {
+export const IdentityListItem = ({
+  identity,
+  presence,
+  onClick
+}: {
+  identity: Profile;
+  presence?: SpaceMember['presence'];
+  onClick?: () => void;
+}) => {
   const { t } = useTranslation('os');
   return (
-    <li className='flex gap-2 items-center'>
+    <li
+      className={mx('flex gap-2 items-center', onClick && 'cursor-pointer')}
+      onClick={() => onClick?.()}
+      data-testid='identity-list-item'
+    >
       <Avatar
         {...{
           variant: 'circle',

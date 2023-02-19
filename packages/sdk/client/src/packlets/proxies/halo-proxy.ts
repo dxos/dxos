@@ -5,7 +5,15 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Observable, observableError, ObservableProvider } from '@dxos/async';
+import {
+  asyncTimeout,
+  Event,
+  EventSubscriptions,
+  Observable,
+  observableError,
+  ObservableProvider,
+  Trigger
+} from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -21,6 +29,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
 
@@ -54,6 +63,8 @@ export interface Halo {
   removeInvitation(id: string): void;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
+
+const THROW_TIMEOUT_ERROR_AFTER = 3000;
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -226,6 +237,54 @@ export class HaloProxy implements Halo {
   }
 
   /**
+   * Get Halo credentials for the current user.
+   */
+  queryCredentials({ id, type }: { id?: PublicKey; type?: string } = {}) {
+    if (!this._profile) {
+      throw new ApiError('Identity is not available.');
+    }
+    if (!this._serviceProvider.services.SpacesService) {
+      throw new ApiError('SpacesService is not available.');
+    }
+    const stream = this._serviceProvider.services.SpacesService.queryCredentials({
+      spaceKey: this._profile.haloSpace!
+    });
+    this._subscriptions.add(() => stream.close());
+
+    const observable = new ObservableProvider<
+      { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
+      Credential[]
+    >();
+    const credentials: Credential[] = [];
+
+    stream.subscribe(
+      (credential) => {
+        credentials.push(credential);
+        const newCredentials = credentials
+          .filter((c) => !id || (c.id && id.equals(c.id)))
+          .filter((c) => !type || c.subject.assertion['@type'] === type);
+        if (
+          newCredentials.length !== observable.value?.length ||
+          !newCredentials.every(
+            (credential, index) =>
+              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!)
+          )
+        ) {
+          observable.setValue(newCredentials);
+          observable.callback.onUpdate(newCredentials);
+        }
+      },
+      (err) => {
+        if (err) {
+          observableError(observable, err);
+        }
+      }
+    );
+
+    return observable;
+  }
+
+  /**
    * Initiates device invitation.
    */
   createInvitation(options?: InvitationsOptions) {
@@ -277,5 +336,54 @@ export class HaloProxy implements Halo {
 
     log('accept invitation', options);
     return this._invitationProxy!.acceptInvitation(invitation, options);
+  }
+
+  /**
+   * Write credentials to halo profile.
+   */
+  async writeCredentials(credentials: Credential[]) {
+    if (!this._profile) {
+      throw new ApiError('Identity is not available.');
+    }
+    if (!this._serviceProvider.services.SpacesService) {
+      throw new ApiError('SpacesService is not available.');
+    }
+    return this._serviceProvider.services.SpacesService.writeCredentials({
+      spaceKey: this._profile.haloSpace!,
+      credentials
+    });
+  }
+
+  /**
+   * Present Credentials.
+   */
+  async presentCredentials({ id, nonce }: { id: PublicKey; nonce: Uint8Array }): Promise<Presentation> {
+    if (!this._serviceProvider.services.ProfileService) {
+      throw new ApiError('ProfileService is not available.');
+    }
+    const trigger = new Trigger<Credential>();
+    this.queryCredentials({ id }).subscribe({
+      onUpdate: (credentials) => {
+        const credential = credentials.find((credential) => credential.id?.equals(id));
+        if (credential) {
+          trigger.wake(credential);
+        }
+      },
+      onError: (err) => {
+        log.catch(err);
+      }
+    });
+
+    const credential = await asyncTimeout(
+      trigger.wait(),
+      THROW_TIMEOUT_ERROR_AFTER,
+      new ApiError('Timeout while waiting for credential')
+    );
+    return this._serviceProvider.services.ProfileService!.signPresentation({
+      presentation: {
+        credentials: [credential]
+      },
+      nonce
+    });
   }
 }

@@ -11,12 +11,12 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { EmbeddedFrame } from '../../frame-container';
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
 export const SandboxFrame = withReactor(() => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -31,7 +31,7 @@ export const SandboxFrame = withReactor(() => {
           content: new TextObject()
         });
 
-        await space.experimental.db.save(frame);
+        await space?.db.add(frame);
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         setSelected(frame);
       });
@@ -99,14 +99,14 @@ const Frame = () => {
   
   const handleCreate = () => {
     const task = new Task({ title: value });
-    space.experimental.db.save(task);
+    space.db.save(task);
   }
 
   return (
     <div className='w-full p-4'>
       <ul>
         {tasks.map(task => (
-          <li key={task[id]} className='p-1 hover:bg-blue-200'>{task.title}</li>
+          <li key={task.id} className='p-1 hover:bg-blue-200'>{task.title}</li>
         ))}
       </ul>
       <div className='flex p-1 mt-4'>

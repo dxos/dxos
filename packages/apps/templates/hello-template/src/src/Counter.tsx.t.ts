@@ -18,7 +18,7 @@ export default defineTemplate(
       useEffect(() => {
         if (!counter && space) {
           const c = new Document({ type: 'counter' });
-          void space.experimental.db.save(c);
+          void space.db.save(c);
         }
       }, [counter, space]);
       if (!space) {

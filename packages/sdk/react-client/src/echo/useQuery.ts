@@ -5,7 +5,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document, DocumentBase, Filter, TypeFilter } from '@dxos/echo-schema';
+import { Document, DocumentBase, Filter, Query, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
   <T extends DocumentBase>(space?: Space, filter?: TypeFilter<T>): T[];
@@ -17,15 +17,15 @@ type UseQuery = {
  */
 export const useQuery: UseQuery = <T extends DocumentBase>(space?: Space, filter?: Filter<T>): DocumentBase[] => {
   const query = useMemo(
-    () => space?.experimental.db.query(filter ?? {}),
-    [space?.experimental.db, ...filterToDepsArray(filter)]
+    () => space?.db.query(filter ?? {}) as Query<T> | undefined,
+    [space?.db, ...filterToDepsArray(filter)]
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   return (
-    useSyncExternalStore<T[]>(
+    useSyncExternalStore<T[] | undefined>(
       (cb) => query?.subscribe?.(cb) ?? cb,
-      () => query?.getObjects() as T[]
+      () => query?.objects
     ) ?? []
   );
 };

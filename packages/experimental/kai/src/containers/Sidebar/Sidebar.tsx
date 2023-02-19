@@ -5,35 +5,27 @@
 import clipboardCopy from 'clipboard-copy';
 import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
-import { useHref, useNavigate, useParams } from 'react-router-dom';
+import { useHref } from 'react-router-dom';
 
-import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
+import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useClient, useMembers, useSpaces } from '@dxos/react-client';
+import { useClient, useCurrentSpace, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import {
-  useSpace,
-  createSpacePath,
-  useAppState,
-  createInvitationPath,
-  Section,
-  createSectionPath,
-  useTheme
-} from '../../hooks';
+import { useAppState, useTheme, useShell } from '../../hooks';
+import { createInvitationPath } from '../../router';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
   const theme = useTheme();
-  const { frame } = useParams();
-  const navigate = useNavigate();
   const client = useClient();
-  const space = useSpace();
+  const [space, setSpace] = useCurrentSpace();
   const spaces = useSpaces();
-  const members = useMembers(space.key);
+  const members = useMembers(space?.key);
+  const shell = useShell();
   const [prevSpace, setPrevSpace] = useState(space);
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
@@ -64,19 +56,19 @@ export const Sidebar = () => {
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
-    navigate(createSpacePath(space.key));
+    setSpace(space.key);
   };
 
-  const handleJoinSpace = async () => {
-    navigate('/space/join');
+  const handleJoinSpace = () => {
+    void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
   };
 
   const handleSelectSpace = (spaceKey: PublicKey) => {
-    navigate(createSpacePath(spaceKey, frame));
+    setSpace(spaceKey);
   };
 
   const handleShareSpace = (spaceKey: PublicKey) => {
-    if (dev) {
+    if (dev && space) {
       // TODO(burdon): Cancel/remove.
       const swarmKey = PublicKey.random();
       const observable = space.createInvitation({
@@ -100,7 +92,7 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(createSectionPath(spaceKey, Section.SETTINGS));
+    void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
   };
 
   // TODO(burdon): Mobile slider (full width, no blur).
@@ -110,7 +102,9 @@ export const Sidebar = () => {
       className={mx('flex flex-col overflow-auto min-bs-full bg-sidebar-bg', theme.panel === 'flat' && 'border-r')}
     >
       {/* Match Frame selector. */}
-      <div className={mx('flex flex-col-reverse h-toolbar bg-appbar-toolbar', theme.panel === 'flat' && 'border-b')}>
+      <div
+        className={mx('flex flex-col-reverse h-toolbar', theme.classes?.toolbar, theme.panel === 'flat' && 'border-b')}
+      >
         <div className='flex justify-between px-2'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
@@ -134,7 +128,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
         <div className='flex overflow-y-auto'>
-          <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+          <SpaceList spaces={spaces} selected={space?.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
 
         <div className='flex-1' />

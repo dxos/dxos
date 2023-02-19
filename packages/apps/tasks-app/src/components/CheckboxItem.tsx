@@ -5,7 +5,7 @@
 import { X } from 'phosphor-react';
 import React, { KeyboardEvent, forwardRef } from 'react';
 
-import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-components';
+import { mx, getSize, defaultFocus, Button, hover } from '@dxos/react-components';
 
 import { Input } from './Input';
 
@@ -44,7 +44,7 @@ export const CheckboxItem = forwardRef<Ref, CheckBoxItemProps>((props, ref) => {
         className={mx(
           'text-primary-600 bg-neutral-50 rounded-full border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
           defaultFocus,
-          defaultHover({})
+          hover()
         )}
         onChange={(e) => {
           const val = e?.target?.checked;

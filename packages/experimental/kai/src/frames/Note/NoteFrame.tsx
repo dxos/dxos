@@ -6,12 +6,11 @@ import faker from 'faker';
 import { XCircle } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { id } from '@dxos/echo-schema';
 import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
 
 const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
@@ -77,14 +76,14 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
 
-  const space = useSpace();
+  const { space } = useFrameState();
   const boards = useQuery(space, NoteBoard.filter());
   const [board, setBoard] = useState<NoteBoard>(boards[0]);
   useEffect(() => {
     if (!board) {
       setTimeout(async () => {
         const board = new NoteBoard();
-        await space.experimental.db.save(board);
+        await space?.db.add(board);
         setBoard(board);
       });
     }
@@ -99,7 +98,7 @@ export const NoteFrame = () => {
     }
 
     return notes.map((note) => {
-      let location = getItemLocation(board, note[id]);
+      let location = getItemLocation(board, note.id);
       if (!location) {
         // TODO(burdon): Assign in free location, not randomly.
         location = {
@@ -107,11 +106,11 @@ export const NoteFrame = () => {
           y: faker.datatype.number({ min: -range.y, max: range.y })!
         };
 
-        setItemLocation(board, note[id], location);
+        setItemLocation(board, note.id, location);
       }
 
       const item: Item<Note> = {
-        id: note[id],
+        id: note.id,
         label: note.title,
         content: note.content?.model?.textContent, // TODO(burdon): Util.
         location: { x: location.x!, y: location.y! },
@@ -128,15 +127,15 @@ export const NoteFrame = () => {
 
   const handleCreate = async (location: Location) => {
     const note = new Note({ title: '' });
-    await space.experimental.db.save(note);
-    setItemLocation(board, note[id], location);
-    return note[id];
+    await space?.db.add(note);
+    setItemLocation(board, note.id, location);
+    return note.id;
   };
 
   const handleDelete = (item: Item) => {
-    const note = notes.find((note) => item.id === note[id]);
+    const note = notes.find((note) => item.id === note.id);
     if (note) {
-      void space.experimental.db.delete(note);
+      void space?.db.remove(note);
     }
   };
 

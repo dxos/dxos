@@ -4,7 +4,7 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy } from '@dxos/echo-db';
-import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db/testing';
+import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
@@ -21,12 +21,9 @@ export const createDatabase = async (router = new DatabaseRouter()) => {
     .registerModel(TextModel);
 
   // TODO(dmaretskyi): Fix.
-  const database = await createMemoryDatabase(modelFactory);
-  const database2 = await createRemoteDatabaseFromDataServiceHost(
-    modelFactory,
-    database.backend.createDataServiceHost()
-  );
-  const db = new EchoDatabase(database2.itemManager, database2.backend as DatabaseBackendProxy, router);
+  const host = await createMemoryDatabase(modelFactory);
+  const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
+  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseBackendProxy, router);
   router.register(PublicKey.random(), db); // TODO(burdon): Database should have random id?
   return db;
 };
