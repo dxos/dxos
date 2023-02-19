@@ -17,9 +17,8 @@ export interface VitePluginTailwindOptions {
   content: string[];
 }
 
-// TODO: make this name such that it looks nice in consumer configs i.e.: DxosUiTheme()
-// TODO: make it easy to override the tailwind config
-// TODO: make it easy to add postcss plugins?
+// TODO (zhenyasav): make it easy to override the tailwind config
+// TODO (zhenyasav): make it easy to add postcss plugins?
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
 ) => {

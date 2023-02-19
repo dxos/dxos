@@ -231,6 +231,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/telemetry': workspace:*
       '@types/eslint': ^8.4.6
       '@types/markdown-it': ^12.2.3
@@ -276,6 +277,7 @@ importers:
       '@dxos/protocols': link:../packages/core/protocols
       '@dxos/react-appkit': link:../packages/apps/patterns/react-appkit
       '@dxos/react-client': link:../packages/sdk/react-client
+      '@dxos/react-components': link:../packages/common/react-components
       '@dxos/telemetry': link:../packages/common/telemetry
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3

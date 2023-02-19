@@ -28,6 +28,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@types/eslint": "^8.4.6",
     "@types/markdown-it": "^12.2.3",
