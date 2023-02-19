@@ -16,7 +16,11 @@ Arguments:
 
 ## Properties
 ### [version]()
+<<<<<<< HEAD
 Type: <code>"0.1.26"</code>
+=======
+Type: <code>"0.1.24"</code>
+>>>>>>> 1fe40eab0 (wip ui docs)
 
 The version of this client API
 ### [config]()
