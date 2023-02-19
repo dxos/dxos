@@ -17,12 +17,38 @@ export interface VitePluginTailwindOptions {
   content: string[];
 }
 
+/** These will automatically be included in tailwind content array unless otherwise specified */
+const knownPeerPackages = ['@dxos/react-components', '@dxos/react-appkit', '@dxos/react-ui', '@dxos/react-list'];
+
+const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {
+  const [, shortName] = packageName.split('/');
+  if (!shortName) throw new Error('invalid package name encountered ' + packageName);
+  const position = resolvedPath.indexOf(shortName);
+  return resolvedPath.substring(0, position + shortName.length);
+};
+
+const ensureContentHasPeerPackages = (content: string[], rootPath: string) => {
+  const result = [...content];
+  knownPeerPackages.forEach((packageName) => {
+    if (result.some((contentPath) => contentPath.indexOf(packageName) >= 0)) return;
+    try {
+      const resolved = require.resolve(packageName, {
+        paths: [rootPath]
+      });
+      if (!resolved) return;
+      const packageRoot = getPackageRootFromResolvedModule(resolved, packageName);
+      result.push(resolve(packageRoot, 'dist/**/*.mjs'));
+    } catch {}
+  });
+  return result;
+};
+
 // TODO (zhenyasav): make it easy to override the tailwind config
 // TODO (zhenyasav): make it easy to add postcss plugins?
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
 ) => {
-  const config: VitePluginTailwindOptions = {
+  const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
     virtualFileId: '@dxosTheme',
@@ -32,6 +58,7 @@ export const ThemePlugin = (
   return {
     name: 'vite-plugin-dxos-ui-theme',
     config: ({ root }, env) => {
+      const content = ensureContentHasPeerPackages(config.content, root!);
       return {
         css: {
           postcss: {
@@ -40,8 +67,8 @@ export const ThemePlugin = (
                 tailwindConfig({
                   env: env.mode,
                   root,
-                  content: options.content,
-                  extensions: options.extensions
+                  content,
+                  extensions: config.extensions
                 })
               ),
               autoprefixer
