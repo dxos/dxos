@@ -16,7 +16,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.24"</code>
+Type: <code>"0.1.25"</code>
 
 The version of this client API
 ### [config]()
