@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.25](https://github.com/dxos/dxos/compare/v0.1.24...v0.1.25) (2023-02-19)
+
+
+### Bug Fixes
+
+* **echo-typegen:** publish ([#2536](https://github.com/dxos/dxos/issues/2536)) ([0ec7eb3](https://github.com/dxos/dxos/commit/0ec7eb3422ba971518503d2ca9921dd8865c047d))
+
 ## [0.1.24](https://github.com/dxos/dxos/compare/v0.1.23...v0.1.24) (2023-02-18)
 
 
