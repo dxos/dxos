@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useQuery, Document, useIdentity, useSpace, useOrCreateFirstSpace } from '@dxos/react-client';
+import { useQuery, Document, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
 export const Counter = () => {

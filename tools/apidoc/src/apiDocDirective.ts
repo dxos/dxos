@@ -8,7 +8,6 @@ import MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
 import remarkPrettier from 'remark-prettier';
-import { ContainerReflection } from 'typedoc';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 

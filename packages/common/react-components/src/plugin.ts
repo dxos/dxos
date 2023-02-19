@@ -22,7 +22,9 @@ const knownPeerPackages = ['@dxos/react-components', '@dxos/react-appkit', '@dxo
 
 const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {
   const [, shortName] = packageName.split('/');
-  if (!shortName) throw new Error('invalid package name encountered ' + packageName);
+  if (!shortName) {
+    throw new Error('invalid package name encountered ' + packageName);
+  }
   const position = resolvedPath.indexOf(shortName);
   return resolvedPath.substring(0, position + shortName.length);
 };
@@ -30,12 +32,16 @@ const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: str
 const ensureContentHasPeerPackages = (content: string[], rootPath: string) => {
   const result = [...content];
   knownPeerPackages.forEach((packageName) => {
-    if (result.some((contentPath) => contentPath.indexOf(packageName) >= 0)) return;
+    if (result.some((contentPath) => contentPath.indexOf(packageName) >= 0)) {
+      return;
+    }
     try {
       const resolved = require.resolve(packageName, {
         paths: [rootPath]
       });
-      if (!resolved) return;
+      if (!resolved) {
+        return;
+      }
       const packageRoot = getPackageRootFromResolvedModule(resolved, packageName);
       result.push(resolve(packageRoot, 'dist/**/*.mjs'));
     } catch {}
