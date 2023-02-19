@@ -16,7 +16,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L44)
-Type: <code>"0.1.24"</code>
+Type: <code>"0.1.25"</code>
 
 The version of this client API
 ### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L95)
