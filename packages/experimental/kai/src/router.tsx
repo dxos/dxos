@@ -6,32 +6,9 @@ import type { Router } from '@remix-run/router';
 import React, { ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
-
 import { Root } from './containers';
 import { AppState } from './hooks';
 import { IdentityPage, SettingsPage, SpacePage } from './pages';
-
-// TODO(burdon): Create defs/helpers for other routes.
-export enum Section {
-  REGISTRY = 'registry',
-  SETTINGS = 'settings',
-  FRAME = 'frame'
-}
-
-const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);
-
-export const findSpace = (spaces: Space[], spaceKey: string): Space | undefined =>
-  spaces.find((space) => truncateKey(space.key) === spaceKey);
-
-export const createSpacePath = (spaceKey?: PublicKey, frame?: string, objectId?: string) =>
-  `/${spaceKey ? truncateKey(spaceKey) + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '') : ''}`;
-
-export const createSectionPath = (spaceKey?: PublicKey, section?: Section) =>
-  `/${spaceKey ? truncateKey(spaceKey) + (section ? `/${section}` : '') : ''}`;
-
-export const createInvitationPath = (invitation: Invitation) =>
-  `/?spaceInvitationCode=${InvitationEncoder.encode(invitation)}`;
 
 /**
  * Main app routes.

@@ -9,8 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCurrentSpace } from '@dxos/react-client';
 import { getSize, mx, Searchbar, Button } from '@dxos/react-components';
 
-import { useBots, useFrames, BotDef, FrameDef, useAppReducer } from '../../hooks';
-import { createSpacePath } from '../../router';
+import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath } from '../../hooks';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
@@ -71,9 +70,9 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
     switch (type) {
       case ExtensionType.FRAME: {
         const active = !activeFrames.find((frameId) => frameId === id);
-        setActiveFrame(id, active);
+        setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
         if (active) {
-          navigate(createSpacePath(space?.key, id));
+          navigate(createPath({ spaceKey: space!.key, frame: id }));
         }
         break;
       }

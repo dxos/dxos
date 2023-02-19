@@ -9,12 +9,12 @@ import { useQuery } from '@dxos/react-client';
 import { Searchbar } from '@dxos/react-components';
 
 import { ProjectCard } from '../../containers';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   if (!space) {
     return null;
   }
@@ -24,7 +24,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {

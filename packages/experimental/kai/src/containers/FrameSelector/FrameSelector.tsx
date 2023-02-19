@@ -4,12 +4,11 @@
 
 import { Globe } from 'phosphor-react';
 import React, { FC } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames, useFrameState } from '../../hooks';
-import { createSectionPath, createSpacePath, Section } from '../../router';
+import { useAppRouter, useFrames, createPath, Section } from '../../hooks';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
 const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
@@ -33,9 +32,9 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
  * Frame tabs.
  */
 export const FrameSelector: FC = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
-  const { section, frame: currentFrame } = useParams();
+  const { section, frame: currentFrame } = useAppRouter();
   const maxTabs = 8; // TODO(burdon): Media query?
 
   return (
@@ -51,7 +50,7 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space?.key, id)}
+                link={createPath({ spaceKey: space!.key, frame: id })}
                 compact={activeFrames.length > maxTabs}
               />
             ))}
@@ -62,7 +61,7 @@ export const FrameSelector: FC = () => {
             selected={section === Section.REGISTRY}
             label='Registry'
             Icon={Globe}
-            link={createSectionPath(space?.key, Section.REGISTRY)}
+            link={createPath({ spaceKey: space!.key, section: Section.REGISTRY })}
             compact={activeFrames.length > maxTabs}
           />
         </div>

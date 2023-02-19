@@ -20,7 +20,7 @@ export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceConte
 // TODO(burdon): spaceKey, onChange.
 export type SpaceProviderProps = PropsWithChildren<{
   initialSpaceKey?: PublicKey | ((spaces: Space[]) => PublicKey);
-  onSpaceChange?: (spaceKey?: PublicKey) => void;
+  onSpaceChange?: (spaceKey: PublicKey) => void;
 }>;
 
 /**
@@ -39,7 +39,9 @@ export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: Spac
   });
 
   useEffect(() => {
-    onSpaceChange?.(spaceKey);
+    if (spaceKey) {
+      onSpaceChange?.(spaceKey);
+    }
 
     if (client.services instanceof IFrameClientServicesProxy) {
       void client.services.setCurrentSpace(spaceKey);

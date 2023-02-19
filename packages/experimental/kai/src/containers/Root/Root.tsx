@@ -8,7 +8,7 @@ import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
-import { ClientProvider, SpaceProvider } from '@dxos/react-client';
+import { ClientProvider, PublicKey, SpaceProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
@@ -20,9 +20,10 @@ import {
   useClientProvider,
   botModules,
   frameModules,
-  defaultFrames
+  defaultFrames,
+  createPath,
+  findSpace
 } from '../../hooks';
-import { createSpacePath, findSpace } from '../../router';
 import kaiTranslations from '../../translations';
 import { ShellProvider } from '../ShellProvider';
 
@@ -48,7 +49,9 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
           <ClientProvider client={clientProvider}>
             <SpaceProvider
               initialSpaceKey={(spaces) => (spaceKey ? findSpace(spaces, spaceKey)?.key : undefined) ?? spaces[0]?.key}
-              onSpaceChange={(spaceKey) => navigate(createSpacePath(spaceKey, frame ?? defaultFrameId))}
+              onSpaceChange={(spaceKey: PublicKey) =>
+                navigate(createPath({ spaceKey, frame: frame ?? defaultFrameId }))
+              }
             >
               <MetagraphProvider value={metagraphContext}>
                 <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>

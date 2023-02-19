@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './useAppRouter';
 export * from './useAppState';
 export * from './useBots';
 export * from './useClientProvider';

@@ -11,8 +11,7 @@ import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appk
 import { useClient, useCurrentSpace, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
-import { defaultFrameId } from '../hooks';
-import { createSpacePath } from '../router';
+import { createPath, defaultFrameId } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
@@ -48,7 +47,7 @@ const IdentityPage = () => {
             </Button>
             <Button
               variant='primary'
-              onClick={() => navigate(createSpacePath(space?.key, defaultFrameId))}
+              onClick={() => navigate(createPath({ spaceKey: space!.key, frame: defaultFrameId }))}
               className='flex gap-1 items-center'
             >
               <span>{t('back to app label')}</span>

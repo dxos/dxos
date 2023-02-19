@@ -13,8 +13,7 @@ import { useClient, useCurrentSpace, useMembers, useSpaces } from '@dxos/react-c
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useAppState, useTheme, useShell } from '../../hooks';
-import { createInvitationPath } from '../../router';
+import { useAppState, useTheme, useShell, createInvitationPath } from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';

@@ -13,8 +13,7 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useCurrentSpace, useNetworkStatus } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFileDownload, useGenerator } from '../../hooks';
-import { createSpacePath } from '../../router';
+import { createPath, useFileDownload, useGenerator } from '../../hooks';
 
 // TODO(burdon): Factor out.
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
@@ -49,7 +48,7 @@ export const Actions = () => {
     const json = new TextDecoder('utf-8').decode(data);
     const space = await client.echo.createSpace();
     await serializer.import(space.db, JSON.parse(json));
-    navigate(createSpacePath(space.key));
+    navigate(createPath({ spaceKey: space.key }));
   };
 
   const handleSettings = () => {

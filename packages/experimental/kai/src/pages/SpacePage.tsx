@@ -10,8 +10,7 @@ import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useFrameState, useFrames, useTheme, useDevDataGenerator } from '../hooks';
-import { Section } from '../router';
+import { useAppRouter, useFrames, useTheme, useDevDataGenerator, Section } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -50,7 +49,7 @@ const SpacePage = () => {
   const { t } = useTranslation('kai');
   const { active } = useFrames();
   const { section } = useParams();
-  const { space, frame } = useFrameState();
+  const { space, frame } = useAppRouter();
 
   return (
     <PanelSidebarProvider

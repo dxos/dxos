@@ -11,7 +11,7 @@ import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 import { withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFileDownload, useFrameState, useIpfsClient } from '../../hooks';
+import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
 import { File, Path, Sketch } from '../../proto';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
@@ -48,7 +48,7 @@ export const SketchFrame = withReactor(() => {
   const active = useRef(false); // TODO(burdon): Review ref pattern.
   const ipfsClient = useIpfsClient();
 
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const [sketch, setSketch] = useState<Sketch>();
 
   // TODO(burdon): Show list of sketch objects and auto-select/create one if missing.
