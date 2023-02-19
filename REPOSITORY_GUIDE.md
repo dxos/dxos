@@ -115,7 +115,7 @@ Packages may also declare scripts in their `package.json` `scripts` field as is 
 
 ## Branch Diagram
 
-![release flow diagram](../../design/diagrams/release-flow.drawio.svg)
+![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
 
 Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
 
