@@ -112,7 +112,7 @@ const defs: FrameDef[] = [
       id: 'dxos.module.frame.bots',
       type: 'dxos:type/frame',
       displayName: 'Bots',
-      description: 'Bts.'
+      description: 'Bots.'
     },
     runtime: {
       Icon: ListChecks,
