@@ -13,13 +13,13 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
-import { Document, DocumentBase, isDocument } from './document';
+import { Document, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
 export type PropertiesFilter = Record<string, any>;
-export type OperatorFilter<T extends DocumentBase> = (document: T) => boolean;
-export type Filter<T extends DocumentBase> = PropertiesFilter | OperatorFilter<T>;
+export type OperatorFilter<T extends Document> = (document: T) => boolean;
+export type Filter<T extends Document> = PropertiesFilter | OperatorFilter<T>;
 
 // NOTE: `__phantom` property forces type.
 export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
@@ -134,7 +134,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
-  remove<T extends DocumentBase>(obj: T) {
+  remove<T extends Document>(obj: T) {
     this._backend.mutate({
       objects: [
         {
@@ -251,7 +251,7 @@ export class Query<T extends Document = Document> {
 }
 
 // TODO(burdon): Create separate test.
-const filterMatcher = (filter: Filter<any>, object: EchoObject): object is DocumentBase => {
+const filterMatcher = (filter: Filter<any>, object: EchoObject): object is Document => {
   if (!isDocument(object)) {
     return false;
   }

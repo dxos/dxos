@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Document, DocumentBase } from '@dxos/client';
+import { Document } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -28,8 +28,8 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: DocumentBase) => doc.__typename;
-const getItemDetails = (item: DocumentBase) => ({
+const getItemType = (doc: Document) => doc.__typename;
+const getItemDetails = (item: Document) => ({
   id: truncateKey(item.id, 4),
   type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
@@ -47,7 +47,7 @@ const ItemsPanel = () => {
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
-  const [selectedItem, setSelectedItem] = useState<DocumentBase>();
+  const [selectedItem, setSelectedItem] = useState<Document>();
   const [filter, setFilter] = useState('');
 
   return (

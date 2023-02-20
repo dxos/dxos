@@ -36,4 +36,8 @@ message Task {
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
+  TextObject description = 6;
 }
+
+// TODO: Extract.
+message TextObject {}
