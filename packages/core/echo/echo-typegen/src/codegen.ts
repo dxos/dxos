@@ -5,11 +5,15 @@
 import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
+const namespaceName = 'dxosEchoSchema'
 
-const types = ['EchoSchema', 'Document', 'TypeFilter', 'TextObject'];
-
+// There's no technical requirement to reserve those, but doing this avoids any potential confusion.
 const reservedTypeNames = [
-  ...types,
+  namespaceName,
+  'EchoSchema',
+  'Document',
+  'TypeFilter',
+  'TextObject',
 ]
 
 const reservedFieldNames = [
@@ -78,7 +82,7 @@ export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
       if (field.resolvedType.name === 'TextObject') {
-        return 'TextObject';
+        return `${namespaceName}.TextObject`;
       }
 
       return field.resolvedType.name;
@@ -129,9 +133,9 @@ export const createType = (field: pb.Field): string => {
 export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
   // prettier-ignore
   builder
-    .push(`import { ${types.sort().join(', ')} } from '${packageName}';`).nl()
+    .push(`import * as ${namespaceName} from '${packageName}';`).nl()
     .push(createSchema(root)).nl()
-    .push('export const schema = EchoSchema.fromJson(schemaJson);').nl();
+    .push(`export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);`).nl();
 
   for (const type of iterTypes(root)) {
     if (type.name === 'TextObject') {
@@ -152,10 +156,10 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
  * Generate class definition.
  */
 export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
-  if(reservedTypeNames.includes(type.name)) {
+  if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
-  for(const field of type.fieldsArray) {
+  for (const field of type.fieldsArray) {
     if (reservedFieldNames.includes(field.name)) {
       throw new Error(`Reserved field name: ${field.name}`);
     }
@@ -170,10 +174,10 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
   builder
     .push(`export type ${name}Options = { ${initializer} };`).nl()
 
-    .push(`export class ${name} extends Document<{}> {`)
+    .push(`export class ${name} extends ${namespaceName}.Document<{}> {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
-    .push(`static filter(opts?: ${name}Options): TypeFilter<${name}> {`, 1)
+    .push(`static filter(opts?: ${name}Options): ${namespaceName}.TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
     .push('}', 1).nl()
 
@@ -191,7 +195,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
  * Plain objects.
  */
 export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
-  if(reservedTypeNames.includes(type.name)) {
+  if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
 
