@@ -9,7 +9,7 @@ package dxos.app.composer;
 // TODO(dmaretskyi): Move to separate file.
 message TextObject {}
 
-message Document {
+message ComposerDocument {
   option (object) = true;
 
   string title = 1;

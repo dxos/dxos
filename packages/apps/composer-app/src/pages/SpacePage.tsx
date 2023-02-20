@@ -10,12 +10,12 @@ import { useQuery } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { Document } from '../proto';
+import { ComposerDocument } from '../proto';
 
 export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();
 
-  const [document] = useQuery(space, Document.filter());
+  const [document] = useQuery(space, ComposerDocument.filter());
 
   return document.content ? (
     <Composer

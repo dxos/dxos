@@ -6,7 +6,17 @@ import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
 
-const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'TextObject'];
+const types = ['EchoSchema', 'Document', 'TypeFilter', 'TextObject'];
+
+const reservedTypeNames = [
+  ...types,
+]
+
+const reservedFieldNames = [
+  'id',
+  '__typename',
+  '__deleted',
+]
 
 /**
  * Source builder and formatter.
@@ -142,8 +152,13 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
  * Generate class definition.
  */
 export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
-  if (type.fields.id) {
-    throw new Error('Reserved name: id');
+  if(reservedTypeNames.includes(type.name)) {
+    throw new Error(`Reserved type name: ${type.name}`);
+  }
+  for(const field of type.fieldsArray) {
+    if (reservedFieldNames.includes(field.name)) {
+      throw new Error(`Reserved field name: ${field.name}`);
+    }
   }
 
   const name = type.name;
@@ -155,7 +170,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
   builder
     .push(`export type ${name}Options = { ${initializer} };`).nl()
 
-    .push(`export class ${name} extends DocumentBase {`)
+    .push(`export class ${name} extends Document<{}> {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
     .push(`static filter(opts?: ${name}Options): TypeFilter<${name}> {`, 1)
@@ -176,6 +191,10 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
  * Plain objects.
  */
 export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
+  if(reservedTypeNames.includes(type.name)) {
+    throw new Error(`Reserved type name: ${type.name}`);
+  }
+
   const name = type.name;
   const fields = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)};`);
 

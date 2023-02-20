@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Document, DocumentBase } from '@dxos/echo-schema';
+import { Document } from '@dxos/echo-schema';
 import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
 
-export type Tile<T = DocumentBase> = {
-  canRender: (data: DocumentBase) => boolean;
+export type Tile<T = Document> = {
+  canRender: (data: Document) => boolean;
   render: (props: { data: T }) => JSX.Element;
 };
 
