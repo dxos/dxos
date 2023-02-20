@@ -9,13 +9,13 @@ import { TextObject, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
 import { useFrameState } from '../../hooks';
-import { Document } from '../../proto';
+import { TextDocument } from '../../proto';
 import { createSpacePath } from '../../router';
 
 export const DocumentTile = () => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useFrameState();
-  const objects = useQuery(space, Document.filter());
+  const objects = useQuery(space, TextDocument.filter());
   if (!space || !frame) {
     return null;
   }
@@ -32,7 +32,7 @@ export const DocumentTile = () => {
   };
 
   const handleCreate = async () => {
-    const object = await space.db.add(new Document());
+    const object = await space.db.add(new TextDocument());
     object.content = new TextObject(); // TODO(burdon): Make automatic?
     return object.id;
   };
@@ -40,7 +40,7 @@ export const DocumentTile = () => {
   const Icon = frame!.runtime.Icon;
 
   return (
-    <EditableObjectList<Document>
+    <EditableObjectList<TextDocument>
       objects={objects}
       selected={objectId}
       Icon={Icon}

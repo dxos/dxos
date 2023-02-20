@@ -9,7 +9,7 @@ import { PublicKey, TextObject } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 
-import { Document, schema } from '../../testing';
+import { ComposerDocument, schema } from '../../testing';
 import { ClientSpaceDecorator } from './ClientSpaceDecorator';
 import { Composer, ComposerProps } from './Composer';
 
@@ -21,12 +21,12 @@ export default {
 const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
-  const [document] = useQuery(space, Document.filter());
+  const [document] = useQuery(space, ComposerDocument.filter());
   useEffect(() => {
     if (space && id === 0) {
       setTimeout(async () => {
         // TODO(burdon): Auto-create document.
-        const document = new Document({ content: new TextObject() });
+        const document = new ComposerDocument({ content: new TextObject() });
         await space?.db.add(document);
       });
     }
