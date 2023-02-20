@@ -13,7 +13,7 @@ import { createCredential } from '../credentials';
 import { verifyPresentation } from './verifier';
 import { signPresentation } from './presentation';
 
-describe.only('presentation verifier', () => {
+describe('presentation verifier', () => {
   describe('chain', () => {
     test('pass', async () => {
       const keyring = new Keyring();
