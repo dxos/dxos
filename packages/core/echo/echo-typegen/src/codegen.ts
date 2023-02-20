@@ -3,6 +3,7 @@
 //
 
 import * as pb from 'protobufjs';
+import { text } from '@dxos/plate';
 
 const packageName = '@dxos/echo-schema';
 
@@ -185,3 +186,9 @@ export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
     .push(fields, 1)
     .push('}');
 };
+
+export const platePlainInterface = (type: pb.Type) => text`
+  export interface ${type.name} {
+    ${type.fieldsArray.map((f) => `${f.name}?: ${createType(f)};`)}
+  }
+`;
