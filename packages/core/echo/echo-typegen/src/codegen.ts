@@ -5,22 +5,12 @@
 import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
-const namespaceName = 'dxosEchoSchema'
+const namespaceName = 'dxosEchoSchema';
 
 // There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [
-  namespaceName,
-  'EchoSchema',
-  'Document',
-  'TypeFilter',
-  'TextObject',
-]
+const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'TextObject'];
 
-const reservedFieldNames = [
-  'id',
-  '__typename',
-  '__deleted',
-]
+const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 /**
  * Source builder and formatter.

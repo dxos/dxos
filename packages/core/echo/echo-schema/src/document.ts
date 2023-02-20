@@ -6,8 +6,8 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { TextModel } from '@dxos/text-model';
 
-import { Doc, TextModel } from '@dxos/text-model';
 import { base, data, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
@@ -34,17 +34,17 @@ export type ConvertVisitors = {
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
   onRef: (id, obj) => {
-    if(obj instanceof TextObject) {
+    if (obj instanceof TextObject) {
       return obj.toString();
     } else {
-      return { '@id': id }
+      return { '@id': id };
     }
   }
 };
 
 /**
  * Base class for generated document types and dynamic objects.
- * 
+ *
  * NOTE: See exported `Document` declaration below.
  */
 // TODO(burdon): Support immutable objects?
@@ -70,7 +70,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
       for (const field of this._schemaType.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
-        } else if(field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
+        } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
           this._set(field.name, new TextObject());
         }
       }
@@ -379,7 +379,6 @@ Object.defineProperty(Document_, 'name', { value: 'Document' });
  */
 type NoInfer<T> = [T][T extends any ? 0 : never];
 
-
 // NOTE:
 // We define the exported value separately to have fine-grained control over the typescript type.
 // Runtime semantics should be exactly the same as this compiled down to `export const Document = Document_`.
@@ -401,5 +400,5 @@ export const Document: {
   ): Document<T>;
 } = Document_ as any;
 
-
-export const isDocument = (object: unknown): object is Document => typeof object === 'object' && object !== null && !!(object as any)[base];
+export const isDocument = (object: unknown): object is Document =>
+  typeof object === 'object' && object !== null && !!(object as any)[base];

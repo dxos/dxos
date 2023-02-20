@@ -2,46 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as pb from 'protobufjs';
+
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
-import * as pb from 'protobufjs';
 
 import { TypeFilter } from './database';
 import { strip } from './util';
 
 export type EchoType =
   | {
-    kind: 'number' | 'string' | 'boolean' | 'bytes';
-  }
+      kind: 'number' | 'string' | 'boolean' | 'bytes';
+    }
   | {
-    /**
-     * Plain JS object.
-     */
-    kind: 'record'; // TODO(mykola) Figure out a better name.
-    objectType: string;
-    // TODO(mykola): Add ability to list fields.
-  }
+      /**
+       * Plain JS object.
+       */
+      kind: 'record'; // TODO(mykola) Figure out a better name.
+      objectType: string;
+      // TODO(mykola): Add ability to list fields.
+    }
   | {
-    kind: 'ref';
-    objectType: string;
-    modelType: string;
-  }
+      kind: 'ref';
+      objectType: string;
+      modelType: string;
+    }
   | {
-    kind: 'array';
-    elementType: EchoType;
-  }
+      kind: 'array';
+      elementType: EchoType;
+    }
   | {
-    kind: 'enum';
-    enumType: string;
-    // TODO(mykola): Add ability to list enum values.
-  };
+      kind: 'enum';
+      enumType: string;
+      // TODO(mykola): Add ability to list enum values.
+    };
 
 export type EchoSchemaField = {
   name: string;
   type: EchoType;
 };
 
-const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'TextObject'
+const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'TextObject';
 
 const getFields = (type: pb.Type): EchoSchemaField[] => {
   type.fieldsArray.forEach((field) => field.resolve());
@@ -55,13 +56,13 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
           return {
             kind: 'ref',
             objectType: type.fullName.slice(1),
-            modelType: TextModel.meta.type,
+            modelType: TextModel.meta.type
           };
         } else if (type.options && type.options['(object)']) {
           return {
             kind: 'ref',
             objectType: type.fullName.slice(1),
-            modelType: DocumentModel.meta.type,
+            modelType: DocumentModel.meta.type
           };
         } else {
           return { kind: 'record', objectType: type.fullName.slice(1) };
@@ -150,7 +151,7 @@ export class EchoSchemaType {
 }
 
 type Prototype = {
-  new(...args: any): any;
+  new (...args: any): any;
   type: EchoSchemaType;
 };
 
