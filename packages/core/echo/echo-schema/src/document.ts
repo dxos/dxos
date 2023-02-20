@@ -227,6 +227,9 @@ class Document_<T> extends EchoObject<DocumentModel> {
     }
   }
 
+  /**
+   * @internal
+   */
   private _set(key: string, value: any) {
     this._database?._logObjectAccess(this);
 
