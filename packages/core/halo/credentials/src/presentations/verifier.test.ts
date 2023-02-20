@@ -98,6 +98,11 @@ describe('presentation verifier', () => {
         presentation: { credentials: [credential] },
         signer: keyring,
         signerKey: device,
+        chain: {
+          ...chain,
+          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } }
+        },
+
         nonce: randomBytes(32)
       });
 
