@@ -4,7 +4,6 @@
 
 import { DotsThreeVertical } from 'phosphor-react';
 import React, { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +11,7 @@ import { withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { getThemeClasses, useFrames } from '../../hooks';
+import { getThemeClasses, useAppRouter } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -55,6 +54,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
           <input
             className='w-full bg-transparent px-2 mx-2'
             value={space.properties.name ?? humanize(space.key)}
+            spellCheck={false}
             onChange={(event) => {
               space.properties.name = event.target.value;
             }}
@@ -87,11 +87,7 @@ export type SpaceListProps = {
 
 // TODO(burdon): Use vertical mosaic.
 export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProps) => {
-  // TODO(burdon): Move to containers.
-  const { frame: currentFrame } = useParams();
-  const { frames } = useFrames();
-
-  const frame = currentFrame ? frames.get(currentFrame) : undefined;
+  const { frame } = useAppRouter();
   const Tile = frame?.runtime.Tile;
 
   // TODO(burdon): Factor pattern?

@@ -25,6 +25,7 @@ export type SpaceProviderProps = PropsWithChildren<{
 
 /**
  * Provider for apps (e.g., testing) where a single space is currently selected.
+ * @deprecated
  */
 // TODO(burdon): Move to patterns/testing or replace with reducer or tie to required framework functionality.
 export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: SpaceProviderProps) => {
@@ -61,6 +62,7 @@ export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: Spac
 
 /**
  * Uses space state from the space context.
+ * @deprecated
  */
 export const useCurrentSpace = (): [Space | undefined, (spaceKey?: PublicKey) => void] => {
   const { spaceKey, setSpaceKey } = useContext(SpaceContext) ?? raise(new Error('No space context'));

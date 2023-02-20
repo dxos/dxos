@@ -32,11 +32,15 @@ export const createPath = ({
   frame,
   objectId
 }: {
-  spaceKey: PublicKey;
+  spaceKey?: PublicKey;
   section?: string;
   frame?: string;
   objectId?: string;
 }) => {
+  if (!spaceKey) {
+    return '/';
+  }
+
   const parts = [truncateKey(spaceKey)];
   if (section) {
     parts.push(section);

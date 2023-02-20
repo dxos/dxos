@@ -10,7 +10,7 @@ import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useFrames, useTheme, useDevDataGenerator, Section } from '../hooks';
+import { useAppRouter, useFrames, useTheme, useGenerator, Section } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -45,7 +45,7 @@ const Toolbar = () => {
  * Home page with current space.
  */
 const SpacePage = () => {
-  useDevDataGenerator();
+  useGenerator();
   const { t } = useTranslation('kai');
   const { active } = useFrames();
   const { section } = useParams();

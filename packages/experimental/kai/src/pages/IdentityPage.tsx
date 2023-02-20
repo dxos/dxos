@@ -8,10 +8,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
-import { useClient, useCurrentSpace, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
+import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
-import { createPath, defaultFrameId } from '../hooks';
+import { createPath, defaultFrameId, useAppRouter } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
@@ -24,7 +24,7 @@ const IdentityPage = () => {
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
 
   const handleCreateInvitation = useCallback(() => {
     client.halo.createInvitation();

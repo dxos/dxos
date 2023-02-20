@@ -5,23 +5,24 @@
 import clipboardCopy from 'clipboard-copy';
 import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
-import { useHref } from 'react-router-dom';
+import { useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useClient, useCurrentSpace, useMembers, useSpaces } from '@dxos/react-client';
+import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useAppState, useTheme, useShell, createInvitationPath } from '../../hooks';
+import { useAppState, useTheme, useShell, createInvitationPath, useAppRouter, createPath } from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const client = useClient();
-  const [space, setSpace] = useCurrentSpace();
+  const { space, frame } = useAppRouter();
   const spaces = useSpaces();
   const members = useMembers(space?.key);
   const shell = useShell();
@@ -54,8 +55,7 @@ export const Sidebar = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
-    // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
-    setSpace(space.key);
+    navigate(createPath({ spaceKey: space.key }));
   };
 
   const handleJoinSpace = () => {
@@ -63,7 +63,7 @@ export const Sidebar = () => {
   };
 
   const handleSelectSpace = (spaceKey: PublicKey) => {
-    setSpace(spaceKey);
+    navigate(createPath({ spaceKey, frame: frame?.module.id }));
   };
 
   const handleShareSpace = (spaceKey: PublicKey) => {

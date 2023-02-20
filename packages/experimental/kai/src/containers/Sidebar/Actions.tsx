@@ -10,10 +10,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useCurrentSpace, useNetworkStatus } from '@dxos/react-client';
+import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { createPath, useFileDownload, useGenerator } from '../../hooks';
+import { createPath, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
 
 // TODO(burdon): Factor out.
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
@@ -29,7 +29,7 @@ export const Actions = () => {
   const navigate = useNavigate();
   const client = useClient();
   const download = useFileDownload();
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
   const { state: connectionState } = useNetworkStatus();
   const generator = useGenerator();
   const serializer = useMemo(() => new Serializer(), []);

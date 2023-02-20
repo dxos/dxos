@@ -3,24 +3,25 @@
 //
 
 import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ShellDisplay, ShellLayout } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
-import { useConfig, useCurrentSpace, useIdentity } from '@dxos/react-client';
+import { useConfig, useIdentity } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { Shell } from '@dxos/react-ui';
 
-import { ShellContext } from '../../hooks';
+import { createPath, ShellContext, useAppRouter } from '../../hooks';
 
 /**
  * Renders the DXOS shell and provides a way to set the layout of the shell from the rest of the app.
  */
 // TODO(wittjosiah): Factor out?
 export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
+  const navigate = useNavigate();
   const config = useConfig();
   const identity = useIdentity();
-  const [space, setSpace] = useCurrentSpace();
+  const { space } = useAppRouter();
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
@@ -78,7 +79,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     }
 
     return shellRuntime.contextUpdate.on(({ display, spaceKey }) => {
-      setSpace(spaceKey);
+      navigate(createPath({ spaceKey }));
       setDisplay(display);
     });
   }, []);
@@ -90,6 +91,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
           <Shell runtime={shellRuntime} origin={window.location.origin} />
         </div>
       )}
+
       <ShellContext.Provider value={{ runtime: shellRuntime, setDisplay }}>
         {identity ? children : undefined}
       </ShellContext.Provider>
