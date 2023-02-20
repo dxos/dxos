@@ -19,7 +19,13 @@ type MochaHooks = {
 export const mochaHooks: MochaHooks & Partial<TestsContext> = {
   async beforeAll() {
     const browser = await getBrowser(process.env.MOCHA_ENV as BrowserType).launch({
-      headless: process.env.HEADLESS !== 'false'
+      headless: process.env.HEADLESS !== 'false',
+      args: process.env.EXTENSION_PATH
+        ? [
+            `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
+            `--load-extension=${process.env.EXTENSION_PATH}`
+          ]
+        : undefined
     });
 
     this.browser = browser;

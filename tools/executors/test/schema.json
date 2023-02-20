@@ -136,6 +136,10 @@
       "type": "boolean",
       "description": "Exit after first failed test",
       "default": false
+    },
+    "extensionPath": {
+      "type": "string",
+      "description": "Path to the extension to test"
     }
   },
   "required": [
