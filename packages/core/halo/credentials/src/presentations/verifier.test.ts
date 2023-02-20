@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 import { createCredential } from '../credentials';
 import { signPresentation } from './presentation';
-import { verifyPresentation } from './verifier';
+import { verifyPresentation, verifyPresentationSignature } from './verifier';
 
 describe('presentation verifier', () => {
   describe('chain', () => {
@@ -108,6 +108,68 @@ describe('presentation verifier', () => {
       });
 
       expect(await verifyPresentation(presentation)).to.deep.contain({ kind: 'fail' });
+    });
+  });
+
+  describe('signature', () => {
+    test('pass', async () => {
+      const keyring = new Keyring();
+      const signingKey = await keyring.createKey();
+      const spaceKey = PublicKey.random();
+      const subject = PublicKey.random();
+
+      const credential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
+        },
+        issuer: signingKey,
+        signer: keyring,
+        subject
+      });
+
+      const presentation = await signPresentation({
+        presentation: { credentials: [credential] },
+        signer: keyring,
+        signerKey: signingKey,
+        nonce: randomBytes(32)
+      });
+
+      expect(await verifyPresentationSignature(presentation, presentation.proofs![0])).to.deep.equal({ kind: 'pass' });
+    });
+
+    test('fail', async () => {
+      const keyring = new Keyring();
+      const signingKey = await keyring.createKey();
+      const spaceKey = PublicKey.random();
+      const subject = PublicKey.random();
+
+      const credential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
+        },
+        issuer: signingKey,
+        signer: keyring,
+        subject
+      });
+
+      const presentation = await signPresentation({
+        presentation: { credentials: [credential] },
+        signer: keyring,
+        signerKey: signingKey,
+        nonce: randomBytes(32)
+      });
+
+      expect(
+        await verifyPresentationSignature(presentation, { ...presentation.proofs![0], creationDate: new Date(0) })
+      ).to.deep.contain({
+        kind: 'fail'
+      });
     });
   });
 });
