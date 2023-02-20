@@ -3,5 +3,5 @@
 //
 
 export * from './signing';
-export * from './proof';
+export * from './presentation';
 export * from './verifier';
