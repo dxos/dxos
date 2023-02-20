@@ -14,17 +14,26 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "playwright": true,
+        "buildTarget": "devtools-extension:bundle",
+        "coveragePath": "coverage/packages/devtools/devtools-extension",
+        "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
         "resultsPath": "test-results/packages/devtools/devtools-extension",
         "testPatterns": [
-          "packages/devtools/devtools-extension/src/playwright/*.spec.{ts,js}"
+          "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
           "packages/devtools/devtools-extension/src/**/*"
-        ]
+        ],
+        "playwright": true,
+        "headless": false,
+        "stayOpen": true,
+        "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [
-        "{options.resultsPath}"
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.extensionPath}"
       ]
     },
     "lint": {
