@@ -3,7 +3,7 @@
 //
 
 import type { Context } from 'mocha';
-import type { Browser, Page } from 'playwright';
+import type { Browser, BrowserContext, Page } from 'playwright';
 
 import { Lock } from '../util';
 
@@ -63,4 +63,14 @@ export const setupPage = async (mochaContext: Context, options: SetupOptions) =>
   }
 
   return { context, page };
+};
+
+export const extensionId = async (context: BrowserContext) => {
+  let [background] = context.serviceWorkers();
+  if (!background) {
+    background = await context.waitForEvent('serviceworker');
+  }
+
+  const extensionId = background.url().split('/')[2];
+  return extensionId;
 };
