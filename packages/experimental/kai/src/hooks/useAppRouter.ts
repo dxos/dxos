@@ -84,6 +84,7 @@ export const useAppRouter = (): AppRoute => {
       creating.current = true;
       t = setTimeout(async () => {
         try {
+          // TODO(burdon): Only create in dev mode.
           const space = await client.echo.createSpace();
           navigate(createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId }));
         } catch (err) {
