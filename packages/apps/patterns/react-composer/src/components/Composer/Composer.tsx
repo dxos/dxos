@@ -33,7 +33,6 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
 
   // TODO(burdon): Value doesn't show up after synced.
   const v = document?.doc?.getXmlFragment(field);
-  console.log('[[', v?.toString().length, ']]');
 
   // Reference:
   // https://tiptap.dev/installation/react

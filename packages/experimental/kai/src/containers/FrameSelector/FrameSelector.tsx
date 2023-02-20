@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { useAppRouter, useFrames, createPath, Section } from '../../hooks';
+import { useAppRouter, useFrames, createPath, decodeFrame, Section } from '../../hooks';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
 const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
@@ -47,7 +47,7 @@ export const FrameSelector: FC = () => {
             .map(({ module: { id, displayName }, runtime: { Icon } }) => (
               <Tab
                 key={id}
-                selected={id === currentFrame}
+                selected={decodeFrame(id!) === currentFrame?.module.id}
                 label={displayName ?? ''}
                 Icon={Icon}
                 link={createPath({ spaceKey: space!.key, frame: id })}

@@ -4,6 +4,7 @@
 
 import { Bug, User } from 'phosphor-react';
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 import { ShellLayout, useCurrentSpace, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -28,10 +29,12 @@ export const AppBar = withReactor(() => {
       )}
     >
       <div className='flex items-center' title="Hi I'm Kai!">
-        <Bug
-          className={mx(getSize(8), 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180')}
-          data-testid='kai-bug'
-        />
+        <Link to='/'>
+          <Bug
+            className={mx(getSize(8), 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180')}
+            data-testid='kai-bug'
+          />
+        </Link>
       </div>
 
       {space && (

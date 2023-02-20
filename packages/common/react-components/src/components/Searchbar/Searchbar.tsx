@@ -31,8 +31,6 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }
     onSearch?.(text);
   };
 
-  console.log(slots);
-
   return (
     <div className='flex flex-1 flex-col'>
       <div className={mx('flex flex-1 items-center')}>

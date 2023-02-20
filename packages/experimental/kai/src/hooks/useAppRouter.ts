@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useSpaces } from '@dxos/react-client';
+import { useClient, useSpaces } from '@dxos/react-client';
 
-import { FrameDef, useFrames } from './useFrames';
+import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
@@ -23,7 +24,7 @@ export const findSpace = (spaces: Space[], spaceKey: string): Space | undefined 
   spaces.find((space) => truncateKey(space.key) === spaceKey);
 
 const encodeFrame = (frame: string) => frame.replaceAll('.', '_');
-const decodeFrame = (frame: string) => frame.replaceAll('_', '.');
+export const decodeFrame = (frame: string) => frame.replaceAll('_', '.');
 
 export const createPath = ({
   spaceKey,
@@ -46,7 +47,7 @@ export const createPath = ({
     }
   }
 
-  return [truncateKey(spaceKey), section].join('/');
+  return '/' + parts.join('/');
 };
 
 export const createInvitationPath = (invitation: Invitation) =>
@@ -63,14 +64,32 @@ export type AppRoute = {
  * App Route:
  *  /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
  */
+// TODO(burdon): Handle invalid space key.
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
+  const navigate = useNavigate();
+  const client = useClient();
   const spaces = useSpaces();
   const { spaceKey, section, frame, objectId } = useParams();
 
-  // TODO(burdon): Remove SpaceSelector.
-  // const [space] = useCurrentSpace();
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
+  const creating = useRef(false);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    if (!space && !creating.current) {
+      creating.current = true;
+      t = setTimeout(async () => {
+        try {
+          const space = await client.echo.createSpace();
+          navigate(createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId }));
+        } catch (err) {
+          creating.current = false;
+        }
+      });
+    }
+
+    return () => clearTimeout(t);
+  }, [space]);
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
