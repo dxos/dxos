@@ -58,7 +58,7 @@ Arguments:
 
 ## Typed Queries
 
-It's possible to obtain strongly typed objects from `useQuery<T>` if we provide a type argument `T`.
+It's possible to obtain strongly typed objects from `useQuery<T>`.
 
 Because `useQuery` returns tracked ECHO objects, their type must descend from [`DocumentBase`](/api/@dxos/client/classes/DocumentBase). DXOS provides a tool to generate these types from a schema definition file.
 

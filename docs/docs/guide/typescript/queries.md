@@ -90,7 +90,7 @@ message TaskList {
 }
 ```
 
-Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding classes for use with DXOS Client.
+Using a tool called `dxtype` from `@dxos/echo-schema` classes can be generated for use with DXOS Client.
 
 ```bash
 dxtype <input protobuf file> <output typescript file>

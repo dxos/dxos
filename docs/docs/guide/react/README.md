@@ -51,7 +51,7 @@ createRoot(document.body).render(<App />);
 
 ## Manipulating data
 
-Before we can manipulate data, we need a [user identity](identity) and a [space](spaces).
+Before manipulating data, a [user identity](identity) and a [space](spaces) are required.
 
 ## Further configuration
 

@@ -59,7 +59,7 @@ Calling `space.experimental.db.save(task)` (line 24 above) needs to happen only 
 
 ## Typed Mutations
 
-For the following example we'll assume the same [schema](./queries#typed-queries) definition and code generation setup with `dxtype` as in the [Typed Queries](./queries#typed-queries) section.
+The following example uses the same [schema](./queries#typed-queries) definition and code generation setup with `dxtype` as in the [Typed Queries](./queries#typed-queries) section.
 
 ### Setting values
 

@@ -56,24 +56,4 @@ const client = new Client();
 
 :::
 
-::: details Creating an identity with a Seed Phrase
-Use `generateSeedPhrase` to get a [Seed Phrase](../glossary#seed-phrase):
-
-```ts{7,9} file=./snippets/create-identity-seedphrase.ts#L5-
-import { Client, generateSeedPhrase } from '@dxos/client';
-
-const client = new Client();
-
-(async () => {
-  await client.initialize();
-  const seedphrase = generateSeedPhrase();
-  const identity = await client.halo.createProfile({
-    seedphrase
-  });
-  console.log(`Don't lose this recovery key: ${seedphrase}`);
-})();
-```
-
-:::
-
 Before data can be manipulated, a [`space`](./spaces) must be obtained.
