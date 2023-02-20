@@ -9,9 +9,10 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
+
 import { createCredential } from '../credentials';
-import { verifyPresentation } from './verifier';
 import { signPresentation } from './presentation';
+import { verifyPresentation } from './verifier';
 
 describe('presentation verifier', () => {
   describe('chain', () => {
