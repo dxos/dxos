@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package dxos.testing.composer;
 
-message Document {
+message ComposerDocument {
   option (object) = true;
 
   TextObject content = 1;
