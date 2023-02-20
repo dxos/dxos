@@ -13,11 +13,6 @@
         "packages/sdk/client/src/version.ts",
         {
           "type": "json",
-          "path": "packages/devtools/devtools-extension/public/manifest.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "docs/package.json",
           "jsonpath": "$.version"
         },
