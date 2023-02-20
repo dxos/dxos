@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { expect } from 'chai';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
@@ -57,7 +57,7 @@ describe.only('presentation verifier', () => {
         nonce: randomBytes(32)
       });
 
-      expect(await verifyPresentation(presentation)).toEqual({ kind: 'pass' });
+      expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
     });
 
     test('fail', async () => {
@@ -66,6 +66,19 @@ describe.only('presentation verifier', () => {
       const device = await keyring.createKey();
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
+
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          signer: keyring
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -77,7 +90,8 @@ describe.only('presentation verifier', () => {
         issuer: identity,
         signer: keyring,
         subject,
-        signingKey: device
+        signingKey: device,
+        chain
       });
 
       const presentation = await signPresentation({
@@ -87,7 +101,7 @@ describe.only('presentation verifier', () => {
         nonce: randomBytes(32)
       });
 
-      expect(await verifyPresentation(presentation)).toEqual({ kind: 'pass' });
+      expect(await verifyPresentation(presentation)).to.deep.contain({ kind: 'fail' });
     });
   });
 });
