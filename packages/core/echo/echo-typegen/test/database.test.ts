@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db } from '@dxos/echo-schema';
+import { base, db, schema, TextObject } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
@@ -26,4 +26,18 @@ describe('database', () => {
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
+
+  describe('text', () => {
+    test('text objects are auto-created on schema', async () => {
+      const task = new Task();
+      expect(task.description).to.be.instanceOf(TextObject);
+
+      const database = await createDatabase();
+      await database.add(task);
+      expect(task.description).to.be.instanceOf(TextObject);
+
+      task.description.model!.insert('test', 0);
+      expect(task.description.model!.textContent).to.eq('test');
+    })
+  })
 });

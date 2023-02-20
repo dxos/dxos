@@ -20,4 +20,8 @@ export class TextObject extends EchoObject<TextModel> {
     this._database?._logObjectAccess(this);
     return this._model;
   }
+
+  override toString() {
+    return this._model?.textContent || '';
+  }
 }

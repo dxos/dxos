@@ -3,14 +3,16 @@
 //
 
 import assert from 'node:assert';
-import { InspectOptionsStylized, inspect } from 'node:util';
+import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
+import { TextModel } from '@dxos/text-model';
 import { base, data, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { TextObject } from './text-object';
 import { isReferenceLike } from './util';
 
 const isValidKey = (key: string | symbol) =>
@@ -31,7 +33,13 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => ({ '@id': id })
+  onRef: (id, obj) => {
+    if(obj instanceof TextObject) {
+      return obj.toString();
+    } else {
+      return { '@id': id }
+    }
+  }
 };
 
 /**
@@ -51,6 +59,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   ) {
     super(DocumentModel);
 
+    // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
       // Set type.
       this._mutate({ type: this._schemaType.name });
@@ -58,6 +67,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       for (const field of this._schemaType.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
+        } else if(field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
+          this._set(field.name, new TextObject());
         }
       }
     }
@@ -113,7 +124,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       if (value instanceof EchoObject) {
         return visitorsWithDefaults.onRef!(value.id, value);
       } else if (value instanceof Reference) {
-        return visitorsWithDefaults.onRef!(value.itemId, this._database?.getObjectById(value.itemId));
+        return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
       } else if (value instanceof OrderedArray) {
         return value.toArray().map(convert);
       } else if (value instanceof EchoArray) {
@@ -298,6 +309,10 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     });
   }
 
+  /**
+   * Called after object is bound to a database.
+   * `this._item` will now be set to an item tracked by ECHO.
+   */
   protected override async _onBind() {
     assert(this._linkCache);
 
