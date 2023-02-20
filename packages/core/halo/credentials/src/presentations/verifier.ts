@@ -5,11 +5,13 @@
 import { verifySignature } from '@dxos/crypto';
 import { Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { SIGNATURE_TYPE_ED25519, VerificationResult, verifyCredential } from '../credentials';
+import { SIGNATURE_TYPE_ED25519, VerificationResult, verifyChain, verifyCredential } from '../credentials';
 import { getPresentationProofPayload } from './signing';
 
 export const verifyPresentation = async (presentation: Presentation): Promise<VerificationResult> => {
   const errors: string[] = [];
+
+  // Verify all credentials.
   const credentialsVerifications = await Promise.all(
     presentation.credentials?.map((credential) => verifyCredential(credential)) ?? []
   );
@@ -19,17 +21,18 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
     }
   }
 
+  // Verify all proofs.
   const proofVerification = await Promise.all(
-    presentation.proofs?.map((proof) => {
-      if (!proof.chain) {
-        return {
-          kind: 'fail',
-          errors: ['Delegated credential is missing credential chain.']
-        };
+    presentation.proofs?.map(async (proof) => {
+      const chainVerification = await verifyPresentationChain(presentation, proof);
+      if (chainVerification.kind === 'fail') {
+        return chainVerification;
       }
-      // TODO(mykola): Add chain verification?
-
-      return verifyPresentationSignature(presentation, proof);
+      const signatureVerification = await verifyPresentationSignature(presentation, proof);
+      if (signatureVerification.kind === 'fail') {
+        return signatureVerification;
+      }
+      return { kind: 'pass' } as VerificationResult;
     }) ?? []
   );
   for (const verification of proofVerification) {
@@ -47,6 +50,29 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
       errors
     };
   }
+};
+
+export const verifyPresentationChain = async (
+  presentation: Presentation,
+  proof: Proof
+): Promise<VerificationResult> => {
+  for (const credential of presentation.credentials ?? []) {
+    if (!credential.issuer.equals(proof.signer)) {
+      if (!proof.chain) {
+        return {
+          kind: 'fail',
+          errors: ['Delegated credential is missing credential chain.']
+        };
+      }
+
+      const chainVerification = await verifyChain(proof.chain, credential.issuer, proof.signer);
+      if (chainVerification.kind === 'fail') {
+        return chainVerification;
+      }
+    }
+  }
+
+  return { kind: 'pass' };
 };
 
 /**
