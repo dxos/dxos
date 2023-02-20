@@ -41,7 +41,7 @@ describe('Halo', () => {
       await client.halo.createProfile({ displayName: 'test-user' });
       expect(client.halo.profile).exist;
 
-      const credentials = client.halo.queryCredentials({type: 'dxos.halo.credentials.AuthorizedDevice'});
+      const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AuthorizedDevice' });
       const trigger = new Trigger<Credential>();
       credentials.subscribe({
         onUpdate: (credentials) => {
