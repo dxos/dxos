@@ -2,24 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React from 'react';
 
-import { Tile, TileContentProps } from '../../components';
-import { MosaicItem } from '../../props';
+import { TileRequiredProps } from '../../props';
+import { Tile } from '../../tiles';
 
-export type StackProps<T extends {}> = {
-  items?: MosaicItem<T>[];
-  Content?: FC<TileContentProps<T>>;
+export type StackTile = TileRequiredProps;
+
+export type StackProps<T extends StackTile> = {
+  tiles?: T[];
 };
 
 // TODO(burdon): External DndContext.
 // TODO(burdon): DndSort.
-export const Stack = <T extends {}>({ items = [], Content }: StackProps<T>) => {
+export const Stack = <T extends StackTile>({ tiles = [] }: StackProps<T>) => {
   return (
     <div className='flex flex-col bg-white'>
-      {items.map((item) => (
-        <div key={item.id} className='m-2 border'>
-          <Tile<T> item={item} Content={Content} />
+      {tiles.map((tile) => (
+        <div key={tile.id} className='m-2 border'>
+          <Tile<T> tile={tile} />
         </div>
       ))}
     </div>

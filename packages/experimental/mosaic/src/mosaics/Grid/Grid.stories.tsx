@@ -9,9 +9,9 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Vec2, MosaicItem } from '../../props';
+import { Vec2 } from '../../props';
 import { createItem } from '../../testing';
-import { Grid } from './Grid';
+import { Grid, GridTile } from './Grid';
 import { GridLayout } from './grid-layout';
 
 faker.seed(100);
@@ -35,7 +35,7 @@ const num = 8;
 
 const Test = () => {
   const layout = useMemo(() => new GridLayout({ range: { x: 3, y: 2 } }), []);
-  const [items, setItems] = useState<MosaicItem[]>(() => {
+  const [tiles, setTiles] = useState<GridTile[]>(() => {
     return range(num).map(() => {
       return createItem({
         x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
@@ -44,35 +44,21 @@ const Test = () => {
     });
   });
 
-  const handleSelect = (item: MosaicItem) => {
+  const handleSelect = (item: GridTile) => {
     console.log(item);
   };
 
   const handleCreate = async (position: Vec2) => {
     const item = createItem(position);
-    setItems((items) => [...items, item]);
+    setTiles((tiles) => [...tiles, item]);
     return item.id;
   };
 
-  const handleDelete = (item: MosaicItem) => {
-    setItems((items) => items.filter(({ id }) => id !== item.id));
+  const handleDelete = (item: GridTile) => {
+    setTiles((tiles) => tiles.filter(({ id }) => id !== item.id));
   };
 
-  return (
-    <Grid
-      items={items}
-      layout={layout}
-      onSelect={handleSelect}
-      onCreate={handleCreate}
-      onDelete={handleDelete}
-      classes={{
-        tile: {
-          root: 'bg-yellow-100 select-none cursor-pointer text-black shadow',
-          selected: 'shadow-lg ring-1 ring-orange-400'
-        }
-      }}
-    />
-  );
+  return <Grid tiles={tiles} layout={layout} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />;
 };
 
 export default {

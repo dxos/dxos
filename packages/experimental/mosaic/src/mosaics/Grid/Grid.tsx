@@ -3,29 +3,25 @@
 //
 
 import { DndContext, DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
-import React, { FC, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { Tile, TileContentProps, TileClasses } from '../../components';
-import { MosaicItem, Vec2 } from '../../props';
+import { TileRequiredProps, Vec2 } from '../../props';
+import { Tile } from '../../tiles';
 import { GridCell } from './GridCell';
 import { Layout, serializePosition, parsePosition } from './grid-layout';
 
-export type GridClasses = {
-  tile?: TileClasses;
-};
+export type GridTile = TileRequiredProps & { position: Vec2 };
 
-export type GridProps<T extends {} = {}> = {
+export type GridProps<T extends GridTile> = {
   layout: Layout;
-  items?: MosaicItem<T>[];
-  classes?: GridClasses;
-  Content?: FC<TileContentProps<T>>;
-  onSelect?: (item: MosaicItem<T>) => void;
-  onChange?: (item: MosaicItem<T>, position: Vec2) => void;
+  tiles?: T[];
+  onSelect?: (tile: T) => void;
+  onChange?: (tile: T, position: Vec2) => void;
   onCreate?: (position: Vec2) => Promise<string | undefined>;
-  onDelete?: (item: MosaicItem<T>) => void;
+  onDelete?: (tile: T) => void;
 };
 
 const options = {
@@ -35,18 +31,16 @@ const options = {
 };
 
 // TODO(burdon): Pass in selected (and store in app state).
-export const Grid = <T extends {} = {}>({
-  items = [],
+export const Grid = <T extends GridTile>({
+  tiles = [],
   layout,
-  classes = {},
-  Content,
   onSelect,
   onChange,
   onCreate,
   onDelete
 }: GridProps<T>) => {
-  const getMosaicItem = (position: Vec2): MosaicItem<T> | undefined => {
-    return items.find((item) => item.position && serializePosition(item.position) === serializePosition(position));
+  const getGridTile = (position: Vec2): T | undefined => {
+    return tiles.find((item) => item.position && serializePosition(item.position) === serializePosition(position));
   };
 
   // Container allows any selected item to scroll near to the center.
@@ -106,7 +100,7 @@ export const Grid = <T extends {} = {}>({
 
   useEffect(() => {
     if (width && height) {
-      const item = selected ? items.find((item) => item.id === selected) : undefined;
+      const item = selected ? tiles.find((item) => item.id === selected) : undefined;
       scrollTo(layout.getCenter(item?.position ?? { x: 0, y: 0 }), false);
     }
   }, [width, height]);
@@ -117,10 +111,10 @@ export const Grid = <T extends {} = {}>({
 
   const [selected, setSelected] = useState<string>();
   useEffect(() => {
-    const item = selected ? items.find((item) => item.id === selected) : undefined;
+    const item = selected ? tiles.find((item) => item.id === selected) : undefined;
     setZoom(zoom);
     scrollTo(layout.getCenter(item?.position ?? { x: 0, y: 0 }));
-  }, [items, selected]);
+  }, [tiles, selected]);
 
   const handleCreate = async (point: Vec2) => {
     if (onCreate) {
@@ -143,7 +137,7 @@ export const Grid = <T extends {} = {}>({
   // TODO(burdon): Dragging broken when scaled (disable until fixed).
   // TODO(burdon): Smoothly drop into place.
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    const item = items.find((item) => item.id === active.id)!;
+    const item = tiles.find((item) => item.id === active.id)!;
     if (over) {
       item.position = parsePosition(over.id as string);
       onChange?.(item, item.position);
@@ -162,7 +156,7 @@ export const Grid = <T extends {} = {}>({
         >
           {/* Layout container. */}
           <div
-            className='flex justify-center items-center'
+            className='flex justify-center tiles-center'
             style={{ width: containerSize.x, height: containerSize.y, ...containerStyles }}
           >
             {/* Layout box. */}
@@ -176,22 +170,18 @@ export const Grid = <T extends {} = {}>({
             >
               {layout.cells.map((position) => {
                 const box = layout.getBox(position);
-                const item = getMosaicItem(position);
+                const tile = getGridTile(position);
 
                 return (
                   <GridCell key={serializePosition(position)} position={position} box={box} onCreate={handleCreate}>
-                    {item && (
-                      <div className='z-50'>
-                        <Tile<T>
-                          classes={classes?.tile}
-                          item={item}
-                          box={box}
-                          Content={Content}
-                          selected={item.id === selected}
-                          onClick={() => setSelected(item.id)}
-                          onDelete={onDelete}
-                        />
-                      </div>
+                    {tile && (
+                      <Tile<T>
+                        tile={tile}
+                        extrinsicSize={box.size}
+                        selected={tile.id === selected}
+                        onClick={() => setSelected(tile.id)}
+                        onDelete={onDelete}
+                      />
                     )}
                   </GridCell>
                 );

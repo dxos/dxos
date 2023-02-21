@@ -7,32 +7,29 @@ import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
 
-import { MosaicItem } from '../../props';
 import { createItem } from '../../testing';
-import { Stack } from './Stack';
+import { Stack, StackTile } from './Stack';
 
 faker.seed(100);
 
-const num = 4;
+const num = 12;
 
 const Test = () => {
-  const [items] = useState<MosaicItem[]>(() => {
+  const [tiles] = useState<StackTile[]>(() => {
     return range(num).map(() => {
       return createItem();
     });
   });
 
-  return <Stack items={items} />;
+  return <Stack tiles={tiles} />;
 };
 
 export default {
   component: Stack,
   decorators: [
     (Story: any) => (
-      <div className='flex flex-col items-center h-screen w-full bg-white'>
-        <div className='w-[500px]'>
-          <Story />
-        </div>
+      <div className='w-[500px] mli-auto bg-neutral-50'>
+        <Story />
       </div>
     )
   ],

@@ -3,4 +3,4 @@
 //
 
 export * from './2d';
-export * from './MosaicItem';
+export * from './Tile';
