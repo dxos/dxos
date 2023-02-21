@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/halo-app"
+    },
+    {
       "path": "../../apps/patterns/assets"
     },
     {
