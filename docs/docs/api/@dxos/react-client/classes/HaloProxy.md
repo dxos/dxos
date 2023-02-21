@@ -17,7 +17,7 @@ Arguments:
 ## Properties
 ### [invitationsUpdate]()
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
-### [profileChanged]()
+### [identityChanged]()
 Type: <code>Event&lt;void&gt;</code>
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
@@ -123,7 +123,7 @@ Get set of authenticated devices.
 Returns: <code>ObservableProvider&lt;DeviceEvents, DeviceInfo[]&gt;</code>
 
 Arguments: none
-### [recoverProfile(seedPhrase)]()
+### [recoverIdentity(seedPhrase)]()
 
 
 Joins an existing identity HALO from a recovery seed phrase.
@@ -143,7 +143,7 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-### [subscribeToProfile(callback)]()
+### [subscribeToIdentity(callback)]()
 
 
 Returns: <code>function</code>

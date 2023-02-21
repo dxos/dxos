@@ -53,8 +53,8 @@ export interface Halo {
   get identity(): Identity | undefined;
   get invitations(): CancellableInvitationObservable[];
   createIdentity(options?: CreateIdentityOptions): Promise<Identity>;
-  recoverProfile(seedPhrase: string): Promise<Identity>;
-  subscribeToProfile(callback: (profile: Identity) => void): void;
+  recoverIdentity(seedPhrase: string): Promise<Identity>;
+  subscribeToIdentity(callback: (profile: Identity) => void): void;
 
   queryDevices(): Observable<DeviceEvents, DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
@@ -70,7 +70,7 @@ export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
-  public readonly profileChanged = new Event(); // TODO(burdon): Move into Identity object.
+  public readonly identityChanged = new Event(); // TODO(burdon): Move into Identity object.
 
   private _invitations: CancellableInvitationObservable[] = [];
   private _invitationProxy?: HaloInvitationsProxy;
@@ -114,7 +114,7 @@ export class HaloProxy implements Halo {
    * Allocate resources and set-up internal subscriptions.
    */
   async open() {
-    const gotProfile = this.profileChanged.waitForCount(1);
+    const gotIdentity = this.identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
     assert(this._serviceProvider.services.HaloInvitationsService, 'HaloInvitationsService not available');
@@ -125,7 +125,7 @@ export class HaloProxy implements Halo {
     const profileStream = this._serviceProvider.services.IdentityService.subscribeIdentity();
     profileStream.subscribe((data) => {
       this._identity = data.identity;
-      this.profileChanged.emit();
+      this.identityChanged.emit();
     });
 
     this._subscriptions.add(() => profileStream.close());
@@ -138,7 +138,7 @@ export class HaloProxy implements Halo {
 
     // this._subscriptions.add(() => contactsStream.close());
 
-    await Promise.all([gotProfile]);
+    await Promise.all([gotIdentity]);
   }
 
   /**
@@ -154,8 +154,8 @@ export class HaloProxy implements Halo {
   /**
    * @deprecated
    */
-  subscribeToProfile(callback: (profile: Identity) => void): () => void {
-    return this.profileChanged.on(() => callback(this._identity!));
+  subscribeToIdentity(callback: (profile: Identity) => void): () => void {
+    return this.identityChanged.on(() => callback(this._identity!));
   }
 
   /**
@@ -196,7 +196,7 @@ export class HaloProxy implements Halo {
   /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
-  async recoverProfile(seedPhrase: string) {
+  async recoverIdentity(seedPhrase: string) {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     this._identity = await this._serviceProvider.services.IdentityService.recoverIdentity({
       seedPhrase

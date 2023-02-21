@@ -213,7 +213,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
-    // this._halo.profileChanged.emit(); // TODO(burdon): Triggers failure in hook.
+    // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
 

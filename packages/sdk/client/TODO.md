@@ -1,6 +1,6 @@
 # Client API Clean-up
 
-- createIdentity => createIdentity (also recoverProfile)
+- createIdentity => createIdentity (also recoverIdentity)
 - services.IdentityService (and protos)
 - get vs queries (and ResultSet)
 - open/close (async) vs. initialize/destroy
