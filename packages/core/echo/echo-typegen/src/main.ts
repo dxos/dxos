@@ -15,7 +15,7 @@ const main = (source: string, out: string) => {
   root.loadSync(source);
 
   const builder = new SourceBuilder();
-  builder.push('//').push(`// Generated from ${source}`).push('//').nl();
+  builder.push('/**').push(` * @generated @dxos/echo-typegen ${source}`).push(' **/').nl();
   generate(builder, root);
 
   mkdirSync(path.dirname(out), { recursive: true });

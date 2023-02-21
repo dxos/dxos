@@ -4,6 +4,9 @@
 
 import * as pb from 'protobufjs';
 
+import { DocumentModel } from '@dxos/document-model';
+import { TextModel } from '@dxos/text-model';
+
 import { TypeFilter } from './database';
 import { strip } from './util';
 
@@ -22,6 +25,7 @@ export type EchoType =
   | {
       kind: 'ref';
       objectType: string;
+      modelType: string;
     }
   | {
       kind: 'array';
@@ -38,6 +42,8 @@ export type EchoSchemaField = {
   type: EchoType;
 };
 
+const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'TextObject';
+
 const getFields = (type: pb.Type): EchoSchemaField[] => {
   type.fieldsArray.forEach((field) => field.resolve());
 
@@ -46,8 +52,18 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
       if (type instanceof pb.Enum) {
         return { kind: 'enum', enumType: type.fullName.slice(1) };
       } else if (type instanceof pb.Type) {
-        if (type.options && type.options['(object)']) {
-          return { kind: 'ref', objectType: type.fullName.slice(1) };
+        if (isTextObject(type.fullName)) {
+          return {
+            kind: 'ref',
+            objectType: type.fullName.slice(1),
+            modelType: TextModel.meta.type
+          };
+        } else if (type.options && type.options['(object)']) {
+          return {
+            kind: 'ref',
+            objectType: type.fullName.slice(1),
+            modelType: DocumentModel.meta.type
+          };
         } else {
           return { kind: 'record', objectType: type.fullName.slice(1) };
         }
@@ -152,7 +168,7 @@ export class EchoSchema {
   // prettier-ignore
   constructor(
     private readonly _root: pb.Root
-  ) {}
+  ) { }
 
   get types() {
     return Array.from(this._prototypes.keys()).map((name) => this.getType(name));
