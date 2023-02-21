@@ -36,6 +36,9 @@ export const FrameSelector: FC = () => {
   const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useAppRouter();
   const maxTabs = 8; // TODO(burdon): Media query?
+  if (!space) {
+    return null;
+  }
 
   return (
     <div className='flex flex-col-reverse w-full'>
@@ -50,7 +53,7 @@ export const FrameSelector: FC = () => {
                 selected={decodeFrame(id!) === currentFrame?.module.id}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createPath({ spaceKey: space!.key, frame: id })}
+                link={createPath({ spaceKey: space.key, frame: id })}
                 compact={activeFrames.length > maxTabs}
               />
             ))}
@@ -61,7 +64,7 @@ export const FrameSelector: FC = () => {
             selected={section === Section.REGISTRY}
             label='Registry'
             Icon={Globe}
-            link={createPath({ spaceKey: space!.key, section: Section.REGISTRY })}
+            link={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
             compact={activeFrames.length > maxTabs}
           />
         </div>

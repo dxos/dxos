@@ -11,6 +11,7 @@ import { useClient, useIdentity, useSpaces } from '@dxos/react-client';
 
 import { oncePerWindow } from './once';
 import { defaultFrameId, FrameDef, useFrames } from './useFrames';
+
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',

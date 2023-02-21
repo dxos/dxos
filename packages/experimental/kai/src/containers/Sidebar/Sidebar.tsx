@@ -13,7 +13,15 @@ import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useAppState, useTheme, useShell, createInvitationPath, useAppRouter, createPath } from '../../hooks';
+import {
+  useAppState,
+  useTheme,
+  useShell,
+  createInvitationPath,
+  useAppRouter,
+  createPath,
+  defaultFrameId
+} from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
@@ -55,7 +63,7 @@ export const Sidebar = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
-    navigate(createPath({ spaceKey: space.key }));
+    navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
   const handleJoinSpace = () => {

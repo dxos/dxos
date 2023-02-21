@@ -6,7 +6,7 @@ import { CaretRight } from 'phosphor-react';
 import React, { useContext } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
@@ -46,13 +46,9 @@ const Toolbar = () => {
  */
 const SpacePage = () => {
   useGenerator();
-  const { t } = useTranslation('kai');
   const { active } = useFrames();
   const { section } = useParams();
   const { space, frame } = useAppRouter();
-  if (!space) {
-    return null;
-  }
 
   return (
     <PanelSidebarProvider
@@ -67,13 +63,11 @@ const SpacePage = () => {
       <Toolbar />
 
       {/* Main content. */}
-      {space ? (
+      {space && (
         <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
           {section === Section.REGISTRY && <FrameRegistry />}
           {frame && <FrameContainer frame={frame} />}
         </div>
-      ) : (
-        <div className='flex justify-center pbs-4'>{t('select a space')}</div>
       )}
     </PanelSidebarProvider>
   );

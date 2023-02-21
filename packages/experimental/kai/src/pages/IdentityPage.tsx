@@ -26,6 +26,11 @@ const IdentityPage = () => {
   const invitations = useHaloInvitations();
   const { space } = useAppRouter();
 
+  const handleDone = () => {
+    // TODO(burdon): Create space if doesn't exist.
+    navigate(createPath({ spaceKey: space!.key, frame: defaultFrameId }));
+  };
+
   const handleCreateInvitation = useCallback(() => {
     client.halo.createInvitation();
   }, []);
@@ -45,11 +50,7 @@ const IdentityPage = () => {
               <Plus className={getSize(5)} />
               {t('add device label')}
             </Button>
-            <Button
-              variant='primary'
-              onClick={() => navigate(createPath({ spaceKey: space!.key, frame: defaultFrameId }))}
-              className='flex gap-1 items-center'
-            >
+            <Button variant='primary' className='flex gap-1 items-center' onClick={handleDone}>
               <span>{t('back to app label')}</span>
               <XCircle className={getSize(5)} />
             </Button>
