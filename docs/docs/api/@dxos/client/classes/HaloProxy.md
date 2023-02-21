@@ -23,10 +23,10 @@ Type: <code>Event&lt;void&gt;</code>
 Type: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]</code>
 ### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L109)
 Type: <code>boolean</code>
-### [profile](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L83)
+### [identity](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L83)
 Type: <code>undefined | [Identity](/api/@dxos/client/interfaces/Identity)</code>
 
-User profile info.
+User identity info.
 
 ## Methods
 ### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L86)
@@ -70,7 +70,7 @@ Arguments:
 
 Create Identity.
 Add Identity key if public and secret key are provided.
-Then initializes profile with given display name.
+Then initializes identity with given display name.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
 
