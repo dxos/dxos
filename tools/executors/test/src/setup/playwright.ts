@@ -30,7 +30,7 @@ export const mochaHooks: MochaHooks & Partial<TestsContext> = {
         : undefined
     };
 
-    if (process.env.INCOGNITO === 'false') {
+    if (process.env.INCOGNITO === 'true') {
       const browser = await getBrowser(process.env.MOCHA_ENV as BrowserType).launch(options);
       this.browser = browser;
     } else {

@@ -24,8 +24,10 @@ export class ExtensionManager {
 
     const { page, context } = await setupPage(this.mochaContext, { bridgeLogs: true });
 
+    debugger;
+
     this.extensionId = await asyncTimeout(extensionId(context), 30_000);
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.goto(`chrome-extension://${this.extensionId}/popup.html`);
 
     await page.waitForSelector('body');
 
@@ -43,6 +45,8 @@ describe('Basic test', () => {
 
   test('our extension loads', async () => {
     await extensionManager.init();
-    expect(extensionManager.page.locator('body')).to.equal('my-extension popup');
+    expect(await extensionManager.page.locator('body').textContent()).to.include(
+      'Open the DXOS Developer Tools extension.'
+    );
   });
 });

@@ -17,11 +17,10 @@
         "buildTarget": "devtools-extension:bundle",
         "coveragePath": "coverage/packages/devtools/devtools-extension",
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "headless": false,
+        "incognito": false,
         "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
         "playwright": true,
         "resultsPath": "test-results/packages/devtools/devtools-extension",
-        "stayOpen": true,
         "testPatterns": [
           "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
         ],
