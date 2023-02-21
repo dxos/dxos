@@ -2207,6 +2207,7 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hello-template': workspace:*
@@ -2256,6 +2257,7 @@ importers:
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/hello-template': link:../../apps/templates/hello-template

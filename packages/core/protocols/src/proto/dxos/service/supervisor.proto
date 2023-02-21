@@ -1,0 +1,74 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "dxos/config.proto";
+import "dxos/halo/credentials.proto";
+
+package dxos.service.supervisor;
+
+option go_package = "github.com/dxos/kube/supervisor/core";
+
+enum Status {
+  STARTED = 0;
+  STOPPED = 1;
+  FAILED  = 2;
+}
+
+enum Type {
+  PROCESS = 0;
+  SERVICE = 1;
+}
+
+// Service record.
+message Service {
+  string name = 1;
+  Status status = 2;
+  repeated string addresses = 4;
+  Type type = 5;
+}
+
+// .well-known endpoint.
+message Services {
+  repeated Service services = 1;
+}
+
+message ConfigPair {
+  string key = 1;
+  string value = 2;
+}
+
+message GetConfigResponse {
+  dxos.config.Config config = 1;
+}
+
+message SetConfigRequest {
+  ConfigPair config = 1;
+}
+
+message SetConfigResponse {
+  ConfigPair config = 1;
+}
+
+message InitAuthSequenceResponse {
+  bytes nonce = 1;
+}
+
+message AuthenticateRequest {
+  dxos.halo.credentials.Presentation presentation = 1;
+}
+
+message AuthenticateResponse {
+  string token = 1;
+}
+
+service Supervisor {
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  rpc InitAuthSequence(google.protobuf.Empty) returns (InitAuthSequenceResponse);
+  rpc GetConfig(google.protobuf.Empty) returns (GetConfigResponse);
+  rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
+  rpc Status(google.protobuf.Empty) returns (Services);
+}
