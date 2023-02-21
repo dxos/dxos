@@ -12,7 +12,7 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
-  test('creates a profile', async () => {
+  test('creates a identity', async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });

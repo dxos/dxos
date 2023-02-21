@@ -23,10 +23,10 @@ Type: <code>Event&lt;void&gt;</code>
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
 ### [opened]()
 Type: <code>boolean</code>
-### [profile]()
+### [identity]()
 Type: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
 
-User profile info.
+User identity info.
 
 ## Methods
 ### [\[custom\]()]()
@@ -70,7 +70,7 @@ Arguments:
 
 Create Identity.
 Add Identity key if public and secret key are provided.
-Then initializes profile with given display name.
+Then initializes identity with given display name.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
 
@@ -78,7 +78,7 @@ Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity
 
 Arguments: 
 
-`options`: <code>CreateProfileOptions</code>
+`options`: <code>CreateIdentityOptions</code>
 ### [open()]()
 
 

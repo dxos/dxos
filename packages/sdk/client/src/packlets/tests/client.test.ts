@@ -111,11 +111,11 @@ const runTest = async (testBuilder: TestBuilder) => {
   const displayName = 'test-user';
 
   {
-    // Create profile.
+    // Create identity.
     await client.initialize();
     expect(client.halo.identity).not.to.exist;
-    const profile = await client.halo.createIdentity({ displayName });
-    expect(client.halo.identity).to.deep.eq(profile);
+    const identity = await client.halo.createIdentity({ displayName });
+    expect(client.halo.identity).to.deep.eq(identity);
     await client.destroy();
   }
 

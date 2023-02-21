@@ -9,7 +9,7 @@ The word kai (貝) is the Japanese word for shell.
 pnpm nx serve kai
 ```
 
-To run with automatic profile creation and simplified invitation flows:
+To run with automatic identity creation and simplified invitation flows:
 
 ```bash
 VITE_DEV=1 pnpm nx serve kai

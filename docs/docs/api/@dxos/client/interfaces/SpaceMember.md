@@ -8,7 +8,7 @@ Defined in:
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 ### [presence]()
 Type: <code>[PresenceState](/api/@dxos/client/enums#PresenceState)</code>
-### [profile]()
+### [identity]()
 Type: <code>[Identity](/api/@dxos/client/interfaces/Identity)</code>
 
 Options:

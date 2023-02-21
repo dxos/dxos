@@ -4,24 +4,24 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { Identity as ProfileType } from '@dxos/client';
+import { Identity as IdentityType } from '@dxos/client';
 import { Avatar, Popover } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface ProfileMenuProps {
-  profile: ProfileType;
+  identity: IdentityType;
 }
 
 export const ProfileMenu = (props: PropsWithChildren<ProfileMenuProps>) => {
-  const { profile } = props;
+  const { identity } = props;
   return (
     <Popover
       openTrigger={
         <Avatar
           size={10}
           variant='circle'
-          fallbackValue={profile.identityKey.toHex()}
-          label={profile.displayName ?? humanize(profile.identityKey.toHex())}
+          fallbackValue={identity.identityKey.toHex()}
+          label={identity.displayName ?? humanize(identity.identityKey.toHex())}
         />
       }
       slots={{

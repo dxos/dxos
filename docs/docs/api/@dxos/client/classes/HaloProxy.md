@@ -78,8 +78,13 @@ Returns: <code>Promise&lt;[Identity](/api/@dxos/client/interfaces/Identity)&gt;<
 
 Arguments: 
 
+<<<<<<< HEAD
 `options`: <code>CreateProfileOptions</code>
 ### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L116)
+=======
+`options`: <code>CreateIdentityOptions</code>
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L99)
+>>>>>>> 6bb442d38 (Rename identity -> profile)
 
 
 Allocate resources and set-up internal subscriptions.
