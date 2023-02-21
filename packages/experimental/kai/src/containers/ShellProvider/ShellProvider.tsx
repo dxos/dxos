@@ -45,7 +45,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
       layout: identity ? ShellLayout.DEFAULT : ShellLayout.AUTH,
       invitationCode: haloInvitationCode ?? undefined
     });
-  }, []);
+  }, [config, identity, spaceInvitationCode, haloInvitationCode]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
