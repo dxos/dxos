@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug } from 'phosphor-react';
-import React, { FC, ReactNode } from 'react';
+import defaultsDeep from 'lodash.defaultsdeep';
+import { Bug, List } from 'phosphor-react';
+import React, { createContext, FC, ReactNode, useContext } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';
 
@@ -11,83 +12,150 @@ const Frame: FC<{ children: ReactNode; className?: string }> = ({ children, clas
   return <div className={mx('flex flex-col absolute top-0 bottom-0 left-0 right-0', className)}>{children}</div>;
 };
 
+const GroupContext = createContext<{ compact?: boolean }>({ compact: false });
+
+const useGroupContext = (defaults: { compact?: boolean }) => {
+  const props = useContext(GroupContext) ?? {};
+  return defaultsDeep({}, defaults, props);
+};
+
 export default {
   component: Frame
 };
 
 const Stripe: FC<{ compact?: boolean; length?: number; row?: number }> = ({ compact, length = 16, row = 0 }) => {
-  const classNames = compact ? 'w-[32px] h-[32px]' : 'w-[40px] h-[40px]';
+  const props = useGroupContext({ compact });
+  const classNames = props.compact ? 'w-[32px] h-[32px]' : 'w-[40px] h-[40px]';
+
   return (
     <div className='flex w-full items-center'>
       {Array.from({ length }).map((_, i) => (
-        <div key={i} className={mx('flex ', classNames, (i + row) % 2 === 0 ? ' bg-slate-100' : 'bg-slate-200')} />
+        <div key={i} className={mx('flex ', classNames, (i + row) % 2 === 0 ? ' bg-sky-50' : 'bg-sky-100')} />
       ))}
     </div>
   );
 };
 
-const IconButton: FC<{ className?: string }> = ({ className }) => (
-  <button className='flex shrink-0 justify-center items-center w-[40px] h-[40px] bg-slate-400'>
-    <Bug className={getSize(6)} />
-  </button>
-);
+//
+// Controls
+//
 
-const Checkbox: FC<{ className?: string }> = ({ className }) => (
-  <div className='flex shrink-0 justify-center items-center w-[40px] h-[40px] bg-slate-400'>
-    <input type='checkbox' />
-  </div>
-);
+const Button: FC<{ compact?: boolean; size?: number; className?: string; children?: ReactNode }> = ({
+  compact,
+  size,
+  className,
+  children
+}) => {
+  const props = useGroupContext({ compact });
 
-const Input: FC<{ className?: string }> = ({ className }) => (
-  <input type='text' autoFocus className={mx('flex shrink-0 leading-4 p-2', className)} />
-);
+  return (
+    <button
+      style={size ? { width: size * (props.compact ? 32 : 40) } : {}}
+      className={mx(
+        'flex shrink-0 justify-center items-center bg-slate-400',
+        props.compact ? 'p-0.5' : 'p-1.5',
+        className
+      )}
+    >
+      {children}
+    </button>
+  );
+};
 
-const Select: FC<{ className?: string }> = ({ className }) => (
-  <select className={mx('flex shrink-0 leading-4 p-2.5', className)}>
-    <option>1</option>
-    <option>2</option>
-    <option>3</option>
-  </select>
-);
+const IconButton: FC<{ compact?: boolean; className?: string; children?: ReactNode }> = ({
+  compact,
+  className,
+  children
+}) => {
+  const props = useGroupContext({ compact });
+
+  return (
+    <button
+      className={mx(
+        'flex shrink-0 justify-center items-center bg-slate-400',
+        props.compact ? 'w-[32px] h-[32px]' : 'w-[40px] h-[40px]',
+        className
+      )}
+    >
+      {children}
+    </button>
+  );
+};
+
+const Checkbox: FC<{ compact?: boolean; className?: string }> = ({ compact, className }) => {
+  const props = useGroupContext({ compact });
+
+  return (
+    <div
+      className={mx(
+        'flex shrink-0 justify-center items-center',
+        props.compact ? 'w-[32px] h-[32px]' : 'w-[40px] h-[40px]',
+        className
+      )}
+    >
+      <input type='checkbox' />
+    </div>
+  );
+};
+
+const Input: FC<{ compact?: boolean; size?: number; className?: string }> = ({ compact, size, className }) => {
+  const props = useGroupContext({ compact });
+
+  return (
+    <input
+      type='text'
+      autoFocus
+      placeholder='Text'
+      style={size ? { width: size * (props.compact ? 32 : 40) } : {}}
+      className={mx('flex shrink-0 leading-4', props.compact ? 'p-1' : 'p-2', className)}
+    />
+  );
+};
+
+const Select: FC<{ compact?: boolean; size?: number; className?: string }> = ({ compact, size, className }) => {
+  const props = useGroupContext({ compact });
+
+  return (
+    <select
+      style={size ? { width: size * (props.compact ? 32 : 40) } : {}}
+      className={mx('flex shrink-0 leading-4', props.compact ? 'p-1.5' : 'p-2.5', className)}
+    >
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+    </select>
+  );
+};
+
+//
+// Stories
+//
 
 export const Controls = () => {
   return (
-    <Frame>
-      <div className='flex flex-col m-4'>
-        <Stripe />
+    <Frame className='bg-neutral-100'>
+      {[false, true].map((compact, i) => (
+        <div key={i} className='flex flex-col m-4'>
+          <GroupContext.Provider value={{ compact }}>
+            <Stripe />
 
-        <div className='flex h-[40px] items-center'>
-          <IconButton />
-          <Checkbox />
-          <Input className='w-[280px]' />
-          <Select className='w-[240px]' />
-          <IconButton />
+            <div className='flex items-center'>
+              <IconButton>
+                <Bug className={getSize(6)} />
+              </IconButton>
+              <Checkbox />
+              <Input size={7} />
+              <Button size={2}>Test</Button>
+              <Select size={4} />
+              <IconButton>
+                <List className={getSize(6)} />
+              </IconButton>
+            </div>
+
+            <Stripe row={1} />
+          </GroupContext.Provider>
         </div>
-
-        <Stripe row={1} />
-      </div>
-
-      <div className='flex flex-col m-4'>
-        <Stripe compact />
-
-        {/* TODO(burdon): Auto size from context? */}
-        <div className='flex h-[40px] items-center'>
-          <IconButton />
-          <Checkbox />
-          <Input className='w-[280px]' />
-          <Select className='w-[240px]' />
-          <IconButton />
-        </div>
-
-        <Stripe compact row={1} />
-      </div>
-
-      {/* TODO(burdon): Create grid overlay. */}
-      <div className='flex flex-col m-4'>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Stripe key={i} compact row={i} />
-        ))}
-      </div>
+      ))}
     </Frame>
   );
 };

@@ -2866,7 +2866,6 @@ importers:
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@types/d3': ^7.1.0
-      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       assert: ^2.0.0
@@ -2889,7 +2888,6 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/react-components': link:../../common/react-components
       '@types/d3': 7.4.0
-      '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -2985,6 +2983,7 @@ importers:
       '@types/d3': ^7.1.0
       '@types/faker': ^5.5.9
       '@types/leaflet': ^1.9.0
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-big-calendar': ^0.38.3
       '@types/react-color': ^3.0.6
@@ -3003,6 +3002,7 @@ importers:
       faker: ^5.5.3
       ipfs-http-client: ~56.0.1
       leaflet: ^1.9.3
+      lodash.defaultsdeep: ^4.6.1
       mobile-detect: ^1.4.5
       monaco-editor: ^0.25.0
       node-fetch: ^2.6.0
@@ -3085,6 +3085,7 @@ importers:
       date-fns: 2.29.3
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       leaflet: 1.9.3
+      lodash.defaultsdeep: 4.6.1
       mobile-detect: 1.4.5
       node-fetch: 2.6.7
       openai: 3.1.0
@@ -3121,6 +3122,7 @@ importers:
       '@types/d3': 7.4.0
       '@types/faker': 5.5.9
       '@types/leaflet': 1.9.0
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-big-calendar': 0.38.3
       '@types/react-color': 3.0.6
