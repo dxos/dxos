@@ -11,8 +11,6 @@ Type: "https://halo.dxos.org/vault.html"
 Type: "dxos:app"
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/react-client/types/ConvertVisitors)
-### [`DELETED`]()
-Type: "__deleted"
 ### [`EXPECTED_CONFIG_VERSION`]()
 Type: "1"
 ### [`SPACE_ITEM_TYPE`]()
@@ -27,13 +25,7 @@ Type: unique symbol
 Type: unique symbol
 ### [`defaultConfig`]()
 Type: ConfigProto
-### [`deleted`]()
-Type: unique symbol
-### [`id`]()
-Type: unique symbol
 ### [`proxy`]()
 Type: unique symbol
 ### [`schema`]()
-Type: unique symbol
-### [`type`]()
 Type: unique symbol

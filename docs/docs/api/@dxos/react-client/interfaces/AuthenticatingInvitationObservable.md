@@ -3,3 +3,5 @@
 
 Cancelable observer that relays authentication requests.
 ## Properties
+### [value]()
+Type: <code>unknown</code>

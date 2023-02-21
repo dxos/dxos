@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.26](https://github.com/dxos/dxos/compare/v0.1.25...v0.1.26) (2023-02-21)
+
+
+### Bug Fixes
+
+* Text model sync ([#2548](https://github.com/dxos/dxos/issues/2548)) ([769c25b](https://github.com/dxos/dxos/commit/769c25bc7de81cedec5df4ab799c2bce223cc405))
+
+## [0.1.25](https://github.com/dxos/dxos/compare/v0.1.24...v0.1.25) (2023-02-19)
+
+
+### Bug Fixes
+
+* **echo-typegen:** publish ([#2536](https://github.com/dxos/dxos/issues/2536)) ([0ec7eb3](https://github.com/dxos/dxos/commit/0ec7eb3422ba971518503d2ca9921dd8865c047d))
+
 ## [0.1.24](https://github.com/dxos/dxos/compare/v0.1.23...v0.1.24) (2023-02-18)
 
 

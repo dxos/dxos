@@ -25,15 +25,19 @@ const client = new Client();
 
 Optionally, the client can be given a custom configuration via the `config` property.
 
-:::details Custom configuration example
+\:::details Custom configuration example
 
 ```ts file=./snippets/create-client-with-options.ts#L5-
+import { Client, Config } from '@dxos/client';
+
+const client = new Client({
+  config: new Config({
     // ...
   })
 });
 ```
 
-:::
+\:::
 
 For more configuration recipes see [configuration examples](config).
 
