@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Context as MochaContext } from 'mocha';
 import { expect } from 'chai';
+import type { Context as MochaContext } from 'mocha';
 import { Page } from 'playwright';
 
-import { beforeAll, describe, setupPage, test, extensionId } from '@dxos/test';
 import { asyncTimeout } from '@dxos/async';
+import { beforeAll, describe, setupPage, test, extensionId } from '@dxos/test';
 
 export class ExtensionManager {
   extensionId!: string;
@@ -24,7 +24,6 @@ export class ExtensionManager {
 
     const { page, context } = await setupPage(this.mochaContext, { bridgeLogs: true });
 
-    debugger;
     this.extensionId = await asyncTimeout(extensionId(context), 30_000);
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
 
