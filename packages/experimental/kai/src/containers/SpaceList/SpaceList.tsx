@@ -8,8 +8,7 @@ import React, { ReactNode } from 'react';
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { withReactor } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
-import { humanize } from '@dxos/util';
+import { Button, getSize, Input, mx } from '@dxos/react-components';
 
 import { getThemeClasses, useAppRouter } from '../../hooks';
 
@@ -35,28 +34,36 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
   // TODO(burdon): Use List.
   return (
     <div
+      // style={{ marginTop: -1 }}
       className={mx(
-        'flex flex-col overflow-hidden mt-2 mx-2 border',
+        'flex flex-col overflow-hidden border first:mt-0 mt-[-1px]',
         'hover:bg-selection-hover',
-        selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
+        selected && 'z-10 hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >
       <div className={mx('flex w-full overflow-hidden px-0 items-center')}>
         <div
-          className='flex flex-1 overflow-hidden font-mono cursor-pointer'
+          className='flex flex-1 items-center overflow-hidden cursor-pointer'
           onClick={() => onAction(SpaceItemAction.SELECT)}
         >
           <div className={mx('flex m-2', selected && 'text-selection-text')}>
             <Icon className={getSize(6)} />
           </div>
 
-          {/* TODO(burdon): Use <Input />. */}
-          <input
-            className='w-full bg-transparent px-2 mr-2'
-            value={space.properties.name ?? humanize(space.key)}
-            spellCheck={false}
+          <Input
+            variant='subdued'
+            value={space.properties.name}
             onChange={(event) => {
               space.properties.name = event.target.value;
+            }}
+            label='Title'
+            placeholder='Space title.'
+            slots={{
+              label: { className: 'sr-only' },
+              input: { autoFocus: !space.properties.name?.length },
+              root: {
+                className: 'm-0'
+              }
             }}
           />
         </div>
@@ -106,7 +113,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col flex-1 overflow-hidden m-2'>
       {spaces.map((space) => (
         <SpaceItem
           key={space.key.toHex()}
