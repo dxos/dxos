@@ -21,7 +21,11 @@ export class TextObject extends EchoObject<TextModel> {
     return this._model;
   }
 
-  override toString() {
-    return this._model?.textContent || '';
+  protected override async _onBind(): Promise<void> {
+    this._model.initialize();
+    // TODO(dmaretskyi): Unsubscribe.
+    this._item!.subscribe(() => {
+      this._model.initialize();
+    });
   }
 }

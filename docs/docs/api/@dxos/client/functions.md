@@ -42,6 +42,22 @@ Generate bip39 seed phrase (aka mnemonic).
 Returns: <code>string</code>
 
 Arguments: none
+### [isDocument(object)]()
+
+
+Returns: <code>object is [DocumentBase](/api/@dxos/client/classes/DocumentBase)</code>
+
+Arguments: 
+
+`object`: <code>any</code>
+### [isReferenceLike(value)]()
+
+
+Returns: <code>value is object</code>
+
+Arguments: 
+
+`value`: <code>any</code>
 ### [strip(obj)]()
 
 

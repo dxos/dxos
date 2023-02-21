@@ -1,5 +1,5 @@
 # Class `EchoSchemaType`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:10]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:28]()</sub>
 
 
 Wraps protocol generated type.
@@ -18,6 +18,8 @@ Arguments:
 ### [fields]()
 Type: <code>[EchoSchemaField](/api/@dxos/react-client/types/EchoSchemaField)[]</code>
 ### [name]()
+Type: <code>string</code>
+### [shortName]()
 Type: <code>string</code>
 
 ## Methods

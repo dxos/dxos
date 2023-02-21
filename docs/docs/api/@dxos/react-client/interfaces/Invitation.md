@@ -1,5 +1,5 @@
 # Interface `Invitation`
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/client/services.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client/services.d.ts`]()
 
 Represents the invitation state passed between client and service.
 

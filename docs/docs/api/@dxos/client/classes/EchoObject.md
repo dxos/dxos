@@ -1,17 +1,19 @@
 # Class `EchoObject`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:8]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:9]()</sub>
 
 
 Base class for all echo objects.
 Can carry different models.
 
 ## Constructors
-### [constructor()]()
+### [constructor(modelConstructor)]()
 
 
 Returns: <code>[EchoObject](/api/@dxos/client/classes/EchoObject)&lt;T&gt;</code>
 
-Arguments: none
+Arguments: 
+
+`modelConstructor`: <code>ModelConstructor&lt;T&gt;</code>
 
 ## Properties
 ### [[base]]()
@@ -22,12 +24,35 @@ Proxied object.
 Type: <code>undefined | [EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</code>
 
 Database reference if bound.
-### [[id]]()
+### [id]()
 Type: <code>string</code>
 
 ID accessor.
 
 ## Methods
+### [_getState()]()
+
+
+Returns: <code>StateOf&lt;T&gt;</code>
+
+Arguments: none
+### [_isPersisted()]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+### [_mutate(mutation)]()
+
+
+Perform mutation on this object's state.
+Mutation is applied optimistically: calls to _getState() will return mutated state.
+
+Returns: <code>undefined | MutateResult</code>
+
+Arguments: 
+
+`mutation`: <code>MutationOf&lt;T&gt;</code>
 ### [_onBind()]()
 
 

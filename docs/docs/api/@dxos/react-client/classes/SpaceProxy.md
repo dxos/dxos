@@ -1,11 +1,11 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:61]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _state, databaseRouter, memberKey)]()
+### [constructor(_clientServices, _modelFactory, _state, databaseRouter)]()
 
 
 Returns: <code>[SpaceProxy](/api/@dxos/react-client/classes/SpaceProxy)</code>
@@ -20,19 +20,15 @@ Arguments:
 
 `databaseRouter`: <code>[DatabaseRouter](/api/@dxos/react-client/classes/DatabaseRouter)</code>
 
-`memberKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
-
 ## Properties
 ### [invitationsUpdate]()
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
 ### [stateUpdate]()
 Type: <code>Event&lt;void&gt;</code>
-### [database]()
-Type: <code>[Database](/api/@dxos/react-client/classes/Database)</code>
-### [experimental]()
-Type: <code>Experimental</code>
-
-Next-gen database.
+### [db]()
+Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
+### [internal]()
+Type: <code>Internal</code>
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
 ### [isActive]()
@@ -42,15 +38,7 @@ Type: <code>boolean</code>
 ### [key]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [properties]()
-Type: <code>ObjectProperties</code>
-### [reduce]()
-Type: <code>function</code>
-
-Returns a selection context, which can be used to traverse the object graph.
-### [select]()
-Type: <code>function</code>
-
-Returns a selection context, which can be used to traverse the object graph.
+Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
 
 ## Methods
 ### [_setOpen(open)]()
@@ -99,22 +87,6 @@ Arguments: none
 Returns: <code>Promise&lt;SpaceDetails&gt;</code>
 
 Arguments: none
-### [getProperty(key, \[defaultValue\])]()
-
-
-Returns: <code>any</code>
-
-Arguments: 
-
-`key`: <code>string</code>
-
-`defaultValue`: <code>any</code>
-### [getTitle()]()
-
-
-Returns: <code>never</code>
-
-Arguments: none
 ### [initialize()]()
 
 
@@ -155,21 +127,3 @@ Returns: <code>Promise&lt;void&gt;</code>
 Arguments: 
 
 `active`: <code>boolean</code>
-### [setProperty(key, \[value\])]()
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: 
-
-`key`: <code>string</code>
-
-`value`: <code>any</code>
-### [setTitle(title)]()
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: 
-
-`title`: <code>string</code>
