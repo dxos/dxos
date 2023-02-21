@@ -20,8 +20,6 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
  * https://vitejs.dev/config
  */
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
-
   server: {
     host: true,
     https:
