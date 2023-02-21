@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useIdentity, useSpaces } from '@dxos/react-client';
 
-import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 import { oncePerWindow } from './once';
+import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',

@@ -3,7 +3,7 @@
 //
 
 import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { ShellDisplay, ShellLayout } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
@@ -11,7 +11,7 @@ import { useConfig, useIdentity } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { Shell } from '@dxos/react-ui';
 
-import { createPath, ShellContext, useAppRouter } from '../../hooks';
+import { createPath, defaultFrameId, ShellContext, useAppRouter } from '../../hooks';
 
 /**
  * Renders the DXOS shell and provides a way to set the layout of the shell from the rest of the app.
@@ -19,6 +19,7 @@ import { createPath, ShellContext, useAppRouter } from '../../hooks';
 // TODO(wittjosiah): Factor out?
 export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const navigate = useNavigate();
+  const { frame } = useParams();
   const config = useConfig();
   const identity = useIdentity();
   const { space } = useAppRouter();
@@ -79,7 +80,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     }
 
     return shellRuntime.contextUpdate.on(({ display, spaceKey }) => {
-      navigate(createPath({ spaceKey }));
+      navigate(createPath({ spaceKey, frame: frame ?? defaultFrameId }));
       setDisplay(display);
     });
   }, []);
