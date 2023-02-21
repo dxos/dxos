@@ -18,22 +18,43 @@ Arguments: none
 Type: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
 
 Proxied object.
-### [_modelConstructor]()
-Type: <code>typeof TextModel</code>
 ### [[db]]()
 Type: <code>undefined | [EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 
 Database reference if bound.
-### [[id]]()
+### [doc]()
+Type: <code>undefined | Doc</code>
+### [id]()
 Type: <code>string</code>
 
 ID accessor.
-### [doc]()
-Type: <code>undefined | Doc</code>
 ### [model]()
 Type: <code>undefined | TextModel</code>
 
 ## Methods
+### [_getState()]()
+
+
+Returns: <code>Doc</code>
+
+Arguments: none
+### [_isPersisted()]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+### [_mutate(mutation)]()
+
+
+Perform mutation on this object's state.
+Mutation is applied optimistically: calls to _getState() will return mutated state.
+
+Returns: <code>undefined | MutateResult</code>
+
+Arguments: 
+
+`mutation`: <code>Mutation</code>
 ### [_onBind()]()
 
 

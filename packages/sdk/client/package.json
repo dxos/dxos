@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.24",
+  "version": "0.1.26",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,8 +17,7 @@
     "testing.d.ts",
     "testing.js",
     "dist",
-    "src",
-    "shell.css"
+    "src"
   ],
   "scripts": {
     "prebuild": "dxtype src/packlets/proto/schema.proto src/packlets/proto/gen/schema.ts"

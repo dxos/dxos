@@ -1,5 +1,5 @@
 # Interface `Module`
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/config.d.ts`]()
 
 Defined in:
    file://./../../dxos/config.proto
@@ -20,6 +20,11 @@ Type: <code>string</code>
 Options:
   - proto3_optional = true
 ### [displayName]()
+Type: <code>string</code>
+
+Options:
+  - proto3_optional = true
+### [id]()
 Type: <code>string</code>
 
 Options:

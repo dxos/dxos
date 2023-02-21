@@ -44,9 +44,6 @@
       "path": "../echo-db"
     },
     {
-      "path": "../echo-pipeline"
-    },
-    {
       "path": "../model-factory"
     },
     {

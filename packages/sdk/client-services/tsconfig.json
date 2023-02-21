@@ -59,9 +59,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
-    },
-    {
       "path": "../../core/echo/model-factory"
     },
     {
