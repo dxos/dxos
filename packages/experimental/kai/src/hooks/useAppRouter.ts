@@ -68,7 +68,7 @@ export type AppRoute = {
  * App Route:
  *  /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
  */
-// TODO(burdon): Handle invalid space key.
+// TODO(burdon): Should not create new space here -- instead on check for profile, initial space.
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
   const navigate = useNavigate();
@@ -76,7 +76,6 @@ export const useAppRouter = (): AppRoute => {
   const spaces = useSpaces();
   const identity = useIdentity();
   const { spaceKey, section, frame, objectId } = useParams();
-
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
   useEffect(() => {
@@ -84,22 +83,23 @@ export const useAppRouter = (): AppRoute => {
     if (identity && !space) {
       t = setTimeout(
         oncePerWindow('echo/first-space', async () => {
-          // TODO(burdon): Only create in dev mode.
-          console.log('creating a first space');
           const space = await client.echo.createSpace();
           const path = createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId });
-          console.log('navigating to', path);
           navigate(path);
         })
       );
     }
+
     return () => t && clearTimeout(t);
   }, [space, identity]);
 
-  // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
-  const frameId = frame ? decodeFrame(frame) : defaultFrameId;
-  const frameDef =
-    frameId && activeFrames.find((id) => id === frameId) ? frames.get(frameId) : frames.get(defaultFrameId);
+  const frameId = frame && decodeFrame(frame);
+  const frameDef = frameId
+    ? activeFrames.find((id) => id === frameId)
+      ? frames.get(frameId)
+      : frames.get(defaultFrameId)
+    : undefined;
+
   return { space, section, frame: frameDef, objectId };
 };

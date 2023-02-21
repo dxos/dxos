@@ -53,6 +53,7 @@ const SpacePage = () => {
   if (!space) {
     return null;
   }
+
   return (
     <PanelSidebarProvider
       inlineStart
