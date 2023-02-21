@@ -24,7 +24,7 @@ Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces
 ### [opened]()
 Type: <code>boolean</code>
 ### [profile]()
-Type: <code>undefined | [Profile](/api/@dxos/react-client/interfaces/Profile)</code>
+Type: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
 
 User profile info.
 
@@ -68,13 +68,13 @@ Arguments:
 ### [createProfile(\[options\])]()
 
 
-Create Profile.
+Create Identity.
 Add Identity key if public and secret key are provided.
 Then initializes profile with given display name.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
 
-Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
+Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
 
 Arguments: 
 
@@ -128,7 +128,7 @@ Arguments: none
 
 Joins an existing identity HALO from a recovery seed phrase.
 
-Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
+Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
 
 Arguments: 
 

@@ -61,7 +61,7 @@ See the [development guide](./docs/development.md).
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
-- [x] Profile.
+- [x] Identity.
 - [x] Invitations configuration.
 
 ### UX Issues.

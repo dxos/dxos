@@ -145,7 +145,7 @@ Arguments: none
 Hook returning DXOS identity object.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: <code>undefined | [Profile](/api/@dxos/react-client/interfaces/Profile)</code>
+Returns: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
 
 Arguments: 
 

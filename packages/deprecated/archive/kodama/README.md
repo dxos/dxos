@@ -35,11 +35,11 @@ To start the `kodama` CLI in interactive mode:
 Navigate the menu system using the `tab` and cursor keys.
 The currently focused panel will have a green border.
 
-### Profile
+### Identity
 
 First create a HALO profile by entering a username:
 
-`> HALO > Create Profile`
+`> HALO > Create Identity`
 
 Your keyphrase will be copied in to the clipboard.
 
@@ -57,7 +57,7 @@ Next enter some items.
 
 ### Sharing
 
-Open `kodama` in another terminal and create a new Profile.
+Open `kodama` in another terminal and create a new Identity.
 
 Using the **first** peer navigate to share the space:
 

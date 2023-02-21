@@ -38,7 +38,7 @@ const TestApp = () => {
         <JsonPanel value={client.toJSON()} />
       </div>
       <div style={{ padding: 1 }}>
-        <JsonPanel value={client.halo.profile} />
+        <JsonPanel value={client.halo.identity} />
       </div>
     </div>
   );

@@ -20,10 +20,10 @@ describe('Halo', () => {
     await client.initialize();
 
     await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
+    expect(client.halo.identity).exist;
 
     expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
-    expect(client.halo.profile?.displayName).to.equal('test-user');
+    expect(client.halo.identity?.displayName).to.equal('test-user');
   });
 
   test('device invitations', async () => {
@@ -34,7 +34,7 @@ describe('Halo', () => {
     await client1.initialize();
 
     await client1.halo.createProfile({ displayName: 'test-user' });
-    expect(client1.halo.profile).exist;
+    expect(client1.halo.identity).exist;
 
     expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
 
@@ -80,7 +80,7 @@ describe('Halo', () => {
     await client.initialize();
 
     await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
+    expect(client.halo.identity).exist;
 
     const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
 

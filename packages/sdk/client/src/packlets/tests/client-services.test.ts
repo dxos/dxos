@@ -143,8 +143,8 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.profile!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.profile!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
@@ -248,17 +248,17 @@ describe('Client services', () => {
       await waitForExpect(() => {
         expect(space.queryMembers().value).to.deep.equal([
           {
-            identityKey: client1.halo.profile!.identityKey,
+            identityKey: client1.halo.identity!.identityKey,
             profile: {
-              identityKey: client1.halo.profile!.identityKey,
+              identityKey: client1.halo.identity!.identityKey,
               displayName: 'Peer 1'
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.profile!.identityKey,
+            identityKey: client2.halo.identity!.identityKey,
             profile: {
-              identityKey: client2.halo.profile!.identityKey,
+              identityKey: client2.halo.identity!.identityKey,
               displayName: 'Peer 2'
             },
             presence: SpaceMember.PresenceState.ONLINE

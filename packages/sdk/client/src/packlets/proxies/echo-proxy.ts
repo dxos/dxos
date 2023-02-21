@@ -106,7 +106,7 @@ export class EchoProxy implements Echo {
 
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.publicKey)) {
-          await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
+          await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.identity);
           if (this._destroying) {
             return;
           }

@@ -4,7 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { Profile as ProfileType } from '@dxos/client';
+import { Identity as ProfileType } from '@dxos/client';
 import { Avatar, Popover } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 

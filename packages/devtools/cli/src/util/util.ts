@@ -64,7 +64,7 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
 export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identityKey, truncateKeys),
-    name: member.profile?.displayName
+    name: member.identity?.displayName
   }));
 };
 

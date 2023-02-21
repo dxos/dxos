@@ -113,16 +113,16 @@ const runTest = async (testBuilder: TestBuilder) => {
   {
     // Create profile.
     await client.initialize();
-    expect(client.halo.profile).not.to.exist;
+    expect(client.halo.identity).not.to.exist;
     const profile = await client.halo.createProfile({ displayName });
-    expect(client.halo.profile).to.deep.eq(profile);
+    expect(client.halo.identity).to.deep.eq(profile);
     await client.destroy();
   }
 
   {
     // Should throw trying to create another.
     await client.initialize();
-    expect(client.halo.profile).to.exist;
+    expect(client.halo.identity).to.exist;
     // TODO(burdon): Error type.
     await expect(client.halo.createProfile({ displayName })).to.be.rejected;
   }
@@ -137,7 +137,7 @@ const runTest = async (testBuilder: TestBuilder) => {
     // Start again.
     await client.initialize();
     await client.halo.createProfile({ displayName });
-    expect(client.halo.profile).to.exist;
+    expect(client.halo.identity).to.exist;
     await client.destroy();
   }
 };

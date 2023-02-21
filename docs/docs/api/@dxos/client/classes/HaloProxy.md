@@ -23,8 +23,8 @@ Type: <code>Event&lt;void&gt;</code>
 Type: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]</code>
 ### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L109)
 Type: <code>boolean</code>
-### [profile](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L100)
-Type: <code>undefined | [Profile](/api/@dxos/client/interfaces/Profile)</code>
+### [profile](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L83)
+Type: <code>undefined | [Identity](/api/@dxos/client/interfaces/Identity)</code>
 
 User profile info.
 
@@ -68,13 +68,13 @@ Arguments:
 ### [createProfile(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L169)
 
 
-Create Profile.
+Create Identity.
 Add Identity key if public and secret key are provided.
 Then initializes profile with given display name.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
 
-Returns: <code>Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;</code>
+Returns: <code>Promise&lt;[Identity](/api/@dxos/client/interfaces/Identity)&gt;</code>
 
 Arguments: 
 
@@ -128,7 +128,7 @@ Arguments: none
 
 Joins an existing identity HALO from a recovery seed phrase.
 
-Returns: <code>Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;</code>
+Returns: <code>Promise&lt;[Identity](/api/@dxos/client/interfaces/Identity)&gt;</code>
 
 Arguments: 
 

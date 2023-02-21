@@ -5,7 +5,7 @@
 import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { generateSeedPhrase, Profile } from '@dxos/client';
+import { generateSeedPhrase, Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { TextInput } from '..';
@@ -13,7 +13,7 @@ import { copyToClipboard } from '../../util';
 import { Panel } from '../util';
 
 export const CreateProfile: FC<{
-  onCreate: (profile: Profile) => void;
+  onCreate: (profile: Identity) => void;
 }> = ({ onCreate }) => {
   const client = useClient();
   const [displayName, setDisplayName] = useState<string>();

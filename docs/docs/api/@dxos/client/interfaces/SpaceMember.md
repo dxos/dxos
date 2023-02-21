@@ -9,7 +9,7 @@ Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 ### [presence]()
 Type: <code>[PresenceState](/api/@dxos/client/enums#PresenceState)</code>
 ### [profile]()
-Type: <code>[Profile](/api/@dxos/client/interfaces/Profile)</code>
+Type: <code>[Identity](/api/@dxos/client/interfaces/Identity)</code>
 
 Options:
   - proto3_optional = true

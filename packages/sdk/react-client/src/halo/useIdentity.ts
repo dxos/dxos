@@ -15,7 +15,7 @@ export const useIdentity = (options?: { login?: boolean }) => {
   const client = useClient();
   const identity = useSyncExternalStore(
     (listener) => client.halo.subscribeToProfile(() => listener()),
-    () => client.halo.profile
+    () => client.halo.identity
   );
   if (login && !identity) {
     // TODO(wittjosiah): Replace with shell display command.

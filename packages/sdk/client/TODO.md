@@ -1,7 +1,7 @@
 # Client API Clean-up
 
 - createProfile => createIdentity (also recoverProfile)
-- services.ProfileService (and protos)
+- services.IdentityService (and protos)
 - get vs queries (and ResultSet)
 - open/close (async) vs. initialize/destroy
 - deprecated getters (e.g., EchoProxy.networkManager)
