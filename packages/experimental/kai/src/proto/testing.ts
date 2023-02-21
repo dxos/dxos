@@ -150,8 +150,8 @@ export class Generator {
 
   createDocument = async () => {
     const document = createDocument();
-    await this._db.add(document);
     createTextObjectContent(document.content, 5);
+    await this._db.add(document);
     return document;
   };
 
