@@ -18,7 +18,7 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
-  test.only('presentation', async () => {
+  test('presentation', async () => {
     const config = new Config({
       version: 1,
       runtime: {

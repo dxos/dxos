@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { DocumentBase } from '@dxos/echo-schema';
+import { Document } from '@dxos/echo-schema';
 
 import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
@@ -26,7 +26,7 @@ export const Base = {
   }
 };
 
-const example = new DocumentBase(props);
+const example = new Document(props);
 
 export const Default = {
   render: DefaultTile.render,

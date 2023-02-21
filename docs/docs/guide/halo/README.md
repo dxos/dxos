@@ -17,8 +17,9 @@ HALO is a system of components for implementing decentralized identity designed 
 The HALO application also acts as a secure vault where all ECHO data is physically stored on behalf of the user and their applications. Read more about [local vault topology](../echo/#local-vault-topology).
 
 ## Features
-- Public/private key-pair authentication mechanism integrated into ECHO
-- Passwordless log in
-- Local-first credentials and key storage
-- Multi-device synchronization of identities, credentials, ECHO spaces
-- Paper-key identity recovery
+
+*   Public/private key-pair authentication mechanism integrated into ECHO
+*   Passwordless log in
+*   Local-first credentials and key storage
+*   Multi-device synchronization of identities, credentials, ECHO spaces
+*   Paper-key identity recovery

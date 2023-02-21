@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
+import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { PublicKey, useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 
@@ -15,7 +15,7 @@ import { schema } from '../../proto';
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
-type ColumnType<T extends DocumentBase> = SelectorOption & {
+type ColumnType<T extends Document> = SelectorOption & {
   columns: Column<Document>[];
   filter?: TypeFilter<any>;
   subFilter?: (match?: string) => (object: T) => boolean;

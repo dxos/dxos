@@ -5,17 +5,17 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document, DocumentBase, Filter, Query, TypeFilter } from '@dxos/echo-schema';
+import { Document, Filter, Query, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
-  <T extends DocumentBase>(space?: Space, filter?: TypeFilter<T>): T[];
-  <T extends DocumentBase>(space?: Space, filter?: Filter<T>): Document[];
+  <T extends Document>(space?: Space, filter?: TypeFilter<T>): T[];
+  <T extends Document>(space?: Space, filter?: Filter<T>): Document[];
 };
 
 /**
  * Create subscription.
  */
-export const useQuery: UseQuery = <T extends DocumentBase>(space?: Space, filter?: Filter<T>): DocumentBase[] => {
+export const useQuery: UseQuery = <T extends Document>(space?: Space, filter?: Filter<T>): Document[] => {
   const query = useMemo(
     () => space?.db.query(filter ?? {}) as Query<T> | undefined,
     [space?.db, ...filterToDepsArray(filter)]

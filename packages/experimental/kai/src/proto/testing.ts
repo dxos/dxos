@@ -11,7 +11,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Document, Event, Organization, Note, Project, Task } from './gen/schema';
+import { Contact, TextDocument, Event, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
@@ -150,8 +150,8 @@ export class Generator {
 
   createDocument = async () => {
     const document = createDocument();
-    await this._db.add(document);
     createTextObjectContent(document.content, 5);
+    await this._db.add(document);
     return document;
   };
 
@@ -241,7 +241,7 @@ export const createEvent = () => {
 };
 
 export const createDocument = () => {
-  const document = new Document();
+  const document = new TextDocument();
   document.title = faker.lorem.sentence(3);
   document.content = new TextObject();
   return document;
