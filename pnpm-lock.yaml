@@ -3457,6 +3457,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
@@ -3511,6 +3512,7 @@ importers:
       debug: 4.3.4
       lodash.isequal: 4.5.0
     devDependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6
       '@types/node': 18.11.9

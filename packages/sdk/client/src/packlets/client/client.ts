@@ -17,6 +17,7 @@ import { Status } from '@dxos/protocols/proto/dxos/client/services';
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
+import { observableFromStream } from '../util';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
@@ -187,19 +188,10 @@ export class Client {
    * Observe the system status.
    */
   queryStatus(): ZenObservable<Status> {
-    return new Concast([
-      // TODO(wittjosiah): Should codec-protobuf streams be observables?
-      //   This would make it simpler to pipe into Concast.
-      new ZenObservable((observer) => {
-        if (!this._services.services.SystemService) {
-          observer.error(new Error('SystemService is not available.'));
-          return;
-        }
+    assert(this._services.services.SystemService, 'SystemService is not available.');
 
-        this._services.services?.SystemService.queryStatus().subscribe(({ status }) => {
-          observer.next(status);
-        });
-      })
+    return new Concast([
+      observableFromStream(this._services.services.SystemService.queryStatus()).map(({ status }) => status)
     ]);
   }
 
