@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { describe, test } from '@dxos/test';
 import { DocumentModel } from '@dxos/document-model';
+import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
 
@@ -47,7 +47,7 @@ describe('schema', () => {
         subTasks: [],
         description: '',
         title: 'Task 1',
-        assignee: { '@id': contact.id },
+        assignee: { '@id': contact.id }
       })
     );
   });
