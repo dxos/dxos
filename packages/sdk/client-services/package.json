@@ -29,6 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/keyring": "workspace:*",
