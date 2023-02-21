@@ -91,7 +91,7 @@ export class TextModel extends Model<Doc, Mutation> {
     doc.on('update', cb);
     return () => {
       doc.off('update', cb);
-    }
+    };
   }
 
   private async _handleDocUpdated(update: Uint8Array, origin: any) {
