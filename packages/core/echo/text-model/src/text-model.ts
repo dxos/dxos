@@ -49,18 +49,26 @@ export class TextModel extends Model<Doc, Mutation> {
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
   };
 
+  private _unsubscribe: (() => void) | undefined;
+
   // prettier-ignore
   constructor(
     meta: ModelMeta,
     itemId: ItemID,
-    getState: () => Doc, writeStream?: MutationWriter<Mutation>
+    getState: () => Doc,
+    writeStream?: MutationWriter<Mutation>
   ) {
     super(meta, itemId, getState, writeStream);
 
-    let unsubscribe = this._subscribeToDocUpdates();
+    this.initialize();
+  }
+
+  initialize() {
+    this._unsubscribe?.();
+    this._unsubscribe = this._subscribeToDocUpdates();
     this.update.on(() => {
-      unsubscribe();
-      unsubscribe = this._subscribeToDocUpdates();
+      this._unsubscribe?.();
+      this._unsubscribe = this._subscribeToDocUpdates();
     });
   }
 
@@ -79,8 +87,11 @@ export class TextModel extends Model<Doc, Mutation> {
 
   private _subscribeToDocUpdates() {
     const cb = this._handleDocUpdated.bind(this);
-    this._getState().on('update', cb);
-    return () => this._getState().off('update', cb);
+    const doc = this._getState();
+    doc.on('update', cb);
+    return () => {
+      doc.off('update', cb);
+    };
   }
 
   private async _handleDocUpdated(update: Uint8Array, origin: any) {

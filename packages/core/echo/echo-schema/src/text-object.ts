@@ -20,4 +20,12 @@ export class TextObject extends EchoObject<TextModel> {
     this._database?._logObjectAccess(this);
     return this._model;
   }
+
+  protected override async _onBind(): Promise<void> {
+    this._model.initialize();
+    // TODO(dmaretskyi): Unsubscribe.
+    this._item!.subscribe(() => {
+      this._model.initialize();
+    });
+  }
 }
