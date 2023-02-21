@@ -26,7 +26,7 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
         .createSpace()
         .then(() => (creating.current = false))
         .catch((err) => {
-          console.error(err);
+          console.error(err); // TODO(burdon): Log.
           creating.current = false;
         });
     }

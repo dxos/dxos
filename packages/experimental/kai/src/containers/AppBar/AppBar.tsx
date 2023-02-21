@@ -4,17 +4,18 @@
 
 import { Bug, User } from 'phosphor-react';
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-import { ShellLayout, useCurrentSpace, withReactor } from '@dxos/react-client';
+import { ShellLayout, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { useShell, useTheme } from '../../hooks';
+import { useAppRouter, useShell, useTheme } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = withReactor(() => {
   const theme = useTheme();
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
   const shell = useShell();
 
   return (
@@ -28,10 +29,12 @@ export const AppBar = withReactor(() => {
       )}
     >
       <div className='flex items-center' title="Hi I'm Kai!">
-        <Bug
-          className={mx(getSize(8), 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180')}
-          data-testid='kai-bug'
-        />
+        <Link to='/'>
+          <Bug
+            className={mx(getSize(8), 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180')}
+            data-testid='kai-bug'
+          />
+        </Link>
       </div>
 
       {space && (

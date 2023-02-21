@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThree, Plus, X } from 'phosphor-react';
+import { X, Plus } from 'phosphor-react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
@@ -20,9 +20,6 @@ import {
   Button,
   getSize,
   useTranslation,
-  DropdownMenu,
-  DropdownMenuItem,
-  valenceColorText,
   Tooltip,
   defaultDescription,
   ButtonProps
@@ -262,6 +259,11 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
         </ListItemHeading>
         {onClickDelete && (
           <ListItemEndcap>
+            {/* TODO(burdon): Hover. */}
+            <Button variant='ghost' compact className={getSize(10)} onClick={onClickDelete}>
+              <X weight='light' className={getSize(4)} />
+            </Button>
+            {/*
             <DropdownMenu
               trigger={
                 <Button variant='ghost' compact className={getSize(10)}>
@@ -274,6 +276,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
                 <X className={getSize(4)} />
               </DropdownMenuItem>
             </DropdownMenu>
+            */}
           </ListItemEndcap>
         )}
       </ListItem>
