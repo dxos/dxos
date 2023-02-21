@@ -42,6 +42,8 @@ export type NodeOptions = {
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
+  // CircleCI does not support headed mode of Playwright.
+  // `xvfb-run` runs the command in a virtual framebuffer that allows running headed tests on CircleCI.
   const exitCode = await execTool(options.headless ? mocha : 'xvfb-run ' + mocha, args, {
     env: {
       ...process.env,
