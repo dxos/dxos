@@ -12,6 +12,7 @@ import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
 export abstract class Model<TState = any, TMutation = any> {
+  // TODO(dmaretskyi): Never fired.
   public readonly update = new Event<Model<TState, TMutation>>();
 
   /**
