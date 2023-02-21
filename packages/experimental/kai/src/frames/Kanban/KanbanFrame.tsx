@@ -6,7 +6,7 @@ import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { Searchbar } from '@dxos/react-components';
+import { ElevationProvider, Searchbar } from '@dxos/react-components';
 
 import { ProjectCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
@@ -54,12 +54,13 @@ export const KanbanFrame: FC = () => {
   // TODO(burdon): Type and column/field selectors.
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2 py-2 mb-2'>
+      <div className='flex p-2 mb-2'>
         <div className='w-screen md:w-column px-4 md:px-2'>
-          <Searchbar
-            slots={{ input: { className: 'border border-paper-border shadow-none' } }}
-            onSearch={handleSearch}
-          />
+          <ElevationProvider elevation='group'>
+            <div>
+              <Searchbar onSearch={handleSearch} />
+            </div>
+          </ElevationProvider>
         </div>
       </div>
 

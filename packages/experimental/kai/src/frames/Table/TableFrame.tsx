@@ -7,7 +7,7 @@ import { Column } from 'react-table';
 
 import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { PublicKey, useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
+import { Table, Searchbar, Selector, SelectorOption, ElevationProvider } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
 import { schema } from '../../proto';
@@ -33,10 +33,19 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
 
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
-        columns.push({
+        const column: Column<Document> = {
           Header: field.name,
           accessor: field.name
-        });
+        };
+
+        switch (field.type.kind) {
+          case 'boolean': {
+            column.Cell = ({ value }) => <input type='checkbox' checked={value} disabled />;
+            break;
+          }
+        }
+
+        columns.push(column);
       }
     }
 
@@ -82,22 +91,16 @@ export const TableFrame = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden px-2'>
-      <div className='flex py-2 mb-2'>
-        <div className='mr-4'>
-          <Selector
-            slots={{ input: { className: 'border border-paper-border shadow-none' } }}
-            options={types}
-            value={type.id}
-            onSelect={handleSelect}
-          />
-        </div>
-        <div>
-          <Searchbar
-            slots={{ input: { className: 'border border-paper-border shadow-none' } }}
-            onSearch={handleSearch}
-          />
-        </div>
+    <div className='flex flex-col flex-1 px-2 overflow-hidden'>
+      <div className='flex p-2 mb-2'>
+        <ElevationProvider elevation='group'>
+          <div className='w-screen md:w-column mr-4'>
+            <Searchbar onSearch={handleSearch} />
+          </div>
+          <div>
+            <Selector options={types} value={type.id} onSelect={handleSelect} />
+          </div>
+        </ElevationProvider>
       </div>
 
       {/* TODO(burdon): Editable variant. */}

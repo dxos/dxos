@@ -5,26 +5,14 @@
 import { MagnifyingGlass } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
-import { mx } from '../../util';
 import { Input } from '../Input';
-
-export type SearchbarSlots = {
-  input?: {
-    className?: string;
-    variant?: string;
-  };
-};
 
 export type SearchbarProps = {
   disabled?: boolean;
-  slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
 };
 
-/**
- * Search bar.
- */
-export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ disabled, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -33,7 +21,7 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }
 
   return (
     <div className='flex flex-1 flex-col'>
-      <div className={mx('flex flex-1 items-center')}>
+      <div className='flex flex-1 items-center'>
         <Input
           label={'Search'}
           onChange={(event) => handleChange(event.target.value)}
@@ -41,13 +29,12 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }
           disabled={disabled}
           slots={{
             root: {
-              className: 'flex flex-1 mlb-0'
+              className: 'flex flex-1 mlb-0 border-t rounded'
             },
             label: { className: 'sr-only' },
             input: {
-              className: mx('flex flex-1', slots?.input?.className),
               spellCheck: false,
-              ...slots?.input
+              className: 'w-full'
             }
           }}
         />
