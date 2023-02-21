@@ -7,10 +7,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useSpaces } from '@dxos/react-client';
+import { useClient, useIdentity, useSpaces } from '@dxos/react-client';
 
 import { defaultFrameId, FrameDef, useFrames } from './useFrames';
-
+import { oncePerWindow } from './once';
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',
@@ -74,32 +74,32 @@ export const useAppRouter = (): AppRoute => {
   const navigate = useNavigate();
   const client = useClient();
   const spaces = useSpaces();
+  const identity = useIdentity();
   const { spaceKey, section, frame, objectId } = useParams();
 
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
-  const creating = useRef(false);
+
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
-    if (!space && !creating.current) {
-      creating.current = true;
-      t = setTimeout(async () => {
-        try {
+    if (identity && !space) {
+      t = setTimeout(
+        oncePerWindow('echo/first-space', async () => {
           // TODO(burdon): Only create in dev mode.
+          console.log('creating a first space');
           const space = await client.echo.createSpace();
-          navigate(createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId }));
-        } catch (err) {
-          creating.current = false;
-        }
-      });
+          const path = createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId });
+          console.log('navigating to', path);
+          navigate(path);
+        })
+      );
     }
-
-    return () => clearTimeout(t);
-  }, [space]);
+    return () => t && clearTimeout(t);
+  }, [space, identity]);
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
-  const frameId = frame ? decodeFrame(frame) : undefined;
-  const frameDef = frameId && activeFrames.find((id) => id === frameId) ? frames.get(frameId) : undefined;
-
+  const frameId = frame ? decodeFrame(frame) : defaultFrameId;
+  const frameDef =
+    frameId && activeFrames.find((id) => id === frameId) ? frames.get(frameId) : frames.get(defaultFrameId);
   return { space, section, frame: frameDef, objectId };
 };

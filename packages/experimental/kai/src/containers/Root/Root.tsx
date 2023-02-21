@@ -37,7 +37,6 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
   const metagraphContext = {
     client: new MetagraphClientFake([...botModules, ...frameModules])
   };
-
   return (
     <ThemeProvider
       appNs='kai'
