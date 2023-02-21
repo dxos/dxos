@@ -3,6 +3,7 @@
 //
 
 import type { Context } from 'mocha';
+import assert from 'node:assert';
 import type { Browser, BrowserContext, Page } from 'playwright';
 
 import { Lock } from '../util';
@@ -20,7 +21,8 @@ export const setupPage = async (mochaContext: Context, options: SetupOptions) =>
   mochaContext.timeout(timeout);
 
   const browser = mochaContext.browser as Browser;
-  const context = await browser.newContext();
+  const context = browser ? await browser.newContext() : (mochaContext.persistentContext as BrowserContext);
+  assert(context, 'Context is not defined');
   const page = await context.newPage();
 
   if (bridgeLogs) {

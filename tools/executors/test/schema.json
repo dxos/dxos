@@ -140,6 +140,11 @@
     "extensionPath": {
       "type": "string",
       "description": "Path to the extension to test"
+    },
+    "incognito": {
+      "type": "boolean",
+      "description": "Run tests in incognito mode",
+      "default": true
     }
   },
   "required": [
