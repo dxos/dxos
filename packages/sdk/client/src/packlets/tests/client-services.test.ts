@@ -249,7 +249,7 @@ describe('Client services', () => {
         expect(space.queryMembers().value).to.deep.equal([
           {
             identityKey: client1.halo.identity!.identityKey,
-            profile: {
+            identity: {
               identityKey: client1.halo.identity!.identityKey,
               displayName: 'Peer 1'
             },
@@ -257,7 +257,7 @@ describe('Client services', () => {
           },
           {
             identityKey: client2.halo.identity!.identityKey,
-            profile: {
+            identity: {
               identityKey: client2.halo.identity!.identityKey,
               displayName: 'Peer 2'
             },
