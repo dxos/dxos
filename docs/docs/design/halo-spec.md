@@ -129,7 +129,7 @@ Set of Agents that can access a digital resource (such as an ECHO Space).
 ***Presentation***
 Message containing a Credential that is signed by the Subject.
 
-***Identity*** -
+***Profile*** -
 Set of metadata associated with an Agent.
 
 ***Space*** -
@@ -181,7 +181,7 @@ The HALO contains:
 
 *   A set of device-local private keys used for signing messages.
 *   A set of credentials that represent various decentralized claims (e.g., ECHO Spaces, KUBE access control, Blockchain accounts, external Web2 tokens).
-*   A set of public keys and metadata (e.g., cached DID Identity documents) representing the Agent's Circle.
+*   A set of public keys and metadata (e.g., cached DID Profile documents) representing the Agent's Circle.
 
 ### 4.1. Keys and Credentials
 
@@ -341,9 +341,9 @@ The diagram below illustrates the chain of trust formed when a HALO is construct
 
 #### 4.2.5. Profiles
 
-*   Agents can create and update a content addressable Identity Document that conforms to a HALO protocol buffer schema.
-*   Identity Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
-*   Identity Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
+*   Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
+*   Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
+*   Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
 *   **NOTE**: IPNS is impractical since it only support single private-key access.
 
 #### 4.2.6. Circles
