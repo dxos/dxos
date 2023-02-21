@@ -17,7 +17,7 @@ export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
 
   useAsyncEffect(async () => {
     if (!profile) {
-      await client.halo.createProfile();
+      await client.halo.createIdentity();
     }
   }, []);
 

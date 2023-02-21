@@ -19,7 +19,7 @@ describe('Halo', () => {
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
     expect(client.halo.identity).exist;
 
     expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
@@ -33,7 +33,7 @@ describe('Halo', () => {
     afterTest(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createProfile({ displayName: 'test-user' });
+    await client1.halo.createIdentity({ displayName: 'test-user' });
     expect(client1.halo.identity).exist;
 
     expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
@@ -79,7 +79,7 @@ describe('Halo', () => {
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
     expect(client.halo.identity).exist;
 
     const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });

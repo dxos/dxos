@@ -34,7 +34,7 @@ const main = async () => {
   log('Initialized');
 
   if (!client.halo.identity) {
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
   }
   log('Created profile');
 

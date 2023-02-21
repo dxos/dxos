@@ -10,7 +10,7 @@ void (async () => {
   await client.initialize();
 
   if (!client.halo.identity) {
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
   }
 
   log('client', client.toJSON());

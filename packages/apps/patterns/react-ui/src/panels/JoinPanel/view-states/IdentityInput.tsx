@@ -23,7 +23,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
   const [validationMessage, setValidationMessage] = useState('');
   const isRecover = method === 'recover identity';
   const handleNext = () => {
-    void client.halo.createProfile({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
+    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
       (identity) => {
         dispatch({ type: 'added identity', identity });
       },

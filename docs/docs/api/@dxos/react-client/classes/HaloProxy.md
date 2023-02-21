@@ -65,7 +65,7 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `options`: <code>InvitationsOptions</code>
-### [createProfile(\[options\])]()
+### [createIdentity(\[options\])]()
 
 
 Create Identity.

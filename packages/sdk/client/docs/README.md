@@ -38,7 +38,7 @@ class HaloProxy {
   open()
   close()
   subscribeToProfile()
-  createProfile()
+  createIdentity()
   recoverProfile()
   queryContacts()
   queryDevices()

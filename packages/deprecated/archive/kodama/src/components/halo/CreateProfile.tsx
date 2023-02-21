@@ -24,7 +24,7 @@ export const CreateProfile: FC<{
     const displayName = text.trim();
     if (displayName.length) {
       const seedphrase = generateSeedPhrase();
-      const profile = await client.halo.createProfile({ seedphrase, displayName });
+      const profile = await client.halo.createIdentity({ seedphrase, displayName });
       const clipped = await copyToClipboard(seedphrase);
       setClipped(clipped);
       onCreate(profile);

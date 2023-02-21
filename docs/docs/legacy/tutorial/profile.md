@@ -44,7 +44,7 @@ const Root = () => {
   if (!profile) {
     const handleRegistration = async ({ username }) => {
       if (username) {
-        await client.halo.createProfile({ username });
+        await client.halo.createIdentity({ username });
       }
     };
 

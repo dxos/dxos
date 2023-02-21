@@ -115,7 +115,7 @@
   log('clients initialized');
 
   if (props.createIdentity) {
-    await Promise.all(clients.map((client) => client.halo.createProfile()));
+    await Promise.all(clients.map((client) => client.halo.createIdentity()));
     log('identities created');
   }
 

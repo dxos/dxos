@@ -25,7 +25,7 @@ export default class Create extends BaseCommand {
         this.log('Identity already initialized.'); // TODO(burdon): Return as error?
       } else {
         const seedphrase = generateSeedPhrase();
-        profile = await client.halo.createProfile({ seedphrase, displayName });
+        profile = await client.halo.createIdentity({ seedphrase, displayName });
         this.log(`IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`);
         return { seedphrase, displayName };
       }

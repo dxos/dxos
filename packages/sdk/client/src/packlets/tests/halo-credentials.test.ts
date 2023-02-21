@@ -38,7 +38,7 @@ describe('Halo', () => {
       afterTest(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createProfile({ displayName: 'test-user' });
+      await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
 
       const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AuthorizedDevice' });

@@ -33,7 +33,7 @@ import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/creden
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
 
-type CreateProfileOptions = {
+type CreateIdentityOptions = {
   publicKey?: PublicKey;
   secretKey?: PublicKey;
   displayName?: string;
@@ -52,7 +52,7 @@ type DeviceEvents = {
 export interface Halo {
   get identity(): Identity | undefined;
   get invitations(): CancellableInvitationObservable[];
-  createProfile(options?: CreateProfileOptions): Promise<Identity>;
+  createIdentity(options?: CreateIdentityOptions): Promise<Identity>;
   recoverProfile(seedPhrase: string): Promise<Identity>;
   subscribeToProfile(callback: (profile: Identity) => void): void;
 
@@ -166,7 +166,12 @@ export class HaloProxy implements Halo {
    * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
-  async createProfile({ publicKey, secretKey, displayName, seedphrase }: CreateProfileOptions = {}): Promise<Identity> {
+  async createIdentity({
+    publicKey,
+    secretKey,
+    displayName,
+    seedphrase
+  }: CreateIdentityOptions = {}): Promise<Identity> {
     if (seedphrase && (publicKey || secretKey)) {
       throw new ApiError('Seedphrase must not be specified with existing keys');
     }

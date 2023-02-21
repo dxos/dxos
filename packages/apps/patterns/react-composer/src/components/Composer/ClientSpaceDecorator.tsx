@@ -49,7 +49,7 @@ export const ClientSpaceDecorator =
         log('echo schema set');
       }
 
-      await Promise.all(clients.map((client) => client.halo.createProfile()));
+      await Promise.all(clients.map((client) => client.halo.createIdentity()));
       log('identity created');
 
       const space = await clients[0].echo.createSpace();

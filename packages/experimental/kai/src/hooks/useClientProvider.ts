@@ -31,7 +31,7 @@ export const useClientProvider = (dev: boolean) => {
     // chrome.windows.create({ '/join', incognito: true });
     if (dev && !client.halo.identity) {
       // TODO(burdon): Causes race condition.
-      await client.halo.createProfile();
+      await client.halo.createIdentity();
     }
 
     // TODO(burdon): Document.
