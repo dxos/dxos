@@ -4,3 +4,4 @@
 
 export * from './grid-layout';
 export * from './layout';
+export * from './Grid';

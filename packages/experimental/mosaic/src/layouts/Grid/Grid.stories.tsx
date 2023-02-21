@@ -9,9 +9,10 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { GridLayout, Item, Location } from '../layout';
-import { createItem } from '../testing';
+import { Vec2, MosaicItem } from '../../props';
+import { createItem } from '../../testing';
 import { Grid } from './Grid';
+import { GridLayout } from './grid-layout';
 
 faker.seed(100);
 
@@ -34,7 +35,7 @@ const num = 8;
 
 const Test = () => {
   const layout = useMemo(() => new GridLayout({ range: { x: 3, y: 2 } }), []);
-  const [items, setItems] = useState<Item[]>(() => {
+  const [items, setItems] = useState<MosaicItem[]>(() => {
     return range(num).map(() => {
       return createItem({
         x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
@@ -43,17 +44,17 @@ const Test = () => {
     });
   });
 
-  const handleSelect = (item: Item) => {
+  const handleSelect = (item: MosaicItem) => {
     console.log(item);
   };
 
-  const handleCreate = async (location: Location) => {
-    const item = createItem(location);
+  const handleCreate = async (position: Vec2) => {
+    const item = createItem(position);
     setItems((items) => [...items, item]);
     return item.id;
   };
 
-  const handleDelete = (item: Item) => {
+  const handleDelete = (item: MosaicItem) => {
     setItems((items) => items.filter(({ id }) => id !== item.id));
   };
 

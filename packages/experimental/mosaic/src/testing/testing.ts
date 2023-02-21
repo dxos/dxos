@@ -4,11 +4,11 @@
 
 import faker from 'faker';
 
-import { Item, Location } from '../layout';
+import { MosaicItem, Vec2 } from '../props';
 
-export const createItem = (location?: Location): Item => ({
+export const createItem = (position?: Vec2): MosaicItem => ({
   id: faker.datatype.uuid(),
   label: faker.lorem.words(3),
   content: faker.lorem.sentences(faker.datatype.number(3)),
-  location
+  position
 });

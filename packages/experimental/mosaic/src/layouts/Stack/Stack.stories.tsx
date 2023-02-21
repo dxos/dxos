@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
 
-import { Item } from '../layout';
-import { createItem } from '../testing';
+import { createItem } from '../../testing';
+import { Item } from '../Grid';
 import { Stack } from './Stack';
 
 faker.seed(100);

@@ -9,12 +9,12 @@ import React, { FC } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { Bounds, Item } from '../layout';
+import { Box2, MosaicItem } from '../props';
 
 export type TileContentProps<T extends {} = {}> = {
-  item: Item<T>;
+  item: MosaicItem<T>;
   selected?: boolean;
-  onDelete?: (item: Item<T>) => void;
+  onDelete?: (item: MosaicItem<T>) => void;
 };
 
 export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContentProps<T>) => {
@@ -53,13 +53,13 @@ export type TileClasses = {
 };
 
 export type TileProps<T extends {}> = {
-  item: Item<T>;
-  bounds?: Bounds;
+  item: MosaicItem<T>;
+  box?: Box2;
   classes?: TileClasses;
   selected?: boolean;
   Content?: FC<TileContentProps<T>>;
-  onClick?: (item: Item<T>) => void;
-  onDelete?: (item: Item<T>) => void;
+  onClick?: (item: MosaicItem<T>) => void;
+  onDelete?: (item: MosaicItem<T>) => void;
 };
 
 /**
@@ -67,7 +67,7 @@ export type TileProps<T extends {}> = {
  */
 export const Tile = <T extends {} = {}>({
   item,
-  bounds,
+  box,
   classes = {},
   selected,
   Content = DefaultTileContent,
@@ -77,11 +77,10 @@ export const Tile = <T extends {} = {}>({
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
     transform: CSS.Transform.toString(transform),
-    width: bounds?.width,
-    height: bounds?.height
+    width: `${box?.size.x}px`,
+    height: `${box?.size.y}px`
   };
 
-  // prettier-ignore
   return (
     <div
       {...attributes}

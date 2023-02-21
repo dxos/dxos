@@ -8,9 +8,10 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { Dimensions, Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
-import { Cell } from './Cell';
-import { Tile, TileContentProps, TileClasses } from './Tile';
+import { Tile, TileContentProps, TileClasses } from '../../components';
+import { MosaicItem, Vec2 } from '../../props';
+import { GridCell } from './GridCell';
+import { Layout, serializePosition, parsePosition } from './grid-layout';
 
 export type GridClasses = {
   tile?: TileClasses;
@@ -18,13 +19,13 @@ export type GridClasses = {
 
 export type GridProps<T extends {} = {}> = {
   layout: Layout;
-  items?: Item<T>[];
+  items?: MosaicItem<T>[];
   classes?: GridClasses;
   Content?: FC<TileContentProps<T>>;
-  onSelect?: (item: Item<T>) => void;
-  onChange?: (item: Item<T>, location: Location) => void;
-  onCreate?: (location: Location) => Promise<string | undefined>;
-  onDelete?: (item: Item<T>) => void;
+  onSelect?: (item: MosaicItem<T>) => void;
+  onChange?: (item: MosaicItem<T>, position: Vec2) => void;
+  onCreate?: (position: Vec2) => Promise<string | undefined>;
+  onDelete?: (item: MosaicItem<T>) => void;
 };
 
 const options = {
@@ -44,28 +45,28 @@ export const Grid = <T extends {} = {}>({
   onCreate,
   onDelete
 }: GridProps<T>) => {
-  const getItem = (location: Location): Item<T> | undefined => {
-    return items.find((item) => item.location && serializeLocation(item.location) === serializeLocation(location));
+  const getMosaicItem = (position: Vec2): MosaicItem<T> | undefined => {
+    return items.find((item) => item.position && serializePosition(item.position) === serializePosition(position));
   };
 
   // Container allows any selected item to scroll near to the center.
-  const containerDimensions: Dimensions = {
-    width: layout.dimensions.width * 1.5,
-    height: layout.dimensions.height * 1.5
+  const containerSize: Vec2 = {
+    x: layout.size.x * 1.5,
+    y: layout.size.y * 1.5
   };
 
   /**
    * Calculate offset of the container relative to the screen of the given point.
    * The point is relative to the center of the layout.
    */
-  const getOffset = (center: Point) => {
+  const getOffset = (center: Vec2) => {
     if (!width || !height) {
       return { x: 0, y: 0 };
     }
 
     return {
-      x: center.x - Math.round((width - containerDimensions.width) / 2),
-      y: center.y - Math.round((height - containerDimensions.height) / 2)
+      x: center.x - Math.round((width - containerSize.x) / 2),
+      y: center.y - Math.round((height - containerSize.y) / 2)
     };
   };
 
@@ -97,7 +98,7 @@ export const Grid = <T extends {} = {}>({
   /**
    * Scroll to center point. Assumes scale is 1.
    */
-  const scrollTo = (center: Point = { x: 0, y: 0 }, smooth = true) => {
+  const scrollTo = (center: Vec2 = { x: 0, y: 0 }, smooth = true) => {
     const offset = getOffset(center);
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
     containerRef.current.scrollTo({ left: offset.x, top: offset.y, behavior: smooth ? 'smooth' : 'instant' });
@@ -106,7 +107,7 @@ export const Grid = <T extends {} = {}>({
   useEffect(() => {
     if (width && height) {
       const item = selected ? items.find((item) => item.id === selected) : undefined;
-      scrollTo(layout.getCenter(item?.location ?? { x: 0, y: 0 }), false);
+      scrollTo(layout.getCenter(item?.position ?? { x: 0, y: 0 }), false);
     }
   }, [width, height]);
 
@@ -118,10 +119,10 @@ export const Grid = <T extends {} = {}>({
   useEffect(() => {
     const item = selected ? items.find((item) => item.id === selected) : undefined;
     setZoom(zoom);
-    scrollTo(layout.getCenter(item?.location ?? { x: 0, y: 0 }));
+    scrollTo(layout.getCenter(item?.position ?? { x: 0, y: 0 }));
   }, [items, selected]);
 
-  const handleCreate = async (point: Point) => {
+  const handleCreate = async (point: Vec2) => {
     if (onCreate) {
       const id = await onCreate(point);
       setSelected(id);
@@ -144,8 +145,8 @@ export const Grid = <T extends {} = {}>({
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const item = items.find((item) => item.id === active.id)!;
     if (over) {
-      item.location = parseLocation(over.id as string);
-      onChange?.(item, item.location);
+      item.position = parsePosition(over.id as string);
+      onChange?.(item, item.position);
       forceUpdate({});
     }
   };
@@ -160,25 +161,31 @@ export const Grid = <T extends {} = {}>({
           className={mx('absolute w-full h-full overflow-auto bg-gray-500', 'snap-mandatory snap-both md:snap-none')}
         >
           {/* Layout container. */}
-          <div className='flex justify-center items-center' style={{ ...containerDimensions, ...containerStyles }}>
+          <div
+            className='flex justify-center items-center'
+            style={{ width: containerSize.x, height: containerSize.y, ...containerStyles }}
+          >
             {/* Layout box. */}
             <div
               className='relative flex bg-gray-200'
-              style={layout.dimensions}
+              style={{
+                width: `${layout.size.x}px`,
+                height: `${layout.size.y}px`
+              }}
               onClick={(event: any) => setZoom(event.detail === 2 ? options.zoomOut : 1)}
             >
-              {layout.cells.map((location) => {
-                const bounds = layout.getBounds(location);
-                const item = getItem(location);
+              {layout.cells.map((position) => {
+                const box = layout.getBox(position);
+                const item = getMosaicItem(position);
 
                 return (
-                  <Cell key={serializeLocation(location)} location={location} bounds={bounds} onCreate={handleCreate}>
+                  <GridCell key={serializePosition(position)} position={position} box={box} onCreate={handleCreate}>
                     {item && (
                       <div className='z-50'>
                         <Tile<T>
                           classes={classes?.tile}
                           item={item}
-                          bounds={bounds}
+                          box={box}
                           Content={Content}
                           selected={item.id === selected}
                           onClick={() => setSelected(item.id)}
@@ -186,7 +193,7 @@ export const Grid = <T extends {} = {}>({
                         />
                       </div>
                     )}
-                  </Cell>
+                  </GridCell>
                 );
               })}
             </div>

@@ -8,26 +8,27 @@ import React, { ReactNode } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { Bounds, Location, Point, serializeLocation } from '../layout';
+import { Box2, Vec2 } from '../../props';
+import { serializePosition } from './grid-layout';
 
 export type CellProps = {
   children?: ReactNode;
-  location: Location;
-  bounds: Bounds;
+  position: Vec2;
+  box: Box2;
   debug?: boolean;
-  onCreate?: (point: Point) => void;
+  onCreate?: (position: Vec2) => void;
 };
 
 /**
  * Placeholder (drop target) for Tile.
  */
-export const Cell = ({ children, location, bounds, debug = true, onCreate }: CellProps) => {
-  const { setNodeRef, isOver } = useDroppable({ id: serializeLocation(location) });
+export const GridCell = ({ children, position, box, debug = true, onCreate }: CellProps) => {
+  const { setNodeRef, isOver } = useDroppable({ id: serializePosition(position) });
 
   const handleClick = (event: any) => {
     if (onCreate) {
       event.stopPropagation();
-      onCreate(location);
+      onCreate(position);
     }
   };
 
@@ -35,7 +36,12 @@ export const Cell = ({ children, location, bounds, debug = true, onCreate }: Cel
     <div
       ref={setNodeRef}
       className='absolute flex flex-1 p-1'
-      style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
+      style={{
+        left: `${box.position.x}px`,
+        top: `${box.position.y}px`,
+        width: `${box.size.x}px`,
+        height: `${box.size.y}px`
+      }}
     >
       <div
         className={mx(
@@ -54,7 +60,7 @@ export const Cell = ({ children, location, bounds, debug = true, onCreate }: Cel
               </div>
             )}
 
-            {debug && <div className='absolute left-2 bottom-1 text-gray-300'>[{serializeLocation(location)}]</div>}
+            {debug && <div className='absolute left-2 bottom-1 text-gray-300'>[{serializePosition(position)}]</div>}
           </>
         )}
       </div>

@@ -4,11 +4,11 @@
 
 import React, { FC } from 'react';
 
-import { Item } from '../layout';
-import { Tile, TileContentProps } from './Tile';
+import { Tile, TileContentProps } from '../../components';
+import { MosaicItem } from '../../props';
 
 export type StackProps<T extends {}> = {
-  items?: Item<T>[];
+  items?: MosaicItem<T>[];
   Content?: FC<TileContentProps<T>>;
 };
 
