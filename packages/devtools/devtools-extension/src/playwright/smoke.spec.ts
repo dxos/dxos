@@ -24,8 +24,6 @@ export class ExtensionManager {
 
     const { page, context } = await setupPage(this.mochaContext, { bridgeLogs: true });
 
-    debugger;
-
     this.extensionId = await asyncTimeout(extensionId(context), 30_000);
     await page.goto(`chrome-extension://${this.extensionId}/popup.html`);
 
