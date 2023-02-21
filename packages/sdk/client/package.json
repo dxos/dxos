@@ -17,6 +17,7 @@
     "testing.d.ts",
     "testing.js",
     "dist",
+    "shell.css",
     "src"
   ],
   "scripts": {
