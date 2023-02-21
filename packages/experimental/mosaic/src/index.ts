@@ -3,5 +3,5 @@
 //
 
 export * from './components';
-export * from './layouts';
+export * from './mosaics';
 export * from './props';

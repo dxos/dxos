@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
 
+import { MosaicItem } from '../../props';
 import { createItem } from '../../testing';
-import { Item } from '../Grid';
 import { Stack } from './Stack';
 
 faker.seed(100);
@@ -16,7 +16,7 @@ faker.seed(100);
 const num = 4;
 
 const Test = () => {
-  const [items] = useState<Item[]>(() => {
+  const [items] = useState<MosaicItem[]>(() => {
     return range(num).map(() => {
       return createItem();
     });
