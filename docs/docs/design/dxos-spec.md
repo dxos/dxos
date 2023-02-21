@@ -5,11 +5,8 @@
 - [1. Introduction](#1-introduction)
 - [2. Ontology](#2-ontology)
   - [2.1. HALO](#21-halo)
-    - [Terminology](#terminology)
-    - [2.1.1 The HALO Application](#211-the-halo-application)
-    - [2.1.2 Browser Profiles](#212-browser-profiles)
-    - [2.1.2. Identities](#212-identities)
-    - [2.1.3. Devices](#213-devices)
+    - [2.1.1. Profiles](#211-profiles)
+    - [2.1.2. Devices](#212-devices)
     - [2.1.3. Contacts](#213-contacts)
   - [2.2. ECHO](#22-echo)
     - [2.2.1. Spaces](#221-spaces)
@@ -44,7 +41,7 @@ HALO is a set of components and protocols for decentralized identity and access 
 | Application         | Represents a specific application / agent which can request the user's identity and data. Applications can be used from multiple devices.                                                                                                                        |
 | Profile             | An overloaded term that refers to a unit of isolation between different configurations or accounts on an application.                                                                                                                                            |
 | Browser Profile     | Chromium has the notion of profiles which isolate browser state for all applications (domains) between the profiles, allowing users to sign in to multiple accounts and switch between their "browsing profiles" quickly.                                        |
-| [HALO] User Identity | The `user.identity` object attached to a given identity which contains arbitrary keys and values that applications may deposit there on behalf of the user. This is where users store their avatar, name, email and other information about themselves.           |
+| [HALO] User Profile | The `user.profile` object attached to a given identity which contains arbitrary keys and values that applications may deposit there on behalf of the user. This is where users store their avatar, name, email and other information about themselves.           |
 |                     |                                                                                                                                                                                                                                                                  |
 
 #### 2.1.1 The HALO Application
