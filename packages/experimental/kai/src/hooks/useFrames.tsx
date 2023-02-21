@@ -19,11 +19,8 @@ import {
   Code
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useCurrentSpace } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
@@ -255,27 +252,4 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   );
 
   return { frames, active };
-};
-
-export type FrameState = {
-  space?: Space;
-  frame?: FrameDef;
-  objectId?: string;
-};
-
-// TODO(burdon): Combine frame hooks?
-// TODO(burdon): Better abstraction for app state hierarchy?
-export const useFrameState = (): FrameState => {
-  const [space] = useCurrentSpace();
-  const { frame, objectId } = useParams();
-
-  // TODO(burdon): Active is unsound.
-  const { frames, active: activeFrames } = useFrames();
-  const currentFrameId = frame?.replaceAll('-', '.');
-  const frameDef =
-    currentFrameId && activeFrames.find((frameId) => frameId === currentFrameId)
-      ? frames.get(currentFrameId)
-      : undefined;
-
-  return { space, frame: frameDef, objectId };
 };

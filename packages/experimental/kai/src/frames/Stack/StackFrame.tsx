@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { mx } from '@dxos/react-components';
 
 import { ContactList, OrganizationList, ProjectHierarchy, UnorderedTaskList } from '../../containers';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
   return (
@@ -36,7 +36,7 @@ export const Tile: FC<{
 };
 
 export const StackFrame: FC = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const { ref } = useResizeDetector();
   const cardStyles = 'flex shrink-0';
 

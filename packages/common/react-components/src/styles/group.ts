@@ -5,6 +5,7 @@
 import { Elevation } from '../props';
 import { mx } from '../util';
 
+// TODO(burdon): Flat by default.
 const elevationClassNameMap = new Map<Elevation, string>([
   ['base', 'shadow-none'],
   ['group', 'shadow-md'],

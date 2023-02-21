@@ -6,11 +6,9 @@ import { FrameCorners, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useCurrentSpace } from '@dxos/react-client';
 import { getSize, mx, Searchbar, Button } from '@dxos/react-components';
 
-import { useBots, useFrames, BotDef, FrameDef, useAppReducer } from '../../hooks';
-import { createSpacePath } from '../../router';
+import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
@@ -59,7 +57,7 @@ const Tile: FC<{
 };
 
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>(ExtensionType.FRAME);
 
@@ -71,9 +69,9 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
     switch (type) {
       case ExtensionType.FRAME: {
         const active = !activeFrames.find((frameId) => frameId === id);
-        setActiveFrame(id, active);
+        setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
         if (active) {
-          navigate(createSpacePath(space?.key, id));
+          navigate(createPath({ spaceKey: space!.key, frame: id }));
         }
         break;
       }
@@ -88,19 +86,20 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
+  // TODO(burdon): Margin top collapses if only ONE frame is selected!
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex justify-center'>
-        <div className='flex w-column items-center m-10'>
+      <div className='flex my-8 justify-center'>
+        <div className='flex w-column p-1 items-center bg-white rounded-lg'>
           <Searchbar disabled />
           <div className='ml-4'>
-            <Button compact className='ml-2' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+            <Button compact variant='ghost' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
               <FrameCorners
                 weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
               />
             </Button>
-            <Button compact className='ml-2' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+            <Button compact variant='ghost' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
               <Robot
                 weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
@@ -111,26 +110,24 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
       </div>
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
-        <div className='flex flex-col p-4'>
+        <div className='flex flex-col mt-8'>
           <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
-            {Array.from(modules.values())
-              // .filter(({ system }) => !system)
-              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-                <Tile
-                  key={id!}
-                  id={id!}
-                  label={displayName ?? id!}
-                  description={description}
-                  slots={slots}
-                  Icon={Icon}
-                  onSelect={handleSelect}
-                  active={
-                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                      (active) => active === id
-                    )
-                  }
-                />
-              ))}
+            {Array.from(modules.values()).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+              <Tile
+                key={id!}
+                id={id!}
+                label={displayName ?? id!}
+                description={description}
+                slots={slots}
+                Icon={Icon}
+                onSelect={handleSelect}
+                active={
+                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                    (active) => active === id
+                  )
+                }
+              />
+            ))}
           </div>
         </div>
       </div>
