@@ -27,7 +27,7 @@ export const SpaceInfo: FC<{
       rows={[
         {
           property: 'Name',
-          value: space.properties.name
+          value: space.properties?.name // TODO(dmaretskyi): Fix.
         },
         {
           property: 'Public key',
