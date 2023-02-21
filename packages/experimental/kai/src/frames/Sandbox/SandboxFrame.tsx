@@ -11,12 +11,12 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { EmbeddedFrame } from '../../frame-container';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
 export const SandboxFrame = withReactor(() => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 

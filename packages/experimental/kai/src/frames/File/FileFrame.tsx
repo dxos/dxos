@@ -8,13 +8,13 @@ import urlJoin from 'url-join';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from '../../components';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { File } from '../../proto';
 import { imageTypes } from './defs';
 
 export const FileFrame = () => {
   const config = useConfig();
-  const { space, objectId } = useFrameState();
+  const { space, objectId } = useAppRouter();
   const object = objectId ? (space!.db.getObjectById(objectId) as File) : undefined;
   if (!object) {
     return null;

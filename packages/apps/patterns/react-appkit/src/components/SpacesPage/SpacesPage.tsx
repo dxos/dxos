@@ -53,6 +53,7 @@ export const SpacesPage = ({
     [spacePath]
   );
 
+  // TODO(burdon): ???
   return (
     <>
       <HeadingWithActions
@@ -84,6 +85,7 @@ export const SpacesPage = ({
           children: t('spaces label')
         }}
       />
+
       <SpaceList spaces={spaces} />
     </>
   );
