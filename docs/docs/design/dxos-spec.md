@@ -5,8 +5,11 @@
 - [1. Introduction](#1-introduction)
 - [2. Ontology](#2-ontology)
   - [2.1. HALO](#21-halo)
-    - [2.1.1. Profiles](#211-profiles)
-    - [2.1.2. Devices](#212-devices)
+    - [Terminology](#terminology)
+    - [2.1.1 The HALO Application](#211-the-halo-application)
+    - [2.1.2 Browser Profiles](#212-browser-profiles)
+    - [2.1.2. Identities](#212-identities)
+    - [2.1.3. Devices](#213-devices)
     - [2.1.3. Contacts](#213-contacts)
   - [2.2. ECHO](#22-echo)
     - [2.2.1. Spaces](#221-spaces)
@@ -39,9 +42,9 @@ HALO is a set of components and protocols for decentralized identity and access 
 | Credential          | A verifiably tamper-free statement from some verifiable authority that claims that some identity (subject) is to be granted or denied some rights (permissions) with respect to a given resource(s)                                                              |
 | Device              | A unique client of the DXOS SDK such as a browser app (each browser profile is a separate device) or a CLI app, or a mobile app, ..., etc. An application may be used from multiple devices. Device authorization can be revoked at any time by the owning user. |
 | Application         | Represents a specific application / agent which can request the user's identity and data. Applications can be used from multiple devices.                                                                                                                        |
-| Identity             | An overloaded term that refers to a unit of isolation between different configurations or accounts on an application.                                                                                                                                            |
-| Browser Identity     | Chromium has the notion of profiles which isolate browser state for all applications (domains) between the profiles, allowing users to sign in to multiple accounts and switch between their "browsing profiles" quickly.                                        |
-| [HALO] User Identity | The `user.profile` object attached to a given identity which contains arbitrary keys and values that applications may deposit there on behalf of the user. This is where users store their avatar, name, email and other information about themselves.           |
+| Profile             | An overloaded term that refers to a unit of isolation between different configurations or accounts on an application.                                                                                                                                            |
+| Browser Profile     | Chromium has the notion of profiles which isolate browser state for all applications (domains) between the profiles, allowing users to sign in to multiple accounts and switch between their "browsing profiles" quickly.                                        |
+| [HALO] User Identity | The `user.identity` object attached to a given identity which contains arbitrary keys and values that applications may deposit there on behalf of the user. This is where users store their avatar, name, email and other information about themselves.           |
 |                     |                                                                                                                                                                                                                                                                  |
 
 #### 2.1.1 The HALO Application
@@ -117,7 +120,7 @@ Using the HALO app, users can:
 #### 2.1.3. Contacts
 
 - Users maintain a set of contacts accumulated from interactions over spaces and invites
-- Contacts are associated with another User's Identity DID and metadata (e.g., display name, avatar, etc.) when users join spaces or interact with each other.
+- Contacts are associated with another User's Profile DID and metadata (e.g., display name, avatar, etc.) when users join spaces or interact with each other.
 - (Let it be known: A collection of contacts is a circle)
 
 ### 2.2. ECHO
@@ -203,7 +206,7 @@ describe.skip("Experimental API", () => {
         expect(client2.halo.identity).not.toBeDefined();
         const profile = await client2.halo.recoverIdentity("invite code");
         // expect(
-        //   PublicKey.equals(profile.publicKey, client2.halo.identity.publicKey)
+        //   PublicKey.equals(profile.publicKey, client2.halo.profile.publicKey)
         // ).toBeTruthy();
       }
     }
