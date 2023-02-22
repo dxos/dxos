@@ -2566,16 +2566,13 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/kai': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2596,17 +2593,13 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       body-parser: 1.19.0
       chalk: ^4.1.0
-      clsx: ^1.1.1
-      color-hash: ^1.0.3
       copy: ~0.3.2
       crx: ^5.0.1
       download: ^8.0.0
       esbuild-plugin-inline-image: ^0.0.9
       express: 4.17.1
-      moment: ^2.24.0
       postcss: ^8.4.17
       react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
       rmdir: ~1.2.0
@@ -2620,15 +2613,11 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
-      '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
-      '@dxos/kai': link:../../experimental/kai
       '@dxos/log': link:../../common/log
-      '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
@@ -2640,11 +2629,7 @@ importers:
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
       '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      clsx: 1.2.1
-      color-hash: 1.1.1
-      moment: 2.29.4
       react: 18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       webextension-polyfill: 0.8.0
@@ -2652,6 +2637,7 @@ importers:
       '@babel/core': 7.19.3
       '@crxjs/vite-plugin': 1.0.14_vite@4.0.4
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
+      '@dxos/kai': link:../../experimental/kai
       '@types/chrome': 0.0.125
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
@@ -20578,18 +20564,6 @@ packages:
       debug:
         optional: true
 
-  /follow-redirects/1.15.2_debug@4.3.4:
-    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    dependencies:
-      debug: 4.3.4
-    dev: true
-
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
     dependencies:
@@ -21833,7 +21807,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug

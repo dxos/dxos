@@ -11,6 +11,31 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/devtools/devtools-extension",
+        "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
+        "headless": true,
+        "incognito": false,
+        "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
+        "playwright": true,
+        "resultsPath": "test-results/packages/devtools/devtools-extension",
+        "serve": "devtools-extension:bundle",
+        "testPatterns": [
+          "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/devtools/devtools-extension/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.extensionPath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

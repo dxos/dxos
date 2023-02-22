@@ -35,6 +35,8 @@ export type NodeOptions = {
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
+  extensionPath?: string;
+  incognito?: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -50,6 +52,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       MOCHA_ENV: options.browser ?? 'nodejs',
       EXECUTOR_RESULT: JSON.stringify(options.executorResult),
       DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
+      EXTENSION_PATH: options.extensionPath,
+      INCOGNITO: String(options.incognito),
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
