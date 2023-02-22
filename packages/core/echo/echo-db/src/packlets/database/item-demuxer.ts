@@ -22,10 +22,7 @@ export type EchoProcessor = (message: IEchoStream) => void;
 export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
 
-  constructor(
-    private readonly _itemManager: ItemManager,
-    private readonly _modelFactory: ModelFactory,
-  ) {}
+  constructor(private readonly _itemManager: ItemManager, private readonly _modelFactory: ModelFactory) {}
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {

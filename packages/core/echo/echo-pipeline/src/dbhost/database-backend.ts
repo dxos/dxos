@@ -24,7 +24,7 @@ export class DatabaseBackendHost {
 
   constructor(
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
-    private readonly _snapshot?: EchoSnapshot,
+    private readonly _snapshot?: EchoSnapshot
   ) {}
 
   get isReadOnly(): boolean {

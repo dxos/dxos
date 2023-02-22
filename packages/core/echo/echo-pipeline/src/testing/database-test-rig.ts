@@ -1,15 +1,20 @@
-import { DocumentModel } from "@dxos/document-model";
-import { DatabaseBackendProxy, ItemManager } from "@dxos/echo-db";
-import { PublicKey } from "@dxos/keys";
-import { ModelFactory } from "@dxos/model-factory";
-import { DataMessage, FeedMessage } from "@dxos/protocols/proto/dxos/echo/feed";
-import { SpaceSnapshot } from "@dxos/protocols/proto/dxos/echo/snapshot";
-import { Timeframe } from "@dxos/timeframe";
-import { DatabaseBackendHost } from "../dbhost";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Event } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
+import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
+import { ModelFactory } from '@dxos/model-factory';
+import { FeedMessageBlock } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { TextModel } from '@dxos/text-model';
-import { Event } from "@dxos/async";
-import { ComplexMap, isNotNullOrUndefined } from "@dxos/util";
-import { FeedMessageBlock } from "@dxos/protocols";
+import { Timeframe } from '@dxos/timeframe';
+import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
+
+import { DatabaseBackendHost } from '../dbhost';
 
 const SPACE_KEY = PublicKey.random();
 
@@ -44,7 +49,7 @@ export class DatabaseTestPeer {
   /**
    * Sequence number of the last mutation confirmed to be written to the feed store.
    */
-  public confirmed: number = -1;
+  public confirmed = -1;
 
   /**
    * Current position of the peer's pipeline.
@@ -55,27 +60,26 @@ export class DatabaseTestPeer {
 
   private readonly _onConfirm = new Event();
 
-  constructor(
-    public readonly rig: DatabaseTestRig,
-  ) { }
+  constructor(public readonly rig: DatabaseTestRig) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
     this.host = new DatabaseBackendHost(
       {
-        write: async message => {
-          const seq = this.feedMessages.push({
-            timeframe: this.timeframe,
-            payload: {
-              data: message,
-            }
-          }) - 1;
+        write: async (message) => {
+          const seq =
+            this.feedMessages.push({
+              timeframe: this.timeframe,
+              payload: {
+                data: message
+              }
+            }) - 1;
 
-          await this._onConfirm.waitFor(() => this.confirmed >= seq)
+          await this._onConfirm.waitFor(() => this.confirmed >= seq);
           return {
             seq,
-            feedKey: this.key,
-          }
+            feedKey: this.key
+          };
         }
       },
       this.snapshot?.database
@@ -104,8 +108,8 @@ export class DatabaseTestPeer {
    */
   replicate(to?: Timeframe) {
     const toTimeframe = Timeframe.merge(
-      to ?? new Timeframe(Array.from(this.rig.peers.values()).map(peer => [peer.key, peer.confirmed])),
-      this.timeframe,
+      to ?? new Timeframe(Array.from(this.rig.peers.values()).map((peer) => [peer.key, peer.confirmed])),
+      this.timeframe
     );
     toTimeframe.set(this.key, this.confirmed);
 
@@ -129,8 +133,8 @@ export class DatabaseTestPeer {
     this.snapshot = {
       spaceKey: SPACE_KEY.asUint8Array(),
       database: this.host.createSnapshot(),
-      timeframe: this.timeframe,
-    }
+      timeframe: this.timeframe
+    };
     return this.snapshot;
   }
 
@@ -139,15 +143,19 @@ export class DatabaseTestPeer {
    * Does not take into account the current snapshot, timeframe dependencies, or the confirmed, or replicated state.
    */
   private _getHeads(): FeedMessageBlock[] {
-    return Array.from(this.rig.peers.values()).map((peer): FeedMessageBlock => {
-      const seq = this.timeframe.get(peer.key) ?? -1;
-      const message = peer.feedMessages[seq + 1];
-      return message && {
-        feedKey: peer.key,
-        seq: seq + 1,
-        data: message,
-      }
-    }).filter(isNotNullOrUndefined)
+    return Array.from(this.rig.peers.values())
+      .map((peer): FeedMessageBlock => {
+        const seq = this.timeframe.get(peer.key) ?? -1;
+        const message = peer.feedMessages[seq + 1];
+        return (
+          message && {
+            feedKey: peer.key,
+            seq: seq + 1,
+            data: message
+          }
+        );
+      })
+      .filter(isNotNullOrUndefined);
   }
 
   private _processMessages(to: Timeframe) {
@@ -178,9 +186,9 @@ export class DatabaseTestPeer {
             feedKey: candidate.feedKey,
             seq: candidate.seq,
             memberKey: candidate.feedKey,
-            timeframe: candidate.data.timeframe,
+            timeframe: candidate.data.timeframe
           }
-        })
+        });
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }
     }

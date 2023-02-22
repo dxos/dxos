@@ -87,8 +87,8 @@ export class DatabaseBackendProxy {
         loaded.wake();
       },
       (err) => {
-        if(err) {
-          log.warn(`Connection closed`, err);
+        if (err) {
+          log.warn('Connection closed', err);
         }
       }
     );
