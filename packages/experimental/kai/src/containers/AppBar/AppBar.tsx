@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, Info, User } from 'phosphor-react';
+import { Info, User } from 'phosphor-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { ShellLayout, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { SpaceSettingsDialog } from '../../containers';
-import { useAppRouter, useShell, useTheme } from '../../hooks';
+import { getIcon, useAppRouter, useShell, useTheme } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = withReactor(() => {
@@ -18,6 +18,9 @@ export const AppBar = withReactor(() => {
   const { space } = useAppRouter();
   const shell = useShell();
   const [showSettings, setShowSettings] = useState(false);
+  const Icon = getIcon(space?.properties.icon);
+
+  // 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180'
 
   return (
     <div
@@ -29,18 +32,17 @@ export const AppBar = withReactor(() => {
         theme.panel === 'flat' && 'border-b'
       )}
     >
-      <div className='flex items-center' title="Hi I'm Kai!">
+      <div className='flex items-center'>
         <Link to='/'>
-          <Bug
-            className={mx(getSize(8), 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180')}
-            data-testid='kai-bug'
-          />
+          <Icon className={getSize(8)} data-testid='space-icon' />
         </Link>
       </div>
 
       {space && (
         <div className='flex overflow-hidden mx-6 items-center'>
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>{space.properties?.name}</h2>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>
+            {space.properties?.name ?? 'Space'}
+          </h2>
           <Button variant='ghost' onClick={() => setShowSettings(true)}>
             <Info className={getSize(4)} />
           </Button>
