@@ -65,7 +65,6 @@ export class WorkerSession {
       NetworkService: () => this._getService((services) => services.NetworkService),
       IdentityService: () => this._getService((services) => services.IdentityService),
       SpaceInvitationsService: () => this._getService((services) => services.SpaceInvitationsService),
-      SpaceService: () => this._getService((services) => services.SpaceService),
       SpacesService: () => this._getService((services) => services.SpacesService),
       SystemService: () => this._getService((services) => services.SystemService),
       TracingService: () => this._getService((services) => services.TracingService)

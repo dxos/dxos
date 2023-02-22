@@ -16,7 +16,7 @@ import { Status } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
+import { IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
@@ -154,7 +154,15 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
-      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager),
+      SpacesService: new SpacesServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.spaceManager,
+        this._serviceContext.dataServiceSubscriptions,
+        async () => {
+          await this._serviceContext.initialized.wait();
+          return this._serviceContext.dataSpaceManager!;
+        }
+      ),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
@@ -162,9 +170,6 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       // TODO(burdon): Move to new protobuf definitions.
       IdentityService: new IdentityServiceImpl(this._serviceContext),
-
-      // TODO(burdon): Port old SubscribeSpaces to QueryServices>
-      SpaceService: new SpaceServiceImpl(this._serviceContext),
 
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({

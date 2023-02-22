@@ -13,8 +13,7 @@ import {
   InvitationsOptions,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
-import { failUndefined, inspectObject } from '@dxos/debug';
-import { ResultSet } from '@dxos/echo-db';
+import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -35,7 +34,7 @@ export interface Echo {
   createSpace(): Promise<Space>;
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
   getSpace(spaceKey: PublicKey): Space | undefined;
-  querySpaces(): ResultSet<Space>;
+  // querySpaces(): ZenObservable<Space[]>;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 
   dbRouter: DatabaseRouter;
@@ -44,13 +43,14 @@ export interface Echo {
 export class EchoProxy implements Echo {
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _spacesChanged = new Event();
+  private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
 
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: SpaceInvitationsProxy;
+  private _cachedSpaces: Space[] = [];
   private _destroying = false; // TODO(burdon): Standardize enum.
 
   // prettier-ignore
@@ -96,17 +96,17 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
-    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
+    assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
     const gotInitialUpdate = new Trigger();
-    const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
-        if (!this._spaces.has(space.publicKey)) {
+        if (!this._spaces.has(space.spaceKey)) {
           await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
           if (this._destroying) {
             return;
@@ -122,13 +122,14 @@ export class EchoProxy implements Echo {
           await spaceProxy.initialize();
           emitUpdate = true;
         } else {
-          this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
+          this._spaces.get(space.spaceKey)!._processSpaceUpdate(space);
         }
       }
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._spacesChanged.emit();
+        this._cachedSpaces = Array.from(this._spaces.values());
+        this._spacesChanged.emit(this._cachedSpaces);
       }
     });
 
@@ -155,13 +156,13 @@ export class EchoProxy implements Echo {
    * Creates a new space.
    */
   async createSpace(meta?: PropertiesOptions): Promise<Space> {
-    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
-    const space = await this._serviceProvider.services.SpaceService.createSpace();
+    assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
+    const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
-      return this._spaces.has(space.publicKey);
+      return this._spaces.has(space.spaceKey);
     });
-    const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
+    const spaceProxy = this._spaces.get(space.spaceKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     await spaceProxy.db.add(new Properties(meta));
@@ -175,20 +176,21 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
-    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
-    const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
+    return todo();
+    // assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
+    // const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
 
-    const proxy = new Trigger<SpaceProxy>();
-    const unsubscribe = this._spaceCreated.on((spaceKey) => {
-      if (spaceKey.equals(space.publicKey)) {
-        const spaceProxy = this._spaces.get(space.publicKey)!;
-        proxy.wake(spaceProxy);
-      }
-    });
+    // const proxy = new Trigger<SpaceProxy>();
+    // const unsubscribe = this._spaceCreated.on((spaceKey) => {
+    //   if (spaceKey.equals(space.publicKey)) {
+    //     const spaceProxy = this._spaces.get(space.publicKey)!;
+    //     proxy.wake(spaceProxy);
+    //   }
+    // });
 
-    const spaceProxy = await proxy.wait();
-    unsubscribe();
-    return spaceProxy;
+    // const spaceProxy = await proxy.wait();
+    // unsubscribe();
+    // return spaceProxy;
   }
 
   /**
@@ -199,10 +201,17 @@ export class EchoProxy implements Echo {
   }
 
   /**
-   * Query for all spaces.
+   * Get list of all spaces.
    */
-  querySpaces(): ResultSet<Space> {
-    return new ResultSet<Space>(this._spacesChanged, () => Array.from(this._spaces.values()));
+  getSpaces(): Space[] {
+    return this._cachedSpaces;
+  }
+
+  /**
+   * Subscribe to spaces changes.
+   */
+  subscribeSpaces(callback: (spaces: Space[]) => void) {
+    return this._spacesChanged.on(callback);
   }
 
   /**

@@ -248,18 +248,20 @@ describe('Client services', () => {
       await waitForExpect(() => {
         expect(space.queryMembers().value).to.deep.equal([
           {
-            identityKey: client1.halo.identity!.identityKey,
             identity: {
               identityKey: client1.halo.identity!.identityKey,
-              displayName: 'Peer 1'
+              profile: {
+                displayName: 'Peer 1'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.identity!.identityKey,
             identity: {
               identityKey: client2.halo.identity!.identityKey,
-              displayName: 'Peer 2'
+              profile: {
+                displayName: 'Peer 2'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           }

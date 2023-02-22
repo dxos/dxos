@@ -4,11 +4,11 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { PublicKey, SpaceMember } from '@dxos/client';
 
 import { useSpace } from './useSpaces';
 
-export const useMembers = (spaceKey: PublicKey | undefined) => {
+export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   const space = useSpace(spaceKey);
   const result = useMemo(() => space?.queryMembers(), [space]);
   const members =

@@ -19,7 +19,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
+import { Space as SpaceType, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Properties } from '../proto';
@@ -39,12 +39,6 @@ export interface Space {
 
   open(): Promise<void>;
   close(): Promise<void>;
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  getDetails(): Promise<SpaceDetails>;
 
   queryMembers(): ResultSet<SpaceMember>;
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
@@ -103,7 +97,7 @@ export class SpaceProxy implements Space {
   }
 
   get key() {
-    return this._state.publicKey;
+    return this._state.spaceKey;
   }
 
   get isOpen() {
@@ -192,16 +186,8 @@ export class SpaceProxy implements Space {
     await this._setOpen(false);
   }
 
-  async getDetails(): Promise<SpaceDetails> {
-    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-    return this._clientServices.services.SpaceService.getSpaceDetails({
-      spaceKey: this.key
-    });
-  }
-
   /**
    * Return set of space members.
-   * @deprecated
    */
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers(): ResultSet<SpaceMember> {
@@ -255,17 +241,20 @@ export class SpaceProxy implements Space {
   }
 
   async _setOpen(open: boolean) {
-    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-    await this._clientServices.services.SpaceService.setSpaceState({
-      spaceKey: this.key,
-      open
-    });
+    return todo();
+    // assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
+    // await this._clientServices.services.SpaceService.setSpaceState({
+    //   spaceKey: this.key,
+    //   open
+    // });
   }
 
   /**
    * Called by EchoProxy to update this space instance.
    * @internal
    */
+  // TODO(wittjosiah): Make private and trigger with event?
   _processSpaceUpdate(space: SpaceType) {
     const emitEvent = shouldUpdate(this._state, space);
     this._state = space;
