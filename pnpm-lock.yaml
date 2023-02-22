@@ -34,6 +34,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log-hook': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protobuf-compiler': workspace:*
@@ -132,6 +133,7 @@ importers:
       '@dxos/esbuild-plugins': link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
+      '@dxos/keys': link:packages/common/keys
       '@dxos/log-hook': link:tools/log-hook
       '@dxos/plate': link:packages/common/plate
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
