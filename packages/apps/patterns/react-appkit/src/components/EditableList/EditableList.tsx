@@ -187,7 +187,6 @@ export const EditableList = ({
           >
             <Button
               variant='ghost'
-              compact
               {...slots.addItemButton}
               className={mx(getSize(10), slots.addItemButton?.className)}
               onClick={onClickAdd}
@@ -260,7 +259,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
         {onClickDelete && (
           <ListItemEndcap>
             {/* TODO(burdon): Hover. */}
-            <Button variant='ghost' compact className={getSize(10)} onClick={onClickDelete}>
+            <Button variant='ghost' className={getSize(10)} onClick={onClickDelete}>
               <X weight='light' className={getSize(4)} />
             </Button>
             {/*

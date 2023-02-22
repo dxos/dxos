@@ -29,15 +29,15 @@ export const CompoundButton = ({
   description,
   before,
   after,
-  compact,
   variant = 'default',
+  elevation,
   slots = {},
   ...buttonProps
-}: CompoundButtonProps) => {
+}: Omit<CompoundButtonProps, 'density'>) => {
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
   const { themeVariant } = useThemeContext();
-  const shadow = useButtonShadow();
+  const shadow = useButtonShadow(elevation);
   return (
     <button
       {...buttonProps}

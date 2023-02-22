@@ -73,7 +73,6 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
       </RadioGroup.Root>
       <Button
         disabled={disabled}
-        compact
         onClick={() => dispatch({ type: 'add identity' })}
         className='flex items-center gap-2 pli-2'
         data-testid='add-identity'

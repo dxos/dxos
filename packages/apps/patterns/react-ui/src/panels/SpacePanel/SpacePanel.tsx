@@ -7,7 +7,7 @@ import React, { cloneElement, useReducer } from 'react';
 
 import { Space, SpaceMember } from '@dxos/client';
 import { useClient, useSpaceInvitations, useSpaces } from '@dxos/react-client';
-import { Button, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
+import { Button, DensityProvider, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
 
 import { InvitationList, PanelSeparator, SpaceListItem, SpaceMemberListContainer } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
@@ -48,7 +48,7 @@ const CurrentSpaceView = ({
     <div role='none' className='flex flex-col'>
       <div role='none' className={mx(subduedSurface, 'rounded-bs-md flex items-center p-2 gap-2')}>
         <Tooltip content={t('show all spaces label')} zIndex='z-50'>
-          <Button compact variant='ghost' onClick={onShowAll} data-testid='show-all-spaces'>
+          <Button variant='ghost' onClick={onShowAll} data-testid='show-all-spaces'>
             <CaretLeft className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
@@ -65,7 +65,6 @@ const CurrentSpaceView = ({
         />
         <Button
           className='is-full flex gap-2 mbs-2'
-          compact
           onClick={() => space?.createInvitation()}
           data-testid='create-space-invitation'
         >
@@ -102,7 +101,7 @@ const SpaceListView = ({
           {t('all spaces label')}
         </h2>
         <Tooltip content={t('show current space label')} zIndex='z-50'>
-          <Button compact variant='ghost' onClick={onShowCurrent} data-testid='show-current-space'>
+          <Button variant='ghost' onClick={onShowCurrent} data-testid='show-current-space'>
             <CaretRight className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
@@ -115,17 +114,12 @@ const SpaceListView = ({
             return doneActionParent ? cloneElement(doneActionParent, { key }, listItem) : listItem;
           })}
         </ul>
-        <Button className='is-full flex gap-2 mbs-2' compact onClick={handleCreateSpace} data-testid='create-space'>
+        <Button className='is-full flex gap-2 mbs-2' onClick={handleCreateSpace} data-testid='create-space'>
           <span>{t('create space label')}</span>
           <PlusCircle className={getSize(4)} weight='bold' />
         </Button>
         {onClickJoinSpace && (
-          <Button
-            className='is-full flex gap-2 mbs-2'
-            compact
-            onClick={() => onClickJoinSpace?.()}
-            data-testid='join-space'
-          >
+          <Button className='is-full flex gap-2 mbs-2' onClick={() => onClickJoinSpace?.()} data-testid='join-space'>
             <span>{t('join space label')}</span>
             <Intersect className={getSize(4)} weight='bold' />
           </Button>
@@ -163,12 +157,12 @@ export const SpacePanel = (props: SpacePanelProps) => {
 
   // TODO(wittjosiah): Use ViewState or similar.
   return (
-    <>
+    <DensityProvider density='fine'>
       {panelState.activeView === 'current space' ? (
         <CurrentSpaceView {...props} onShowAll={() => dispatch({ type: 'deselect space' })} />
       ) : (
         <SpaceListView {...props} onShowCurrent={() => dispatch({ type: 'select space' })} />
       )}
-    </>
+    </DensityProvider>
   );
 };
