@@ -25,6 +25,9 @@ export class Text extends EchoObject<TextModel> {
     return this._model;
   }
 
+  /**
+   * Returns the text content of the object.
+   */
   get text(): string {
     // TODO(dmaretskyi): Should accessing this re-render the react component?
     // this._database?._logObjectAccess(this);
