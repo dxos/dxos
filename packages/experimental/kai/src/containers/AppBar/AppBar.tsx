@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, User } from 'phosphor-react';
-import React from 'react';
+import { Bug, Info, User } from 'phosphor-react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ShellLayout, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
-import { humanize } from '@dxos/util';
+import { Button, getSize, mx } from '@dxos/react-components';
 
+import { SpaceSettingsDialog } from '../../containers';
 import { useAppRouter, useShell, useTheme } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
@@ -17,6 +17,7 @@ export const AppBar = withReactor(() => {
   const theme = useTheme();
   const { space } = useAppRouter();
   const shell = useShell();
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div
@@ -38,10 +39,11 @@ export const AppBar = withReactor(() => {
       </div>
 
       {space && (
-        <div className='flex overflow-hidden mx-6'>
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>
-            {space.properties?.name ?? humanize(space.key)}
-          </h2>
+        <div className='flex overflow-hidden mx-6 items-center'>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>{space.properties?.name}</h2>
+          <Button variant='ghost' onClick={() => setShowSettings(true)}>
+            <Info className={getSize(4)} />
+          </Button>
         </div>
       )}
 
@@ -58,6 +60,8 @@ export const AppBar = withReactor(() => {
           <User className={getSize(6)} />
         </span>
       </div>
+
+      {space && <SpaceSettingsDialog space={space} open={showSettings} onClose={() => setShowSettings(false)} />}
     </div>
   );
 });
