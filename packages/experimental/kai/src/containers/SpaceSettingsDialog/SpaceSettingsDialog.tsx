@@ -20,15 +20,14 @@ export type SpaceSettingsDialog = {
 };
 
 export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space, open, onClose }) => {
-  // TODO(burdon): Translation.
   return (
     <Dialog initiallyOpen={!!open} onClose={() => onClose?.()} title='Space Settings'>
-      <div className='px-1'>
+      <div>
         <Input
-          label=''
+          label='Title'
           variant='subdued'
           placeholder='Title'
-          slots={{ input: { autoFocus: true, className: 'text-xl' } }}
+          slots={{ input: { autoFocus: true, className: 'text-xl' }, label: { className: 'sr-only' } }}
           value={space.properties.name}
           onChange={(event) => {
             space.properties.name = event.target.value;
@@ -54,24 +53,21 @@ export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space
         />
       </div>
 
-      {/* TODO(burdon): Use Dialog.Primitive. */}
-      <div>
-        <Button variant='primary' onClick={onClose}>
-          OK
-        </Button>
-      </div>
+      <Button variant='primary' onClick={onClose}>
+        OK
+      </Button>
     </Dialog>
   );
 });
 
-const Icons: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
+const Themes: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
   return (
     <div className='flex'>
-      <div className='grid grid-cols-4'>
-        {icons.map(({ id, Icon }) => (
+      <div className='grid grid-cols-6'>
+        {themes.map(({ id, classes }) => (
           <Button key={id} variant='ghost' onClick={() => onSelect(id)}>
-            <div className={mx('p-1', selected === id && 'ring-2 ring-black')}>
-              <Icon className={getSize(6)} />
+            <div className={mx('m-1', selected === id && 'ring-2 ring-black')}>
+              <Square className={mx(getSize(6), classes.header, 'text-transparent')} />
             </div>
           </Button>
         ))}
@@ -80,14 +76,14 @@ const Icons: FC<{ selected: string; onSelect: (selected: string) => void }> = ({
   );
 };
 
-const Themes: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
+const Icons: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
   return (
     <div className='flex'>
-      <div className='grid grid-cols-4'>
-        {themes.map(({ id, classes }) => (
+      <div className='grid grid-cols-6'>
+        {icons.map(({ id, Icon }) => (
           <Button key={id} variant='ghost' onClick={() => onSelect(id)}>
-            <div className={mx('m-1', selected === id && 'ring-2 ring-black')}>
-              <Square className={mx(getSize(6), classes.header, 'text-transparent')} />
+            <div className={mx('p-1', selected === id && 'ring-2 ring-black')}>
+              <Icon className={getSize(6)} />
             </div>
           </Button>
         ))}

@@ -2,7 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AirplaneTakeoff, Bank, Buildings, Bug, Confetti, Factory, Rocket, Users } from 'phosphor-react';
+import {
+  AirplaneTakeoff,
+  Atom,
+  Bag,
+  Bank,
+  Basketball,
+  Buildings,
+  Bug,
+  Presentation,
+  Confetti,
+  Factory,
+  Rocket,
+  Users
+} from 'phosphor-react';
 import { FC, useEffect, useState } from 'react';
 
 import { Properties } from '@dxos/client';
@@ -13,6 +26,18 @@ export const icons: { id: string; Icon: FC<any> }[] = [
   {
     id: 'bug',
     Icon: Bug
+  },
+  {
+    id: 'atom',
+    Icon: Atom
+  },
+  {
+    id: 'suitcase',
+    Icon: Bag
+  },
+  {
+    id: 'presentation',
+    Icon: Presentation
   },
   {
     id: 'plane',
@@ -39,6 +64,10 @@ export const icons: { id: string; Icon: FC<any> }[] = [
     Icon: Rocket
   },
   {
+    id: 'sport',
+    Icon: Basketball
+  },
+  {
     id: 'team',
     Icon: Users
   }
@@ -56,10 +85,24 @@ export type Theme = {
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
 export const themes: Theme[] = [
   {
-    id: 'sky',
+    id: 'slate',
     classes: {
-      header: 'bg-sky-500',
-      toolbar: 'bg-sky-300'
+      header: 'bg-slate-500',
+      toolbar: 'bg-slate-300'
+    }
+  },
+  {
+    id: 'zinc',
+    classes: {
+      header: 'bg-zinc-500',
+      toolbar: 'bg-zinc-300'
+    }
+  },
+  {
+    id: 'red',
+    classes: {
+      header: 'bg-red-500',
+      toolbar: 'bg-red-300'
     }
   },
   {
@@ -77,6 +120,41 @@ export const themes: Theme[] = [
     }
   },
   {
+    id: 'cyan',
+    classes: {
+      header: 'bg-cyan-500',
+      toolbar: 'bg-cyan-300'
+    }
+  },
+  {
+    id: 'sky',
+    classes: {
+      header: 'bg-sky-500',
+      toolbar: 'bg-sky-300'
+    }
+  },
+  {
+    id: 'blue',
+    classes: {
+      header: 'bg-blue-500',
+      toolbar: 'bg-blue-300'
+    }
+  },
+  {
+    id: 'indigo',
+    classes: {
+      header: 'bg-indigo-500',
+      toolbar: 'bg-indigo-300'
+    }
+  },
+  {
+    id: 'fuchsia',
+    classes: {
+      header: 'bg-fuchsia-500',
+      toolbar: 'bg-fuchsia-300'
+    }
+  },
+  {
     id: 'violet',
     classes: {
       header: 'bg-violet-500',
@@ -89,27 +167,6 @@ export const themes: Theme[] = [
       header: 'bg-pink-500',
       toolbar: 'bg-pink-300'
     }
-  },
-  {
-    id: 'indigo',
-    classes: {
-      header: 'bg-indigo-500',
-      toolbar: 'bg-indigo-300'
-    }
-  },
-  {
-    id: 'cyan',
-    classes: {
-      header: 'bg-cyan-500',
-      toolbar: 'bg-cyan-300'
-    }
-  },
-  {
-    id: 'blue',
-    classes: {
-      header: 'bg-blue-500',
-      toolbar: 'bg-blue-300'
-    }
   }
 ];
 
@@ -118,9 +175,11 @@ export const getIcon = (icon: string | undefined) => {
   return Icon;
 };
 
-export const getTheme = (theme: string | undefined) => {
-  return themes.find(({ id }) => id === theme) ?? themes[0];
+export const getTheme = (theme: string | undefined): Theme => {
+  return themes.find(({ id }) => id === theme) ?? defaultTheme;
 };
+
+const defaultTheme = getTheme('sky') ?? themes[0];
 
 /**
  * Support theme variants.
@@ -130,6 +189,7 @@ export const useTheme = (): Theme => {
   const { space } = useAppRouter();
   const [theme, setTheme] = useState(getTheme(space?.properties.theme));
   useEffect(() => {
+    setTheme(getTheme(space?.properties.theme));
     const query = space?.db.query(Properties.filter());
     return query?.subscribe(() => {
       setTheme(getTheme(space?.properties.theme));
