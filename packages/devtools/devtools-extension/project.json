@@ -14,20 +14,20 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "serve": "devtools-extension:bundle",
         "coveragePath": "coverage/packages/devtools/devtools-extension",
+        "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
+        "headless": false,
+        "incognito": false,
+        "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
+        "playwright": true,
         "resultsPath": "test-results/packages/devtools/devtools-extension",
+        "serve": "devtools-extension:bundle",
         "testPatterns": [
           "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
           "packages/devtools/devtools-extension/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
-        "playwright": true,
-        "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "incognito": false,
-        "headless": false
+        ]
       },
       "outputs": [
         "{options.coveragePath}",
