@@ -9,8 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { describe, test, afterTest } from '@dxos/test';
 

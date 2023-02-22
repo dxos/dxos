@@ -81,12 +81,8 @@ export class AppManager {
   }
 
   async createTodo(title: string) {
-    await this.page.keyboard.type(title);
+    await this.page.getByTestId('new-todo').type(title);
     await this.page.keyboard.press('Enter');
-  }
-
-  async focusNewTodo() {
-    await this.page.getByTestId('new-todo').click();
   }
 
   async toggleTodo(title: string) {
