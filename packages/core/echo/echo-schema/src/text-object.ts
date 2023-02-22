@@ -11,6 +11,10 @@ export class TextObject extends EchoObject<TextModel> {
     super(TextModel);
   }
 
+  override toString() {
+    return this.doc?.getText().toString() ?? '';
+  }
+
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
     return this._model?.doc;

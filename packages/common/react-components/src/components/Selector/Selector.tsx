@@ -10,17 +10,19 @@ import { Input } from '../Input';
 
 export type SelectorOption = { id: string; title: string };
 
-/**
- * Options selector.
- */
-export const Selector: FC<{
+export type SelectorProps = {
   value?: string;
   options?: SelectorOption[];
   rows?: number;
   placeholder?: string;
   onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
-}> = ({ value, options, rows = 5, placeholder, onSelect }) => {
+};
+
+/**
+ * Options selector.
+ */
+export const Selector: FC<SelectorProps> = ({ value, options, rows = 5, placeholder, onSelect }) => {
   const getText = (id?: string) => {
     if (id === undefined) {
       return '';
@@ -80,7 +82,7 @@ export const Selector: FC<{
 
   return (
     <div className='flex w-full'>
-      <div className='flex flex-col'>
+      <div className='flex flex-col w-full'>
         <Input
           label={'Select'}
           value={value ? getText(value) : text}
@@ -92,7 +94,8 @@ export const Selector: FC<{
             },
             label: { className: 'sr-only' },
             input: {
-              className: 'flex flex-1',
+              spellCheck: false,
+              className: 'w-full',
               onKeyDown: handleKeyDown,
               onBlur: () => setOpen(false)
             }
@@ -102,7 +105,7 @@ export const Selector: FC<{
         {hasOptions && open && (
           <div className='relative z-50'>
             <div
-              className='absolute flex flex-col overflow-y-auto w-full bg-zinc-100 shadow border-t rounded'
+              className='absolute flex flex-col overflow-y-scroll w-full bg-zinc-100 shadow border-t rounded'
               style={{ maxHeight: rows * 32 }}
             >
               {options!.map((option) => (

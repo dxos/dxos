@@ -82,7 +82,6 @@ class SpaceProxy {
   open()
   close()
   getDetails()
-  setActive()
   setTitle()
   getTitle()
   setProperty()
@@ -104,7 +103,6 @@ class Space {
   <interface>
   open()
   close()
-  setActive()
   setTitle()
   getTitle()
   getDetails()

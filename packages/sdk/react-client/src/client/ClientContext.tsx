@@ -68,7 +68,9 @@ export interface ClientProviderProps {
    * Whether or not to include a SpaceProvider as a child.
    *
    * Default is true.
+   * @deprecated Move to patterns/testing.
    */
+  // TODO(burdon): Consider changing to reducer pattern.
   spaceProvider?: boolean | SpaceProviderProps;
 
   /**
