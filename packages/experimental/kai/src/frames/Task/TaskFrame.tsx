@@ -5,10 +5,10 @@
 import React from 'react';
 
 import { UnorderedTaskList } from '../../containers';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 export const TaskFrame = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   if (!space) {
     return null;
   }

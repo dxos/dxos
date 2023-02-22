@@ -36,7 +36,7 @@ export default class Deploy extends BaseCommand {
 
     try {
       return await this.execWithClient(async (client: Client) => {
-        if (!client.halo.profile) {
+        if (!client.halo.identity) {
           throw new Error('Halo profile should be initialized first.');
         }
         // TODO(egorgripasov): HALO <-> KUBE integration.

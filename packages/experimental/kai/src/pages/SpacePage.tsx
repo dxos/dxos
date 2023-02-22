@@ -6,12 +6,11 @@ import { CaretRight } from 'phosphor-react';
 import React, { useContext } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useFrameState, useFrames, useTheme, useDevDataGenerator } from '../hooks';
-import { Section } from '../router';
+import { useAppRouter, useFrames, useTheme, useGenerator, Section } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -46,17 +45,16 @@ const Toolbar = () => {
  * Home page with current space.
  */
 const SpacePage = () => {
-  useDevDataGenerator();
-  const { t } = useTranslation('kai');
+  useGenerator();
   const { active } = useFrames();
   const { section } = useParams();
-  const { space, frame } = useFrameState();
+  const { space, frame } = useAppRouter();
 
   return (
     <PanelSidebarProvider
       inlineStart
       slots={{
-        // TODO (thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
+        // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
         content: { className: '!block-start-appbar', children: <Sidebar /> },
         main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
       }}
@@ -65,13 +63,11 @@ const SpacePage = () => {
       <Toolbar />
 
       {/* Main content. */}
-      {space ? (
+      {space && (
         <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
           {section === Section.REGISTRY && <FrameRegistry />}
           {frame && <FrameContainer frame={frame} />}
         </div>
-      ) : (
-        <div className='flex justify-center pbs-4'>{t('select a space')}</div>
       )}
     </PanelSidebarProvider>
   );

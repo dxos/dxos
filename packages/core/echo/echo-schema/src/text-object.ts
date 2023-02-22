@@ -11,6 +11,10 @@ export class TextObject extends EchoObject<TextModel> {
     super(TextModel);
   }
 
+  override toString() {
+    return this.doc?.getText().toString() ?? '';
+  }
+
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
     return this._model?.doc;
@@ -21,7 +25,11 @@ export class TextObject extends EchoObject<TextModel> {
     return this._model;
   }
 
-  override toString() {
-    return this._model?.textContent || '';
+  protected override async _onBind(): Promise<void> {
+    this._model.initialize();
+    // TODO(dmaretskyi): Unsubscribe.
+    this._item!.subscribe(() => {
+      this._model.initialize();
+    });
   }
 }

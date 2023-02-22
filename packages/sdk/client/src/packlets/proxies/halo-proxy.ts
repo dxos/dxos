@@ -27,13 +27,13 @@ import { ResultSet } from '@dxos/echo-db';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
+import { Contact, Identity } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
 
-type CreateProfileOptions = {
+type CreateIdentityOptions = {
   publicKey?: PublicKey;
   secretKey?: PublicKey;
   displayName?: string;
@@ -50,11 +50,11 @@ type DeviceEvents = {
  * TODO(burdon): Public API (move comments here).
  */
 export interface Halo {
-  get profile(): Profile | undefined;
+  get identity(): Identity | undefined;
   get invitations(): CancellableInvitationObservable[];
-  createProfile(options?: CreateProfileOptions): Promise<Profile>;
-  recoverProfile(seedPhrase: string): Promise<Profile>;
-  subscribeToProfile(callback: (profile: Profile) => void): void;
+  createIdentity(options?: CreateIdentityOptions): Promise<Identity>;
+  recoverIdentity(seedPhrase: string): Promise<Identity>;
+  subscribeToIdentity(callback: (profile: Identity) => void): void;
 
   queryDevices(): Observable<DeviceEvents, DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
@@ -70,12 +70,12 @@ export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
-  public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
+  public readonly identityChanged = new Event(); // TODO(burdon): Move into Identity object.
 
   private _invitations: CancellableInvitationObservable[] = [];
   private _invitationProxy?: HaloInvitationsProxy;
 
-  private _profile?: Profile;
+  private _identity?: Identity;
   private _contacts: Contact[] = [];
 
   // prettier-ignore
@@ -90,15 +90,15 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      key: this._profile?.identityKey.truncate()
+      key: this._identity?.identityKey.truncate()
     };
   }
 
   /**
-   * User profile info.
+   * User identity info.
    */
-  get profile(): Profile | undefined {
-    return this._profile;
+  get identity(): Identity | undefined {
+    return this._identity;
   }
 
   get invitations() {
@@ -114,18 +114,18 @@ export class HaloProxy implements Halo {
    * Allocate resources and set-up internal subscriptions.
    */
   async open() {
-    const gotProfile = this.profileChanged.waitForCount(1);
+    const gotIdentity = this.identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
     assert(this._serviceProvider.services.HaloInvitationsService, 'HaloInvitationsService not available');
     // TODO(burdon): ???
     this._invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
 
-    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
-    const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
+    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    const profileStream = this._serviceProvider.services.IdentityService.subscribeIdentity();
     profileStream.subscribe((data) => {
-      this._profile = data.profile;
-      this.profileChanged.emit();
+      this._identity = data.identity;
+      this.identityChanged.emit();
     });
 
     this._subscriptions.add(() => profileStream.close());
@@ -138,7 +138,7 @@ export class HaloProxy implements Halo {
 
     // this._subscriptions.add(() => contactsStream.close());
 
-    await Promise.all([gotProfile]);
+    await Promise.all([gotIdentity]);
   }
 
   /**
@@ -147,26 +147,31 @@ export class HaloProxy implements Halo {
   async close() {
     this._subscriptions.clear();
     this._invitationProxy = undefined;
-    this._profile = undefined;
+    this._identity = undefined;
     this._contacts = [];
   }
 
   /**
    * @deprecated
    */
-  subscribeToProfile(callback: (profile: Profile) => void): () => void {
-    return this.profileChanged.on(() => callback(this._profile!));
+  subscribeToIdentity(callback: (profile: Identity) => void): () => void {
+    return this.identityChanged.on(() => callback(this._identity!));
   }
 
   /**
-   * Create Profile.
+   * Create Identity.
    * Add Identity key if public and secret key are provided.
    * Then initializes profile with given display name.
    * If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
    * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
-  async createProfile({ publicKey, secretKey, displayName, seedphrase }: CreateProfileOptions = {}): Promise<Profile> {
+  async createIdentity({
+    publicKey,
+    secretKey,
+    displayName,
+    seedphrase
+  }: CreateIdentityOptions = {}): Promise<Identity> {
     if (seedphrase && (publicKey || secretKey)) {
       throw new ApiError('Seedphrase must not be specified with existing keys');
     }
@@ -177,26 +182,26 @@ export class HaloProxy implements Halo {
       secretKey = PublicKey.from(keyPair.secretKey);
     }
 
-    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
+    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     // TODO(burdon): Rename createIdentity?
-    this._profile = await this._serviceProvider.services.ProfileService.createProfile({
+    this._identity = await this._serviceProvider.services.IdentityService.createIdentity({
       publicKey: publicKey?.asUint8Array(),
       secretKey: secretKey?.asUint8Array(),
       displayName
     });
 
-    return this._profile;
+    return this._identity;
   }
 
   /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
-  async recoverProfile(seedPhrase: string) {
-    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
-    this._profile = await this._serviceProvider.services.ProfileService.recoverProfile({
+  async recoverIdentity(seedPhrase: string) {
+    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    this._identity = await this._serviceProvider.services.IdentityService.recoverIdentity({
       seedPhrase
     });
-    return this._profile;
+    return this._identity;
   }
 
   /**
@@ -240,14 +245,14 @@ export class HaloProxy implements Halo {
    * Get Halo credentials for the current user.
    */
   queryCredentials({ id, type }: { id?: PublicKey; type?: string } = {}) {
-    if (!this._profile) {
+    if (!this._identity) {
       throw new ApiError('Identity is not available.');
     }
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
     const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: this._profile.haloSpace!
+      spaceKey: this._identity.haloSpace!
     });
     this._subscriptions.add(() => stream.close());
 
@@ -342,14 +347,14 @@ export class HaloProxy implements Halo {
    * Write credentials to halo profile.
    */
   async writeCredentials(credentials: Credential[]) {
-    if (!this._profile) {
+    if (!this._identity) {
       throw new ApiError('Identity is not available.');
     }
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
     return this._serviceProvider.services.SpacesService.writeCredentials({
-      spaceKey: this._profile.haloSpace!,
+      spaceKey: this._identity.haloSpace!,
       credentials
     });
   }
@@ -358,8 +363,8 @@ export class HaloProxy implements Halo {
    * Present Credentials.
    */
   async presentCredentials({ id, nonce }: { id: PublicKey; nonce: Uint8Array }): Promise<Presentation> {
-    if (!this._serviceProvider.services.ProfileService) {
-      throw new ApiError('ProfileService is not available.');
+    if (!this._serviceProvider.services.IdentityService) {
+      throw new ApiError('IdentityService is not available.');
     }
     const trigger = new Trigger<Credential>();
     this.queryCredentials({ id }).subscribe({
@@ -379,7 +384,7 @@ export class HaloProxy implements Halo {
       THROW_TIMEOUT_ERROR_AFTER,
       new ApiError('Timeout while waiting for credential')
     );
-    return this._serviceProvider.services.ProfileService!.signPresentation({
+    return this._serviceProvider.services.IdentityService!.signPresentation({
       presentation: {
         credentials: [credential]
       },

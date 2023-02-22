@@ -23,13 +23,13 @@ const Root = () => {
     return <h1>No profile created yet</h1>;
   }
 
-  return <h1>Profile created</h1>;
+  return <h1>Identity created</h1>;
 };
 ```
 
 ## Create a profile
 
-Profile creation is handled through the `client.halo` object. We need to send a username provided by the user.
+Identity creation is handled through the `client.halo` object. We need to send a username provided by the user.
 
 Now let's go to our `src/components/Root.js` file and add the code to actually create the profile:
 
@@ -44,7 +44,7 @@ const Root = () => {
   if (!profile) {
     const handleRegistration = async ({ username }) => {
       if (username) {
-        await client.halo.createProfile({ username });
+        await client.halo.createIdentity({ username });
       }
     };
 
@@ -59,7 +59,7 @@ const Root = () => {
 
 See your app again, you should now see:
 
-![Tasks App - Create Profile](images/introduction-00.png)
+![Tasks App - Create Identity](images/introduction-00.png)
 
 > If you see already created profile but not the dialog itself you can use your storage clearing extension to clear all data from the previous step.
 

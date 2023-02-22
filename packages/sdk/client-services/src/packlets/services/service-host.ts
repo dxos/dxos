@@ -13,7 +13,7 @@ import { Status } from '@dxos/protocols/proto/dxos/client';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, ProfileServiceImpl, TracingServiceImpl, SystemServiceImpl } from '../deprecated';
+import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl, SystemServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
@@ -153,7 +153,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
       // TODO(burdon): Move to new protobuf definitions.
-      ProfileService: new ProfileServiceImpl(this._serviceContext),
+      IdentityService: new IdentityServiceImpl(this._serviceContext),
 
       // TODO(burdon): Port old SubscribeSpaces to QueryServices>
       SpaceService: new SpaceServiceImpl(this._serviceContext),

@@ -1,5 +1,5 @@
 # Class `EchoSchema`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:24]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:43]()</sub>
 
 
 Constructed via generated protobuf class.
@@ -15,6 +15,8 @@ Arguments:
 `_root`: <code>Root</code>
 
 ## Properties
+### [types]()
+Type: <code>[EchoSchemaType](/api/@dxos/react-client/classes/EchoSchemaType)[]</code>
 
 ## Methods
 ### [getPrototype(name)]()

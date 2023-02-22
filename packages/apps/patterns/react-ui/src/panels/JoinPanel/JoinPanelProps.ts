@@ -4,7 +4,7 @@
 
 import { cloneElement, Dispatch } from 'react';
 
-import type { AuthenticatingInvitationObservable, Profile } from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 
 export type JoinPanelMode = 'default' | 'halo-only';
@@ -23,7 +23,7 @@ export interface JoinPanelProps {
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
-  identity: Profile;
+  identity: Identity;
 }
 
 export interface EmptyJoinAction {
@@ -85,6 +85,6 @@ export interface JoinState {
   haloInvitation?: AuthenticatingInvitationObservable;
   haloViewState: InvitationView;
   haloInvitationAnnotation?: 'authenticating' | 'authentication failed';
-  selectedIdentity?: Profile;
+  selectedIdentity?: Identity;
   additionMethod?: AdditionMethodAction['method'];
 }

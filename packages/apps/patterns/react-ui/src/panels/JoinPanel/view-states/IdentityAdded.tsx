@@ -5,7 +5,7 @@
 import { CaretLeft, CaretRight, Check } from 'phosphor-react';
 import React, { cloneElement } from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -14,7 +14,7 @@ import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentityAddedProps extends ViewStateProps, DoneProps {
   mode?: JoinPanelMode;
-  addedIdentity?: Profile;
+  addedIdentity?: Identity;
 }
 
 export interface DoneProps extends ViewStateProps {

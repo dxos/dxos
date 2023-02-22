@@ -5,7 +5,7 @@
 import { Transition } from '@headlessui/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'phosphor-react';
-import React, { ComponentProps, Fragment, ReactNode, useState } from 'react';
+import React, { ComponentProps, Fragment, ReactNode, useEffect, useState } from 'react';
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
@@ -30,9 +30,10 @@ export interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   closeLabel?: string;
-  initiallyOpen?: boolean;
+  initiallyOpen?: boolean; // TODO(burdon): Change to just 'open'.
   mountAsSibling?: boolean;
   slots?: DialogSlots;
+  onClose?: () => void;
 }
 
 // TODO(burdon): Add size property.
@@ -46,9 +47,18 @@ export const Dialog = ({
   closeLabel,
   initiallyOpen,
   mountAsSibling,
-  slots = {}
+  slots = {},
+  onClose
 }: DialogProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
+  useEffect(() => {
+    setIsOpen(!!initiallyOpen);
+  }, [initiallyOpen]);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    onClose?.();
+  };
 
   const dialogOverlayAndContent = (
     <Transition.Root show={isOpen}>
@@ -147,7 +157,7 @@ export const Dialog = ({
   );
 
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={handleClose}>
       {openTrigger && <DialogPrimitive.Trigger asChild>{openTrigger}</DialogPrimitive.Trigger>}
       {mountAsSibling ? (
         dialogOverlayAndContent

@@ -18,7 +18,7 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
-  test.only('presentation', async () => {
+  test('presentation', async () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -38,8 +38,8 @@ describe('Halo', () => {
       afterTest(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createProfile({ displayName: 'test-user' });
-      expect(client.halo.profile).exist;
+      await client.halo.createIdentity({ displayName: 'test-user' });
+      expect(client.halo.identity).exist;
 
       const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AuthorizedDevice' });
       const trigger = new Trigger<Credential>();

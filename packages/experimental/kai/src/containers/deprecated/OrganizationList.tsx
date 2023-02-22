@@ -51,8 +51,8 @@ export const OrganizationListItem: FC<{ organization: Organization }> = withReac
             <List labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
               {organization.people?.map((contact) => (
                 <ListItem key={contact.id}>
-                  <ListItemEndcap className={getSize(6)}>
-                    <User className={mx(getSize(4), 'mbs-1')} />
+                  <ListItemEndcap className={mx('flex items-center mr-2', getSize(6))}>
+                    <User className={getSize(4)} />
                   </ListItemEndcap>
                   <ListItemHeading className='text-sm mbs-0.5'>{contact.name}</ListItemHeading>
                 </ListItem>

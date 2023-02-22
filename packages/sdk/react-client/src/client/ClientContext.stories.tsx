@@ -4,6 +4,7 @@
 
 import React, { Component, PropsWithChildren } from 'react';
 
+import { fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 
 import { ClientProvider, useClient } from './ClientContext';
@@ -38,17 +39,21 @@ const TestApp = () => {
         <JsonPanel value={client.toJSON()} />
       </div>
       <div style={{ padding: 1 }}>
-        <JsonPanel value={client.halo.profile} />
+        <JsonPanel value={client.halo.identity} />
       </div>
     </div>
   );
 };
 
-export const Primary = () => (
-  <ClientProvider>
-    <TestApp />
-  </ClientProvider>
-);
+const servicesProvider = (config?: Config) => fromHost(config);
+
+export const Primary = () => {
+  return (
+    <ClientProvider services={servicesProvider}>
+      <TestApp />
+    </ClientProvider>
+  );
+};
 
 class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
   constructor(props: any) {

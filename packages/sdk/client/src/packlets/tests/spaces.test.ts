@@ -21,7 +21,7 @@ describe('Spaces', () => {
     afterTest(() => client.destroy());
 
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
     const space = await client.echo.createSpace();
@@ -39,7 +39,7 @@ describe('Spaces', () => {
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     let itemId: string;
     {
