@@ -94,17 +94,7 @@ export const ClientProvider = ({
       return;
     }
 
-    const subscription = client.queryStatus().subscribe(
-      (status) => {
-        setStatus(status);
-      },
-      (err) => {
-        log.error(err);
-        setStatus(undefined);
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    return client.subscribeStatus((status) => setStatus(status));
   }, [client]);
 
   useEffect(() => {
@@ -112,7 +102,7 @@ export const ClientProvider = ({
       log('client ready', { client });
       await onInitialize?.(client);
       setClient(client);
-      setStatus(Status.ACTIVE);
+      setStatus(client.getStatus() ?? Status.ACTIVE);
       printBanner(client);
     };
 

@@ -940,15 +940,11 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
-      symbol-observable: ^4.0.0
-      zen-observable-ts: ^1.2.5
     dependencies:
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
-      symbol-observable: 4.0.0
-      zen-observable-ts: 1.2.5
 
   packages/common/codec-protobuf:
     specifiers:
@@ -31861,11 +31857,6 @@ packages:
       stable: 0.1.8
     dev: true
 
-  /symbol-observable/4.0.0:
-    resolution: {integrity: sha512-b19dMThMV4HVFynSAM1++gBHAbk2Tc/osgLIBZMKsyqh34jb2e8Os7T6ZW/Bt3pJFdBTd2JwAnAAEQV7rSNvcQ==}
-    engines: {node: '>=0.10'}
-    dev: false
-
   /symbol-tree/3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
     dev: true
@@ -35351,16 +35342,6 @@ packages:
     optionalDependencies:
       commander: 2.20.3
     dev: true
-
-  /zen-observable-ts/1.2.5:
-    resolution: {integrity: sha512-QZWQekv6iB72Naeake9hS1KxHlotfRpe+WGNbNx5/ta+R3DNjVO2bswf63gXlWDcs+EMd7XY8HfVQyP1X6T4Zg==}
-    dependencies:
-      zen-observable: 0.8.15
-    dev: false
-
-  /zen-observable/0.8.15:
-    resolution: {integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==}
-    dev: false
 
   /zip-stream/2.1.3:
     resolution: {integrity: sha512-EkXc2JGcKhO5N5aZ7TmuNo45budRaFGHOmz24wtJR7znbNqDPmdZtUauKX6et8KAVseAMBOyWJqEpXcHTBsh7Q==}

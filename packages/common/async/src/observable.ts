@@ -9,7 +9,6 @@ import { UnsubscribeCallback } from './events';
 /**
  * Return type for processes that support cancellable subscriptions.
  * The handler object implements the observable events.
- * @deprecated use `ZenObservable` instead
  */
 export interface Observable<Events, Value = unknown> {
   value?: Value;

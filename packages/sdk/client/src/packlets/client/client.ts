@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Concast, synchronized, ZenObservable } from '@dxos/async';
+import { Event, synchronized, UnsubscribeCallback } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
@@ -17,7 +17,6 @@ import { Status } from '@dxos/protocols/proto/dxos/client/services';
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
-import { observableFromStream } from '../util';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
@@ -50,8 +49,10 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
+  private readonly _statusUpdate = new Event<Status | undefined>();
 
   private _initialized = false;
+  private _status?: Status;
 
   // prettier-ignore
   constructor({
@@ -157,10 +158,22 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.createSession();
 
+    this._services.services.SystemService.queryStatus().subscribe(
+      ({ status }) => {
+        this._status = status;
+        this._statusUpdate.emit(this._status);
+      },
+      (_err) => {
+        this._status = undefined;
+        this._statusUpdate.emit(this._status);
+      }
+    );
+
     // TODO(wittjosiah): Promise.all?
     await this._halo.open();
     await this._echo.open();
     await this._mesh.open();
+    await this._statusUpdate.waitForCondition(() => this._status !== undefined);
 
     this._initialized = true;
   }
@@ -184,15 +197,15 @@ export class Client {
     this._initialized = false;
   }
 
+  getStatus(): Status | undefined {
+    return this._status;
+  }
+
   /**
    * Observe the system status.
    */
-  queryStatus(): ZenObservable<Status> {
-    assert(this._services.services.SystemService, 'SystemService is not available.');
-
-    return new Concast([
-      observableFromStream(this._services.services.SystemService.queryStatus()).map(({ status }) => status)
-    ]);
+  subscribeStatus(callback: (status: Status | undefined) => void): UnsubscribeCallback {
+    return this._statusUpdate.on(callback);
   }
 
   /**

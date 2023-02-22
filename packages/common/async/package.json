@@ -19,9 +19,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "symbol-observable": "^4.0.0",
-    "zen-observable-ts": "^1.2.5"
+    "@dxos/util": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

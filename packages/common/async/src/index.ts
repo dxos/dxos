@@ -9,7 +9,6 @@ export * from './event-emitter';
 export * from './events';
 export * from './latch';
 export * from './observable';
-export * from './observables';
 export * from './lock';
 export * from './sink';
 export * from './timeout';
