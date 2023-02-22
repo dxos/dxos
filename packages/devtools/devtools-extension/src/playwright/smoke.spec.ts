@@ -8,10 +8,6 @@ import { beforeAll, describe, test } from '@dxos/test';
 
 import { ExtensionManager } from './extension-manager';
 
-/**
- * This is a basic smoke test for the extension.
- * It loads the extension and checks that the extension's pop-up is visible.
- */
 // CircleCI does not support headed mode of Playwright.
 // And Playwright does not support extensions in headless mode.
 // So we skip this test on CI.
