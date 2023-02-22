@@ -12,18 +12,18 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
-  test('creates a profile', async () => {
+  test('creates a identity', async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity).exist;
 
     expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
-    expect(client.halo.profile?.displayName).to.equal('test-user');
+    expect(client.halo.identity?.displayName).to.equal('test-user');
   });
 
   test('device invitations', async () => {
@@ -33,8 +33,8 @@ describe('Halo', () => {
     afterTest(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createProfile({ displayName: 'test-user' });
-    expect(client1.halo.profile).exist;
+    await client1.halo.createIdentity({ displayName: 'test-user' });
+    expect(client1.halo.identity).exist;
 
     expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
 
@@ -79,8 +79,8 @@ describe('Halo', () => {
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity).exist;
 
     const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
 

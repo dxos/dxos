@@ -21,7 +21,7 @@ Once the CLI is installed you should be able to run the following to see the ver
 dx version
 ```
 
-## Setup Profile
+## Setup Identity
 
 Profiles contain configuration for connecting with various DXOS services, allowing you to connect to specify which service provider you wish to use and quickly switch between them.
 
@@ -111,4 +111,4 @@ Copy the outputted `code`.
 
 #### Troubleshooting
 
-- If the pin code is not showing up, make sure the Wallet and the CLI Profile are connecting to the same Signal Server.
+- If the pin code is not showing up, make sure the Wallet and the CLI Identity are connecting to the same Signal Server.

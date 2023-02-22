@@ -33,8 +33,8 @@ const main = async () => {
   await client.initialize();
   log('Initialized');
 
-  if (!client.halo.profile) {
-    await client.halo.createProfile();
+  if (!client.halo.identity) {
+    await client.halo.createIdentity();
   }
   log('Created profile');
 
@@ -44,7 +44,7 @@ const main = async () => {
   //   );
   // }
 
-  const profile = client.halo.profile ?? failUndefined();
+  const profile = client.halo.identity ?? failUndefined();
   // const space = client.echo.getSpace(PublicKey.from(botConfig.spec.spaceKey));
 
   log('Before send report');

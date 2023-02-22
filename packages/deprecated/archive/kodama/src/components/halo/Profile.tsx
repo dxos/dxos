@@ -9,7 +9,7 @@ import { useIdentity } from '@dxos/react-client';
 
 import { Table } from '../util';
 
-export const Profile = () => {
+export const Identity = () => {
   const profile = useIdentity();
   if (!profile) {
     return null;

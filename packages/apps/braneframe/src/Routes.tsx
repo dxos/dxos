@@ -60,7 +60,7 @@ export const Routes = () => {
   // Allow the client to auto-create an identity if env DX_VAULT=false
   useEffect(() => {
     if (process.env.DX_VAULT === 'false' && !identity) {
-      void client.halo.createProfile();
+      void client.halo.createIdentity();
     }
   }, []);
 

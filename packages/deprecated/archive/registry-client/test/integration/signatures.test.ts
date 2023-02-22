@@ -79,7 +79,7 @@ describe.skip('Signatures', () => {
     client = new Client({ config });
 
     await client.initialize();
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
     // TODO(burdon): Factor out client API for key management.
     // await client.halo.addKeyRecord({
     //   publicKey: PublicKey.from(decodeAddress(keypair.address)),

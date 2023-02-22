@@ -41,7 +41,7 @@ const App = () => {
   const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, displayName) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ seedphrase, displayName });
+      await client.halo.createIdentity({ seedphrase, displayName });
     } catch (e: any) {
       console.error(e);
       setError(e);

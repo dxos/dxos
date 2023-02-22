@@ -19,7 +19,7 @@ export const RecoverProfile = () => {
     try {
       setStatus({ processing: 'Recovering HALO...' });
       // TODO(burdon): Validate keyPrase is well-formed.
-      await client.halo.recoverProfile(keyPhrase);
+      await client.halo.recoverIdentity(keyPhrase);
       setStatus({ success: 'OK' });
     } catch (err) {
       // TODO(burdon): Error object is not well-formed (type Error, no name, message props).

@@ -22,7 +22,7 @@ export const useTestProfile = () => {
     }
 
     didInit = true;
-    void client.halo.createProfile();
+    void client.halo.createIdentity();
   }, []);
 
   return profile;

@@ -86,7 +86,7 @@ describe('ClientProvider', () => {
   beforeAll(async () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
   });
 
   afterAll(async () => {

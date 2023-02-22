@@ -13,7 +13,7 @@ import { Contacts } from './Contacts';
 import { CreateProfile } from './CreateProfile';
 import { Devices } from './Devices';
 import { Keychain } from './Keychain';
-import { Profile } from './Profile';
+import { Identity } from './Identity';
 import { RecoverProfile } from './RecoverProfile';
 
 export const createHaloMenu = (client: Client): MenuItem => {
@@ -26,11 +26,11 @@ export const createHaloMenu = (client: Client): MenuItem => {
           id='halo'
           parent={parent}
           items={
-            !client.halo.profile
+            !client.halo.identity
               ? [
                   {
                     id: 'create-profile',
-                    label: 'Create Profile',
+                    label: 'Create Identity',
                     component: () => {
                       const [, setPath] = useModule();
                       return (
@@ -51,10 +51,10 @@ export const createHaloMenu = (client: Client): MenuItem => {
               : [
                   {
                     id: 'profile',
-                    label: 'Profile',
+                    label: 'Identity',
                     component: () => (
                       <Panel>
-                        <Profile />
+                        <Identity />
                       </Panel>
                     )
                   },
