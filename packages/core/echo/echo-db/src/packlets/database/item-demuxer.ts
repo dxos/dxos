@@ -13,11 +13,7 @@ import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ItemManager } from './item-manager';
 
-export interface ItemDemuxerOptions {
-  snapshots?: boolean;
-}
-
-export type EchoProcessor = (message: IEchoStream) => Promise<void>;
+export type EchoProcessor = (message: IEchoStream) => void;
 
 /**
  * Creates a stream that consumes `IEchoStream` messages and routes them to the associated items.
@@ -26,11 +22,7 @@ export type EchoProcessor = (message: IEchoStream) => Promise<void>;
 export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
 
-  constructor(
-    private readonly _itemManager: ItemManager,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _options: ItemDemuxerOptions = {}
-  ) {}
+  constructor(private readonly _itemManager: ItemManager, private readonly _modelFactory: ModelFactory) {}
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
@@ -94,13 +86,12 @@ export class ItemDemuxer {
   }
 
   createSnapshot(): EchoSnapshot {
-    assert(this._options.snapshots, 'Snapshots are disabled');
     return {
       items: this._itemManager.items.map((item) => item.createSnapshot())
     };
   }
 
-  async restoreFromSnapshot(snapshot: EchoSnapshot) {
+  restoreFromSnapshot(snapshot: EchoSnapshot) {
     const { items = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);
