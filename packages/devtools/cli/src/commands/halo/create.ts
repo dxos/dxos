@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, generateSeedPhrase } from '@dxos/client';
+import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
@@ -24,10 +24,8 @@ export default class Create extends BaseCommand {
       if (profile) {
         this.log('Identity already initialized.'); // TODO(burdon): Return as error?
       } else {
-        const seedphrase = generateSeedPhrase();
-        profile = await client.halo.createIdentity({ seedphrase, displayName });
-        this.log(`IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`);
-        return { seedphrase, displayName };
+        profile = await client.halo.createIdentity({ displayName });
+        return { displayName };
       }
     });
   }
