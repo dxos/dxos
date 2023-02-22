@@ -7,11 +7,13 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { base } from './defs';
 import { EchoObject } from './object';
+import { getCurrentReactComponent } from './react-integration';
 import { EchoSchema } from './schema';
 
 /**
@@ -78,6 +80,16 @@ export class DatabaseRouter {
    */
   _logObjectAccess(obj: EchoObject) {
     this._accessObserverStack.at(-1)?.accessed.add(obj);
+
+    // Print a helpful warning if we're accessing data in of a react component.
+    if (this._accessObserverStack.length === 0) {
+      const currentComponent = getCurrentReactComponent();
+      if (currentComponent) {
+        log.warn(
+          `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
+        );
+      }
+    }
   }
 }
 
