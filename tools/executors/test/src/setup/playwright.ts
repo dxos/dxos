@@ -22,12 +22,14 @@ export const mochaHooks: MochaHooks & Partial<TestsContext> = {
   async beforeAll() {
     const options: LaunchOptions = {
       headless: process.env.HEADLESS !== 'false',
-      args: process.env.EXTENSION_PATH
-        ? [
-            `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
-            `--load-extension=${process.env.EXTENSION_PATH}`
-          ]
-        : undefined
+      args:
+        // playwright does not support extensions in headless mode.
+        process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
+          ? [
+              `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
+              `--load-extension=${process.env.EXTENSION_PATH}`
+            ]
+          : undefined
     };
 
     if (process.env.INCOGNITO === 'true') {
