@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Browser } from 'playwright';
+import { Browser, BrowserContext, LaunchOptions } from 'playwright';
+import { v4 } from 'uuid';
 
 import { getBrowser } from '../browser';
 import { BrowserType } from '../types';
 
 export type TestsContext = {
   browser: Browser;
+  persistentContext: BrowserContext;
 };
 
 type MochaHooks = {
@@ -18,16 +20,34 @@ type MochaHooks = {
 
 export const mochaHooks: MochaHooks & Partial<TestsContext> = {
   async beforeAll() {
-    const browser = await getBrowser(process.env.MOCHA_ENV as BrowserType).launch({
-      headless: process.env.HEADLESS !== 'false'
-    });
+    const options: LaunchOptions = {
+      headless: process.env.HEADLESS !== 'false',
+      args:
+        // playwright does not support extensions in headless mode.
+        process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
+          ? [
+              `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
+              `--load-extension=${process.env.EXTENSION_PATH}`
+            ]
+          : undefined
+    };
 
-    this.browser = browser;
+    if (process.env.INCOGNITO === 'true') {
+      const browser = await getBrowser(process.env.MOCHA_ENV as BrowserType).launch(options);
+      this.browser = browser;
+    } else {
+      const persistentContext = await getBrowser(process.env.MOCHA_ENV as BrowserType).launchPersistentContext(
+        `/tmp/playwright/${v4()}`,
+        options
+      );
+      this.persistentContext = persistentContext;
+    }
   },
 
   async afterAll() {
     if (process.env.STAY_OPEN !== 'true') {
       await this.browser?.close();
+      await this.persistentContext?.close();
     }
   }
 };
