@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
+import { CaretLeft, CaretRight, Plus, QrCode } from 'phosphor-react';
 import React from 'react';
 
 import type { Identity } from '@dxos/client';
