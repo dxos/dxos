@@ -34,7 +34,6 @@ const CreateIdentityPage = React.lazy(() => import('./pages/CreateIdentityPage')
 const DevicesPage = React.lazy(() => import('./pages/DevicesPage'));
 const IdentityPage = React.lazy(() => import('./pages/IdentityPage'));
 const JoinIdentityPage = React.lazy(() => import('./pages/JoinIdentityPage'));
-const RecoverIdentityPage = React.lazy(() => import('./pages/RecoverIdentityPage'));
 const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
@@ -55,10 +54,6 @@ const Routes = () => {
     {
       path: '/identity/create',
       element: <CreateIdentityPage />
-    },
-    {
-      path: '/identity/recover',
-      element: <RecoverIdentityPage />
     },
     {
       path: '/identity/join',

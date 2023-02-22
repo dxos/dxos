@@ -71,8 +71,7 @@ const LockPage = () => {
           <AuthChoices
             {...{
               onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
-              onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
-              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
+              onCreate: () => navigate(`/identity/create?redirect=${redirect}`)
             }}
           />
         </div>
