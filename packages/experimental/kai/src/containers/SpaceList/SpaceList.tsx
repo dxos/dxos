@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { withReactor } from '@dxos/react-client';
 import { Button, getSize, Input, mx } from '@dxos/react-components';
 
-import { getThemeClasses, useAppRouter } from '../../hooks';
+import { getIcon, useAppRouter } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -29,7 +29,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
 const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
-  const { Icon } = getThemeClasses(space.key);
+  const Icon = getIcon(space.properties.icon);
 
   // TODO(burdon): Use List.
   return (

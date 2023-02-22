@@ -24,9 +24,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Properties } from '../proto';
 
-// TODO(burdon): Remove.
-export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
-
 interface Internal {
   get db(): DatabaseBackendProxy;
 }
@@ -35,7 +32,6 @@ interface Internal {
 export interface Space {
   get key(): PublicKey;
   get isOpen(): boolean;
-  get isActive(): boolean;
   get db(): EchoDatabase;
   get properties(): Document;
   get invitations(): CancellableInvitationObservable[];
@@ -47,11 +43,7 @@ export interface Space {
   /**
    * @deprecated
    */
-  setActive(active: boolean): Promise<void>;
-
-  /**
-   * @deprecated
-   */
+  // TODO(burdon): Remove.
   getDetails(): Promise<SpaceDetails>;
 
   queryMembers(): ResultSet<SpaceMember>;
@@ -71,7 +63,7 @@ export class SpaceProxy implements Space {
    * @internal
    * To unlock internal operations that should happen after the database is initialized but before initialize() completes.
    */
-  public _databaseInitialized = new Trigger();
+  public readonly _databaseInitialized = new Trigger();
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
@@ -118,11 +110,6 @@ export class SpaceProxy implements Space {
     return this._state.isOpen;
   }
 
-  // TODO(burdon): Remove (depends on properties).
-  get isActive() {
-    return this._state.isActive;
-  }
-
   get db() {
     return this._db;
   }
@@ -154,7 +141,7 @@ export class SpaceProxy implements Space {
     this._initialized = true;
 
     await this._dbBackend!.open(this._itemManager!, this._modelFactory);
-    log('database ready');
+    log('ready');
     this._databaseInitialized.wake();
 
     {
@@ -194,7 +181,6 @@ export class SpaceProxy implements Space {
     log('destroying...');
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
-
     log('destroyed');
   }
 
@@ -208,25 +194,9 @@ export class SpaceProxy implements Space {
 
   async getDetails(): Promise<SpaceDetails> {
     assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-
     return this._clientServices.services.SpaceService.getSpaceDetails({
       spaceKey: this.key
     });
-  }
-
-  // TODO(burdon): Remove deprecated methods.
-
-  /**
-   * @deprecated
-   */
-  async setActive(active: boolean) {
-    // const active_global = options.global ? active : undefined;
-    // const active_device = options.device ? active : undefined;
-    // await this._serviceProvider.services.SpaceService.setSpaceState({
-    //   space_key: this.key,
-    //   active_global,
-    //   active_device
-    // });
   }
 
   /**
@@ -286,7 +256,6 @@ export class SpaceProxy implements Space {
 
   async _setOpen(open: boolean) {
     assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-
     await this._clientServices.services.SpaceService.setSpaceState({
       spaceKey: this.key,
       open
