@@ -29,4 +29,27 @@ describe('database (unit)', () => {
       expect(stateAfterReload).toEqual(state);
     }
   })
+
+  test('create object and reload from snapshot', async () => {
+    const rig = new DatabaseTestRig();
+    const peer = await rig.createPeer();
+
+    const id = PublicKey.random().toHex();
+    peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer.proxy.mutate(createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())));
+
+    peer.confirm();
+    expect(peer.confirmed).toEqual(1);
+    expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]))
+    peer.makeSnapshot();
+    
+    const state = peer.items.getItem(id)!.state;
+
+    {
+      await peer.reload()
+      const stateAfterReload = peer.items.getItem(id)!.state;
+
+      expect(stateAfterReload).toEqual(state);
+    }
+  })
 })
