@@ -5,6 +5,7 @@
 import { ThemeContextValue } from '../components';
 import { Density, MessageValence } from '../props';
 import { mx } from '../util';
+import { coarseBlockSize, defaultCoarse, defaultFine, fineBlockSize } from './density';
 import { defaultDisabled } from './disabled';
 import { staticFocus, focus } from './focus';
 import { hover } from './hover';
@@ -25,7 +26,7 @@ export const defaultInput = (
     themeVariant === 'os'
       ? 'rounded-sm text-sm bg-neutral-50/50 dark:bg-neutral-900/50'
       : 'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
-    props.density === 'fine' ? 'pli-2 min-bs-[32px]' : 'pli-3 min-bs-[40px]',
+    props.density === 'fine' ? defaultFine : defaultCoarse,
     focus({ ...props, variant: 'default' }, themeVariant),
     defaultPlaceholder,
     hover({ disabled }, themeVariant),
@@ -44,7 +45,7 @@ export const subduedInput = (
 ) => {
   return mx(
     'bg-transparent text-current',
-    props.density === 'fine' ? 'min-bs-[32px]' : 'min-bs-[40px]',
+    props.density === 'fine' ? fineBlockSize : coarseBlockSize,
     focus({ ...props, variant: 'subdued' }, themeVariant),
     defaultPlaceholder
   );
