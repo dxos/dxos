@@ -20,7 +20,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.createIdentity({});
+    await host.services.IdentityService!.updateIdentity({});
     const { spaceKey } = await host.services.SpacesService!.createSpace();
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
@@ -39,7 +39,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.createIdentity({});
+    await host.services.IdentityService!.updateIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,
@@ -48,9 +48,9 @@ describe('ClientServicesHost', () => {
 
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
-    host.services.IdentityService!.subscribeIdentity()!.subscribe(({ identity }) => {
-      if (identity?.haloSpace) {
-        haloSpace.wake(identity.haloSpace);
+    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+      if (identity?.spaceKey) {
+        haloSpace.wake(identity.spaceKey);
       }
     });
 
@@ -76,7 +76,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.createIdentity({});
+    await host.services.IdentityService!.updateIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,

@@ -85,31 +85,44 @@ service SigningService {
 message Identity {
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
-  halo.credentials.ProfileDocument profile = 3;
-
-  // TODO(wittjosiah): Move to devices service.
-  optional dxos.keys.PublicKey device_key = 4;
+  optional halo.credentials.ProfileDocument profile = 3;
 }
 
-message RecoverProfileRequest {
+message RecoverIdentityRequest {
   bytes recovery_key = 1;
 }
 
-// TODO(wittjosiah): Rename IdentityService.
-service HaloService {
-  // TODO(wittjosiah): Profile -> Identity?
-  rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
-  rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
-  rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
+message QueryIdentityResponse {
+  optional Identity identity = 1;
+}
+
+message SignPresentationRequest {
+  dxos.halo.credentials.Presentation presentation = 1;
+  optional bytes nonce = 2;
+}
+
+service IdentityService {
+  rpc UpdateIdentity(halo.credentials.ProfileDocument) returns (Identity);
+  rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
+  rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
+
+  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
 }
 
 //
 // Devices
 //
 
+enum DeviceKind {
+  CURRENT = 0;
+  TRUSTED = 1;
+}
+
 // TODO(burdon): Preferences (in database).
 message Device {
   dxos.keys.PublicKey device_key = 1;
+  DeviceKind kind = 2;
+  optional halo.credentials.ProfileDocument profile = 3;
 }
 
 message QueryDevicesResponse {
@@ -117,7 +130,7 @@ message QueryDevicesResponse {
 }
 
 service DevicesService {
-  rpc UpdateDevice(google.protobuf.Empty) returns (Device);
+  rpc UpdateDevice(halo.credentials.ProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 

@@ -4,23 +4,23 @@
 
 import React from 'react';
 
-import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { Device } from '@dxos/protocols/proto/dxos/client/services';
 
 import { IdentityListItem } from './IdentityListItem';
 
 export interface DeviceListProps {
-  devices: DeviceInfo[];
-  onSelect?: (device: DeviceInfo) => void;
+  devices: Device[];
+  onSelect?: (device: Device) => void;
 }
 
 export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
   return (
     <ul className='flex flex-col gap-2'>
       {devices.map((device) => {
-        const identity = { identityKey: device.publicKey, profile: { displayName: device.displayName } };
+        const identity = { identityKey: device.deviceKey, profile: { displayName: device.profile?.displayName } };
         return (
           <IdentityListItem
-            key={device.publicKey.toHex()}
+            key={device.deviceKey.toHex()}
             identity={identity}
             onClick={onSelect && (() => onSelect(device))}
           />

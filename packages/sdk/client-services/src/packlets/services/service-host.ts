@@ -16,9 +16,10 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
+import { TracingServiceImpl } from '../deprecated';
+import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { DevicesServiceImpl } from '../identity/devices-service-impl';
+import { IdentityServiceImpl } from '../identity';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
@@ -138,15 +139,16 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
-      // TODO(burdon): Move to new protobuf definitions.
       SystemService: this._systemService,
+
+      IdentityService: new IdentityServiceImpl(this._serviceContext),
+
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
       HaloInvitationsService: new HaloInvitationsServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.haloInvitations
       ),
-
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         this._serviceContext.identityManager,
@@ -169,8 +171,6 @@ export class ClientServicesHost implements ClientServicesProvider {
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
       // TODO(burdon): Move to new protobuf definitions.
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
-
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),

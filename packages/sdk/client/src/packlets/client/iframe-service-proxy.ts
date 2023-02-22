@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { ClientServicesProvider, ClientServicesProxy, ShellController } from '@dxos/client-services';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { Identity } from '@dxos/protocols/proto/dxos/client';
+import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -113,7 +113,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         return;
       }
 
-      this._clientServicesProxy.services.IdentityService.subscribeIdentity().subscribe(({ identity }) => {
+      this._clientServicesProxy.services.IdentityService.queryIdentity().subscribe(({ identity }) => {
         resolve(identity);
       });
     });
