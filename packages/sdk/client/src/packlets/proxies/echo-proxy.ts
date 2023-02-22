@@ -119,14 +119,6 @@ export class EchoProxy implements Echo {
           this._spaceCreated.emit(spaceProxy.key);
 
           await spaceProxy.initialize();
-
-          // TODO(dmaretskyi): Replace with selection API when it has update filtering.
-          // spaceProxy.database.entityUpdate.on((entity) => {
-          //   if (entity.type === SPACE_ITEM_TYPE) {
-          //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
-          //   }
-          // });
-
           emitUpdate = true;
         } else {
           this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
