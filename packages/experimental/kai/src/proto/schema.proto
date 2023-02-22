@@ -29,7 +29,7 @@ message Address {
 //
 
 /// Special object type for text object references.
-message TextObject {}
+message Text {}
 
 // TODO(burdon): First-class typed links?
 message Link {
@@ -80,7 +80,7 @@ message Project {
   option (object) = true;
 
   string title = 1;
-  TextObject description = 2; // TODO(burdon): Change to string (see Document).
+  Text description = 2; // TODO(burdon): Change to string (see Document).
   string url = 3;
   repeated Contact team = 4;
   repeated Task tasks = 5;
@@ -98,7 +98,7 @@ message TextDocument {
   option (object) = true;
 
   string title = 1;
-  TextObject content = 2;
+  Text content = 2;
 //  repeated string tags = 2;
   string tag = 3;
 }
@@ -169,5 +169,5 @@ message Note {
   option (object) = true;
 
   string title = 1;
-  TextObject content = 2;
+  Text content = 2;
 }

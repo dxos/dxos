@@ -6,7 +6,7 @@ import { TextModel, type Doc } from '@dxos/text-model';
 
 import { EchoObject } from './object';
 
-export class TextObject extends EchoObject<TextModel> {
+export class Text extends EchoObject<TextModel> {
   constructor() {
     super(TextModel);
   }

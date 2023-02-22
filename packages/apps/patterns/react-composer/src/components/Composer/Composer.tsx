@@ -8,7 +8,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { ComponentProps } from 'react';
 
-import type { TextObject } from '@dxos/client';
+import type { Text } from '@dxos/client';
 import { useTranslation, mx } from '@dxos/react-components';
 
 export interface ComposerSlots {
@@ -20,7 +20,7 @@ export interface ComposerSlots {
 }
 
 export interface ComposerProps {
-  document: TextObject;
+  document: Text;
   field?: string;
   placeholder?: string;
   slots?: ComposerSlots;

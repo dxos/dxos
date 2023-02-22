@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect } from 'react';
 
-import { PublicKey, TextObject } from '@dxos/client';
+import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 
@@ -26,7 +26,7 @@ const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceK
     if (space && id === 0) {
       setTimeout(async () => {
         // TODO(burdon): Auto-create document.
-        const document = new ComposerDocument({ content: new TextObject() });
+        const document = new ComposerDocument({ content: new Text() });
         await space?.db.add(document);
       });
     }
