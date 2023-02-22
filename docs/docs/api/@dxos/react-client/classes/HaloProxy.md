@@ -17,16 +17,16 @@ Arguments:
 ## Properties
 ### [invitationsUpdate]()
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
-### [identityChanged]()
+### [profileChanged]()
 Type: <code>Event&lt;void&gt;</code>
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
 ### [opened]()
 Type: <code>boolean</code>
-### [identity]()
-Type: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
+### [profile]()
+Type: <code>undefined | [Profile](/api/@dxos/react-client/interfaces/Profile)</code>
 
-User identity info.
+User profile info.
 
 ## Methods
 ### [\[custom\]()]()
@@ -65,20 +65,20 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `options`: <code>InvitationsOptions</code>
-### [createIdentity(\[options\])]()
+### [createProfile(\[options\])]()
 
 
-Create Identity.
+Create Profile.
 Add Identity key if public and secret key are provided.
-Then initializes identity with given display name.
+Then initializes profile with given display name.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
 
-Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
+Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
 
 Arguments: 
 
-`options`: <code>CreateIdentityOptions</code>
+`options`: <code>CreateProfileOptions</code>
 ### [open()]()
 
 
@@ -123,12 +123,12 @@ Get set of authenticated devices.
 Returns: <code>ObservableProvider&lt;DeviceEvents, DeviceInfo[]&gt;</code>
 
 Arguments: none
-### [recoverIdentity(seedPhrase)]()
+### [recoverProfile(seedPhrase)]()
 
 
 Joins an existing identity HALO from a recovery seed phrase.
 
-Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
+Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
 
 Arguments: 
 
@@ -143,7 +143,7 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-### [subscribeToIdentity(callback)]()
+### [subscribeToProfile(callback)]()
 
 
 Returns: <code>function</code>

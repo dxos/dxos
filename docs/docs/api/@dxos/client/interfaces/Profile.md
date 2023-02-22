@@ -5,7 +5,7 @@ Defined in:
    file://./../../dxos/client.proto
 ## Properties
 ### [deviceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Options:
   - proto3_optional = true
@@ -15,9 +15,9 @@ Type: <code>string</code>
 Options:
   - proto3_optional = true
 ### [haloSpace]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Options:
   - proto3_optional = true
 ### [identityKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
