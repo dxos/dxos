@@ -8,7 +8,7 @@ import React, { ReactNode } from 'react';
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { withReactor } from '@dxos/react-client';
-import { Button, getSize, Input, mx } from '@dxos/react-components';
+import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { getIcon, useAppRouter } from '../../hooks';
 
@@ -29,6 +29,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
 const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
+  const { t } = useTranslation('kai');
   const Icon = getIcon(space.properties.icon);
 
   // TODO(burdon): Use List.
@@ -57,7 +58,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
               space.properties.name = event.target.value;
             }}
             label='Title'
-            placeholder='Space title.'
+            placeholder={t('space title placeholder')}
             slots={{
               label: { className: 'sr-only' },
               input: { autoFocus: !space.properties.name?.length },
