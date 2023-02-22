@@ -1593,6 +1593,7 @@ importers:
       '@dxos/teleport-extension-object-sync': workspace:*
       '@dxos/teleport-extension-presence': workspace:*
       '@dxos/teleport-extension-replicator': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
@@ -1631,6 +1632,7 @@ importers:
       '@dxos/util': link:../../../common/util
       debug: 4.3.4
     devDependencies:
+      '@dxos/text-model': link:../text-model
       '@types/debug': 4.1.7
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
