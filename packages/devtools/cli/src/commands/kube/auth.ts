@@ -8,9 +8,9 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Credentials extends BaseCommand {
+export default class Auth extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'Show HALO credentials.';
+  static override description = 'Authenticate with KUBE.';
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
@@ -21,13 +21,7 @@ export default class Credentials extends BaseCommand {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
       } else {
-        profile;
-        // const { identityKey, displayName } = profile;
-        // this.log(`Display name: ${displayName}`);
-        // return {
-        //   identityKey: identityKey.toHex(),
-        //   displayName
-        // };
+        
       }
     });
   }

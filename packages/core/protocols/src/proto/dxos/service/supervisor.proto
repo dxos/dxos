@@ -62,7 +62,9 @@ message AuthenticateRequest {
 }
 
 message AuthenticateResponse {
-  string token = 1;
+  optional string token = 1;
+  // TODO(egorgripasov): Remove. KubeAccess credential for POC.
+  optional dxos.halo.credentials.Credential credential = 2;
 }
 
 service Supervisor {
