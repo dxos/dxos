@@ -332,11 +332,10 @@ describe('EchoDatabase', () => {
       await db.add(text);
 
       expect(text.doc).toBeDefined();
-      expect(text.model).toBeDefined();
-      expect(text.model!.textContent).toEqual('');
+      expect(text.text).toEqual('');
 
       text.model!.insert('Hello world', 0);
-      expect(text.model!.textContent).toEqual('Hello world');
+      expect(text.text).toEqual('Hello world');
     });
 
     test('text property', async () => {
@@ -347,10 +346,10 @@ describe('EchoDatabase', () => {
       await sleep(10);
       expect(task.text.doc).toBeDefined();
       expect(task.text.model).toBeDefined();
-      expect(task.text.model!.textContent).toEqual('');
+      expect(task.text.text).toEqual('');
 
       task.text.model!.insert('Hello world', 0);
-      expect(task.text.model!.textContent).toEqual('Hello world');
+      expect(task.text.text).toEqual('Hello world');
     });
   });
 });

@@ -12,7 +12,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   override toString() {
-    return this.doc?.getText().toString() ?? '';
+    return this.text;
   }
 
   get doc(): Doc | undefined {
@@ -23,6 +23,13 @@ export class Text extends EchoObject<TextModel> {
   get model(): TextModel | undefined {
     this._database?._logObjectAccess(this);
     return this._model;
+  }
+
+  get text(): string {
+    // TODO(dmaretskyi): Should accessing this re-render the react component?
+    // this._database?._logObjectAccess(this);
+
+    return this._model.textContent
   }
 
   protected override async _onBind(): Promise<void> {
