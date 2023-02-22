@@ -30,7 +30,7 @@ The Client should implement the following features:
 *   Recover an existing HALO identity.
     *   Using a seed phrase.
     *   Using a credential issued from another device.
-*   Display and edit metadata relating to the user's profile.
+*   Display and edit metadata relating to the user's identity.
 *   Securely store the user's HALO using password protected encryption.
 *   Securely uninstall the client erasing all local information.
 *   Manage multiple client instances installed on other devices and platforms.
@@ -45,9 +45,9 @@ The Client should implement the following features:
 ### 2.2. Circles and Collaboration
 
 *   Provide a discovery key that can be presented to other users running the client.
-*   Manage a set of contacts (user profiles).
+*   Manage a set of contacts (user identities).
 *   Send and receive ephemeral messages to other users.
-*   Publish profile to DXNS.
+*   Publish identity to DXNS.
 *   Manage HALO credentials and keychain.
     *   Store and use KUBE credentials to manage KUBE nodes.
 

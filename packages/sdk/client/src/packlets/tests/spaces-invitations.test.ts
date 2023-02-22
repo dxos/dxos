@@ -14,7 +14,7 @@ describe('Spaces/invitations', () => {
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     {
       const space = await client.echo.createSpace();

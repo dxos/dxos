@@ -28,7 +28,7 @@ const RecoverIdentityPage = () => {
 
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createProfile({ seedphrase }).then(redirect, (_rejection) => setPending(false));
+    void client.halo.createIdentity({ seedphrase }).then(redirect, (_rejection) => setPending(false));
   }, [seedphrase, redirect]);
 
   useEffect(() => {

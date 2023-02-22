@@ -174,7 +174,7 @@ class HostAgentStateMachine extends AgentStateMachine {
 
   async processCommand(command: Command) {
     if (command.createProfile) {
-      await this.agent.client.halo.createProfile();
+      await this.agent.client.halo.createIdentity();
     } else if (command.createSpace) {
       const id = command.createSpace.id;
       const space = await this.agent.client.echo.createSpace();
@@ -212,7 +212,7 @@ class HostAgentStateMachine extends AgentStateMachine {
 class GuestAgentStateMachine extends AgentStateMachine {
   async processCommand(command: Command) {
     if (command.createProfile) {
-      await this.agent.client.halo.createProfile();
+      await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,

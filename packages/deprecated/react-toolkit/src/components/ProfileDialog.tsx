@@ -34,7 +34,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
   return (
     <Dialog
       open={open}
-      title='Create Profile'
+      title='Create Identity'
       content={
         <Box sx={{ paddingTop: 1 }}>
           <TextField

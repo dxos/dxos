@@ -5,7 +5,7 @@
 - Mosaic is a UX framework for tiled data components.
 - It is responsive to work with phones, tablets, and larger format computers and screens (as well as AR).
 - The framework UX consists of the following concepts:
-  - **The Shell**: A framework-wide container that provides access to global functions (Profile, Spaces, Sharing, Global options, etc.)
+  - **The Shell**: A framework-wide container that provides access to global functions (Identity, Spaces, Sharing, Global options, etc.)
   - **Frames**: Modular panels that can be dynamically discovered and downloaded that represent data in use-case specific ways (Kanban, Calendar, Map, etc.)
   - **Tiles**: Atomic components that typically represent individual data objects.
 

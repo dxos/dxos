@@ -52,7 +52,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client1a.destroy(), server1a.close()]));
         expect(client1a.initialized).to.be.true;
 
-        await client1a.halo.createProfile();
+        await client1a.halo.createIdentity();
       }
       {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
@@ -77,7 +77,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client2a.destroy(), server2a.close()]));
         expect(client2a.initialized).to.be.true;
 
-        await client2a.halo.createProfile();
+        await client2a.halo.createIdentity();
       }
     }
   });
@@ -102,7 +102,7 @@ describe('Client services', () => {
       await client1.initialize();
       await client2.initialize();
 
-      await client1.halo.createProfile();
+      await client1.halo.createIdentity();
     }
 
     const success1 = new Trigger<Invitation>();
@@ -143,8 +143,8 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.profile!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.profile!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
@@ -194,8 +194,8 @@ describe('Client services', () => {
 
       await client1.initialize();
       await client2.initialize();
-      await client1.halo.createProfile({ displayName: 'Peer 1' });
-      await client2.halo.createProfile({ displayName: 'Peer 2' });
+      await client1.halo.createIdentity({ displayName: 'Peer 1' });
+      await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
     log('initialized');
 
@@ -248,17 +248,17 @@ describe('Client services', () => {
       await waitForExpect(() => {
         expect(space.queryMembers().value).to.deep.equal([
           {
-            identityKey: client1.halo.profile!.identityKey,
-            profile: {
-              identityKey: client1.halo.profile!.identityKey,
+            identityKey: client1.halo.identity!.identityKey,
+            identity: {
+              identityKey: client1.halo.identity!.identityKey,
               displayName: 'Peer 1'
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.profile!.identityKey,
-            profile: {
-              identityKey: client2.halo.profile!.identityKey,
+            identityKey: client2.halo.identity!.identityKey,
+            identity: {
+              identityKey: client2.halo.identity!.identityKey,
               displayName: 'Peer 2'
             },
             presence: SpaceMember.PresenceState.ONLINE
