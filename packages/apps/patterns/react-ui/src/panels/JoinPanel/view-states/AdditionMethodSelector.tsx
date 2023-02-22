@@ -49,15 +49,6 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
         >
           {t('join identity label')}
         </CompoundButton>
-        <CompoundButton
-          {...sharedButtonProps}
-          description={t('recover identity description')}
-          before={<Textbox className={getSize(6)} />}
-          onClick={() => dispatch({ type: 'select addition method', method: 'recover identity' })}
-          data-testid='recover-identity'
-        >
-          {t('recover identity label')}
-        </CompoundButton>
       </div>
       <Button
         disabled={disabled || availableIdentities.length < 1}

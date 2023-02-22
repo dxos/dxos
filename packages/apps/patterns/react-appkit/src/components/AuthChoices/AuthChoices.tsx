@@ -10,6 +10,10 @@ import { CompoundButton, useTranslation } from '@dxos/react-components';
 export interface AuthChoicesProps {
   onCreate?: () => void;
   onJoin?: () => void;
+  /**
+   * TODO(mykola): reimplement on Halo level.
+   * @deprecated
+   */
   onRecover?: () => void;
 }
 
