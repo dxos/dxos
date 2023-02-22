@@ -10,12 +10,12 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseTestRig } from '../testing/database-test-rig';
+import { DatabaseTestBuilder } from '../testing/database-test-rig';
 
 describe('database (unit)', () => {
   test('create object and reload', async () => {
-    const rig = new DatabaseTestRig();
-    const peer = await rig.createPeer();
+    const builder = new DatabaseTestBuilder();
+    const peer = await builder.createPeer();
 
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
@@ -38,8 +38,8 @@ describe('database (unit)', () => {
   });
 
   test('create object and reload from snapshot', async () => {
-    const rig = new DatabaseTestRig();
-    const peer = await rig.createPeer();
+    const builder = new DatabaseTestBuilder();
+    const peer = await builder.createPeer();
 
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
@@ -63,9 +63,9 @@ describe('database (unit)', () => {
   });
 
   test('two peers replicate', async () => {
-    const rig = new DatabaseTestRig();
-    const peer1 = await rig.createPeer();
-    const peer2 = await rig.createPeer();
+    const builder = new DatabaseTestBuilder();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
 
     const id = PublicKey.random().toHex();
     peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));

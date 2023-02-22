@@ -18,7 +18,7 @@ import { DatabaseBackendHost } from '../dbhost';
 
 const SPACE_KEY = PublicKey.random();
 
-export class DatabaseTestRig {
+export class DatabaseTestBuilder {
   public readonly peers = new ComplexMap<PublicKey, DatabaseTestPeer>(PublicKey.hash);
 
   async createPeer(): Promise<DatabaseTestPeer> {
@@ -60,7 +60,7 @@ export class DatabaseTestPeer {
 
   private readonly _onConfirm = new Event();
 
-  constructor(public readonly rig: DatabaseTestRig) {}
+  constructor(public readonly rig: DatabaseTestBuilder) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
