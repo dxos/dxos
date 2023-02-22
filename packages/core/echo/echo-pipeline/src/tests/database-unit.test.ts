@@ -52,4 +52,19 @@ describe('database (unit)', () => {
       expect(stateAfterReload).toEqual(state);
     }
   })
+
+  test('two peers replicate', async () => {
+    const rig = new DatabaseTestRig();
+    const peer1 = await rig.createPeer();
+    const peer2 = await rig.createPeer();
+
+    const id = PublicKey.random().toHex();
+    peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer1.proxy.mutate(createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())));
+    peer1.confirm();
+
+    peer2.replicate(peer1.timeframe);
+
+    expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
+  })
 })
