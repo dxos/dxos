@@ -22,7 +22,7 @@ export const buttonStyles = (
   const resolvedVariant = props.variant ?? 'default';
   return mx(
     'inline-flex select-none items-center justify-center transition-color duration-100',
-    props.compact ? 'pli-2 plb-1.5' : 'pli-4 plb-2',
+    props.density === 'fine' ? 'pli-2.5 min-bs-[32px]' : 'pli-4 min-bs-[40px]',
     isOsTheme ? 'rounded font-system-medium text-xs' : 'rounded-md font-medium text-sm',
     hover(props, themeVariant),
     !isOsTheme && resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
