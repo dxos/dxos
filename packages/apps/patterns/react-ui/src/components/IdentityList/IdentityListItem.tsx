@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { Profile, SpaceMember } from '@dxos/client';
+import { Identity, SpaceMember } from '@dxos/client';
 import { Avatar, mx, useTranslation } from '@dxos/react-components';
 
 export const IdentityListItem = ({
@@ -11,7 +11,7 @@ export const IdentityListItem = ({
   presence,
   onClick
 }: {
-  identity: Profile;
+  identity: Identity;
   presence?: SpaceMember['presence'];
   onClick?: () => void;
 }) => {

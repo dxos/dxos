@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
@@ -37,7 +37,7 @@ export const ManageSpacePage = ({
   const space = useSpace(spaceKey);
   const members = useMembers(spaceKey);
   const memberProfiles = useMemo(
-    () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
+    () => members.map(({ identity }) => identity).filter((identity): identity is Identity => !!identity),
     [members]
   );
   const invitations = useSpaceInvitations(space?.key);
@@ -71,7 +71,7 @@ export const ManageSpacePage = ({
           </>
         }
       />
-      <ProfileList profiles={memberProfiles} />
+      <ProfileList identities={memberProfiles} />
       <InvitationList
         invitations={invitations}
         createInvitationUrl={createInvitationUrl}

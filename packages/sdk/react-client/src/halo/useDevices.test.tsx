@@ -16,7 +16,7 @@ describe('useDevices', () => {
   test('lists existing devices', async () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>

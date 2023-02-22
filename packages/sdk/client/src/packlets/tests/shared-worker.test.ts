@@ -41,7 +41,7 @@ describe('Shared worker', () => {
 
     await Promise.all([workerRuntime.start(), clientProxy.open('*'), client.initialize()]);
 
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
   });
 
   test('initialization errors get propagated to the client', async () => {

@@ -17,7 +17,7 @@ The user's identity can be obtained by a react application with the `useIdentity
 };
 ```
 
-The object returned is of type [`Profile`](/api/@dxos/client/interfaces/Profile).
+The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
 
 If an identity has not been established, `null` will be returned. In this case the user should be redirected to `halo.dxos.org` and they will be guided to establish identity.
 

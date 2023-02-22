@@ -3,6 +3,6 @@
 //
 
 export * from './space';
-export * from './profile';
+export * from './identity';
 export * from './system';
 export * from './tracing';

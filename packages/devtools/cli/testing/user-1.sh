@@ -11,7 +11,7 @@ then
   $dx reset
 fi
 
-# Create Profile
+# Create Identity
 PUBLIC_KEY=$($dx halo --json | jq --raw-output '.public_key' 2>/dev/null)
 if [ "$PUBLIC_KEY" = 'null' ];
 then

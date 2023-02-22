@@ -35,7 +35,7 @@ export const Default = {
         await Promise.all(clients.map((client) => client.initialize()));
         log.info('[initialized]');
 
-        await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
+        await clients[0].halo.createIdentity({ displayName: 'Os Mutantes' });
 
         const space = await clients[0].echo.createSpace();
         log.info('[space created]', space);

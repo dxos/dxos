@@ -9,7 +9,7 @@ The word kai (貝) is the Japanese word for shell.
 pnpm nx serve kai
 ```
 
-To run with automatic profile creation and simplified invitation flows:
+To run with automatic identity creation and simplified invitation flows:
 
 ```bash
 VITE_DEV=1 pnpm nx serve kai
@@ -61,7 +61,7 @@ See the [development guide](./docs/development.md).
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
-- [x] Profile.
+- [x] Identity.
 - [x] Invitations configuration.
 
 ### UX Issues.

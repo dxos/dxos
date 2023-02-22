@@ -124,7 +124,7 @@ export class Client {
    */
   get echo(): EchoProxy {
     assert(this._initialized, 'Client not initialized.');
-    // if (!this.halo.profile) {
+    // if (!this.halo.identity) {
     //   throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
     // }
 
@@ -213,7 +213,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
-    // this._halo.profileChanged.emit(); // TODO(burdon): Triggers failure in hook.
+    // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
 

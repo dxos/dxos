@@ -16,21 +16,21 @@ import { AlertDialog } from '../components';
 
 const IdentityPage = () => {
   const client = useClient();
-  const profile = useIdentity();
-  const profileHex = profile!.identityKey.toHex();
+  const identity = useIdentity();
+  const identityHex = identity!.identityKey.toHex();
   const telemetryDisabled = isTelemetryDisabled(namespace);
   const { t } = useTranslation('halo');
 
-  const confirmString = humanize(profile!.identityKey.toHex());
+  const confirmString = humanize(identity!.identityKey.toHex());
 
   const onChangeDisplayName = useCallback(
     ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      if (profile) {
+      if (identity) {
         // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
-        profile.displayName = value;
+        identity.displayName = value;
       }
     },
-    [profile]
+    [identity]
   );
 
   return (
@@ -39,14 +39,14 @@ const IdentityPage = () => {
       <Avatar
         size={32}
         variant='circle'
-        fallbackValue={profileHex}
-        label={profile?.displayName ?? humanize(profileHex)}
+        fallbackValue={identityHex}
+        label={identity?.displayName ?? humanize(identityHex)}
         slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}
-        placeholder={humanize(profileHex)}
-        defaultValue={profile?.displayName}
+        placeholder={humanize(identityHex)}
+        defaultValue={identity?.displayName}
         onChange={onChangeDisplayName}
         slots={{ root: { className: 'w-full' } }}
       />

@@ -43,7 +43,7 @@ export {
 
 export { ApiError } from '@dxos/errors';
 
-export { type Contact, type Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
+export { type Contact, type Identity, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 

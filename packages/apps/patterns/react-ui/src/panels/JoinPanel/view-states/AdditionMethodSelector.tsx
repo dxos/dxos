@@ -5,13 +5,13 @@
 import { CaretLeft, CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
 import React from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { Button, CompoundButton, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface AdditionMethodSelectorProps extends ViewStateProps {
-  availableIdentities: Profile[];
+  availableIdentities: Identity[];
 }
 
 export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps }: AdditionMethodSelectorProps) => {

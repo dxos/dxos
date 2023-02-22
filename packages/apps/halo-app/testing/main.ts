@@ -9,8 +9,8 @@ void (async () => {
   const client = new Client({ services: fromIFrame() });
   await client.initialize();
 
-  if (!client.halo.profile) {
-    await client.halo.createProfile();
+  if (!client.halo.identity) {
+    await client.halo.createIdentity();
   }
 
   log('client', client.toJSON());

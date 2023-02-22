@@ -23,7 +23,7 @@ const columns: Column<SpaceMember>[] = [
   },
   {
     Header: 'name',
-    accessor: (member) => member.profile?.displayName
+    accessor: (member) => member.identity?.displayName
   },
   {
     Header: 'status',
