@@ -77,7 +77,7 @@ export const SpaceItem = withReactor(({ space, selected, children, onAction }: S
               data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
             })
           }
-          data-testid='space-settings'
+          data-testid='space-share'
         >
           <UserPlus className={getSize(6)} />
         </Button>

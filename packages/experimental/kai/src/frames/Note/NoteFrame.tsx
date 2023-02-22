@@ -44,7 +44,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
 
     const item: Item<Note> = {
       id: note.id,
-      label: note.title,
+      title: note.title,
       content: note.content?.model?.textContent, // TODO(burdon): Util.
       location: { x: location.x!, y: location.y! },
       data: note
@@ -88,7 +88,7 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
           />
         </div>
 
-        {/* Icons */}
+        {/* Actions */}
         <div className='flex shrink-0 pl-2'>
           <div className='invisible group-hover:visible text-gray-500'>
             <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
