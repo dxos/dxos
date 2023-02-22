@@ -69,7 +69,6 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
         </div>
 
         <Button
-          compact
           variant='ghost'
           className={mx(selected ? 'flex' : 'invisible')}
           title='Create new space'

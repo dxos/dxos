@@ -30,7 +30,7 @@ const Toolbar = () => {
     >
       <div className='flex'>
         {!isOpen && (
-          <Button compact variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
+          <Button variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
             {<CaretRight className={getSize(6)} />}
           </Button>
         )}

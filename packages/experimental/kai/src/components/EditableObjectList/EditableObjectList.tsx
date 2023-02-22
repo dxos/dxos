@@ -92,7 +92,7 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <Button compact variant='ghost' onClick={handleCreate} className='mbs-2'>
+        <Button variant='ghost' onClick={handleCreate} className='mbs-2'>
           <Plus className={getSize(6)} />
         </Button>
       )}

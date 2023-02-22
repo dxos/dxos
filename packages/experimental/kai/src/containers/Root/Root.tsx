@@ -40,6 +40,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
   return (
     <ThemeProvider
       appNs='kai'
+      rootDensity='fine'
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
       fallback={<Fallback message='Loading...' />}
     >

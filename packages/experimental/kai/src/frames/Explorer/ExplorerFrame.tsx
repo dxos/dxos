@@ -94,7 +94,6 @@ export const ExplorerFrame = () => {
         <div className='flex-1' />
         {views.map(({ type, label, Icon }) => (
           <Button
-            compact
             variant='ghost'
             key={type}
             title={label}
