@@ -16,7 +16,7 @@
       "options": {
         "coveragePath": "coverage/packages/devtools/devtools-extension",
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "headless": false,
+        "headless": true,
         "incognito": false,
         "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
         "playwright": true,
