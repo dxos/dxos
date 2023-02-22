@@ -43,7 +43,7 @@ export class AppManager {
   }
 
   async kaiIsVisible() {
-    return await this.page.getByTestId('kai-bug').isVisible();
+    return await this.page.getByTestId('space-icon').isVisible();
   }
 
   // Actions
