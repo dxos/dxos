@@ -14,6 +14,7 @@ import { InputProps as NaturalInputProps, InputSize } from './InputProps';
 
 export type InputProps = NaturalInputProps;
 
+// TODO(burdon): State change error.
 // TODO(burdon): Default standard height, padding for controls (2.5rem) to enable embedding in list rows, tables, etc.
 // TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
 export const Input = ({
@@ -56,7 +57,7 @@ export const Input = ({
     ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
     disabled,
     placeholder,
-    value,
+    value: value ?? '',
     defaultValue,
     onChange,
     validationMessage,

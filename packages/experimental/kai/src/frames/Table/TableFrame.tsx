@@ -27,7 +27,8 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     const columns: Column<Document>[] = [
       {
         Header: 'id',
-        accessor: (object) => PublicKey.from(object.id).truncate()
+        accessor: (object) => PublicKey.from(object.id).truncate(),
+        width: 120
       }
     ];
 
@@ -41,6 +42,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
         switch (field.type.kind) {
           case 'boolean': {
             column.Cell = ({ value }) => <input type='checkbox' checked={value} disabled />;
+            column.width = 120;
             break;
           }
         }

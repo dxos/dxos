@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DotsThreeVertical } from 'phosphor-react';
-import React, { ReactNode } from 'react';
+import { UserPlus } from 'phosphor-react';
+import React, { ReactNode, Suspense } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
@@ -11,23 +11,18 @@ import { withReactor } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { getIcon, useAppRouter } from '../../hooks';
-
-enum SpaceItemAction {
-  SELECT = 1,
-  SHARE = 2
-}
+import { Intent, IntentAction } from '../../util';
 
 export type SpaceItemProps = {
   space: Space;
   selected?: boolean;
   children?: ReactNode;
-  onAction: (action: SpaceItemAction) => void;
+  onAction: (intent: Intent<SpaceListAction>) => void;
 };
 
 // TODO(burdon): Repurposable panel (compact, vs full mode). Tile?
 // TODO(burdon): Editable space name?
 // TODO(burdon): Action menu.
-// TODO(burdon): Full width mobile.
 const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
   const { t } = useTranslation('kai');
   const Icon = getIcon(space.properties.icon);
@@ -45,7 +40,12 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
       <div className={mx('flex w-full overflow-hidden px-0 items-center')}>
         <div
           className='flex flex-1 items-center overflow-hidden cursor-pointer'
-          onClick={() => onAction(SpaceItemAction.SELECT)}
+          onClick={(event) =>
+            onAction({
+              action: IntentAction.SPACE_SELECT,
+              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+            })
+          }
         >
           <div className={mx('flex m-2', selected && 'text-selection-text')}>
             <Icon className={getSize(6)} />
@@ -73,11 +73,16 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
           compact
           variant='ghost'
           className={mx(selected ? 'flex' : 'invisible')}
-          title='Create new space'
-          onClick={() => onAction(SpaceItemAction.SHARE)}
+          title='Share space'
+          onClick={(event) =>
+            onAction({
+              action: IntentAction.SPACE_SHARE,
+              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+            })
+          }
           data-testid='space-settings'
         >
-          <DotsThreeVertical className={getSize(6)} />
+          <UserPlus className={getSize(6)} />
         </Button>
       </div>
 
@@ -86,32 +91,20 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
   );
 });
 
+export type SpaceListAction = {
+  spaceKey: PublicKey;
+  modifier?: boolean;
+};
+
 export type SpaceListProps = {
   spaces: Space[];
   selected?: PublicKey;
-  onSelect: (spaceKey: PublicKey) => void;
-  onShare: (spaceKey: PublicKey) => void;
+  onAction?: (intent: Intent<SpaceListAction>) => void;
 };
 
-// TODO(burdon): Use vertical mosaic.
-export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProps) => {
+export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
   const { frame } = useAppRouter();
   const Tile = frame?.runtime.Tile;
-
-  // TODO(burdon): Factor pattern?
-  const handleAction = (spaceKey: PublicKey, action: SpaceItemAction) => {
-    switch (action) {
-      case SpaceItemAction.SELECT: {
-        onSelect(spaceKey);
-        break;
-      }
-
-      case SpaceItemAction.SHARE: {
-        onShare(spaceKey);
-        break;
-      }
-    }
-  };
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden m-2'>
@@ -120,9 +113,9 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
           key={space.key.toHex()}
           space={space}
           selected={selected && space.key.equals(selected)}
-          onAction={(action) => handleAction(space.key, action)}
+          onAction={(intent) => onAction?.(intent)}
         >
-          {Tile && <Tile />}
+          <Suspense>{Tile && <Tile />}</Suspense>
         </SpaceItem>
       ))}
     </div>

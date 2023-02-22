@@ -28,7 +28,7 @@ export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContent
       <div className='flex w-full items-center mb-3'>
         {/* Title */}
         <div className='flex flex-1 overflow-hidden'>
-          <h2 className='text-lg overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
+          <h2 className='text-lg overflow-hidden text-ellipsis whitespace-nowrap'>{item.title}</h2>
         </div>
 
         {/* Icons */}
@@ -47,15 +47,19 @@ export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContent
   );
 };
 
-export type TileClasses = {
-  root?: string;
-  selected?: string;
+export type TileSlots = {
+  root?: {
+    className?: string;
+  };
+  selected?: {
+    className?: string;
+  };
 };
 
 export type TileProps<T extends {}> = {
   item: Item<T>;
   bounds?: Bounds;
-  classes?: TileClasses;
+  slots?: TileSlots;
   selected?: boolean;
   Content?: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
@@ -68,7 +72,7 @@ export type TileProps<T extends {}> = {
 export const Tile = <T extends {} = {}>({
   item,
   bounds,
-  classes = {},
+  slots = {},
   selected,
   Content = DefaultTileContent,
   onClick,
@@ -91,8 +95,8 @@ export const Tile = <T extends {} = {}>({
         'group',
         'flex flex-col overflow-hidden p-3',
         isDragging && 'opacity-80',
-        classes.root,
-        selected && classes?.selected
+        slots.root?.className,
+        selected && slots?.selected?.className
       )}
       style={style}
       onClick={(event) => {

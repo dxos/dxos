@@ -8,7 +8,7 @@ import { Item, Location } from '../layout';
 
 export const createItem = (location?: Location): Item => ({
   id: faker.datatype.uuid(),
-  label: faker.lorem.words(3),
+  title: faker.lorem.words(3),
   content: faker.lorem.sentences(faker.datatype.number(3)),
   location
 });

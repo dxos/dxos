@@ -9,6 +9,9 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
   "dependencies": {
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/modifiers": "^6.0.0",
