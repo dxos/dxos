@@ -3,7 +3,7 @@
 //
 
 import { ThemeContextValue } from '../components';
-import { MessageValence } from '../props';
+import { Density, MessageValence } from '../props';
 import { mx } from '../util';
 import { defaultDisabled } from './disabled';
 import { staticFocus, focus } from './focus';
@@ -14,6 +14,7 @@ import { inputValence } from './valence';
 export const defaultInput = (
   props: {
     disabled?: boolean;
+    density?: Density;
     validationValence?: MessageValence;
   } = {},
   themeVariant: ThemeContextValue['themeVariant'] = 'app'
@@ -24,6 +25,7 @@ export const defaultInput = (
     themeVariant === 'os'
       ? 'rounded-sm text-sm bg-neutral-50/50 dark:bg-neutral-900/50'
       : 'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
+    props.density === 'fine' ? 'pli-2 min-bs-[32px]' : 'pli-3 min-bs-[40px]',
     focus({ ...props, variant: 'default' }, themeVariant),
     defaultPlaceholder,
     hover({ disabled }, themeVariant),
@@ -35,13 +37,14 @@ export const defaultInput = (
 export const subduedInput = (
   props: {
     disabled?: boolean;
+    density?: Density;
     validationValence?: MessageValence;
   } = {},
   themeVariant: ThemeContextValue['themeVariant'] = 'app'
 ) => {
   return mx(
     'bg-transparent text-current',
-    themeVariant === 'os' ? 'rounded-sm' : 'rounded',
+    props.density === 'fine' ? 'min-bs-[32px]' : 'min-bs-[40px]',
     focus({ ...props, variant: 'subdued' }, themeVariant),
     defaultPlaceholder
   );
@@ -54,6 +57,7 @@ export const staticInput = ({
 }: {
   disabled?: boolean;
   focused?: boolean;
+  density?: Density;
   validationValence?: MessageValence;
 }) => {
   return mx(

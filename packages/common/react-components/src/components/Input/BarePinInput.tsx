@@ -5,7 +5,7 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useButtonShadow, useForwardedRef, useIsFocused } from '../../hooks';
+import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused } from '../../hooks';
 import { staticInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps } from './InputProps';
@@ -20,15 +20,16 @@ export type BarePinInputProps = Omit<
   ComponentPropsWithoutRef<typeof CodeInput>,
   'inputRef' | 'renderSegment' | 'spellCheck'
 > &
-  Pick<InputProps, 'validationMessage' | 'validationValence' | 'variant'>;
+  Pick<InputProps, 'validationMessage' | 'validationValence' | 'variant' | 'elevation' | 'density'>;
 
 // TODO(thure): supplying a `value` prop to CodeInput does not yield correct controlled input interactivity; this may be an issue with RCI (filed as https://github.com/leonardodino/rci/issues/25).
 export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
-  ({ validationMessage, validationValence, variant, ...inputSlot }, ref) => {
+  ({ validationMessage, validationValence, variant, elevation, density: propsDensity, ...inputSlot }, ref) => {
     const width = getSegmentCssWidth('13px');
     const inputRef = useForwardedRef(ref);
     const inputFocused = useIsFocused(inputRef);
-    const shadow = useButtonShadow();
+    const shadow = useButtonShadow(elevation);
+    const density = useDensityContext(propsDensity);
 
     const { disabled } = inputSlot;
 
@@ -40,6 +41,7 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
             staticInput({
               focused: inputFocused && !!state,
               disabled,
+              density,
               ...(validationMessage && { validationValence })
             }),
             !disabled && variant !== 'subdued' && shadow
