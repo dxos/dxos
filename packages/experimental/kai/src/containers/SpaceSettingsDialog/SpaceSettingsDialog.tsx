@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
 import { withReactor } from '@dxos/react-client';
-import { Button, Dialog, getSize, Input, mx } from '@dxos/react-components';
+import { Button, Dialog, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { icons, themes } from '../../hooks';
 
@@ -20,13 +20,15 @@ export type SpaceSettingsDialog = {
 };
 
 export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space, open, onClose }) => {
+  const { t } = useTranslation('kai');
+
   return (
     <Dialog initiallyOpen={!!open} onClose={() => onClose?.()} title='Space Settings'>
       <div>
         <Input
           label='Title'
           variant='subdued'
-          placeholder='Title'
+          placeholder={t('space title placeholder')}
           slots={{ input: { autoFocus: true, className: 'text-xl' }, label: { className: 'sr-only' } }}
           value={space.properties.name}
           onChange={(event) => {
