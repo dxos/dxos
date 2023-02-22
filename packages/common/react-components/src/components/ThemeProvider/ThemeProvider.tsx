@@ -11,8 +11,10 @@ import {
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import React, { createContext, PropsWithChildren } from 'react';
 
+import { Density, Elevation } from '../../props';
 import { themeVariantFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
+import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
@@ -20,6 +22,8 @@ export type ThemeVariant = 'app' | 'os';
 
 export interface ThemeContextValue {
   themeVariant: ThemeVariant;
+  rootElevation?: Elevation;
+  rootDensity?: Density;
   hasIosKeyboard?: boolean;
 }
 
@@ -41,7 +45,9 @@ export const ThemeProvider = ({
   fallback = null,
   resourceExtensions,
   appNs,
-  themeVariant = 'app'
+  themeVariant = 'app',
+  rootElevation = 'base',
+  rootDensity = 'coarse'
 }: ThemeProviderProps) => {
   return (
     <ThemeContext.Provider value={{ themeVariant, hasIosKeyboard: hasIosKeyboard() }}>
@@ -54,7 +60,9 @@ export const ThemeProvider = ({
       >
         <ToastProvider {...toastProviderProps}>
           <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
-            <ElevationProvider elevation='base'>{children}</ElevationProvider>
+            <ElevationProvider elevation={rootElevation}>
+              <DensityProvider density={rootDensity}>{children}</DensityProvider>
+            </ElevationProvider>
           </TooltipProvider>
           <ToastViewport
             {...toastViewportProps}

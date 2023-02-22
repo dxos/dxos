@@ -7,6 +7,7 @@ export * from './Avatar';
 export * from './Button';
 export * from './Checkbox';
 export * from './CompoundButton';
+export * from './DensityProvider';
 export * from './Dialog';
 export * from './DropdownMenu';
 export * from './ElevationProvider';
