@@ -65,6 +65,7 @@ describe('database (unit)', () => {
 
     peer2.replicate(peer1.timeframe);
 
+    // TODO(dmaretskyi): Helper functions to compare state.
     expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
   })
 })
