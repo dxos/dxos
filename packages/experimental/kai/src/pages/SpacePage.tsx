@@ -56,7 +56,7 @@ const SpacePage = () => {
       slots={{
         // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
         content: { className: '!block-start-appbar', children: <Sidebar /> },
-        main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
+        main: { className: 'pbs-header bs-full overflow-hidden' }
       }}
     >
       <AppBar />

@@ -78,7 +78,9 @@ export const NoteFrame = () => {
       setItems(doLayout(board, notes, layout));
     });
 
-    subscription.update([board, notes]);
+    // TODO(burdon): Subscription is initially out of date for newly created items.
+    setItems(doLayout(board, notes, layout));
+    // subscription.update([board, notes]);
     return () => subscription.unsubscribe();
   }, [board, notes]);
 
