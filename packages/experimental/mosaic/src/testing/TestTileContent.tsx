@@ -37,7 +37,7 @@ export const TestTileContent = ({ item, onDelete }: TileContentProps<TestData>) 
       </div>
 
       {/* Body */}
-      <div className='flex flex-1 overflow-hidden text-gray-600'>{item.data?.content}</div>
+      <div className='flex flex-1 overflow-hidden text-gray-600'>{item.data?.description}</div>
     </div>
   );
 };
