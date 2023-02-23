@@ -58,7 +58,7 @@ export const Input = ({
     ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
     disabled,
     placeholder,
-    value: value ?? '',
+    value,
     defaultValue,
     onChange,
     validationMessage,
