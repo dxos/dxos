@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
-import { SpaceProvider, SpaceProviderProps } from '../echo';
 
 export type ClientContextProps = {
   client: Client;
@@ -65,15 +64,6 @@ export interface ClientProviderProps {
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
-   * Whether or not to include a SpaceProvider as a child.
-   *
-   * Default is true.
-   * @deprecated Move to patterns/testing.
-   */
-  // TODO(burdon): Consider changing to reducer pattern.
-  spaceProvider?: boolean | SpaceProviderProps;
-
-  /**
    * Post initialization hook.
    * @param Client
    * @deprecated Previously used to register models.
@@ -91,7 +81,6 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  spaceProvider,
   onInitialize
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
@@ -162,10 +151,6 @@ export const ClientProvider = ({
 
   if (!client || status !== Status.ACTIVE) {
     return <Fallback client={client} status={status} />;
-  }
-
-  if (spaceProvider !== false) {
-    children = <SpaceProvider {...(spaceProvider === true ? {} : spaceProvider)}>{children}</SpaceProvider>;
   }
 
   // prettier-ignore

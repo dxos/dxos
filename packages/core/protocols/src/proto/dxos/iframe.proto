@@ -33,7 +33,6 @@ enum ShellDisplay {
 message AppContextRequest {
   ShellDisplay display = 1;
   optional dxos.keys.PublicKey space_key = 2;
-  optional string invitation_code = 3;
 }
 
 /// App RPCs for the shell.
@@ -43,11 +42,10 @@ service AppService {
 
 enum ShellLayout {
   DEFAULT = 0;
-  AUTH = 1;
-  CURRENT_SPACE = 2;
-  SPACE_LIST = 3;
+  INITIALIZE_IDENTITY = 1;
+  HALO_INVITATIONS = 2;
+  SPACE_INVITATIONS = 3;
   JOIN_SPACE = 4;
-  DEVICES_LIST = 5;
 }
 
 message LayoutRequest {
