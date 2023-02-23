@@ -27,10 +27,12 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
         <div className='flex flex-col flex-1 overflow-hidden'>
           <Input
             variant='subdued'
+            label='Title'
+            labelVisuallyHidden
             placeholder='Title'
             slots={{
               root: {
-                className: 'm-0 w-full'
+                className: 'w-full'
               },
               input: {
                 tabIndex: 1,
