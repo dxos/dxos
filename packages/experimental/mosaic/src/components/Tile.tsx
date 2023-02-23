@@ -4,10 +4,9 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { XCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/react-components';
+import { mx } from '@dxos/react-components';
 
 import { Bounds, Item } from '../layout';
 
@@ -15,36 +14,6 @@ export type TileContentProps<T extends {} = {}> = {
   item: Item<T>;
   selected?: boolean;
   onDelete?: (item: Item<T>) => void;
-};
-
-export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContentProps<T>) => {
-  const handleDelete = (event: any) => {
-    event.stopPropagation();
-    onDelete?.(item);
-  };
-
-  return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex w-full items-center mb-3'>
-        {/* Title */}
-        <div className='flex flex-1 overflow-hidden'>
-          <h2 className='text-lg overflow-hidden text-ellipsis whitespace-nowrap'>{item.title}</h2>
-        </div>
-
-        {/* Icons */}
-        <div className='flex shrink-0 pl-3'>
-          <div className='invisible group-hover:visible text-gray-500'>
-            <button onClick={handleDelete}>
-              <XCircle className={getSize(6)} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className='flex flex-1 overflow-hidden text-gray-600'>{item.content}</div>
-    </div>
-  );
 };
 
 export type TileSlots = {
@@ -61,7 +30,7 @@ export type TileProps<T extends {}> = {
   bounds?: Bounds;
   slots?: TileSlots;
   selected?: boolean;
-  Content?: FC<TileContentProps<T>>;
+  Content: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
   onDelete?: (item: Item<T>) => void;
 };
@@ -74,7 +43,7 @@ export const Tile = <T extends {} = {}>({
   bounds,
   slots = {},
   selected,
-  Content = DefaultTileContent,
+  Content,
   onClick,
   onDelete
 }: TileProps<T>) => {

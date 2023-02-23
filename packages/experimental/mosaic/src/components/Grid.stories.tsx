@@ -10,7 +10,7 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { GridLayout, Item, Location } from '../layout';
-import { createItem } from '../testing';
+import { createItem, TestData, TestTileContent } from '../testing';
 import { Grid } from './Grid';
 
 faker.seed(100);
@@ -34,7 +34,7 @@ const num = 8;
 
 const Test = () => {
   const layout = useMemo(() => new GridLayout({ range: { x: 3, y: 2 } }), []);
-  const [items, setItems] = useState<Item[]>(() => {
+  const [items, setItems] = useState<Item<TestData>[]>(() => {
     return range(num).map(() => {
       return createItem({
         x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
@@ -58,9 +58,10 @@ const Test = () => {
   };
 
   return (
-    <Grid
+    <Grid<TestData>
       items={items}
       layout={layout}
+      Content={TestTileContent}
       onSelect={handleSelect}
       onCreate={handleCreate}
       onDelete={handleDelete}

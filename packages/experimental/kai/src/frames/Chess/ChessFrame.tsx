@@ -15,7 +15,7 @@ import { useAppRouter } from '../../hooks';
 
 const gridSize = 300;
 
-const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUTURE, ChessPieces.CUSTOM];
+const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUTURE];
 
 const createChess = (game: Game) => {
   const chess = new Chess();
@@ -110,10 +110,18 @@ const Play: FC<{
 
       <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
-          <Button compact onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
+          <Button
+            compact
+            className='mr-1'
+            onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}
+          >
             <CaretLeft weight='thin' className={getSize(6)} />
           </Button>
-          <Button compact onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
+          <Button
+            compact
+            className='mr-1'
+            onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}
+          >
             <CaretRight weight='thin' className={getSize(6)} />
           </Button>
         </div>

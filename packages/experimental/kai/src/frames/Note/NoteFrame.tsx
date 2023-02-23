@@ -44,8 +44,6 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
 
     const item: Item<Note> = {
       id: note.id,
-      title: note.title,
-      content: note.content?.model?.textContent, // TODO(burdon): Util.
       location: { x: location.x!, y: location.y! },
       data: note
     };

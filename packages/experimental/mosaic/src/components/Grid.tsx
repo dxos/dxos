@@ -23,7 +23,7 @@ export type GridProps<T extends {} = {}> = {
   layout: Layout;
   items?: Item<T>[];
   slots?: GridSlots;
-  Content?: FC<TileContentProps<T>>;
+  Content: FC<TileContentProps<T>>;
   onSelect?: (item: Item<T>) => void;
   onChange?: (item: Item<T>, location: Location) => void;
   onCreate?: (location: Location) => Promise<string | undefined>;
