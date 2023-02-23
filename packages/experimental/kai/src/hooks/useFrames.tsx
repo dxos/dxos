@@ -226,7 +226,7 @@ export const defaultFrames = [
   'dxos.module.frame.mosaic',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  // 'dxos.module.frame.document',
+  'dxos.module.frame.document',
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
