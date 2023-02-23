@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Serializer } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { DropdownMenuItem, getSize, mx } from '@dxos/react-components';
 
 import { createPath, defaultFrameId, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
 
@@ -81,62 +81,42 @@ export const Actions = () => {
     }
   };
 
-  const actions: Action[] = [
-    {
-      Icon: Gear,
-      title: 'Settings',
-      handler: () => handleSettings()
-    },
-    space &&
-      !isMobile && [
-        {
-          Icon: DownloadSimple,
-          title: 'Export data',
-          handler: () => handleExportSpace()
-        },
-        {
-          Icon: () => (
-            <FileUploader types={['json']} handleChange={handleImportSpace}>
-              <UploadSimple className={mx(getSize(6), 'cursor-pointer')} />
-            </FileUploader>
-          ),
-          title: 'Import data'
-        }
-      ],
-    {
-      Icon: Robot,
-      title: 'Generate test data',
-      handler: () => handleGenerateData()
-    },
-    {
-      Icon: Trash,
-      title: 'Reset storage',
-      handler: () => handleReset()
-    },
-    {
-      Icon: () =>
-        connectionState === ConnectionState.ONLINE ? (
-          <WifiHigh className={getSize(6)} />
-        ) : (
-          <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
-        ),
-      title: 'Toggle connection',
-      handler: () => handleToggleConnection()
-    }
-  ]
-    .filter(Boolean)
-    .flat() as Action[];
-
   return (
-    <div className='flex shrink-0 p-2 px-2'>
-      {actions.map((action, i) => {
-        const { Icon, handler, title } = action;
-        return (
-          <Button key={i} className='mr-1' onClick={handler} title={title}>
-            <Icon className={getSize(6)} />
-          </Button>
-        );
-      })}
-    </div>
+    <>
+      <DropdownMenuItem onClick={handleSettings}>
+        <Gear className={getSize(5)} />
+        <span className='mis-2'>Settings</span>
+      </DropdownMenuItem>
+      {space && !isMobile && (
+        <>
+          <DropdownMenuItem onClick={handleExportSpace}>
+            <DownloadSimple className={getSize(5)} />
+            <span className='mis-2'>Export data</span>
+          </DropdownMenuItem>
+          <FileUploader types={['json']} handleChange={handleImportSpace}>
+            <DropdownMenuItem>
+              <UploadSimple className={getSize(5)} />
+              <span className='mis-2'>Import data</span>
+            </DropdownMenuItem>
+          </FileUploader>
+        </>
+      )}
+      <DropdownMenuItem onClick={handleGenerateData}>
+        <Robot className={getSize(5)} />
+        <span className='mis-2'>Generate test data</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={handleReset}>
+        <Trash className={getSize(5)} />
+        <span className='mis-2'>Reset storage</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={handleToggleConnection}>
+        {connectionState === ConnectionState.ONLINE ? (
+          <WifiHigh className={getSize(5)} />
+        ) : (
+          <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
+        )}
+        <span className='mis-2'>Toggle connection</span>
+      </DropdownMenuItem>
+    </>
   );
 };

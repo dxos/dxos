@@ -57,7 +57,7 @@ export const DropdownMenuLabel = ({
   return (
     <DropdownMenuPrimitive.Label
       {...props}
-      className={mx('select-none px-2 py-2 text-xs text-neutral-700 dark:text-neutral-200', className)}
+      className={mx('select-none px-2 py-2 text-sm text-neutral-900 dark:text-neutral-100', className)}
     />
   );
 };
@@ -94,7 +94,7 @@ export const DropdownMenuSubContent = forwardRef<HTMLDivElement, DropdownMenuSub
           {...props}
           className={mx(
             'origin-radix-dropdown-menu radix-side-right:animate-scale-in',
-            'w-full rounded-md px-1 py-1 text-xs shadow-md',
+            'w-full rounded-md px-1 py-1 text-sm shadow-md',
             'bg-white dark:bg-neutral-800',
             className
           )}

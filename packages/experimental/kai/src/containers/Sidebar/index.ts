@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Actions';
+export * from '../AppBar/Actions';
 export * from './Sidebar';

@@ -19,7 +19,6 @@ import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useShel
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SpaceList, SpaceListAction } from '../SpaceList';
-import { Actions } from './Actions';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -148,9 +147,6 @@ export const Sidebar = () => {
             <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
           </div>
         </div>
-
-        {/* TODO(burdon): Move some actions to menu. */}
-        <Actions />
       </div>
     </div>
   );
