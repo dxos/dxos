@@ -6,9 +6,16 @@ import faker from 'faker';
 
 import { Item, Location } from '../layout';
 
-export const createItem = (location?: Location): Item => ({
+export type TestData = {
+  title: string;
+  description: string;
+};
+
+export const createItem = (location?: Location): Item<TestData> => ({
   id: faker.datatype.uuid(),
-  label: faker.lorem.words(3),
-  content: faker.lorem.sentences(faker.datatype.number(3)),
+  data: {
+    title: faker.lorem.words(3),
+    description: faker.lorem.sentences(faker.datatype.number(3))
+  },
   location
 });
