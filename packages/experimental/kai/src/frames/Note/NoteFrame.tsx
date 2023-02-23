@@ -3,18 +3,14 @@
 //
 
 import faker from 'faker';
-import { XCircle } from 'phosphor-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic';
-import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, getSize, Input } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { Grid, GridLayout, Item, Location } from '@dxos/mosaic';
+import { useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
-
-// TODO(burdon): Move to layout.
+import { NoteTile } from './NoteTile';
 
 const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
   board.locations.find((location) => location.objectId === id);
@@ -28,6 +24,7 @@ const setItemLocation = (board: NoteBoard, id: string, location: LocationProto) 
   }
 };
 
+// TODO(burdon): Extend layout.
 const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
   // TODO(burdon): Memoize and update existing map.
   return notes.map((note) => {
@@ -51,62 +48,6 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
     return item;
   });
 };
-
-export const TileContent = withReactor(({ item, selected, onDelete }: TileContentProps) => {
-  const note = item.data as Note;
-
-  const handleDelete = (event: any) => {
-    event.stopPropagation();
-    onDelete?.(item);
-  };
-
-  return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex w-full items-center mb-3'>
-        {/* Title */}
-        <div className='flex flex-col flex-1 overflow-hidden'>
-          <Input
-            label='Title'
-            variant='subdued'
-            value={note.title}
-            onChange={(event) => {
-              note.title = event.target.value;
-            }}
-            placeholder='Title'
-            slots={{
-              label: { className: 'sr-only' },
-              root: {
-                className: 'm-0 w-full'
-              },
-              input: {
-                className: 'p-1 w-full border-0 text-xl',
-                autoFocus: true // TODO(burdon): Apply selectively?
-              }
-            }}
-          />
-        </div>
-
-        {/* Actions */}
-        <div className='flex shrink-0 pl-2'>
-          <div className='invisible group-hover:visible text-gray-500'>
-            <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
-              <XCircle className={getSize(6)} />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      {/* TODO(burdon): Error when syncing: Cannot read properties of undefined (reading doc). */}
-      <div className='flex flex-1 overflow-hidden p-1 text-gray-600'>
-        <Composer
-          document={note.content}
-          slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full' } }}
-        />
-      </div>
-    </div>
-  );
-});
 
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
@@ -168,7 +109,7 @@ export const NoteFrame = () => {
           selected: { className: 'ring-1 ring-selection-border' }
         }
       }}
-      Content={TileContent}
+      Content={NoteTile}
       onChange={handleChange}
       onCreate={handleCreate}
       onDelete={handleDelete}
