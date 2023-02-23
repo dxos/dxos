@@ -1,7 +1,36 @@
-button#open {
-  position: absolute;
-  top: 15px;
-  left: 15px;
+div#spaces button {
   font-size: 22px;
-  color: #949494;
+  cursor: pointer;
+  padding: 0 5px;
+  transform: scale(-1, 1);
+}
+
+div#spaces a {
+  display: block;
+  color: #7a7a7a;
+}
+
+div#spaces a.selected {
+  font-weight: bold;
+  color: #b83f45;
+}
+
+div#spaces {
+  position: absolute;
+  width: 272px;
+  top: 8px;
+  bottom: 8px;
+  left: 8px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #eaeaea;
+  z-index: 100;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-grow {
+  flex: 1;
 }

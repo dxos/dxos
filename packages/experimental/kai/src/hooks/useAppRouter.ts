@@ -7,9 +7,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client';
 
-import { oncePerWindow } from './once';
 import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.
@@ -73,26 +72,15 @@ export type AppRoute = {
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
   const navigate = useNavigate();
-  const client = useClient();
-  const spaces = useSpaces();
-  const identity = useIdentity();
   const { spaceKey, section, frame, objectId } = useParams();
+  const spaces = useSpaces();
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
-    if (identity && !space) {
-      t = setTimeout(
-        oncePerWindow('echo/first-space', async () => {
-          const space = await client.echo.createSpace();
-          const path = createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId });
-          navigate(path);
-        })
-      );
+    if (!space && spaces.length > 0) {
+      navigate(createPath({ spaceKey: spaces[0].key, frame }));
     }
-
-    return () => t && clearTimeout(t);
-  }, [space, identity]);
+  }, [space, spaces]);
 
   const { frames, active: activeFrames } = useFrames();
   const frameId = frame && decodeFrame(frame);

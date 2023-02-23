@@ -43,8 +43,8 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
       log('stream opened', this.getLoggingContext());
 
       let invitationId: string;
-      const { type, swarmKey } = invitation;
-      const observable = invitationsHandler.createInvitation(context, { type, swarmKey });
+      const { type, swarmKey, authMethod } = invitation;
+      const observable = invitationsHandler.createInvitation(context, { type, swarmKey, authMethod });
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);

@@ -10,6 +10,7 @@ import { useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -78,6 +79,7 @@ export const Sidebar = () => {
           const swarmKey = PublicKey.random();
           const observable = space.createInvitation({
             swarmKey,
+            authMethod: AuthMethod.NONE,
             type: Invitation.Type.MULTIUSE_TESTING
           });
 
@@ -94,7 +96,7 @@ export const Sidebar = () => {
             }
           });
         } else {
-          void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
+          void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
         }
 
         break;
