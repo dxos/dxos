@@ -3,15 +3,14 @@
 //
 
 import MobileDetect from 'mobile-detect';
-import { DownloadSimple, UploadSimple, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
+import { DownloadSimple, UploadSimple, Gear, Robot, Trash } from 'phosphor-react';
 import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { DropdownMenuItem, getSize, mx } from '@dxos/react-components';
+import { useClient } from '@dxos/react-client';
+import { DropdownMenuItem, getSize } from '@dxos/react-components';
 
 import { createPath, defaultFrameId, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
 
@@ -30,7 +29,6 @@ export const Actions = () => {
   const client = useClient();
   const download = useFileDownload();
   const { space } = useAppRouter();
-  const { state: connectionState } = useNetworkStatus();
   const generator = useGenerator();
   const serializer = useMemo(() => new Serializer(), []);
 
@@ -68,19 +66,6 @@ export const Actions = () => {
     }
   };
 
-  const handleToggleConnection = async () => {
-    switch (connectionState) {
-      case ConnectionState.OFFLINE: {
-        await client.mesh.setConnectionState(ConnectionState.ONLINE);
-        break;
-      }
-      case ConnectionState.ONLINE: {
-        await client.mesh.setConnectionState(ConnectionState.OFFLINE);
-        break;
-      }
-    }
-  };
-
   return (
     <>
       <DropdownMenuItem onClick={handleSettings}>
@@ -108,14 +93,6 @@ export const Actions = () => {
       <DropdownMenuItem onClick={handleReset}>
         <Trash className={getSize(5)} />
         <span className='mis-2'>Reset storage</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleToggleConnection}>
-        {connectionState === ConnectionState.ONLINE ? (
-          <WifiHigh className={getSize(5)} />
-        ) : (
-          <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
-        )}
-        <span className='mis-2'>Toggle connection</span>
       </DropdownMenuItem>
     </>
   );
