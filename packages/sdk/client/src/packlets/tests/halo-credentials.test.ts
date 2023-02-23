@@ -11,7 +11,6 @@ import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
@@ -41,22 +40,24 @@ describe('Halo', () => {
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
 
-      const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AuthorizedDevice' });
-      const trigger = new Trigger<Credential>();
+      const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
+      const trigger = new Trigger();
       credentials.subscribe({
         onUpdate: (credentials) => {
-          if (credentials.length > 0) {
-            trigger.wake(credentials[0]);
+          if (credentials.length >= 2) {
+            trigger.wake();
           }
         },
         onError: (err) => log.catch(err)
       });
+      await asyncTimeout(trigger.wait(), 500);
+
       const nonce = new Uint8Array([0, 0, 0, 0]);
       const presentation = await client.halo.presentCredentials({
-        ids: [(await asyncTimeout(trigger.wait(), 500)).id!],
-        nonce
+        ids: credentials.value!.map(({ id }) => id!),
+        nonce: new Uint8Array([0, 0, 0, 0])
       });
-
+      expect(presentation.credentials?.length).to.equal(2);
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
       expect(presentation.proofs![0].nonce).to.deep.equal(nonce);
     }

@@ -362,7 +362,7 @@ export class HaloProxy implements Halo {
   /**
    * Present Credentials.
    */
-  async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce: Uint8Array }): Promise<Presentation> {
+  async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation> {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
