@@ -16,7 +16,7 @@ describe('SystemService', () => {
   let config: Config;
   let statusUpdate: Event<void>;
   let currentStatus: Status;
-  let createSession: Trigger<boolean>;
+  let updateStatus: Trigger<Status>;
   let reset: Trigger<boolean>;
 
   const changeStatus = (status: Status) => {
@@ -28,16 +28,16 @@ describe('SystemService', () => {
     config = new Config({ runtime: { client: { log: { filter: 'system-service:debug' } } } });
     statusUpdate = new Event<void>();
     currentStatus = Status.ACTIVE;
-    createSession = new Trigger<boolean>();
+    updateStatus = new Trigger<Status>();
     reset = new Trigger<boolean>();
 
     systemService = new SystemServiceImpl({
       config,
       statusUpdate,
-      onCreateSession: () => {
-        createSession.wake(true);
+      getCurrentStatus: () => currentStatus,
+      onUpdateStatus: (status) => {
+        updateStatus.wake(status);
       },
-      onStatusUpdate: () => currentStatus,
       onReset: () => {
         reset.wake(true);
       }
@@ -48,10 +48,10 @@ describe('SystemService', () => {
     expect(await systemService.getConfig()).to.deep.equal(config.values);
   });
 
-  test('createSession triggers callback', async () => {
-    await systemService.createSession();
-    const result = await createSession.wait();
-    expect(result).to.be.true;
+  test('updateStatus triggers callback', async () => {
+    await systemService.updateStatus({ status: Status.INACTIVE });
+    const result = await updateStatus.wait();
+    expect(result).to.equal(Status.INACTIVE);
   });
 
   test('queryStatus returns initial status', async () => {

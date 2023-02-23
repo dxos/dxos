@@ -69,6 +69,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager,
     storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage,
+    // TODO(wittjosiah): Turn this on by default.
     lockKey
   }: ClientServicesHostParams) {
     this._config = config;
@@ -89,11 +90,15 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       statusUpdate: this._statusUpdate,
 
-      onCreateSession: async () => {
-        await this._resourceLock?.acquire();
-      },
+      getCurrentStatus: () => (this.isOpen ? Status.ACTIVE : Status.INACTIVE),
 
-      onStatusUpdate: () => (this.isOpen ? Status.ACTIVE : Status.INACTIVE),
+      onUpdateStatus: async (status: Status) => {
+        if (!this.isOpen && status === Status.ACTIVE) {
+          await this._resourceLock?.acquire();
+        } else if (this.isOpen && status === Status.INACTIVE) {
+          await this._resourceLock?.release();
+        }
+      },
 
       onReset: async () => {
         assert(this._serviceContext, 'service host is closed');
@@ -125,6 +130,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     }
 
     log('opening...');
+    await this._resourceLock?.acquire();
 
     // TODO(wittjosiah): Make re-entrant.
     // TODO(burdon): Break into components.

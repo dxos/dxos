@@ -5,14 +5,14 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { Status, StatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import { Status, StatusResponse, SystemService, UpdateStatusRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { MaybePromise } from '@dxos/util';
 
 export type SystemServiceOptions = {
   config: Config;
   statusUpdate: Event<void>;
-  onCreateSession: () => MaybePromise<void>;
-  onStatusUpdate: () => Status;
+  getCurrentStatus: () => Status;
+  onUpdateStatus: (status: Status) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
 };
 
@@ -20,17 +20,17 @@ export type SystemServiceOptions = {
  *
  */
 export class SystemServiceImpl implements SystemService {
-  private readonly _config: Config;
-  private readonly _statusUpdate: Event<void>;
-  private readonly _onCreateSession: () => MaybePromise<void>;
-  private readonly _onStatusUpdate: () => Status;
-  private readonly _onReset: () => MaybePromise<void>;
+  private readonly _config: SystemServiceOptions['config'];
+  private readonly _statusUpdate: SystemServiceOptions['statusUpdate'];
+  private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
+  private readonly _onUpdateStatus: SystemServiceOptions['onUpdateStatus'];
+  private readonly _onReset: SystemServiceOptions['onReset'];
 
-  constructor({ config, statusUpdate, onCreateSession, onStatusUpdate, onReset }: SystemServiceOptions) {
+  constructor({ config, statusUpdate, onUpdateStatus, getCurrentStatus, onReset }: SystemServiceOptions) {
     this._config = config;
     this._statusUpdate = statusUpdate;
-    this._onCreateSession = onCreateSession;
-    this._onStatusUpdate = onStatusUpdate;
+    this._getCurrentStatus = getCurrentStatus;
+    this._onUpdateStatus = onUpdateStatus;
     this._onReset = onReset;
   }
 
@@ -38,19 +38,24 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
-  async createSession() {
-    await this._onCreateSession();
+  async updateStatus({ status }: UpdateStatusRequest) {
+    await this._onUpdateStatus(status);
   }
 
   queryStatus(): Stream<StatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        next({ status: this._onStatusUpdate() });
+        next({ status: this._getCurrentStatus() });
       };
 
-      const unsubscribe = this._statusUpdate.on(() => update());
       update();
-      return unsubscribe;
+      const unsubscribe = this._statusUpdate.on(() => update());
+      const interval = setInterval(update, 3000);
+
+      return () => {
+        clearInterval(interval);
+        unsubscribe();
+      };
     });
   }
 

@@ -58,17 +58,17 @@ export class WorkerSession {
     this._getService = getService;
 
     const handlers = {
-      DataService: async () => await this._getService((services) => services.DataService),
-      DevicesService: async () => await this._getService((services) => services.DevicesService),
-      DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
-      HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
-      NetworkService: async () => await this._getService((services) => services.NetworkService),
-      IdentityService: async () => await this._getService((services) => services.IdentityService),
-      SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
-      SpaceService: async () => await this._getService((services) => services.SpaceService),
-      SpacesService: async () => await this._getService((services) => services.SpacesService),
-      SystemService: async () => await this._getService((services) => services.SystemService),
-      TracingService: async () => await this._getService((services) => services.TracingService)
+      DataService: () => this._getService((services) => services.DataService),
+      DevicesService: () => this._getService((services) => services.DevicesService),
+      DevtoolsHost: () => this._getService((services) => services.DevtoolsHost),
+      HaloInvitationsService: () => this._getService((services) => services.HaloInvitationsService),
+      NetworkService: () => this._getService((services) => services.NetworkService),
+      IdentityService: () => this._getService((services) => services.IdentityService),
+      SpaceInvitationsService: () => this._getService((services) => services.SpaceInvitationsService),
+      SpaceService: () => this._getService((services) => services.SpaceService),
+      SpacesService: () => this._getService((services) => services.SpacesService),
+      SystemService: () => this._getService((services) => services.SystemService),
+      TracingService: () => this._getService((services) => services.TracingService)
     };
 
     this._clientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: appPort });

@@ -156,12 +156,19 @@ export class Client {
     }
 
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.createSession();
 
+    let timeout: NodeJS.Timeout | undefined;
     this._services.services.SystemService.queryStatus().subscribe(
-      ({ status }) => {
+      async ({ status }) => {
+        timeout && clearTimeout(timeout);
+
         this._status = status;
         this._statusUpdate.emit(this._status);
+
+        timeout = setTimeout(() => {
+          this._status = undefined;
+          this._statusUpdate.emit(this._status);
+        }, 5000);
       },
       (_err) => {
         this._status = undefined;
@@ -215,7 +222,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.createSession();
+    await this._services.services.SystemService.updateStatus({ status: Status.ACTIVE });
   }
 
   /**

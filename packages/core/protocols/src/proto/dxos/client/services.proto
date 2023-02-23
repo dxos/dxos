@@ -28,6 +28,10 @@ enum Status {
   INACTIVE = 1;
 }
 
+message UpdateStatusRequest {
+  Status status = 1;
+}
+
 message StatusResponse {
   Status status = 1;
 }
@@ -40,8 +44,8 @@ service SystemService {
   /// Get the static config of the client.
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
 
-  /// Called at the start of the session. Service should block until it is fully initialized.
-  rpc CreateSession(google.protobuf.Empty) returns (google.protobuf.Empty);
+  /// Update the status of the client. Used to re-activate an inactive client.
+  rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
 
   /// Stream the status of the client.
   rpc QueryStatus(google.protobuf.Empty) returns (stream StatusResponse);
