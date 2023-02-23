@@ -19,7 +19,7 @@ export const useClientProvider = (dev: boolean) => {
         config.get('runtime.app.env.DX_VAULT') === 'true'
           ? dev
             ? fromLocal()
-            : fromIFrame(config, true)
+            : fromIFrame(config, { shell: true })
           : fromHost(config)
     });
 
