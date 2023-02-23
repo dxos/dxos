@@ -9,7 +9,6 @@ import * as pb from 'protobufjs';
 
 import { SourceBuilder, generate } from './codegen';
 
-
 export type ProtoResolver = (origin: string, target: string) => string | any | null;
 
 /**
@@ -19,7 +18,7 @@ export function createProtoResolver(original: ProtoResolver, baseDir?: string): 
   // NOTE: Must be function to preserve `this`.
   return function (this: any, origin, target) {
     if (target === 'dxos/schema.proto') {
-      return 'dxos/schema.proto'
+      return 'dxos/schema.proto';
     }
 
     return original.call(this, origin, target);
@@ -30,11 +29,11 @@ const registerResolver = (baseDir?: string) => {
   pb.Root.prototype.resolvePath = createProtoResolver(pb.Root.prototype.resolvePath, baseDir);
 };
 
-
 const loadProtobufBuiltins = () => {
-  const common = require('protobufjs/src/common')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const common = require('protobufjs/src/common');
 
-  common("dxos/schema.proto", {
+  common('dxos/schema.proto', {
     nested: {
       dxos: {
         nested: {
@@ -43,9 +42,9 @@ const loadProtobufBuiltins = () => {
               Text: {
                 fields: {
                   test: {
-                    type: "string",
+                    type: 'string',
                     id: 1
-                  },
+                  }
                 }
               }
             }
@@ -54,12 +53,11 @@ const loadProtobufBuiltins = () => {
       }
     }
   });
-}
+};
 
 const main = (source: string, out: string) => {
   console.log(`Reading: ${source}`);
   const root = new pb.Root();
-  debugger;
   root.loadSync(source);
 
   const builder = new SourceBuilder();
