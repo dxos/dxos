@@ -50,7 +50,7 @@ export const SpaceItem = withReactor(({ space, selected, children, onAction }: S
 
           <Input
             variant='subdued'
-            value={space.properties.name}
+            value={space.properties.name ?? ''}
             onChange={(event) => {
               space.properties.name = event.target.value;
             }}
