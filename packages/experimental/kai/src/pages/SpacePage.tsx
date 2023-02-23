@@ -10,7 +10,7 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useFrames, useTheme, useGenerator, Section } from '../hooks';
+import { useAppRouter, useTheme, useGenerator, Section } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -46,7 +46,6 @@ const Toolbar = () => {
  */
 const SpacePage = () => {
   useGenerator();
-  const { active } = useFrames();
   const { section } = useParams();
   const { space, frame } = useAppRouter();
 
@@ -56,7 +55,7 @@ const SpacePage = () => {
       slots={{
         // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
         content: { className: '!block-start-appbar', children: <Sidebar /> },
-        main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
+        main: { className: 'pbs-header bs-full overflow-hidden' }
       }}
     >
       <AppBar />
