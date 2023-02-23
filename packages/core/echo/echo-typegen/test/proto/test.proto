@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "dxos/schema.proto";
+
 package example.test;
 
 message LatLng {
@@ -36,8 +38,5 @@ message Task {
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
-  Text description = 6;
+  dxos.schema.Text description = 6;
 }
-
-// TODO: Extract.
-message Text {}
