@@ -170,13 +170,13 @@ export const SketchFrame = withReactor(() => {
         <div className='flex-1' />
 
         <div className='flex items-center'>
-          <Button compact variant='ghost' title='Clear' onClick={handleClear}>
+          <Button variant='ghost' title='Clear' onClick={handleClear}>
             <Trash className={getSize(6)} />
           </Button>
-          <Button compact variant='ghost' title='Download' onClick={handleDownload}>
+          <Button variant='ghost' title='Download' onClick={handleDownload}>
             <DownloadSimple className={getSize(6)} />
           </Button>
-          <Button compact variant='ghost' title='Upload' onClick={handleUpload}>
+          <Button variant='ghost' title='Upload' onClick={handleUpload}>
             <UploadSimple className={getSize(6)} />
           </Button>
         </div>

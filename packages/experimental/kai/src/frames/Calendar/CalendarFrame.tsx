@@ -66,7 +66,7 @@ export const CalendarFrame = () => {
               {(event.resource as EventType).members.map((member) => (
                 <div key={member.id} className='flex items-center overflow-hidden cursor-pointer'>
                   <div className='flex items-center mr-1 text-blue-500'>
-                    <Button compact onClick={() => setContact(member)}>
+                    <Button onClick={() => setContact(member)}>
                       <User />
                     </Button>
                   </div>
@@ -92,19 +92,14 @@ export const CalendarFrame = () => {
     <div className='flex flex-1 flex-col justify-center overflow-hidden'>
       <div className='flex m-2 pl-2 pr-2'>
         <div>
-          <Button compact>
+          <Button>
             <Clock className={getSize(6)} />
           </Button>
         </div>
         <div className='flex-1' />
         <div>
           {views.map(({ view: v, Icon }) => (
-            <Button
-              compact
-              key={v}
-              className={mx('text-gray-300', v === view && 'text-gray-700')}
-              onClick={() => setView(v)}
-            >
+            <Button key={v} className={mx('text-gray-300', v === view && 'text-gray-700')} onClick={() => setView(v)}>
               <Icon weight='light' className={getSize(6)} />
             </Button>
           ))}

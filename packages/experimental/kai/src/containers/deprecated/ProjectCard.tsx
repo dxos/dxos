@@ -37,7 +37,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
           onChange={({ target: { value } }) => (project.title = value)}
           placeholder='Project name'
         />
-        <Button compact variant='ghost' className={mx(getSize(10), 'text-gray-500')} onClick={handleExpand}>
+        <Button variant='ghost' className={mx(getSize(10), 'text-gray-500')} onClick={handleExpand}>
           <ArrowsOut className={getSize(5)} />
         </Button>
       </div>

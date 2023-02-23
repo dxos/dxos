@@ -21,11 +21,12 @@ import React, {
   ReactNode
 } from 'react';
 
-import { useId, useThemeContext } from '../../hooks';
-import { ScopedProps } from '../../props';
+import { useDensityContext, useId, useThemeContext } from '../../hooks';
+import { Density, ScopedProps } from '../../props';
 import { getSize, themeVariantFocus } from '../../styles';
 import { mx } from '../../util';
 import { Checkbox, CheckboxProps } from '../Checkbox';
+import { DensityProvider } from '../DensityProvider';
 import { defaultListItemHeading, defaultListItemEndcap } from './listStyles';
 
 // TODO (thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
@@ -52,9 +53,11 @@ interface SharedListProps {
   onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
   listItemIds?: string[];
   slots?: SharedListSlots;
+  density?: Density;
 }
 
-interface DraggableListProps extends Omit<SharedListProps, 'onDragEnd' | 'listItemIds' | 'variant' | 'slots'> {
+interface DraggableListProps
+  extends Omit<SharedListProps, 'onDragEnd' | 'listItemIds' | 'variant' | 'slots' | 'density'> {
   onDragEnd: Exclude<SharedListProps['onDragEnd'], undefined>;
   listItemIds: Exclude<SharedListProps['listItemIds'], undefined>;
   variant: 'ordered-draggable';
@@ -71,6 +74,7 @@ interface ListItemData {
 interface ListItemSlots {
   root?: Omit<ComponentPropsWithRef<'li'>, 'id' | 'children'>;
   dragHandle?: ComponentPropsWithoutRef<typeof ListItemDragHandle>;
+  dragHandleIcon?: ComponentPropsWithoutRef<typeof DotsSixVertical>;
 }
 
 interface ListItemProps extends Omit<ListItemData, 'id'> {
@@ -91,31 +95,38 @@ type ListContextValue = Pick<ListProps, 'selectable' | 'variant'>;
 
 const [ListProvider, useListContext] = createListContext<ListContextValue>(LIST_NAME);
 
+const useListDensity = ({ density, variant }: Pick<SharedListProps, 'density' | 'variant'>) => {
+  const contextDensity = useDensityContext(density);
+  return variant === 'ordered-draggable' ? 'coarse' : contextDensity ?? 'coarse';
+};
+
 const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   const { __scopeSelect, variant = 'ordered', selectable = false, children, slots = {} } = props;
   const ListRoot = variant === 'ordered' || variant === 'ordered-draggable' ? Primitive.ol : Primitive.ul;
-
+  const density = useListDensity(props);
   return (
     <ListRoot
       {...(selectable && { role: 'listbox', 'aria-multiselectable': true })}
       {...slots.root}
       aria-labelledby={props.labelId}
     >
-      <ListProvider
-        {...{
-          scope: __scopeSelect,
-          variant,
-          selectable
-        }}
-      >
-        {variant === 'ordered-draggable' ? (
-          <DndContext onDragEnd={(props as DraggableListProps).onDragEnd} modifiers={[restrictToVerticalAxis]}>
-            <SortableContext items={(props as DraggableListProps).listItemIds}>{children}</SortableContext>
-          </DndContext>
-        ) : (
-          <>{children}</>
-        )}
-      </ListProvider>
+      <DensityProvider density={density}>
+        <ListProvider
+          {...{
+            scope: __scopeSelect,
+            variant,
+            selectable
+          }}
+        >
+          {variant === 'ordered-draggable' ? (
+            <DndContext onDragEnd={(props as DraggableListProps).onDragEnd} modifiers={[restrictToVerticalAxis]}>
+              <SortableContext items={(props as DraggableListProps).listItemIds}>{children}</SortableContext>
+            </DndContext>
+          ) : (
+            <>{children}</>
+          )}
+        </ListProvider>
+      </DensityProvider>
     </ListRoot>
   );
 };
@@ -137,8 +148,9 @@ const ListItemEndcap = ({
   ...props
 }: ComponentPropsWithoutRef<'div'> & { asChild?: boolean }) => {
   const Root = asChild ? Slot : 'div';
+  const density = useDensityContext();
   return (
-    <Root {...(!asChild && { role: 'none' })} {...props} className={mx(defaultListItemEndcap, className)}>
+    <Root {...(!asChild && { role: 'none' })} {...props} className={mx(defaultListItemEndcap({ density }), className)}>
       {children}
     </Root>
   );
@@ -153,19 +165,24 @@ const ListItemHeading = ({
 }: ScopedProps<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean }) => {
   const { headingId } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
   const Root = asChild ? Slot : 'div';
+  const density = useDensityContext();
   return (
     <Root
       {...(!asChild && { role: 'none' })}
       {...props}
       id={headingId}
-      className={mx(defaultListItemHeading, className)}
+      className={mx(defaultListItemHeading({ density }), className)}
     >
       {children}
     </Root>
   );
 };
 
-const ListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
+const ListItemDragHandle = ({
+  className,
+  dragHandleIconSlot = {},
+  ...props
+}: Omit<ComponentPropsWithoutRef<'div'>, 'children'> & { dragHandleIconSlot?: ListItemSlots['dragHandleIcon'] }) => {
   const { themeVariant } = useThemeContext();
   return (
     <div
@@ -173,7 +190,7 @@ const ListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutR
       {...props}
       className={mx('bs-10 is-5 rounded touch-none', themeVariantFocus(themeVariant), className)}
     >
-      <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
+      <DotsSixVertical {...dragHandleIconSlot} className={mx(getSize(5), 'mbs-2.5', dragHandleIconSlot.className)} />
     </div>
   );
 };
@@ -189,6 +206,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
       id,
       slots = {}
     } = props;
+    const density = useDensityContext();
     const { variant, selectable } = useListContext(LIST_NAME, __scopeSelect);
     const draggable = variant === 'ordered-draggable';
 
@@ -210,12 +228,18 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
           {...(selectable && { role: 'option', 'aria-selected': !!selected })}
           className={mx('flex', slots.root?.className)}
         >
-          {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
+          {draggable && (
+            <ListItemDragHandle
+              {...slots.dragHandle}
+              className={slots.dragHandle?.className}
+              dragHandleIconSlot={slots.dragHandleIcon}
+            />
+          )}
           {selectable && (
             <ListItemEndcap>
               <Checkbox
                 labelId={headingId}
-                className='mbs-2.5'
+                className={density === 'fine' ? 'mbs-1.5' : 'mbs-2.5'}
                 {...{ checked: selected, onCheckedChange: setSelected }}
               />
             </ListItemEndcap>
@@ -262,6 +286,15 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   }
 });
 
-export { List, createListScope, ListItem, ListItemHeading, ListItemEndcap, ListItemDragHandle, createListItemScope };
+export {
+  List,
+  createListScope,
+  useListDensity,
+  ListItem,
+  ListItemHeading,
+  ListItemEndcap,
+  ListItemDragHandle,
+  createListItemScope
+};
 
 export type { ListProps, ListVariant, ListItemProps };

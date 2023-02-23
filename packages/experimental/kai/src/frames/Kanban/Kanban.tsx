@@ -63,7 +63,7 @@ export const Kanban: FC<{
                       )}
                     </div>
                     <div className='flex flex-1 justify-center'>
-                      <Button compact variant='ghost' onClick={() => onCreate(column)}>
+                      <Button variant='ghost' onClick={() => onCreate(column)}>
                         <PlusCircle className={getSize(6)} />
                       </Button>
                     </div>

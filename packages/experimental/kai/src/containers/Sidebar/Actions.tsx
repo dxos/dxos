@@ -132,7 +132,7 @@ export const Actions = () => {
       {actions.map((action, i) => {
         const { Icon, handler, title } = action;
         return (
-          <Button compact key={i} className='mr-1' onClick={handler} title={title}>
+          <Button key={i} className='mr-1' onClick={handler} title={title}>
             <Icon className={getSize(6)} />
           </Button>
         );

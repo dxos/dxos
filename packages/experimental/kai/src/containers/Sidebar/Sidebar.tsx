@@ -115,17 +115,17 @@ export const Sidebar = () => {
         <div className='flex justify-between px-2'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
-            <Button compact variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>
+            <Button variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
-            <Button compact variant='ghost' className='flex' title='Join a space' onClick={handleJoinSpace}>
+            <Button variant='ghost' className='flex' title='Join a space' onClick={handleJoinSpace}>
               <span className='sr-only'>Join a space</span>
               <ArrowCircleDownLeft className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button compact variant='ghost' onClick={toggleSidebar}>
+            <Button variant='ghost' onClick={toggleSidebar}>
               {isOpen && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>

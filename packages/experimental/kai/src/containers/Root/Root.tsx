@@ -39,7 +39,11 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
   };
 
   return (
-    <ThemeProvider appNs='kai' resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}>
+    <ThemeProvider
+      appNs='kai'
+      rootDensity='fine'
+      resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
+    >
       <ErrorProvider>
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={clientProvider}>
