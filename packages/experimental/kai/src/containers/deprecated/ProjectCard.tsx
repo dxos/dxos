@@ -34,7 +34,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
           label='Project name'
           labelVisuallyHidden
           placeholder='Project name'
-          slots={{ root: { className: 'm-0 grow' }, input: { spellCheck: false } }}
+          slots={{ root: { className: 'grow' }, input: { spellCheck: false } }}
           value={project.title}
           onChange={({ target: { value } }) => (project.title = value)}
         />

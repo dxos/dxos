@@ -69,7 +69,7 @@ export const EditableObjectList = <T extends Document>({
                 labelVisuallyHidden
                 placeholder='Title'
                 slots={{
-                  root: { className: 'm-0 grow' },
+                  root: { className: 'grow' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
                 value={getTitle(object)}
