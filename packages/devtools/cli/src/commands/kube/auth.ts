@@ -97,7 +97,6 @@ export default class Auth extends BaseCommand {
         } else {
           this.log(chalk`{gray Writing KUBE access credential..}`);
           await client.halo.writeCredentials([credential]);
-          await sleep(1_000)
 
           const { token } = await this.presentAuthCredentials(client);
           if (token) {
