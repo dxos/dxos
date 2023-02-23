@@ -47,7 +47,6 @@ export const DocumentFrame = withReactor(() => {
             label='Title'
             labelVisuallyHidden
             placeholder='Title'
-            labelVisuallyHidden
             slots={{
               root: {
                 className: 'px-6 py-6 bg-paper-bg'
