@@ -83,10 +83,15 @@ export default class Auth extends BaseCommand {
         assert(!!credential || !!token, 'No credentials or token received.');
 
         if (token) {
-          this.log(chalk`{green Authenticated with token ${token}}`);
+          this.log(chalk`{green Authenticated with session token ${token}}`);
         } else {
-          // Store credential.
-          // Run presentation again.
+          await client.halo.writeCredentials([credential]);
+          const { token } = await this.presentAuthCredentials(client);
+          if (token) {
+            this.log(chalk`{green Authenticated with session token ${token}}`);
+          } else {
+            this.log(chalk`{red Failed to authenticate.}`);
+          }
         }
       }
     });
