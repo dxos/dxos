@@ -24,12 +24,13 @@ export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space
 
   return (
     <Dialog initiallyOpen={!!open} onClose={() => onClose?.()} title='Space Settings'>
-      <div>
+      <div className='mt-2 mb-6'>
         <Input
-          label='Title'
           variant='subdued'
+          label='Title'
+          labelVisuallyHidden
           placeholder={t('space title placeholder')}
-          slots={{ input: { autoFocus: true, className: 'text-xl' }, label: { className: 'sr-only' } }}
+          slots={{ input: { autoFocus: true, className: 'text-xl' } }}
           value={space.properties.name}
           onChange={(event) => {
             space.properties.name = event.target.value;

@@ -42,7 +42,7 @@ export const OrganizationListItem: FC<{ organization: Organization }> = withReac
             input: { spellCheck: false }
           }}
         />
-        <div className='mis-2'>
+        <div>
           {organization.address && <p className='text-sm text-gray-800'>{address(organization.address)}</p>}
 
           {/* Contacts */}
