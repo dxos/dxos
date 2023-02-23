@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, Plus, QrCode } from 'phosphor-react';
+import { CaretLeft, CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
 import React from 'react';
 
 import type { Identity } from '@dxos/client';
@@ -48,6 +48,17 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
           data-testid='join-identity'
         >
           {t('join identity label')}
+        </CompoundButton>
+        <CompoundButton
+          {...sharedButtonProps}
+          description={t('recover identity description')}
+          before={<Textbox className={getSize(6)} />}
+          // TODO(mykola): Implement recover.
+          onClick={() => {}}
+          // onClick={() => dispatch({ type: 'select addition method', method: 'recover identity' })}
+          data-testid='recover-identity'
+        >
+          {t('recover identity label')}
         </CompoundButton>
       </div>
       <Button

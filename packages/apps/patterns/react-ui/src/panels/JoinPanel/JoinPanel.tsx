@@ -213,6 +213,13 @@ export const JoinPanel = ({
               method: 'create identity'
             }}
           />
+          <IdentityInput
+            {...{
+              dispatch,
+              active: joinState.activeView === 'identity input' && joinState.additionMethod === 'recover identity',
+              method: 'recover identity'
+            }}
+          />
           <InvitationInput
             {...{
               dispatch,
