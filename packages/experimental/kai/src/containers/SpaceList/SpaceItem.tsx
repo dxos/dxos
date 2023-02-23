@@ -55,13 +55,10 @@ export const SpaceItem = withReactor(({ space, selected, children, onAction }: S
               space.properties.name = event.target.value;
             }}
             label='Title'
+            labelVisuallyHidden
             placeholder={t('space title placeholder')}
             slots={{
-              label: { className: 'sr-only' },
-              input: { autoFocus: !space.properties.name?.length },
-              root: {
-                className: 'm-0'
-              }
+              input: { autoFocus: !space.properties.name?.length }
             }}
           />
         </div>

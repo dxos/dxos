@@ -27,9 +27,10 @@ export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space
       <div>
         <Input
           label='Title'
+          labelVisuallyHidden
           variant='subdued'
           placeholder={t('space title placeholder')}
-          slots={{ input: { autoFocus: true, className: 'text-xl' }, label: { className: 'sr-only' } }}
+          slots={{ input: { autoFocus: true, className: 'text-xl' } }}
           value={space.properties.name}
           onChange={(event) => {
             space.properties.name = event.target.value;

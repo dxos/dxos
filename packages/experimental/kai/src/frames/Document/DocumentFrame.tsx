@@ -50,10 +50,10 @@ export const DocumentFrame = withReactor(() => {
             }}
             label='Title'
             placeholder='Title'
+            labelVisuallyHidden
             slots={{
-              label: { className: 'sr-only' },
               root: {
-                className: 'm-0 px-6 py-6 bg-paper-bg'
+                className: 'px-6 py-6 bg-paper-bg'
               },
               input: {
                 className: 'p-2 border-0 text-xl',

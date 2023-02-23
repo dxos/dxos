@@ -27,6 +27,7 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
         <div className='flex flex-col flex-1 overflow-hidden'>
           <Input
             label='Title'
+            labelVisuallyHidden
             variant='subdued'
             value={note.title ?? ''}
             onChange={(event) => {
@@ -34,9 +35,8 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
             }}
             placeholder='Title'
             slots={{
-              label: { className: 'sr-only' },
               root: {
-                className: 'm-0 w-full'
+                className: 'w-full'
               },
               input: {
                 tabIndex: 1,

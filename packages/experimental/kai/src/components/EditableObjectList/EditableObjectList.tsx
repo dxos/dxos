@@ -69,9 +69,9 @@ export const EditableObjectList = <T extends Document>({
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
                 placeholder='Title'
                 label='Title'
+                labelVisuallyHidden
                 slots={{
-                  root: { className: 'm-0 grow' },
-                  label: { className: 'sr-only' },
+                  root: { className: 'grow' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
               />
