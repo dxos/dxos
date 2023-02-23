@@ -10,7 +10,7 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useFrames, useTheme, useGenerator, Section } from '../hooks';
+import { useAppRouter, useTheme, useGenerator, Section } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -46,7 +46,6 @@ const Toolbar = () => {
  */
 const SpacePage = () => {
   useGenerator();
-  const { active } = useFrames();
   const { section } = useParams();
   const { space, frame } = useAppRouter();
 
