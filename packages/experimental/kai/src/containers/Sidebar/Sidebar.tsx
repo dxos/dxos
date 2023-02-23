@@ -19,6 +19,7 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SpaceList, SpaceListAction } from '../SpaceList';
 import { Actions } from './Actions';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -78,6 +79,7 @@ export const Sidebar = () => {
           const swarmKey = PublicKey.random();
           const observable = space.createInvitation({
             swarmKey,
+            authMethod: AuthMethod.NONE,
             type: Invitation.Type.MULTIUSE_TESTING
           });
 

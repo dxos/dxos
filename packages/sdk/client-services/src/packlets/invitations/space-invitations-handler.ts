@@ -153,13 +153,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
-            if (
-              invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
-              invitation.type !== Invitation.Type.MULTIUSE_TESTING
-            ) {
-              if (invitation.authMethod !== AuthMethod.NONE && !authenticationPassed) {
-                throw new Error('Not authenticated');
-              }
+            const authenticationRequired =
+              invitation.authMethod !== AuthMethod.NONE ||
+              invitation.type === Invitation.Type.INTERACTIVE_TESTING ||
+              invitation.type === Invitation.Type.MULTIUSE_TESTING;
+            if (authenticationRequired && !authenticationPassed) {
+              throw new Error('Not authenticated');
             }
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
