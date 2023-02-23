@@ -2,15 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Info, User } from 'phosphor-react';
+import { Command, Info, User } from 'phosphor-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ShellLayout, withReactor } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, DensityProvider, DropdownMenu, getSize, mx } from '@dxos/react-components';
 
 import { SpaceSettingsDialog } from '../../containers';
 import { getIcon, useAppRouter, useShell, useTheme } from '../../hooks';
+import { Actions } from './Actions';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = withReactor(() => {
@@ -54,13 +55,21 @@ export const AppBar = withReactor(() => {
       {/* TODO(burdon): Help button. */}
       {/* TODO(burdon): Share button. */}
       <div className='flex items-center'>
-        <span
-          className='pl-2 cursor-pointer'
-          onClick={() => shell.setLayout(ShellLayout.HALO_INVITATIONS)}
-          title='Identity'
-        >
-          <User className={getSize(6)} />
-        </span>
+        <DensityProvider density='coarse'>
+          <DropdownMenu
+            trigger={
+              <Button variant='ghost' className='p-2'>
+                <Command className={getSize(6)} />
+              </Button>
+            }
+            slots={{ content: { className: 'z-50' } }}
+          >
+            <Actions />
+          </DropdownMenu>
+          <Button variant='ghost' className='p-2' onClick={() => shell.setLayout(ShellLayout.HALO_INVITATIONS)}>
+            <User className={getSize(6)} />
+          </Button>
+        </DensityProvider>
       </div>
 
       {space && <SpaceSettingsDialog space={space} open={showSettings} onClose={() => setShowSettings(false)} />}

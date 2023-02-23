@@ -49,7 +49,7 @@ export const DocumentFrame = withReactor(() => {
             placeholder='Title'
             slots={{
               root: {
-                className: 'm-0 px-6 py-6 bg-paper-bg'
+                className: 'px-6 py-6 bg-paper-bg'
               },
               input: {
                 className: 'p-2 border-0 text-xl',

@@ -88,7 +88,6 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
                     value={orgName}
                     onChange={({ target: { value } }) => setOrgName(value)}
                     slots={{
-                      root: { className: 'm-0' },
                       input: {
                         spellCheck: false,
                         onKeyDown: ({ key }) => key === 'Enter' && handleEnter(),
