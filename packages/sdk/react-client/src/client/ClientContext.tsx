@@ -4,7 +4,7 @@
 
 import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
-import { Client, Status } from '@dxos/client';
+import { Client, SystemStatus } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -19,7 +19,7 @@ export type ClientContextProps = {
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
 
-  status?: Status;
+  status?: SystemStatus;
 };
 
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
@@ -83,7 +83,7 @@ export const ClientProvider = ({
   onInitialize
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-  const [status, setStatus] = useState<Status>();
+  const [status, setStatus] = useState<SystemStatus>();
   const [error, setError] = useState();
   if (error) {
     throw error;
@@ -102,7 +102,7 @@ export const ClientProvider = ({
       log('client ready', { client });
       await onInitialize?.(client);
       setClient(client);
-      setStatus(client.getStatus() ?? Status.ACTIVE);
+      setStatus(client.getStatus() ?? SystemStatus.ACTIVE);
       printBanner(client);
     };
 
@@ -133,7 +133,7 @@ export const ClientProvider = ({
     };
   }, [clientProvider, configProvider, createServices]);
 
-  if (!client || status !== Status.ACTIVE) {
+  if (!client || status !== SystemStatus.ACTIVE) {
     return <Fallback client={client} status={status} />;
   }
 

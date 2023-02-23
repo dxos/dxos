@@ -23,17 +23,17 @@ package dxos.client.services;
 // - Normalize records for performance (e.g., Space members separate from Space metadata).
 //
 
-enum Status {
+enum SystemStatus {
   ACTIVE = 0;
   INACTIVE = 1;
 }
 
-message UpdateStatusRequest {
-  Status status = 1;
+message UpdateSystemStatusRequest {
+  SystemStatus status = 1;
 }
 
-message StatusResponse {
-  Status status = 1;
+message SystemStatusResponse {
+  SystemStatus status = 1;
 }
 
 //
@@ -45,10 +45,10 @@ service SystemService {
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
 
   /// Update the status of the client. Used to re-activate an inactive client.
-  rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
+  rpc UpdateStatus(UpdateSystemStatusRequest) returns (google.protobuf.Empty);
 
   /// Stream the status of the client.
-  rpc QueryStatus(google.protobuf.Empty) returns (stream StatusResponse);
+  rpc QueryStatus(google.protobuf.Empty) returns (stream SystemStatusResponse);
 
   /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
@@ -149,11 +149,20 @@ message SpaceMember {
   PresenceState presence = 2;
 }
 
+enum SpaceStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
 message Space {
   dxos.keys.PublicKey space_key = 1;
-  bool is_open = 2;
+  SpaceStatus status = 2;
 
   repeated SpaceMember members = 10;
+}
+
+message UpdateSpaceRequest {
+  optional Status status = 1;
 }
 
 message QuerySpacesResponse {
@@ -171,7 +180,7 @@ message QueryCredentialsRequest {
 
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
-  rpc RemoveSpace(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
   /// Write credentials to the space control feed.

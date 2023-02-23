@@ -12,7 +12,7 @@ import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Status } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
@@ -90,12 +90,12 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       statusUpdate: this._statusUpdate,
 
-      getCurrentStatus: () => (this.isOpen ? Status.ACTIVE : Status.INACTIVE),
+      getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
 
-      onUpdateStatus: async (status: Status) => {
-        if (!this.isOpen && status === Status.ACTIVE) {
+      onUpdateStatus: async (status: SystemStatus) => {
+        if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();
-        } else if (this.isOpen && status === Status.INACTIVE) {
+        } else if (this.isOpen && status === SystemStatus.INACTIVE) {
           await this._resourceLock?.release();
         }
       },

@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Status, StatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus, SystemStatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client/services';
 import { beforeEach, describe, test } from '@dxos/test';
 
 import { SystemServiceImpl } from './system-service';
@@ -15,11 +15,11 @@ describe('SystemService', () => {
   let systemService: SystemService;
   let config: Config;
   let statusUpdate: Event<void>;
-  let currentStatus: Status;
-  let updateStatus: Trigger<Status>;
+  let currentStatus: SystemStatus;
+  let updateStatus: Trigger<SystemStatus>;
   let reset: Trigger<boolean>;
 
-  const changeStatus = (status: Status) => {
+  const changeStatus = (status: SystemStatus) => {
     currentStatus = status;
     statusUpdate.emit();
   };
@@ -27,8 +27,8 @@ describe('SystemService', () => {
   beforeEach(() => {
     config = new Config({ runtime: { client: { log: { filter: 'system-service:debug' } } } });
     statusUpdate = new Event<void>();
-    currentStatus = Status.ACTIVE;
-    updateStatus = new Trigger<Status>();
+    currentStatus = SystemStatus.ACTIVE;
+    updateStatus = new Trigger<SystemStatus>();
     reset = new Trigger<boolean>();
 
     systemService = new SystemServiceImpl({
@@ -49,27 +49,27 @@ describe('SystemService', () => {
   });
 
   test('updateStatus triggers callback', async () => {
-    await systemService.updateStatus({ status: Status.INACTIVE });
+    await systemService.updateStatus({ status: SystemStatus.INACTIVE });
     const result = await updateStatus.wait();
-    expect(result).to.equal(Status.INACTIVE);
+    expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
   test('queryStatus returns initial status', async () => {
-    const status = new Trigger<StatusResponse>();
+    const status = new Trigger<SystemStatusResponse>();
     systemService.queryStatus().subscribe((response) => {
       status.wake(response);
     });
-    expect(await status.wait()).to.deep.equal({ status: Status.ACTIVE });
+    expect(await status.wait()).to.deep.equal({ status: SystemStatus.ACTIVE });
   });
 
   test('queryStatus streams status changes', async () => {
-    const statuses: Status[] = [];
+    const statuses: SystemStatus[] = [];
     systemService.queryStatus().subscribe(({ status }) => {
       statuses.push(status);
     });
-    changeStatus(Status.INACTIVE);
-    changeStatus(Status.ACTIVE);
-    expect(statuses).to.deep.equal([Status.ACTIVE, Status.INACTIVE, Status.ACTIVE]);
+    changeStatus(SystemStatus.INACTIVE);
+    changeStatus(SystemStatus.ACTIVE);
+    expect(statuses).to.deep.equal([SystemStatus.ACTIVE, SystemStatus.INACTIVE, SystemStatus.ACTIVE]);
   });
 
   test('reset triggers callback', async () => {

@@ -5,14 +5,19 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { Status, StatusResponse, SystemService, UpdateStatusRequest } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  SystemStatus,
+  SystemStatusResponse,
+  SystemService,
+  UpdateSystemStatusRequest
+} from '@dxos/protocols/proto/dxos/client/services';
 import { MaybePromise } from '@dxos/util';
 
 export type SystemServiceOptions = {
   config: Config;
   statusUpdate: Event<void>;
-  getCurrentStatus: () => Status;
-  onUpdateStatus: (status: Status) => MaybePromise<void>;
+  getCurrentStatus: () => SystemStatus;
+  onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
 };
 
@@ -38,11 +43,11 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
-  async updateStatus({ status }: UpdateStatusRequest) {
+  async updateStatus({ status }: UpdateSystemStatusRequest) {
     await this._onUpdateStatus(status);
   }
 
-  queryStatus(): Stream<StatusResponse> {
+  queryStatus(): Stream<SystemStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
         next({ status: this._getCurrentStatus() });

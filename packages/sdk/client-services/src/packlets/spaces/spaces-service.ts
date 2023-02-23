@@ -13,6 +13,8 @@ import {
   Space,
   SpaceMember,
   SpacesService,
+  SpaceStatus,
+  UpdateSpaceRequest,
   WriteCredentialsRequest
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -42,7 +44,7 @@ export class SpacesServiceImpl implements SpacesService {
     return this._transformSpace(space);
   }
 
-  async removeSpace() {
+  async updateSpace(request: UpdateSpaceRequest) {
     todo();
   }
 
@@ -118,7 +120,7 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      isOpen: space.isOpen,
+      status: space.isOpen ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,
