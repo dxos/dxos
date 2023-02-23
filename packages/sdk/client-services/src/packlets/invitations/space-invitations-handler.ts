@@ -153,11 +153,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
-            const authenticationRequired =
-              invitation.authMethod !== AuthMethod.NONE ||
-              invitation.type === Invitation.Type.INTERACTIVE_TESTING ||
-              invitation.type === Invitation.Type.MULTIUSE_TESTING;
-            if (authenticationRequired && !authenticationPassed) {
+            if (isAuthenticationRequired(invitation) && !authenticationPassed) {
               throw new Error('Not authenticated');
             }
 
@@ -286,15 +282,13 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 invitation.spaceKey = introductionResponse.spaceKey;
               }
 
-              // TODO(dmaretskyi): Should this be a separate callback?
-              observable.callback.onAuthenticating?.(invitation);
-
+              // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regradless of auth requirements).
+              
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
-              if (
-                (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) &&
-                invitation.authMethod === AuthMethod.SHARED_SECRET
-              ) {
+              if (isAuthenticationRequired(invitation)) {
+                observable.callback.onAuthenticating?.(invitation);
+
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
                   observable.callback.onAuthenticating?.(invitation);
@@ -381,6 +375,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
     return observable;
   }
 }
+
+const isAuthenticationRequired = (invitation: Invitation) =>
+  invitation.authMethod !== AuthMethod.NONE &&
+  invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
+  invitation.type !== Invitation.Type.MULTIUSE_TESTING;
+
 
 type HostSpaceInvitationExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
