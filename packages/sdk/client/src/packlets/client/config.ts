@@ -4,7 +4,8 @@
 
 import { ConfigProto } from '@dxos/config';
 
-export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
+export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';
+export const DEFAULT_SHELL_CHANNEL = 'dxos:shell';
 
 // TODO(burdon): Move to ConfigProto.
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/vault.html';

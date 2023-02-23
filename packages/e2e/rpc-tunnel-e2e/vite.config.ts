@@ -9,26 +9,5 @@ export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true
-  },
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/async',
-      '@dxos/codec-protobuf',
-      '@dxos/log',
-      '@dxos/protocols',
-      '@dxos/react-async',
-      '@dxos/react-components-deprecated',
-      '@dxos/rpc',
-      '@dxos/rpc-tunnel'
-    ]
-  },
-  build: {
-    commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
-    }
   }
 });

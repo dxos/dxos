@@ -91,5 +91,9 @@ export const appkit = {
   'current device label': 'This device',
   'resume heading label': 'Resume session',
   'resume description label': 'Only one tab can be active at a time',
-  'resume label': 'Resume'
+  'resume label': 'Resume',
+  'list item input label': 'List item title',
+  'list item input placeholder': 'Enter text…',
+  'new list item input label': 'New list item title',
+  'new list item input placeholder': 'Enter text…'
 };

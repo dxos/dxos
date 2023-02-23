@@ -13,7 +13,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
 import { ModelFactory } from '../model-factory';
-import { StateManager } from '../state-manager';
 import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
@@ -22,7 +21,7 @@ const log = debug('dxos:echo:model-test-rig');
  * Factory for peers to test model replication.
  * @deprecated
  */
-// TODO(burdon): Clean-up. This is exported to @dxos/object-model.
+// TODO(burdon): Clean-up. This is exported to @dxos/document-model.
 export class TestBuilder<M extends Model<any>> {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
   private readonly _replicationFinished = new Trigger();
@@ -44,9 +43,17 @@ export class TestBuilder<M extends Model<any>> {
     });
 
     const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
+    const stateManager = this._modelFactory.createModel(
+      this._modelConstructor.meta.type,
+      id,
+      {
+        objectId: 'test'
+      },
+      key,
+      writer
+    );
 
-    const peer = new TestPeer(stateManager, key);
+    const peer = new TestPeer(stateManager, key) as any;
     this._peers.set(key, peer);
     return peer;
   }
@@ -126,12 +133,13 @@ export class TestPeer<M extends Model> {
 
   // prettier-ignore
   constructor(
-    public readonly stateManager: StateManager<M>,
+    public readonly stateManager: any/* StateManager<M> */,
     public readonly key: PublicKey
   ) {}
 
   get model(): M {
-    return this.stateManager.model;
+    return null as any;
+    // return this.stateManager.model;
   }
 
   processMutation(message: ModelMessage<Any>) {

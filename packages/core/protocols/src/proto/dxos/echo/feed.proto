@@ -21,7 +21,7 @@ package dxos.echo.feed;
  */
 message FeedMessage {
   dxos.echo.timeframe.TimeframeVector timeframe = 1;
-  
+
   message Payload{
     oneof payload {
       CredentialsMessage credential = 10;
@@ -42,5 +42,6 @@ message CredentialsMessage {
  * A container ECHO database messages in data feeds.
  */
 message DataMessage {
+  // TODO(dmaretskyi): Batch.
   dxos.echo.object.EchoObject object = 1;
 }

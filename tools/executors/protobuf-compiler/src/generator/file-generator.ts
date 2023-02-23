@@ -65,12 +65,14 @@ export const createIndexSourceFile = (
   substitutionsModule: ModuleSpecifier | undefined,
   root: pb.Root,
   outDirPath: string,
-  namespaces: string[]
+  namespaces: string[],
+  compress: boolean
 ) => {
   const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(
     substitutionsModule,
     root,
-    outDirPath
+    outDirPath,
+    compress
   );
 
   const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);

@@ -47,7 +47,7 @@ export const AppLayout = ({ spacesPath = '/spaces', manageProfilePath, menubarCo
         {isManagingSpace && <SpacesLink onClickGoToSpaces={handleGoToSpaces} />}
         <Separator className='grow' />
         {identity && (
-          <ProfileMenu profile={identity}>
+          <ProfileMenu identity={identity}>
             <Button onClick={handleManageProfile}>{t('manage profile label')}</Button>
           </ProfileMenu>
         )}

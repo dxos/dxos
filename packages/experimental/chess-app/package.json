@@ -1,6 +1,7 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.1.23",
+  "version": "0.1.26",
+  "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,7 +27,7 @@
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",
     "react-resize-detector": "^7.1.2",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",

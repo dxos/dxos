@@ -14,7 +14,7 @@ import { ItemID } from './types';
 
 // TODO(burdon): Move to testing package (with other fakers, etc.)
 export const createTestItemMutation = (
-  itemId: ItemID,
+  objectId: ItemID,
   key: string,
   value: string,
   timeframe = new Timeframe()
@@ -23,8 +23,16 @@ export const createTestItemMutation = (
   payload: {
     data: {
       object: {
-        itemId,
-        mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+        objectId,
+        mutations: [
+          {
+            model: {
+              '@type': 'google.protobuf.Any',
+              typeUrl: 'todo',
+              value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+            }
+          }
+        ]
       }
     }
   }

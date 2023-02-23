@@ -3,14 +3,50 @@
 //
 
 import type { Context } from 'mocha';
-import type { Browser, Page } from 'playwright';
+import assert from 'node:assert';
+import type { Browser, BrowserContext, Page } from 'playwright';
 
-export const setupPage = async (mochaContext: Context, url?: string, waitFor?: (page: Page) => Promise<boolean>) => {
-  mochaContext.timeout(30_000);
+import { Lock } from '../util';
+
+export type SetupOptions = {
+  url?: string;
+  waitFor?: (page: Page) => Promise<boolean>;
+  timeout?: number;
+  bridgeLogs?: boolean;
+};
+
+export const setupPage = async (mochaContext: Context, options: SetupOptions) => {
+  const { url, waitFor, timeout = 30_000, bridgeLogs } = options;
+
+  mochaContext.timeout(timeout);
 
   const browser = mochaContext.browser as Browser;
-  const context = await browser.newContext();
+  const context = browser ? await browser.newContext() : (mochaContext.persistentContext as BrowserContext);
+  assert(context, 'Context is not defined');
   const page = await context.newPage();
+
+  if (bridgeLogs) {
+    const lock = new Lock();
+
+    page.on('pageerror', async (error) => {
+      await lock.executeSynchronized(async () => {
+        console.log(error);
+      });
+    });
+
+    page.on('console', async (msg) => {
+      const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
+      await lock.executeSynchronized(async () => {
+        const args = await argsPromise;
+
+        if (args.length > 0) {
+          console.log(...args);
+        } else {
+          console.log(msg);
+        }
+      });
+    });
+  }
 
   if (url) {
     await page.goto(url);
@@ -29,4 +65,14 @@ export const setupPage = async (mochaContext: Context, url?: string, waitFor?: (
   }
 
   return { context, page };
+};
+
+export const extensionId = async (context: BrowserContext) => {
+  let [background] = context.serviceWorkers();
+  if (!background) {
+    background = await context.waitForEvent('serviceworker');
+  }
+
+  const extensionId = background.url().split('/')[2];
+  return extensionId;
 };

@@ -28,7 +28,7 @@ const CreateIdentityPage = () => {
 
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createProfile({ displayName }).then(redirect, (_rejection) => setPending(false));
+    void client.halo.createIdentity({ displayName }).then(redirect, (_rejection) => setPending(false));
   }, [displayName, redirect]);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const CreateIdentityPage = () => {
           pending,
           inputLabel: t('displayName label'),
           inputPlaceholder: t('displayName placeholder'),
-          onChange: setDisplayName,
+          onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
           onBack: () => history.back()
         }}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-presence",
-  "version": "0.1.23",
+  "version": "0.1.26",
   "description": "Presence extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",

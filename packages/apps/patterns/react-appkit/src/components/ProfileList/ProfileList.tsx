@@ -3,38 +3,38 @@
 //
 import React from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 import { useTranslation, Tag, Avatar, defaultDisabled, defaultGroup, Group, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface ProfileListProps {
-  profiles: Profile[];
+  identities: Identity[];
 }
 
-export const ProfileList = ({ profiles }: ProfileListProps) => {
+export const ProfileList = ({ identities }: ProfileListProps) => {
   const { t } = useTranslation('appkit');
-  const identity = useIdentity();
-  const identityHex = identity?.identityKey.toHex();
-  return profiles.length > 0 ? (
+  const myIdentity = useIdentity();
+  const myIdentityHex = myIdentity?.identityKey.toHex();
+  return identities.length > 0 ? (
     <ul className='flex flex-col gap-2 mlb-4'>
-      {profiles.map((profile) => {
-        const profileHex = profile.identityKey.toHex();
+      {identities.map((identity) => {
+        const identityHex = identity.identityKey.toHex();
         return (
           <li
-            key={profileHex}
+            key={identityHex}
             className={mx(
-              defaultGroup({ elevation: 1, spacing: 'p-1', rounding: 'rounded' }),
+              defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded' }),
               'flex gap-2 items-center'
             )}
           >
             <Avatar
               variant='circle'
-              fallbackValue={profileHex}
+              fallbackValue={identityHex}
               label={
                 <p>
-                  {profile.displayName ?? humanize(profileHex)}
-                  {profileHex === identityHex && (
+                  {identity.displayName ?? humanize(identityHex)}
+                  {identityHex === myIdentityHex && (
                     <Tag valence='info' className='mli-2 align-middle'>
                       {t('current identity label')}
                     </Tag>
@@ -54,7 +54,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
         children: t('empty members message'),
         className: mx('text-xl', defaultDisabled)
       }}
-      elevation={0}
+      elevation='base'
     />
   );
 };

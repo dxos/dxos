@@ -60,7 +60,8 @@ export const TranslationsProvider = ({
     setLoaded(true);
   }, [resourceExtensions]);
 
-  // todo(thure): This is not ideal, but i18next was causing `Suspense` to not render the fallback even when the child was asking for namespaces yet to be added.
+  // TODO(thure): This is not ideal, but i18next was causing `Suspense` to not render the fallback even when the child was asking for namespaces yet to be added.
+  // TODO(burdon): Fallbacks should only appear after a short delay, and if the displayed then be visible for 500mx to avoid startup flickering.
   return (
     <TranslationsContext.Provider value={{ appNs: appNs ?? initialNs }}>
       <Suspense fallback={fallback}>{loaded ? children : fallback}</Suspense>

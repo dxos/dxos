@@ -14,7 +14,10 @@
   ],
   "references": [
     {
-      "path": "../../common/esbuild-plugins"
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/react-components"
     }
   ]
 }

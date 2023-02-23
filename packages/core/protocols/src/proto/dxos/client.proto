@@ -11,6 +11,7 @@ import "dxos/config.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/keys.proto";
+import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.client;
@@ -84,26 +85,28 @@ message AuthenticateInvitationRequest {
 // HALO
 //
 
-message Profile {
-  // TODO(burdon): Remove identity from Profile (space of identity).
+message Identity {
+  // TODO(burdon): Remove identity from Identity (space of identity).
   dxos.keys.PublicKey identity_key = 1;
   optional string displayName = 2;
   // TODO(mykola): Factor out. It was added to make deviceKey available in the HaloProxy.
   optional dxos.keys.PublicKey device_key = 3;
+
+  optional dxos.keys.PublicKey halo_space = 4;
 }
 
-message SubscribeProfileResponse {
-  optional Profile profile = 1;
+message SubscribeIdentityResponse {
+  optional Identity identity = 1;
 }
 
-message CreateProfileRequest {
+message CreateIdentityRequest {
   optional bytes public_key = 1;
   optional bytes secret_key = 2;
-  // TODO(burdon): Profile.
+  // TODO(burdon): Identity.
   optional string displayName = 3;
 }
 
-message RecoverProfileRequest {
+message RecoverIdentityRequest {
   string seed_phrase = 1;
 }
 
@@ -116,10 +119,17 @@ message Contacts {
   repeated Contact contacts = 1;
 }
 
-service ProfileService {
-  rpc CreateProfile(CreateProfileRequest) returns (Profile);
-  rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
-  rpc SubscribeProfile(google.protobuf.Empty) returns (stream SubscribeProfileResponse);
+message SignPresentationRequest {
+  dxos.halo.credentials.Presentation presentation = 1;
+  optional bytes nonce = 2;
+}
+
+service IdentityService {
+  rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
+  rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
+  rpc SubscribeIdentity(google.protobuf.Empty) returns (stream SubscribeIdentityResponse);
+
+  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
 }
 
 message AddKeyRecordRequest {
@@ -190,7 +200,7 @@ message SpaceDetails {
 }
 
 // TODO(burdon): Reconcile with dxos.halo.credentials.SpaceMember.
-// TODO(burdon): Reconcile with Profile.
+// TODO(burdon): Reconcile with Identity.
 message SpaceMember {
   enum PresenceState {
     OFFLINE = 0;
@@ -198,7 +208,7 @@ message SpaceMember {
   }
 
   dxos.keys.PublicKey identity_key = 1;
-  optional Profile profile = 2;
+  optional Identity identity = 2;
   PresenceState presence = 3;
 }
 

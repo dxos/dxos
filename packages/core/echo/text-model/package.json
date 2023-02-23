@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "0.1.23",
+  "version": "0.1.26",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -24,11 +24,11 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@types/node": "^18.11.9",
-    "yjs": "^13.5.41"
+    "yjs": "^13.5.44"
   },
   "devDependencies": {
+    "@dxos/document-model": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/faker": "^5.5.9",
     "faker": "^5.5.3"

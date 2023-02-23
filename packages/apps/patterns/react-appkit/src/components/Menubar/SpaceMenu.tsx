@@ -38,7 +38,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
       }
       slots={{
         content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },
-        trigger: { className: mx(buttonStyles({ compact: true }), 'pointer-events-auto flex items-center gap-1') }
+        trigger: { className: mx(buttonStyles(), 'pointer-events-auto flex items-center gap-1') }
       }}
       triggerIsInToolbar
     >

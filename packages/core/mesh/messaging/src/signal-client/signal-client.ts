@@ -227,6 +227,7 @@ export class SignalClient implements SignalMethods {
         this._reconnectAfter *= 2;
       }
 
+      // TODO(burdon): If client isn't set, then flows through to error below.
       this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
       this._reconnect();
@@ -251,7 +252,6 @@ export class SignalClient implements SignalMethods {
 
       this._lastError = error;
       this._setState(SignalState.DISCONNECTED);
-
       this._reconnect();
     });
 
@@ -290,7 +290,6 @@ export class SignalClient implements SignalMethods {
       async () => {
         // Close client if it wasn't already closed.
         this._client.close().catch(() => {});
-
         this._createClient();
       },
       this._reconnectAfter

@@ -35,6 +35,36 @@ export const Default = {
   }
 };
 
+export const DensityFine = {
+  args: {
+    label: 'This is an Input with a density value of ‘fine’',
+    placeholder: 'This is a density:fine input',
+    disabled: false,
+    description: undefined,
+    labelVisuallyHidden: false,
+    descriptionVisuallyHidden: false,
+    validationMessage: '',
+    validationValence: undefined,
+    length: 6,
+    density: 'fine'
+  }
+};
+
+export const Subdued = {
+  args: {
+    label: 'Hello',
+    placeholder: 'This is a subdued input',
+    disabled: false,
+    description: undefined,
+    labelVisuallyHidden: false,
+    descriptionVisuallyHidden: false,
+    validationMessage: '',
+    validationValence: undefined,
+    length: 6,
+    variant: 'subdued'
+  }
+};
+
 export const Disabled = {
   args: {
     label: 'Disabled',

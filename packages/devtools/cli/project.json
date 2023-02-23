@@ -45,19 +45,19 @@
       "executor": "nx:run-script",
       "inputs": [
         {
-          "env": "DX_ENVIRONMENT"
-        },
-        {
           "env": "NODE_ENV"
         },
         {
-          "env": "IPDATA_API_KEY"
+          "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "SENTRY_DESTINATION"
+          "env": "DX_IPDATA_API_KEY"
         },
         {
-          "env": "TELEMETRY_API_KEY"
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
         },
         "^production",
         "default"

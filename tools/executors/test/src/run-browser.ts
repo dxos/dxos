@@ -8,8 +8,9 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
+import { resolveFiles } from './node-util';
 import { BrowserType } from './types';
-import { mochaComment, resolveFiles } from './util';
+import { mochaComment } from './util';
 
 export type BrowserOptions = {
   browser: BrowserType;

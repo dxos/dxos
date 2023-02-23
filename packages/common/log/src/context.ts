@@ -13,6 +13,7 @@ export type LogContext = Record<string, any> | Error | any;
 /**
  * Generated meta data from source map.
  */
+// TODO(burdon): Protobuf structure?
 export interface LogMetadata {
   file: string;
   line: number;

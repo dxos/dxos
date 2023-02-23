@@ -55,6 +55,17 @@ describe('Client', () => {
     expect(client.initialized).to.be.false;
   });
 
+  test('create space before identity', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    await expect(client.echo.createSpace()).to.eventually.be.rejectedWith(
+      'This device has no HALO identity available.'
+    );
+  }).timeout(1_000);
+
   // TODO(burdon): Memory store is reset on close (feed store is closed).
   test.skip('creates identity then resets the memory storage', async () => {
     const config = new Config();
@@ -100,20 +111,20 @@ const runTest = async (testBuilder: TestBuilder) => {
   const displayName = 'test-user';
 
   {
-    // Create profile.
+    // Create identity.
     await client.initialize();
-    expect(client.halo.profile).not.to.exist;
-    const profile = await client.halo.createProfile({ displayName });
-    expect(client.halo.profile).to.deep.eq(profile);
+    expect(client.halo.identity).not.to.exist;
+    const identity = await client.halo.createIdentity({ displayName });
+    expect(client.halo.identity).to.deep.eq(identity);
     await client.destroy();
   }
 
   {
     // Should throw trying to create another.
     await client.initialize();
-    expect(client.halo.profile).to.exist;
+    expect(client.halo.identity).to.exist;
     // TODO(burdon): Error type.
-    await expect(client.halo.createProfile({ displayName })).to.be.rejected;
+    await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
   }
 
   {
@@ -125,8 +136,8 @@ const runTest = async (testBuilder: TestBuilder) => {
   {
     // Start again.
     await client.initialize();
-    await client.halo.createProfile({ displayName });
-    expect(client.halo.profile).to.exist;
+    await client.halo.createIdentity({ displayName });
+    expect(client.halo.identity).to.exist;
     await client.destroy();
   }
 };

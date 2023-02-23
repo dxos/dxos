@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, useCallback, useState, useTransition } from 'react';
+import React from 'react';
 
 import { useId, useThemeContext } from '../../hooks';
 import { defaultDescription, valenceColorText } from '../../styles';
@@ -10,16 +10,19 @@ import { mx } from '../../util';
 import { BarePinInput } from './BarePinInput';
 import { BareTextInput } from './BareTextInput';
 import { BareTextareaInput, BareTextareaInputProps } from './BareTextareaInput';
-import { InputProps as NaturalInputProps } from './InputProps';
+import { InputProps as NaturalInputProps, InputSize } from './InputProps';
 
 export type InputProps = NaturalInputProps;
 
+// TODO(burdon): Support input ref for programmatic focus.
+// TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
 export const Input = ({
   label,
   labelVisuallyHidden,
   description,
   descriptionVisuallyHidden,
-  initialValue,
+  value,
+  defaultValue,
   onChange,
   disabled,
   placeholder,
@@ -27,51 +30,42 @@ export const Input = ({
   length = 6,
   validationMessage,
   validationValence,
+  variant = 'default',
+  elevation,
+  density,
   slots = {}
 }: InputProps) => {
-  const inputId = slots.input?.id ?? useId('input');
+  const internalInputId = useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
   const { hasIosKeyboard } = useThemeContext();
 
+  const inputId = slots.input?.id ?? internalInputId;
+
   const isInvalid = !!validationMessage && validationValence === 'error';
-
-  const [_isPending, startTransition] = useTransition();
-
-  const [internalValue, setInternalValue] = useState<string>(initialValue?.toString() || '');
-
-  const onInternalChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const nextValue = e.target?.value || '';
-      setInternalValue(nextValue);
-      onChange &&
-        startTransition(() => {
-          onChange(nextValue);
-        });
-    },
-    [onChange]
-  );
 
   const { autoFocus, ...inputSlot } = slots.input ?? {};
 
   const bareInputBaseProps = {
+    ...inputSlot,
     id: inputId,
     ...(slots.input?.required && { required: true }),
-    ...(disabled && { disabled: true }),
     ...(description && { 'aria-describedby': descriptionId }),
     ...(isInvalid && {
       'aria-invalid': 'true' as const,
       'aria-errormessage': validationId
     }),
+    ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
+    disabled,
     placeholder,
-    value: internalValue,
-    onChange: onInternalChange,
-    inputSlot: {
-      ...inputSlot,
-      ...(autoFocus && !hasIosKeyboard && { autoFocus: true })
-    },
+    value,
+    defaultValue,
+    onChange,
     validationMessage,
-    validationValence
+    validationValence,
+    variant,
+    elevation,
+    density
   };
 
   const bareInput =
@@ -80,11 +74,11 @@ export const Input = ({
     ) : size === 'textarea' ? (
       <BareTextareaInput {...(bareInputBaseProps as BareTextareaInputProps)} />
     ) : (
-      <BareTextInput {...bareInputBaseProps} size={size} />
+      <BareTextInput {...bareInputBaseProps} size={size as Exclude<InputSize, 'pin' | 'textarea'>} />
     );
 
   return (
-    <div role='none' className={mx('mlb-4', slots.root?.className)}>
+    <div role='none' className={slots.root?.className}>
       <label
         {...slots.label}
         htmlFor={inputId}
@@ -96,11 +90,13 @@ export const Input = ({
       >
         {label}
       </label>
+
       {bareInput}
+
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
-          className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
+          className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only', slots.description?.className)}
         >
           {validationMessage && (
             <span id={validationId} className={mx(valenceColorText(validationValence), slots.validation?.className)}>
@@ -109,7 +105,7 @@ export const Input = ({
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only', slots.description?.className)}
+            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
           >
             {description}
           </span>

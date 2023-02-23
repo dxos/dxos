@@ -14,7 +14,8 @@ import {
   CredentialConsumer
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
-import { Space } from '@dxos/echo-db';
+import { failUndefined } from '@dxos/debug';
+import { Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -101,7 +102,7 @@ export class Identity {
   async ready() {
     await this._deviceStateMachine.processor.deviceChainReady.wait();
 
-    // TODO(dmaretskyi): Should we also wait for our feeds to be admitted?
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: 3_000 });
   }
 
   get profileDocument(): ProfileDocument | undefined {
@@ -123,11 +124,15 @@ export class Identity {
     return this.space.genesisFeedKey;
   }
 
+  get deviceCredentialChain() {
+    return this._deviceStateMachine.processor.deviceCredentialChain;
+  }
+
   getAdmissionCredentials(): HaloAdmissionCredentials {
     return {
       deviceKey: this.deviceKey,
-      controlFeedKey: this.space.controlFeedKey,
-      dataFeedKey: this.space.dataFeedKey
+      controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
+      dataFeedKey: this.space.dataFeedKey ?? failUndefined()
     };
   }
 

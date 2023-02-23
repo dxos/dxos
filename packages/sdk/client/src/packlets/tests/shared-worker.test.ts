@@ -23,14 +23,17 @@ describe('Shared worker', () => {
     const systemPorts = createLinkedPorts();
     const workerProxyPorts = createLinkedPorts();
     const proxyWindowPorts = createLinkedPorts();
+    const shellPorts = createLinkedPorts();
     void workerRuntime.createSession({
       systemPort: systemPorts[1],
-      appPort: workerProxyPorts[1]
+      appPort: workerProxyPorts[1],
+      shellPort: shellPorts[1]
     });
     const clientProxy = new IFrameProxyRuntime({
       systemPort: systemPorts[0],
       windowAppPort: proxyWindowPorts[0],
-      workerAppPort: workerProxyPorts[0]
+      workerAppPort: workerProxyPorts[0],
+      shellPort: shellPorts[0]
     });
     const client = new Client({
       services: new ClientServicesProxy(proxyWindowPorts[1])
@@ -38,7 +41,7 @@ describe('Shared worker', () => {
 
     await Promise.all([workerRuntime.start(), clientProxy.open('*'), client.initialize()]);
 
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
   });
 
   test('initialization errors get propagated to the client', async () => {
@@ -50,15 +53,18 @@ describe('Shared worker', () => {
     const systemPorts = createLinkedPorts();
     const workerProxyPorts = createLinkedPorts();
     const proxyWindowPorts = createLinkedPorts();
+    const shellPorts = createLinkedPorts();
     void workerRuntime.createSession({
       systemPort: systemPorts[1],
-      appPort: workerProxyPorts[1]
+      appPort: workerProxyPorts[1],
+      shellPort: shellPorts[1]
     });
 
     const clientProxy = new IFrameProxyRuntime({
       systemPort: systemPorts[0],
       windowAppPort: proxyWindowPorts[0],
-      workerAppPort: workerProxyPorts[0]
+      workerAppPort: workerProxyPorts[0],
+      shellPort: shellPorts[0]
     });
 
     const client = new Client({

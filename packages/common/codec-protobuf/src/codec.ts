@@ -4,7 +4,7 @@
 
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
-import { Any, EncodingOptions } from './common';
+import { Any, EncodingOptions, WithTypeUrl } from './common';
 import { BidirectionalMapingDescriptors } from './mapping';
 import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
@@ -70,8 +70,9 @@ export class ProtoCodec<T = any> implements Codec<T> {
     return this._decodeMapper(obj, [this._schema, options]);
   }
 
-  encodeAsAny(value: T, options: EncodingOptions = {}): Any {
+  encodeAsAny(value: T, options: EncodingOptions = {}): WithTypeUrl<Any> {
     return {
+      '@type': 'google.protobuf.Any',
       type_url: this._type.fullName.slice(1),
       value: this.encode(value, options)
     };

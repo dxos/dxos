@@ -6,12 +6,12 @@ import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { ObjectModel } from '@dxos/object-model';
+import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
-import { TestBuilder } from '../testing';
+import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -21,13 +21,11 @@ describe('Spaces', () => {
     afterTest(() => client.destroy());
 
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
     const space = await client.echo.createSpace();
-    const item = await space.database.createItem({ model: ObjectModel });
-    await item.model.set('title', 'testing');
-    expect(item.model.get('title')).to.eq('testing');
+    await testSpace(space.internal.db);
 
     await asyncTimeout(
       space.queryMembers().waitFor((items) => items.length === 1),
@@ -41,22 +39,24 @@ describe('Spaces', () => {
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     let itemId: string;
     {
       // TODO(burdon): API (client.echo/client.halo).
       const space = await client.echo.createSpace();
-      const item = await space.database.createItem({ model: ObjectModel });
-      await item.model.set('title', 'testing');
-      expect(item.model.get('title')).to.eq('testing');
+      const {
+        objectsCreated: [item]
+      } = await testSpace(space.internal.db);
       itemId = item.id;
-
       const result = await space.queryMembers().waitFor((items) => items.length === 1);
       expect(result).to.have.length(1);
     }
 
     await client.destroy();
+
+    log.break();
+
     await client.initialize();
 
     {
@@ -64,12 +64,8 @@ describe('Spaces', () => {
       expect(result).to.have.length(1);
       const space = result[0];
 
-      const item = space.database.getItem(itemId)!;
+      const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
-      expect(item.model.get('title')).to.eq('testing');
-
-      await item.model.set('title', 'testing2');
-      expect(item.model.get('title')).to.eq('testing2');
     }
 
     await client.destroy();

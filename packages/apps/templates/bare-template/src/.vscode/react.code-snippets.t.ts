@@ -22,8 +22,8 @@ export default defineTemplate(
       // 	],
       // 	"description": "Log output to console"
       // }
-      "plate": {
-        "scope": "typescript,typescriptreact",
+      "component": {
+        "scope": "typescriptreact",
         "prefix": "component",
         "body": [
           "import React from 'react';",

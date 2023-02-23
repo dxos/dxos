@@ -5,11 +5,11 @@
 import { expect } from 'chai';
 
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-db';
+import { DocumentModel } from '@dxos/document-model';
+import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { test, describe } from '@dxos/test';
 
 import { createSigningContext, syncItems, TestBuilder } from '../testing';
@@ -27,7 +27,8 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer.keyring,
       identity,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
+      peer.feedStore,
       peer.snapshotStore
     );
     const space = await dataSpaceManager.createSpace();
@@ -52,7 +53,8 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
+      peer1.feedStore,
       peer1.snapshotStore
     );
 
@@ -64,17 +66,29 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
+      peer2.feedStore,
       peer1.snapshotStore
     );
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    // Admit peer2 to space1.
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials(
+        identity1.credentialSigner,
+        identity2.identityKey,
+        space1.key,
+        space1.inner.genesisFeedKey
+      )
+    );
+
+    // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await dataSpaceManager2.acceptSpace({
       spaceKey: space1.key,
-      genesisFeedKey: space1.inner.genesisFeedKey,
-      controlFeedKey: await peer2.keyring.createKey(),
-      dataFeedKey: await peer2.keyring.createKey()
+      genesisFeedKey: space1.inner.genesisFeedKey
     });
 
     log('', {
@@ -92,20 +106,6 @@ describe('DataSpaceManager', () => {
       }
     });
 
-    // Admit peer2 to space1.
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        identity1.credentialSigner,
-        identity2.identityKey,
-        identity2.deviceKey,
-        space1.key,
-        space2.inner.controlFeedKey,
-        space2.inner.dataFeedKey,
-        space2.inner.genesisFeedKey
-      )
-    );
-
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
     await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
@@ -121,7 +121,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItems(space1, space2);
+    await syncItems(space1.dataPipelineController, space2.dataPipelineController);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);

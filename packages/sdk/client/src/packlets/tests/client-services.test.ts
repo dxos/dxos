@@ -8,31 +8,14 @@ import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
-import { TestBuilder } from '../testing';
-
-// TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
-const syncItems = async (space1: ISpace, space2: ISpace) => {
-  {
-    // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
-    expect(item1.id).to.eq(item2.id);
-  }
-
-  {
-    // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
-    expect(item1.id).to.eq(item2.id);
-  }
-};
+import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -69,7 +52,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client1a.destroy(), server1a.close()]));
         expect(client1a.initialized).to.be.true;
 
-        await client1a.halo.createProfile();
+        await client1a.halo.createIdentity();
       }
       {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
@@ -94,7 +77,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client2a.destroy(), server2a.close()]));
         expect(client2a.initialized).to.be.true;
 
-        await client2a.halo.createProfile();
+        await client2a.halo.createIdentity();
       }
     }
   });
@@ -119,7 +102,7 @@ describe('Client services', () => {
       await client1.initialize();
       await client2.initialize();
 
-      await client1.halo.createProfile();
+      await client1.halo.createIdentity();
     }
 
     const success1 = new Trigger<Invitation>();
@@ -160,16 +143,35 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.profile!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.profile!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      expect((await client1.halo.queryDevices()).length).to.eq(2);
-      expect((await client2.halo.queryDevices()).length).to.eq(2);
+      const devices1 = new Trigger<DeviceInfo[]>();
+      const devices2 = new Trigger<DeviceInfo[]>();
+
+      {
+        client1.halo.queryDevices().subscribe({
+          onUpdate: (devices) => {
+            devices1.wake(devices);
+          },
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+
+        client2.halo.queryDevices().subscribe({
+          onUpdate: (devices) => {
+            devices2.wake(devices);
+          },
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+      }
+
+      expect(await devices1.wait()).to.have.lengthOf(2);
+      expect(await devices2.wait()).to.have.lengthOf(2);
     });
   });
 
@@ -192,8 +194,8 @@ describe('Client services', () => {
 
       await client1.initialize();
       await client2.initialize();
-      await client1.halo.createProfile({ displayName: 'Peer 1' });
-      await client2.halo.createProfile({ displayName: 'Peer 2' });
+      await client1.halo.createIdentity({ displayName: 'Peer 1' });
+      await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
     log('initialized');
 
@@ -246,17 +248,17 @@ describe('Client services', () => {
       await waitForExpect(() => {
         expect(space.queryMembers().value).to.deep.equal([
           {
-            identityKey: client1.halo.profile!.identityKey,
-            profile: {
-              identityKey: client1.halo.profile!.identityKey,
+            identityKey: client1.halo.identity!.identityKey,
+            identity: {
+              identityKey: client1.halo.identity!.identityKey,
               displayName: 'Peer 1'
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.profile!.identityKey,
-            profile: {
-              identityKey: client2.halo.profile!.identityKey,
+            identityKey: client2.halo.identity!.identityKey,
+            identity: {
+              identityKey: client2.halo.identity!.identityKey,
               displayName: 'Peer 2'
             },
             presence: SpaceMember.PresenceState.ONLINE
@@ -265,6 +267,6 @@ describe('Client services', () => {
       }, 3_000);
     }
 
-    await syncItems(space1, space2);
+    await syncItems(space1.internal.db, space2.internal.db);
   });
 });

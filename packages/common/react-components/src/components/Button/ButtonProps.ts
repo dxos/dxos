@@ -2,10 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentProps } from 'react';
+import { ComponentPropsWithRef } from 'react';
 
-export interface ButtonProps extends ComponentProps<'button'> {
+import { Density, Elevation } from '../../props';
+
+export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';
-  compact?: boolean;
+  density?: Density;
+  elevation?: Elevation;
   disabled?: boolean;
 }

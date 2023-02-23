@@ -15,6 +15,9 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
@@ -42,19 +45,16 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/echo/document-model"
     },
     {
       "path": "../../core/echo/messenger-model"
     },
     {
       "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/object-model"
     },
     {
       "path": "../../core/echo/text-model"
@@ -72,19 +72,19 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
+      "path": "../../deprecated/react-toolkit"
     },
     {
-      "path": "../../deprecated/react-toolkit"
+      "path": "../../experimental/gem-spore"
     },
     {
       "path": "../../experimental/kai"
     },
     {
-      "path": "../../experimental/react-registry-client"
+      "path": "../../experimental/mosaic"
     },
     {
-      "path": "../../experimental/registry-client"
+      "path": "../../experimental/plexus"
     },
     {
       "path": "../../sdk/client"
@@ -97,9 +97,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../devtools-mesh"
     }
   ]
 }

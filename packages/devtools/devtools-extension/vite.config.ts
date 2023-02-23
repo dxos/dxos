@@ -13,15 +13,14 @@ import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
+import packageJson from './package.json';
+
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   build: {
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       input: {
         // Everything mentioned in manifest.json will be bundled.
@@ -44,10 +43,14 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
@@ -55,7 +58,7 @@ export default defineConfig({
     chromeExtensionPlugin({
       manifest: {
         manifest_version: 3,
-        version: '0.1.23',
+        version: packageJson.version,
         author: 'DXOS.org',
         name: 'DXOS Client Developer Tools',
         short_name: 'DXOS DevTools',

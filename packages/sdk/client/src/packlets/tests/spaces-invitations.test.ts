@@ -2,13 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { ObjectModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
-import { TestBuilder } from '../testing';
+import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
@@ -17,13 +14,11 @@ describe('Spaces/invitations', () => {
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     {
       const space = await client.echo.createSpace();
-      const item = await space.database.createItem({ model: ObjectModel });
-      await item.model.set('title', 'testing');
-      expect(item.model.get('title')).to.eq('testing');
+      await testSpace(space.internal.db);
     }
   });
 });

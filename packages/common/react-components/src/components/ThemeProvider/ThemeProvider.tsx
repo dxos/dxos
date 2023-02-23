@@ -11,12 +11,19 @@ import {
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import React, { createContext, PropsWithChildren } from 'react';
 
-import { defaultFocus } from '../../styles';
+import { Density, Elevation } from '../../props';
+import { themeVariantFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
+import { DensityProvider } from '../DensityProvider';
+import { ElevationProvider } from '../ElevationProvider';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
+export type ThemeVariant = 'app' | 'os';
+
 export interface ThemeContextValue {
-  themeVariant: 'app' | 'os';
+  themeVariant: ThemeVariant;
+  rootElevation?: Elevation;
+  rootDensity?: Density;
   hasIosKeyboard?: boolean;
 }
 
@@ -35,10 +42,12 @@ export const ThemeProvider = ({
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
-  fallback,
+  fallback = null,
   resourceExtensions,
   appNs,
-  themeVariant = 'app'
+  themeVariant = 'app',
+  rootElevation = 'base',
+  rootDensity = 'coarse'
 }: ThemeProviderProps) => {
   return (
     <ThemeContext.Provider value={{ themeVariant, hasIosKeyboard: hasIosKeyboard() }}>
@@ -51,13 +60,15 @@ export const ThemeProvider = ({
       >
         <ToastProvider {...toastProviderProps}>
           <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
-            {children}
+            <ElevationProvider elevation={rootElevation}>
+              <DensityProvider density={rootDensity}>{children}</DensityProvider>
+            </ElevationProvider>
           </TooltipProvider>
           <ToastViewport
             {...toastViewportProps}
             className={mx(
               'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
-              defaultFocus,
+              themeVariantFocus(themeVariant),
               toastViewportProps?.className
             )}
           />

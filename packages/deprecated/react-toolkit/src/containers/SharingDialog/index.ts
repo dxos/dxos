@@ -7,4 +7,3 @@ export * from './HaloSharingDialog';
 export * from './SpaceSharingDialog';
 export * from './PendingInvitation';
 export * from './SharingDialog';
-export * from './SpawnBotPanel';

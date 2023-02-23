@@ -4,21 +4,30 @@
 
 import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
+import { useButtonShadow, useThemeContext } from '../../hooks';
+import { useDensityContext } from '../../hooks/useDensityContext';
 import { mx } from '../../util';
 import { ButtonProps } from './ButtonProps';
 import { buttonStyles } from './buttonStyles';
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ children, compact, variant, ...rootSlot }, ref) => {
-  const { themeVariant } = useThemeContext();
-  return (
-    <button
-      ref={ref}
-      {...rootSlot}
-      className={mx(buttonStyles({ compact, variant, disabled: rootSlot.disabled }, themeVariant), rootSlot.className)}
-      {...(rootSlot.disabled && { disabled: true })}
-    >
-      {children}
-    </button>
-  );
-});
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ children, density: propsDensity, elevation, variant = 'default', ...rootSlot }, ref) => {
+    const { themeVariant } = useThemeContext();
+    const shadow = useButtonShadow();
+    const density = useDensityContext(propsDensity);
+    return (
+      <button
+        ref={ref}
+        {...rootSlot}
+        className={mx(
+          buttonStyles({ density, variant, disabled: rootSlot.disabled }, themeVariant),
+          !rootSlot.disabled && (variant === 'default' || variant === 'primary') && shadow,
+          rootSlot.className
+        )}
+        {...(rootSlot.disabled && { disabled: true })}
+      >
+        {children}
+      </button>
+    );
+  }
+);

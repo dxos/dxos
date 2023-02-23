@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, valueEncoding } from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -60,10 +60,10 @@ describe('identity/identity', () => {
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-    });
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -165,10 +165,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity1 = new Identity({
         signer: keyring,
@@ -244,10 +244,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity2 = new Identity({
         signer: keyring,

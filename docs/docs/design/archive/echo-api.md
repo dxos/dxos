@@ -7,7 +7,7 @@
 *   Query
 *   Item
     *   Model
-        *   ObjectModel: Document (JSON)
+        *   DocumentModel: Document (JSON)
             *   Key-value mutations
 *   Transactions
 

@@ -8,45 +8,54 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { ComponentProps } from 'react';
 
-import { Item } from '@dxos/client';
+import type { TextObject } from '@dxos/client';
 import { useTranslation, mx } from '@dxos/react-components';
-import { TextModel, Doc } from '@dxos/text-model';
 
 export interface ComposerSlots {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
+    spellCheck?: boolean;
+    tabIndex?: number;
   };
 }
 
 export interface ComposerProps {
-  doc?: Doc;
-  /**
-   * @deprecated Use `doc` instead.
-   */
-  item?: Item<TextModel>;
+  document: TextObject;
+  field?: string;
+  placeholder?: string;
   slots?: ComposerSlots;
 }
 
-export const Composer = ({ item, doc = item?.model?.doc, slots = {} }: ComposerProps) => {
+export const Composer = ({ document, field = 'content', placeholder, slots = {} }: ComposerProps) => {
+  // TODO(wittjosiah): Provide own translations?
+  //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
+
+  // Reference:
+  // https://tiptap.dev/installation/react
+  // https://github.com/ueberdosis/tiptap
+  // https://tiptap.dev/guide/output/#option-3-yjs
   const editor = useEditor(
     {
       extensions: [
         StarterKit.configure({ history: false }),
-        Collaboration.configure({ document: doc, field: 'content' }),
+        // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
+        Collaboration.configure({ document: document.doc!, field }),
         Placeholder.configure({
-          placeholder: t('composer placeholder'),
+          placeholder: placeholder ?? t('composer placeholder'),
           emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
         })
       ],
       editorProps: {
         attributes: {
-          class: mx('focus:outline-none focus-visible:outline-none', slots?.editor?.className)
+          class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
+          spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
+          tabindex: slots?.editor?.tabIndex ? String(slots?.editor?.tabIndex) : '0'
         }
       }
     },
-    [doc]
+    [document, document?.doc]
   );
 
   return <EditorContent {...slots?.root} editor={editor} />;

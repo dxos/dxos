@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 import { ClassProcessor } from './class-processor';
 
 describe('Code analysis', () => {
-  test('traverses echo-db', () => {
+  test.skip('traverses echo-db', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 

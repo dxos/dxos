@@ -6,7 +6,7 @@ import React, { ComponentProps } from 'react';
 
 import { mx, Popover } from '@dxos/react-components';
 
-import { defaultPanel, defaultArrow } from '../../styles';
+import { defaultSurface, defaultArrow } from '../../styles';
 
 /**
  * This component essentially sets default styles for popovers which have panels as their content
@@ -24,7 +24,7 @@ export const PanelPopover = ({ slots, children, ...popoverProps }: ComponentProp
           collisionPadding: 8,
           sideOffset: 4,
           ...slots?.content,
-          className: mx(defaultPanel, slots?.content?.className)
+          className: mx(defaultSurface, slots?.content?.className)
         },
         trigger: {
           ...slots?.trigger,

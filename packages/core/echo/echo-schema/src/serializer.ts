@@ -3,7 +3,7 @@
 //
 
 import { EchoDatabase } from './database';
-import { base, id, schema } from './defs';
+import { base, schema } from './defs';
 import { Document } from './document';
 import { strip } from './util';
 
@@ -21,12 +21,11 @@ export type SerializedSpace = {
 // TODO(burdon): Sort JSON keys (npm canonical serialize util).
 export class Serializer {
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const result = database.query();
-    const objects = result.getObjects();
+    const { objects } = database.query();
     const data = {
       objects: objects.map((object) => {
         return strip({
-          '@id': object[id],
+          '@id': object.id,
           '@type': object[schema] ? object[schema].name : undefined,
           ...object[base].toJSON() // TODO(burdon): Not working unless schema.
         });
@@ -47,7 +46,7 @@ export class Serializer {
         ...data
       });
       obj[base]._id = id;
-      await database.save(obj);
+      await database.add(obj);
     }
   }
 }

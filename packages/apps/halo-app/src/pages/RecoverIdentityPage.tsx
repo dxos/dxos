@@ -28,7 +28,8 @@ const RecoverIdentityPage = () => {
 
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createProfile({ seedphrase }).then(redirect, (_rejection) => setPending(false));
+    // TODO(mykola): Add seedphrase.
+    void client.halo.createIdentity().then(redirect, (_rejection) => setPending(false));
   }, [seedphrase, redirect]);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ const RecoverIdentityPage = () => {
           pending,
           inputLabel: t('seed phrase label'),
           inputPlaceholder: t('seed phrase placeholder'),
-          onChange: setSeedphrase,
+          onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
           onBack: () => history.back()
         }}

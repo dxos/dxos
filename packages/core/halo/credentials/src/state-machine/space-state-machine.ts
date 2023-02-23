@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TypedMessage } from '@dxos/protocols';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
 
@@ -19,6 +20,7 @@ export interface SpaceState {
   readonly genesisCredential: Credential | undefined;
 
   registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
+  getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
 
 /**
@@ -84,6 +86,10 @@ export class SpaceStateMachine implements SpaceState {
     return processor;
   }
 
+  getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
+    return this._credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+  }
+
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
@@ -105,7 +111,8 @@ export class SpaceStateMachine implements SpaceState {
       return false;
     }
 
-    switch (getCredentialAssertion(credential)['@type']) {
+    const assertion = getCredentialAssertion(credential);
+    switch (assertion['@type']) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -125,6 +132,10 @@ export class SpaceStateMachine implements SpaceState {
       }
 
       case 'dxos.halo.credentials.SpaceMember': {
+        if (!assertion.spaceKey.equals(this._spaceKey)) {
+          break; // Ignore credentials for other spaces.
+        }
+
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before adding members.');
           return false;

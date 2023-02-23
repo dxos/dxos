@@ -6,7 +6,8 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { execTool, getBin, mochaComment, resolveFiles } from './util';
+import { execTool, getBin, resolveFiles } from './node-util';
+import { mochaComment } from './util';
 import { formatArgs } from './util/formatArgs';
 
 export type NodeOptions = {
@@ -23,6 +24,7 @@ export type NodeOptions = {
   checkLeaks: boolean;
   forceExit: boolean;
   domRequired: boolean;
+  executorResult?: object;
   playwright: boolean;
   browser?: string;
   headless: boolean;
@@ -33,6 +35,8 @@ export type NodeOptions = {
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
+  extensionPath?: string;
+  incognito?: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -46,7 +50,10 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       STAY_OPEN: String(options.stayOpen),
       MOCHA_TAGS: options.tags.join(','),
       MOCHA_ENV: options.browser ?? 'nodejs',
+      EXECUTOR_RESULT: JSON.stringify(options.executorResult),
       DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
+      EXTENSION_PATH: options.extensionPath,
+      INCOGNITO: String(options.incognito),
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937

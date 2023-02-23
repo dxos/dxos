@@ -6,7 +6,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node",
       "sharedworker"
@@ -57,7 +57,7 @@
       "path": "../../experimental/metagraph"
     },
     {
-      "path": "../../experimental/react-client-testing"
+      "path": "../../experimental/react-metagraph"
     },
     {
       "path": "../../sdk/client"
@@ -70,6 +70,9 @@
     },
     {
       "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-ui"
     }
   ]
 }

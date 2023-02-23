@@ -11,13 +11,15 @@ import { useClient, useIdentity } from '@dxos/react-client';
 import { SpacesLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
 import { SpacePage, SpacesPage } from './pages';
 
+export const namespace = 'composer-app';
+
 export const Routes = () => {
   const client = useClient();
   const identity = useIdentity();
   const DX_VAULT = client.config.get('runtime.app.env.DX_VAULT');
 
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
-  useTelemetry({ namespace: 'composer-app' });
+  useTelemetry({ namespace });
 
   const routes = useRoutes([
     {
@@ -61,7 +63,7 @@ export const Routes = () => {
   // Allow the client to auto-create an identity if env DX_VAULT=false
   useEffect(() => {
     if (DX_VAULT === 'false' && !identity) {
-      void client.halo.createProfile();
+      void client.halo.createIdentity();
     }
   }, []);
 

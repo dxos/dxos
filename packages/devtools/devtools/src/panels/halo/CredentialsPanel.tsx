@@ -10,7 +10,7 @@ import { useDevtoolsState, useCredentials } from '../../hooks';
 
 // TODO(burdon): Blows up since JSON data is too large.
 
-export const CredentialsPanel = () => {
+const CredentialsPanel = () => {
   const { space } = useDevtoolsState();
   const credentials = useCredentials({ spaceKey: space?.key });
 
@@ -24,3 +24,5 @@ export const CredentialsPanel = () => {
     </div>
   );
 };
+
+export default CredentialsPanel;

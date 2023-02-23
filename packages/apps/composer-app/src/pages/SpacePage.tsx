@@ -5,20 +5,21 @@
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
-import type { Item, Space } from '@dxos/client';
-import { useSelection } from '@dxos/react-client';
+import type { Space } from '@dxos/client';
+import { useQuery } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
-import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
-import type { TextModel } from '@dxos/text-model';
+import { Composer } from '@dxos/react-composer';
+
+import { ComposerDocument } from '../proto';
 
 export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();
 
-  const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+  const [document] = useQuery(space, ComposerDocument.filter());
 
-  return item ? (
+  return document.content ? (
     <Composer
-      item={item}
+      document={document.content}
       slots={{
         editor: {
           className:

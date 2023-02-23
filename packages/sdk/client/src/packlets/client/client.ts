@@ -96,6 +96,13 @@ export class Client {
     return this._config;
   }
 
+  /**
+   * Current client services provider.
+   */
+  get services(): ClientServicesProvider {
+    return this._services;
+  }
+
   // TODO(burdon): Rename isOpen.
   /**
    * Returns true if the client has been initialized. Initialize by calling `.initialize()`
@@ -116,7 +123,11 @@ export class Client {
    * ECHO database.
    */
   get echo(): EchoProxy {
-    // assert(this._initialized, 'Client not initialized.');
+    assert(this._initialized, 'Client not initialized.');
+    // if (!this.halo.identity) {
+    //   throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
+    // }
+
     return this._echo;
   }
 
@@ -145,6 +156,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
 
+    // TODO(wittjosiah): Promise.all?
     await this._halo.open();
     await this._echo.open();
     await this._mesh.open();
@@ -201,7 +213,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
-    // this._halo.profileChanged.emit(); // TODO(burdon): Triggers failure in hook.
+    // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
 

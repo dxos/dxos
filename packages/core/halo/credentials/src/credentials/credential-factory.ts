@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getSignaturePayload } from './signing';
+import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {
@@ -68,7 +68,7 @@ export const createCredential = async ({
   };
 
   // Set proof after creating signature.
-  const signedPayload = getSignaturePayload(credential);
+  const signedPayload = getCredentialProofPayload(credential);
   credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
     credential.proof.chain = chain;

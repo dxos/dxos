@@ -4,18 +4,21 @@
 
 import React, { useState, useCallback } from 'react';
 
+import { Trigger } from '@dxos/async';
 import { Status } from '@dxos/client';
 import { ClientContextProps } from '@dxos/react-client';
 import { Button, Heading, Loading, useTranslation } from '@dxos/react-components';
 
-export const Fallback = ({ message }: { message: string }) => (
-  <div className='py-8 flex flex-col gap-4' aria-live='polite'>
-    <Loading label={message} size='lg' />
-    <Heading level={1} className='text-lg font-light text-center'>
-      {message}
-    </Heading>
-  </div>
-);
+export const Fallback = ({ message }: { message: string }) => {
+  return (
+    <div className='py-8 flex flex-col gap-4' aria-live='polite'>
+      <Loading label={message} size='lg' />
+      <Heading level={1} className='text-lg font-light text-center'>
+        {message}
+      </Heading>
+    </div>
+  );
+};
 
 export const GenericFallback = () => {
   const { t } = useTranslation('appkit');
@@ -24,16 +27,22 @@ export const GenericFallback = () => {
 
 /**
  * Fallback component for the ClientProvider from @dxos/react-client.
- *
  * Allows the user to resume their client when it has been suspended.
  */
 export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) => {
   const { t } = useTranslation('appkit');
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState(true);
 
+  console.log(':::::::::::::::::::');
+
+  // Set timeout to prevent flickering.
+  // TODO(burdon): Wait 200ms before showing then display for at least 500ms if it is then displayed.
   const resume = useCallback(async () => {
     setPending(true);
+    const done = new Trigger();
+    setTimeout(() => done.wake(), 1000);
     await client?.resumeHostServices();
+    await done.wait();
     setPending(false);
   }, [client]);
 

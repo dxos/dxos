@@ -25,6 +25,7 @@ export const AuthChoices = ({ onCreate, onJoin, onRecover }: AuthChoicesProps) =
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onCreate}
+          data-testid='create-identity-button'
         >
           {t('create identity label')}
         </CompoundButton>
@@ -36,17 +37,21 @@ export const AuthChoices = ({ onCreate, onJoin, onRecover }: AuthChoicesProps) =
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onJoin}
+          data-testid='join-identity-button'
         >
           {t('join identity label')}
         </CompoundButton>
       )}
       {onRecover && (
         <CompoundButton
+          // TODO(mykola): Implement recover.
+          disabled={true}
           description={t('recover identity description')}
           before={<Textbox className='w-6 h-6' />}
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onRecover}
+          data-testid='recover-identity-button'
         >
           {t('recover identity label')}
         </CompoundButton>

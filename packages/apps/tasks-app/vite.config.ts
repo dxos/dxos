@@ -23,33 +23,17 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/client',
-      '@dxos/config',
-      '@dxos/log',
-      '@dxos/react-appkit',
-      '@dxos/react-client',
-      '@dxos/react-list',
-      '@dxos/react-components',
-      '@dxos/sentry'
-    ]
-  },
   build: {
-    outDir: 'out/tasks',
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+    outDir: 'out/tasks'
   },
   plugins: [
     ConfigPlugin({
       env: [
         'DX_ENVIRONMENT',
-        'DX_VAULT',
-        'IPDATA_API_KEY',
-        'SENTRY_DESTINATION',
-        'TELEMETRY_API_KEY'
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY',
+        'DX_VAULT'
       ]
     }),
     ThemePlugin({

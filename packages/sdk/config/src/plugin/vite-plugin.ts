@@ -5,8 +5,7 @@
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
-import { ConfigPlugin as EsbuildConfigPlugin } from './esbuild-plugin';
-import { ConfigPlugin as RollupConfigPlugin } from './rollup-plugin';
+import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
@@ -15,18 +14,14 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
     const configPath = root && resolve(root, options.configPath ?? 'dx.yml');
     const envPath = root && resolve(root, options.envPath ?? 'dx-env.yml');
     const devPath = root && resolve(root, options.devPath ?? 'dx-dev.yml');
-
-    return {
-      optimizeDeps: {
-        esbuildOptions: {
-          plugins: [EsbuildConfigPlugin({ ...options, configPath, envPath, devPath })]
-        }
+    const define = Object.entries(definitions({ ...options, configPath, envPath, devPath })).reduce(
+      (define, [key, value]) => {
+        define[key] = JSON.stringify(value);
+        return define;
       },
-      build: {
-        rollupOptions: {
-          plugins: [RollupConfigPlugin({ ...options, configPath, envPath, devPath })]
-        }
-      }
-    };
+      {} as { [key: string]: string }
+    );
+
+    return { define };
   }
 });

@@ -64,6 +64,18 @@
           "env": "CONFIG_DYNAMIC"
         },
         {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
           "env": "DX_VAULT"
         }
       ],
@@ -84,8 +96,8 @@
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "build",
-        "bundle"
+        "prebuild",
+        "^compile"
       ]
     },
     "lint": {
@@ -104,10 +116,7 @@
       ]
     },
     "preview": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "bundle"
-      ]
+      "inputs": ["production", "^production"]
     },
     "serve": {
       "inputs": ["production", "^production"],
@@ -117,6 +126,13 @@
       ]
     },
     "serve-with-halo": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ]
+    },
+    "storybook": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",

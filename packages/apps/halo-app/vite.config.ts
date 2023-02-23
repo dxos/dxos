@@ -25,33 +25,8 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/async',
-      '@dxos/client',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/config',
-      '@dxos/metagraph',
-      '@dxos/network-manager',
-      '@dxos/protocols',
-      '@dxos/react-appkit',
-      '@dxos/react-async',
-      '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/rpc',
-      '@dxos/rpc-tunnel',
-      '@dxos/sentry',
-      '@dxos/telemetry',
-      '@dxos/util'
-    ]
-  },
   build: {
     sourcemap: true,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -68,18 +43,19 @@ export default defineConfig({
     ConfigPlugin({
       env: [
         'DX_ENVIRONMENT',
-        'DX_VAULT',
-        'IPDATA_API_KEY',
-        'SENTRY_DESTINATION',
-        'TELEMETRY_API_KEY'
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY',
+        'DX_VAULT'
       ]
     }),
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
+        resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),

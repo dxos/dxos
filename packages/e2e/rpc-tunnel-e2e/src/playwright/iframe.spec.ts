@@ -15,8 +15,9 @@ describe('iframe', () => {
   let page: Page;
 
   beforeAll(async function () {
-    const result = await setupPage(this, `${config.baseUrl}/iframe.html`, async (page) => {
-      return await page.isVisible(':has-text("value")');
+    const result = await setupPage(this, {
+      url: `${config.baseUrl}/iframe.html`,
+      waitFor: (page) => page.isVisible(':has-text("value")')
     });
 
     page = result.page;

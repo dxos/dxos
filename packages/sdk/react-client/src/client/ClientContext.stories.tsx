@@ -4,12 +4,13 @@
 
 import React, { Component, PropsWithChildren } from 'react';
 
+import { fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 
 import { ClientProvider, useClient } from './ClientContext';
 
 export default {
-  title: 'react-client/ClientContext'
+  component: ClientProvider
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -38,17 +39,21 @@ const TestApp = () => {
         <JsonPanel value={client.toJSON()} />
       </div>
       <div style={{ padding: 1 }}>
-        <JsonPanel value={client.halo.profile} />
+        <JsonPanel value={client.halo.identity} />
       </div>
     </div>
   );
 };
 
-export const Primary = () => (
-  <ClientProvider>
-    <TestApp />
-  </ClientProvider>
-);
+const servicesProvider = (config?: Config) => fromHost(config);
+
+export const Primary = () => {
+  return (
+    <ClientProvider services={servicesProvider}>
+      <TestApp />
+    </ClientProvider>
+  );
+};
 
 class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
   constructor(props: any) {
@@ -64,7 +69,7 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
   override render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
-      return <h1>Something went wrong.</h1>;
+      return <div>Runtime Error</div>;
     }
 
     return this.props.children;
@@ -73,6 +78,7 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
 
 export const Failure = () => {
   const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
+
   return (
     <ErrorBoundary>
       <ClientProvider config={config}>

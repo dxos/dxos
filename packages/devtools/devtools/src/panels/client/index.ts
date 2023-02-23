@@ -2,5 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './ConfigPanel';
-export * from './LoggingPanel';
+import React from 'react';
+
+export const ConfigPanel = React.lazy(() => import('./ConfigPanel'));

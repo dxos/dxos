@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
@@ -38,12 +39,13 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
+export const namespace = 'halo-app';
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 const Routes = () => {
-  useTelemetry({ namespace: 'halo-app' });
+  useTelemetry({ namespace });
 
   return useRoutes([
     {
@@ -102,17 +104,19 @@ export const App = () => {
       appNs='halo'
     >
       <ErrorProvider>
-        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
-            <HashRouter>
-              <Routes />
-              {needRefresh ? (
-                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
-              ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' />
-              ) : null}
-            </HashRouter>
+            <MetagraphProvider>
+              <HashRouter>
+                <Routes />
+                {needRefresh ? (
+                  <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+                ) : offlineReady ? (
+                  <ServiceWorkerToast variant='offlineReady' />
+                ) : null}
+              </HashRouter>
+            </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

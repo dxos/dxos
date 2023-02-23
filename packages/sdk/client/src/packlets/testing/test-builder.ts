@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'node:assert';
+
+import { asyncTimeout } from '@dxos/async';
 import {
   ClientServices,
   ClientServicesHost,
@@ -9,6 +12,9 @@ import {
   createDefaultModelFactory
 } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { DocumentModel } from '@dxos/document-model';
+import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
@@ -99,3 +105,28 @@ export class TestBuilder {
     return [client, server];
   }
 }
+
+export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
+  const objectId = PublicKey.random().toHex();
+
+  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+
+  await result.getReceipt();
+  // TODO(dmaretskiy): await result.waitToBeProcessed()
+  assert(create._itemManager.entities.has(result.objectsCreated[0].id));
+
+  await asyncTimeout(
+    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    1000
+  );
+
+  return result;
+};
+
+export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendProxy) => {
+  // Check item replicated from 1 => 2.
+  await testSpace(db1, db2);
+
+  // Check item replicated from 2 => 1.
+  await testSpace(db2, db1);
+};

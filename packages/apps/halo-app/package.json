@@ -1,13 +1,24 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.23",
-  "private": true,
+  "version": "0.1.26",
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./testing": "./dist/testing/node/testing.cjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -21,6 +32,8 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
+    "@dxos/react-metagraph": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
@@ -34,11 +47,10 @@
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.0",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/react-client-testing": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
@@ -48,5 +60,8 @@
     "vite": "4.0.4",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

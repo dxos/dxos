@@ -19,7 +19,25 @@
   ],
   "references": [
     {
+      "path": "../packages/apps/patterns/react-appkit"
+    },
+    {
+      "path": "../packages/common/async"
+    },
+    {
+      "path": "../packages/common/keys"
+    },
+    {
+      "path": "../packages/common/log"
+    },
+    {
       "path": "../packages/common/telemetry"
+    },
+    {
+      "path": "../packages/core/echo/echo-schema"
+    },
+    {
+      "path": "../packages/core/echo/echo-typegen"
     },
     {
       "path": "../packages/core/protocols"

@@ -1,12 +1,20 @@
 formatter:
-  column: 100
+  column: 60
 
 # processor: debug
 
 filter:
   - warn
   - info
-  - test.ts:debug
+  - debug
+  # - test.ts:debug
+  # - database:debug
+  # - notarization:debug
+  # - feed-store:debug
+  # - control-pipeline:debug
+  # - state-manager:debug
+  - feed-store:debug
+  - client-services:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

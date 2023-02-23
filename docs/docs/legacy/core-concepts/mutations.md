@@ -6,7 +6,7 @@ To create shared items on our space, we just need to call `space.database.create
 
 ```jsx
 import { usespace } from '@dxos/react-client';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 
 const EXAMPLE_TYPE = 'example.com/type/item';
 
@@ -16,7 +16,7 @@ const Component = ({ space_key }) => {
   const handleCreateItem = async () => {
     await space.database.createItem({
       type: EXAMPLE_TYPE,
-      model: ObjectModel,
+      model: DocumentModel,
       props: { title: 'My Example' },
     });
   };

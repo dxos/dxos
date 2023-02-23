@@ -3,6 +3,8 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
@@ -18,79 +20,22 @@ export default defineConfig({
   server: {
     host: true
   },
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/async',
-      '@dxos/client',
-      '@dxos/client-services',
-      '@dxos/config',
-      '@dxos/context',
-      '@dxos/debug',
-      '@dxos/devtools-mesh',
-      '@dxos/feed-store',
-      '@dxos/kai',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/messaging',
-      '@dxos/messenger-model',
-      '@dxos/model-factory',
-      '@dxos/network-manager',
-      '@dxos/object-model',
-      '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client/services.ts',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/client',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/object',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/halo/keys',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc',
-      '@dxos/react-appkit',
-      '@dxos/react-async',
-      '@dxos/react-client',
-      '@dxos/react-components-deprecated',
-      '@dxos/react-registry-client',
-      '@dxos/react-toolkit',
-      '@dxos/registry-client',
-      '@dxos/rpc',
-      '@dxos/text-model',
-      '@dxos/timeframe',
-      '@dxos/util'
-    ]
-  },
   build: {
     sourcemap: true,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        testbench: resolve(__dirname, 'testbench.html')
-      },
       output: {
         manualChunks: {
+          highlighter: ['react-syntax-highlighter'],
           vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
     }
   },
   plugins: [
-    ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'IPDATA_API_KEY',
-        'SENTRY_DESTINATION',
-        'TELEMETRY_API_KEY'
-      ]
-    }),
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'] }),
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
+        resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
@@ -98,13 +43,14 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
     ReactPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // TODO(wittjosiah): Remove once this has been released.
+      selfDestroying: true,
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
@@ -129,7 +75,6 @@ export default defineConfig({
         ]
       }
     }),
-
     /**
      * Bundle fonts.
      * https://fonts.google.com
@@ -158,6 +103,27 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ]
 });

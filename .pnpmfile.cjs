@@ -47,6 +47,7 @@ function readPackage(packageJson, context) {
     // @dxos/presenter
     case '@react-pdf/renderer': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
     }
 
     // @storybook/react transitive dep
@@ -65,12 +66,26 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // @dxos/devtools
+    case 'react-vis':
+    case 'react-motion': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
+    }
+
+    // @dxos/devtools-extension
+    case '@crxjs/vite-plugin': {
+      packageJson.peerDependencies['vite'] = '4.0.4'
+      break;
+    }
+
     case 'storybook-dark-mode': {
       packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
       packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
       packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
       packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
       packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+      break;
     }
 
     // Ensure vuepress uses patched vite.

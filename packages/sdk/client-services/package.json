@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.1.23",
+  "version": "0.1.26",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   "browser": {
     "jsondown": false,
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
+    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -27,7 +27,9 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/keyring": "workspace:*",
@@ -37,7 +39,6 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",

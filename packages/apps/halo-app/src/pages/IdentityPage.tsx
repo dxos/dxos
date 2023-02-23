@@ -3,33 +3,34 @@
 //
 
 import { Activity, Eraser } from 'phosphor-react';
-import React, { useCallback } from 'react';
+import React, { ChangeEvent, useCallback } from 'react';
 
-import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
+import { namespace } from '../App';
 import { AlertDialog } from '../components';
 
 const IdentityPage = () => {
   const client = useClient();
-  const profile = useIdentity();
-  const profileHex = profile!.identityKey.toHex();
-  const telemetryDisabled = DX_TELEMETRY === 'true';
+  const identity = useIdentity();
+  const identityHex = identity!.identityKey.toHex();
+  const telemetryDisabled = isTelemetryDisabled(namespace);
   const { t } = useTranslation('halo');
 
-  const confirmString = humanize(profile!.identityKey.toHex());
+  const confirmString = humanize(identity!.identityKey.toHex());
 
   const onChangeDisplayName = useCallback(
-    (nextValue: string) => {
-      if (profile) {
+    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+      if (identity) {
         // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
-        profile.displayName = nextValue;
+        identity.displayName = value;
       }
     },
-    [profile]
+    [identity]
   );
 
   return (
@@ -38,14 +39,14 @@ const IdentityPage = () => {
       <Avatar
         size={32}
         variant='circle'
-        fallbackValue={profileHex}
-        label={profile?.displayName ?? humanize(profileHex)}
-        slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
+        fallbackValue={identityHex}
+        label={identity?.displayName ?? humanize(identityHex)}
+        slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}
-        placeholder={humanize(profileHex)}
-        initialValue={profile?.displayName}
+        placeholder={humanize(identityHex)}
+        defaultValue={identity?.displayName}
         onChange={onChangeDisplayName}
         slots={{ root: { className: 'w-full' } }}
       />

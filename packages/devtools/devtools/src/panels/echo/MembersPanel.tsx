@@ -23,7 +23,7 @@ const columns: Column<SpaceMember>[] = [
   },
   {
     Header: 'name',
-    accessor: (member) => member.profile?.displayName
+    accessor: (member) => member.identity?.displayName
   },
   {
     Header: 'status',
@@ -38,7 +38,7 @@ const columns: Column<SpaceMember>[] = [
   }
 ];
 
-export const MembersPanel = () => {
+const MembersPanel = () => {
   const { space } = useDevtoolsState();
   const members = useMembers(space?.key);
 
@@ -52,3 +52,5 @@ export const MembersPanel = () => {
     </div>
   );
 };
+
+export default MembersPanel;
