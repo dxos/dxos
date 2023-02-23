@@ -97,7 +97,7 @@ export const Sidebar = () => {
             }
           });
         } else {
-          void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
+          void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
         }
 
         break;

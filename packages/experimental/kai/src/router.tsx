@@ -8,7 +8,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { Root } from './containers';
 import { AppState } from './hooks';
-import { IdentityPage, SettingsPage, SpacePage } from './pages';
+import { SettingsPage, SpacePage } from './pages';
 
 /**
  * Main app routes.
@@ -19,11 +19,6 @@ export const createRouter = (initialState: AppState = {}, children?: ReactNode):
       path: '/',
       element: <Root initialState={initialState}>{children}</Root>,
       children: [
-        // TODO(wittjosiah): This is broken and should be integrated w/ shell.
-        {
-          path: '/identity',
-          element: <IdentityPage />
-        },
         {
           path: '/settings',
           element: <SettingsPage />

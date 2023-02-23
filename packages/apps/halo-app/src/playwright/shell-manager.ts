@@ -65,10 +65,6 @@ export class ShellManager {
   }
 
   async acceptSpaceInvitation(invitationCode: string) {
-    // TODO(wittjosiah): Why is this needed?
-    await sleep(10);
-    await this.openSpaceList();
-    await this.shell.getByTestId('join-space').click();
     await this.shell.getByTestId('select-identity').click();
     // Wait for focus to shift before typing.
     await sleep(10);

@@ -20,7 +20,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
   return (
     <PanelDialog
       {...{
-        slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(null), ...slots?.root } },
+        slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(), ...slots?.root } },
         titleId
       }}
     >

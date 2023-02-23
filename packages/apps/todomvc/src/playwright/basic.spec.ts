@@ -63,6 +63,7 @@ describe('Basic test', () => {
       await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      await guest.openJoinSpace();
       const [authenticationCode] = await Promise.all([
         host.shell.getAuthenticationCode(),
         guest.shell.acceptSpaceInvitation(invitationCode)

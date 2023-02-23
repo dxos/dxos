@@ -68,6 +68,18 @@ export class AppManager {
 
   // Actions
 
+  async createSpace() {
+    await this.page.getByTestId('add-button').click();
+  }
+
+  async openShareSpace() {
+    await this.page.getByTestId('share-button').click();
+  }
+
+  async openJoinSpace() {
+    await this.page.getByTestId('join-button').click();
+  }
+
   async createTodo(title: string) {
     await this.page.keyboard.type(title);
     await this.page.keyboard.press('Enter');

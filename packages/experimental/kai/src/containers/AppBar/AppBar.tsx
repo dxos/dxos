@@ -69,7 +69,7 @@ export const AppBar = withReactor(() => {
           <Button
             variant='ghost'
             className='p-2'
-            onClick={() => shell.setLayout(ShellLayout.DEVICES_LIST, { spaceKey: space?.key })}
+            onClick={() => shell.setLayout(ShellLayout.HALO_INVITATIONS)}
           >
             <User className={getSize(6)} />
           </Button>
