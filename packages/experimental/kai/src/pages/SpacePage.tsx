@@ -2,67 +2,75 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { CaretRight } from 'phosphor-react';
+import React, { useContext } from 'react';
+import { useParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
-import { useSpaces } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
-import { PanelSidebarProvider } from '@dxos/react-ui';
+import { Button, getSize, mx } from '@dxos/react-components';
+import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
-import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
+import { useAppRouter, useFrames, useTheme, useGenerator, Section } from '../hooks';
 
-// TODO(burdon): Factor out.
-const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
-  spaces.find((space) => space.key.truncate() === spaceKey);
+const Toolbar = () => {
+  const theme = useTheme();
+  const { displayState } = useContext(PanelSidebarContext);
+  const isOpen = displayState === 'show';
+  const toggleSidebar = useTogglePanelSidebar();
+
+  return (
+    <div
+      className={mx(
+        'flex flex-col-reverse bg-appbar-toolbar',
+        theme.classes?.toolbar,
+        theme.panel === 'flat' && 'border-b',
+        'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
+        isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
+      )}
+    >
+      <div className='flex'>
+        {!isOpen && (
+          <Button variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
+            {<CaretRight className={getSize(6)} />}
+          </Button>
+        )}
+
+        <FrameSelector />
+      </div>
+    </div>
+  );
+};
 
 /**
  * Home page with current space.
  */
-export const SpacePage = () => {
-  const navigate = useNavigate();
-  const frames = useActiveFrames();
-  const { spaceKey: currentSpaceKey, frame } = useParams();
-  const spaces = useSpaces();
-  const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
-  const [spaceContext, setSpaceContext] = useState<SpaceContextType>();
-
-  // Change space.
-  useEffect(() => {
-    if (space) {
-      setSpaceContext({ space });
-    } else {
-      navigate('/');
-    }
-  }, [space]);
-
-  // Change to default view.
-  useEffect(() => {
-    if (space && (!frame || !frames.find(({ id }) => id === frame))) {
-      navigate(createSpacePath(space.key, defaultFrameId));
-    }
-  }, [currentSpaceKey, frame]);
-
-  if (!spaceContext) {
-    return null;
-  }
+const SpacePage = () => {
+  useGenerator();
+  const { active } = useFrames();
+  const { section } = useParams();
+  const { space, frame } = useAppRouter();
 
   return (
-    <SpaceContext.Provider value={spaceContext}>
-      <PanelSidebarProvider
-        inlineStart
-        slots={{
-          content: { children: <Sidebar />, className: 'block-start-appbar' },
-          main: { className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden') }
-        }}
-      >
-        <AppBar />
-        <FrameSelector />
-        <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+    <PanelSidebarProvider
+      inlineStart
+      slots={{
+        // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
+        content: { className: '!block-start-appbar', children: <Sidebar /> },
+        main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
+      }}
+    >
+      <AppBar />
+      <Toolbar />
+
+      {/* Main content. */}
+      {space && (
+        <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
+          {section === Section.REGISTRY && <FrameRegistry />}
           {frame && <FrameContainer frame={frame} />}
         </div>
-      </PanelSidebarProvider>
-    </SpaceContext.Provider>
+      )}
+    </PanelSidebarProvider>
   );
 };
+
+export default SpacePage;

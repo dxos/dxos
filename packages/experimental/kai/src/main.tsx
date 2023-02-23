@@ -4,15 +4,18 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import '@dxosTheme';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
+import { captureException } from '@dxos/sentry';
 
-import { App } from './app';
 import { AppState } from './hooks';
+import { createRouter } from './router';
 
+import '@dxos/client/shell.css';
 import '../style.css';
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
@@ -40,6 +43,7 @@ const PWA = () => {
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err: any) => {
+      captureException(err);
       log.error(err);
     }
   });
@@ -51,9 +55,6 @@ const PWA = () => {
   ) : null;
 };
 
-createRoot(document.getElementById('root')!).render(
-  // prettier-ignore
-  <App initialState={initialState}>
-    {initialState.pwa && <PWA />}
-  </App>
-);
+const router = createRouter(initialState, initialState ? <PWA /> : undefined);
+const root = createRoot(document.getElementById('root')!);
+root.render(<RouterProvider router={router} />);

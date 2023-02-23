@@ -9,32 +9,32 @@ html, body, #root {
 }
 
 body {
-  overscroll-behavior: none;
   overflow: hidden;
+  overscroll-behavior: none;
   @apply font-body font-normal text-base;
 }
 
-.logo {
-  transform: rotate(300deg);
-  transition: transform 750ms ease-in-out;
-}
-.logo:hover {
-  transform: rotate(-300deg);
-}
-
 /*
- * TODO(burdon): Custom RBC style
+ * TODO(burdon): Custom RBC style.
+ * TODO(burdon): Tailwind colors.
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-custom-styling--page
  */
 .rbc-calendar, .rbc-month-view, .rbc-header {
   @apply font-body font-normal !important;
 }
 .rbc-event {
-  border: 1px solid #333 !important;
+  /*border: 1px solid #333 !important;*/
+  border: none !important;
   border-radius: 0 !important;
   color: #333 !important;
-  background-color: #eee !important;
   padding: 2px 6px 2px 6px !important;
+  @apply bg-slate-200 !important;
+}
+.rbc-off-range-bg {
+  @apply bg-slate-200 !important;
+}
+.rbc-today {
+  @apply bg-gray-100 !important;
 }
 .rbc-event-content > div {
   text-overflow: ellipsis;

@@ -11,18 +11,25 @@ import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appk
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
+import { createPath, defaultFrameId, useAppRouter } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const IdentityPage = () => {
+const IdentityPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const client = useClient();
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
+  const { space } = useAppRouter();
+
+  const handleDone = () => {
+    // TODO(burdon): Create space if doesn't exist.
+    navigate(createPath({ spaceKey: space!.key, frame: defaultFrameId }));
+  };
 
   const handleCreateInvitation = useCallback(() => {
     client.halo.createInvitation();
@@ -43,7 +50,7 @@ export const IdentityPage = () => {
               <Plus className={getSize(5)} />
               {t('add device label')}
             </Button>
-            <Button variant='primary' onClick={() => navigate('/')} className='flex gap-1 items-center'>
+            <Button variant='primary' className='flex gap-1 items-center' onClick={handleDone}>
               <span>{t('back to app label')}</span>
               <XCircle className={getSize(5)} />
             </Button>
@@ -62,3 +69,5 @@ export const IdentityPage = () => {
     </div>
   );
 };
+
+export default IdentityPage;

@@ -5,11 +5,15 @@
 import add from 'date-fns/add';
 import roundToNearestMinutes from 'date-fns/roundToNearestMinutes';
 import faker from 'faker';
+import { schema } from 'prosemirror-schema-basic';
+import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Event, Organization, Project, Task } from './gen/schema';
+import { Contact, TextDocument, Event, Organization, Note, Project, Task } from './gen/schema';
+
+// TODO(burdon): Factor out all testing deps (and separately testing protos).
 
 export type MinMax = { min: number; max: number } | number;
 
@@ -21,6 +25,8 @@ export type GeneratorOptions = {
   tasks: MinMax;
   contacts: MinMax;
   events: MinMax;
+  documents: MinMax;
+  notes: MinMax;
 };
 
 export class Generator {
@@ -31,7 +37,9 @@ export class Generator {
       projects: { min: 1, max: 2 },
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
-      events: { min: 20, max: 40 }
+      events: { min: 20, max: 40 },
+      documents: { min: 1, max: 3 },
+      notes: { min: 8, max: 16 }
     }
   ) {}
 
@@ -101,43 +109,79 @@ export class Generator {
         return event;
       })
     );
+
+    // Documents.
+    await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
+
+    // Notes.
+    await Promise.all(range(this._options.notes).map(async () => this.createNote()));
   }
 
   createOrganization = async () => {
     const organization = createOrganization();
     const projects = await Promise.all(range(3).map(() => this.createProject()));
     projects.forEach((project) => organization.projects.push(project));
-    return await this._db.save(organization);
+    return await this._db.add(organization);
   };
 
   createProject = async (tag?: string) => {
     const project = createProject(tag);
-
-    // TODO(burdon): Not working?
-    project.description.model?.insert('Hello world', 0);
-
-    return await this._db.save(project);
+    return await this._db.add(project);
   };
 
   createTask = async () => {
-    const contacts = this._db.query(Contact.filter()).getObjects();
+    const { objects: contacts } = this._db.query(Contact.filter());
     const contact =
       faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
 
     const task = createTask(contact);
-    return await this._db.save(task);
+    return await this._db.add(task);
   };
 
   createContact = async () => {
     const contact = createContact();
-    return await this._db.save(contact);
+    return await this._db.add(contact);
   };
 
   createEvent = async () => {
     const event = createEvent();
-    return await this._db.save(event);
+    return await this._db.add(event);
+  };
+
+  createDocument = async () => {
+    const document = createDocument();
+    createTextObjectContent(document.content, 5);
+    await this._db.add(document);
+    return document;
+  };
+
+  createNote = async () => {
+    const document = createNote();
+    await this._db.add(document);
+    createTextObjectContent(document.content, 1);
+    return document;
   };
 }
+
+// TODO(burdon): TextObject initial state isn't replicated.
+// TODO(burdon): Factor out into TextModel.
+const createTextObjectContent = (content: TextObject, sentences = 5) => {
+  // https://prosemirror.net/docs/guide/#doc
+  const doc = schema.node(
+    'doc',
+    null,
+    range({ min: 1, max: 5 }).flatMap(() => [
+      schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
+      schema.node('paragraph')
+    ])
+  );
+
+  // TODO(burdon): Cannot update until saved.
+  // TODO(burdon): Configure 'content' field.
+  // https://docs.yjs.dev/api/shared-types/y.xmlfragment
+  const fragment = content.doc!.getXmlFragment('content');
+  prosemirrorToYXmlFragment(doc, fragment);
+};
 
 //
 // Constructors.
@@ -194,4 +238,18 @@ export const createEvent = () => {
     start: start.toISOString(),
     end: end.toISOString()
   });
+};
+
+export const createDocument = () => {
+  const document = new TextDocument();
+  document.title = faker.lorem.sentence(3);
+  document.content = new TextObject();
+  return document;
+};
+
+export const createNote = () => {
+  const note = new Note();
+  note.title = faker.lorem.words(2);
+  note.content = new TextObject();
+  return note;
 };

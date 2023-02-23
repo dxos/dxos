@@ -4,10 +4,10 @@
 
 import { useMemo } from 'react';
 
+import { useAppRouter } from '../hooks';
 import { Generator } from '../proto';
-import { useSpace } from './useSpace';
 
-export const useGenerator = (): Generator => {
-  const space = useSpace();
-  return useMemo(() => new Generator(space.experimental.db), [space]);
+export const useGenerator = (): Generator | undefined => {
+  const { space } = useAppRouter();
+  return useMemo(() => space && new Generator(space.db), [space]);
 };

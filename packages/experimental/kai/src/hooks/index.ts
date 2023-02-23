@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './useAppRoutes';
+export * from './useAppRouter';
 export * from './useAppState';
 export * from './useBots';
 export * from './useClientProvider';
 export * from './useFileDownload';
 export * from './useFrames';
 export * from './useGenerator';
-export * from './useSpace';
+export * from './useIpfsClient';
+export * from './useShell';
+export * from './useTheme';

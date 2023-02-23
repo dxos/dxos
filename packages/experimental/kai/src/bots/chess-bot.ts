@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-
 import { Game } from '@dxos/chess-app';
 import { EchoDatabase } from '@dxos/echo-schema';
 
@@ -23,6 +21,7 @@ export class ChessBot extends Bot<Game> {
   // TODO(burdon): Only trigger if invited.
   override async onUpdate(game: Game) {
     if (game.fen) {
+      const { Chess } = await import('chess.js');
       const chess = new Chess();
       chess.loadPgn(game.fen);
       if (chess.turn() === this._player) {
