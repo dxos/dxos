@@ -54,8 +54,8 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
           description={t('recover identity description')}
           before={<Textbox className={getSize(6)} />}
           // TODO(mykola): Implement recover.
-          onClick={() => {}}
           // onClick={() => dispatch({ type: 'select addition method', method: 'recover identity' })}
+          onClick={() => {}}
           data-testid='recover-identity'
         >
           {t('recover identity label')}
