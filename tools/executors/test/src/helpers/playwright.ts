@@ -3,7 +3,8 @@
 //
 
 import type { Context } from 'mocha';
-import type { Browser, Page } from 'playwright';
+import assert from 'node:assert';
+import type { Browser, BrowserContext, Page } from 'playwright';
 
 import { Lock } from '../util';
 
@@ -20,7 +21,8 @@ export const setupPage = async (mochaContext: Context, options: SetupOptions) =>
   mochaContext.timeout(timeout);
 
   const browser = mochaContext.browser as Browser;
-  const context = await browser.newContext();
+  const context = browser ? await browser.newContext() : (mochaContext.persistentContext as BrowserContext);
+  assert(context, 'Context is not defined');
   const page = await context.newPage();
 
   if (bridgeLogs) {
@@ -63,4 +65,14 @@ export const setupPage = async (mochaContext: Context, options: SetupOptions) =>
   }
 
   return { context, page };
+};
+
+export const extensionId = async (context: BrowserContext) => {
+  let [background] = context.serviceWorkers();
+  if (!background) {
+    background = await context.waitForEvent('serviceworker');
+  }
+
+  const extensionId = background.url().split('/')[2];
+  return extensionId;
 };

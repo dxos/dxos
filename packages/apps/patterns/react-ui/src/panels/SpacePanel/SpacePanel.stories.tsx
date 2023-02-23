@@ -27,7 +27,7 @@ const SpaceDecorator = (Story: StoryFn, { args }: StoryContext) => {
       await client.initialize();
       setClient(client);
 
-      await client.halo.createProfile();
+      await client.halo.createIdentity();
       const space = await client.echo.createSpace();
       space.properties.name = 'Q3 2022 Planning';
 

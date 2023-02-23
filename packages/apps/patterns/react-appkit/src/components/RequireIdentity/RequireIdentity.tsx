@@ -15,7 +15,7 @@ export interface RequireIdentityProps {
 /**
  * Prevents child routes from rendering if identity does not exist.
  * Redirects if identity is not present. Requires a ClientProvider ancestor.
- * If inverse is true then the logic is reversed and it redirect only if the profile exists.
+ * If inverse is true then the logic is reversed and it redirect only if the identity exists.
  */
 export const RequireIdentity = ({ redirect: to }: RequireIdentityProps) => {
   const client = useClient();

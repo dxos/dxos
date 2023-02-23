@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Avatar, Button, ThemeContext, useTranslation } from '@dxos/react-components';
 
@@ -11,7 +11,7 @@ export const IdentityPanel = ({
   identity,
   onClickManageProfile
 }: {
-  identity: Profile;
+  identity: Identity;
   onClickManageProfile?: () => void;
 }) => {
   const { t } = useTranslation('os');

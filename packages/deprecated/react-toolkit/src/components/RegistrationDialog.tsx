@@ -245,7 +245,7 @@ export const RegistrationDialog = ({
                     color='primary'
                     onClick={() => setStage(RegistrationStage.ENTER_DISPLAY_NAME)}
                   >
-                    Create Profile
+                    Create Identity
                   </Button>
                 </Option>
               </Box>
@@ -258,7 +258,7 @@ export const RegistrationDialog = ({
                     to recover your profile.
                   </Typography>
                   <Button variant='contained' color='primary' onClick={() => setStage(RegistrationStage.RESTORE)}>
-                    Recover Profile
+                    Recover Identity
                   </Button>
                 </Option>
               </Box>

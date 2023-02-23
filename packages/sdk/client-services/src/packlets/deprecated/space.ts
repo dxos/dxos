@@ -104,7 +104,7 @@ export class SpaceServiceImpl implements SpaceService {
               isActive: true,
               members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
                 identityKey: member.key,
-                profile: {
+                identity: {
                   identityKey: member.key,
                   displayName: member.assertion.profile?.displayName ?? humanize(member.key)
                 },

@@ -73,7 +73,7 @@ const User = ({ sharing, joining, remote }: UserProps) => {
       <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteSpaces /> : <Spaces />}</Box>
 
       <Box sx={{ padding: 1 }}>
-        <p>{profile?.displayName ?? 'Profile not created.'}</p>
+        <p>{profile?.displayName ?? 'Identity not created.'}</p>
       </Box>
     </Box>
   );

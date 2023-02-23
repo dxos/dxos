@@ -113,9 +113,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       this._pipeline.writer ?? failUndefined()
     );
 
-    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
-      snapshots: true // TODO(burdon): Config.
-    });
+    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database);
     this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.

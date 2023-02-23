@@ -20,8 +20,8 @@ export const SpaceMemberListContainer = ({ spaceKey, includeSelf, onSelect }: Sp
   const members = useMemo(
     () =>
       includeSelf
-        ? allUnsortedMembers.sort((a) => (a.identityKey.equals(client.halo.profile!.identityKey) ? -1 : 1))
-        : allUnsortedMembers.filter((member) => !member.identityKey.equals(client.halo.profile!.identityKey)),
+        ? allUnsortedMembers.sort((a) => (a.identityKey.equals(client.halo.identity!.identityKey) ? -1 : 1))
+        : allUnsortedMembers.filter((member) => !member.identityKey.equals(client.halo.identity!.identityKey)),
     [allUnsortedMembers]
   );
   return <SpaceMemberList members={members} onSelect={onSelect} />;

@@ -16,16 +16,13 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
       "path": "../../common/async"
-    },
-    {
-      "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/debug"
     },
     {
       "path": "../../common/esbuild-plugins"
@@ -38,12 +35,6 @@
     },
     {
       "path": "../../common/react-components"
-    },
-    {
-      "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/mesh/rpc"

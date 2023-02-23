@@ -66,7 +66,7 @@ const Test = () => {
 const init = async () => {
   const client = new Client({});
   await client.initialize();
-  await client.halo.createProfile({ displayName: 'test-user' });
+  await client.halo.createIdentity({ displayName: 'test-user' });
 
   render(
     <ClientProvider client={client}>

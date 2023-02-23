@@ -6,13 +6,13 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { Avatar, Button, themeVariantFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentitySelectorProps extends ViewStateProps {
-  availableIdentities: Profile[];
+  availableIdentities: Identity[];
 }
 
 export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: IdentitySelectorProps) => {

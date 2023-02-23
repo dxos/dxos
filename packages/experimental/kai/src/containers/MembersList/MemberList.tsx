@@ -26,7 +26,7 @@ export const MemberList: FC<{ identityKey: PublicKey; members: SpaceMember[] }> 
             )}
           </div>
           <div className='overflow-hidden text-ellipsis whitespace-nowrap font-mono'>
-            {member.profile?.displayName ?? member.identityKey.truncate()}
+            {member.identity?.displayName ?? member.identityKey.truncate()}
           </div>
         </div>
       ))}

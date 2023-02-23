@@ -143,7 +143,7 @@ export const Sidebar = () => {
         {/* Members */}
         <div className='flex flex-col shrink-0 my-4'>
           <div className='flex shrink-0'>
-            <MemberList identityKey={client.halo.profile!.identityKey} members={members} />
+            <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
           </div>
         </div>
 

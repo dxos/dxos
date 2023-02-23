@@ -31,7 +31,7 @@ export const MemberRow = ({ member, onRemove }: MemberRowProps) => (
     <MemberAvatar key={member.identityKey.toString()} member={member} />
 
     <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
-      {member.profile?.displayName}
+      {member.identity?.displayName}
     </Typography>
 
     {/* TODO(burdon): Role (Read-only, Editor, Admin). */}

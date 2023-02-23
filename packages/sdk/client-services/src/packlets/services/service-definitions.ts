@@ -3,7 +3,7 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { ProfileService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
+import { IdentityService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
 import {
   HaloInvitationsService,
   SpaceInvitationsService,
@@ -31,7 +31,7 @@ export type ClientServices = {
   // TODO(burdon): Deprecated.
   SpaceService: SpaceService;
   DataService: DataService;
-  ProfileService: ProfileService;
+  IdentityService: IdentityService;
   SystemService: SystemService;
   DevtoolsHost: DevtoolsHost;
   TracingService: TracingService;
@@ -61,7 +61,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   // TODO(burdon): Deprecated.
   SpaceService: schema.getService('dxos.client.SpaceService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
-  ProfileService: schema.getService('dxos.client.ProfileService'),
+  IdentityService: schema.getService('dxos.client.IdentityService'),
   SystemService: schema.getService('dxos.client.SystemService'),
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.host.TracingService')
