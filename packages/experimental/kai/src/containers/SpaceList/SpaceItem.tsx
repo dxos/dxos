@@ -50,15 +50,15 @@ export const SpaceItem = withReactor(({ space, selected, children, onAction }: S
 
           <Input
             variant='subdued'
-            value={space.properties.name ?? ''}
-            onChange={(event) => {
-              space.properties.name = event.target.value;
-            }}
             label='Title'
             labelVisuallyHidden
             placeholder={t('space title placeholder')}
             slots={{
               input: { autoFocus: !space.properties.name?.length }
+            }}
+            value={space.properties.name ?? ''}
+            onChange={(event) => {
+              space.properties.name = event.target.value;
             }}
           />
         </div>

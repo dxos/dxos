@@ -57,6 +57,7 @@ export const Kanban: FC<{
                   <div className='flex shrink-0 items-center p-2'>
                     <div className='flex flex-1 text-sm'>
                       {filtered.length > 0 && (
+                        // TODO(burdon): Obviously don't do this.
                         <span>
                           {filtered.length} record{filtered.length === 1 ? '' : 's'}
                         </span>

@@ -33,10 +33,10 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
           variant='subdued'
           label='Project name'
           labelVisuallyHidden
+          placeholder='Project name'
           slots={{ root: { className: 'grow' }, input: { spellCheck: false } }}
           value={project.title}
           onChange={({ target: { value } }) => (project.title = value)}
-          placeholder='Project name'
         />
         <Button variant='ghost' className={mx(getSize(10), 'text-gray-500')} onClick={handleExpand}>
           <ArrowsOut className={getSize(5)} />

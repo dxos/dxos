@@ -65,15 +65,15 @@ export const EditableObjectList = <T extends Document>({
               </ListItemEndcap>
               <Input
                 variant='subdued'
-                value={getTitle(object)}
-                onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
-                placeholder='Title'
                 label='Title'
                 labelVisuallyHidden
+                placeholder='Title'
                 slots={{
                   root: { className: 'grow' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
+                value={getTitle(object)}
+                onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
               {onAction && (
                 <ListItemEndcap asChild>

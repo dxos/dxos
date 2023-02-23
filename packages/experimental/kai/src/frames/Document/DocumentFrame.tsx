@@ -44,11 +44,8 @@ export const DocumentFrame = withReactor(() => {
           {/* TODO(burdon): Throttle input. */}
           <Input
             variant='subdued'
-            value={object.title}
-            onChange={(event) => {
-              object.title = event.target.value;
-            }}
             label='Title'
+            labelVisuallyHidden
             placeholder='Title'
             labelVisuallyHidden
             slots={{
@@ -59,6 +56,10 @@ export const DocumentFrame = withReactor(() => {
                 className: 'p-2 border-0 text-xl',
                 spellCheck
               }
+            }}
+            value={object.title}
+            onChange={(event) => {
+              object.title = event.target.value;
             }}
           />
 
