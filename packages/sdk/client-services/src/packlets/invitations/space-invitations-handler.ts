@@ -111,9 +111,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
           observable.callback.onAuthenticating?.(invitation);
 
           return {
-            spaceKey: type === Invitation.Type.INTERACTIVE_TESTING || type === Invitation.Type.MULTIUSE_TESTING ? space.key : undefined,
-            authMethod: invitation.authMethod!,
-          }
+            spaceKey:
+              type === Invitation.Type.INTERACTIVE_TESTING || type === Invitation.Type.MULTIUSE_TESTING
+                ? space.key
+                : undefined,
+            authMethod: invitation.authMethod!
+          };
         },
 
         authenticate: async ({ authenticationCode: code }) => {
@@ -122,7 +125,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
           switch (invitation.authMethod) {
             case AuthMethod.NONE: {
-              log('authentication not required')
+              log('authentication not required');
               return { status: AuthenticationResponse.Status.OK };
             }
             case AuthMethod.SHARED_SECRET: {
@@ -155,7 +158,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               invitation.type !== Invitation.Type.MULTIUSE_TESTING
             ) {
               if (invitation.authMethod !== AuthMethod.NONE && !authenticationPassed) {
-                throw new Error(`Not authenticated`);
+                throw new Error('Not authenticated');
               }
             }
 
@@ -280,7 +283,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               });
               log('introduce response', { guest: this._signingContext.deviceKey, response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
-              if(introductionResponse.spaceKey) {
+              if (introductionResponse.spaceKey) {
                 invitation.spaceKey = introductionResponse.spaceKey;
               }
 
@@ -289,7 +292,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
-              if ((invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) && invitation.authMethod === AuthMethod.SHARED_SECRET) {
+              if (
+                (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) &&
+                invitation.authMethod === AuthMethod.SHARED_SECRET
+              ) {
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
                   observable.callback.onAuthenticating?.(invitation);
