@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, synchronized, UnsubscribeCallback } from '@dxos/async';
+import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
@@ -158,9 +158,11 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
 
     let timeout: NodeJS.Timeout | undefined;
+    const trigger = new Trigger<Error | undefined>();
     this._services.services.SystemService.queryStatus().subscribe(
       async ({ status }) => {
         timeout && clearTimeout(timeout);
+        trigger.wake(undefined);
 
         this._status = status;
         this._statusUpdate.emit(this._status);
@@ -170,17 +172,22 @@ export class Client {
           this._statusUpdate.emit(this._status);
         }, 5000);
       },
-      (_err) => {
+      (err) => {
+        trigger.wake(err);
         this._status = undefined;
         this._statusUpdate.emit(this._status);
       }
     );
 
+    const err = await trigger.wait();
+    if (err) {
+      throw err;
+    }
+
     // TODO(wittjosiah): Promise.all?
     await this._halo.open();
     await this._echo.open();
     await this._mesh.open();
-    await this._statusUpdate.waitForCondition(() => this._status !== undefined);
 
     this._initialized = true;
   }
