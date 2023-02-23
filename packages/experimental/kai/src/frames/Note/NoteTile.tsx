@@ -28,7 +28,7 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
           <Input
             label='Title'
             variant='subdued'
-            value={note.title}
+            value={note.title ?? ''}
             onChange={(event) => {
               note.title = event.target.value;
             }}
