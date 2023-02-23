@@ -78,7 +78,7 @@ export const useAppRouter = (): AppRoute => {
 
   useEffect(() => {
     if (!space && spaces.length > 0) {
-      navigate(createPath({ spaceKey: spaces[0].key, frame }));
+      navigate(createPath({ spaceKey: spaces[0].key, frame: frame ?? defaultFrameId }));
     }
   }, [space, spaces]);
 
