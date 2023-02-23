@@ -260,20 +260,6 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
                 <X className={getSize(4)} />
               </Button>
             </Tooltip>
-            {/*
-            <DropdownMenu
-              trigger={
-                <Button variant='ghost' compact className={getSize(10)}>
-                  <DotsThree weight='light' className={getSize(4)} />
-                </Button>
-              }
-            >
-              <DropdownMenuItem onClick={onClickDelete} className={valenceColorText('error')}>
-                <span className='grow'>{t('delete list item label')}</span>
-                <X className={getSize(4)} />
-              </DropdownMenuItem>
-            </DropdownMenu>
-            */}
           </ListItemEndcap>
         )}
       </ListItem>
