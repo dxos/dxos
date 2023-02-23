@@ -21,7 +21,6 @@ import {
   HaloInvitationsProxy,
   InvitationsOptions
 } from '@dxos/client-services';
-import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { ApiError } from '@dxos/errors';
@@ -37,7 +36,6 @@ type CreateIdentityOptions = {
   publicKey?: PublicKey;
   secretKey?: PublicKey;
   displayName?: string;
-  seedphrase?: string;
 };
 
 // TODO(wittjosiah): This is kind of cumbersome.
@@ -53,7 +51,6 @@ export interface Halo {
   get identity(): Identity | undefined;
   get invitations(): CancellableInvitationObservable[];
   createIdentity(options?: CreateIdentityOptions): Promise<Identity>;
-  recoverIdentity(seedPhrase: string): Promise<Identity>;
   subscribeToIdentity(callback: (profile: Identity) => void): void;
 
   queryDevices(): Observable<DeviceEvents, DeviceInfo[]>;
@@ -162,26 +159,10 @@ export class HaloProxy implements Halo {
    * Create Identity.
    * Add Identity key if public and secret key are provided.
    * Then initializes profile with given display name.
-   * If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
-   * Seedphrase must not be specified with existing keys.
+   * If no public and secret key are provided it relies on keyring to contain an identity key.
    * @returns User profile info.
    */
-  async createIdentity({
-    publicKey,
-    secretKey,
-    displayName,
-    seedphrase
-  }: CreateIdentityOptions = {}): Promise<Identity> {
-    if (seedphrase && (publicKey || secretKey)) {
-      throw new ApiError('Seedphrase must not be specified with existing keys');
-    }
-
-    if (seedphrase) {
-      const keyPair = keyPairFromSeedPhrase(seedphrase);
-      publicKey = PublicKey.from(keyPair.publicKey);
-      secretKey = PublicKey.from(keyPair.secretKey);
-    }
-
+  async createIdentity({ publicKey, secretKey, displayName }: CreateIdentityOptions = {}): Promise<Identity> {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     // TODO(burdon): Rename createIdentity?
     this._identity = await this._serviceProvider.services.IdentityService.createIdentity({
@@ -190,17 +171,6 @@ export class HaloProxy implements Halo {
       displayName
     });
 
-    return this._identity;
-  }
-
-  /**
-   * Joins an existing identity HALO from a recovery seed phrase.
-   */
-  async recoverIdentity(seedPhrase: string) {
-    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    this._identity = await this._serviceProvider.services.IdentityService.recoverIdentity({
-      seedPhrase
-    });
     return this._identity;
   }
 
