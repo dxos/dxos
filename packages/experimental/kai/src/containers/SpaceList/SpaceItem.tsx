@@ -67,7 +67,6 @@ export const SpaceItem = withReactor(({ space, selected, children, onAction }: S
         </div>
 
         <Button
-          compact
           variant='ghost'
           className={mx(selected ? 'flex' : 'invisible')}
           title='Share space'

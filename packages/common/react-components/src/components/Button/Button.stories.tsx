@@ -5,6 +5,7 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
+import { DensityProvider } from '../DensityProvider';
 import { Group } from '../Group';
 import { Button } from './Button';
 import { ButtonProps } from './ButtonProps';
@@ -15,11 +16,17 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <Group label={{ children: null }} elevation='base' className='flex gap-4 px-1 mb-4'>
-      {children}
+    <Group label={{ children: null, className: 'sr-only' }} elevation='base' className='flex flex-col gap-4 mbe-4'>
+      <div className='flex gap-4'>{children}</div>
+      <DensityProvider density='fine'>
+        <div className='flex gap-4'>{children}</div>
+      </DensityProvider>
     </Group>
-    <Group label={{ children: null }} elevation='group' className='flex gap-4 px-1'>
-      {children}
+    <Group label={{ children: null, className: 'sr-only' }} elevation='group' className='flex flex-col gap-4'>
+      <div className='flex gap-4'>{children}</div>
+      <DensityProvider density='fine'>
+        <div className='flex gap-4'>{children}</div>
+      </DensityProvider>
     </Group>
   </>
 );

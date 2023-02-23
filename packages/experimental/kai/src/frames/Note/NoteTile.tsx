@@ -41,7 +41,7 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
               input: {
                 tabIndex: 1,
                 className: 'p-1 w-full border-0 text-xl',
-                autoFocus: true // TODO(burdon): Apply selectively?
+                autoFocus: true // TODO(burdon): Use ref.
               }
             }}
           />
@@ -50,7 +50,7 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
         {/* Actions */}
         <div className='flex shrink-0 pl-2'>
           <div className='invisible group-hover:visible text-gray-500'>
-            <Button tabIndex={3} compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
+            <Button tabIndex={3} variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
               <XCircle className={getSize(6)} />
             </Button>
           </div>

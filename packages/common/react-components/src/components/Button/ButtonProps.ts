@@ -4,8 +4,11 @@
 
 import { ComponentPropsWithRef } from 'react';
 
+import { Density, Elevation } from '../../props';
+
 export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';
-  compact?: boolean; // TODO(burdon): Global size variant.
+  density?: Density;
+  elevation?: Elevation;
   disabled?: boolean;
 }

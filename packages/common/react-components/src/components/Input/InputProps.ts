@@ -4,7 +4,7 @@
 
 import { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from 'react';
 
-import { MessageValence } from '../../props';
+import { Density, Elevation, MessageValence } from '../../props';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
@@ -21,6 +21,8 @@ interface SharedTextInputProps
   validationValence?: MessageValence;
   length?: number;
   variant?: InputVariant;
+  elevation?: Elevation;
+  density?: Density;
 }
 
 interface SharedSlots {
