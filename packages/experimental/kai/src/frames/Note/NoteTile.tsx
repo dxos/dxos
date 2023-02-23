@@ -26,15 +26,11 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
         {/* Title */}
         <div className='flex flex-col flex-1 overflow-hidden'>
           <Input
-            label='Title'
             variant='subdued'
-            value={note.title}
-            onChange={(event) => {
-              note.title = event.target.value;
-            }}
+            label='Title'
+            labelVisuallyHidden
             placeholder='Title'
             slots={{
-              label: { className: 'sr-only' },
               root: {
                 className: 'm-0 w-full'
               },
@@ -43,6 +39,10 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
                 className: 'p-1 w-full border-0 text-xl',
                 autoFocus: true // TODO(burdon): Use ref.
               }
+            }}
+            value={note.title}
+            onChange={(event) => {
+              note.title = event.target.value;
             }}
           />
         </div>
@@ -60,10 +60,12 @@ export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
       {/* Content */}
       {/* TODO(burdon): Error when syncing: Cannot read properties of undefined (reading doc). */}
       <div className='flex flex-1 overflow-hidden p-1 text-gray-600'>
-        <Composer
-          document={note.content}
-          slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full', tabIndex: 2 } }}
-        />
+        {note.content && (
+          <Composer
+            document={note.content}
+            slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full', tabIndex: 2 } }}
+          />
+        )}
       </div>
     </div>
   );

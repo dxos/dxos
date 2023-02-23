@@ -47,6 +47,7 @@ export class EchoProxy implements Echo {
   private readonly _spacesChanged = new Event();
   private readonly _spaceCreated = new Event<PublicKey>();
 
+  // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: SpaceInvitationsProxy;

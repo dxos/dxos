@@ -6,7 +6,7 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Grid, GridLayout, Item, Location } from '@dxos/mosaic';
-import { useQuery } from '@dxos/react-client';
+import { useClient, useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
@@ -52,6 +52,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
 
+  const client = useClient();
   const { space } = useAppRouter();
   const boards = useQuery(space, NoteBoard.filter());
   const [board, setBoard] = useState<NoteBoard>(boards[0]);
@@ -71,12 +72,14 @@ export const NoteFrame = () => {
   const notes = useQuery(space, Note.filter());
   const [items, setItems] = useState<Item<Note>[]>([]);
   useEffect(() => {
-    if (!board) {
-      return;
-    }
+    // TODO(burdon): Change API; make space-specific.
+    // TODO(burdon): Don't create new subscription.
+    const subscription = client.echo.dbRouter.createSubscription(() => {
+      setItems(doLayout(board, notes, layout));
+    });
 
-    // TODO(burdon): Note updated if board locations change.
-    setItems(doLayout(board, notes, layout));
+    subscription.update([board, notes]);
+    return () => subscription.unsubscribe();
   }, [board, notes]);
 
   const handleChange = (item: Item, location: Location) => {
@@ -99,6 +102,7 @@ export const NoteFrame = () => {
     }
   };
 
+  // TODO(burdon): Select colors.
   return (
     <Grid
       items={items}
