@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
+import "dxos/halo/invitations.proto";
 import "dxos/keys.proto";
 
 // TODO(burdon): Restructure all services.
@@ -151,6 +152,7 @@ message Invitation {
     /// Requires both to be online with OTP to complete key exchange.
     INTERACTIVE = 0;
     /// Interactive without OTP.
+    /// @deprecated Use authMethod.
     INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
     OFFLINE = 2;
@@ -182,6 +184,8 @@ message Invitation {
 
   /// Determined when created.
   optional Type type = 2;
+
+  optional dxos.halo.invitations.AuthMethod auth_method = 10; // TODO: Fix numbering.
 
   /// Local state.
   optional State state = 3;
