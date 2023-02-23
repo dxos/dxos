@@ -56,7 +56,7 @@ export const AppBar = withReactor(() => {
       <div className='flex items-center'>
         <span
           className='pl-2 cursor-pointer'
-          onClick={() => shell.setLayout(ShellLayout.DEVICES_LIST, { spaceKey: space?.key })}
+          onClick={() => shell.setLayout(ShellLayout.HALO_INVITATIONS)}
           title='Identity'
         >
           <User className={getSize(6)} />
