@@ -3,15 +3,14 @@
 //
 
 import faker from 'faker';
-import { XCircle } from 'phosphor-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic';
-import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
+import { Grid, GridLayout, Item, Location } from '@dxos/mosaic';
+import { useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
+import { NoteTile } from './NoteTile';
 
 const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
   board.locations.find((location) => location.objectId === id);
@@ -25,53 +24,30 @@ const setItemLocation = (board: NoteBoard, id: string, location: LocationProto) 
   }
 };
 
-export const TileContent = withReactor(({ item, selected, onDelete }: TileContentProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (selected) {
-      inputRef.current?.focus();
+// TODO(burdon): Extend layout.
+const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
+  // TODO(burdon): Memoize and update existing map.
+  return notes.map((note) => {
+    let location = getItemLocation(board, note.id);
+    if (!location) {
+      // TODO(burdon): Assign in free location, not randomly.
+      location = {
+        x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
+        y: faker.datatype.number({ min: -layout.range.y, max: layout.range.y })!
+      };
+
+      setItemLocation(board, note.id, location);
     }
-  }, [selected]);
 
-  const handleDelete = (event: any) => {
-    event.stopPropagation();
-    onDelete?.(item);
-  };
+    const item: Item<Note> = {
+      id: note.id,
+      location: { x: location.x!, y: location.y! },
+      data: note
+    };
 
-  return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex w-full items-center mb-3'>
-        {/* Title */}
-        <div className='flex flex-1 overflow-hidden'>
-          <input
-            ref={inputRef}
-            className='text-lg w-full outline-0 p-1 bg-transparent'
-            placeholder='Title'
-            autoFocus={selected} // TODO(burdon): Not working.
-            value={item.label}
-            onChange={({ target: { value } }) => {
-              // TODO(burdon): Breaks abstraction: bubble change event instead.
-              const note = item.data! as Note;
-              note.title = value;
-            }}
-          />
-        </div>
-
-        {/* Icons */}
-        <div className='flex shrink-0 pl-2'>
-          <div className='invisible group-hover:visible text-gray-500'>
-            <Button variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
-              <XCircle className={getSize(6)} />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className='flex flex-1 overflow-hidden p-1 text-gray-600'>{item.content}</div>
-    </div>
-  );
-});
+    return item;
+  });
+};
 
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
@@ -89,36 +65,18 @@ export const NoteFrame = () => {
     }
   }, []);
 
+  // TODO(burdon): Use theme variables.
   // Cells should be 366px wide (390px - 2 x 12px padding) with 24px margins.
   const layout = useMemo(() => new GridLayout({ range, dimensions: { width: 354, height: 354 }, padding: 24 }), []);
   const notes = useQuery(space, Note.filter());
-  const items: Item<Note>[] = useMemo(() => {
+  const [items, setItems] = useState<Item<Note>[]>([]);
+  useEffect(() => {
     if (!board) {
-      return [];
+      return;
     }
 
-    return notes.map((note) => {
-      let location = getItemLocation(board, note.id);
-      if (!location) {
-        // TODO(burdon): Assign in free location, not randomly.
-        location = {
-          x: faker.datatype.number({ min: -range.x, max: range.x }),
-          y: faker.datatype.number({ min: -range.y, max: range.y })!
-        };
-
-        setItemLocation(board, note.id, location);
-      }
-
-      const item: Item<Note> = {
-        id: note.id,
-        label: note.title,
-        content: note.content?.model?.textContent, // TODO(burdon): Util.
-        location: { x: location.x!, y: location.y! },
-        data: note
-      };
-
-      return item;
-    });
+    // TODO(burdon): Note updated if board locations change.
+    setItems(doLayout(board, notes, layout));
   }, [board, notes]);
 
   const handleChange = (item: Item, location: Location) => {
@@ -126,9 +84,11 @@ export const NoteFrame = () => {
   };
 
   const handleCreate = async (location: Location) => {
-    const note = new Note({ title: '' });
-    await space?.db.add(note);
+    const note = new Note();
     setItemLocation(board, note.id, location);
+    // TODO(burdon): Need transaction.
+    // NOTE: Must happen after updating board; otherwise will be assigned a random location on layout.
+    await space?.db.add(note);
     return note.id;
   };
 
@@ -143,13 +103,13 @@ export const NoteFrame = () => {
     <Grid
       items={items}
       layout={layout}
-      classes={{
+      slots={{
         tile: {
-          root: 'bg-yellow-100 w-sidebar select-none cursor-pointer shadow-1',
-          selected: 'ring-1 ring-selection-border'
+          root: { className: 'bg-yellow-100 w-sidebar select-none cursor-pointer shadow-1' },
+          selected: { className: 'ring-1 ring-selection-border' }
         }
       }}
-      Content={TileContent}
+      Content={NoteTile}
       onChange={handleChange}
       onCreate={handleCreate}
       onDelete={handleDelete}

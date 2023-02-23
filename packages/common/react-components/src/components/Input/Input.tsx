@@ -14,6 +14,8 @@ import { InputProps as NaturalInputProps, InputSize } from './InputProps';
 
 export type InputProps = NaturalInputProps;
 
+// TODO(burdon): Support input ref for programmatic focus.
+// TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
 export const Input = ({
   label,
   labelVisuallyHidden,
@@ -56,7 +58,7 @@ export const Input = ({
     ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
     disabled,
     placeholder,
-    value,
+    value: value ?? '',
     defaultValue,
     onChange,
     validationMessage,

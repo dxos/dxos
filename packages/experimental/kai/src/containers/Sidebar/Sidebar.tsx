@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
+import { ArrowCircleDownLeft, CaretLeft, PlusCircle } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router-dom';
 
@@ -13,17 +14,10 @@ import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import {
-  useAppState,
-  useTheme,
-  useShell,
-  createInvitationPath,
-  useAppRouter,
-  createPath,
-  defaultFrameId
-} from '../../hooks';
+import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useShell, useTheme } from '../../hooks';
+import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { SpaceList } from '../SpaceList';
+import { SpaceList, SpaceListAction } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
@@ -38,7 +32,6 @@ export const Sidebar = () => {
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
-  const { dev } = useAppState();
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
@@ -70,36 +63,43 @@ export const Sidebar = () => {
     void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
   };
 
-  const handleSelectSpace = (spaceKey: PublicKey) => {
-    navigate(createPath({ spaceKey, frame: frame?.module.id }));
-  };
+  const handleSpaceListAction = (intent: Intent<SpaceListAction>) => {
+    const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
+    assert(space);
 
-  const handleShareSpace = (spaceKey: PublicKey) => {
-    if (dev && space) {
-      // TODO(burdon): Cancel/remove.
-      const swarmKey = PublicKey.random();
-      const observable = space.createInvitation({
-        swarmKey,
-        type: Invitation.Type.MULTIUSE_TESTING
-      });
+    switch (intent.action) {
+      case IntentAction.SPACE_SELECT: {
+        navigate(createPath({ spaceKey: intent.data.spaceKey, frame: frame?.module.id }));
+        break;
+      }
 
-      const unsubscribe = observable.subscribe({
-        onConnecting: () => {
-          setObservable(observable);
-          unsubscribe();
-        },
-        onConnected: () => {},
-        onSuccess: () => {},
-        onError: (error) => {
-          log.error(error);
-          unsubscribe();
+      case IntentAction.SPACE_SHARE: {
+        if (intent.data.modifier) {
+          const swarmKey = PublicKey.random();
+          const observable = space.createInvitation({
+            swarmKey,
+            type: Invitation.Type.MULTIUSE_TESTING
+          });
+
+          const unsubscribe = observable.subscribe({
+            onConnecting: () => {
+              setObservable(observable);
+              unsubscribe();
+            },
+            onConnected: () => {},
+            onSuccess: () => {},
+            onError: (error) => {
+              log.error(error);
+              unsubscribe();
+            }
+          });
+        } else {
+          void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
         }
-      });
 
-      return;
+        break;
+      }
     }
-
-    void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
   };
 
   // TODO(burdon): Mobile slider (full width, no blur).
@@ -135,7 +135,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
         <div className='flex overflow-y-auto'>
-          <SpaceList spaces={spaces} selected={space?.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+          <SpaceList spaces={spaces} selected={space?.key} onAction={handleSpaceListAction} />
         </div>
 
         <div className='flex-1' />

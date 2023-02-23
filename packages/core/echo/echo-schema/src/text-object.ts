@@ -12,6 +12,10 @@ export class TextObject extends EchoObject<TextModel> {
   }
 
   override toString() {
+    return this.text;
+  }
+
+  get text(): string {
     return this.doc?.getText().toString() ?? '';
   }
 
