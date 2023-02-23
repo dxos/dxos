@@ -20,7 +20,7 @@ import { TracingServiceImpl } from '../deprecated';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
-import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { DeviceInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
@@ -145,9 +145,9 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
-      HaloInvitationsService: new HaloInvitationsServiceImpl(
+      DeviceInvitationsService: new DeviceInvitationsServiceImpl(
         this._serviceContext.identityManager,
-        this._serviceContext.haloInvitations
+        this._serviceContext.deviceInvitations
       ),
 
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(

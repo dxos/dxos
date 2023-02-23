@@ -20,7 +20,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.updateIdentity({});
+    await host.services.IdentityService!.createIdentity({});
     const { spaceKey } = await host.services.SpacesService!.createSpace();
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
@@ -39,7 +39,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.updateIdentity({});
+    await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,
@@ -76,7 +76,7 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.IdentityService!.updateIdentity({});
+    await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,

@@ -5,7 +5,7 @@
 import { schema } from '@dxos/protocols';
 import {
   DevicesService,
-  HaloInvitationsService,
+  DeviceInvitationsService,
   IdentityService,
   NetworkService,
   SpaceInvitationsService,
@@ -24,8 +24,8 @@ export type ClientServices = {
   SystemService: SystemService;
 
   IdentityService: IdentityService;
+  DeviceInvitationsService: DeviceInvitationsService;
   DevicesService: DevicesService;
-  HaloInvitationsService: HaloInvitationsService;
 
   SpaceInvitationsService: SpaceInvitationsService;
   SpacesService: SpacesService;
@@ -55,8 +55,8 @@ export interface ClientServicesProvider {
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.services.SystemService'),
   IdentityService: schema.getService('dxos.client.services.IdentityService'),
+  DeviceInvitationsService: schema.getService('dxos.client.services.DeviceInvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
-  HaloInvitationsService: schema.getService('dxos.client.services.HaloInvitationsService'),
   SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
   DataService: schema.getService('dxos.echo.service.DataService'),

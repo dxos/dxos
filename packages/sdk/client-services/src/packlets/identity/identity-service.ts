@@ -22,11 +22,7 @@ export class IdentityServiceImpl implements IdentityService {
   // TODO(wittjosiah): Remove dependency on service context.
   constructor(private readonly _serviceContext: ServiceContext) {}
 
-  async updateIdentity(request: ProfileDocument): Promise<Identity> {
-    if (this._serviceContext.identityManager.identity) {
-      todo('implement update');
-    }
-
+  async createIdentity(request: ProfileDocument): Promise<Identity> {
     await this._serviceContext.createIdentity(request);
 
     return this._getIdentity()!;

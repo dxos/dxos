@@ -18,7 +18,7 @@ import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   ClientServicesProvider,
-  HaloInvitationsProxy,
+  DeviceInvitationsProxy,
   InvitationsOptions
 } from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
@@ -37,6 +37,7 @@ export interface Halo {
   get invitations(): CancellableInvitationObservable[];
 
   createIdentity(options?: ProfileDocument): Promise<Identity>;
+  recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
   subscribeIdentity(callback: (identity: Identity) => void): UnsubscribeCallback;
 
   getDevices(): Device[];
@@ -60,7 +61,7 @@ export class HaloProxy implements Halo {
   public readonly identityChanged = new Event(); // TODO(burdon): Move into Identity object.
 
   private _invitations: CancellableInvitationObservable[] = [];
-  private _invitationProxy?: HaloInvitationsProxy;
+  private _invitationProxy?: DeviceInvitationsProxy;
 
   private _identity?: Identity;
   private _devices: Device[] = [];
@@ -109,9 +110,8 @@ export class HaloProxy implements Halo {
     const gotIdentity = this.identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
-    assert(this._serviceProvider.services.HaloInvitationsService, 'HaloInvitationsService not available');
-    // TODO(burdon): ???
-    this._invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
+    assert(this._serviceProvider.services.DeviceInvitationsService, 'DeviceInvitationsService not available');
+    this._invitationProxy = new DeviceInvitationsProxy(this._serviceProvider.services.DeviceInvitationsService);
 
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
@@ -158,8 +158,14 @@ export class HaloProxy implements Halo {
    */
   async createIdentity(profile = {}): Promise<Identity> {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    // TODO(burdon): Rename createIdentity?
-    this._identity = await this._serviceProvider.services.IdentityService.updateIdentity(profile);
+    this._identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+
+    return this._identity;
+  }
+
+  async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
+    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    this._identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
 
     return this._identity;
   }

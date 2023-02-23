@@ -59,9 +59,9 @@ export class WorkerSession {
 
     const handlers = {
       DataService: () => this._getService((services) => services.DataService),
+      DeviceInvitationsService: () => this._getService((services) => services.DeviceInvitationsService),
       DevicesService: () => this._getService((services) => services.DevicesService),
       DevtoolsHost: () => this._getService((services) => services.DevtoolsHost),
-      HaloInvitationsService: () => this._getService((services) => services.HaloInvitationsService),
       NetworkService: () => this._getService((services) => services.NetworkService),
       IdentityService: () => this._getService((services) => services.IdentityService),
       SpaceInvitationsService: () => this._getService((services) => services.SpaceInvitationsService),
