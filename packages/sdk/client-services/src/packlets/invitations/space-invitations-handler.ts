@@ -283,7 +283,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               }
 
               // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regradless of auth requirements).
-              
+
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
               if (isAuthenticationRequired(invitation)) {
@@ -380,7 +380,6 @@ const isAuthenticationRequired = (invitation: Invitation) =>
   invitation.authMethod !== AuthMethod.NONE &&
   invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
   invitation.type !== Invitation.Type.MULTIUSE_TESTING;
-
 
 type HostSpaceInvitationExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.

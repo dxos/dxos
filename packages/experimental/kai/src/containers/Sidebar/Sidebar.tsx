@@ -10,6 +10,7 @@ import { useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -19,7 +20,6 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SpaceList, SpaceListAction } from '../SpaceList';
 import { Actions } from './Actions';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 export const Sidebar = () => {
   const theme = useTheme();
