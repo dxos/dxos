@@ -244,7 +244,7 @@ export class HaloProxy implements Halo {
   /**
    * Get Halo credentials for the current user.
    */
-  queryCredentials({ id, type }: { id?: PublicKey; type?: string } = {}) {
+  queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}) {
     if (!this._identity) {
       throw new ApiError('Identity is not available.');
     }
@@ -266,7 +266,7 @@ export class HaloProxy implements Halo {
       (credential) => {
         credentials.push(credential);
         const newCredentials = credentials
-          .filter((c) => !id || (c.id && id.equals(c.id)))
+          .filter((c) => !ids || (c.id && ids.some((id) => id.equals(c.id!))))
           .filter((c) => !type || c.subject.assertion['@type'] === type);
         if (
           newCredentials.length !== observable.value?.length ||
@@ -362,16 +362,18 @@ export class HaloProxy implements Halo {
   /**
    * Present Credentials.
    */
-  async presentCredentials({ id, nonce }: { id: PublicKey; nonce: Uint8Array }): Promise<Presentation> {
+  async presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce: Uint8Array }): Promise<Presentation> {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
-    const trigger = new Trigger<Credential>();
-    this.queryCredentials({ id }).subscribe({
+    const trigger = new Trigger<Credential[]>();
+    this.queryCredentials({ ids }).subscribe({
       onUpdate: (credentials) => {
-        const credential = credentials.find((credential) => credential.id?.equals(id));
-        if (credential) {
-          trigger.wake(credential);
+        if (
+          credentials.every((credential) => ids.some((id) => id.equals(credential.id!))) &&
+          ids.every((id) => credentials.some((credential) => id.equals(credential.id!)))
+        ) {
+          trigger.wake(credentials);
         }
       },
       onError: (err) => {
@@ -379,14 +381,14 @@ export class HaloProxy implements Halo {
       }
     });
 
-    const credential = await asyncTimeout(
+    const credentials = await asyncTimeout(
       trigger.wait(),
       THROW_TIMEOUT_ERROR_AFTER,
-      new ApiError('Timeout while waiting for credential')
+      new ApiError('Timeout while waiting for credentials')
     );
     return this._serviceProvider.services.IdentityService!.signPresentation({
       presentation: {
-        credentials: [credential]
+        credentials
       },
       nonce
     });
