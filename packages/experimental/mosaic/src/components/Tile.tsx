@@ -4,10 +4,9 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { XCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/react-components';
+import { mx } from '@dxos/react-components';
 
 import { Bounds, Item } from '../layout';
 
@@ -17,47 +16,21 @@ export type TileContentProps<T extends {} = {}> = {
   onDelete?: (item: Item<T>) => void;
 };
 
-export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContentProps<T>) => {
-  const handleDelete = (event: any) => {
-    event.stopPropagation();
-    onDelete?.(item);
+export type TileSlots = {
+  root?: {
+    className?: string;
   };
-
-  return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex w-full items-center mb-3'>
-        {/* Title */}
-        <div className='flex flex-1 overflow-hidden'>
-          <h2 className='text-lg overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
-        </div>
-
-        {/* Icons */}
-        <div className='flex shrink-0 pl-3'>
-          <div className='invisible group-hover:visible text-gray-500'>
-            <button onClick={handleDelete}>
-              <XCircle className={getSize(6)} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className='flex flex-1 overflow-hidden text-gray-600'>{item.content}</div>
-    </div>
-  );
-};
-
-export type TileClasses = {
-  root?: string;
-  selected?: string;
+  selected?: {
+    className?: string;
+  };
 };
 
 export type TileProps<T extends {}> = {
   item: Item<T>;
   bounds?: Bounds;
-  classes?: TileClasses;
+  slots?: TileSlots;
   selected?: boolean;
-  Content?: FC<TileContentProps<T>>;
+  Content: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
   onDelete?: (item: Item<T>) => void;
 };
@@ -68,9 +41,9 @@ export type TileProps<T extends {}> = {
 export const Tile = <T extends {} = {}>({
   item,
   bounds,
-  classes = {},
+  slots = {},
   selected,
-  Content = DefaultTileContent,
+  Content,
   onClick,
   onDelete
 }: TileProps<T>) => {
@@ -91,8 +64,8 @@ export const Tile = <T extends {} = {}>({
         'group',
         'flex flex-col overflow-hidden p-3',
         isDragging && 'opacity-80',
-        classes.root,
-        selected && classes?.selected
+        slots.root?.className,
+        selected && slots?.selected?.className
       )}
       style={style}
       onClick={(event) => {

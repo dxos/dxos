@@ -30,13 +30,12 @@ export interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   closeLabel?: string;
-  initiallyOpen?: boolean; // TODO(burdon): Change to just 'open'.
+  initiallyOpen?: boolean; // TODO(burdon): Change to just 'open' (i.e., controlled and non-controlled?)
   mountAsSibling?: boolean;
   slots?: DialogSlots;
   onClose?: () => void;
 }
 
-// TODO(burdon): Add size property.
 export const Dialog = ({
   title,
   titleVisuallyHidden,

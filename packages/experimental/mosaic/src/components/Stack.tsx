@@ -9,7 +9,7 @@ import { Tile, TileContentProps } from './Tile';
 
 export type StackProps<T extends {}> = {
   items?: Item<T>[];
-  Content?: FC<TileContentProps<T>>;
+  Content: FC<TileContentProps<T>>;
 };
 
 // TODO(burdon): External DndContext.

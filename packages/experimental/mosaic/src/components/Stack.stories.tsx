@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { range } from '@dxos/util';
 
 import { Item } from '../layout';
-import { createItem } from '../testing';
+import { createItem, TestData, TestTileContent } from '../testing';
 import { Stack } from './Stack';
 
 faker.seed(100);
@@ -16,13 +16,13 @@ faker.seed(100);
 const num = 4;
 
 const Test = () => {
-  const [items] = useState<Item[]>(() => {
+  const [items] = useState<Item<TestData>[]>(() => {
     return range(num).map(() => {
       return createItem();
     });
   });
 
-  return <Stack items={items} />;
+  return <Stack<TestData> items={items} Content={TestTileContent} />;
 };
 
 export default {
