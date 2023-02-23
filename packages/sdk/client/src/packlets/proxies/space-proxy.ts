@@ -68,7 +68,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
   private _invitations: CancellableInvitationObservable[] = [];
-  private _properties?: Document;
+  private _properties = new Properties();
   private _initialized = false;
 
   // prettier-ignore

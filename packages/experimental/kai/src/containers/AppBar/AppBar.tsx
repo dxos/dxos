@@ -43,7 +43,7 @@ export const AppBar = withReactor(() => {
       {space && (
         <div className='flex overflow-hidden mx-6 items-center'>
           <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>
-            {space.properties?.name ?? 'Space'}
+            {space.properties.name ?? 'Space'}
           </h2>
           <Button variant='ghost' onClick={() => setShowSettings(true)}>
             <Info weight='bold' className={getSize(4)} />
