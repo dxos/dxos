@@ -93,13 +93,13 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
         <div className='flex w-column p-1 items-center bg-white rounded-lg'>
           <Searchbar disabled />
           <div className='ml-4'>
-            <Button compact variant='ghost' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+            <Button variant='ghost' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
               <FrameCorners
                 weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
               />
             </Button>
-            <Button compact variant='ghost' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+            <Button variant='ghost' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
               <Robot
                 weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}

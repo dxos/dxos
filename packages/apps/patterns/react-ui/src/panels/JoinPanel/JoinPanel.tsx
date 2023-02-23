@@ -6,7 +6,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useId } from '@dxos/react-components';
+import { DensityProvider, useId } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
@@ -190,7 +190,7 @@ export const JoinPanel = ({
   }, [joinState.haloInvitation]);
 
   return (
-    <>
+    <DensityProvider density='fine'>
       <JoinHeading
         {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent, preventExit }}
       />
@@ -319,6 +319,6 @@ export const JoinPanel = ({
           />
         </div>
       </div>
-    </>
+    </DensityProvider>
   );
 };

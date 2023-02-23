@@ -14,8 +14,6 @@ import { InputProps as NaturalInputProps, InputSize } from './InputProps';
 
 export type InputProps = NaturalInputProps;
 
-// TODO(burdon): Default standard height, padding for controls (2.5rem) to enable embedding in list rows, tables, etc.
-// TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
 export const Input = ({
   label,
   labelVisuallyHidden,
@@ -31,6 +29,8 @@ export const Input = ({
   validationMessage,
   validationValence,
   variant = 'default',
+  elevation,
+  density,
   slots = {}
 }: InputProps) => {
   const internalInputId = useId('input');
@@ -61,7 +61,9 @@ export const Input = ({
     onChange,
     validationMessage,
     validationValence,
-    variant
+    variant,
+    elevation,
+    density
   };
 
   const bareInput =
@@ -74,7 +76,7 @@ export const Input = ({
     );
 
   return (
-    <div role='none' className={mx('mlb-4', slots.root?.className)}>
+    <div role='none' className={slots.root?.className}>
       <label
         {...slots.label}
         htmlFor={inputId}

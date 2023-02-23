@@ -85,6 +85,7 @@ export const TaskList: FC<TaskListProps> = withReactor(
       <EditableList
         completable
         variant={unordered ? 'unordered' : 'ordered-draggable'}
+        density='coarse'
         id={listId}
         labelId='omitted'
         itemIdOrder={tasks.map((task) => task.id)}
