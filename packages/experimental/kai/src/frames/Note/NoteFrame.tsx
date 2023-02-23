@@ -72,6 +72,10 @@ export const NoteFrame = () => {
   const notes = useQuery(space, Note.filter());
   const [items, setItems] = useState<Item<Note>[]>([]);
   useEffect(() => {
+    if (!board) {
+      return;
+    }
+
     // TODO(burdon): Change API; make space-specific.
     // TODO(burdon): Don't create new subscription.
     const subscription = client.echo.dbRouter.createSubscription(() => {
