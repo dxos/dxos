@@ -3,9 +3,9 @@
 //
 
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { useParams, generatePath } from 'react-router-dom';
+import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { useCurrentSpace, useQuery, withReactor } from '@dxos/react-client';
+import { Space, useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
@@ -16,7 +16,7 @@ import { TodoItem } from './TodoItem';
 export const Todos = withReactor(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editing, setEditing] = useState<string>();
-  const [space] = useCurrentSpace();
+  const { space } = useOutletContext<{ space: Space | undefined }>();
   const { state } = useParams();
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
