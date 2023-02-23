@@ -39,7 +39,7 @@ export default class Members extends BaseCommand {
         return;
       }
 
-      const { value: members = [] } = space.queryMembers();
+      const members = space.getMembers();
       if (!flags.json) {
         printMembers(members, flags);
       }

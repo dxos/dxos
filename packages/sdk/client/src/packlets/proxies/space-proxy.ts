@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger } from '@dxos/async';
+import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import {
   ClientServicesProvider,
   CancellableInvitationObservable,
@@ -13,7 +13,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -40,7 +40,9 @@ export interface Space {
   open(): Promise<void>;
   close(): Promise<void>;
 
-  queryMembers(): ResultSet<SpaceMember>;
+  getMembers(): SpaceMember[];
+  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
+
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
   removeInvitation(id: string): void;
 
@@ -189,9 +191,15 @@ export class SpaceProxy implements Space {
   /**
    * Return set of space members.
    */
-  // TODO(burdon): Don't expose result object and provide type.
-  queryMembers(): ResultSet<SpaceMember> {
-    return new ResultSet(this.stateUpdate, () => this._state.members ?? []);
+  getMembers(): SpaceMember[] {
+    return this._state.members ?? [];
+  }
+
+  /**
+   * Subscribe to changes to space members.
+   */
+  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback {
+    return this.stateUpdate.on(() => callback(this.getMembers()));
   }
 
   /**

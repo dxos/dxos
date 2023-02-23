@@ -243,9 +243,8 @@ describe('Client services', () => {
     const space2 = await trigger.wait();
 
     for (const space of [space1, space2]) {
-      await space.queryMembers().waitFor((members) => members.length === 2);
       await waitForExpect(() => {
-        expect(space.queryMembers().value).to.deep.equal([
+        expect(space.getMembers()).to.deep.equal([
           {
             identity: {
               identityKey: client1.halo.identity!.identityKey,

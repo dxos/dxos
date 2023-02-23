@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -27,10 +26,7 @@ describe('Spaces', () => {
     const space = await client.echo.createSpace();
     await testSpace(space.internal.db);
 
-    await asyncTimeout(
-      space.queryMembers().waitFor((items) => items.length === 1),
-      500
-    );
+    expect(space.getMembers()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
@@ -49,8 +45,7 @@ describe('Spaces', () => {
         objectsCreated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
-      const result = await space.queryMembers().waitFor((items) => items.length === 1);
-      expect(result).to.have.length(1);
+      expect(space.getMembers()).to.be.length(1);
     }
 
     await client.destroy();

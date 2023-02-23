@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Trigger } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger, UnsubscribeCallback } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   ClientServicesProvider,
@@ -33,8 +33,11 @@ import { Space, SpaceProxy } from './space-proxy';
 export interface Echo {
   createSpace(): Promise<Space>;
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
+
   getSpace(spaceKey: PublicKey): Space | undefined;
-  // querySpaces(): ZenObservable<Space[]>;
+  getSpaces(): Space[];
+  subscribeSpaces(callback: (spaces: Space[]) => void): UnsubscribeCallback;
+
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 
   dbRouter: DatabaseRouter;
