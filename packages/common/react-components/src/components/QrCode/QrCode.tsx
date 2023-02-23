@@ -10,13 +10,12 @@ import { useId } from '../../hooks';
 import { Size } from '../../props';
 import { getSize } from '../../styles';
 import { mx } from '../../util';
-import { Button, ButtonGroup } from '../Button';
+import { Button, ButtonGroup, ButtonProps } from '../Button';
 import { Popover } from '../Popover';
 import { Tooltip, TooltipSlots } from '../Tooltip';
 
-interface SharedQrCodeProps {
+interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
   value: string;
-  buttonCompact?: boolean;
 }
 
 interface FullQrCodeSlots {
@@ -50,7 +49,7 @@ export interface CompactQrCodeProps extends SharedQrCodeProps {
   slots?: CompactQrCodeSlots;
 }
 
-export const FullQrCode = ({ value, label, size, buttonCompact = true, slots = {} }: FullQrCodeProps) => {
+export const FullQrCode = ({ value, label, size, density, elevation, slots = {} }: FullQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
@@ -58,7 +57,7 @@ export const FullQrCode = ({ value, label, size, buttonCompact = true, slots = {
   return (
     <Tooltip content={label} {...slots.tooltipContent}>
       <Button
-        compact={buttonCompact}
+        {...{ density, elevation }}
         {...slots.button}
         className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
         onClick={copyValue}
@@ -78,7 +77,14 @@ export const FullQrCode = ({ value, label, size, buttonCompact = true, slots = {
   );
 };
 
-export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact, slots = {} }: CompactQrCodeProps) => {
+export const CompactQrCode = ({
+  value,
+  displayQrLabel,
+  copyLabel,
+  density,
+  elevation,
+  slots = {}
+}: CompactQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
@@ -92,7 +98,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
         <Popover
           openTrigger={
             <Button
-              compact={buttonCompact}
+              {...{ density, elevation }}
               {...slots.qrButton}
               className={mx('border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className)}
               aria-labelledby={labelId}
@@ -117,7 +123,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
         </Popover>
         <Tooltip content={copyLabel} tooltipLabelsTrigger slots={{ content: slots.qrTooltipContent }}>
           <Button
-            compact={buttonCompact}
+            {...{ density, elevation }}
             {...slots.copyButton}
             className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
             onClick={copyValue}
@@ -130,7 +136,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
         <Popover
           openTrigger={
             <Button
-              compact={buttonCompact}
+              {...{ density, elevation }}
               {...slots.qrButton}
               className={mx('border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className)}
             >
@@ -154,7 +160,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
           </div>
         </Popover>
         <Button
-          compact={buttonCompact}
+          {...{ density, elevation }}
           {...slots.copyButton}
           className={mx('flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className)}
           onClick={copyValue}

@@ -3,6 +3,7 @@
 //
 
 export * from './useId';
+export * from './useDensityContext';
 export * from './useForwardedRef';
 export * from './useElevationContext';
 export * from './useIsFocused';

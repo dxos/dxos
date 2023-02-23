@@ -22,7 +22,10 @@ import {
   useTranslation,
   Tooltip,
   defaultDescription,
-  ButtonProps
+  ButtonProps,
+  Density,
+  useListDensity,
+  DensityProvider
 } from '@dxos/react-components';
 
 export interface EditableListItemSlots {
@@ -64,6 +67,7 @@ export interface EditableListProps {
   onMoveItem?: (oldIndex: number, newIndex: number) => void;
   children?: ReactNode;
   slots?: EditableListSlots;
+  density?: Density;
 }
 
 const focusAndSetCaretPosition = (prevEl: HTMLInputElement, nextEl: HTMLInputElement) => {
@@ -122,9 +126,11 @@ export const EditableList = ({
   onChangeNextItemTitle,
   itemIdOrder,
   onMoveItem,
+  density: propsDensity,
   slots = {}
 }: EditableListProps) => {
   const { t } = useTranslation('appkit');
+  const density = useListDensity({ density: propsDensity, variant });
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -144,58 +150,54 @@ export const EditableList = ({
         onDragEnd={handleDragEnd}
         listItemIds={itemIdOrder ?? []}
         slots={slots.list}
+        density={density}
       >
         {children}
       </List>
       <div className='flex'>
-        <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
-        <ListItemEndcap className='invisible' />
-        <Input
-          variant='subdued'
-          label={t('new list item input label')}
-          placeholder={t('new list item input placeholder')}
-          {...{
-            value: nextItemTitle,
-            defaultValue: defaultNextItemTitle,
-            onChange: onChangeNextItemTitle
-          }}
-          slots={{
-            input: {
-              ...slots.addItemInput?.input,
-              className: mx('p-2', slots.addItemInput?.input?.className)
-            },
-            root: {
-              ...slots.addItemInput?.root,
-              className: mx('grow mbs-0', slots.addItemInput?.root?.className)
-            },
-            label: {
-              ...slots.addItemInput?.label,
-              className: mx('sr-only', slots.addItemInput?.label?.className)
-            }
-          }}
-        />
-        <ListItemEndcap>
-          <Tooltip
-            content={
-              <>
-                <span className='mie-2'>{t('add list item label')}</span>
-                <span className={defaultDescription}>⏎</span>
-              </>
-            }
-            side='left'
-            tooltipLabelsTrigger
-          >
-            <Button
-              variant='ghost'
-              compact
-              {...slots.addItemButton}
-              className={mx(getSize(10), slots.addItemButton?.className)}
-              onClick={onClickAdd}
+        <DensityProvider density={density}>
+          <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
+          <ListItemEndcap className='invisible' />
+          <Input
+            variant='subdued'
+            label={t('new list item input label')}
+            labelVisuallyHidden
+            placeholder={t('new list item input placeholder')}
+            {...{
+              value: nextItemTitle,
+              defaultValue: defaultNextItemTitle,
+              onChange: onChangeNextItemTitle
+            }}
+            slots={{
+              ...slots.addItemInput,
+              root: {
+                ...slots.addItemInput?.root,
+                className: mx('grow', slots.addItemInput?.root?.className)
+              }
+            }}
+          />
+          <ListItemEndcap>
+            <Tooltip
+              content={
+                <>
+                  <span className='mie-2'>{t('add list item label')}</span>
+                  <span className={defaultDescription}>⏎</span>
+                </>
+              }
+              side='left'
+              tooltipLabelsTrigger
             >
-              <Plus weight='bold' className={getSize(4)} />
-            </Button>
-          </Tooltip>
-        </ListItemEndcap>
+              <Button
+                variant='ghost'
+                {...slots.addItemButton}
+                className={mx('p-1', slots.addItemButton?.className)}
+                onClick={onClickAdd}
+              >
+                <Plus className={getSize(4)} />
+              </Button>
+            </Tooltip>
+          </ListItemEndcap>
+        </DensityProvider>
       </div>
     </div>
   );
@@ -233,19 +235,13 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
             {...{
               variant: 'subdued',
               label: t('list item input label'),
+              labelVisuallyHidden: true,
               placeholder: t('list item input placeholder'),
               slots: {
+                ...slots.input,
                 root: {
                   ...slots.input?.root,
                   className: mx('grow mlb-0', slots.input?.root?.className)
-                },
-                input: {
-                  ...slots.input?.input,
-                  className: mx('p-2', slots.input?.input?.className)
-                },
-                label: {
-                  ...slots.input?.label,
-                  className: mx('sr-only', slots.input?.label?.className)
                 }
               },
               value: title,
@@ -259,24 +255,11 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
         </ListItemHeading>
         {onClickDelete && (
           <ListItemEndcap>
-            {/* TODO(burdon): Hover. */}
-            <Button variant='ghost' compact className={getSize(10)} onClick={onClickDelete}>
-              <X weight='light' className={getSize(4)} />
-            </Button>
-            {/*
-            <DropdownMenu
-              trigger={
-                <Button variant='ghost' compact className={getSize(10)}>
-                  <DotsThree weight='light' className={getSize(4)} />
-                </Button>
-              }
-            >
-              <DropdownMenuItem onClick={onClickDelete} className={valenceColorText('error')}>
-                <span className='grow'>{t('delete list item label')}</span>
+            <Tooltip content={t('delete list item label')} side='left' tooltipLabelsTrigger>
+              <Button variant='ghost' className='p-1' onClick={onClickDelete}>
                 <X className={getSize(4)} />
-              </DropdownMenuItem>
-            </DropdownMenu>
-            */}
+              </Button>
+            </Tooltip>
           </ListItemEndcap>
         )}
       </ListItem>

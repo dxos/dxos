@@ -37,13 +37,7 @@ export const JoinHeading = forwardRef(
         : invitation?.invitation?.identityKey?.toHex();
 
     const exitButton = (
-      <Button
-        compact
-        variant='ghost'
-        {...(onExit && { onClick: onExit })}
-        className='grow-0 shrink-0'
-        data-testid='join-exit'
-      >
+      <Button variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0' data-testid='join-exit'>
         <ProhibitInset className={getSize(5)} />
         <span className='sr-only'>{t('exit label')}</span>
       </Button>

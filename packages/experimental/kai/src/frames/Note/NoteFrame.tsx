@@ -60,7 +60,7 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
         {/* Icons */}
         <div className='flex shrink-0 pl-2'>
           <div className='invisible group-hover:visible text-gray-500'>
-            <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
+            <Button variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
               <XCircle className={getSize(6)} />
             </Button>
           </div>
