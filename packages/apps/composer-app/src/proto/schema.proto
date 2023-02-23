@@ -4,14 +4,13 @@
 
 syntax = "proto3";
 
-package dxos.app.composer;
+import "dxos/schema.proto";
 
-// TODO(dmaretskyi): Move to separate file.
-message Text {}
+package dxos.app.composer;
 
 message ComposerDocument {
   option (object) = true;
 
   string title = 1;
-  Text content = 2;
+  dxos.schema.Text content = 2;
 }
