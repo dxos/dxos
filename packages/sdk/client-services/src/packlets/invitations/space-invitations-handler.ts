@@ -20,7 +20,9 @@ import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AuthenticationRequest,
   AuthenticationResponse,
+  AuthMethod,
   Introduction,
+  IntroductionResponse,
   SpaceAdmissionCredentials,
   SpaceAdmissionRequest,
   SpaceHostService
@@ -70,7 +72,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
       invitationId: PublicKey.random().toHex(),
       swarmKey: swarmKey ?? PublicKey.random(),
       spaceKey: space.key,
-      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
+      authMethod: options?.authMethod ?? AuthMethod.SHARED_SECRET,
+      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH) // TODO(dmaretskyi): Don't generate if authMethod === NONE .
     };
 
     const ctx = new Context({
@@ -85,7 +88,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
       await swarmConnection?.close();
     });
 
-    let authenticationCode: string;
+    let authenticationPassed = false;
     let authenticationRetry = 0;
 
     // Called for every connecting peer.
@@ -106,18 +109,41 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
           // TODO(burdon): Is this the right place to set this state?
           // TODO(dmaretskyi): Should we expose guest's profile in this callback?
           observable.callback.onAuthenticating?.(invitation);
+
+          return {
+            spaceKey:
+              type === Invitation.Type.INTERACTIVE_TESTING || type === Invitation.Type.MULTIUSE_TESTING
+                ? space.key
+                : undefined,
+            authMethod: invitation.authMethod!
+          };
         },
 
         authenticate: async ({ authenticationCode: code }) => {
           log('received authentication request', { authenticationCode: code });
           let status = AuthenticationResponse.Status.OK;
-          if (invitation.authenticationCode) {
-            if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-              status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
-            } else if (code !== invitation.authenticationCode) {
-              status = AuthenticationResponse.Status.INVALID_OTP;
-            } else {
-              authenticationCode = code;
+
+          switch (invitation.authMethod) {
+            case AuthMethod.NONE: {
+              log('authentication not required');
+              return { status: AuthenticationResponse.Status.OK };
+            }
+            case AuthMethod.SHARED_SECRET: {
+              if (invitation.authenticationCode) {
+                if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                } else if (code !== invitation.authenticationCode) {
+                  status = AuthenticationResponse.Status.INVALID_OTP;
+                } else {
+                  authenticationPassed = true;
+                }
+              }
+              break;
+            }
+            default: {
+              log.error('invalid authentication method', { authMethod: invitation.authMethod });
+              status = AuthenticationResponse.Status.INTERNAL_ERROR;
+              break;
             }
           }
 
@@ -127,13 +153,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
-            if (
-              invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
-              invitation.type !== Invitation.Type.MULTIUSE_TESTING
-            ) {
-              if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
-                throw new Error(`invalid authentication code: ${authenticationCode}`);
-              }
+            if (isAuthenticationRequired(invitation) && !authenticationPassed) {
+              throw new Error('Not authenticated');
             }
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
@@ -252,13 +273,22 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
               // 1. Introduce guest to host.
               log('introduce', { guest: this._signingContext.deviceKey });
-              await extension.rpc.SpaceHostService.introduce({
+              const introductionResponse = await extension.rpc.SpaceHostService.introduce({
                 profile: this._signingContext.profile
               });
+              log('introduce response', { guest: this._signingContext.deviceKey, response: introductionResponse });
+              invitation.authMethod = introductionResponse.authMethod;
+              if (introductionResponse.spaceKey) {
+                invitation.spaceKey = introductionResponse.spaceKey;
+              }
+
+              // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regradless of auth requirements).
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
-              if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+              if (isAuthenticationRequired(invitation)) {
+                observable.callback.onAuthenticating?.(invitation);
+
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
                   observable.callback.onAuthenticating?.(invitation);
@@ -346,11 +376,16 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
   }
 }
 
+const isAuthenticationRequired = (invitation: Invitation) =>
+  invitation.authMethod !== AuthMethod.NONE &&
+  invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
+  invitation.type !== Invitation.Type.MULTIUSE_TESTING;
+
 type HostSpaceInvitationExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
 
-  introduce: (introduction: Introduction) => Promise<void>;
+  introduce: (introduction: Introduction) => Promise<IntroductionResponse>;
   authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
   requestAdmission: (request: SpaceAdmissionRequest) => Promise<SpaceAdmissionCredentials>;
 };
