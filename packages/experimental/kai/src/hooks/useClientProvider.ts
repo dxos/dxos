@@ -8,7 +8,7 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { fromLocal } from '@dxos/halo-app';
 
-import { schema } from '../proto';
+import { Generator, schema } from '../proto';
 
 export const useClientProvider = (dev: boolean) => {
   return useCallback(async () => {
@@ -36,6 +36,14 @@ export const useClientProvider = (dev: boolean) => {
 
     // TODO(burdon): Document.
     client.echo.dbRouter.setSchema(schema);
+
+    if (dev && client.halo.identity && client.echo.querySpaces().value.length === 0) {
+      const space = await client.echo.createSpace();
+
+      // TODO(burdon): Create context.
+      const generator = new Generator(space.db);
+      await generator.generate();
+    }
 
     return client;
   }, [dev]);
