@@ -157,21 +157,21 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
 
   const name = type.name;
   const fullName = type.fullName.slice(1);
-  const initializer = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)}`).join(', ');
+  const initializer = type.fieldsArray.map((field) => `  ${field.name}: ${createType(field)}`).join(';\n');
   const fields = type.fieldsArray.map((field) => `declare ${field.name}: ${createType(field)};`);
 
   // prettier-ignore
   builder
-    .push(`export type ${name}Options = { ${initializer} };`).nl()
+    .push(`export type ${name}Props = {\n${initializer}\n};`).nl()
 
     .push(`export class ${name} extends ${namespaceName}.Document<{}> {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
-    .push(`static filter(opts?: ${name}Options): ${namespaceName}.TypeFilter<${name}> {`, 1)
+    .push(`static filter(opts?: Partial<${name}Props>): ${namespaceName}.TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
     .push('}', 1).nl()
 
-    .push(`constructor(opts?: ${name}Options) {`, 1)
+    .push(`constructor(opts?: Partial<${name}Props>) {`, 1)
     .push(`super({ ...opts}, ${name}.type);`, 2)
     .push('}', 1).nl()
 
