@@ -16,8 +16,8 @@ export default class Share extends BaseCommand {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const profile = client.halo.profile;
-      if (!profile) {
+      const identity = client.halo.identity;
+      if (!identity) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
       } else {

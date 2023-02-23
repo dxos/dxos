@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import assert from 'node:assert';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -15,11 +15,14 @@ import { SupervisorRpcPeer } from '../../util';
 
 const timeout = 500;
 
-const findCredentials = async (client: Client, type: string): Promise<Credential[]> => {
+const findCredentials = async (client: Client, type: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> => {
   const credentialsQuery = client.halo.queryCredentials({ type });
   const trigger = new Trigger<Credential[]>();
   credentialsQuery.subscribe({
-    onUpdate: (credentials) => {
+    onUpdate: (credentials: Credential[]) => {
+      if (predicate) {
+        credentials = credentials.filter(predicate)
+      }
       if (credentials.length) {
         trigger.wake(credentials);
       }
@@ -41,8 +44,9 @@ export default class Auth extends BaseCommand {
   static override description = 'Authenticate with KUBE.';
 
   async presentAuthCredentials(client: Client): Promise<any> {
-    const kubeAccessCreds = await findCredentials(client, 'dxos.halo.credentials.KubeAccess');
+    this.log(chalk`{gray Initiating presentation sequence..}`);
     // TODO(egorgripasov): Find AuthorizedDevice by KubeAccess credential.
+    // TODO(egorgripasov): Find AuthorizedDevice for current device.
     const authDeviceCreds = await findCredentials(client, 'dxos.halo.credentials.AuthorizedDevice');
 
     if (!authDeviceCreds.length) {
@@ -55,12 +59,18 @@ export default class Auth extends BaseCommand {
       const { nonce, kubeKey } = await supervisor.rpc.initAuthSequence();
 
       // Find proper KubeAccess credential.
-      const kubeAccessCred = kubeAccessCreds.find((cred) => PublicKey.equals(cred.issuer, kubeKey));
-      const credsToPresent = [authDeviceCreds[0].id, kubeAccessCred?.id].filter(Boolean);
+      const kubeAccessCreds = await findCredentials(client, 'dxos.halo.credentials.KubeAccess', cred => PublicKey.equals(cred.issuer, kubeKey));
+
+      if (!kubeAccessCreds.length) {
+        this.log(chalk`{gray No kube access credentials - requesting..}`);
+      } else {
+        this.log(chalk`{gray Kube access credentials found - requesting session token..}`);
+      }
+
+      const credsToPresent = [authDeviceCreds[0].id, kubeAccessCreds[0]?.id].filter(Boolean)
       // Create presentation.
       const presentation = await client.halo.presentCredentials({
-        // TODO(egorgripasov): Present all credentials.
-        id: credsToPresent[0]!,
+        ids: credsToPresent as PublicKey[],
         nonce
       });
 
@@ -72,8 +82,8 @@ export default class Auth extends BaseCommand {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const profile = client.halo.profile;
-      if (!profile) {
+      const identity = client.halo.identity;
+      if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
         //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Profile not initialized.}`);
@@ -85,10 +95,13 @@ export default class Auth extends BaseCommand {
         if (token) {
           this.log(chalk`{green Authenticated with session token ${token}}`);
         } else {
+          this.log(chalk`{gray Writing KUBE access credential..}`);
           await client.halo.writeCredentials([credential]);
+          await sleep(1_000)
+
           const { token } = await this.presentAuthCredentials(client);
           if (token) {
-            this.log(chalk`{green Authenticated with session token ${token}}`);
+            this.log(chalk`{green Authenticated with session token: ${token}}`);
           } else {
             this.log(chalk`{red Failed to authenticate.}`);
           }
