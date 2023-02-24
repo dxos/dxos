@@ -621,6 +621,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.6.0
       '@radix-ui/react-accordion': ^1.0.1
       '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-dialog': ^1.0.0
@@ -658,6 +659,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
+      '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -3567,6 +3569,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.6.0
       '@testing-library/dom': ^8.17.1
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^14.4.3
@@ -3599,8 +3602,10 @@ importers:
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       use-subscription: 1.8.0_react@18.2.0
-    devDependencies:
+    optionalDependencies:
       '@dxos/react-components': link:../../common/react-components
+      '@faker-js/faker': 7.6.0
+    devDependencies:
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
@@ -7091,6 +7096,10 @@ packages:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
+
+  /@faker-js/faker/7.6.0:
+    resolution: {integrity: sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==}
+    engines: {node: '>=14.0.0', npm: '>=6.0.0'}
 
   /@fal-works/esbuild-plugin-global-externals/2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}
@@ -20674,6 +20683,18 @@ packages:
       debug:
         optional: true
 
+  /follow-redirects/1.15.2_debug@4.3.4:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dependencies:
+      debug: 4.3.4
+    dev: true
+
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
     dependencies:
@@ -21936,7 +21957,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug

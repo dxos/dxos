@@ -7,10 +7,10 @@ import React, { useEffect } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
+import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
-import { ClientSpaceDecorator } from './ClientSpaceDecorator';
 import { Composer, ComposerProps } from './Composer';
 
 export default {
