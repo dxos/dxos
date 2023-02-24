@@ -5,7 +5,7 @@
 import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { ShellDisplay, ShellLayout } from '@dxos/client';
+import { IFrameClientServicesProxy, ShellDisplay, ShellLayout } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
@@ -18,9 +18,32 @@ import { createPath, defaultFrameId, ShellContext, useAppRouter } from '../../ho
  */
 // TODO(wittjosiah): Factor out?
 export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
+  const { space, frame } = useAppRouter();
+
+  //
+  // IFrame Shell
+  //
+
+  useEffect(() => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      return client.services.joinedSpace.on(
+        (spaceKey) => spaceKey && navigate(createPath({ spaceKey, frame: frame?.module.id ?? defaultFrameId }))
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      client.services.setSpaceProvider(() => space?.key);
+    }
+  }, [space]);
+
+  //
+  // Component Shell
+  //
+
   const client = useClient();
   const identity = useIdentity();
-  const { space, frame } = useAppRouter();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
@@ -28,6 +51,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const [display, setDisplay] = useState(
     !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE
   );
+
   const shellRuntime = useMemo(() => {
     if (client.config.get('runtime.app.env.DX_VAULT') === 'true') {
       return;

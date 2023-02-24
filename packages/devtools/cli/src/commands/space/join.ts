@@ -42,7 +42,7 @@ export default class Join extends BaseCommand {
       const space = client.echo.getSpace(invitation.spaceKey!)!;
       CliUx.ux.action.stop();
 
-      const { value: members } = space.queryMembers();
+      const members = space.getMembers();
       if (!json) {
         printMembers(members);
       }

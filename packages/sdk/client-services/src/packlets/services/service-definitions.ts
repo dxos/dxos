@@ -3,13 +3,14 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { IdentityService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
+import { IdentityService } from '@dxos/protocols/proto/dxos/client';
 import {
+  DevicesService,
   HaloInvitationsService,
+  NetworkService,
   SpaceInvitationsService,
   SpacesService,
-  DevicesService,
-  NetworkService
+  SystemService
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -29,7 +30,6 @@ export type ClientServices = {
   NetworkService: NetworkService;
 
   // TODO(burdon): Deprecated.
-  SpaceService: SpaceService;
   DataService: DataService;
   IdentityService: IdentityService;
   SystemService: SystemService;
@@ -52,17 +52,16 @@ export interface ClientServicesProvider {
  * Services supported by host.
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
-  HaloInvitationsService: schema.getService('dxos.client.services.HaloInvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
+  HaloInvitationsService: schema.getService('dxos.client.services.HaloInvitationsService'),
+  NetworkService: schema.getService('dxos.client.services.NetworkService'),
   SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  NetworkService: schema.getService('dxos.client.services.NetworkService'),
+  SystemService: schema.getService('dxos.client.services.SystemService'),
 
   // TODO(burdon): Deprecated.
-  SpaceService: schema.getService('dxos.client.SpaceService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
   IdentityService: schema.getService('dxos.client.IdentityService'),
-  SystemService: schema.getService('dxos.client.SystemService'),
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.host.TracingService')
 });

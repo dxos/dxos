@@ -104,7 +104,6 @@ export class IFrameHostRuntime {
           NetworkService: async () => await this._getService((services) => services.NetworkService),
           IdentityService: async () => await this._getService((services) => services.IdentityService),
           SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
-          SpaceService: async () => await this._getService((services) => services.SpaceService),
           SpacesService: async () => await this._getService((services) => services.SpacesService),
           SystemService: async () => await this._getService((services) => services.SystemService),
           TracingService: async () => await this._getService((services) => services.TracingService)

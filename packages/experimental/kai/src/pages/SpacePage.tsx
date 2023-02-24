@@ -4,13 +4,14 @@
 
 import { CaretRight } from 'phosphor-react';
 import React, { useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 
+import { useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useTheme, useGenerator, Section } from '../hooks';
+import { useAppRouter, useTheme, useGenerator, Section, createPath, defaultFrameId } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -48,6 +49,11 @@ const SpacePage = () => {
   useGenerator();
   const { section } = useParams();
   const { space, frame } = useAppRouter();
+  const spaces = useSpaces();
+
+  if (!space && spaces.length > 0) {
+    return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
+  }
 
   console.log(section, frame);
 

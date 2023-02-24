@@ -40,7 +40,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
         aria-label={t('identity radio group title')}
         data-autofocus='identity selector'
       >
-        {availableIdentities.map(({ displayName, identityKey }) => {
+        {availableIdentities.map(({ profile, identityKey }) => {
           const hex = identityKey.toHex();
           const inputId = `identitySelector__item--${hex}`;
           const labelId = `identitySelector__itemLabel--${hex}`;
@@ -64,8 +64,8 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
               <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
-              <span id={labelId} className={mx(!displayName && 'font-mono')}>
-                {displayName ?? identityKey.truncate() ?? ''}
+              <span id={labelId} className={mx(!profile.displayName && 'font-mono')}>
+                {profile.displayName ?? identityKey.truncate() ?? ''}
               </span>
             </label>
           );

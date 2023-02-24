@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
@@ -70,16 +69,9 @@ export type AppRoute = {
 // TODO(burdon): Should not create new space here -- instead on check for profile, initial space.
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
-  const navigate = useNavigate();
   const { spaceKey, section, frame, objectId } = useParams();
   const spaces = useSpaces();
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
-
-  useEffect(() => {
-    if (!space && spaces.length > 0) {
-      navigate(createPath({ spaceKey: spaces[0].key, frame: frame ?? defaultFrameId }));
-    }
-  }, [space, spaces]);
 
   const { frames, active: activeFrames } = useFrames();
   const frameId = frame && decodeFrame(frame);

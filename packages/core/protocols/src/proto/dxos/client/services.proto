@@ -23,12 +23,34 @@ package dxos.client.services;
 // - Normalize records for performance (e.g., Space members separate from Space metadata).
 //
 
+enum SystemStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
+message UpdateSystemStatusRequest {
+  SystemStatus status = 1;
+}
+
+message SystemStatusResponse {
+  SystemStatus status = 1;
+}
+
 //
 // System
 //
 
 service SystemService {
+  /// Get the static config of the client.
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
+
+  /// Update the status of the client. Used to re-activate an inactive client.
+  rpc UpdateStatus(UpdateSystemStatusRequest) returns (google.protobuf.Empty);
+
+  /// Stream the status of the client.
+  rpc QueryStatus(google.protobuf.Empty) returns (stream SystemStatusResponse);
+
+  /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -62,14 +84,20 @@ service SigningService {
 
 message Identity {
   dxos.keys.PublicKey identity_key = 1;
-  halo.credentials.ProfileDocument profile = 2;
+  optional dxos.keys.PublicKey space_key = 2;
+  halo.credentials.ProfileDocument profile = 3;
+
+  // TODO(wittjosiah): Move to devices service.
+  optional dxos.keys.PublicKey device_key = 4;
 }
 
 message RecoverProfileRequest {
   bytes recovery_key = 1;
 }
 
+// TODO(wittjosiah): Rename IdentityService.
 service HaloService {
+  // TODO(wittjosiah): Profile -> Identity?
   rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
   rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
   rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
@@ -111,13 +139,34 @@ service ContactsService {
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
 //
 
-message Space {
-  dxos.keys.PublicKey space_key = 1;
+message SpaceMember {
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+  }
+
+  Identity identity = 1;
+  PresenceState presence = 2;
 }
 
-message QueryMembersRequest {}
-message QueryMembersResponse {
-  dxos.halo.credentials.IdentityProfile members = 1;
+enum SpaceStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
+message Space {
+  dxos.keys.PublicKey space_key = 1;
+  SpaceStatus status = 2;
+
+  repeated SpaceMember members = 10;
+}
+
+message UpdateSpaceRequest {
+  optional Status status = 1;
+}
+
+message QuerySpacesResponse {
+  repeated Space spaces = 1;
 }
 
 message WriteCredentialsRequest {
@@ -131,12 +180,12 @@ message QueryCredentialsRequest {
 
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
-  rpc QuerySpaces(google.protobuf.Empty) returns (stream Space);
+  rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
+  rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
-  // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
-  rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
-  
+  /// Write credentials to the space control feed.
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
+  /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 

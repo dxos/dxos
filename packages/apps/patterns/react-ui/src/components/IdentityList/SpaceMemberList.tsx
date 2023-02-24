@@ -21,8 +21,8 @@ export const SpaceMemberList = ({ members, onSelect }: SpaceMemberListProps) => 
         .map((member) => {
           return (
             <IdentityListItem
-              key={member.identityKey.toHex()}
-              identity={member.identity!}
+              key={member.identity.identityKey.toHex()}
+              identity={member.identity}
               presence={member.presence}
               onClick={onSelect && (() => onSelect(member))}
             />

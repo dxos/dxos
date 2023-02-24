@@ -26,8 +26,8 @@ import { ResultSet } from '@dxos/echo-db';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Contact, Identity } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Contact, Identity as DeprecatedIdentity } from '@dxos/protocols/proto/dxos/client';
+import { Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
@@ -62,6 +62,22 @@ export interface Halo {
 }
 
 const THROW_TIMEOUT_ERROR_AFTER = 3000;
+
+// TODO(wittjosiah): Remove this.
+const convertIdentity = (identity?: DeprecatedIdentity): Identity | undefined => {
+  if (!identity) {
+    return identity;
+  }
+
+  const { identityKey, haloSpace: spaceKey, deviceKey, ...profile } = identity;
+
+  return {
+    identityKey,
+    spaceKey,
+    deviceKey,
+    profile
+  };
+};
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -121,7 +137,7 @@ export class HaloProxy implements Halo {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const profileStream = this._serviceProvider.services.IdentityService.subscribeIdentity();
     profileStream.subscribe((data) => {
-      this._identity = data.identity;
+      this._identity = convertIdentity(data.identity);
       this.identityChanged.emit();
     });
 
@@ -165,11 +181,13 @@ export class HaloProxy implements Halo {
   async createIdentity({ publicKey, secretKey, displayName }: CreateIdentityOptions = {}): Promise<Identity> {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     // TODO(burdon): Rename createIdentity?
-    this._identity = await this._serviceProvider.services.IdentityService.createIdentity({
-      publicKey: publicKey?.asUint8Array(),
-      secretKey: secretKey?.asUint8Array(),
-      displayName
-    });
+    this._identity = convertIdentity(
+      await this._serviceProvider.services.IdentityService.createIdentity({
+        publicKey: publicKey?.asUint8Array(),
+        secretKey: secretKey?.asUint8Array(),
+        displayName
+      })
+    )!;
 
     return this._identity;
   }
@@ -222,7 +240,7 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
     const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: this._identity.haloSpace!
+      spaceKey: this._identity.spaceKey!
     });
     this._subscriptions.add(() => stream.close());
 
@@ -324,7 +342,7 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
     return this._serviceProvider.services.SpacesService.writeCredentials({
-      spaceKey: this._identity.haloSpace!,
+      spaceKey: this._identity.spaceKey!,
       credentials
     });
   }

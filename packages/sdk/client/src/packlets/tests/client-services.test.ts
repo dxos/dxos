@@ -9,8 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -244,22 +243,23 @@ describe('Client services', () => {
     const space2 = await trigger.wait();
 
     for (const space of [space1, space2]) {
-      await space.queryMembers().waitFor((members) => members.length === 2);
       await waitForExpect(() => {
-        expect(space.queryMembers().value).to.deep.equal([
+        expect(space.getMembers()).to.deep.equal([
           {
-            identityKey: client1.halo.identity!.identityKey,
             identity: {
               identityKey: client1.halo.identity!.identityKey,
-              displayName: 'Peer 1'
+              profile: {
+                displayName: 'Peer 1'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.identity!.identityKey,
             identity: {
               identityKey: client2.halo.identity!.identityKey,
-              displayName: 'Peer 2'
+              profile: {
+                displayName: 'Peer 2'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           }
