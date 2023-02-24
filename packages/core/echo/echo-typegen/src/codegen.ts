@@ -95,14 +95,11 @@ export const createType = (field: pb.Field): string => {
 };
 
 const isSchemaNamespace = (ns: pb.ReflectionObject) =>
-  ns instanceof pb.Namespace &&
-  ns.name === 'dxos' &&
-  ns.nestedArray.length === 1 &&
-  ns.nestedArray[0].name === 'schema';
+  ns instanceof pb.Namespace && ns.name === 'dxos' && ns.nestedArray[0].name === 'schema';
 
 const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
   const nestedArray = ns.nestedArray.filter((nested) => !isSchemaNamespace(nested));
-  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace) {
+  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace && !(nestedArray[0] instanceof pb.Type)) {
     return getStartingNamespace(nestedArray[0]);
   } else {
     return ns;
