@@ -17,7 +17,7 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
   return (
     <ul className='flex flex-col gap-2'>
       {devices.map((device) => {
-        const identity = { identityKey: device.publicKey, displayName: device.displayName };
+        const identity = { identityKey: device.publicKey, profile: { displayName: device.displayName } };
         return (
           <IdentityListItem
             key={device.publicKey.toHex()}
