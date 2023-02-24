@@ -43,8 +43,8 @@ export {
 
 export { ApiError } from '@dxos/errors';
 
-export { type Contact, type Identity, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
-export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+export { type Contact, type Identity, SpaceMember } from '@dxos/protocols/proto/dxos/client';
+export { Invitation, Status } from '@dxos/protocols/proto/dxos/client/services';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 // TODO(burdon): Remove.

@@ -5,14 +5,15 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
+import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { StatusResponse } from '@dxos/protocols/proto/dxos/client';
+import { Status, StatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -49,8 +50,11 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
+  private readonly _statusUpdate = new Event<Status | undefined>();
 
   private _initialized = false;
+  private _statusStream?: Stream<StatusResponse>;
+  private _status?: Status;
 
   // prettier-ignore
   constructor({
@@ -154,7 +158,34 @@ export class Client {
     }
 
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.initSession();
+
+    let timeout: NodeJS.Timeout | undefined;
+    const trigger = new Trigger<Error | undefined>();
+    this._statusStream = this._services.services.SystemService.queryStatus();
+    this._statusStream.subscribe(
+      async ({ status }) => {
+        timeout && clearTimeout(timeout);
+        trigger.wake(undefined);
+
+        this._status = status;
+        this._statusUpdate.emit(this._status);
+
+        timeout = setTimeout(() => {
+          this._status = undefined;
+          this._statusUpdate.emit(this._status);
+        }, 5000);
+      },
+      (err) => {
+        trigger.wake(err);
+        this._status = undefined;
+        this._statusUpdate.emit(this._status);
+      }
+    );
+
+    const err = await trigger.wait();
+    if (err) {
+      throw err;
+    }
 
     // TODO(wittjosiah): Promise.all?
     await this._halo.open();
@@ -178,17 +209,21 @@ export class Client {
     await this._echo.close();
     await this._mesh.close();
 
+    this._statusStream!.close();
     await this._services.close();
 
     this._initialized = false;
   }
 
+  getStatus(): Status | undefined {
+    return this._status;
+  }
+
   /**
-   * Get system status.
+   * Observe the system status.
    */
-  async getStatus(): Promise<StatusResponse> {
-    assert(this._services.services.SystemService, 'SystemService is not available.');
-    return this._services.services?.SystemService.getStatus();
+  subscribeStatus(callback: (status: Status | undefined) => void): UnsubscribeCallback {
+    return this._statusUpdate.on(callback);
   }
 
   /**
@@ -198,7 +233,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.initSession();
+    await this._services.services.SystemService.updateStatus({ status: Status.ACTIVE });
   }
 
   /**
