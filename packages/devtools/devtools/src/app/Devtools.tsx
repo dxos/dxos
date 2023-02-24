@@ -26,10 +26,6 @@ const Telemetry = () => {
 export const Devtools = ({ client }: { client?: { client: Client; services?: ClientServices } }) => {
   const fallback = <Fallback message='Loading...' />;
 
-  if (!client) {
-    return fallback;
-  }
-
   return (
     <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
       <ErrorBoundary>
