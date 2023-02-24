@@ -15,7 +15,7 @@ import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
 import { Document, isDocument } from './document';
 import { EchoObject } from './object';
-import { TextObject } from './text-object';
+import { Text } from './text-object';
 
 export type PropertiesFilter = Record<string, any>;
 export type OperatorFilter<T extends Document> = (document: T) => boolean;
@@ -202,7 +202,7 @@ export class EchoDatabase {
         return new Proto();
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new TextObject();
+      return new Text();
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;

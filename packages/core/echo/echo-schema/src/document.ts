@@ -12,7 +12,7 @@ import { base, data, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
-import { TextObject } from './text-object';
+import { Text } from './text-object';
 import { isReferenceLike } from './util';
 
 const isValidKey = (key: string | symbol) =>
@@ -34,7 +34,7 @@ export type ConvertVisitors = {
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
   onRef: (id, obj) => {
-    if (obj instanceof TextObject) {
+    if (obj instanceof Text) {
       return obj.toString();
     } else {
       return { '@id': id };
@@ -71,7 +71,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
         } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
-          this._set(field.name, new TextObject());
+          this._set(field.name, new Text());
         }
       }
     }

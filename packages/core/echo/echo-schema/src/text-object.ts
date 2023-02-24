@@ -6,17 +6,13 @@ import { TextModel, type Doc } from '@dxos/text-model';
 
 import { EchoObject } from './object';
 
-export class TextObject extends EchoObject<TextModel> {
+export class Text extends EchoObject<TextModel> {
   constructor() {
     super(TextModel);
   }
 
   override toString() {
     return this.text;
-  }
-
-  get text(): string {
-    return this.doc?.getText().toString() ?? '';
   }
 
   get doc(): Doc | undefined {
@@ -27,6 +23,16 @@ export class TextObject extends EchoObject<TextModel> {
   get model(): TextModel | undefined {
     this._database?._logObjectAccess(this);
     return this._model;
+  }
+
+  /**
+   * Returns the text content of the object.
+   */
+  get text(): string {
+    // TODO(dmaretskyi): Should accessing this re-render the react component?
+    // this._database?._logObjectAccess(this);
+
+    return this._model.textContent;
   }
 
   protected override async _onBind(): Promise<void> {

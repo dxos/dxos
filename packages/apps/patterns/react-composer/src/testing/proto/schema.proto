@@ -4,14 +4,12 @@
 
 syntax = "proto3";
 
+import "dxos/schema.proto";
+
 package dxos.testing.composer;
 
 message ComposerDocument {
   option (object) = true;
 
-  TextObject content = 1;
+  dxos.schema.Text content = 1;
 }
-
-// TODO(dmaretskyi): Move to separate file.
-/// Special object type for text object references.
-message TextObject {}

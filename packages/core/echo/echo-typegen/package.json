@@ -14,7 +14,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "ts-node ./src/main.ts ./test/proto/test.proto ./test/proto/gen/test.ts"
+    "prebuild": "node -r ts-node/register ./src/main.ts ./test/proto/test.proto ./test/proto/gen/test.ts"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
