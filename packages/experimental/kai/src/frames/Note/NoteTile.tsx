@@ -2,35 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
-import { XCircle } from 'phosphor-react';
-import React from 'react';
+import { List, Palette, X } from 'phosphor-react';
+import React, { FC } from 'react';
 
 import { TileContentProps } from '@dxos/mosaic';
 import { withReactor } from '@dxos/react-client';
-import { Button, getSize, Input } from '@dxos/react-components';
+import { mx, Button, DropdownMenu, DropdownMenuItem, getSize, Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { Note } from '../../proto';
 
+export const colors: { id: string; color: string; border: string }[] = [
+  { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
+  { id: 'yellow', color: 'bg-amber-100', border: 'border-amber-200' },
+  { id: 'cyan', color: 'bg-sky-100', border: 'border-sky-200' },
+  { id: 'green', color: 'bg-emerald-100', border: 'border-emerald-200' },
+  { id: 'orange', color: 'bg-violet-100', border: 'border-violet-200' }
+];
+
+const Menu: FC<{ onDelete: () => void; onColorChange: () => void }> = ({ onDelete, onColorChange }) => {
+  return (
+    <>
+      <DropdownMenuItem onClick={onDelete}>
+        <X className={getSize(5)} />
+        <span className='mis-2'>Delete</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={onColorChange}>
+        <Palette className={getSize(5)} />
+        <span className='mis-2'>Color</span>
+      </DropdownMenuItem>
+    </>
+  );
+};
+
 export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
   const note = item.data as Note;
 
-  const handleDelete = (event: any) => {
-    event.stopPropagation();
+  const { color, border } = colors.find(({ id }) => id === note.color) ?? colors[0];
+
+  const handleDelete = () => {
     onDelete?.(item);
   };
 
+  const handleColorChange = () => {
+    const idx = colors.findIndex(({ id }) => id === note.color);
+    note.color = colors[idx === -1 ? 1 : idx < colors.length - 1 ? idx + 1 : 0].id;
+  };
+
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
+    <div className={mx('flex flex-1 flex-col overflow-hidden p-3 border', color, border)}>
       <div className='flex w-full overflow-hidden'>
         {/* Actions */}
-        <Button
-          variant='ghost'
-          className='invisible group-hover:visible text-gray-500 mbs-1 mie-1 order-1'
-          onClick={handleDelete}
-        >
-          <XCircle className={getSize(6)} />
-        </Button>
+        <div className='order-1'>
+          <DropdownMenu
+            trigger={
+              <Button variant='ghost' className='p-2'>
+                <List className={getSize(5)} />
+              </Button>
+            }
+            slots={{ content: { className: 'z-50' } }}
+          >
+            <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
+          </DropdownMenu>
+        </div>
 
         {/* Title */}
         <Input

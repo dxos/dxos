@@ -83,10 +83,9 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
                 <div className='text-xl py-4'>
                   <Input
                     variant='subdued'
-                    placeholder='Enter company name...'
-                    label='Enter company name...'
-                    value={orgName}
-                    onChange={({ target: { value } }) => setOrgName(value)}
+                    placeholder='Organization'
+                    label='Company'
+                    labelVisuallyHidden
                     slots={{
                       input: {
                         spellCheck: false,
@@ -94,6 +93,8 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
                         onBlur: handleEnter
                       }
                     }}
+                    value={orgName}
+                    onChange={({ target: { value } }) => setOrgName(value)}
                   />
                 </div>
               </td>

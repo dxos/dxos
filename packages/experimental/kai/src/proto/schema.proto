@@ -170,4 +170,5 @@ message Note {
 
   string title = 1;
   TextObject content = 2;
+  string color = 3;
 }
