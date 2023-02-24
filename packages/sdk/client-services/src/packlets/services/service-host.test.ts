@@ -48,9 +48,9 @@ describe('ClientServicesHost', () => {
 
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
-    host.services.IdentityService!.subscribeIdentity()!.subscribe(({ identity }) => {
-      if (identity?.haloSpace) {
-        haloSpace.wake(identity.haloSpace);
+    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+      if (identity?.spaceKey) {
+        haloSpace.wake(identity.spaceKey);
       }
     });
 

@@ -4,14 +4,15 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Device, DevicesService, QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { Device, DeviceKind, DevicesService, QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { IdentityManager } from './identity-manager';
+import { IdentityManager } from '../identity/identity-manager';
 
 export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}
 
-  updateDevice(): Promise<Device> {
+  updateDevice(request: ProfileDocument): Promise<Device> {
     throw new Error('Method not implemented.');
   }
 
@@ -24,19 +25,20 @@ export class DevicesServiceImpl implements DevicesService {
         } else {
           next({
             devices: Array.from(deviceKeys.values()).map((key) => ({
-              deviceKey: key
+              deviceKey: key,
+              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED
             }))
           });
         }
       };
 
-      const dispose = new EventSubscriptions();
-      dispose.add(
+      const subscriptions = new EventSubscriptions();
+      subscriptions.add(
         this._identityManager.stateUpdate.on(() => {
           update();
 
           if (this._identityManager.identity) {
-            dispose.add(
+            subscriptions.add(
               this._identityManager.identity.stateUpdate.on(() => {
                 update();
               })
@@ -47,7 +49,7 @@ export class DevicesServiceImpl implements DevicesService {
 
       update();
 
-      return () => dispose.clear();
+      return () => subscriptions.clear();
     });
   }
 }

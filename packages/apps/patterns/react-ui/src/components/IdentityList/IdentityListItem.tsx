@@ -27,7 +27,7 @@ export const IdentityListItem = ({
           variant: 'circle',
           size: 9,
           fallbackValue: identity.identityKey.toHex(),
-          label: <p className='text-sm truncate'>{identity.profile.displayName ?? identity.identityKey.truncate()}</p>,
+          label: <p className='text-sm truncate'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>,
           ...(presence === SpaceMember.PresenceState.OFFLINE && {
             status: 'inactive',
             description: (

@@ -42,7 +42,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         />
       );
 
-    case ShellLayout.HALO_INVITATIONS:
+    case ShellLayout.DEVICE_INVITATIONS:
       return (
         <DevicesDialog
           createInvitationUrl={(invitationCode) => `${origin}?haloInvitationCode=${invitationCode}`}

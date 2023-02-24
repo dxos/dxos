@@ -3,9 +3,9 @@
 //
 
 export * from './encoder';
-export * from './halo-invitations-handler';
-export * from './halo-invitations-proxy';
-export * from './halo-invitations-service';
+export * from './device-invitations-handler';
+export * from './device-invitations-proxy';
+export * from './device-invitations-service';
 export * from './invitations';
 export * from './invitations-handler';
 export * from './invitations-proxy';
