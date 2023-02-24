@@ -138,6 +138,7 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
       export namespace ${ns.name} {
         ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
       }
+      
     `;
   }
 

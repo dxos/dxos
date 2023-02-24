@@ -11,13 +11,13 @@ import { useClient, useQuery } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Note, NoteBoard, Location as LocationProto } from '../../proto';
+import { Note, NoteBoard } from '../../proto';
 import { NoteTile } from './NoteTile';
 
-const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
+const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>
   board.locations.find((location) => location.objectId === id);
 
-const setItemLocation = (board: NoteBoard, id: string, location: LocationProto) => {
+const setItemLocation = (board: NoteBoard, id: string, location: NoteBoard.Location ) => {
   const idx = board.locations.findIndex((location) => location.objectId === id);
   if (idx === -1) {
     board.locations.push({ objectId: id, ...location });
