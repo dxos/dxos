@@ -21,7 +21,7 @@ export type CellProps = {
 /**
  * Placeholder (drop target) for Tile.
  */
-export const Cell = ({ children, location, bounds, debug = true, onCreate }: CellProps) => {
+export const Cell = ({ children, location, bounds, debug = false, onCreate }: CellProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: serializeLocation(location) });
 
   const handleClick = (event: any) => {

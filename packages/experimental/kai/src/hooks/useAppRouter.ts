@@ -13,8 +13,7 @@ import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',
-  REGISTRY = 'registry',
-  SETTINGS = 'settings'
+  REGISTRY = 'registry'
 }
 
 const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);

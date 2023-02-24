@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { CaretLeft, Intersect, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-react';
+import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router-dom';
 
@@ -130,7 +130,6 @@ export const Sidebar = () => {
       >
         <div className='flex justify-between px-2'>
           <div className='flex items-center'>
-            {/* TODO(burdon): Remove initial focus. */}
             <Button
               variant='ghost'
               className='flex'
@@ -149,7 +148,7 @@ export const Sidebar = () => {
               onClick={handleJoinSpace}
             >
               <span className='sr-only'>Join a space</span>
-              <Intersect className={getSize(6)} />
+              <Target className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
