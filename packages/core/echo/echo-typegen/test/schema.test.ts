@@ -16,7 +16,7 @@ describe('schema', () => {
   test('keys', () => {
     const contact = new Contact({ name: 'Test User' });
     expect(contact.id).to.exist;
-    expect(Object.keys(contact).length).to.eq(5);
+    expect(Object.keys(contact).length).to.eq(6);
     contact.email = 'test@example.com';
 
     // TODO(burdon): Address should be auto-created?
