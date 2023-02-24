@@ -16,7 +16,7 @@ export type SelectProps = {
   defaultValue?: string;
   label?: string;
   options?: Option[];
-  onChange?: (value: Option) => any;
+  onChange?: (value: string, item?: Option) => any;
 };
 
 const value = (item: Option) => (typeof item === 'string' ? item : item.id ?? item.title);
@@ -45,7 +45,12 @@ export const Select = (props: SelectProps) => {
   return (
     <SelectPrimitive.Root
       defaultValue={value(defaultOption(options, props.defaultValue) ?? '')}
-      onValueChange={(v) => onChange?.(options.find((s) => eq(s, v)) ?? v)}
+      onValueChange={(v) =>
+        onChange?.(
+          v,
+          options.find((s) => eq(s, v))
+        )
+      }
     >
       <SelectPrimitive.Trigger asChild aria-label={label}>
         <Button>
