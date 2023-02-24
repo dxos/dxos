@@ -12,11 +12,11 @@ import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Status } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
+import { IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
@@ -90,12 +90,12 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       statusUpdate: this._statusUpdate,
 
-      getCurrentStatus: () => (this.isOpen ? Status.ACTIVE : Status.INACTIVE),
+      getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
 
-      onUpdateStatus: async (status: Status) => {
-        if (!this.isOpen && status === Status.ACTIVE) {
+      onUpdateStatus: async (status: SystemStatus) => {
+        if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();
-        } else if (this.isOpen && status === Status.INACTIVE) {
+        } else if (this.isOpen && status === SystemStatus.INACTIVE) {
           await this._resourceLock?.release();
         }
       },
@@ -154,7 +154,15 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
-      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager),
+      SpacesService: new SpacesServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.spaceManager,
+        this._serviceContext.dataServiceSubscriptions,
+        async () => {
+          await this._serviceContext.initialized.wait();
+          return this._serviceContext.dataSpaceManager!;
+        }
+      ),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
@@ -162,9 +170,6 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       // TODO(burdon): Move to new protobuf definitions.
       IdentityService: new IdentityServiceImpl(this._serviceContext),
-
-      // TODO(burdon): Port old SubscribeSpaces to QueryServices>
-      SpaceService: new SpaceServiceImpl(this._serviceContext),
 
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({

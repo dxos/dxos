@@ -21,7 +21,7 @@ export const ProfileMenu = (props: PropsWithChildren<ProfileMenuProps>) => {
           size={10}
           variant='circle'
           fallbackValue={identity.identityKey.toHex()}
-          label={identity.displayName ?? humanize(identity.identityKey.toHex())}
+          label={identity.profile.displayName ?? humanize(identity.identityKey.toHex())}
         />
       }
       slots={{

@@ -21,7 +21,7 @@ export default class List extends BaseCommand {
     const { flags } = await this.parse(List);
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: spaces = [] } = await client.echo.querySpaces();
+      const spaces = client.echo.getSpaces();
       if (!flags.json) {
         printSpaces(spaces, flags);
       }

@@ -28,7 +28,7 @@ export const IdentityPanel = ({
           size={16}
           variant='circle'
           fallbackValue={identity.identityKey.toHex()}
-          label={identity.displayName ?? ''}
+          label={identity.profile.displayName ?? ''}
         />
         <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
           {t('manage profile label')}

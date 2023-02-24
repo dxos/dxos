@@ -27,7 +27,7 @@ const IdentityPage = () => {
     ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
       if (identity) {
         // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
-        identity.displayName = value;
+        identity.profile.displayName = value;
       }
     },
     [identity]
@@ -40,13 +40,13 @@ const IdentityPage = () => {
         size={32}
         variant='circle'
         fallbackValue={identityHex}
-        label={identity?.displayName ?? humanize(identityHex)}
+        label={identity?.profile.displayName ?? humanize(identityHex)}
         slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}
         placeholder={humanize(identityHex)}
-        defaultValue={identity?.displayName}
+        defaultValue={identity?.profile.displayName}
         onChange={onChangeDisplayName}
         slots={{ root: { className: 'w-full' } }}
       />

@@ -7,7 +7,6 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/client.proto";
 import "dxos/client/services.proto";
 import "dxos/config.proto";
 import "dxos/keys.proto";
@@ -93,7 +92,7 @@ message GetLogsRequest {
 
 message BotReport {
   /// Details of the space the bot was spawned for.
-  optional dxos.client.SpaceDetails space_details = 1;
+  optional dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
 /// Service that is used by clients to communicate with bot factory.

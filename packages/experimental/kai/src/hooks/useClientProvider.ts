@@ -37,7 +37,7 @@ export const useClientProvider = (dev: boolean) => {
     // TODO(burdon): Document.
     client.echo.dbRouter.setSchema(schema);
 
-    if (dev && client.halo.identity && client.echo.querySpaces().value.length === 0) {
+    if (dev && client.halo.identity && client.echo.getSpaces().length === 0) {
       const space = await client.echo.createSpace();
 
       // TODO(burdon): Create context.

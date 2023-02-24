@@ -49,7 +49,7 @@ interface UserProps {
 const User = ({ sharing, joining, remote }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
-  const profile = useIdentity();
+  const identity = useIdentity();
 
   return (
     <Box>
@@ -73,7 +73,7 @@ const User = ({ sharing, joining, remote }: UserProps) => {
       <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteSpaces /> : <Spaces />}</Box>
 
       <Box sx={{ padding: 1 }}>
-        <p>{profile?.displayName ?? 'Identity not created.'}</p>
+        <p>{identity?.profile.displayName ?? 'Identity not created.'}</p>
       </Box>
     </Box>
   );

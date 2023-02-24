@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger } from '@dxos/async';
+import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import {
   ClientServicesProvider,
   CancellableInvitationObservable,
@@ -13,13 +13,13 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
+import { Space as SpaceType, SpaceMember, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Properties } from '../proto';
@@ -40,13 +40,9 @@ export interface Space {
   open(): Promise<void>;
   close(): Promise<void>;
 
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  getDetails(): Promise<SpaceDetails>;
+  getMembers(): SpaceMember[];
+  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
 
-  queryMembers(): ResultSet<SpaceMember>;
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
   removeInvitation(id: string): void;
 
@@ -86,7 +82,7 @@ export class SpaceProxy implements Space {
     this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
     // TODO(burdon): Don't shadow properties.
-    if (!this._state.isOpen) { // TODO(burdon): Assert?
+    if (this._state.status !== SpaceStatus.ACTIVE) { // TODO(burdon): Assert?
       return;
     }
 
@@ -103,11 +99,11 @@ export class SpaceProxy implements Space {
   }
 
   get key() {
-    return this._state.publicKey;
+    return this._state.spaceKey;
   }
 
   get isOpen() {
-    return this._state.isOpen;
+    return this._state.status === SpaceStatus.ACTIVE;
   }
 
   get db() {
@@ -192,20 +188,18 @@ export class SpaceProxy implements Space {
     await this._setOpen(false);
   }
 
-  async getDetails(): Promise<SpaceDetails> {
-    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-    return this._clientServices.services.SpaceService.getSpaceDetails({
-      spaceKey: this.key
-    });
+  /**
+   * Return set of space members.
+   */
+  getMembers(): SpaceMember[] {
+    return this._state.members ?? [];
   }
 
   /**
-   * Return set of space members.
-   * @deprecated
+   * Subscribe to changes to space members.
    */
-  // TODO(burdon): Don't expose result object and provide type.
-  queryMembers(): ResultSet<SpaceMember> {
-    return new ResultSet(this.stateUpdate, () => this._state.members ?? []);
+  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback {
+    return this.stateUpdate.on(() => callback(this.getMembers()));
   }
 
   /**
@@ -255,17 +249,20 @@ export class SpaceProxy implements Space {
   }
 
   async _setOpen(open: boolean) {
-    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
-    await this._clientServices.services.SpaceService.setSpaceState({
-      spaceKey: this.key,
-      open
-    });
+    return todo();
+    // assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
+    // await this._clientServices.services.SpaceService.setSpaceState({
+    //   spaceKey: this.key,
+    //   open
+    // });
   }
 
   /**
    * Called by EchoProxy to update this space instance.
    * @internal
    */
+  // TODO(wittjosiah): Make private and trigger with event?
   _processSpaceUpdate(space: SpaceType) {
     const emitEvent = shouldUpdate(this._state, space);
     this._state = space;
