@@ -55,8 +55,6 @@ const SpacePage = () => {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
   }
 
-  console.log(section, frame);
-
   return (
     <PanelSidebarProvider
       inlineStart
