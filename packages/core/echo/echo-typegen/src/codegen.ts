@@ -15,34 +15,6 @@ const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter'
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 /**
- * Source builder and formatter.
- */
-export class SourceBuilder {
-  private _content: string[] = [];
-
-  // TODO(burdon): Reformat using prettier.
-  get content() {
-    return this._content.join('\n');
-  }
-
-  push(line: string | string[], indent = 0) {
-    const prefix = ' '.repeat(indent * 2);
-    if (typeof line === 'string') {
-      this._content.push(prefix + line);
-    } else {
-      this._content.push(...line.map((line) => prefix + line));
-    }
-
-    return this;
-  }
-
-  nl() {
-    this._content.push('');
-    return this;
-  }
-}
-
-/**
  * Protobuf schema as JSON object.
  */
 // TODO(burdon): Missing name.
