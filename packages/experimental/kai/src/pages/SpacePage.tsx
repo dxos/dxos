@@ -49,6 +49,8 @@ const SpacePage = () => {
   const { section } = useParams();
   const { space, frame } = useAppRouter();
 
+  console.log(section, frame);
+
   return (
     <PanelSidebarProvider
       inlineStart
