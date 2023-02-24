@@ -2,7 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
+import {
+  FC,
+  ReactElement,
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+  ForwardRefRenderFunction,
+  forwardRef,
+  ForwardedRef,
+  ForwardRefExoticComponent,
+  PropsWithoutRef,
+  RefAttributes
+} from 'react';
 
 import { useClient } from '../client';
 
@@ -71,6 +85,30 @@ export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): F
 
     return render(component(props));
   };
+
+  if (opts.componentName) {
+    Component.displayName = opts.componentName;
+  }
+
+  return Component;
+};
+
+/**
+ * Reactive HOC which forwards refs.
+ */
+export const withReactorRef = <T, P>(
+  component: ForwardRefRenderFunction<T, P>,
+  opts: WithReactorOpts = {}
+): ForwardRefExoticComponent<PropsWithoutRef<P> & RefAttributes<T>> => {
+  const Component = forwardRef((props: P, ref: ForwardedRef<T>) => {
+    const { render } = useReactor({
+      onChange: () => {
+        // console.log('UPDATED');
+      }
+    });
+
+    return render(component(props, ref));
+  });
 
   if (opts.componentName) {
     Component.displayName = opts.componentName;
