@@ -176,7 +176,7 @@ export const ViewState = ({
                 labelValue:
                   selectedIdentity === true
                     ? ' '
-                    : selectedIdentity.profile.displayName ?? selectedIdentity.identityKey.truncate()
+                    : selectedIdentity.profile?.displayName ?? selectedIdentity.identityKey.truncate()
               }
             }}
           />

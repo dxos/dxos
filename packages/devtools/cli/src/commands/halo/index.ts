@@ -21,14 +21,11 @@ export default class Halo extends BaseCommand {
         this.log(chalk`{red Identity not initialized.}`);
         return {};
       } else {
-        const {
-          identityKey,
-          profile: { displayName }
-        } = identity;
-        this.log(`Display name: ${displayName}`);
+        const { identityKey, profile } = identity;
+        this.log(`Display name: ${profile?.displayName}`);
         return {
           identityKey: identityKey.toHex(),
-          displayName
+          profile
         };
       }
     });

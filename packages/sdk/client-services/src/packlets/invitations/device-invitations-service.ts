@@ -11,7 +11,7 @@ import { AbstractInvitationsService } from './invitations-service';
 /**
  * Adapts invitation service observable to client/service stream.
  */
-export class HaloInvitationsServiceImpl extends AbstractInvitationsService {
+export class DeviceInvitationsServiceImpl extends AbstractInvitationsService {
   // prettier-ignore
   constructor (
     identityManager: IdentityManager,

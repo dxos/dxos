@@ -22,8 +22,8 @@ describe('Halo', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
     expect(client.halo.identity).exist;
 
-    expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
-    expect(client.halo.identity?.profile.displayName).to.equal('test-user');
+    expect(await client.halo.getDevices()).to.have.lengthOf(1);
+    expect(client.halo.identity!.profile?.displayName).to.equal('test-user');
   });
 
   test('device invitations', async () => {
@@ -36,7 +36,7 @@ describe('Halo', () => {
     await client1.halo.createIdentity({ displayName: 'test-user' });
     expect(client1.halo.identity).exist;
 
-    expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
+    expect(await client1.halo.getDevices()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client2.destroy());
@@ -68,7 +68,7 @@ describe('Halo', () => {
     await done1.wait();
     await done2.wait();
 
-    expect(await client1.halo.queryDevices().value).to.have.lengthOf(2);
-    expect(await client2.halo.queryDevices().value).to.have.lengthOf(2);
+    expect(await client1.halo.getDevices()).to.have.lengthOf(2);
+    expect(await client2.halo.getDevices()).to.have.lengthOf(2);
   });
 });

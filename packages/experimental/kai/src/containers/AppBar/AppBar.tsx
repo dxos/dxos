@@ -66,7 +66,7 @@ export const AppBar = withReactor(() => {
           >
             <Actions />
           </DropdownMenu>
-          <Button variant='ghost' className='p-2' onClick={() => shell.setLayout(ShellLayout.HALO_INVITATIONS)}>
+          <Button variant='ghost' className='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
             <User className={getSize(6)} />
           </Button>
         </DensityProvider>
