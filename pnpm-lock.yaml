@@ -3453,6 +3453,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
@@ -3507,6 +3508,7 @@ importers:
       debug: 4.3.4
       lodash.isequal: 4.5.0
     devDependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6
       '@types/node': 18.11.9
@@ -20566,6 +20568,18 @@ packages:
       debug:
         optional: true
 
+  /follow-redirects/1.15.2_debug@4.3.4:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dependencies:
+      debug: 4.3.4
+    dev: true
+
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
     dependencies:
@@ -21809,7 +21823,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug

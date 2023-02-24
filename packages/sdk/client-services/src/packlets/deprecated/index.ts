@@ -4,5 +4,4 @@
 
 export * from './space';
 export * from './identity';
-export * from './system';
 export * from './tracing';
