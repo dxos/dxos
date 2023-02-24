@@ -5,17 +5,13 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
-import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
+import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { appkitTranslations, Fallback } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientContext, ClientContextProps } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
-import { ErrorBoundary } from '@dxos/react-toolkit';
+import { ClientContextProps } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
 
 log.config({ filter: 'debug' });
@@ -60,11 +56,7 @@ const waitForRpc = async () =>
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
 
-export const DevtoolsRoutes = () => {
-  return useRoutes();
-};
-
-const Devtools = () => {
+const App = () => {
   log('initializing...');
 
   const [value, setValue] = useState<ClientContextProps>();
@@ -80,29 +72,11 @@ const Devtools = () => {
     setValue({ client, services: servicesProvider.services });
   }, []);
 
-  return (
-    <ThemeProvider
-      appNs='devtools'
-      resourceExtensions={[appkitTranslations]}
-      fallback={<Fallback message='Loading...' />}
-    >
-      <ErrorBoundary>
-        {value && (
-          <ClientContext.Provider value={value}>
-            <DevtoolsContextProvider>
-              <HashRouter>
-                <DevtoolsRoutes />
-              </HashRouter>
-            </DevtoolsContextProvider>
-          </ClientContext.Provider>
-        )}
-      </ErrorBoundary>
-    </ThemeProvider>
-  );
+  return <Devtools client={value} />;
 };
 
 const init = async () => {
-  createRoot(document.getElementById('root')!).render(<Devtools />);
+  createRoot(document.getElementById('root')!).render(<App />);
 };
 
 void init();
