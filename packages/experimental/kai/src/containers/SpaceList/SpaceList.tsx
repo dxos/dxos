@@ -6,6 +6,7 @@ import React, { Suspense } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
+import { DensityProvider } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
 import { Intent } from '../../util';
@@ -35,7 +36,9 @@ export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
           selected={selected && space.key.equals(selected)}
           onAction={(intent) => onAction?.(intent)}
         >
-          <Suspense>{Tile && <Tile />}</Suspense>
+          <DensityProvider density='coarse'>
+            <Suspense>{Tile && <Tile />}</Suspense>
+          </DensityProvider>
         </SpaceItem>
       ))}
     </div>
