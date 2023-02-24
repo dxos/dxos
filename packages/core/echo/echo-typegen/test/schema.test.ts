@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { DocumentModel } from '@dxos/document-model';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
