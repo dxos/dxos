@@ -26,8 +26,6 @@ const Panel = ({ panel, setPanel }: { panel?: PanelType; setPanel: (panel?: Pane
   const client = useClient();
   const spaces = useSpaces();
 
-  const createSpace = async () => client.echo.createSpace({ name: faker.animal.bird() });
-
   if (panel instanceof SpaceProxy) {
     return <SpacePanel space={panel} createInvitationUrl={createInvitationUrl} />;
   }
@@ -49,7 +47,10 @@ const Panel = ({ panel, setPanel }: { panel?: PanelType; setPanel: (panel?: Pane
       const controls = (
         <ButtonGroup className='mbe-4'>
           <Tooltip content='Create Space'>
-            <Button onClick={createSpace} data-testid='invitations.create-space'>
+            <Button
+              onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}
+              data-testid='invitations.create-space'
+            >
               <PlusCircle className={getSize(6)} />
             </Button>
           </Tooltip>
@@ -91,11 +92,14 @@ const render = ({ id }: { id: number }) => {
   const identity = useIdentity();
   const [panel, setPanel] = useState<PanelType>();
 
-  const createIdentity = () => client.halo.createIdentity({ displayName: faker.name.firstName() });
   const controls = (
     <ButtonGroup className='mbe-4'>
       <Tooltip content='Create Identity'>
-        <Button onClick={createIdentity} disabled={Boolean(identity)} data-testid='invitations.create-identity'>
+        <Button
+          onClick={() => client.halo.createIdentity({ displayName: faker.name.firstName() })}
+          disabled={Boolean(identity)}
+          data-testid='invitations.create-identity'
+        >
           <Plus className={getSize(6)} />
         </Button>
       </Tooltip>
