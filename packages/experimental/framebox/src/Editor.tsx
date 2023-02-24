@@ -6,10 +6,10 @@ import MonacoEditor from '@monaco-editor/react';
 import React, { useRef } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
-import { TextObject } from '@dxos/echo-schema';
+import { Text } from '@dxos/echo-schema';
 
 export type EditorProps = {
-  document: TextObject;
+  document: Text;
   onChange?: () => void;
 };
 

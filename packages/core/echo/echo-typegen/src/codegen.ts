@@ -8,7 +8,7 @@ const packageName = '@dxos/echo-schema';
 const namespaceName = 'dxosEchoSchema';
 
 // There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'TextObject'];
+const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'Text'];
 
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
@@ -71,8 +71,8 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      if (field.resolvedType.name === 'TextObject') {
-        return `${namespaceName}.TextObject`;
+      if (field.resolvedType.name === 'Text') {
+        return `${namespaceName}.Text`;
       }
 
       return field.resolvedType.name;
@@ -128,7 +128,7 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
     .push(`export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);`).nl();
 
   for (const type of iterTypes(root)) {
-    if (type.name === 'TextObject') {
+    if (type.name === 'Text') {
       continue;
     }
 
