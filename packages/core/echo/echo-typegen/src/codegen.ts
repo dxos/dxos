@@ -103,7 +103,7 @@ const isSchemaNamespace = (ns: pb.ReflectionObject) =>
 
 const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
   const nestedArray = ns.nestedArray.filter((nested) => !isSchemaNamespace(nested));
-  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace && !(nestedArray[0] instanceof pb.Type)) {
+  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace && !isType(nestedArray[0])) {
     return getStartingNamespace(nestedArray[0]);
   }
 
@@ -116,9 +116,7 @@ const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
 export const generate = (root: pb.NamespaceBase): string => {
   const startNamespace = getStartingNamespace(root);
 
-  const declarations = isType(startNamespace)
-    ? Array.from(emitDeclarations(startNamespace))
-    : startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
+  const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return text`
   import * as ${namespaceName} from '${packageName}';
