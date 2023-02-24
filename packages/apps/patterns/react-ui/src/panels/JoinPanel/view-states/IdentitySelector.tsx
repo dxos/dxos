@@ -64,8 +64,8 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
               <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
-              <span id={labelId} className={mx(!profile.displayName && 'font-mono')}>
-                {profile.displayName ?? identityKey.truncate() ?? ''}
+              <span id={labelId} className={mx(!profile?.displayName && 'font-mono')}>
+                {profile?.displayName ?? identityKey.truncate() ?? ''}
               </span>
             </label>
           );

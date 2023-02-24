@@ -98,9 +98,9 @@ export class IFrameHostRuntime {
         exposed: clientServiceBundle,
         handlers: {
           DataService: async () => await this._getService((services) => services.DataService),
+          DeviceInvitationsService: async () => await this._getService((services) => services.DeviceInvitationsService),
           DevicesService: async () => await this._getService((services) => services.DevicesService),
           DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
-          HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
           NetworkService: async () => await this._getService((services) => services.NetworkService),
           IdentityService: async () => await this._getService((services) => services.IdentityService),
           SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),

@@ -2,27 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { Device as DeviceType, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 
-import { Device, DeviceProps } from './Device';
+import { Device } from './Device';
 
 export interface DeviceListProps {
-  devices: DeviceProps[];
-  currentDevice?: PublicKey;
+  devices: DeviceType[];
 }
 
-export const DeviceList = ({ devices, currentDevice }: DeviceListProps) => {
-  const currentDeviceIndex = useMemo(
-    () => currentDevice && devices.findIndex((device) => device.publicKey.equals(currentDevice)),
-    [devices, currentDevice]
-  );
-
+export const DeviceList = ({ devices }: DeviceListProps) => {
   return (
     <>
       {devices.map((device, index) => (
-        <Device key={device.publicKey.toHex()} {...device} isCurrentDevice={index === currentDeviceIndex} />
+        <Device
+          key={device.deviceKey.toHex()}
+          publicKey={device.deviceKey}
+          isCurrentDevice={device.kind === DeviceKind.CURRENT}
+        />
       ))}
     </>
   );

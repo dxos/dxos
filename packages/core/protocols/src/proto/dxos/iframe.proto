@@ -43,7 +43,7 @@ service AppService {
 enum ShellLayout {
   DEFAULT = 0;
   INITIALIZE_IDENTITY = 1;
-  HALO_INVITATIONS = 2;
+  DEVICE_INVITATIONS = 2;
   SPACE_INVITATIONS = 3;
   JOIN_SPACE = 4;
 }

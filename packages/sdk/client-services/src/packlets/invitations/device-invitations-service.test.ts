@@ -8,20 +8,20 @@ import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { Invitation, HaloInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, DeviceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers } from '../testing';
-import { HaloInvitationsProxy } from './halo-invitations-proxy';
-import { HaloInvitationsServiceImpl } from './halo-invitations-service';
+import { DeviceInvitationsProxy } from './device-invitations-proxy';
+import { DeviceInvitationsServiceImpl } from './device-invitations-service';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
   return peer;
 };
 
-describe('services/halo-invitation-service', () => {
+describe('services/device-invitation-service', () => {
   test('creates identity and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
@@ -29,14 +29,14 @@ describe('services/halo-invitation-service', () => {
     expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
 
     // prettier-ignore
-    const service1: HaloInvitationsService = new HaloInvitationsServiceImpl(
+    const service1: DeviceInvitationsService = new DeviceInvitationsServiceImpl(
       host.identityManager,
-      host.haloInvitations
+      host.deviceInvitations
     );
     // prettier-ignore
-    const service2: HaloInvitationsService = new HaloInvitationsServiceImpl(
+    const service2: DeviceInvitationsService = new DeviceInvitationsServiceImpl(
       guest.identityManager,
-      guest.haloInvitations
+      guest.deviceInvitations
     );
 
     const success1 = new Trigger<Invitation>();
@@ -45,11 +45,11 @@ describe('services/halo-invitation-service', () => {
     const authenticationCode = new Trigger<string>();
 
     {
-      const proxy1 = new HaloInvitationsProxy(service1);
+      const proxy1 = new DeviceInvitationsProxy(service1);
       const observable1 = proxy1.createInvitation();
       observable1.subscribe({
         onConnecting: (invitation: Invitation) => {
-          const proxy2 = new HaloInvitationsProxy(service2);
+          const proxy2 = new DeviceInvitationsProxy(service2);
           const observable2 = proxy2.acceptInvitation(invitation);
           observable2.subscribe({
             onAuthenticating: async () => {

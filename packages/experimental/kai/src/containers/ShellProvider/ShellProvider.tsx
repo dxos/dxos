@@ -78,7 +78,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
 
       const modifier = event.ctrlKey || event.metaKey;
       if (event.key === '>' && event.shiftKey && modifier) {
-        shellRuntime.setLayout(ShellLayout.HALO_INVITATIONS);
+        shellRuntime.setLayout(ShellLayout.DEVICE_INVITATIONS);
         setDisplay(ShellDisplay.FULLSCREEN);
       } else if (event.key === '.' && modifier) {
         shellRuntime.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
