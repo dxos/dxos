@@ -4,6 +4,7 @@
 
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Grid, GridLayout, Item, Location } from '@dxos/mosaic';
 import { useClient, useQuery } from '@dxos/react-client';
@@ -52,26 +53,29 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout) => {
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
 
+  // TODO(burdon): Factor out.
+  const navigate = useNavigate();
   const client = useClient();
-  const { space } = useAppRouter();
+  const { space, frame, objectId } = useAppRouter();
   const boards = useQuery(space, NoteBoard.filter());
-  const [board, setBoard] = useState<NoteBoard>(boards[0]);
+  const board = objectId ? (space!.db.getObjectById(objectId) as NoteBoard) : undefined;
   useEffect(() => {
-    if (!board) {
-      setTimeout(async () => {
-        const board = new NoteBoard();
-        await space?.db.add(board);
-        setBoard(board);
-      });
+    console.log('!!!');
+    if (!board && boards.length) {
+      // navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: boards[0].id }));
     }
-  }, []);
+  }, [boards]);
 
   // TODO(burdon): Use theme variables.
   // Cells should be 366px wide (390px - 2 x 12px padding) with 24px margins.
   const layout = useMemo(() => new GridLayout({ range, dimensions: { width: 354, height: 354 }, padding: 24 }), []);
-  const notes = useQuery(space, Note.filter());
   const [items, setItems] = useState<Item<Note>[]>([]);
+
+  // TODO(burdon): Filter by notes on board (could be multiple). Extend useQuery.
+  // TODO(burdon): Causes infinite loop if adding the filter.
+  const notes = useQuery(space, Note.filter()); // .filter((note) => board && getItemLocation(board, note.id));
   useEffect(() => {
+    console.log('??', board?.id);
     if (!board) {
       return;
     }
@@ -87,6 +91,10 @@ export const NoteFrame = () => {
     // subscription.update([board, notes]);
     return () => subscription.unsubscribe();
   }, [board, notes]);
+
+  if (!board) {
+    return null;
+  }
 
   const handleChange = (item: Item, location: Location) => {
     setItemLocation(board, item.id, location);
@@ -125,3 +133,5 @@ export const NoteFrame = () => {
     />
   );
 };
+
+export default NoteFrame;

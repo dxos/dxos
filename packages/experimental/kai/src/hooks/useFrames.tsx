@@ -32,7 +32,7 @@ import {
   File,
   KanbanFrame,
   MapFrame,
-  NoteFrame,
+  Note,
   SketchFrame,
   TableFrame,
   TaskFrame,
@@ -139,7 +139,8 @@ const defs: FrameDef[] = [
     },
     runtime: {
       Icon: Cards,
-      Component: NoteFrame
+      Component: Note.Frame,
+      Tile: Note.Tile
     }
   },
   {

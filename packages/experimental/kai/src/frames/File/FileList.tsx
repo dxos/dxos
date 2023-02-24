@@ -37,7 +37,7 @@ const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
   );
 };
 
-export const FileTile = () => {
+export const FileList = () => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
@@ -109,4 +109,4 @@ export const FileTile = () => {
   );
 };
 
-export default FileTile;
+export default FileList;
