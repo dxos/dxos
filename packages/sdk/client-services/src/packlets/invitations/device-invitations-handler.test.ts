@@ -16,7 +16,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/halo', () => {
+describe('services/device', () => {
   test('creates identity', async () => {
     const peer = createServiceContext();
     await peer.open();
@@ -32,7 +32,7 @@ describe('services/halo', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await performInvitation(host.haloInvitations, guest.haloInvitations, undefined);
+    await performInvitation(host.deviceInvitations, guest.deviceInvitations, undefined);
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 });

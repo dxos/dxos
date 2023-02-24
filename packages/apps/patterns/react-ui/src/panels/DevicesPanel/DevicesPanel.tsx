@@ -26,7 +26,7 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
-  const displayName = identity?.profile.displayName;
+  const displayName = identity?.profile?.displayName;
 
   if (!identity) {
     return null;

@@ -33,7 +33,7 @@ import {
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
 
-type HaloInvitationsHandlerParams = {
+type DeviceInvitationsHandlerParams = {
   networkManager: NetworkManager;
   keyring: Keyring;
 
@@ -42,13 +42,13 @@ type HaloInvitationsHandlerParams = {
 };
 
 /**
- * Handles the life-cycle of Halo invitations between peers.
+ * Handles the life-cycle of device invitations between peers.
  */
 // TODO(dmaretskyi): Split into Host and Guest parts.
-export class HaloInvitationsHandler extends AbstractInvitationsHandler {
+export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
-    private readonly _params: HaloInvitationsHandlerParams
+    private readonly _params: DeviceInvitationsHandlerParams
   ) {
     super(_params.networkManager);
   }

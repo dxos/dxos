@@ -7,7 +7,7 @@ import { AbstractInvitationsProxy } from './invitations-proxy';
 /**
  * Adapts invitation service observable to client/service stream.
  */
-export class HaloInvitationsProxy extends AbstractInvitationsProxy {
+export class DeviceInvitationsProxy extends AbstractInvitationsProxy {
   getInvitationOptions() {
     return {};
   }

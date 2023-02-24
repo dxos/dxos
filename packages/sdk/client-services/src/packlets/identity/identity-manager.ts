@@ -15,8 +15,8 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { deferFunction } from '@dxos/util';
 
-import { Identity } from '../identity';
 import { createAuthProvider } from './authenticator';
+import { Identity } from './identity';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;

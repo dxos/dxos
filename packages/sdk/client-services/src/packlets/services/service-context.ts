@@ -23,7 +23,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
-import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
+import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 import { DataSpaceManager } from '../spaces/data-space-manager';
 
 /**
@@ -39,7 +39,7 @@ export class ServiceContext {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
-  public readonly haloInvitations: HaloInvitationsHandler;
+  public readonly deviceInvitations: DeviceInvitationsHandler;
 
   private _deviceSpaceSync?: CredentialConsumer<any>;
 
@@ -82,7 +82,7 @@ export class ServiceContext {
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.haloInvitations = new HaloInvitationsHandler({
+    this.deviceInvitations = new DeviceInvitationsHandler({
       networkManager: this.networkManager,
       getIdentity: () => this.identityManager.identity ?? failUndefined(),
       acceptIdentity: this._acceptIdentity.bind(this),
