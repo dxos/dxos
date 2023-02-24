@@ -13,7 +13,7 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Status, StatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -50,11 +50,11 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
-  private readonly _statusUpdate = new Event<Status | undefined>();
+  private readonly _statusUpdate = new Event<SystemStatus | undefined>();
 
   private _initialized = false;
-  private _statusStream?: Stream<StatusResponse>;
-  private _status?: Status;
+  private _statusStream?: Stream<SystemStatusResponse>;
+  private _status?: SystemStatus;
 
   // prettier-ignore
   constructor({
@@ -215,14 +215,14 @@ export class Client {
     this._initialized = false;
   }
 
-  getStatus(): Status | undefined {
+  getStatus(): SystemStatus | undefined {
     return this._status;
   }
 
   /**
    * Observe the system status.
    */
-  subscribeStatus(callback: (status: Status | undefined) => void): UnsubscribeCallback {
+  subscribeStatus(callback: (status: SystemStatus | undefined) => void): UnsubscribeCallback {
     return this._statusUpdate.on(callback);
   }
 
@@ -233,7 +233,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.updateStatus({ status: Status.ACTIVE });
+    await this._services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
   }
 
   /**

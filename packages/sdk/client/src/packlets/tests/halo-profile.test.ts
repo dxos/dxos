@@ -23,7 +23,7 @@ describe('Halo', () => {
     expect(client.halo.identity).exist;
 
     expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
-    expect(client.halo.identity?.displayName).to.equal('test-user');
+    expect(client.halo.identity?.profile.displayName).to.equal('test-user');
   });
 
   test('device invitations', async () => {

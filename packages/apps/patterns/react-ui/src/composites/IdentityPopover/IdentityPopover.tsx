@@ -32,7 +32,7 @@ export const IdentityPopover = ({
             size={10}
             variant='circle'
             fallbackValue={identity.identityKey.toHex()}
-            label={identity.displayName ?? ''}
+            label={identity.profile.displayName ?? ''}
           />
         )
       }

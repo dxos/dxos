@@ -38,8 +38,8 @@ export class AppManager {
   // Getters
 
   async currentSpace() {
-    const url = await this.page.url();
-    return url.split('/').find((part) => part.includes('...'));
+    const url = new URL(await this.page.url());
+    return url.pathname.split('/')[0];
   }
 
   async kaiIsVisible() {
@@ -48,7 +48,13 @@ export class AppManager {
 
   // Actions
 
-  // TODO
+  async createSpace() {
+    await this.page.getByTestId('sidebar.createSpace').click();
+  }
+
+  async openJoinSpace() {
+    await this.page.getByTestId('sidebar.joinSpace').click();
+  }
 
   private async _onConsoleMessage(message: ConsoleMessage) {
     try {
