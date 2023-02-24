@@ -80,42 +80,18 @@ describe('schema', () => {
 
   test('fields', () => {
     expect(Contact.type.fields).to.deep.eq([
-      {
-        name: 'name',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'username',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'email',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'address',
-        type: {
-          kind: 'record',
-          objectType: 'example.test.Address'
-        }
-      },
+      { name: 'name', type: { kind: 'string' } },
+      { name: 'username', type: { kind: 'string' } },
+      { name: 'email', type: { kind: 'string' } },
+      { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },
       {
         name: 'tasks',
         type: {
           kind: 'array',
-          elementType: {
-            kind: 'ref',
-            objectType: 'example.test.Task',
-            modelType: DocumentModel.meta.type
-          }
+          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos:model/document' }
         }
-      }
+      },
+      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } }
     ]);
   });
 });

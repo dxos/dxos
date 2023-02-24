@@ -5,6 +5,7 @@
 import * as pb from 'protobufjs';
 
 import { text } from '@dxos/plate';
+import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName } from '@dxos/protobuf-compiler';
 
 const packageName = '@dxos/echo-schema';
 const namespaceName = 'dxosEchoSchema';
@@ -49,7 +50,9 @@ export const createType = (field: pb.Field): string => {
         return `${namespaceName}.Text`;
       }
 
-      return field.resolvedType.name;
+      return stringifyFullyQualifiedName(
+        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!))
+      );
     } else {
       switch (field.type) {
         case 'string':
@@ -91,22 +94,26 @@ export const createType = (field: pb.Field): string => {
   }
 };
 
+const isSchemaNamespace = (ns: pb.ReflectionObject) =>
+  ns instanceof pb.Namespace &&
+  ns.name === 'dxos' &&
+  ns.nestedArray.length === 1 &&
+  ns.nestedArray[0].name === 'schema';
+
+const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
+  const nestedArray = ns.nestedArray.filter((nested) => !isSchemaNamespace(nested));
+  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace) {
+    return getStartingNamespace(nestedArray[0]);
+  } else {
+    return ns;
+  }
+};
+
 /**
  * Generate type definitions.
  */
 export const generate = (root: pb.NamespaceBase): string => {
-  const declarations = [];
-  for (const type of iterTypes(root)) {
-    if (type.name === 'Text') {
-      continue;
-    }
-
-    if (type.options?.['(object)'] !== true) {
-      declarations.push(createPlainInterface(type));
-    } else {
-      declarations.push(createObjectClass(type));
-    }
-  }
+  const declarations = getStartingNamespace(root).nestedArray.flatMap((item) => Array.from(emitDeclarations(item)));
 
   return text`
   import * as ${namespaceName} from '${packageName}';
@@ -115,9 +122,31 @@ export const generate = (root: pb.NamespaceBase): string => {
 
   export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);
 
-  ${declarations.join('\n')}
+  ${declarations}
   `;
 };
+
+function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
+  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
+    yield text`
+      export namespace ${ns.name} {
+        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
+      }
+    `;
+  }
+
+  if (ns instanceof pb.Type) {
+    if (ns.name === 'Text') {
+      return;
+    }
+
+    if (ns.options?.['(object)'] !== true) {
+      yield createPlainInterface(ns);
+    } else {
+      yield createObjectClass(ns);
+    }
+  }
+}
 
 /**
  * Generate class definition.

@@ -8,19 +8,19 @@ import "dxos/schema.proto";
 
 package example.test;
 
-message LatLng {
-  fixed32 lat = 1;
-  fixed32 lng = 2;
-}
-
-message Address {
-  string city = 1;
-  string state = 2;
-  string zip = 3;
-  LatLng coordinates = 4;
-}
-
 message Contact {
+  message Address {
+    message LatLng {
+      fixed32 lat = 1;
+      fixed32 lng = 2;
+    }
+  
+    string city = 1;
+    string state = 2;
+    string zip = 3;
+    LatLng coordinates = 4;
+  }
+
   option (object) = true;
 
   string name = 1;
@@ -28,6 +28,7 @@ message Contact {
   string email = 3;
   Address address = 4;
   repeated Task tasks = 5;
+  LatLng current_location = 6;
 }
 
 message Task {
