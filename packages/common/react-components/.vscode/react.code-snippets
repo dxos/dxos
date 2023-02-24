@@ -20,8 +20,10 @@
 		"prefix": "component",
 		"body": [
 			"import React from 'react';",
+			"import { mx } from '../../util';",
 			"",
 			"export type $1Props = {$2};",
+			"",
 			"export const ${1:Component} = (props: $1Props) => {",
 			"  return <>$0</>;",
 			"}"

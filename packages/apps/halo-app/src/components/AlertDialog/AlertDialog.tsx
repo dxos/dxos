@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Transition } from '@headlessui/react';
+import { Transition } from '@headlessui/react';s
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 

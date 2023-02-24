@@ -28,7 +28,7 @@ const Test = () => {
         <div className='w-[300px]'>
           <Selector options={options} value={value} onChange={setValue} />
         </div>
-        <div className='p-1 ml-4'>{value ?? 'undefined'}</div>
+        <div className='p-1 ml-4'>Value: {value ?? 'undefined'}</div>
       </div>
     </div>
   );
