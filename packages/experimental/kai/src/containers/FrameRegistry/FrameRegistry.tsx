@@ -107,7 +107,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
       </div>
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
-        <div className='flex flex-col mt-8'>
+        <div className='flex flex-col'>
           <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
             {Array.from(modules.values()).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
               <Tile

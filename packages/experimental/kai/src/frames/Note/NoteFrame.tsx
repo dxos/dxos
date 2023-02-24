@@ -108,15 +108,14 @@ export const NoteFrame = () => {
     }
   };
 
-  // TODO(burdon): Select colors.
   return (
     <Grid
       items={items}
       layout={layout}
       slots={{
         tile: {
-          root: { className: 'bg-yellow-100 w-sidebar select-none cursor-pointer shadow-1' },
-          selected: { className: 'ring-1 ring-selection-border' }
+          root: { className: 'w-sidebar select-none cursor-pointer __shadow-1' }
+          // selected: { className: 'ring-1 ring-selection-border' }
         }
       }}
       Content={NoteTile}
