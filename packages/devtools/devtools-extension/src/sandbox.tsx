@@ -67,8 +67,13 @@ const App = () => {
     await waitForRpc();
 
     const client = new Client({ services: servicesProvider });
-    await client.initialize();
-    log('initialized client');
+    log('initializing client');
+    void client.initialize().then(
+      () => {
+        log('client initialized');
+      },
+      (err) => log.catch(err)
+    );
     setValue({ client, services: servicesProvider.services });
   }, []);
 
