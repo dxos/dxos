@@ -61,8 +61,7 @@ export const Tile = <T extends {} = {}>({
       {...listeners}
       ref={setNodeRef}
       className={mx(
-        'group',
-        'flex flex-col overflow-hidden p-3',
+        'group flex flex-col overflow-hidden',
         isDragging && 'opacity-80',
         slots.root?.className,
         selected && slots?.selected?.className
