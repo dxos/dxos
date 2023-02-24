@@ -9,7 +9,7 @@ import React, { Component, PropsWithChildren } from 'react';
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, fromHost, Status } from '@dxos/client';
 import { log } from '@dxos/log';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { ClientProvider, useClient } from './ClientContext';
 
@@ -73,9 +73,7 @@ describe('Client hook', function () {
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
-    });
+    await act(() => waitForCondition(() => client.getStatus() === Status.ACTIVE));
     expect(result.current).toEqual(client);
   });
 });
@@ -83,13 +81,13 @@ describe('Client hook', function () {
 describe('ClientProvider', () => {
   let client: Client;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await client.destroy();
   });
 
@@ -100,9 +98,8 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
-    });
+    // TODO(wittjosiah): This no longer works. Because the client status becomes active during initialization?
+    await act(() => waitForCondition(() => client.getStatus() === Status.ACTIVE));
 
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
@@ -114,9 +111,8 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
-    });
+    // TODO(wittjosiah): This no longer works. Because the client status becomes active during initialization?
+    await act(() => waitForCondition(() => client.getStatus() === Status.ACTIVE));
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();
     expect(() => screen.getByText('Client is NOT there')).toThrow();
