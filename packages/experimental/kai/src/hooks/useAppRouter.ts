@@ -2,21 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client';
 
-import { oncePerWindow } from './once';
 import { defaultFrameId, FrameDef, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',
-  REGISTRY = 'registry',
-  SETTINGS = 'settings'
+  REGISTRY = 'registry'
 }
 
 const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);
@@ -72,27 +69,9 @@ export type AppRoute = {
 // TODO(burdon): Should not create new space here -- instead on check for profile, initial space.
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
-  const navigate = useNavigate();
-  const client = useClient();
-  const spaces = useSpaces();
-  const identity = useIdentity();
   const { spaceKey, section, frame, objectId } = useParams();
+  const spaces = useSpaces();
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
-
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
-    if (identity && !space) {
-      t = setTimeout(
-        oncePerWindow('echo/first-space', async () => {
-          const space = await client.echo.createSpace();
-          const path = createPath({ spaceKey: space.key, frame: frame ?? defaultFrameId });
-          navigate(path);
-        })
-      );
-    }
-
-    return () => t && clearTimeout(t);
-  }, [space, identity]);
 
   const { frames, active: activeFrames } = useFrames();
   const frameId = frame && decodeFrame(frame);

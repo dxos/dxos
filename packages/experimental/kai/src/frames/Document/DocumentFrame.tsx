@@ -44,21 +44,21 @@ export const DocumentFrame = withReactor(() => {
           {/* TODO(burdon): Throttle input. */}
           <Input
             variant='subdued'
-            value={object.title}
-            onChange={(event) => {
-              object.title = event.target.value;
-            }}
             label='Title'
+            labelVisuallyHidden
             placeholder='Title'
             slots={{
-              label: { className: 'sr-only' },
               root: {
-                className: 'm-0 px-6 py-6 bg-paper-bg'
+                className: 'px-6 py-6 bg-paper-bg'
               },
               input: {
                 className: 'p-2 border-0 text-xl',
                 spellCheck
               }
+            }}
+            value={object.title}
+            onChange={(event) => {
+              object.title = event.target.value;
             }}
           />
 

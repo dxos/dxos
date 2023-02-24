@@ -7,16 +7,16 @@ import {
   Article,
   Calendar,
   Cards,
+  Code,
   Compass,
   Files,
-  Stack,
   Graph,
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
   Sword,
   Table,
-  Code
+  Wall
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -56,13 +56,13 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.stack',
+      id: 'dxos.module.frame.mosaic',
       type: 'dxos:type/frame',
-      displayName: 'Stack',
+      displayName: 'Mosaic',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Stack,
+      Icon: Wall,
       Component: StackFrame
     }
   },
@@ -219,19 +219,19 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.mosaic';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.stack',
+  'dxos.module.frame.mosaic',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
-  'dxos.module.frame.kanban'
+  // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer'
-  // 'dxos.module.frame.notes'
+  'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;

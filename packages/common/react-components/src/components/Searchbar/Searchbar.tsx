@@ -23,20 +23,21 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, onSearch }) => {
     <div className='flex flex-1 flex-col'>
       <div className='flex flex-1 items-center'>
         <Input
-          label={'Search'}
-          onChange={(event) => handleChange(event.target.value)}
+          variant='subdued'
+          label='Search'
+          labelVisuallyHidden
           placeholder='Search...'
           disabled={disabled}
           slots={{
             root: {
-              className: 'flex flex-1 mlb-0 border-t rounded'
+              className: 'flex flex-1'
             },
-            label: { className: 'sr-only' },
             input: {
               spellCheck: false,
               className: 'w-full'
             }
           }}
+          onChange={(event) => handleChange(event.target.value)}
         />
 
         {/* TODO(burdon): Move decorator inside input. */}

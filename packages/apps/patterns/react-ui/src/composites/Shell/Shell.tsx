@@ -25,36 +25,41 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
 
   useEffect(() => {
     return runtime.layoutUpdate.on((request) => setLayout(request));
-  }, []);
+  }, [runtime]);
 
   switch (layout) {
-    case ShellLayout.AUTH:
+    case ShellLayout.INITIALIZE_IDENTITY:
       return (
         <JoinDialog
           mode='halo-only'
           initialInvitationCode={invitationCode}
           onDone={async () => {
             // TODO(wittjosiah): Is this app-specific?
-            const space = spaces[0] ?? (await client.echo.createSpace());
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: space.key });
+            spaces.length > 0 || (await client.echo.createSpace());
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />
       );
 
-    case ShellLayout.CURRENT_SPACE:
-    case ShellLayout.SPACE_LIST:
+    case ShellLayout.DEVICE_INVITATIONS:
+      return (
+        <DevicesDialog
+          createInvitationUrl={(invitationCode) => `${origin}?haloInvitationCode=${invitationCode}`}
+          onDone={async () => {
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
+            runtime.setLayout(ShellLayout.DEFAULT);
+          }}
+        />
+      );
+
+    case ShellLayout.SPACE_INVITATIONS:
       return (
         <SpaceDialog
           space={space}
-          initialState={layout === ShellLayout.SPACE_LIST ? 'space list' : 'current space'}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
-          onClickJoinSpace={() => runtime.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key })}
-          onClickMember={() => runtime.setLayout(ShellLayout.DEVICES_LIST, { spaceKey: space?.key })}
-          onDone={async (space) => {
-            // TODO(wittjosiah): If space is newly created the app won't yet know about it.
-            //   This is a bug that needs to be fixed when upgrading the space service.
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: space ? space.key : spaceKey });
+          onDone={async () => {
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />
@@ -69,18 +74,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
           onExit={async () => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
-            runtime.setLayout(ShellLayout.DEFAULT);
-          }}
-        />
-      );
-
-    case ShellLayout.DEVICES_LIST:
-      return (
-        <DevicesDialog
-          createInvitationUrl={(invitationCode) => `${origin}?haloInvitationCode=${invitationCode}`}
-          onDone={async () => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />

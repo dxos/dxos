@@ -3,7 +3,6 @@
 //
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -17,8 +16,6 @@ export class ShellController {
   readonly contextUpdate = new Event<AppContextRequest>();
   private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
   private _display = ShellDisplay.NONE;
-  private _spaceKey?: PublicKey;
-  private _invitationCode?: string;
 
   constructor(private readonly _port: RpcPort) {}
 
@@ -26,19 +23,10 @@ export class ShellController {
     return this._display;
   }
 
-  get spaceKey() {
-    return this._spaceKey;
-  }
-
-  setSpace(key?: PublicKey) {
-    this._spaceKey = key;
-    this._emitUpdate();
-  }
-
   async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
     log('set layout', { layout, ...options });
     this._display = ShellDisplay.FULLSCREEN;
-    this._emitUpdate();
+    this.contextUpdate.emit({ display: this._display });
     await this._shellRpc?.rpc.ShellService.setLayout({ layout, ...options });
   }
 
@@ -51,8 +39,6 @@ export class ShellController {
           setContext: async (request) => {
             log('set context', request);
             this._display = request.display;
-            this._spaceKey = request.spaceKey;
-            this._invitationCode = request.invitationCode;
             this.contextUpdate.emit(request);
           }
         }
@@ -66,13 +52,5 @@ export class ShellController {
   async close() {
     await this._shellRpc?.close();
     this._shellRpc = undefined;
-  }
-
-  private _emitUpdate() {
-    this.contextUpdate.emit({
-      display: this._display,
-      spaceKey: this._spaceKey,
-      invitationCode: this._invitationCode
-    });
   }
 }

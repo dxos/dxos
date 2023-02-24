@@ -21,7 +21,7 @@ describe('ClientServicesHost', () => {
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
-    const { publicKey: spaceKey } = await host.services.SpaceService!.createSpace();
+    const { spaceKey } = await host.services.SpacesService!.createSpace();
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });
@@ -48,9 +48,9 @@ describe('ClientServicesHost', () => {
 
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
-    host.services.IdentityService!.subscribeIdentity()!.subscribe(({ identity }) => {
-      if (identity?.haloSpace) {
-        haloSpace.wake(identity.haloSpace);
+    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+      if (identity?.spaceKey) {
+        haloSpace.wake(identity.spaceKey);
       }
     });
 

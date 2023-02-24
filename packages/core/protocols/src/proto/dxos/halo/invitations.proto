@@ -23,9 +23,18 @@ message AuthenticationResponse {
     OK = 0;
     INVALID_OTP = 1;
     INVALID_OPT_ATTEMPTS = 2;
+    INTERNAL_ERROR = 3;
   }
 
   optional Status status = 1;
+}
+
+enum AuthMethod {
+  /// No authnetication is required. Guest should not call `Authenticate`.
+  NONE = 0;
+
+  /// Guest should call `Authenticate` with the shared secret.
+  SHARED_SECRET = 1;
 }
 
 //
@@ -64,6 +73,13 @@ message Introduction {
   optional halo.credentials.ProfileDocument profile = 1;
 }
 
+message IntroductionResponse {
+  /// Only present for testing invitation types.
+  optional dxos.keys.PublicKey space_key = 1;
+
+  AuthMethod auth_method = 2;
+}
+
 message SpaceAdmissionRequest {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey device_key = 2;
@@ -75,13 +91,16 @@ message SpaceAdmissionCredentials {
   /// Credential of type `SpaceMember` that grants Guest's identity access to the space.
   dxos.halo.credentials.Credential credential = 1;
 
+  /// Hint to the guest about the current control timeframe.
   optional dxos.echo.timeframe.TimeframeVector control_timeframe = 2;
+
+  /// Hint to the guest about the current data timeframe.
   optional dxos.echo.timeframe.TimeframeVector data_timeframe = 3;
 }
 
 service SpaceHostService {
   /// Introduce Guest to the host.
-  rpc Introduce(Introduction) returns (google.protobuf.Empty);
+  rpc Introduce(Introduction) returns (IntroductionResponse);
 
   /// Authenticate request.
   rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);

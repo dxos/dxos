@@ -44,6 +44,8 @@ export const AuthChoices = ({ onCreate, onJoin, onRecover }: AuthChoicesProps) =
       )}
       {onRecover && (
         <CompoundButton
+          // TODO(mykola): Implement recover.
+          disabled={true}
           description={t('recover identity description')}
           before={<Textbox className='w-6 h-6' />}
           after={<CaretRight className='w-4 h-4' weight='bold' />}

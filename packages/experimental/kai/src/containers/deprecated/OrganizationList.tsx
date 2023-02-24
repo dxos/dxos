@@ -15,7 +15,7 @@ export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());
 
   return (
-    <List labelId='todo'>
+    <List labelId='todo' density='coarse'>
       {organizations.map((organization) => (
         <OrganizationListItem key={organization.id} organization={organization} />
       ))}
@@ -35,26 +35,25 @@ export const OrganizationListItem: FC<{ organization: Organization }> = withReac
         <Input
           variant='subdued'
           label='Organization name'
+          labelVisuallyHidden
           value={organization.name}
           onChange={({ target: { value } }) => (organization.name = value)}
           slots={{
-            root: { className: 'm-0' },
-            input: { spellCheck: false, className: 'p-2' },
-            label: { className: 'sr-only' }
+            input: { spellCheck: false }
           }}
         />
-        <div className='mis-2'>
+        <div>
           {organization.address && <p className='text-sm text-gray-800'>{address(organization.address)}</p>}
 
           {/* Contacts */}
           {organization.people?.length > 0 && (
-            <List labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
+            <List density='fine' labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
               {organization.people?.map((contact) => (
                 <ListItem key={contact.id}>
-                  <ListItemEndcap className={mx('flex items-center mr-2', getSize(6))}>
-                    <User className={getSize(4)} />
+                  <ListItemEndcap className={mx('flex items-center')}>
+                    <User className={getSize(5)} />
                   </ListItemEndcap>
-                  <ListItemHeading className='text-sm mbs-0.5'>{contact.name}</ListItemHeading>
+                  <ListItemHeading className='text-sm pbs-1.5'>{contact.name}</ListItemHeading>
                 </ListItem>
               ))}
             </List>

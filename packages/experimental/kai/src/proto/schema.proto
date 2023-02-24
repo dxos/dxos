@@ -169,4 +169,5 @@ message Note {
 
   string title = 1;
   dxos.schema.Text content = 2;
+  string color = 3;
 }

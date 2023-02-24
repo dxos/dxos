@@ -6,7 +6,7 @@ import { FrameCorners, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize, mx, Searchbar, Button } from '@dxos/react-components';
+import { getSize, mx, Searchbar, Button, ButtonGroup } from '@dxos/react-components';
 
 import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
 
@@ -86,31 +86,28 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
-  // TODO(burdon): Margin top collapses if only ONE frame is selected!
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex my-8 justify-center'>
-        <div className='flex w-column p-1 items-center bg-white rounded-lg'>
-          <Searchbar disabled />
-          <div className='ml-4'>
-            <Button compact variant='ghost' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
-              <FrameCorners
-                weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
-              />
-            </Button>
-            <Button compact variant='ghost' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
-              <Robot
-                weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
-              />
-            </Button>
-          </div>
-        </div>
+        <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
+          <Searchbar />
+          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+            <FrameCorners
+              weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
+              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
+            />
+          </Button>
+          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+            <Robot
+              weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
+              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
+            />
+          </Button>
+        </ButtonGroup>
       </div>
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
-        <div className='flex flex-col mt-8'>
+        <div className='flex flex-col'>
           <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
             {Array.from(modules.values()).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
               <Tile

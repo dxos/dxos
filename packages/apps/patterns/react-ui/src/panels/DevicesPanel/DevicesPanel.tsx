@@ -6,7 +6,7 @@ import { UserPlus, X } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
-import { Button, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
+import { Button, DensityProvider, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
 
 import { DeviceList, InvitationList, PanelSeparator } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
@@ -26,14 +26,14 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
-  const displayName = identity?.displayName;
+  const displayName = identity?.profile?.displayName;
 
   if (!identity) {
     return null;
   }
 
   const doneButton = (
-    <Button compact variant='ghost' onClick={() => onDone?.()} data-testid='show-all-spaces'>
+    <Button variant='ghost' onClick={() => onDone?.()} data-testid='show-all-spaces'>
       <X className={getSize(4)} weight='bold' />
     </Button>
   );
@@ -57,7 +57,6 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
         />
         <Button
           className='is-full flex gap-2 mbs-2'
-          compact
           onClick={() => client.halo.createInvitation()}
           data-testid='create-space-invitation'
         >
@@ -94,5 +93,9 @@ export const DevicesPanel = (props: DevicesPanelProps) => {
   });
 
   // TODO(wittjosiah): Use ViewState or similar.
-  return <>{panelState.activeView === 'device list' ? <DeviceListView {...props} /> : null}</>;
+  return (
+    <DensityProvider density='fine'>
+      {panelState.activeView === 'device list' ? <DeviceListView {...props} /> : null}
+    </DensityProvider>
+  );
 };

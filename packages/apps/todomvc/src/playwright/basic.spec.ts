@@ -34,8 +34,7 @@ describe('Basic test', () => {
     guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
   });
 
-  // TODO(wittjosiah): Space service does not notify client proxy of new space.
-  describe.skip('Default space', () => {
+  describe('Default space', () => {
     test('create identity', async () => {
       await host.init();
 
@@ -52,7 +51,6 @@ describe('Basic test', () => {
     }).skipEnvironments('firefox');
 
     test('create a task', async () => {
-      // Should be autofocused into new task input.
       await host.createTodo(Groceries.Eggs);
 
       expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
@@ -63,6 +61,7 @@ describe('Basic test', () => {
       await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      await guest.openJoinSpace();
       const [authenticationCode] = await Promise.all([
         host.shell.getAuthenticationCode(),
         guest.shell.acceptSpaceInvitation(invitationCode)
@@ -128,7 +127,6 @@ describe('Basic test', () => {
     }).skipEnvironments('firefox');
 
     test('filter active tasks', async () => {
-      await host.focusNewTodo();
       await host.createTodo(Groceries.Eggs);
       await host.createTodo(Groceries.Milk);
       await host.createTodo(Groceries.Butter);

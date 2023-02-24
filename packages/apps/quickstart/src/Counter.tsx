@@ -31,7 +31,7 @@ export const Counter = () => {
   }
   return (
     <div>
-      {identity && `Hello ${identity?.displayName}!`}
+      {identity && `Hello ${identity?.profile?.displayName}!`}
       {counter && (
         <button
           className='p-4 m-2 border'

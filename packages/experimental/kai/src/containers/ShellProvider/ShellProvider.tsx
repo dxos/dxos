@@ -3,11 +3,11 @@
 //
 
 import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { ShellDisplay, ShellLayout } from '@dxos/client';
+import { IFrameClientServicesProxy, ShellDisplay, ShellLayout } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
-import { useConfig, useIdentity } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { Shell } from '@dxos/react-ui';
 
@@ -18,19 +18,42 @@ import { createPath, defaultFrameId, ShellContext, useAppRouter } from '../../ho
  */
 // TODO(wittjosiah): Factor out?
 export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const navigate = useNavigate();
-  const { frame } = useParams();
-  const config = useConfig();
+  const { space, frame } = useAppRouter();
+
+  //
+  // IFrame Shell
+  //
+
+  useEffect(() => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      return client.services.joinedSpace.on(
+        (spaceKey) => spaceKey && navigate(createPath({ spaceKey, frame: frame?.module.id ?? defaultFrameId }))
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      client.services.setSpaceProvider(() => space?.key);
+    }
+  }, [space]);
+
+  //
+  // Component Shell
+  //
+
+  const client = useClient();
   const identity = useIdentity();
-  const { space } = useAppRouter();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
   const [display, setDisplay] = useState(
     !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE
   );
+
   const shellRuntime = useMemo(() => {
-    if (config.get('runtime.app.env.DX_VAULT') === 'true') {
+    if (client.config.get('runtime.app.env.DX_VAULT') === 'true') {
       return;
     }
 
@@ -42,10 +65,10 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     }
 
     return new MemoryShellRuntime({
-      layout: identity ? ShellLayout.DEFAULT : ShellLayout.AUTH,
+      layout: identity ? ShellLayout.DEFAULT : ShellLayout.INITIALIZE_IDENTITY,
       invitationCode: haloInvitationCode ?? undefined
     });
-  }, [config, identity, spaceInvitationCode, haloInvitationCode]);
+  }, [client, identity, spaceInvitationCode, haloInvitationCode]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -55,10 +78,10 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
 
       const modifier = event.ctrlKey || event.metaKey;
       if (event.key === '>' && event.shiftKey && modifier) {
-        shellRuntime.setLayout(ShellLayout.SPACE_LIST, { spaceKey: space.key });
+        shellRuntime.setLayout(ShellLayout.DEVICE_INVITATIONS);
         setDisplay(ShellDisplay.FULLSCREEN);
       } else if (event.key === '.' && modifier) {
-        shellRuntime.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space.key });
+        shellRuntime.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
         setDisplay(ShellDisplay.FULLSCREEN);
       }
     },
@@ -80,10 +103,10 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     }
 
     return shellRuntime.contextUpdate.on(({ display, spaceKey }) => {
-      navigate(createPath({ spaceKey, frame: frame ?? defaultFrameId }));
       setDisplay(display);
+      spaceKey && navigate(createPath({ spaceKey, frame: frame?.module.id ?? defaultFrameId }));
     });
-  }, []);
+  }, [shellRuntime, frame]);
 
   return (
     <>

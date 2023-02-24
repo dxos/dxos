@@ -43,13 +43,15 @@ export {
 
 export { ApiError } from '@dxos/errors';
 
-export { type Contact, type Identity, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
-export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+export {
+  type Contact,
+  type Identity,
+  Invitation,
+  SpaceMember,
+  SpaceStatus,
+  SystemStatus
+} from '@dxos/protocols/proto/dxos/client/services';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-
-// TODO(burdon): Remove.
-export { type KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-export type { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';

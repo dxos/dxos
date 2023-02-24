@@ -9,9 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
@@ -151,27 +149,8 @@ describe('Client services', () => {
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      const devices1 = new Trigger<DeviceInfo[]>();
-      const devices2 = new Trigger<DeviceInfo[]>();
-
-      {
-        client1.halo.queryDevices().subscribe({
-          onUpdate: (devices) => {
-            devices1.wake(devices);
-          },
-          onError: (err: Error) => raise(new Error(err.message))
-        });
-
-        client2.halo.queryDevices().subscribe({
-          onUpdate: (devices) => {
-            devices2.wake(devices);
-          },
-          onError: (err: Error) => raise(new Error(err.message))
-        });
-      }
-
-      expect(await devices1.wait()).to.have.lengthOf(2);
-      expect(await devices2.wait()).to.have.lengthOf(2);
+      expect(client1.halo.getDevices()).to.have.lengthOf(2);
+      expect(client2.halo.getDevices()).to.have.lengthOf(2);
     });
   });
 
@@ -244,22 +223,23 @@ describe('Client services', () => {
     const space2 = await trigger.wait();
 
     for (const space of [space1, space2]) {
-      await space.queryMembers().waitFor((members) => members.length === 2);
       await waitForExpect(() => {
-        expect(space.queryMembers().value).to.deep.equal([
+        expect(space.getMembers()).to.deep.equal([
           {
-            identityKey: client1.halo.identity!.identityKey,
             identity: {
               identityKey: client1.halo.identity!.identityKey,
-              displayName: 'Peer 1'
+              profile: {
+                displayName: 'Peer 1'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.identity!.identityKey,
             identity: {
               identityKey: client2.halo.identity!.identityKey,
-              displayName: 'Peer 2'
+              profile: {
+                displayName: 'Peer 2'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           }

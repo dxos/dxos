@@ -62,8 +62,8 @@ export const IdentityAdded = ({
           size={20}
           fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
           label={
-            <p className={mx('text-lg', !addedIdentity?.displayName && 'font-mono')}>
-              {addedIdentity?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
+            <p className={mx('text-lg', !addedIdentity?.profile?.displayName && 'font-mono')}>
+              {addedIdentity?.profile?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
             </p>
           }
           variant='circle'

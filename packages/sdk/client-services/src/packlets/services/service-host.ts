@@ -2,6 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
+
+import { Event } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
@@ -9,17 +12,19 @@ import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Status } from '@dxos/protocols/proto/dxos/client';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl, SystemServiceImpl } from '../deprecated';
+import { TracingServiceImpl } from '../deprecated';
+import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { DevicesServiceImpl } from '../identity/devices-service-impl';
-import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { IdentityServiceImpl } from '../identity';
+import { DeviceInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
+import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
@@ -48,6 +53,7 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _systemService: SystemServiceImpl;
 
   private readonly _config: Config;
+  private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _storage: Storage;
@@ -64,6 +70,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager,
     storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage,
+    // TODO(wittjosiah): Turn this on by default.
     lockKey
   }: ClientServicesHostParams) {
     this._config = config;
@@ -82,20 +89,21 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._systemService = new SystemServiceImpl({
       config: this._config,
 
-      onInit: async () => {
-        await this._resourceLock?.acquire();
-      },
+      statusUpdate: this._statusUpdate,
 
-      onStatus: async () => {
-        if (!this.isOpen) {
-          return { status: Status.INACTIVE };
+      getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
+
+      onUpdateStatus: async (status: SystemStatus) => {
+        if (!this.isOpen && status === SystemStatus.ACTIVE) {
+          await this._resourceLock?.acquire();
+        } else if (this.isOpen && status === SystemStatus.INACTIVE) {
+          await this._resourceLock?.release();
         }
-
-        return { status: Status.ACTIVE };
       },
 
       onReset: async () => {
-        await this._serviceContext?.reset();
+        assert(this._serviceContext, 'service host is closed');
+        await this._serviceContext.reset();
       }
     });
 
@@ -123,6 +131,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     }
 
     log('opening...');
+    await this._resourceLock?.acquire();
 
     // TODO(wittjosiah): Make re-entrant.
     // TODO(burdon): Break into components.
@@ -130,15 +139,16 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
-      // TODO(burdon): Move to new protobuf definitions.
       SystemService: this._systemService,
 
-      HaloInvitationsService: new HaloInvitationsServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.haloInvitations
-      ),
+      IdentityService: new IdentityServiceImpl(this._serviceContext),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+
+      DeviceInvitationsService: new DeviceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.deviceInvitations
+      ),
 
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         this._serviceContext.identityManager,
@@ -146,18 +156,21 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
-      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager),
+      SpacesService: new SpacesServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.spaceManager,
+        this._serviceContext.dataServiceSubscriptions,
+        async () => {
+          await this._serviceContext.initialized.wait();
+          return this._serviceContext.dataSpaceManager!;
+        }
+      ),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
       // TODO(burdon): Move to new protobuf definitions.
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
-
-      // TODO(burdon): Port old SubscribeSpaces to QueryServices>
-      SpaceService: new SpaceServiceImpl(this._serviceContext),
-
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
@@ -168,6 +181,7 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     await this._serviceContext.open();
     this._open = true;
+    this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
@@ -182,6 +196,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._serviceContext.close();
     this._open = false;
+    this._statusUpdate.emit();
     log('closed', { deviceKey });
   }
 }

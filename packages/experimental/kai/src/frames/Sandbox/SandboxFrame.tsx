@@ -60,7 +60,7 @@ export const SandboxFrame = withReactor(() => {
     return (
       <div className='flex shrink-0 w-full justify-between p-2 bg-gray-200'>
         <h2>{selected.name}</h2>
-        <Button compact variant='ghost' onClick={handleCompile}>
+        <Button variant='ghost' onClick={handleCompile}>
           <PlayCircle className={getSize(6)} />
         </Button>
       </div>

@@ -2,29 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
+import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useClient, useMembers, useSpaces } from '@dxos/react-client';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import {
-  useAppState,
-  useTheme,
-  useShell,
-  createInvitationPath,
-  useAppRouter,
-  createPath,
-  defaultFrameId
-} from '../../hooks';
+import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useShell, useTheme } from '../../hooks';
+import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { SpaceList } from '../SpaceList';
-import { Actions } from './Actions';
+import { SpaceList, SpaceListAction } from '../SpaceList';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -38,7 +33,7 @@ export const Sidebar = () => {
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
-  const { dev } = useAppState();
+  const { state: connectionState } = useNetworkStatus();
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
@@ -70,36 +65,57 @@ export const Sidebar = () => {
     void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
   };
 
-  const handleSelectSpace = (spaceKey: PublicKey) => {
-    navigate(createPath({ spaceKey, frame: frame?.module.id }));
+  const handleSpaceListAction = (intent: Intent<SpaceListAction>) => {
+    const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
+    assert(space);
+
+    switch (intent.action) {
+      case IntentAction.SPACE_SELECT: {
+        navigate(createPath({ spaceKey: intent.data.spaceKey, frame: frame?.module.id }));
+        break;
+      }
+
+      case IntentAction.SPACE_SHARE: {
+        if (intent.data.modifier) {
+          const swarmKey = PublicKey.random();
+          const observable = space.createInvitation({
+            swarmKey,
+            authMethod: AuthMethod.NONE,
+            type: Invitation.Type.MULTIUSE_TESTING
+          });
+
+          const unsubscribe = observable.subscribe({
+            onConnecting: () => {
+              setObservable(observable);
+              unsubscribe();
+            },
+            onConnected: () => {},
+            onSuccess: () => {},
+            onError: (error) => {
+              log.error(error);
+              unsubscribe();
+            }
+          });
+        } else {
+          void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
+        }
+
+        break;
+      }
+    }
   };
 
-  const handleShareSpace = (spaceKey: PublicKey) => {
-    if (dev && space) {
-      // TODO(burdon): Cancel/remove.
-      const swarmKey = PublicKey.random();
-      const observable = space.createInvitation({
-        swarmKey,
-        type: Invitation.Type.MULTIUSE_TESTING
-      });
-
-      const unsubscribe = observable.subscribe({
-        onConnecting: () => {
-          setObservable(observable);
-          unsubscribe();
-        },
-        onConnected: () => {},
-        onSuccess: () => {},
-        onError: (error) => {
-          log.error(error);
-          unsubscribe();
-        }
-      });
-
-      return;
+  const handleToggleConnection = async () => {
+    switch (connectionState) {
+      case ConnectionState.OFFLINE: {
+        await client.mesh.setConnectionState(ConnectionState.ONLINE);
+        break;
+      }
+      case ConnectionState.ONLINE: {
+        await client.mesh.setConnectionState(ConnectionState.OFFLINE);
+        break;
+      }
     }
-
-    void shell.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
   };
 
   // TODO(burdon): Mobile slider (full width, no blur).
@@ -114,18 +130,29 @@ export const Sidebar = () => {
       >
         <div className='flex justify-between px-2'>
           <div className='flex items-center'>
-            {/* TODO(burdon): Remove initial focus. */}
-            <Button compact variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>
+            <Button
+              variant='ghost'
+              className='flex'
+              title='Create new space'
+              data-testid='sidebar.createSpace'
+              onClick={handleCreateSpace}
+            >
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
-            <Button compact variant='ghost' className='flex' title='Join a space' onClick={handleJoinSpace}>
+            <Button
+              variant='ghost'
+              className='flex'
+              title='Join a space'
+              data-testid='sidebar.joinSpace'
+              onClick={handleJoinSpace}
+            >
               <span className='sr-only'>Join a space</span>
-              <ArrowCircleDownLeft className={getSize(6)} />
+              <Target className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button compact variant='ghost' onClick={toggleSidebar}>
+            <Button variant='ghost' onClick={toggleSidebar}>
               {isOpen && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>
@@ -135,20 +162,24 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
         <div className='flex overflow-y-auto'>
-          <SpaceList spaces={spaces} selected={space?.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+          <SpaceList spaces={spaces} selected={space?.key} onAction={handleSpaceListAction} />
         </div>
 
         <div className='flex-1' />
 
         {/* Members */}
         <div className='flex flex-col shrink-0 my-4'>
-          <div className='flex shrink-0'>
-            <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
-          </div>
+          <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
+          <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />
+          <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>
+            {connectionState === ConnectionState.ONLINE ? (
+              <WifiHigh className={getSize(5)} />
+            ) : (
+              <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
+            )}
+            <span className='mis-2'>Toggle connection</span>
+          </Button>
         </div>
-
-        {/* TODO(burdon): Move some actions to menu. */}
-        <Actions />
       </div>
     </div>
   );

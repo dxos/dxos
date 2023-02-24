@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, Suspense } from 'react';
 
 import { FrameDef } from '../../hooks';
 
@@ -16,5 +16,9 @@ export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
   }
 
   // TODO(burdon): Standardize container (bg, padding, centered, size, etc.)
-  return <Component />;
+  return (
+    <Suspense>
+      <Component />
+    </Suspense>
+  );
 };

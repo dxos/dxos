@@ -5,18 +5,20 @@
 import { useContext } from 'react';
 
 import { ElevationContext } from '../components';
+import { Elevation } from '../props';
 import { useThemeContext } from './useThemeContext';
 
 export const useElevationContext = () => useContext(ElevationContext);
 
-export const useButtonShadow = () => {
+export const useButtonShadow = (propsElevation?: Elevation) => {
   const { elevation } = useElevationContext();
   const { themeVariant } = useThemeContext();
+  const resolvedElevation = propsElevation ?? elevation;
   return themeVariant === 'os'
     ? 'shadow-none'
-    : elevation === 'group'
+    : resolvedElevation === 'group'
     ? 'shadow'
-    : elevation === 'chrome'
+    : resolvedElevation === 'chrome'
     ? 'shadow-none'
     : 'shadow-md';
 };

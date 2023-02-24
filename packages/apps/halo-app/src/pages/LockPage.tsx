@@ -41,7 +41,7 @@ const LockPage = () => {
             size={32}
             variant='circle'
             fallbackValue={identity.identityKey.toHex()}
-            label={identity.displayName ?? humanize(identity.identityKey)}
+            label={identity.profile?.displayName ?? humanize(identity.identityKey)}
             slots={{
               root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) }
             }}
@@ -52,7 +52,7 @@ const LockPage = () => {
               {...{
                 t,
                 i18nKey: 'using halo as message',
-                values: { displayName: identity.displayName ?? humanize(identity.identityKey.toHex()) },
+                values: { displayName: identity.profile?.displayName ?? humanize(identity.identityKey.toHex()) },
                 components: { nameStyle: <span className='text-success-600 dark:text-success-300'>_</span> }
               }}
             />

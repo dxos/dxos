@@ -5,7 +5,7 @@
 import React, { useState, useCallback } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Status } from '@dxos/client';
+import { SystemStatus } from '@dxos/client';
 import { ClientContextProps } from '@dxos/react-client';
 import { Button, Heading, Loading, useTranslation } from '@dxos/react-components';
 
@@ -47,7 +47,7 @@ export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) 
   }, [client]);
 
   switch (status) {
-    case Status.INACTIVE:
+    case SystemStatus.INACTIVE:
       return (
         <div className='flex flex-col gap-4 justify-center items-center h-screen' aria-live='polite'>
           <Heading level={1} className='text-lg font-light text-center'>

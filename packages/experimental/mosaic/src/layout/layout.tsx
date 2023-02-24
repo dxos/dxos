@@ -31,7 +31,5 @@ export interface Layout {
 export type Item<T extends {} = {}> = {
   id: string;
   data?: T;
-  label: string;
-  content?: string;
   location?: Location;
 };

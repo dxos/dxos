@@ -51,6 +51,8 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
         </CompoundButton>
         <CompoundButton
           {...sharedButtonProps}
+          // TODO(mykola): Implement recover.
+          disabled={true}
           description={t('recover identity description')}
           before={<Textbox className={getSize(6)} />}
           onClick={() => dispatch({ type: 'select addition method', method: 'recover identity' })}

@@ -3,13 +3,14 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { IdentityService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
 import {
-  HaloInvitationsService,
+  DevicesService,
+  DeviceInvitationsService,
+  IdentityService,
+  NetworkService,
   SpaceInvitationsService,
   SpacesService,
-  DevicesService,
-  NetworkService
+  SystemService
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -20,19 +21,19 @@ import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 //
 
 export type ClientServices = {
-  HaloInvitationsService: HaloInvitationsService;
+  SystemService: SystemService;
+
+  IdentityService: IdentityService;
+  DeviceInvitationsService: DeviceInvitationsService;
   DevicesService: DevicesService;
 
   SpaceInvitationsService: SpaceInvitationsService;
   SpacesService: SpacesService;
+  DataService: DataService;
 
   NetworkService: NetworkService;
 
   // TODO(burdon): Deprecated.
-  SpaceService: SpaceService;
-  DataService: DataService;
-  IdentityService: IdentityService;
-  SystemService: SystemService;
   DevtoolsHost: DevtoolsHost;
   TracingService: TracingService;
 };
@@ -52,17 +53,16 @@ export interface ClientServicesProvider {
  * Services supported by host.
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
-  HaloInvitationsService: schema.getService('dxos.client.services.HaloInvitationsService'),
+  SystemService: schema.getService('dxos.client.services.SystemService'),
+  IdentityService: schema.getService('dxos.client.services.IdentityService'),
+  DeviceInvitationsService: schema.getService('dxos.client.services.DeviceInvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
+  DataService: schema.getService('dxos.echo.service.DataService'),
   NetworkService: schema.getService('dxos.client.services.NetworkService'),
 
   // TODO(burdon): Deprecated.
-  SpaceService: schema.getService('dxos.client.SpaceService'),
-  DataService: schema.getService('dxos.echo.service.DataService'),
-  IdentityService: schema.getService('dxos.client.IdentityService'),
-  SystemService: schema.getService('dxos.client.SystemService'),
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.host.TracingService')
 });

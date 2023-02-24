@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './SpaceContext';
 export * from './useMembers';
 export * from './useQuery';
 export * from './useReactor';

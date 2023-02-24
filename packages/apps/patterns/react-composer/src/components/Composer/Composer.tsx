@@ -16,6 +16,7 @@ export interface ComposerSlots {
   editor?: {
     className?: string;
     spellCheck?: boolean;
+    tabIndex?: number;
   };
 }
 
@@ -48,8 +49,9 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
       ],
       editorProps: {
         attributes: {
-          class: mx('focus:outline-none focus-visible:outline-none', slots?.editor?.className),
-          spellcheck: slots?.editor?.spellCheck === false ? 'false' : 'true'
+          class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
+          spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
+          tabindex: slots?.editor?.tabIndex ? String(slots?.editor?.tabIndex) : '0'
         }
       }
     },
