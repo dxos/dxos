@@ -28,6 +28,27 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/patterns/react-ui/playwright",
+        "outputPath": "tmp/mocha/packages/apps/patterns/react-ui/playwright",
+        "playwright": true,
+        "resultsPath": "test-results/packages/apps/patterns/react-ui/playwright",
+        "serve": "react-ui:storybook",
+        "testPatterns": [
+          "packages/apps/patterns/react-ui/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/patterns/react-ui/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

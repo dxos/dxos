@@ -35,6 +35,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
+    "@faker-js/faker": "^7.6.0",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
