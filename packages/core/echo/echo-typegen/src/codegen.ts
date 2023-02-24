@@ -5,7 +5,7 @@
 import * as pb from 'protobufjs';
 
 import { text } from '@dxos/plate';
-import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName } from '@dxos/protobuf-compiler';
+import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
 const packageName = '@dxos/echo-schema';
 const namespaceName = 'dxosEchoSchema';
@@ -95,22 +95,30 @@ export const createType = (field: pb.Field): string => {
 };
 
 const isSchemaNamespace = (ns: pb.ReflectionObject) =>
-  ns instanceof pb.Namespace && ns.name === 'dxos' && ns.nestedArray[0].name === 'schema';
+  (ns instanceof pb.Namespace &&
+    ns.name === 'dxos' &&
+    ns.nestedArray.length === 1 &&
+    ns.nestedArray[0].name === 'schema') ||
+  (ns instanceof pb.Namespace && ns.name === 'schema' && ns.parent?.name === 'dxos');
 
 const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
   const nestedArray = ns.nestedArray.filter((nested) => !isSchemaNamespace(nested));
   if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace && !(nestedArray[0] instanceof pb.Type)) {
     return getStartingNamespace(nestedArray[0]);
-  } else {
-    return ns;
   }
+
+  return ns;
 };
 
 /**
  * Generate type definitions.
  */
 export const generate = (root: pb.NamespaceBase): string => {
-  const declarations = getStartingNamespace(root).nestedArray.flatMap((item) => Array.from(emitDeclarations(item)));
+  const startNamespace = getStartingNamespace(root);
+
+  const declarations = isType(startNamespace)
+    ? Array.from(emitDeclarations(startNamespace))
+    : startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return text`
   import * as ${namespaceName} from '${packageName}';
@@ -120,6 +128,7 @@ export const generate = (root: pb.NamespaceBase): string => {
   export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
+
   `;
 };
 
@@ -181,6 +190,7 @@ export const createObjectClass = (type: pb.Type) => {
     }
 
     schema.registerPrototype(${name});
+
   `;
 };
 
@@ -200,5 +210,6 @@ export const createPlainInterface = (type: pb.Type) => {
   export interface ${name} {
     ${fields}
   }
+
   `;
 };
