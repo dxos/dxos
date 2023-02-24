@@ -42,7 +42,7 @@ export type EchoSchemaField = {
   type: EchoType;
 };
 
-const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'TextObject';
+const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'Text';
 
 const getFields = (type: pb.Type): EchoSchemaField[] => {
   type.fieldsArray.forEach((field) => field.resolve());

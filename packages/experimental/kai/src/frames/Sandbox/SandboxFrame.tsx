@@ -5,7 +5,7 @@
 import { PlayCircle } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
@@ -28,7 +28,7 @@ export const SandboxFrame = withReactor(() => {
       setTimeout(async () => {
         const frame = new Frame({
           name: 'Frame.tsx',
-          content: new TextObject()
+          content: new Text()
         });
 
         await space?.db.add(frame);

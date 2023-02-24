@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { TextObject, useQuery } from '@dxos/react-client';
+import { Text, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
@@ -32,7 +32,7 @@ export const DocumentTile = () => {
 
   const handleCreate = async () => {
     const object = await space.db.add(new TextDocument());
-    object.content = new TextObject(); // TODO(burdon): Make automatic?
+    object.content = new Text(); // TODO(burdon): Make automatic?
     return object.id;
   };
 
