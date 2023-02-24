@@ -12,6 +12,9 @@ export type EditableObjectListSlots = {
   root?: {
     className?: string;
   };
+  selected?: {
+    className?: string;
+  };
 };
 
 // TODO(burdon): Make fully generic (don't depend on Document).
@@ -61,7 +64,15 @@ export const EditableObjectList = <T extends Document>({
         {objects.map((object) => {
           const isSelected = object.id === selected;
           return (
-            <ListItem id={object.id} key={object.id}>
+            <ListItem
+              id={object.id}
+              key={object.id}
+              slots={{
+                root: {
+                  className: selected === object.id ? slots?.selected?.className : undefined
+                }
+              }}
+            >
               <ListItemEndcap asChild>
                 <Button
                   variant='ghost'
@@ -100,8 +111,8 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <Button variant='ghost' onClick={handleCreate} className='mbs-2'>
-          <Plus className={getSize(6)} />
+        <Button density='fine' variant='ghost' onClick={handleCreate}>
+          <Plus className={getSize(5)} />
         </Button>
       )}
     </div>

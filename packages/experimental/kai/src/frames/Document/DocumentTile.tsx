@@ -11,6 +11,7 @@ import { EditableObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
 import { TextDocument } from '../../proto';
 
+// TODO(burdon): Factor out.
 export const DocumentTile = () => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
