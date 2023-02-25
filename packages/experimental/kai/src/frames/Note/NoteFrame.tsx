@@ -119,7 +119,8 @@ export const NoteFrame = () => {
 
   return (
     <>
-      <div className='absolute right-0 m-2 z-50'>
+      {/* TODO(burdon): Standardize overlays. */}
+      <div className='absolute right-0 z-10 m-2'>
         <Button
           title='Double-click board to toggle zoom.'
           onClick={() => {
@@ -139,7 +140,7 @@ export const NoteFrame = () => {
             root: { className: 'w-sidebar select-none cursor-pointer opacity-100' }
           },
           cell: {
-            over: { className: '__border-red-400 border-4' }
+            over: { className: 'border-4' }
           }
         }}
         Content={NoteTile}
