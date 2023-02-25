@@ -30,7 +30,7 @@ export const Alert = ({ title, children, assertive, valence, slots = {} }: Alert
       {...slots.root}
       role={assertive ? 'alert' : 'group'}
       aria-labelledby={labelId}
-      className={mx('p-3 rounded-md', shadow, alertValence(valence), slots.root?.className)}
+      className={mx('p-3 rounded-md max-is-full overflow-auto', shadow, alertValence(valence), slots.root?.className)}
     >
       <p {...slots.title} id={labelId} className={mx('font-medium mb-2', slots.title?.className)}>
         {title}

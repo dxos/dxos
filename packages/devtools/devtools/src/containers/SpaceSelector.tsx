@@ -28,9 +28,9 @@ export const SpaceSelector = () => {
   return (
     <PublicKeySelector
       keys={spaces.map((space) => space.key)}
-      value={space?.key}
+      defaultValue={space?.key}
       placeholder={'Select space'}
-      onSelect={handleSelect}
+      onChange={handleSelect}
     />
   );
 };

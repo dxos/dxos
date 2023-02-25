@@ -4,12 +4,12 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { GridLensModel } from 'packages/experimental/mosaic/src/components/Grid';
 import React, { FC } from 'react';
 
 import { mx } from '@dxos/react-components';
 
 import { Bounds, Item } from '../layout';
+import { GridLensModel } from './Grid';
 
 export type TileContentProps<T extends {} = {}> = {
   item: Item<T>;
@@ -28,10 +28,10 @@ export type TileSlots = {
 
 export type TileProps<T extends {}> = {
   item: Item<T>;
+  selected?: boolean;
   bounds?: Bounds;
   lensModel: GridLensModel;
   slots?: TileSlots;
-  selected?: boolean;
   Content: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
   onDelete?: (item: Item<T>) => void;
@@ -42,26 +42,26 @@ export type TileProps<T extends {}> = {
  */
 export const Tile = <T extends {} = {}>({
   item,
+  selected,
   bounds,
   lensModel,
   slots = {},
-  selected,
   Content,
   onClick,
   onDelete
 }: TileProps<T>) => {
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
-    transform:
-      transform &&
-      CSS.Transform.toString(
-        Object.assign(transform, {
-          x: transform.x / lensModel.zoom,
-          y: transform.y / lensModel.zoom
-        })
-      ),
     width: bounds?.width,
-    height: bounds?.height
+    height: bounds?.height,
+    transform: transform
+      ? CSS.Transform.toString(
+          Object.assign(transform, {
+            x: transform.x / lensModel.zoom,
+            y: transform.y / lensModel.zoom
+          })
+        )
+      : undefined
   };
 
   return (
