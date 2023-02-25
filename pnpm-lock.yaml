@@ -941,12 +941,14 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/websocket-rpc': workspace:*
+      esbuild: ^0.16.14
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      esbuild: 0.16.14
 
   packages/common/async:
     specifiers:
@@ -3014,6 +3016,7 @@ importers:
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
+      '@dxos/websocket-rpc': workspace:*
       '@monaco-editor/react': ^4.4.6
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.17.2
@@ -3111,6 +3114,7 @@ importers:
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
+      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9

@@ -16,7 +16,7 @@ const rpcPort = parseInt(process.env.DX_RPC_PORT ?? '3023');
       },
       services: {
         signal: {
-          server: 'wss://kube.dxos.org/.well-known/dx/signal'
+          server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
         },
         ice: [
           { urls: 'stun:enterprise.kube.dxos.network:3478' },
@@ -54,7 +54,7 @@ const rpcPort = parseInt(process.env.DX_RPC_PORT ?? '3023');
     port: rpcPort,
     onConnection: async (info) => {
       const id = PublicKey.random().toHex();
-      log.info('connection', { id, info })
+      log.info('connection', { id })
 
       return {
         exposed: client.services.descriptors,

@@ -240,6 +240,7 @@ export const defaultFrames = [
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
+  'dxos.module.frame.bots',
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

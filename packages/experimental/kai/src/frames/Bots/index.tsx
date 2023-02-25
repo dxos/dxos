@@ -4,17 +4,26 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 import React, { useState } from 'react'
 import { useEffect } from 'react';
 import { PublicKey } from '@dxos/keys';
-import { sleep } from '@dxos/async';
+import { sleep, trigger, Trigger } from '@dxos/async';
+import { Client, fromIFrame } from '@dxos/client';
+import { clientServiceBundle, ClientServicesProvider } from '@dxos/client-services';
+import { WebsocketRpcClient } from '@dxos/websocket-rpc'
+import { useClient, useSpace } from '@dxos/react-client';
+import { raise } from '@dxos/debug';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 // const DOCKER_URL = 'https://cors-anywhere.herokuapp.com/' + 'http://198.211.114.136:4243';
 
 // socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
-// cors-http-proxy -t http://localhost:2376 -p 2377
-const DOCKER_URL = 'http://localhost:2377';
+// cors-proxy-server
+
+const DOCKER_URL = 'http://127.0.0.1:2376';
 
 export const BotsFrame = () => {
   const [resp, setResp] = useState({})
   const [status, setStatus] = useState('')
+  const client = useClient();
+  const space = useSpace();
 
   const refresh = () => {
     // https://docs.docker.com/engine/api/v1.42/
@@ -29,7 +38,7 @@ export const BotsFrame = () => {
 
   const addBot = async () => {
     setStatus('Creating container...')
-    const name = 'kai-bot-' + PublicKey.random().toHex().slice(0, 8)
+    const name = 'bot-' + PublicKey.random().toHex().slice(0, 8)
     const port = Math.floor(Math.random() * 1000) + 3000
     const res = await fetch(`${DOCKER_URL}/containers/create?name=${name}`, {
       method: 'POST',
@@ -37,19 +46,22 @@ export const BotsFrame = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        Image: 'nginx',
+        Image: 'bot-test',
         ExposedPorts: {
-          '80/tcp': {},
+          '3023/tcp': {},
         },
         HostConfig: {
           PortBindings: {
-            '80/tcp': [
+            '3023/tcp': [
               {
                 HostPort: `${port}`,
               },
             ],
           },
         },
+        Env: [
+          'LOG_FILTER=debug'
+        ],
         Labels: {
           'dxos.bot': `${true}`,
           'dxos.bot.dxrpc-port': `${port}`,
@@ -65,16 +77,66 @@ export const BotsFrame = () => {
     })
     refresh()
     setStatus('Waiting for bot to start...')
-    // while(true) {
-    //   try {
-    //     await fetch(`http://localhost:${port}/`)
-    //     break
-    //   } catch (err) {
-    //     console.log(err)
-    //   }
-    //   await sleep(500)
-    // }
+    const botEndpoint = `ws://127.0.0.1:${port}`
+
+    while (true) {
+      try {
+        await fetch(`http://127.0.0.1:${port}`)
+        break
+      } catch (err) {
+        console.log(err)
+      }
+      await sleep(500)
+    }
     setStatus('Connecting to bot...')
+
+    const botClient = new Client({
+      services: fromRemote(botEndpoint),
+    })
+
+    await botClient.initialize();
+
+    console.log('status', await botClient.getStatus())
+    setStatus('Initializing bot...')
+
+    await botClient.halo.createIdentity({
+      displayName: name,
+    })
+
+    setStatus('Adding bot to space...')
+
+    {
+      const trg = new Trigger();
+      const invitation = space!.createInvitation({
+        authMethod: AuthMethod.NONE,
+      })
+      invitation.subscribe({
+        onConnecting: async (invitation1) => {
+          console.log('invitation1', invitation1)
+          const observable2 = botClient.echo.acceptInvitation(invitation1);
+          observable2.subscribe({
+            onSuccess: async (invitation2) => {
+              trg.wake();
+            },
+            onCancelled: () => console.error(new Error('cancelled')),
+            onTimeout: (err: Error) => console.error(new Error(err.message)),
+            onError: (err: Error) => console.error(new Error(err.message))
+          })
+        },
+        onConnected: async (invitation1) => {
+          console.log('connected')
+        },
+        onSuccess: async (invitation1) => { 
+          console.log('success')
+        },
+        onCancelled: () => console.error(new Error('cancelled')),
+        onTimeout: (err: Error) => console.error(new Error(err.message)),
+        onError: (err: Error) => console.error(new Error(err.message))
+      });
+      await trg.wait();
+    }
+
+    setStatus('Done')
 
     refresh()
   }
@@ -92,5 +154,33 @@ export const BotsFrame = () => {
     </div>
   )
 }
+
+// TODO(dmaretskyi): Extract.
+export const fromRemote = (url: string): ClientServicesProvider => {
+  const dxrpcClient = new WebsocketRpcClient({
+    url,
+    requested: clientServiceBundle,
+    exposed: {},
+    handlers: {}
+  });
+
+  return {
+    get descriptors() {
+      return clientServiceBundle;
+    },
+
+    get services() {
+      return dxrpcClient.rpc;
+    },
+
+    open() {
+      return dxrpcClient.open();
+    },
+
+    close() {
+      return dxrpcClient.close();
+    },
+  }
+};
 
 export default BotsFrame;

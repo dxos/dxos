@@ -20,12 +20,12 @@
     "build": "node -r @swc-node/register src/build.ts"
   },
   "dependencies": {
-    "esbuild": "^0.16.14",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*"
+    "@dxos/websocket-rpc": "workspace:*",
+    "esbuild": "^0.16.14"
   },
   "publishConfig": {
     "access": "public"
