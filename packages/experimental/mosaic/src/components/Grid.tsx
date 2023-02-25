@@ -213,8 +213,6 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
-  // TODO(burdon): Jumps on first render.
-
   return (
     <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       {/* Full screen. */}
@@ -222,16 +220,15 @@ export const Grid = <T extends {} = {}>({
         <div
           ref={containerRef}
           className={mx(
-            'absolute w-full h-full overflow-auto',
+            'absolute w-full h-full',
             'snap-mandatory snap-both md:snap-none',
-            slots.root?.className
+            slots.root?.className,
+            // Prevents flickering on initial render.
+            visible ? 'visible overflow-auto' : 'invisible overflow-hidden'
           )}
         >
           {/* Layout container. */}
-          <div
-            className={mx('flex justify-center items-center', visible ? 'visible' : 'invisible')}
-            style={containerStyles}
-          >
+          <div className='flex justify-center items-center' style={containerStyles}>
             {/* Layout box. */}
             <div
               className='relative'

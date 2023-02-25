@@ -43,7 +43,7 @@
 * ECHO filtering. ([#2307](https://github.com/dxos/dxos/issues/2307)) ([b696326](https://github.com/dxos/dxos/commit/b69632632c234951e8de6136ab7e200e78febaa4))
 * Error handling ([#2389](https://github.com/dxos/dxos/issues/2389)) ([b9c5ec1](https://github.com/dxos/dxos/commit/b9c5ec16a9baf6d690a6b3475c75fb8955799f8e))
 * Explorer ([#2458](https://github.com/dxos/dxos/issues/2458)) ([78e36ac](https://github.com/dxos/dxos/commit/78e36acd3c55d2b8554d423e5c459b40dbea652e))
-* Extendible network test builder for teleport ([#2318](https://github.com/dxos/dxos/issues/2318)) ([3e208f8](https://github.com/dxos/dxos/commit/3e208f83a9ad9931a931f56b22898cde86cca9ad))
+* Extendable network test builder for teleport ([#2318](https://github.com/dxos/dxos/issues/2318)) ([3e208f8](https://github.com/dxos/dxos/commit/3e208f83a9ad9931a931f56b22898cde86cca9ad))
 * Factor out faker from get-spore/plexus/kai ([#2464](https://github.com/dxos/dxos/issues/2464)) ([e56d686](https://github.com/dxos/dxos/commit/e56d6864fa69df80ca5021d218326b5c441f0112))
 * Factor out frames, bots into DMG. ([#2480](https://github.com/dxos/dxos/issues/2480)) ([6d77c2b](https://github.com/dxos/dxos/commit/6d77c2ba542cd7be1ab6c816cc298025ce2bcdb3))
 * Factor out PWA ([#2345](https://github.com/dxos/dxos/issues/2345)) ([9fcf00b](https://github.com/dxos/dxos/commit/9fcf00bfd0e0ef20a4522abb3a712c5086f4b536))
