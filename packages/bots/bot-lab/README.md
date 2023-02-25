@@ -1,6 +1,21 @@
 # @dxos/bot-lab
 
-ECHO object model.
+## Bot demo
+
+```bash
+# 1. Start docker
+
+# 2. Proxy docker socket
+brew install socat
+socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
+
+# 3. Open chrome without cors
+open -n -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --user-data-dir="/tmp/chrome_dev_test" --disable-web-security
+
+# 4. Build bot
+# in bot-lab
+pnpm -w compile bot-lab && pnpm run build && docker build . -t bot-test
+```
 
 ## Installation
 
