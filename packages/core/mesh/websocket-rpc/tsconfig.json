@@ -1,0 +1,41 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../rpc"
+    },
+    {
+      "path": "../signal"
+    }
+  ]
+}
