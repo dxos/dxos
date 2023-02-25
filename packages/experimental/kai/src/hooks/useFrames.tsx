@@ -32,7 +32,7 @@ import {
   File,
   KanbanFrame,
   MapFrame,
-  NoteFrame,
+  Note,
   SketchFrame,
   TableFrame,
   TaskFrame,
@@ -139,7 +139,8 @@ const defs: FrameDef[] = [
     },
     runtime: {
       Icon: Cards,
-      Component: NoteFrame
+      Component: Note.Frame,
+      Tile: Note.Tile
     }
   },
   {
@@ -219,7 +220,7 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.document';
+export const defaultFrameId = 'dxos.module.frame.mosaic';
 
 // prettier-ignore
 export const defaultFrames = [

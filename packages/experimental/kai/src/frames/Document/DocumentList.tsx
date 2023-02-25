@@ -12,7 +12,7 @@ import { createPath, useAppRouter } from '../../hooks';
 import { TextDocument } from '../../proto';
 
 // TODO(burdon): Factor out.
-export const DocumentTile = () => {
+export const DocumentList = () => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
   const objects = useQuery(space, TextDocument.filter());
@@ -52,4 +52,4 @@ export const DocumentTile = () => {
   );
 };
 
-export default DocumentTile;
+export default DocumentList;
