@@ -4,7 +4,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions, ItemManager } from '@dxos/echo-db';
+import { EchoProcessor, ItemDemuxer, ItemManager } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -24,8 +24,7 @@ export class DatabaseBackendHost {
 
   constructor(
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
-    private readonly _snapshot?: EchoSnapshot,
-    private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
+    private readonly _snapshot?: EchoSnapshot
   ) {}
 
   get isReadOnly(): boolean {
@@ -40,11 +39,11 @@ export class DatabaseBackendHost {
     this._itemManager = itemManager;
     this._itemManager._debugLabel = 'host';
 
-    this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
+    this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     this._echoProcessor = this._itemDemuxer.open();
 
     if (this._snapshot) {
-      await this._itemDemuxer.restoreFromSnapshot(this._snapshot);
+      this._itemDemuxer.restoreFromSnapshot(this._snapshot);
     }
   }
 

@@ -23,17 +23,17 @@ import { Client } from "@dxos/client";
 
 const client = new Client();
 
-const identity = client.halo.profile;
+const identity = client.halo.identity;
 ```
 
-The object returned is of type [`Profile`](/api/@dxos/client/interfaces/Profile).
+The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
 
-:::apidoc[@dxos/client.Halo]{level=2}
-## Interface `Halo`
+:::apidoc[@dxos/client.Halo]{level="2"}
+# Interface `Halo`
 
 > Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts`]()
 
 TODO(burdon): Public API (move comments here).
 
-### Properties
+## Properties
 :::

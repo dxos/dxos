@@ -6,12 +6,11 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
@@ -38,27 +37,58 @@ describe('Halo', () => {
       afterTest(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createProfile({ displayName: 'test-user' });
-      expect(client.halo.profile).exist;
+      await client.halo.createIdentity({ displayName: 'test-user' });
+      expect(client.halo.identity).exist;
 
-      const credentials = client.halo.queryCredentials();
-      const trigger = new Trigger<Credential>();
+      const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
+      const trigger = new Trigger();
       credentials.subscribe({
         onUpdate: (credentials) => {
-          if (credentials.length > 0) {
-            trigger.wake(credentials[0]);
+          if (credentials.length >= 2) {
+            trigger.wake();
           }
         },
         onError: (err) => log.catch(err)
       });
+      await asyncTimeout(trigger.wait(), 500);
+
       const nonce = new Uint8Array([0, 0, 0, 0]);
       const presentation = await client.halo.presentCredentials({
-        id: (await trigger.wait()).id!,
-        nonce
+        ids: credentials.value!.map(({ id }) => id!),
+        nonce: new Uint8Array([0, 0, 0, 0])
       });
-
+      expect(presentation.credentials?.length).to.equal(2);
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
       expect(presentation.proofs![0].nonce).to.deep.equal(nonce);
     }
+  });
+
+  test('query credentials', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    afterTest(() => client.destroy());
+    await client.initialize();
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity).exist;
+
+    const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
+
+    const trigger = new Trigger();
+    credentials.subscribe({
+      onUpdate: () => {
+        if (credentials.value?.length === 2) {
+          trigger.wake();
+        }
+      },
+      onError: (error) => {
+        throw error;
+      }
+    });
+    await asyncTimeout(trigger.wait(), 500);
+
+    expect(credentials.value!.every((cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'))
+      .to.be.true;
   });
 });

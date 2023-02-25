@@ -5,17 +5,19 @@
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
+import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { PublicKey, useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
+import { Table, Searchbar, Select, ElevationProvider } from '@dxos/react-components';
 
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { schema } from '../../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
-type ColumnType<T extends DocumentBase> = SelectorOption & {
+type ColumnType<T extends Document> = {
+  id: string;
+  title: string;
   columns: Column<Document>[];
   filter?: TypeFilter<any>;
   subFilter?: (match?: string) => (object: T) => boolean;
@@ -27,16 +29,27 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     const columns: Column<Document>[] = [
       {
         Header: 'id',
-        accessor: (object) => PublicKey.from(object.id).truncate()
+        accessor: (object) => PublicKey.from(object.id).truncate(),
+        width: 120
       }
     ];
 
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
-        columns.push({
+        const column: Column<Document> = {
           Header: field.name,
           accessor: field.name
-        });
+        };
+
+        switch (field.type.kind) {
+          case 'boolean': {
+            column.Cell = ({ value }) => <input type='checkbox' checked={value} disabled />;
+            column.width = 120;
+            break;
+          }
+        }
+
+        columns.push(column);
       }
     }
 
@@ -62,7 +75,7 @@ const types: ColumnType<any>[] = generateTypes(schema.types);
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const [type, setType] = useState<ColumnType<any>>(types[0]);
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
@@ -75,21 +88,21 @@ export const TableFrame = () => {
     setText(text);
   };
 
-  const handleSelect = (id?: string) => {
-    if (id) {
-      setType(getType(id));
-    }
-  };
-
   return (
-    <div className='flex flex-col flex-1 overflow-hidden px-2'>
-      <div className='flex py-2'>
-        <div className='mr-4'>
-          <Selector options={types} value={type.id} onSelect={handleSelect} />
-        </div>
-        <div>
-          <Searchbar onSearch={handleSearch} />
-        </div>
+    <div className='flex flex-col flex-1 px-2 overflow-hidden'>
+      <div className='flex p-2 mb-2'>
+        <ElevationProvider elevation='group'>
+          <div className='w-screen md:w-column mr-4'>
+            <Searchbar onSearch={handleSearch} />
+          </div>
+          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getType(value))}>
+            {types?.map((type) => (
+              <Select.Item key={type.id} value={type.id}>
+                {type.title}
+              </Select.Item>
+            ))}
+          </Select>
+        </ElevationProvider>
       </div>
 
       {/* TODO(burdon): Editable variant. */}

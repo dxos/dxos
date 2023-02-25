@@ -8,10 +8,10 @@ import faker from 'faker';
 import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
-import { EchoDatabase, TextObject } from '@dxos/echo-schema';
+import { EchoDatabase, Text } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Document, Event, Organization, Note, Project, Task } from './gen/schema';
+import { Contact, TextDocument, Event, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
@@ -150,8 +150,8 @@ export class Generator {
 
   createDocument = async () => {
     const document = createDocument();
-    await this._db.add(document);
     createTextObjectContent(document.content, 5);
+    await this._db.add(document);
     return document;
   };
 
@@ -163,9 +163,9 @@ export class Generator {
   };
 }
 
-// TODO(burdon): TextObject initial state isn't replicated.
+// TODO(burdon): Text initial state isn't replicated.
 // TODO(burdon): Factor out into TextModel.
-const createTextObjectContent = (content: TextObject, sentences = 5) => {
+const createTextObjectContent = (content: Text, sentences = 5) => {
   // https://prosemirror.net/docs/guide/#doc
   const doc = schema.node(
     'doc',
@@ -200,7 +200,7 @@ export const createOrganization = () => {
 export const createProject = (tag?: string) => {
   return new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
-    description: new TextObject(),
+    description: new Text(),
     url: faker.internet.url(),
     tag: tag ?? faker.random.arrayElement(tags)
   });
@@ -241,15 +241,15 @@ export const createEvent = () => {
 };
 
 export const createDocument = () => {
-  const document = new Document();
+  const document = new TextDocument();
   document.title = faker.lorem.sentence(3);
-  document.content = new TextObject();
+  document.content = new Text();
   return document;
 };
 
 export const createNote = () => {
   const note = new Note();
   note.title = faker.lorem.words(2);
-  note.content = new TextObject();
+  note.content = new Text();
   return note;
 };

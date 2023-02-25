@@ -63,8 +63,8 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
 // TODO(burdon): Export proto type.
 export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
-    key: maybeTruncateKey(member.identityKey, truncateKeys),
-    name: member.profile?.displayName
+    key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
+    name: member.identity.profile?.displayName
   }));
 };
 

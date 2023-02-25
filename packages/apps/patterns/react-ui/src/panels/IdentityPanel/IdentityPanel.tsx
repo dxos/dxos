@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Avatar, Button, ThemeContext, useTranslation } from '@dxos/react-components';
 
@@ -11,7 +11,7 @@ export const IdentityPanel = ({
   identity,
   onClickManageProfile
 }: {
-  identity: Profile;
+  identity: Identity;
   onClickManageProfile?: () => void;
 }) => {
   const { t } = useTranslation('os');
@@ -22,15 +22,15 @@ export const IdentityPanel = ({
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ themeVariant: 'os', rootDensity: 'fine' }}>
       <div className='flex flex-col gap-2 justify-center items-center'>
         <Avatar
           size={16}
           variant='circle'
           fallbackValue={identity.identityKey.toHex()}
-          label={identity.displayName ?? ''}
+          label={identity.profile?.displayName ?? ''}
         />
-        <Button compact onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
+        <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
           {t('manage profile label')}
         </Button>
       </div>

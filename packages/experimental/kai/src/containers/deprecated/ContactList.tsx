@@ -15,7 +15,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
-    <List labelId='todo' slots={{ root: { className: 'is-full' } }}>
+    <List density='coarse' labelId='todo' slots={{ root: { className: 'is-full' } }}>
       {contacts.map((contact) => (
         <ContactListItem key={contact.id} contact={contact} />
       ))}
@@ -35,15 +35,14 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
         <Input
           variant='subdued'
           label='Contact name'
+          labelVisuallyHidden
           value={contact.name}
           onChange={({ target: { value } }) => (contact.name = value)}
           slots={{
-            root: { className: 'm-0' },
-            input: { spellCheck: false, className: 'p-2' },
-            label: { className: 'sr-only' }
+            input: { spellCheck: false }
           }}
         />
-        <div role='none' className='pis-2 text-sm text-secondary-text'>
+        <div role='none' className='text-sm text-secondary-text'>
           {contact.username && <p className='truncate'>{contact.username}</p>}
           {contact.email && <p className='truncate'>{contact.email}</p>}
           {contact.address && <p className='truncate'>{address(contact.address)}</p>}

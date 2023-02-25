@@ -86,6 +86,7 @@ export abstract class EchoObject<T extends Model = any> {
   }
 
   /**
+   * @internal
    * Called after object is bound to database.
    */
   protected async _onBind(): Promise<void> {}
@@ -115,6 +116,9 @@ export abstract class EchoObject<T extends Model = any> {
     }
   }
 
+  /**
+   * @internal
+   */
   protected _getState(): StateOf<T> {
     if (this._stateMachine) {
       return this._stateMachine.getState();
@@ -126,6 +130,7 @@ export abstract class EchoObject<T extends Model = any> {
 
   /**
    * @returns Is this object currently persisted in the database.
+   * @internal
    */
   protected _isPersisted(): boolean {
     return !!this._item;
@@ -135,6 +140,7 @@ export abstract class EchoObject<T extends Model = any> {
    * Perform mutation on this object's state.
    * Mutation is applied optimistically: calls to _getState() will return mutated state.
    * @returns Mutation result for the database or undefined if the current object is not persisted.
+   * @internal
    */
   protected _mutate(mutation: MutationOf<T>): MutateResult | undefined {
     if (this._stateMachine) {

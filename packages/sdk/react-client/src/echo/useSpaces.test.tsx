@@ -16,7 +16,7 @@ describe('useSpaces', () => {
   test('lists existing spaces', async () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createProfile();
+    await client.halo.createIdentity();
     await client.echo.createSpace();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (

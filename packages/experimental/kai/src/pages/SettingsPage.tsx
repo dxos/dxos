@@ -18,6 +18,8 @@ const SettingsPage = () => {
   const client = useClient();
   const state = useAppState();
 
+  console.log(state);
+
   // TODO(burdon): Toggle settings with local storage.
   return (
     <div className='flex overflow-hidden w-full h-full'>

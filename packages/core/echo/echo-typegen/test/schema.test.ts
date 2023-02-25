@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { DocumentModel } from '@dxos/document-model';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -44,6 +45,7 @@ describe('schema', () => {
         '@id': task1.id,
         '@type': task1.__typename,
         subTasks: [],
+        description: '',
         title: 'Task 1',
         assignee: { '@id': contact.id }
       })
@@ -109,7 +111,8 @@ describe('schema', () => {
           kind: 'array',
           elementType: {
             kind: 'ref',
-            objectType: 'example.test.Task'
+            objectType: 'example.test.Task',
+            modelType: DocumentModel.meta.type
           }
         }
       }

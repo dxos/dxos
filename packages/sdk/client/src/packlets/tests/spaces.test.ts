@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -21,16 +20,13 @@ describe('Spaces', () => {
     afterTest(() => client.destroy());
 
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
     const space = await client.echo.createSpace();
     await testSpace(space.internal.db);
 
-    await asyncTimeout(
-      space.queryMembers().waitFor((items) => items.length === 1),
-      500
-    );
+    expect(space.getMembers()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
@@ -39,7 +35,7 @@ describe('Spaces', () => {
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
-    await client.halo.createProfile({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' });
 
     let itemId: string;
     {
@@ -49,8 +45,7 @@ describe('Spaces', () => {
         objectsCreated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
-      const result = await space.queryMembers().waitFor((items) => items.length === 1);
-      expect(result).to.have.length(1);
+      expect(space.getMembers()).to.be.length(1);
     }
 
     await client.destroy();
@@ -60,7 +55,7 @@ describe('Spaces', () => {
     await client.initialize();
 
     {
-      const result = await client.echo.querySpaces().waitFor((spaces) => spaces.length === 1);
+      const result = client.echo.getSpaces();
       expect(result).to.have.length(1);
       const space = result[0];
 

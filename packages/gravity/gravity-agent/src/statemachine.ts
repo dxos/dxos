@@ -54,7 +54,7 @@ export class GenericStateMachine extends AgentStateMachine {
   async processCommand(command: Command) {
     // --- CREATE PROFILE
     if (command.createProfile) {
-      await this.agent.client.halo.createProfile();
+      await this.agent.client.halo.createIdentity();
     }
     // --- CREATE SPACE ---
     else if (command.createSpace) {

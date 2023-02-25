@@ -13,9 +13,8 @@ import { useConfig, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
 
 import { EditableObjectList } from '../../components';
-import { useFileDownload, useFrameState, useIpfsClient } from '../../hooks';
+import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
 import { File } from '../../proto';
-import { createSpacePath } from '../../router';
 import { fileTypes } from './defs';
 
 const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
@@ -44,14 +43,14 @@ export const FileTile = () => {
   const download = useFileDownload();
   const navigate = useNavigate();
   const [isMd] = useMediaQuery('md', { ssr: false });
-  const { space, frame, objectId } = useFrameState();
+  const { space, frame, objectId } = useAppRouter();
   const objects = useQuery(space, File.filter());
   if (!space || !frame) {
     return null;
   }
 
   const handleSelect = (objectId: string) => {
-    navigate(createSpacePath(space.key, frame?.module.id, objectId));
+    navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
   };
 
   const handleUpdate = async (objectId: string, text: string) => {

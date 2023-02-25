@@ -4,11 +4,10 @@
 
 import { useMemo } from 'react';
 
-import { useCurrentSpace } from '@dxos/react-client';
-
+import { useAppRouter } from '../hooks';
 import { Generator } from '../proto';
 
 export const useGenerator = (): Generator | undefined => {
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
   return useMemo(() => space && new Generator(space.db), [space]);
 };

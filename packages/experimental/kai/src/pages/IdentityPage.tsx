@@ -8,11 +8,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
-import { useClient, useCurrentSpace, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
+import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
-import { defaultFrameId } from '../hooks';
-import { createSpacePath } from '../router';
+import { createPath, defaultFrameId, useAppRouter } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
@@ -22,10 +21,14 @@ const IdentityPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const client = useClient();
-  const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
-  const [space] = useCurrentSpace();
+  const { space } = useAppRouter();
+
+  const handleDone = () => {
+    // TODO(burdon): Create space if doesn't exist.
+    navigate(createPath({ spaceKey: space!.key, frame: defaultFrameId }));
+  };
 
   const handleCreateInvitation = useCallback(() => {
     client.halo.createInvitation();
@@ -46,18 +49,14 @@ const IdentityPage = () => {
               <Plus className={getSize(5)} />
               {t('add device label')}
             </Button>
-            <Button
-              variant='primary'
-              onClick={() => navigate(createSpacePath(space?.key, defaultFrameId))}
-              className='flex gap-1 items-center'
-            >
+            <Button variant='primary' className='flex gap-1 items-center' onClick={handleDone}>
               <span>{t('back to app label')}</span>
               <XCircle className={getSize(5)} />
             </Button>
           </>
         }
       />
-      <DeviceList devices={devices} currentDevice={identity?.deviceKey} />
+      <DeviceList devices={devices} />
       <Heading level={2} className='text-xl mbs-4'>
         {t('device invitations label')}
       </Heading>

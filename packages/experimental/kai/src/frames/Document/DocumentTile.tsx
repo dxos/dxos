@@ -5,23 +5,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { TextObject, useQuery } from '@dxos/react-client';
+import { Text, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
-import { useFrameState } from '../../hooks';
-import { Document } from '../../proto';
-import { createSpacePath } from '../../router';
+import { createPath, useAppRouter } from '../../hooks';
+import { TextDocument } from '../../proto';
 
+// TODO(burdon): Factor out.
 export const DocumentTile = () => {
   const navigate = useNavigate();
-  const { space, frame, objectId } = useFrameState();
-  const objects = useQuery(space, Document.filter());
+  const { space, frame, objectId } = useAppRouter();
+  const objects = useQuery(space, TextDocument.filter());
   if (!space || !frame) {
     return null;
   }
 
   const handleSelect = (objectId: string) => {
-    navigate(createSpacePath(space.key, frame?.module.id, objectId));
+    navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
   };
 
   const handleUpdate = async (objectId: string, text: string) => {
@@ -32,15 +32,15 @@ export const DocumentTile = () => {
   };
 
   const handleCreate = async () => {
-    const object = await space.db.add(new Document());
-    object.content = new TextObject(); // TODO(burdon): Make automatic?
+    const object = await space.db.add(new TextDocument());
+    object.content = new Text(); // TODO(burdon): Make automatic?
     return object.id;
   };
 
   const Icon = frame!.runtime.Icon;
 
   return (
-    <EditableObjectList<Document>
+    <EditableObjectList<TextDocument>
       objects={objects}
       selected={objectId}
       Icon={Icon}

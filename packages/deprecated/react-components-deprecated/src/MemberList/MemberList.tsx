@@ -22,7 +22,7 @@ export const MemberList = ({ members }: { members: SpaceMember[] }) => (
   >
     <AvatarGroup>
       {members.map((member) => (
-        <MemberAvatar key={member.identityKey?.toHex()} member={member} />
+        <MemberAvatar key={member.identity.identityKey?.toHex()} member={member} />
       ))}
     </AvatarGroup>
   </Box>

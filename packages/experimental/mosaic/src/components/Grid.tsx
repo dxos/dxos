@@ -10,17 +10,20 @@ import { mx } from '@dxos/react-components';
 
 import { Dimensions, Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
 import { Cell } from './Cell';
-import { Tile, TileContentProps, TileClasses } from './Tile';
+import { Tile, TileContentProps, TileSlots } from './Tile';
 
-export type GridClasses = {
-  tile?: TileClasses;
+export type GridSlots = {
+  root?: {
+    className?: string;
+  };
+  tile?: TileSlots;
 };
 
 export type GridProps<T extends {} = {}> = {
   layout: Layout;
   items?: Item<T>[];
-  classes?: GridClasses;
-  Content?: FC<TileContentProps<T>>;
+  slots?: GridSlots;
+  Content: FC<TileContentProps<T>>;
   onSelect?: (item: Item<T>) => void;
   onChange?: (item: Item<T>, location: Location) => void;
   onCreate?: (location: Location) => Promise<string | undefined>;
@@ -37,7 +40,7 @@ const options = {
 export const Grid = <T extends {} = {}>({
   items = [],
   layout,
-  classes = {},
+  slots = {},
   Content,
   onSelect,
   onChange,
@@ -157,13 +160,17 @@ export const Grid = <T extends {} = {}>({
       <div className='relative flex flex-1'>
         <div
           ref={containerRef}
-          className={mx('absolute w-full h-full overflow-auto bg-gray-500', 'snap-mandatory snap-both md:snap-none')}
+          className={mx(
+            'absolute w-full h-full overflow-auto',
+            'snap-mandatory snap-both md:snap-none',
+            slots.root?.className
+          )}
         >
           {/* Layout container. */}
           <div className='flex justify-center items-center' style={{ ...containerDimensions, ...containerStyles }}>
             {/* Layout box. */}
             <div
-              className='relative flex bg-gray-200'
+              className='relative'
               style={layout.dimensions}
               onClick={(event: any) => setZoom(event.detail === 2 ? options.zoomOut : 1)}
             >
@@ -176,7 +183,7 @@ export const Grid = <T extends {} = {}>({
                     {item && (
                       <div className='z-50'>
                         <Tile<T>
-                          classes={classes?.tile}
+                          slots={slots?.tile}
                           item={item}
                           bounds={bounds}
                           Content={Content}

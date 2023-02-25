@@ -1,5 +1,5 @@
 # Class `HaloProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:31]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:36]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -87,6 +87,16 @@ Allocate resources and set-up internal subscriptions.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+### [presentCredentials(options)]()
+
+
+Present Credentials.
+
+Returns: <code>Promise&lt;Presentation&gt;</code>
+
+Arguments: 
+
+`options`: <code>object</code>
 ### [queryContacts()]()
 
 
@@ -95,12 +105,22 @@ Query for contacts. Contacts represent member keys across all known Spaces.
 Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;[Contact](/api/@dxos/react-client/interfaces/Contact)&gt;</code>
 
 Arguments: none
+### [queryCredentials(\[options\])]()
+
+
+Get Halo credentials for the current user.
+
+Returns: <code>ObservableProvider&lt;object, Credential[]&gt;</code>
+
+Arguments: 
+
+`options`: <code>object</code>
 ### [queryDevices()]()
 
 
 Get set of authenticated devices.
 
-Returns: <code>Promise&lt;DeviceInfo[]&gt;</code>
+Returns: <code>ObservableProvider&lt;DeviceEvents, DeviceInfo[]&gt;</code>
 
 Arguments: none
 ### [recoverProfile(seedPhrase)]()
@@ -137,3 +157,13 @@ Arguments:
 Returns: <code>object</code>
 
 Arguments: none
+### [writeCredentials(credentials)]()
+
+
+Write credentials to halo profile.
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`credentials`: <code>Credential[]</code>

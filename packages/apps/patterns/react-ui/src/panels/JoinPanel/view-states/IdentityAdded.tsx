@@ -5,7 +5,7 @@
 import { CaretLeft, CaretRight, Check } from 'phosphor-react';
 import React, { cloneElement } from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -14,7 +14,7 @@ import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentityAddedProps extends ViewStateProps, DoneProps {
   mode?: JoinPanelMode;
-  addedIdentity?: Profile;
+  addedIdentity?: Identity;
 }
 
 export interface DoneProps extends ViewStateProps {
@@ -62,8 +62,8 @@ export const IdentityAdded = ({
           size={20}
           fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
           label={
-            <p className={mx('text-lg', !addedIdentity?.displayName && 'font-mono')}>
-              {addedIdentity?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
+            <p className={mx('text-lg', !addedIdentity?.profile?.displayName && 'font-mono')}>
+              {addedIdentity?.profile?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
             </p>
           }
           variant='circle'

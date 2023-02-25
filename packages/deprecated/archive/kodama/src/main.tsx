@@ -74,7 +74,7 @@ const main = async () => {
         await client.initialize();
 
         if (displayName) {
-          await client.halo.createProfile({ displayName });
+          await client.halo.createIdentity({ displayName });
         }
 
         clear();

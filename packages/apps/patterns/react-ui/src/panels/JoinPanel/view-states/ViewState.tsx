@@ -5,7 +5,7 @@
 import { CheckCircle, HourglassSimple, X } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import type { AuthenticatingInvitationObservable, Profile } from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
@@ -17,7 +17,7 @@ import { JoinDispatch } from '../JoinPanelProps';
 export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
   dispatch: JoinDispatch;
-  selectedIdentity?: true | Profile;
+  selectedIdentity?: true | Identity;
   activeInvitation?: true | AuthenticatingInvitationObservable;
 }
 
@@ -176,7 +176,7 @@ export const ViewState = ({
                 labelValue:
                   selectedIdentity === true
                     ? ' '
-                    : selectedIdentity.displayName ?? selectedIdentity.identityKey.truncate()
+                    : selectedIdentity.profile?.displayName ?? selectedIdentity.identityKey.truncate()
               }
             }}
           />

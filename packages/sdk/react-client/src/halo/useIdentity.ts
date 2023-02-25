@@ -14,9 +14,10 @@ export const useIdentity = (options?: { login?: boolean }) => {
   const { login } = { login: false, ...options };
   const client = useClient();
   const identity = useSyncExternalStore(
-    (listener) => client.halo.subscribeToProfile(() => listener()),
-    () => client.halo.profile
+    (listener) => client.halo.subscribeIdentity(listener),
+    () => client.halo.identity
   );
+
   if (login && !identity) {
     // TODO(wittjosiah): Replace with shell display command.
     // TODO(wittjosiah): Config defaults should be available from the config.
@@ -28,5 +29,6 @@ export const useIdentity = (options?: { login?: boolean }) => {
       window.location.replace(`${remoteSource.origin}${redirect}`);
     }
   }
+
   return identity;
 };

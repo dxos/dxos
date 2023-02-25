@@ -54,19 +54,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   async setAppContext(context: AppContextRequest) {
     assert(this._appRpc, 'runtime not open');
 
-    if (context.spaceKey) {
-      this._spaceKey = context.spaceKey;
-    }
-
-    if (context.invitationCode) {
-      this._invitationCode = context.invitationCode;
-    }
-
-    await this._appRpc.rpc.AppService.setContext({
-      ...context,
-      spaceKey: this._spaceKey,
-      invitationCode: this._invitationCode
-    });
+    await this._appRpc.rpc.AppService.setContext(context);
   }
 
   async open() {

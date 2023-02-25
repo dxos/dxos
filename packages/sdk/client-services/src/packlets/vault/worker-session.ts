@@ -58,17 +58,16 @@ export class WorkerSession {
     this._getService = getService;
 
     const handlers = {
-      DataService: async () => await this._getService((services) => services.DataService),
-      DevicesService: async () => await this._getService((services) => services.DevicesService),
-      DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
-      HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
-      NetworkService: async () => await this._getService((services) => services.NetworkService),
-      ProfileService: async () => await this._getService((services) => services.ProfileService),
-      SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
-      SpaceService: async () => await this._getService((services) => services.SpaceService),
-      SpacesService: async () => await this._getService((services) => services.SpacesService),
-      SystemService: async () => await this._getService((services) => services.SystemService),
-      TracingService: async () => await this._getService((services) => services.TracingService)
+      DataService: () => this._getService((services) => services.DataService),
+      DeviceInvitationsService: () => this._getService((services) => services.DeviceInvitationsService),
+      DevicesService: () => this._getService((services) => services.DevicesService),
+      DevtoolsHost: () => this._getService((services) => services.DevtoolsHost),
+      NetworkService: () => this._getService((services) => services.NetworkService),
+      IdentityService: () => this._getService((services) => services.IdentityService),
+      SpaceInvitationsService: () => this._getService((services) => services.SpaceInvitationsService),
+      SpacesService: () => this._getService((services) => services.SpacesService),
+      SystemService: () => this._getService((services) => services.SystemService),
+      TracingService: () => this._getService((services) => services.TracingService)
     };
 
     this._clientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: appPort });

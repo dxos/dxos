@@ -68,13 +68,21 @@ export class AppManager {
 
   // Actions
 
-  async createTodo(title: string) {
-    await this.page.keyboard.type(title);
-    await this.page.keyboard.press('Enter');
+  async createSpace() {
+    await this.page.getByTestId('add-button').click();
   }
 
-  async focusNewTodo() {
-    await this.page.getByTestId('new-todo').click();
+  async openShareSpace() {
+    await this.page.getByTestId('share-button').click();
+  }
+
+  async openJoinSpace() {
+    await this.page.getByTestId('join-button').click();
+  }
+
+  async createTodo(title: string) {
+    await this.page.getByTestId('new-todo').type(title);
+    await this.page.keyboard.press('Enter');
   }
 
   async toggleTodo(title: string) {

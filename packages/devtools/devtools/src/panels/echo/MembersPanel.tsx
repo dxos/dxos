@@ -5,7 +5,7 @@
 import React from 'react';
 import { Column } from 'react-table';
 
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { useMembers } from '@dxos/react-client';
 
 import { MasterTable } from '../../components';
@@ -17,13 +17,13 @@ const columns: Column<SpaceMember>[] = [
     Header: 'key',
     width: 120,
     accessor: (member) => {
-      const identityKey = member.identityKey;
+      const identityKey = member.identity.identityKey;
       return identityKey.truncate(4);
     }
   },
   {
     Header: 'name',
-    accessor: (member) => member.profile?.displayName
+    accessor: (member) => member.identity.profile?.displayName
   },
   {
     Header: 'status',

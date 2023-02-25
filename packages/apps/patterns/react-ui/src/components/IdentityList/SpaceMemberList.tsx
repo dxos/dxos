@@ -17,12 +17,12 @@ export const SpaceMemberList = ({ members, onSelect }: SpaceMemberListProps) => 
   return (
     <ul className='flex flex-col gap-2'>
       {members
-        .filter((member) => member.profile)
+        .filter((member) => member.identity)
         .map((member) => {
           return (
             <IdentityListItem
-              key={member.identityKey.toHex()}
-              identity={member.profile!}
+              key={member.identity.identityKey.toHex()}
+              identity={member.identity}
               presence={member.presence}
               onClick={onSelect && (() => onSelect(member))}
             />

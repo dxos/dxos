@@ -53,6 +53,7 @@ export const SpacesPage = ({
     [spacePath]
   );
 
+  // TODO(burdon): ???
   return (
     <>
       <HeadingWithActions
@@ -65,7 +66,7 @@ export const SpacesPage = ({
               onJoin={handleJoin}
               acceptInvitation={acceptInvitation}
               dialogProps={{
-                initiallyOpen: Boolean(invitationParam),
+                defaultOpen: Boolean(invitationParam),
                 openTrigger: (
                   <Button className='grow flex gap-1'>
                     <Rocket className={getSize(5)} />
@@ -84,6 +85,7 @@ export const SpacesPage = ({
           children: t('spaces label')
         }}
       />
+
       <SpaceList spaces={spaces} />
     </>
   );

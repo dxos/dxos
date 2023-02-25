@@ -4,25 +4,16 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import { MetagraphClientFake } from '@dxos/metagraph';
-import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
 
-import {
-  AppState,
-  AppStateProvider,
-  defaultFrameId,
-  useClientProvider,
-  botModules,
-  frameModules,
-  defaultFrames
-} from '../../hooks';
-import { createSpacePath } from '../../router';
+import { AppState, AppStateProvider, useClientProvider, botModules, frameModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';
 import { ShellProvider } from '../ShellProvider';
 
@@ -34,25 +25,16 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
   const metagraphContext = {
     client: new MetagraphClientFake([...botModules, ...frameModules])
   };
-  const navigate = useNavigate();
-  const { spaceKey, frame } = useParams();
 
   return (
     <ThemeProvider
       appNs='kai'
+      rootDensity='fine'
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
-      fallback={<Fallback message='Loading...' />}
     >
       <ErrorProvider>
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider
-            client={clientProvider}
-            spaceProvider={{
-              initialSpaceKey: (spaces) =>
-                spaces.find((space) => space.key.truncate() === spaceKey)?.key ?? spaces[0]?.key,
-              onSpaceChange: (spaceKey) => navigate(createSpacePath(spaceKey, frame ?? defaultFrameId))
-            }}
-          >
+          <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
               <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                 <ShellProvider>

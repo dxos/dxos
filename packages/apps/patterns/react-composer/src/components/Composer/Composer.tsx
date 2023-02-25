@@ -8,7 +8,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { ComponentProps } from 'react';
 
-import type { TextObject } from '@dxos/client';
+import type { Text } from '@dxos/client';
 import { useTranslation, mx } from '@dxos/react-components';
 
 export interface ComposerSlots {
@@ -16,11 +16,12 @@ export interface ComposerSlots {
   editor?: {
     className?: string;
     spellCheck?: boolean;
+    tabIndex?: number;
   };
 }
 
 export interface ComposerProps {
-  document: TextObject;
+  document: Text;
   field?: string;
   placeholder?: string;
   slots?: ComposerSlots;
@@ -30,10 +31,6 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
   // TODO(wittjosiah): Provide own translations?
   //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
-
-  // TODO(burdon): Value doesn't show up after synced.
-  const v = document?.doc?.getXmlFragment(field);
-  console.log('[[', v?.toString().length, ']]');
 
   // Reference:
   // https://tiptap.dev/installation/react
@@ -52,8 +49,9 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
       ],
       editorProps: {
         attributes: {
-          class: mx('focus:outline-none focus-visible:outline-none', slots?.editor?.className),
-          spellcheck: slots?.editor?.spellCheck === false ? 'false' : 'true'
+          class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
+          spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
+          tabindex: slots?.editor?.tabIndex ? String(slots?.editor?.tabIndex) : '0'
         }
       }
     },

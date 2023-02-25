@@ -9,20 +9,19 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { useFrameState } from '../../hooks';
-import { Document } from '../../proto';
-import { createSpacePath } from '../../router';
+import { createPath, useAppRouter } from '../../hooks';
+import { TextDocument } from '../../proto';
 
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();
-  const { space, frame, objectId } = useFrameState();
-  const objects = useQuery(space, Document.filter());
+  const { space, frame, objectId } = useAppRouter();
+  const objects = useQuery(space, TextDocument.filter());
 
   // Default to first.
-  const object = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
+  const object = objectId ? (space!.db.getObjectById(objectId) as TextDocument) : undefined;
   useEffect(() => {
     if (frame && !object && objects.length) {
-      navigate(createSpacePath(space!.key, frame?.module.id, objects[0].id));
+      navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: objects[0].id }));
     }
   }, [frame, object, objects]);
 
@@ -45,20 +44,21 @@ export const DocumentFrame = withReactor(() => {
           {/* TODO(burdon): Throttle input. */}
           <Input
             variant='subdued'
-            value={object.title}
-            onChange={(event) => {
-              object.title = event.target.value;
-            }}
-            label=''
+            label='Title'
+            labelVisuallyHidden
             placeholder='Title'
             slots={{
               root: {
-                className: 'm-0 px-6 py-6 bg-paper-bg'
+                className: 'px-6 py-6 bg-paper-bg'
               },
               input: {
                 className: 'p-2 border-0 text-xl',
                 spellCheck
               }
+            }}
+            value={object.title}
+            onChange={(event) => {
+              object.title = event.target.value;
             }}
           />
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultDisabled, hover, defaultActive, osActive, focus } from '../../styles';
+import { defaultDisabled, hover, defaultActive, osActive, focus, buttonFine, buttonCoarse } from '../../styles';
 import { mx } from '../../util';
 import { ThemeContextValue } from '../ThemeProvider';
 import { ButtonProps } from './ButtonProps';
@@ -22,7 +22,7 @@ export const buttonStyles = (
   const resolvedVariant = props.variant ?? 'default';
   return mx(
     'inline-flex select-none items-center justify-center transition-color duration-100',
-    props.compact ? 'pli-2 plb-1.5' : 'pli-4 plb-2',
+    props.density === 'fine' ? buttonFine : buttonCoarse,
     isOsTheme ? 'rounded font-system-medium text-xs' : 'rounded-md font-medium text-sm',
     hover(props, themeVariant),
     !isOsTheme && resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',

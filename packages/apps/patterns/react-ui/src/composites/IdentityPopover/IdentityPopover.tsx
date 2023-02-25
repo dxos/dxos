@@ -4,14 +4,14 @@
 
 import React, { ComponentProps } from 'react';
 
-import { Profile } from '@dxos/client';
+import { Identity } from '@dxos/client';
 import { Avatar, mx } from '@dxos/react-components';
 
 import { PanelPopover } from '../../layouts';
 import { IdentityPanel } from '../../panels';
 
 export interface IdentityPopoverProps extends Partial<ComponentProps<typeof PanelPopover>> {
-  identity: Profile;
+  identity: Identity;
   onClickManageProfile?: () => void;
 }
 
@@ -32,7 +32,7 @@ export const IdentityPopover = ({
             size={10}
             variant='circle'
             fallbackValue={identity.identityKey.toHex()}
-            label={identity.displayName ?? ''}
+            label={identity.profile?.displayName ?? ''}
           />
         )
       }

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useEffect, useSyncExternalStore, useRef } from 'react';
+import { useEffect, useSyncExternalStore, useRef } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
@@ -26,7 +26,7 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
         .createSpace()
         .then(() => (creating.current = false))
         .catch((err) => {
-          console.error(err);
+          console.error(err); // TODO(burdon): Log.
           creating.current = false;
         });
     }
@@ -39,12 +39,11 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
  * Get all Spaces available to current user.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useSpaces = () => {
+export const useSpaces = (): Space[] => {
   const client = useClient();
-  const result = useMemo(() => client.echo.querySpaces(), [client]);
-  const spaces: Space[] = useSyncExternalStore(
-    (listener) => result.subscribe(listener),
-    () => result.value
+  const spaces = useSyncExternalStore(
+    (listener) => client.echo.subscribeSpaces(listener),
+    () => client.echo.getSpaces()
   );
 
   return spaces;

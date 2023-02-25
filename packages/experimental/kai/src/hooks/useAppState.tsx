@@ -13,7 +13,7 @@ export type AppState = {
   // Debug info.
   debug?: boolean;
 
-  // Dev mode (auto profile, simple invitations).
+  // Dev mode (auto identity, simple invitations).
   dev?: boolean;
 
   // PWA mode.

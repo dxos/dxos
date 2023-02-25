@@ -9,9 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
@@ -52,7 +50,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client1a.destroy(), server1a.close()]));
         expect(client1a.initialized).to.be.true;
 
-        await client1a.halo.createProfile();
+        await client1a.halo.createIdentity();
       }
       {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
@@ -77,7 +75,7 @@ describe('Client services', () => {
         afterTest(() => Promise.all([client2a.destroy(), server2a.close()]));
         expect(client2a.initialized).to.be.true;
 
-        await client2a.halo.createProfile();
+        await client2a.halo.createIdentity();
       }
     }
   });
@@ -102,7 +100,7 @@ describe('Client services', () => {
       await client1.initialize();
       await client2.initialize();
 
-      await client1.halo.createProfile();
+      await client1.halo.createIdentity();
     }
 
     const success1 = new Trigger<Invitation>();
@@ -143,35 +141,16 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.profile!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.profile!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      const devices1 = new Trigger<DeviceInfo[]>();
-      const devices2 = new Trigger<DeviceInfo[]>();
-
-      {
-        client1.halo.queryDevices().subscribe({
-          onUpdate: (devices) => {
-            devices1.wake(devices);
-          },
-          onError: (err: Error) => raise(new Error(err.message))
-        });
-
-        client2.halo.queryDevices().subscribe({
-          onUpdate: (devices) => {
-            devices2.wake(devices);
-          },
-          onError: (err: Error) => raise(new Error(err.message))
-        });
-      }
-
-      expect(await devices1.wait()).to.have.lengthOf(2);
-      expect(await devices2.wait()).to.have.lengthOf(2);
+      expect(client1.halo.getDevices()).to.have.lengthOf(2);
+      expect(client2.halo.getDevices()).to.have.lengthOf(2);
     });
   });
 
@@ -194,8 +173,8 @@ describe('Client services', () => {
 
       await client1.initialize();
       await client2.initialize();
-      await client1.halo.createProfile({ displayName: 'Peer 1' });
-      await client2.halo.createProfile({ displayName: 'Peer 2' });
+      await client1.halo.createIdentity({ displayName: 'Peer 1' });
+      await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
     log('initialized');
 
@@ -244,22 +223,23 @@ describe('Client services', () => {
     const space2 = await trigger.wait();
 
     for (const space of [space1, space2]) {
-      await space.queryMembers().waitFor((members) => members.length === 2);
       await waitForExpect(() => {
-        expect(space.queryMembers().value).to.deep.equal([
+        expect(space.getMembers()).to.deep.equal([
           {
-            identityKey: client1.halo.profile!.identityKey,
-            profile: {
-              identityKey: client1.halo.profile!.identityKey,
-              displayName: 'Peer 1'
+            identity: {
+              identityKey: client1.halo.identity!.identityKey,
+              profile: {
+                displayName: 'Peer 1'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           },
           {
-            identityKey: client2.halo.profile!.identityKey,
-            profile: {
-              identityKey: client2.halo.profile!.identityKey,
-              displayName: 'Peer 2'
+            identity: {
+              identityKey: client2.halo.identity!.identityKey,
+              profile: {
+                displayName: 'Peer 2'
+              }
             },
             presence: SpaceMember.PresenceState.ONLINE
           }

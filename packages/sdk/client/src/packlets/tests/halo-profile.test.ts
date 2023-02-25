@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -12,18 +12,18 @@ import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
-  test('creates a profile', async () => {
+  test('creates a identity', async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity).exist;
 
-    expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
-    expect(client.halo.profile?.displayName).to.equal('test-user');
+    expect(await client.halo.getDevices()).to.have.lengthOf(1);
+    expect(client.halo.identity!.profile?.displayName).to.equal('test-user');
   });
 
   test('device invitations', async () => {
@@ -33,10 +33,10 @@ describe('Halo', () => {
     afterTest(() => client1.destroy());
     await client1.initialize();
 
-    await client1.halo.createProfile({ displayName: 'test-user' });
-    expect(client1.halo.profile).exist;
+    await client1.halo.createIdentity({ displayName: 'test-user' });
+    expect(client1.halo.identity).exist;
 
-    expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
+    expect(await client1.halo.getDevices()).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client2.destroy());
@@ -68,36 +68,7 @@ describe('Halo', () => {
     await done1.wait();
     await done2.wait();
 
-    expect(await client1.halo.queryDevices().value).to.have.lengthOf(2);
-    expect(await client2.halo.queryDevices().value).to.have.lengthOf(2);
-  });
-
-  test('query credentials', async () => {
-    const testBuilder = new TestBuilder();
-
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
-    afterTest(() => client.destroy());
-    await client.initialize();
-
-    await client.halo.createProfile({ displayName: 'test-user' });
-    expect(client.halo.profile).exist;
-
-    const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
-
-    const trigger = new Trigger();
-    credentials.subscribe({
-      onUpdate: () => {
-        if (credentials.value?.length === 2) {
-          trigger.wake();
-        }
-      },
-      onError: (error) => {
-        throw error;
-      }
-    });
-    await asyncTimeout(trigger.wait(), 500);
-
-    expect(credentials.value!.every((cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'))
-      .to.be.true;
+    expect(await client1.halo.getDevices()).to.have.lengthOf(2);
+    expect(await client2.halo.getDevices()).to.have.lengthOf(2);
   });
 });

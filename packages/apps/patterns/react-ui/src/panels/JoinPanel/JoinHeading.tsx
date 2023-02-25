@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 import { ProhibitInset } from 'phosphor-react';
-import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
+import React, { cloneElement, ForwardedRef } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { useSpace } from '@dxos/react-client';
+import { useSpace, withReactorRef } from '@dxos/react-client';
 import { Avatar, Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
 
 import { subduedSurface } from '../../styles';
@@ -20,7 +20,7 @@ export interface JoinSpaceHeadingProps {
   preventExit?: boolean;
 }
 
-export const JoinHeading = forwardRef(
+export const JoinHeading = withReactorRef(
   (
     { mode, titleId, invitation, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>
@@ -37,13 +37,7 @@ export const JoinHeading = forwardRef(
         : invitation?.invitation?.identityKey?.toHex();
 
     const exitButton = (
-      <Button
-        compact
-        variant='ghost'
-        {...(onExit && { onClick: onExit })}
-        className='grow-0 shrink-0'
-        data-testid='join-exit'
-      >
+      <Button variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0' data-testid='join-exit'>
         <ProhibitInset className={getSize(5)} />
         <span className='sr-only'>{t('exit label')}</span>
       </Button>

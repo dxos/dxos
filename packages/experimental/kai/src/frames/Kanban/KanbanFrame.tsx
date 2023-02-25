@@ -6,15 +6,15 @@ import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { Searchbar } from '@dxos/react-components';
+import { ElevationProvider, Searchbar } from '@dxos/react-components';
 
 import { ProjectCard } from '../../containers';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   if (!space) {
     return null;
   }
@@ -24,7 +24,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {
@@ -51,13 +51,16 @@ export const KanbanFrame: FC = () => {
     await space?.db.add(project);
   };
 
-  // TODO(burdon): Searchbar Input slots.
   // TODO(burdon): Type and column/field selectors.
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2 py-2 mb-2'>
+      <div className='flex p-2 mb-2'>
         <div className='w-screen md:w-column px-4 md:px-2'>
-          <Searchbar onSearch={handleSearch} />
+          <ElevationProvider elevation='group'>
+            <div>
+              <Searchbar onSearch={handleSearch} />
+            </div>
+          </ElevationProvider>
         </div>
       </div>
 

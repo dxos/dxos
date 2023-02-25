@@ -14,7 +14,7 @@ import { data } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
-import { TextObject } from './text-object';
+import { Text } from './text-object';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -328,29 +328,28 @@ describe('EchoDatabase', () => {
   describe('text', () => {
     test('basic', async () => {
       const db = await createDatabase();
-      const text = new TextObject();
+      const text = new Text();
       await db.add(text);
 
       expect(text.doc).toBeDefined();
-      expect(text.model).toBeDefined();
-      expect(text.model!.textContent).toEqual('');
+      expect(text.text).toEqual('');
 
       text.model!.insert('Hello world', 0);
-      expect(text.model!.textContent).toEqual('Hello world');
+      expect(text.text).toEqual('Hello world');
     });
 
     test('text property', async () => {
       const db = await createDatabase();
       const task = new Document();
       await db.add(task);
-      task.text = new TextObject();
+      task.text = new Text();
       await sleep(10);
       expect(task.text.doc).toBeDefined();
       expect(task.text.model).toBeDefined();
-      expect(task.text.model!.textContent).toEqual('');
+      expect(task.text.text).toEqual('');
 
       task.text.model!.insert('Hello world', 0);
-      expect(task.text.model!.textContent).toEqual('Hello world');
+      expect(task.text.text).toEqual('Hello world');
     });
   });
 });

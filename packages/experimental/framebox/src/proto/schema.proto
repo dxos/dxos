@@ -4,13 +4,15 @@
 
 syntax = "proto3";
 
+import "dxos/schema.proto";
+
 package dxos.experimental.framebox;
 
 message Frame {
   option (object) = true;
 
   string name = 1;
-  TextObject content = 2;
+  dxos.schema.Text content = 2;
   Artifact compiled = 3;
 }
 
@@ -26,7 +28,3 @@ message Artifact {
   string bundle = 2;
   repeated Import imports = 3;
 }
-
-// TODO(dmaretskyi): Move to separate file.
-/// Special object type for text object references.
-message TextObject {}

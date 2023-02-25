@@ -7,23 +7,20 @@ import {
   Article,
   Calendar,
   Cards,
+  Code,
   Compass,
   Files,
-  Stack,
   Graph,
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
   Sword,
   Table,
-  Code
+  Wall
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useCurrentSpace } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
@@ -60,13 +57,13 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.stack',
+      id: 'dxos.module.frame.mosaic',
       type: 'dxos:type/frame',
-      displayName: 'Stack',
+      displayName: 'Mosaic',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Stack,
+      Icon: Wall,
       Component: StackFrame
     }
   },
@@ -235,19 +232,19 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.document';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.stack',
+  'dxos.module.frame.mosaic',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
-  'dxos.module.frame.kanban'
+  // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer'
-  // 'dxos.module.frame.notes'
+  'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;
@@ -268,27 +265,4 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   );
 
   return { frames, active };
-};
-
-export type FrameState = {
-  space?: Space;
-  frame?: FrameDef;
-  objectId?: string;
-};
-
-// TODO(burdon): Combine frame hooks?
-// TODO(burdon): Better abstraction for app state hierarchy?
-export const useFrameState = (): FrameState => {
-  const [space] = useCurrentSpace();
-  const { frame, objectId } = useParams();
-
-  // TODO(burdon): Active is unsound.
-  const { frames, active: activeFrames } = useFrames();
-  const currentFrameId = frame?.replaceAll('-', '.');
-  const frameDef =
-    currentFrameId && activeFrames.find((frameId) => frameId === currentFrameId)
-      ? frames.get(currentFrameId)
-      : undefined;
-
-  return { space, frame: frameDef, objectId };
 };

@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useForwardedRef, useThemeContext } from '../../hooks';
+import { useButtonShadow, useThemeContext, useDensityContext } from '../../hooks';
 import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSize } from './InputProps';
@@ -17,28 +17,31 @@ const sizeMap: Record<InputSize, string> = {
 };
 
 export type BareTextInputProps = Omit<ComponentPropsWithRef<'input'>, 'size'> &
-  Pick<InputProps, 'validationMessage' | 'validationValence' | 'size' | 'variant'>;
+  Pick<InputProps, 'validationMessage' | 'validationValence' | 'size' | 'variant' | 'elevation' | 'density'>;
 
 export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
-  ({ validationValence, validationMessage, variant, size, ...inputSlot }, ref) => {
+  (
+    { validationValence, validationMessage, variant, elevation, density: propsDensity, size, ...inputSlot },
+    forwardedRef
+  ) => {
     const { themeVariant } = useThemeContext();
-    const inputRef = useForwardedRef(ref);
-    const shadow = useButtonShadow();
+    const shadow = useButtonShadow(elevation);
+    const density = useDensityContext(themeVariant === 'os' ? 'fine' : propsDensity);
     return (
       <input
         {...inputSlot}
-        ref={inputRef}
+        ref={forwardedRef}
         className={mx(
           (variant === 'subdued' ? subduedInput : defaultInput)(
             {
+              density,
               disabled: inputSlot.disabled,
               ...(validationMessage && { validationValence })
             },
             themeVariant
           ),
           sizeMap[size ?? 'md'],
-          'block w-full',
-          themeVariant === 'os' ? 'pli-1.5 plb-1' : 'pli-2.5 plb-2',
+          'block is-full',
           !inputSlot.disabled && variant !== 'subdued' && shadow,
           inputSlot?.className
         )}

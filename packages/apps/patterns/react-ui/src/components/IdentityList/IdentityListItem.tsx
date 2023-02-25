@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { Profile, SpaceMember } from '@dxos/client';
+import { Identity, SpaceMember } from '@dxos/client';
 import { Avatar, mx, useTranslation } from '@dxos/react-components';
 
 export const IdentityListItem = ({
@@ -11,7 +11,7 @@ export const IdentityListItem = ({
   presence,
   onClick
 }: {
-  identity: Profile;
+  identity: Identity;
   presence?: SpaceMember['presence'];
   onClick?: () => void;
 }) => {
@@ -27,7 +27,7 @@ export const IdentityListItem = ({
           variant: 'circle',
           size: 9,
           fallbackValue: identity.identityKey.toHex(),
-          label: <p className='text-sm truncate'>{identity.displayName ?? identity.identityKey.truncate()}</p>,
+          label: <p className='text-sm truncate'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>,
           ...(presence === SpaceMember.PresenceState.OFFLINE && {
             status: 'inactive',
             description: (

@@ -20,16 +20,15 @@ export default class Recover extends BaseCommand {
     const { seedphrase } = args; // TODO(burdon): Prompt.
 
     return await this.execWithClient(async (client: Client) => {
-      let profile = client.halo.profile;
-      if (profile) {
-        this.log('Profile already initialized.');
+      let identity = client.halo.identity;
+      if (identity) {
+        this.log('Identity already initialized.');
       } else {
         // TODO(burdon): Needs to be connected to peer?
         this.log('Recovering...', seedphrase);
-        profile = await client.halo.recoverProfile(seedphrase);
-        const { displayName } = profile;
-        this.log('Profile', profile);
-        return { seedphrase, displayName };
+        identity = await client.halo.recoverIdentity(seedphrase);
+        this.log('Identity', identity.profile);
+        return { seedphrase, displayName: identity.profile?.displayName };
       }
     });
   }

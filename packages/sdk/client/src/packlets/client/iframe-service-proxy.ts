@@ -2,13 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { ClientServicesProvider, ClientServicesProxy, ShellController } from '@dxos/client-services';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { Profile } from '@dxos/protocols/proto/dxos/client';
+import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
+import { Provider } from '@dxos/util';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_CLIENT_ORIGIN, DEFAULT_SHELL_CHANNEL } from './config';
 
@@ -24,10 +26,13 @@ export type IFrameClientServicesProxyOptions = {
  */
 // TODO(burdon): Move to client-services.
 export class IFrameClientServicesProxy implements ClientServicesProvider {
+  public readonly joinedSpace = new Event<PublicKey>();
+
   private readonly _options: IFrameClientServicesProxyOptions;
   private _iframe?: HTMLIFrameElement;
   private _clientServicesProxy?: ClientServicesProxy;
   private _shellController?: ShellController;
+  private _spaceProvider?: Provider<PublicKey | undefined>;
 
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
@@ -56,20 +61,16 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     return this._shellController?.display;
   }
 
-  get spaceKey() {
-    return this._shellController?.spaceKey;
-  }
-
   get contextUpdate() {
     return this._shellController?.contextUpdate;
   }
 
-  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
-    await this._shellController?.setLayout(layout, options);
+  setSpaceProvider(provider: Provider<PublicKey | undefined>) {
+    this._spaceProvider = provider;
   }
 
-  setCurrentSpace(key?: PublicKey) {
-    this._shellController?.setSpace(key);
+  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
+    await this._shellController?.setLayout(layout, options);
   }
 
   async open() {
@@ -81,11 +82,12 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
       this._iframe!.classList.add('__DXOS_SHELL');
       this._iframe!.setAttribute('data-testid', 'dxos-shell');
-      this._shellController.contextUpdate.on(({ display }) => {
+      this._shellController.contextUpdate.on(({ display, spaceKey }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
         if (display === ShellDisplay.NONE) {
           this._iframe!.blur();
         }
+        spaceKey && this.joinedSpace.emit(spaceKey);
       });
 
       window.addEventListener('keydown', this._handleKeyDown);
@@ -105,20 +107,22 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    const identity = await new Promise<Profile | undefined>((resolve) => {
+    const identity = await new Promise<Identity | undefined>((resolve) => {
       if (!this._clientServicesProxy) {
         resolve(undefined);
         return;
       }
 
-      this._clientServicesProxy.services.ProfileService.subscribeProfile().subscribe(({ profile }) => {
-        resolve(profile);
+      this._clientServicesProxy.services.IdentityService.queryIdentity().subscribe(({ identity }) => {
+        resolve(identity);
       });
     });
 
     const haloInvitationCode = searchParams.get('haloInvitationCode');
     if (!identity) {
-      await this._shellController.setLayout(ShellLayout.AUTH, { invitationCode: haloInvitationCode ?? undefined });
+      await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
+        invitationCode: haloInvitationCode ?? undefined
+      });
     }
   }
 
@@ -159,13 +163,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     const modifier = event.ctrlKey || event.metaKey;
     if (event.key === '>' && event.shiftKey && modifier) {
-      await this._shellController.setLayout(ShellLayout.SPACE_LIST, {
-        spaceKey: this._shellController.spaceKey
-      });
+      await this._shellController.setLayout(ShellLayout.DEVICE_INVITATIONS);
     } else if (event.key === '.' && modifier) {
-      await this._shellController.setLayout(ShellLayout.CURRENT_SPACE, {
-        spaceKey: this._shellController.spaceKey
-      });
+      const spaceKey = await this._spaceProvider?.();
+      await this._shellController.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
     }
   }
 }

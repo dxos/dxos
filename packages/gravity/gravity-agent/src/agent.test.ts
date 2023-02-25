@@ -125,12 +125,10 @@ describe('Agent', () => {
     const space2 = new Trigger<Space>();
 
     agent1.sequenceComplete.once(() => {
-      const results = agent1.client.echo.querySpaces();
-      space1.wake(results.value[0]!);
+      space1.wake(agent1.client.echo.getSpaces()[0]!);
     });
     agent2.sequenceComplete.once(() => {
-      const results = agent2.client.echo.querySpaces();
-      space2.wake(results.value[0]!);
+      space2.wake(agent2.client.echo.getSpaces()[0]!);
     });
 
     // Test invitation happened.
@@ -174,7 +172,7 @@ class HostAgentStateMachine extends AgentStateMachine {
 
   async processCommand(command: Command) {
     if (command.createProfile) {
-      await this.agent.client.halo.createProfile();
+      await this.agent.client.halo.createIdentity();
     } else if (command.createSpace) {
       const id = command.createSpace.id;
       const space = await this.agent.client.echo.createSpace();
@@ -212,7 +210,7 @@ class HostAgentStateMachine extends AgentStateMachine {
 class GuestAgentStateMachine extends AgentStateMachine {
   async processCommand(command: Command) {
     if (command.createProfile) {
-      await this.agent.client.halo.createProfile();
+      await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,

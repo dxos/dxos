@@ -22,28 +22,26 @@ Arguments:
 Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
 
 Proxied object.
-### [_modelConstructor]()
-Type: <code>typeof [ObjectModel](/api/@dxos/react-client/classes/ObjectModel)</code>
 ### [[data]]()
 Type: <code>any</code>
 ### [[db]]()
 Type: <code>undefined | [EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 
 Database reference if bound.
-### [[deleted]]()
-Type: <code>boolean</code>
-
-Deletion.
-### [[id]]()
-Type: <code>string</code>
-
-ID accessor.
 ### [[schema]]()
 Type: <code>undefined | [EchoSchemaType](/api/@dxos/react-client/classes/EchoSchemaType)</code>
 ### [[toStringTag]]()
 Type: <code>string</code>
-### [[type]]()
-Type: <code>"null" | string</code>
+### [__deleted]()
+Type: <code>boolean</code>
+
+Deletion.
+### [__typename]()
+Type: <code>undefined | string</code>
+### [id]()
+Type: <code>string</code>
+
+ID accessor.
 
 ## Methods
 ### [\[custom\](depth, options, inspect_)]()
@@ -58,6 +56,29 @@ Arguments:
 `options`: <code>InspectOptionsStylized</code>
 
 `inspect_`: <code>function</code>
+### [_getState()]()
+
+
+Returns: <code>DocumentModelState</code>
+
+Arguments: none
+### [_isPersisted()]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+### [_mutate(mutation)]()
+
+
+Perform mutation on this object's state.
+Mutation is applied optimistically: calls to _getState() will return mutated state.
+
+Returns: <code>undefined | MutateResult</code>
+
+Arguments: 
+
+`mutation`: <code>ObjectMutationSet</code>
 ### [_onBind()]()
 
 

@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
+import "dxos/halo/invitations.proto";
 import "dxos/keys.proto";
 
 // TODO(burdon): Restructure all services.
@@ -22,37 +23,35 @@ package dxos.client.services;
 // - Normalize records for performance (e.g., Space members separate from Space metadata).
 //
 
+enum SystemStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
+message UpdateSystemStatusRequest {
+  SystemStatus status = 1;
+}
+
+message SystemStatusResponse {
+  SystemStatus status = 1;
+}
+
 //
 // System
 //
 
 service SystemService {
+  /// Get the static config of the client.
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
+
+  /// Update the status of the client. Used to re-activate an inactive client.
+  rpc UpdateStatus(UpdateSystemStatusRequest) returns (google.protobuf.Empty);
+
+  /// Stream the status of the client.
+  rpc QueryStatus(google.protobuf.Empty) returns (stream SystemStatusResponse);
+
+  /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
-}
-
-//
-// Signing
-// TODO(burdon): Rename Crypto/KeystoreService?
-//
-
-// TODO(burdon): Metadata (e.g., added, expired).
-message KeyRecord {
-  dxos.keys.PublicKey public_key = 1;
-}
-
-message SignRequest {
-  dxos.keys.PublicKey public_key = 1;
-  bytes payload = 2;
-}
-
-message SignResponse {
-  bytes signed = 2;
-}
-
-service SigningService {
-  rpc UpdateKeyRecord(KeyRecord) returns (KeyRecord);
-  rpc Sign(SignRequest) returns (SignResponse);
 }
 
 //
@@ -61,26 +60,45 @@ service SigningService {
 
 message Identity {
   dxos.keys.PublicKey identity_key = 1;
-  halo.credentials.ProfileDocument profile = 2;
+  optional dxos.keys.PublicKey space_key = 2;
+  optional halo.credentials.ProfileDocument profile = 3;
 }
 
-message RecoverProfileRequest {
+message RecoverIdentityRequest {
   bytes recovery_key = 1;
 }
 
-service HaloService {
-  rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
-  rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
-  rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
+message QueryIdentityResponse {
+  optional Identity identity = 1;
+}
+
+message SignPresentationRequest {
+  dxos.halo.credentials.Presentation presentation = 1;
+  optional bytes nonce = 2;
+}
+
+service IdentityService {
+  rpc CreateIdentity(halo.credentials.ProfileDocument) returns (Identity);
+  rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
+  rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
+
+  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
 }
 
 //
 // Devices
 //
 
+enum DeviceKind {
+  CURRENT = 0;
+  TRUSTED = 1;
+}
+
 // TODO(burdon): Preferences (in database).
 message Device {
   dxos.keys.PublicKey device_key = 1;
+  DeviceKind kind = 2;
+  optional halo.credentials.ProfileDocument profile = 3;
 }
 
 message QueryDevicesResponse {
@@ -88,7 +106,7 @@ message QueryDevicesResponse {
 }
 
 service DevicesService {
-  rpc UpdateDevice(google.protobuf.Empty) returns (Device);
+  rpc UpdateDevice(halo.credentials.ProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 
@@ -110,13 +128,34 @@ service ContactsService {
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
 //
 
-message Space {
-  dxos.keys.PublicKey space_key = 1;
+message SpaceMember {
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+  }
+
+  Identity identity = 1;
+  PresenceState presence = 2;
 }
 
-message QueryMembersRequest {}
-message QueryMembersResponse {
-  dxos.halo.credentials.IdentityProfile members = 1;
+enum SpaceStatus {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
+message Space {
+  dxos.keys.PublicKey space_key = 1;
+  SpaceStatus status = 2;
+
+  repeated SpaceMember members = 10;
+}
+
+message UpdateSpaceRequest {
+  optional Status status = 1;
+}
+
+message QuerySpacesResponse {
+  repeated Space spaces = 1;
 }
 
 message WriteCredentialsRequest {
@@ -130,12 +169,12 @@ message QueryCredentialsRequest {
 
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
-  rpc QuerySpaces(google.protobuf.Empty) returns (stream Space);
+  rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
+  rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
-  // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
-  rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
-  
+  /// Write credentials to the space control feed.
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
+  /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 
@@ -151,6 +190,7 @@ message Invitation {
     /// Requires both to be online with OTP to complete key exchange.
     INTERACTIVE = 0;
     /// Interactive without OTP.
+    /// @deprecated Use authMethod.
     INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
     OFFLINE = 2;
@@ -182,6 +222,8 @@ message Invitation {
 
   /// Determined when created.
   optional Type type = 2;
+
+  optional dxos.halo.invitations.AuthMethod auth_method = 10; // TODO: Fix numbering.
 
   /// Local state.
   optional State state = 3;
@@ -217,7 +259,7 @@ message CancelInvitationRequest {
 // Common TS interface.
 // TODO(burdon): Reconcile with halo/invitations.proto (e.g., common defs like error vs superset of services?)
 
-service HaloInvitationsService {
+service DeviceInvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);

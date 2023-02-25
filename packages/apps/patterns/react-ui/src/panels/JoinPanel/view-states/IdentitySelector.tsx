@@ -6,13 +6,13 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import type { Profile } from '@dxos/client';
+import type { Identity } from '@dxos/client';
 import { Avatar, Button, themeVariantFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentitySelectorProps extends ViewStateProps {
-  availableIdentities: Profile[];
+  availableIdentities: Identity[];
 }
 
 export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: IdentitySelectorProps) => {
@@ -40,7 +40,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
         aria-label={t('identity radio group title')}
         data-autofocus='identity selector'
       >
-        {availableIdentities.map(({ displayName, identityKey }) => {
+        {availableIdentities.map(({ profile, identityKey }) => {
           const hex = identityKey.toHex();
           const inputId = `identitySelector__item--${hex}`;
           const labelId = `identitySelector__itemLabel--${hex}`;
@@ -64,8 +64,8 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
               <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
-              <span id={labelId} className={mx(!displayName && 'font-mono')}>
-                {displayName ?? identityKey.truncate() ?? ''}
+              <span id={labelId} className={mx(!profile?.displayName && 'font-mono')}>
+                {profile?.displayName ?? identityKey.truncate() ?? ''}
               </span>
             </label>
           );
@@ -73,7 +73,6 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
       </RadioGroup.Root>
       <Button
         disabled={disabled}
-        compact
         onClick={() => dispatch({ type: 'add identity' })}
         className='flex items-center gap-2 pli-2'
         data-testid='add-identity'

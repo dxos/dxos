@@ -14,12 +14,15 @@ import {
   NetworkManagerOptions
 } from '@dxos/network-manager';
 
-import { IFrameClientServicesProxy } from './iframe-service-proxy';
+import { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 
 /**
  * Create services provider proxy connected via iFrame to host.
  */
-export const fromIFrame = (config: Config = new Config(), shell?: boolean): ClientServicesProvider => {
+export const fromIFrame = (
+  config: Config = new Config(),
+  options: Omit<Partial<IFrameClientServicesProxyOptions>, 'source'> = {}
+): ClientServicesProvider => {
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.
     throw new ApiError('Cannot configure IFrame bridge outside of browser environment.');
@@ -27,7 +30,7 @@ export const fromIFrame = (config: Config = new Config(), shell?: boolean): Clie
 
   const source = config.get('runtime.client.remoteSource');
 
-  return new IFrameClientServicesProxy({ source, shell });
+  return new IFrameClientServicesProxy({ source, ...options });
 };
 
 /**

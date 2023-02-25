@@ -11,11 +11,11 @@ import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 const gridSize = 300;
 
-const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUTURE, ChessPieces.CUSTOM];
+const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUTURE];
 
 const createChess = (game: Game) => {
   const chess = new Chess();
@@ -31,7 +31,7 @@ const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [pieces, setPieces] = useState(0);
   const [game, setGame] = useState<Game | undefined>();
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
 
   const handleCreate = async () => {
     const game = new Game();
@@ -92,7 +92,7 @@ const Play: FC<{
     <div className='flex flex-col flex-1'>
       <div className='flex w-full p-4'>
         <div>
-          <Button compact onClick={() => onClose()}>
+          <Button onClick={() => onClose()}>
             <ArrowUUpLeft weight='thin' className={getSize(6)} />
           </Button>
         </div>
@@ -110,10 +110,10 @@ const Play: FC<{
 
       <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
-          <Button compact onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
+          <Button className='ml-2' onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
           </Button>
-          <Button compact onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
+          <Button className='ml-1' onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
             <CaretRight weight='thin' className={getSize(6)} />
           </Button>
         </div>
@@ -130,7 +130,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   onSelect,
   onCreate
 }) => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
@@ -140,7 +140,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
     >
       <div className='flex'>
         {onClick && (
-          <Button compact variant='ghost' onClick={onClick}>
+          <Button variant='ghost' onClick={onClick}>
             <PlusCircle className={mx(getSize(16))} />
           </Button>
         )}

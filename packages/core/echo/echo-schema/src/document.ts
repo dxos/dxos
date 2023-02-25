@@ -3,14 +3,16 @@
 //
 
 import assert from 'node:assert';
-import { InspectOptionsStylized, inspect } from 'node:util';
+import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { TextModel } from '@dxos/text-model';
 
 import { base, data, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { Text } from './text-object';
 import { isReferenceLike } from './util';
 
 const isValidKey = (key: string | symbol) =>
@@ -31,26 +33,36 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => ({ '@id': id })
+  onRef: (id, obj) => {
+    if (obj instanceof Text) {
+      return obj.toString();
+    } else {
+      return { '@id': id };
+    }
+  }
 };
 
 /**
  * Base class for generated document types and dynamic objects.
+ *
+ * NOTE: See exported `Document` declaration below.
  */
 // TODO(burdon): Support immutable objects?
-export class DocumentBase extends EchoObject<DocumentModel> {
+class Document_<T> extends EchoObject<DocumentModel> {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
+   * @internal
    */
   private _linkCache? = new Map<string, EchoObject>();
 
   // prettier-ignore
   constructor(
-    initialProps?: Record<keyof any, any>,
+    initialProps?: T,
     private readonly _schemaType?: EchoSchemaType
   ) {
     super(DocumentModel);
 
+    // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
       // Set type.
       this._mutate({ type: this._schemaType.name });
@@ -58,6 +70,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       for (const field of this._schemaType.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
+        } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
+          this._set(field.name, new Text());
         }
       }
     }
@@ -75,10 +89,17 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     return this[base]?._schemaType?.name ?? 'Document';
   }
 
+  /**
+   * Fully qualified name of the object type for objects created from the schema.
+   * @example "example.kai.Task"
+   */
   get __typename(): string | undefined {
     return this[base]?._schemaType?.name ?? this[base]._model?.type ?? undefined;
   }
 
+  /**
+   * Returns the schema type descriptor for the object.
+   */
   // TODO(burdon): Method on Document vs EchoObject?
   get [schema](): EchoSchemaType | undefined {
     return this[base]?._schemaType;
@@ -107,13 +128,16 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     };
   }
 
+  /**
+   * @internal
+   */
   private _convert(visitors: ConvertVisitors = {}) {
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => {
       if (value instanceof EchoObject) {
         return visitorsWithDefaults.onRef!(value.id, value);
       } else if (value instanceof Reference) {
-        return visitorsWithDefaults.onRef!(value.itemId, this._database?.getObjectById(value.itemId));
+        return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
       } else if (value instanceof OrderedArray) {
         return value.toArray().map(convert);
       } else if (value instanceof EchoArray) {
@@ -163,6 +187,9 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   //   };
   // }
 
+  /**
+   * @internal
+   */
   private _get(key: string): any {
     this._database?._logObjectAccess(this);
 
@@ -200,6 +227,9 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     }
   }
 
+  /**
+   * @internal
+   */
   private _set(key: string, value: any) {
     this._database?._logObjectAccess(this);
 
@@ -240,6 +270,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
   /**
    * Create proxy for root or sub-object.
+   * @internal
    */
   private _createProxy(object: any, parent?: string): any {
     const getProperty = (property: string) => (parent ? `${parent}.${property}` : property);
@@ -298,6 +329,11 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     });
   }
 
+  /**
+   * Called after object is bound to a database.
+   * `this._item` will now be set to an item tracked by ECHO.
+   * @internal
+   */
   protected override async _onBind() {
     assert(this._linkCache);
 
@@ -311,8 +347,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   /**
-   * @internal
    * Store referenced object.
+   * @internal
    */
   _linkObject(obj: EchoObject) {
     if (this._database) {
@@ -324,8 +360,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   /**
-   * @internal
    * Lookup referenced object.
+   * @internal
    */
   _lookupLink(id: string): EchoObject | undefined {
     if (this._database) {
@@ -337,13 +373,35 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 }
 
-/**
- * Documents with dynamic properties.
- * Don't have a schema.
- */
-export class Document extends DocumentBase {
-  // Property accessor.
-  [key: string]: any;
-}
+// Fix constructor name.
+Object.defineProperty(Document_, 'name', { value: 'Document' });
 
-export const isDocument = (object: any): object is DocumentBase => !!object[base];
+/**
+ * Helper type to disable type inference for a generic parameter.
+ * @see https://stackoverflow.com/a/56688073
+ */
+type NoInfer<T> = [T][T extends any ? 0 : never];
+
+// NOTE:
+// We define the exported value separately to have fine-grained control over the typescript type.
+// Runtime semantics should be exactly the same as this compiled down to `export const Document = Document_`.
+
+/**
+ * Base class for generated document types and dynamic objects.
+ */
+export type Document<T extends Record<string, any> = { [key: string]: any }> = Document_<T> & T;
+
+export const Document: {
+  /**
+   * Create a new document.
+   * @param initialProps Initial properties.
+   * @param _schemaType Schema type for generated types.
+   */
+  new <T extends Record<string, any> = { [key: string]: any }>(
+    initialProps?: NoInfer<Partial<T>>,
+    _schemaType?: EchoSchemaType
+  ): Document<T>;
+} = Document_ as any;
+
+export const isDocument = (object: unknown): object is Document =>
+  typeof object === 'object' && object !== null && !!(object as any)[base];

@@ -2,29 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
-import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { Device } from '@dxos/protocols/proto/dxos/client/services';
 
 import { useClient } from '../client';
 
-export const useDevices = (): DeviceInfo[] => {
+export const useDevices = (): Device[] => {
   const client = useClient();
-  const observable = useMemo(() => client.halo.queryDevices(), [client]);
-  const [isLoading, setIsLoading] = useState(false);
-  const devices =
-    useSyncExternalStore(
-      (listener) =>
-        observable.subscribe({
-          onUpdate: (devices) => {
-            isLoading && setIsLoading(false);
-            observable.setValue(devices);
-            listener();
-          },
-          onError: () => {}
-        }),
-      () => observable.value
-    ) ?? [];
+  const devices = useSyncExternalStore(
+    (listener) => client.halo.subscribeDevices(listener),
+    () => client.halo.getDevices()
+  );
 
   return devices;
 };

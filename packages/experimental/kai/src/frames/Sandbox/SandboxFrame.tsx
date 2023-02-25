@@ -5,18 +5,18 @@
 import { PlayCircle } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { EmbeddedFrame } from '../../frame-container';
-import { useFrameState } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
 export const SandboxFrame = withReactor(() => {
-  const { space } = useFrameState();
+  const { space } = useAppRouter();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -28,7 +28,7 @@ export const SandboxFrame = withReactor(() => {
       setTimeout(async () => {
         const frame = new Frame({
           name: 'Frame.tsx',
-          content: new TextObject()
+          content: new Text()
         });
 
         await space?.db.add(frame);
@@ -60,7 +60,7 @@ export const SandboxFrame = withReactor(() => {
     return (
       <div className='flex shrink-0 w-full justify-between p-2 bg-gray-200'>
         <h2>{selected.name}</h2>
-        <Button compact variant='ghost' onClick={handleCompile}>
+        <Button variant='ghost' onClick={handleCompile}>
           <PlayCircle className={getSize(6)} />
         </Button>
       </div>
