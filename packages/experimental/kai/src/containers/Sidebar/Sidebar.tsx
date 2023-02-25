@@ -14,9 +14,9 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useShell, useTheme } from '../../hooks';
+import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SpaceList, SpaceListAction } from '../SpaceList';

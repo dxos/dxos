@@ -38,7 +38,10 @@ export {
   IFrameProxyRuntime,
   WorkerRuntime,
   WorkerSession,
-  type ShellRuntime
+  type ShellRuntime,
+  MemoryShellRuntime,
+  ShellRuntimeImpl,
+  ShellController
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
