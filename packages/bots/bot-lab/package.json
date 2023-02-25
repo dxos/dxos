@@ -1,0 +1,33 @@
+{
+  "name": "@dxos/bot-lab",
+  "version": "0.1.26",
+  "private": false,
+  "description": "Bot experiments incubator.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "node -r @swc-node/register src/build.ts"
+  },
+  "dependencies": {
+    "esbuild": "^0.16.14",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/websocket-rpc": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

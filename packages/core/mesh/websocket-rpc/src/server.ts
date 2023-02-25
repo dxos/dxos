@@ -12,11 +12,9 @@ export type ConnectionHandler<C, S> = {
   onClose?: (rpc: ProtoRpcPeer<C>) => Promise<void>;
 } & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>
 
-export type ServerOptions = ConstructorParameters<typeof WebSocket.Server>[0]
-
 export type WebsocketRpcServerParams<C, S> = {
   onConnection: (info: ConnectionInfo) => Promise<ConnectionHandler<C, S>>;
-} & ServerOptions
+} & WebSocket.ServerOptions
 
 export class WebsocketRpcServer<C, S> {
   private _server?: WebSocket.Server
