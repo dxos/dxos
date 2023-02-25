@@ -39,12 +39,13 @@
       "import { $1 } from './$1';",
       "",
       "export default {",
-      "  component: $1",
+      "  component: $1,",
+      "  actions: { argTypesRegex: '^on.*' }",
       "};",
       "",
-      "export const Normal = () => {",
+      "export const Normal = (props: any) => {",
       "  return (",
-      "    <$1 $0 />",
+      "    <$1 $0 {...props} />",
       "  );",
       "};"
     ]

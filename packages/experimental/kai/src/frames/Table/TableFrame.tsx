@@ -95,7 +95,13 @@ export const TableFrame = () => {
           <div className='w-screen md:w-column mr-4'>
             <Searchbar onSearch={handleSearch} />
           </div>
-          <Select options={types} defaultValue={type.id} onChange={(value) => value && setType(getType(value))} />
+          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getType(value))}>
+            {types?.map((type) => (
+              <Select.Item key={type.id} value={type.id}>
+                {type.title}
+              </Select.Item>
+            ))}
+          </Select>
         </ElevationProvider>
       </div>
 

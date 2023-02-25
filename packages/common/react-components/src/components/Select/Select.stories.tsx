@@ -5,52 +5,46 @@
 import React from 'react';
 
 import '@dxosTheme';
-import { Select, SelectProps } from './Select';
+import { Select } from './Select';
 
 export default {
   component: Select,
   actions: { argTypesRegex: '^on.*' }
 };
 
-export const Normal = () => {
-  return <Select options={[{ title: 'Banana' }, { title: 'Orange' }, { title: 'Pear' }]} />;
-};
+const Item = Select.Item;
 
-export const Strings = () => {
-  return <Select options={['Banana', 'Orange', 'Pear', 'Apple', 'Plum', 'Grapefruit', 'Pineapple', 'Melon']} />;
-};
-
-export const DefaultValue = () => {
+export const Normal = (props: any) => {
   return (
-    <Select
-      defaultValue='Orange'
-      options={['Banana', 'Orange', 'Pear', 'Apple', 'Plum', 'Grapefruit', 'Pineapple', 'Melon']}
-    />
+    <Select defaultValue='orange' {...props}>
+      <Item value='orange'>Orange</Item>
+      <Item value='apple'>Apple</Item>
+    </Select>
   );
 };
 
-export const DisabledItems = () => {
+export const DefaultValue = (props: any) => {
   return (
-    <Select
-      options={[
-        'Banana',
-        'Orange',
-        'Pear',
-        'Apple',
-        { disabled: true, title: 'Plum' },
-        'Grapefruit',
-        { disabled: true, title: 'Pineapple' },
-        'Melon'
-      ]}
-    />
+    <Select defaultValue='orange' {...props}>
+      <Item value='orange'>Orange</Item>
+      <Item value='banana'>Banana</Item>
+      <Item value='apple'>Apple</Item>
+      <Item value='pear'>Pear</Item>
+      <Item value='grape'>Grape</Item>
+      <Item value='plum'>Plum</Item>
+    </Select>
   );
 };
 
-export const Events = (props: SelectProps) => {
+export const DisabledItems = (props: any) => {
   return (
-    <Select
-      options={[{ title: 'Banana', id: 'banana' }, 'Orange', 'Pear', 'Apple', 'Grapefruit', 'Melon']}
-      {...props}
-    />
+    <Select defaultValue='apple' {...props}>
+      <Item value='banana'>Banana</Item>
+      <Item value='orange'>Orange</Item>
+      <Item value='apple'>Apple</Item>
+      <Item value='pear' disabled>
+        Pear
+      </Item>
+    </Select>
   );
 };

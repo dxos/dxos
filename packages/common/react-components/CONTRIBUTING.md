@@ -96,18 +96,17 @@ Keep it simple: use inherent positioning & layouts wherever doing so would have 
 Slots give developers access to other attributes they might want to set on a component’s actual HTML elements. Provide a slots interface with a slot for each HTML element rendered by the component, e.g.:
 
 ```ts
-interface ComponentSlots {
+type ComponentSlots = {
   root?: ComponentPropsWithoutRef<'div'>;
   label?: ComponentPropsWithoutRef<'h3'>;
   description?: ComponentPropsWithoutRef<'p'>;
 }
 
-interface ComponentProps {
+type ComponentProps = {
   // ...
   slots?: ComponentSlots;
   // ...
 }
-
 ```
 
 Name slots semantically. If there is any top-level element wrapping things, call it `root`.

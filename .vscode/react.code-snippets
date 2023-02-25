@@ -22,6 +22,7 @@
       "import React from 'react';",
       "",
       "export type $1Props = {$2};",
+      "",
       "export const ${1:Component} = (props: $1Props) => {",
       "  return <>$0</>;",
       "}"
@@ -37,12 +38,13 @@
       "import { $1 } from './$1';",
       "",
       "export default {",
-      "  component: $1",
+      "  component: $1,",
+      "  actions: { argTypesRegex: '^on.*' }",
       "};",
       "",
-      "export const Normal = () => {",
+      "export const Normal = (props: any) => {",
       "  return (",
-      "    <$1 $0 />",
+      "    <$1 $0 {...props} />",
       "  );",
       "};"
     ]
