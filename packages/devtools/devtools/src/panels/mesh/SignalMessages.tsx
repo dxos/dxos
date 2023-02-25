@@ -2,23 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Column } from 'react-table';
 
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useDevtools } from '@dxos/react-client';
-import { Searchbar, Selector, SelectorOption } from '@dxos/react-components';
+import { Searchbar, Select } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 import { MasterTable } from '../../components';
 
-type ColumnType<T extends {}> = SelectorOption & {
+export type View<T extends {}> = {
+  id: string;
+  title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: Column<T>[];
+  columns: readonly Column<T>[];
 };
 
-const types: ColumnType<SignalResponse>[] = [
+const views = [
   {
     id: 'swarm-event',
     title: 'SwarmEvent',
@@ -104,67 +105,49 @@ const types: ColumnType<SignalResponse>[] = [
       }
     ]
   }
-];
+] as const; // this is ok because getView below will fail typecheck if this array is misdefined
 
-const getType = (id: string): ColumnType<SignalResponse> => types.find((type) => type.id === id)!;
+export type ViewType = typeof views[number]['id'];
 
-const SignalMessages = () => {
-  const devtoolsHost = useDevtools();
-  const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
+const getView = (id: ViewType): View<SignalResponse> => views.find((type) => type.id === id)!;
 
-  const [type, setType] = useState<ColumnType<SignalResponse>>(getType('swarm-event'));
-  const handleSearch = (text: string) => {
-    setText(text);
-  };
+export type SignalMessagesProps = {
+  messages?: SignalResponse[];
+};
 
-  const [text, setText] = useState<string>();
-  const handleSelect = (id?: string) => {
-    if (id) {
-      setType(getType(id));
-    }
-  };
+export const SignalMessages = (props: SignalMessagesProps) => {
+  const { messages } = { messages: [], ...props };
+  const [viewType, setViewType] = useState<ViewType>('swarm-event');
+  const [search, setSearch] = useState('');
+  const view = viewType ? getView(viewType) : undefined;
+  const filteredMessages = getFilteredData(messages, view, search);
+  return (
+    <div className='flex flex-col flex-1 overflow-hidden'>
+      <div className='flex p-3 border-b border-slate-200 border-solid'>
+        <Select className='mr-2' defaultValue={viewType} onValueChange={(s) => setViewType(s as ViewType)}>
+          {views.map(({ id, title }) => (
+            <Select.Item value={id} key={id}>
+              {title}
+            </Select.Item>
+          ))}
+        </Select>
+        <Searchbar onSearch={setSearch} />
+      </div>
+      <div className='flex flex-1 overflow-hidden'>
+        {view ? <MasterTable columns={view.columns as any} data={filteredMessages} /> : null}
+      </div>
+    </div>
+  );
+};
 
+const getFilteredData = (messages: SignalResponse[], view?: View<SignalResponse>, searchText?: string) => {
   const defaultSubFilter = (match?: string) => (object: SignalResponse) => {
     if (!match) {
       return true;
     }
     return JSON.stringify(object).includes(match);
   };
-
-  const getFilteredData = () => {
-    return signalResponses.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
-  };
-
-  useEffect(() => {
-    const signalOutput = devtoolsHost.subscribeToSignal();
-    const signalResponses: SignalResponse[] = [];
-    signalOutput.subscribe((response: SignalResponse) => {
-      signalResponses.push(response);
-      setSignalResponses([...signalResponses]);
-    });
-
-    return () => {
-      signalOutput.close();
-    };
-  }, []);
-
-  return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3 border-b border-slate-200 border-solid'>
-        <div className='flex'>
-          <div className='mr-2'>
-            <Selector options={types} value={type.id} onSelect={handleSelect} />
-          </div>
-          <div>
-            <Searchbar onSearch={handleSearch} />
-          </div>
-        </div>
-      </div>
-      <div className='flex flex-1 overflow-hidden'>
-        <MasterTable columns={type.columns} data={getFilteredData()} />
-      </div>
-    </div>
-  );
+  return view
+    ? messages.filter(view.filter).filter(view.subFilter ? view.subFilter(searchText) : defaultSubFilter(searchText))
+    : messages;
 };
-
-export default SignalMessages;

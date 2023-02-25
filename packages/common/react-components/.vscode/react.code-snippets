@@ -15,19 +15,39 @@
   // 	],
   // 	"description": "Log output to console"
   // }
-  "plate": {
-    "scope": "typescript,typescriptreact",
-    "prefix": "plate",
+  "component": {
+    "scope": "typescriptreact",
+    "prefix": "component",
     "body": [
-      "import { defineTemplate, text } from '@dxos/plate';",
-      "import config from './config.t';",
+      "import React from 'react';",
+      "import { mx } from '../../util';",
       "",
-      "export default defineTemplate(",
-      "  ({ input }) => {",
-      "    return text`$0`;",
-      "  },",
-      "  { config }",
-      ");"
+      "export type $1Props = {$2};",
+      "",
+      "export const ${1:Component} = (props: $1Props) => {",
+      "  return <>$0</>;",
+      "}"
+    ]
+  },
+  "story": {
+    "scope": "typescriptreact",
+    "prefix": "story",
+    "body": [
+      "import React from 'react';",
+      "",
+      "import '@dxosTheme';",
+      "import { $1 } from './$1';",
+      "",
+      "export default {",
+      "  component: $1,",
+      "  actions: { argTypesRegex: '^on.*' }",
+      "};",
+      "",
+      "export const Normal = (props: any) => {",
+      "  return (",
+      "    <$1 $0 {...props} />",
+      "  );",
+      "};"
     ]
   }
 }
