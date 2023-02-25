@@ -11,11 +11,10 @@ import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appki
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations, ShellProvider } from '@dxos/react-ui';
 
 import { AppState, AppStateProvider, useClientProvider, botModules, frameModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';
-import { ShellProvider } from '../ShellProvider';
 
 /**
  * Main app container.
