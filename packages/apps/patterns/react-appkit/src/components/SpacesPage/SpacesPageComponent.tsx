@@ -51,7 +51,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
               onJoin={(result) => onSpaceJoined?.(result)}
               acceptInvitation={(invitation) => client.echo.acceptInvitation(invitation)}
               dialogProps={{
-                initiallyOpen: Boolean(invitationParam),
+                defaultOpen: Boolean(invitationParam),
                 openTrigger: (
                   <Button className='grow flex gap-1'>
                     <Rocket className={getSize(5)} />

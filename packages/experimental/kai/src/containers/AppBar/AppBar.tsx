@@ -45,7 +45,7 @@ export const AppBar = withReactor(() => {
             {space.properties?.name ?? 'Space'}
           </h2>
           <Button variant='ghost' onClick={() => setShowSettings(true)}>
-            <Info className={getSize(4)} />
+            <Info weight='bold' className={getSize(4)} />
           </Button>
         </div>
       )}
@@ -72,7 +72,7 @@ export const AppBar = withReactor(() => {
         </DensityProvider>
       </div>
 
-      {space && <SpaceSettingsDialog space={space} open={showSettings} onClose={() => setShowSettings(false)} />}
+      {space && <SpaceSettingsDialog space={space} open={showSettings} onOpenChange={setShowSettings} />}
     </div>
   );
 });
