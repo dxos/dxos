@@ -30,7 +30,7 @@ export type TileProps<T extends {}> = {
   item: Item<T>;
   selected?: boolean;
   bounds?: Bounds;
-  lensModel: GridLensModel;
+  lensModel?: GridLensModel;
   slots?: TileSlots;
   Content: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
@@ -56,10 +56,12 @@ export const Tile = <T extends {} = {}>({
     height: bounds?.height,
     transform: transform
       ? CSS.Transform.toString(
-          Object.assign(transform, {
-            x: transform.x / lensModel.zoom,
-            y: transform.y / lensModel.zoom
-          })
+          lensModel
+            ? Object.assign(transform, {
+                x: transform.x / lensModel.zoom,
+                y: transform.y / lensModel.zoom
+              })
+            : transform
         )
       : undefined
   };
