@@ -4,8 +4,9 @@
 
 import { Transition } from '@headlessui/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { X } from 'phosphor-react';
-import React, { ComponentProps, Fragment, ReactNode, useEffect, useState } from 'react';
+import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
@@ -22,7 +23,8 @@ export interface DialogSlots {
   closeTriggers?: Omit<ComponentProps<'div'>, 'children'>;
 }
 
-export interface DialogProps {
+export interface DialogProps
+  extends Pick<ComponentPropsWithoutRef<typeof DialogPrimitive.Root>, 'open' | 'defaultOpen' | 'onOpenChange'> {
   title: ReactNode;
   openTrigger?: ReactNode;
   closeTriggers?: [ReactNode, ...ReactNode[]];
@@ -30,7 +32,6 @@ export interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   closeLabel?: string;
-  initiallyOpen?: boolean; // TODO(burdon): Change to just 'open' (i.e., controlled and non-controlled?)
   mountAsSibling?: boolean;
   slots?: DialogSlots;
   onClose?: () => void;
@@ -41,26 +42,23 @@ export const Dialog = ({
   titleVisuallyHidden,
   description,
   openTrigger,
-  children,
   closeTriggers,
+  children,
   closeLabel,
-  initiallyOpen,
   mountAsSibling,
-  slots = {},
-  onClose
+  open: propsOpen,
+  defaultOpen: propsDefaultOpen,
+  onOpenChange: propsOnOpenChange,
+  slots = {}
 }: DialogProps) => {
-  const [isOpen, setIsOpen] = useState(!!initiallyOpen);
-  useEffect(() => {
-    setIsOpen(!!initiallyOpen);
-  }, [initiallyOpen]);
-
-  const handleClose = () => {
-    setIsOpen(false);
-    onClose?.();
-  };
+  const [open = false, setOpen] = useControllableState({
+    prop: propsOpen,
+    defaultProp: propsDefaultOpen,
+    onChange: propsOnOpenChange
+  });
 
   const dialogOverlayAndContent = (
-    <Transition.Root show={isOpen}>
+    <Transition.Root show={open}>
       <Transition.Child
         as={Fragment}
         enter='linear duration-300'
@@ -158,7 +156,7 @@ export const Dialog = ({
   );
 
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={handleClose}>
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       {openTrigger && <DialogPrimitive.Trigger asChild>{openTrigger}</DialogPrimitive.Trigger>}
       {mountAsSibling ? (
         dialogOverlayAndContent
