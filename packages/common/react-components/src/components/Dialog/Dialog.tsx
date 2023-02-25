@@ -87,6 +87,8 @@ export const Dialog = ({
       >
         <DialogPrimitive.Content
           forceMount
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
           {...slots.content}
           className={mx(
             'fixed z-50',
