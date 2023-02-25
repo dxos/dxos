@@ -1,13 +1,5 @@
 # Class `HaloProxy`
-<<<<<<< HEAD
-<<<<<<< HEAD
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:36]()</sub>
-=======
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:35]()</sub>
->>>>>>> 464c6e793 (docs wip)
-=======
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:36]()</sub>
->>>>>>> 4df9c9ec7 (wip docs)
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:26]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -23,18 +15,20 @@ Arguments:
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
 ## Properties
+### [identityChanged]()
+Type: <code>Event&lt;void&gt;</code>
 ### [invitationsUpdate]()
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
-### [profileChanged]()
-Type: <code>Event&lt;void&gt;</code>
+### [device]()
+Type: <code>undefined | Device</code>
+### [identity]()
+Type: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
+
+User identity info.
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
 ### [opened]()
 Type: <code>boolean</code>
-### [profile]()
-Type: <code>undefined | [Profile](/api/@dxos/react-client/interfaces/Profile)</code>
-
-User profile info.
 
 ## Methods
 ### [\[custom\]()]()
@@ -63,6 +57,17 @@ Destroy the instance and clean-up subscriptions.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+### [createIdentity(\[profile\])]()
+
+
+Create Identity.
+Then initializes profile with given display name.
+
+Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
+
+Arguments: 
+
+`profile`: <code>object</code>
 ### [createInvitation(\[options\])]()
 
 
@@ -73,20 +78,18 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `options`: <code>InvitationsOptions</code>
-### [createProfile(\[options\])]()
+### [getContacts()]()
 
 
-Create Profile.
-Add Identity key if public and secret key are provided.
-Then initializes profile with given display name.
-If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
-Seedphrase must not be specified with existing keys.
+Returns: <code>[Contact](/api/@dxos/react-client/interfaces/Contact)[]</code>
 
-Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
+Arguments: none
+### [getDevices()]()
 
-Arguments: 
 
-`options`: <code>CreateProfileOptions</code>
+Returns: <code>Device[]</code>
+
+Arguments: none
 ### [open()]()
 
 
@@ -105,14 +108,6 @@ Returns: <code>Promise&lt;Presentation&gt;</code>
 Arguments: 
 
 `options`: <code>object</code>
-### [queryContacts()]()
-
-
-Query for contacts. Contacts represent member keys across all known Spaces.
-
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;[Contact](/api/@dxos/react-client/interfaces/Contact)&gt;</code>
-
-Arguments: none
 ### [queryCredentials(\[options\])]()
 
 
@@ -123,24 +118,14 @@ Returns: <code>ObservableProvider&lt;object, Credential[]&gt;</code>
 Arguments: 
 
 `options`: <code>object</code>
-### [queryDevices()]()
+### [recoverIdentity(recoveryKey)]()
 
 
-Get set of authenticated devices.
-
-Returns: <code>ObservableProvider&lt;DeviceEvents, DeviceInfo[]&gt;</code>
-
-Arguments: none
-### [recoverProfile(seedPhrase)]()
-
-
-Joins an existing identity HALO from a recovery seed phrase.
-
-Returns: <code>Promise&lt;[Profile](/api/@dxos/react-client/interfaces/Profile)&gt;</code>
+Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
 
 Arguments: 
 
-`seedPhrase`: <code>string</code>
+`recoveryKey`: <code>Uint8Array</code>
 ### [removeInvitation(id)]()
 
 
@@ -151,7 +136,23 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-### [subscribeToProfile(callback)]()
+### [subscribeContacts(callback)]()
+
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
+### [subscribeDevices(callback)]()
+
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
+### [subscribeIdentity(callback)]()
 
 
 Returns: <code>function</code>

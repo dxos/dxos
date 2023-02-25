@@ -41,6 +41,7 @@ export default defineConfig({
   ]
 })
 ```
+
 The content array should contain globs that match any other code which will contain `tailwind` css classes.
 
 Import the special DXOS theme stylesheet `@dxosTheme` anywhere in code such as `main.tsx`:

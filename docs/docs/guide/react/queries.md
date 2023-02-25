@@ -47,7 +47,7 @@ The API definition of `useQuery` is below. It returns a generic `Document` type 
 
 Create subscription.
 
-Returns: <code>[Document](/api/@dxos/react-client/classes/Document)\[]</code>
+Returns: <code>[Document](/api/@dxos/react-client/values#Document)\<object>\[]</code>
 
 Arguments:
 

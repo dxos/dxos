@@ -1,11 +1,11 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:26](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L26)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L28)</sub>
 
 
 Proxy to host client service via iframe.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L32)
+### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L37)
 
 
 Returns: <code>[IFrameClientServicesProxy](/api/@dxos/client/classes/IFrameClientServicesProxy)</code>
@@ -15,41 +15,33 @@ Arguments:
 `options`: <code>Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;</code>
 
 ## Properties
-### [contextUpdate](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L63)
+### [joinedSpace](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L29)
+Type: <code>Event&lt;[PublicKey](/api/@dxos/client/classes/PublicKey)&gt;</code>
+### [contextUpdate](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L64)
 Type: <code>undefined | Event&lt;AppContextRequest&gt;</code>
-### [descriptors](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L47)
+### [descriptors](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L52)
 Type: <code>ServiceBundle&lt;ClientServices&gt;</code>
-### [display](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L55)
+### [display](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L60)
 Type: <code>undefined | [ShellDisplay](/api/@dxos/client/enums#ShellDisplay)</code>
-### [proxy](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L43)
+### [proxy](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L48)
 Type: <code>ProtoRpcPeer&lt;ClientServices&gt;</code>
-### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L51)
+### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L56)
 Type: <code>ClientServices</code>
-### [spaceKey](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L59)
-Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L125)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L129)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L75)
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L76)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [setCurrentSpace(\[key\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L71)
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`key`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
-### [setLayout(layout, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L67)
+### [setLayout(layout, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L72)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
@@ -59,3 +51,11 @@ Arguments:
 `layout`: <code>[ShellLayout](/api/@dxos/client/enums#ShellLayout)</code>
 
 `options`: <code>Omit&lt;LayoutRequest, "layout"&gt;</code>
+### [setSpaceProvider(provider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L68)
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`provider`: <code>Provider&lt;undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)&gt;</code>

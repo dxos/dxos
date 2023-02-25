@@ -40,7 +40,7 @@ Values:
 ### [`PresenceState`]()
 
 Defined in:
-   file://./../../dxos/client.proto
+   file://./../../../dxos/client/services.proto
 
 Values:
 - `OFFLINE`
@@ -53,18 +53,6 @@ Values:
 - `HIDE_DELETED` Do not return deleted items. Default behaviour.
 - `SHOW_DELETED` Return deleted and regular items.
 - `SHOW_DELETED_ONLY` Return only deleted items.
-### [`KeyType`]()
-
-Defined in:
-   file://./../../../dxos/halo/keys.proto
-
-Values:
-- `DEVICE`
-- `DXNS_ADDRESS`
-- `FEED`
-- `IDENTITY`
-- `SPACE`
-- `UNKNOWN`
 ### [`ShellDisplay`]()
 
 Defined in:
@@ -79,16 +67,23 @@ Defined in:
    file://./../../dxos/iframe.proto
 
 Values:
-- `AUTH`
-- `CURRENT_SPACE`
 - `DEFAULT`
-- `DEVICES_LIST`
+- `DEVICE_INVITATIONS`
+- `INITIALIZE_IDENTITY`
 - `JOIN_SPACE`
-- `SPACE_LIST`
-### [`Status`]()
+- `SPACE_INVITATIONS`
+### [`SpaceStatus`]()
 
 Defined in:
-   file://./../../dxos/client.proto
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `ACTIVE`
+- `INACTIVE`
+### [`SystemStatus`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
 
 Values:
 - `ACTIVE`

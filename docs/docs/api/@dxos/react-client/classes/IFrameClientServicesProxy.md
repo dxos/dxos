@@ -1,5 +1,5 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:13]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:15]()</sub>
 
 
 Proxy to host client service via iframe.
@@ -15,6 +15,8 @@ Arguments:
 `options`: <code>Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;</code>
 
 ## Properties
+### [joinedSpace]()
+Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
 ### [contextUpdate]()
 Type: <code>undefined | Event&lt;AppContextRequest&gt;</code>
 ### [descriptors]()
@@ -25,8 +27,6 @@ Type: <code>undefined | [ShellDisplay](/api/@dxos/react-client/enums#ShellDispla
 Type: <code>ProtoRpcPeer&lt;ClientServices&gt;</code>
 ### [services]()
 Type: <code>ClientServices</code>
-### [spaceKey]()
-Type: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 ## Methods
 ### [close()]()
@@ -41,14 +41,6 @@ Arguments: none
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [setCurrentSpace(\[key\])]()
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`key`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [setLayout(layout, \[options\])]()
 
 
@@ -59,3 +51,11 @@ Arguments:
 `layout`: <code>[ShellLayout](/api/@dxos/react-client/enums#ShellLayout)</code>
 
 `options`: <code>Omit&lt;LayoutRequest, "layout"&gt;</code>
+### [setSpaceProvider(provider)]()
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`provider`: <code>Provider&lt;undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>

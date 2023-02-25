@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:23]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:24]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -16,11 +16,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-<<<<<<< HEAD
 Type: <code>"0.1.26"</code>
-=======
-Type: <code>"0.1.24"</code>
->>>>>>> 1fe40eab0 (wip ui docs)
 
 The version of this client API
 ### [config]()
@@ -71,9 +67,7 @@ Arguments: none
 ### [getStatus()]()
 
 
-Get system status.
-
-Returns: <code>Promise&lt;StatusResponse&gt;</code>
+Returns: <code>undefined | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
 
 Arguments: none
 ### [initialize()]()
@@ -104,6 +98,16 @@ This is useful when connecting to a host running behind a resource lock
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+### [subscribeStatus(callback)]()
+
+
+Observe the system status.
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
 ### [toJSON()]()
 
 

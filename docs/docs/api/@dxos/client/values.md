@@ -11,10 +11,10 @@ Type: "https://halo.dxos.org/vault.html"
 Type: "dxos:shell"
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/client/types/ConvertVisitors)
+### [`Document`]()
+Type: function
 ### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L13)
 Type: "1"
-### [`SPACE_ITEM_TYPE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L28)
-Type: "dxos:item/space"
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
 ### [`base`]()

@@ -1,17 +1,5 @@
 # Class `SpaceProxy`
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
-=======
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:62]()</sub>
->>>>>>> ac192b194 (tunneling)
-=======
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:58]()</sub>
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
-=======
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
->>>>>>> 4df9c9ec7 (wip docs)
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:27]()</sub>
 
 
 
@@ -37,51 +25,24 @@ Arguments:
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
 ### [stateUpdate]()
 Type: <code>Event&lt;void&gt;</code>
-<<<<<<< HEAD
-<<<<<<< HEAD
 ### [db]()
 Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
-=======
-### [experimental]()
-Type: <code>Experimental</code>
-
-Next-gen database.
->>>>>>> ac192b194 (tunneling)
-=======
-### [db]()
-Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
->>>>>>> 4df9c9ec7 (wip docs)
 ### [internal]()
 Type: <code>Internal</code>
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
-### [isActive]()
-Type: <code>boolean</code>
 ### [isOpen]()
 Type: <code>boolean</code>
 ### [key]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [properties]()
-<<<<<<< HEAD
-<<<<<<< HEAD
-Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
-=======
-Type: <code>ObjectProperties</code>
->>>>>>> ac192b194 (tunneling)
-=======
-Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
+Type: <code>[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;</code>
 
-<<<<<<< HEAD
-Space Metadata stored in the database.
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
-
-=======
->>>>>>> 4df9c9ec7 (wip docs)
 ## Methods
 ### [_setOpen(open)]()
 
 
-Returns: <code>Promise&lt;void&gt;</code>
+Returns: <code>Promise&lt;never&gt;</code>
 
 Arguments: 
 
@@ -118,10 +79,12 @@ Called by EchoProxy close.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [getDetails()]()
+### [getMembers()]()
 
 
-Returns: <code>Promise&lt;SpaceDetails&gt;</code>
+Return set of space members.
+
+Returns: <code>[SpaceMember](/api/@dxos/react-client/interfaces/SpaceMember)[]</code>
 
 Arguments: none
 ### [initialize()]()
@@ -138,14 +101,6 @@ Arguments: none
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [queryMembers()]()
-
-
-Return set of space members.
-
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;[SpaceMember](/api/@dxos/react-client/interfaces/SpaceMember)&gt;</code>
-
-Arguments: none
 ### [removeInvitation(id)]()
 
 
@@ -156,11 +111,13 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-### [setActive(active)]()
+### [subscribeMembers(callback)]()
 
 
-Returns: <code>Promise&lt;void&gt;</code>
+Subscribe to changes to space members.
+
+Returns: <code>UnsubscribeCallback</code>
 
 Arguments: 
 
-`active`: <code>boolean</code>
+`callback`: <code>function</code>

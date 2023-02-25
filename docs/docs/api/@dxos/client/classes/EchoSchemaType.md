@@ -1,5 +1,5 @@
 # Class `EchoSchemaType`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:28]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:29]()</sub>
 
 
 Wraps protocol generated type.

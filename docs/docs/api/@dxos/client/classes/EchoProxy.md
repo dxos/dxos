@@ -1,11 +1,11 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/echo-proxy.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L44)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/echo-proxy.ts:46](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L46)</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 ## Constructors
-### [constructor(_serviceProvider, _modelFactory, _haloProxy)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L56)
+### [constructor(_serviceProvider, _modelFactory, _haloProxy)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L60)
 
 
 Returns: <code>[EchoProxy](/api/@dxos/client/classes/EchoProxy)</code>
@@ -19,31 +19,23 @@ Arguments:
 `_haloProxy`: <code>[HaloProxy](/api/@dxos/client/classes/HaloProxy)</code>
 
 ## Properties
-### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L50)
+### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L53)
 Type: <code>[DatabaseRouter](/api/@dxos/client/classes/DatabaseRouter)</code>
-### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L76)
+### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L80)
 Type: <code>ModelFactory</code>
-### [networkManager](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L83)
+### [networkManager](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L87)
 Type: <code>any</code>
-### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L93)
+### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L97)
 Type: <code>boolean</code>
 
 ## Methods
-### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L62)
+### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L66)
 
 
 Returns: <code>string</code>
 
 Arguments: none
-<<<<<<< HEAD
-<<<<<<< HEAD
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L218)
-=======
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L229)
->>>>>>> ac192b194 (tunneling)
-=======
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L218)
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L223)
 
 
 Initiates an interactive accept invitation flow.
@@ -55,34 +47,23 @@ Arguments:
 `invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 `options`: <code>InvitationsOptions</code>
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L147)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L144)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L164)
+### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L161)
 
 
 Creates a new space.
 
 Returns: <code>Promise&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 Arguments: 
 
 `meta`: <code>[PropertiesOptions](/api/@dxos/client/types/PropertiesOptions)</code>
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L204)
-<<<<<<< HEAD
-=======
-Arguments: none
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L215)
->>>>>>> ac192b194 (tunneling)
-=======
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
+### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L202)
 
 
 Returns an individual space by its key.
@@ -92,29 +73,31 @@ Returns: <code>undefined | [Space](/api/@dxos/client/interfaces/Space)</code>
 Arguments: 
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L97)
+### [getSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L209)
+
+
+Get list of all spaces.
+
+Returns: <code>[Space](/api/@dxos/client/interfaces/Space)[]</code>
+
+Arguments: none
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L101)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-<<<<<<< HEAD
-<<<<<<< HEAD
-### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L211)
-=======
-### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L222)
->>>>>>> ac192b194 (tunneling)
-=======
-### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L211)
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
+### [subscribeSpaces(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L216)
 
 
-Query for all spaces.
+Subscribe to spaces changes.
 
-Returns: <code>[ResultSet](/api/@dxos/client/classes/ResultSet)&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
+Returns: <code>UnsubscribeCallback</code>
 
-Arguments: none
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L67)
+Arguments: 
+
+`callback`: <code>function</code>
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L71)
 
 
 Returns: <code>object</code>

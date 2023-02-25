@@ -77,6 +77,7 @@ const App = () => {
 
 createRoot(document.body).render(<App />);
 ```
+
 :::
 
 :::details Passing a custom Client object to ClientProvider

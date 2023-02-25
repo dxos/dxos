@@ -47,22 +47,7 @@ Arguments:
 ### [query(\[filter\])]()
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-Filter by type.
-
-Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;T&gt;</code>
-
-Arguments: 
-
-`filter`: <code>[TypeFilter](/api/@dxos/client/types/TypeFilter)&lt;T&gt;</code>
-Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[Document](/api/@dxos/client/classes/Document)&gt;</code>
-=======
-Returns: <code>[Query](/api/@dxos/client/types/Query)&lt;[Document](/api/@dxos/client/classes/Document)&gt;</code>
->>>>>>> 5ed417652 (wip docs)
-=======
-Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[Document](/api/@dxos/client/classes/Document)&gt;</code>
->>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
+Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[Document](/api/@dxos/client/values#Document)&lt;object&gt;&gt;</code>
 
 Arguments: 
 
