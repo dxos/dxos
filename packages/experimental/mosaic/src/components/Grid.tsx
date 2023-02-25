@@ -116,14 +116,16 @@ export const Grid = <T extends {} = {}>({
     }
   });
 
-  /**
-   * Container size allows selected item to be scrolled into center.
-   */
-  const overScrollFactor = 1.6;
-  const [containerStyles, setContainerStyles] = useState<any>({
-    width: Math.round(layout.dimensions.width * overScrollFactor),
-    height: Math.round(layout.dimensions.height * overScrollFactor),
+  const [containerStyles, setContainerStyles] = useState<{
+    width?: number;
+    height?: number;
+    transition: string;
+    transitionProperty: string;
+    transform: string;
+  }>({
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
     transition: `${options.transitionDelay}ms ease-in-out`,
+    transitionProperty: 'transform',
     transform: 'scale(1)'
   });
 
@@ -136,18 +138,28 @@ export const Grid = <T extends {} = {}>({
   const updatePosition = (smooth = true) => {
     const { width, height } = bounds.current;
 
-    // Calculate offset relative to center of layout.
-    const center = layout.getCenter(lensModel.offset);
-    const offset = {
-      x: center.x * lensModel.zoom - (width === undefined ? 0 : Math.round((width - containerStyles.width) / 2)),
-      y: center.y * lensModel.zoom - (height === undefined ? 0 : Math.round((height - containerStyles.height) / 2))
-    };
+    setContainerStyles((styles) => {
+      const newStyles = {
+        ...styles,
+        width: layout.dimensions.width + (width ?? 0),
+        height: layout.dimensions.height + (height ?? 0)
+      };
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
-    containerRef.current.scrollTo({ left: offset.x, top: offset.y, behavior: smooth ? 'smooth' : 'instant' });
+      // Calculate offset relative to center of layout.
+      const center = layout.getCenter(lensModel.offset);
+      const offset = {
+        x: center.x * lensModel.zoom - (width === undefined ? 0 : Math.round((width - newStyles.width) / 2)),
+        y: center.y * lensModel.zoom - (height === undefined ? 0 : Math.round((height - newStyles.height) / 2))
+      };
 
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-    setContainerStyles((styles: any) => ({ ...styles, transform: `scale(${lensModel.zoom})` }));
+      // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
+      containerRef.current.scrollTo({ left: offset.x, top: offset.y, behavior: smooth ? 'smooth' : 'instant' });
+
+      return {
+        ...newStyles,
+        transform: `scale(${lensModel.zoom})`
+      };
+    });
   };
 
   // Update when aspect changed.
@@ -167,6 +179,14 @@ export const Grid = <T extends {} = {}>({
   useEffect(() => {
     updatePosition(false);
   }, [width, height]);
+
+  // Wait for initial scroll position to prevent flickering.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    setTimeout(() => {
+      setVisible(true);
+    }, 100);
+  }, []);
 
   //
   // Handlers
@@ -193,6 +213,8 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
+  // TODO(burdon): Jumps on first render.
+
   return (
     <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       {/* Full screen. */}
@@ -206,7 +228,10 @@ export const Grid = <T extends {} = {}>({
           )}
         >
           {/* Layout container. */}
-          <div className='flex justify-center items-center' style={containerStyles}>
+          <div
+            className={mx('flex justify-center items-center', visible ? 'visible' : 'invisible')}
+            style={containerStyles}
+          >
             {/* Layout box. */}
             <div
               className='relative'
