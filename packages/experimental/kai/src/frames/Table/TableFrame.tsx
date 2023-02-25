@@ -7,7 +7,7 @@ import { Column } from 'react-table';
 
 import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { PublicKey, useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Selector, SelectorOption, ElevationProvider } from '@dxos/react-components';
+import { Table, Searchbar, Select, ElevationProvider } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
 import { schema } from '../../proto';
@@ -15,7 +15,9 @@ import { schema } from '../../proto';
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
-type ColumnType<T extends Document> = SelectorOption & {
+type ColumnType<T extends Document> = {
+  id: string;
+  title: string;
   columns: Column<Document>[];
   filter?: TypeFilter<any>;
   subFilter?: (match?: string) => (object: T) => boolean;
@@ -86,12 +88,6 @@ export const TableFrame = () => {
     setText(text);
   };
 
-  const handleSelect = (id?: string) => {
-    if (id) {
-      setType(getType(id));
-    }
-  };
-
   return (
     <div className='flex flex-col flex-1 px-2 overflow-hidden'>
       <div className='flex p-2 mb-2'>
@@ -99,9 +95,13 @@ export const TableFrame = () => {
           <div className='w-screen md:w-column mr-4'>
             <Searchbar onSearch={handleSearch} />
           </div>
-          <div>
-            <Selector options={types} value={type.id} onSelect={handleSelect} />
-          </div>
+          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getType(value))}>
+            {types?.map((type) => (
+              <Select.Item key={type.id} value={type.id}>
+                {type.title}
+              </Select.Item>
+            ))}
+          </Select>
         </ElevationProvider>
       </div>
 

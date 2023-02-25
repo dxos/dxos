@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import SignalMessages from './SignalMessages';
+import SignalMessages from './SignalMessagesContainer';
 import SignalStatusComp from './SignalStatus';
 
 const SignalPanel = () => {

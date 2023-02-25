@@ -5,8 +5,34 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Selector } from '@dxos/react-components';
+import { Select } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
+
+export type PublicKeySelectorProps = {
+  keys: PublicKey[];
+  defaultValue?: PublicKey;
+  placeholder?: string;
+  onChange?: (value: PublicKey) => any;
+};
+
+export const PublicKeySelector = (props: PublicKeySelectorProps) => {
+  const { placeholder, keys, defaultValue, onChange } = props;
+  return (
+    <Select
+      defaultValue={defaultValue?.toHex()}
+      placeholder={placeholder}
+      onValueChange={(id) => {
+        id && onChange?.(PublicKey.fromHex(id));
+      }}
+    >
+      {removeDuplicates(keys).map((key) => (
+        <Select.Item value={key.toHex()} key={key.toHex()}>
+          {humanize(key)} <span className='text-neutral-250'>{key.truncate(4)}</span>
+        </Select.Item>
+      ))}
+    </Select>
+  );
+};
 
 // TODO(burdon): Factor out.
 const removeDuplicates = (keys: PublicKey[]) =>
@@ -19,25 +45,3 @@ const removeDuplicates = (keys: PublicKey[]) =>
     }
     return acc;
   }, [] as PublicKey[]);
-
-export type PublicKeySelectorProps = {
-  placeholder?: string;
-  keys: PublicKey[];
-  value: PublicKey | undefined;
-  onSelect: (value: PublicKey | undefined) => void;
-};
-
-// TODO(burdon): Why is this wrapper needed? Remove?
-export const PublicKeySelector = ({ placeholder, keys, value, onSelect }: PublicKeySelectorProps) => (
-  <Selector
-    options={removeDuplicates(keys).map((key) => ({
-      id: key.toHex(),
-      title: `${key.truncate(4)} [${humanize(key)}]`
-    }))}
-    value={value?.toHex()}
-    placeholder={placeholder}
-    onSelect={(id) => {
-      id && onSelect(PublicKey.fromHex(id));
-    }}
-  />
-);

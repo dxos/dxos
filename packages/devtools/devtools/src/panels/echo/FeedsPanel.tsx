@@ -52,7 +52,7 @@ const FeedsPanel = () => {
     <div className='flex flex-col overflow-hidden'>
       <SpaceToolbar>
         <div className='w-[400px]'>
-          <PublicKeySelector keys={feeds} value={feedKey} placeholder={'Select feed'} onSelect={handleSelect} />
+          <PublicKeySelector keys={feeds} defaultValue={feedKey} placeholder={'Select feed'} onChange={handleSelect} />
         </div>
       </SpaceToolbar>
       <div className='flex flex-1 overflow-hidden'>
