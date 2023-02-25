@@ -18,7 +18,9 @@ const options = {
   transitionDelay: 500
 };
 
-// TODO(burdon): Move selection here.
+/**
+ * Offset and Zoom.
+ */
 export class GridLensModel {
   public readonly onChange = new Event();
 
@@ -182,7 +184,6 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
-  // TODO(burdon): Dragging broken when scaled.
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const item = items.find((item) => item.id === active.id)!;
     if (over) {
