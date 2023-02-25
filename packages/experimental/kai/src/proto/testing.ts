@@ -26,7 +26,6 @@ export type GeneratorOptions = {
   contacts: MinMax;
   events: MinMax;
   documents: MinMax;
-  notes: MinMax;
 };
 
 export class Generator {
@@ -38,8 +37,7 @@ export class Generator {
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
-      documents: { min: 1, max: 3 },
-      notes: { min: 8, max: 16 }
+      documents: { min: 1, max: 3 }
     }
   ) {}
 
@@ -112,9 +110,6 @@ export class Generator {
 
     // Documents.
     await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
-
-    // Notes.
-    await Promise.all(range(this._options.notes).map(async () => this.createNote()));
   }
 
   createOrganization = async () => {
