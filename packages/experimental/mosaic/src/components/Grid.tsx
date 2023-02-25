@@ -3,25 +3,82 @@
 //
 
 import { DndContext, DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
-import React, { FC, useEffect, useState } from 'react';
+import isEqual from 'lodash.isequal';
+import React, { FC, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { Event } from '@dxos/async';
 import { mx } from '@dxos/react-components';
 
-import { Dimensions, Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
-import { Cell } from './Cell';
+import { Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
+import { Cell, CellSlots } from './Cell';
 import { Tile, TileContentProps, TileSlots } from './Tile';
+
+const options = {
+  transitionDelay: 500
+};
+
+// TODO(burdon): Move selection here.
+export class GridLensModel {
+  public readonly onChange = new Event();
+
+  private readonly _aspect = {
+    zoom: 1,
+    offset: { x: 0, y: 0 }
+  };
+
+  constructor(
+    private readonly _options = {
+      zoomOut: 0.5
+    }
+  ) {}
+
+  get zoom() {
+    return this._aspect.zoom;
+  }
+
+  get offset() {
+    return this._aspect.offset;
+  }
+
+  setAspect({ zoom, offset }: { zoom?: number; offset?: Point }) {
+    let modified = false;
+    if (zoom !== undefined) {
+      if (this._aspect.zoom !== zoom) {
+        this._aspect.zoom = zoom;
+        modified = true;
+      }
+    }
+
+    if (offset !== undefined) {
+      if (!isEqual(this._aspect.offset, offset)) {
+        this._aspect.offset = offset;
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      this.onChange.emit();
+    }
+  }
+
+  toggleZoom() {
+    this.setAspect({ zoom: this.zoom === 1 ? this._options.zoomOut : 1 });
+  }
+}
 
 export type GridSlots = {
   root?: {
     className?: string;
   };
   tile?: TileSlots;
+  cell?: CellSlots;
 };
 
 export type GridProps<T extends {} = {}> = {
-  layout: Layout;
   items?: Item<T>[];
+  layout: Layout;
+  lensModel?: GridLensModel;
   slots?: GridSlots;
   Content: FC<TileContentProps<T>>;
   onSelect?: (item: Item<T>) => void;
@@ -30,16 +87,11 @@ export type GridProps<T extends {} = {}> = {
   onDelete?: (item: Item<T>) => void;
 };
 
-const options = {
-  transitionDelay: 500,
-  zoomOut: 0.55,
-  zoomIn: 2
-};
-
 // TODO(burdon): Pass in selected (and store in app state).
 export const Grid = <T extends {} = {}>({
   items = [],
   layout,
+  lensModel: controlledLensModel,
   slots = {},
   Content,
   onSelect,
@@ -47,82 +99,81 @@ export const Grid = <T extends {} = {}>({
   onCreate,
   onDelete
 }: GridProps<T>) => {
-  const getItem = (location: Location): Item<T> | undefined => {
+  const lensModel = useMemo(() => controlledLensModel ?? new GridLensModel(), [controlledLensModel]);
+  const getItemById = (id?: string) => (id ? items.find((item) => item.id === id) : undefined);
+  const getItemByLocation = (location: Location): Item<T> | undefined => {
     return items.find((item) => item.location && serializeLocation(item.location) === serializeLocation(location));
   };
 
-  // Container allows any selected item to scroll near to the center.
-  const containerDimensions: Dimensions = {
-    width: layout.dimensions.width * 1.5,
-    height: layout.dimensions.height * 1.5
-  };
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 500 });
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 8 // Move 10px before activating.
+    }
+  });
 
   /**
-   * Calculate offset of the container relative to the screen of the given point.
-   * The point is relative to the center of the layout.
+   * Container size allows selected item to be scrolled into center.
    */
-  const getOffset = (center: Point) => {
-    if (!width || !height) {
-      return { x: 0, y: 0 };
-    }
-
-    return {
-      x: center.x - Math.round((width - containerDimensions.width) / 2),
-      y: center.y - Math.round((height - containerDimensions.height) / 2)
-    };
-  };
-
-  const { ref: containerRef, width, height } = useResizeDetector();
-  const [, forceUpdate] = useState({});
-
-  //
-  // Pan (scroll) and zoom.
-  //
-
-  // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
+  const overScrollFactor = 1.6;
   const [containerStyles, setContainerStyles] = useState<any>({
+    width: Math.round(layout.dimensions.width * overScrollFactor),
+    height: Math.round(layout.dimensions.height * overScrollFactor),
     transition: `${options.transitionDelay}ms ease-in-out`,
     transform: 'scale(1)'
   });
 
-  const [zoom, setZoom] = useState<number>(1);
+  // TODO(burdon): Why is this required?
+  const bounds = useRef({ width, height });
   useEffect(() => {
-    if (zoom !== 1) {
-      scrollTo();
-    }
+    bounds.current = { width, height };
+  }, [width, height]);
 
-    setContainerStyles((style: any) => ({
-      ...style,
-      transform: `scale(${zoom})`
-    }));
-  }, [zoom]);
+  const updatePosition = (smooth = true) => {
+    const { width, height } = bounds.current;
 
-  /**
-   * Scroll to center point. Assumes scale is 1.
-   */
-  const scrollTo = (center: Point = { x: 0, y: 0 }, smooth = true) => {
-    const offset = getOffset(center);
+    // Calculate offset relative to center of layout.
+    const center = layout.getCenter(lensModel.offset);
+    const offset = {
+      x: center.x * lensModel.zoom - (width === undefined ? 0 : Math.round((width - containerStyles.width) / 2)),
+      y: center.y * lensModel.zoom - (height === undefined ? 0 : Math.round((height - containerStyles.height) / 2))
+    };
+
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
     containerRef.current.scrollTo({ left: offset.x, top: offset.y, behavior: smooth ? 'smooth' : 'instant' });
+
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
+    setContainerStyles((styles: any) => ({ ...styles, transform: `scale(${lensModel.zoom})` }));
   };
 
+  // Update when aspect changed.
   useEffect(() => {
-    if (width && height) {
-      const item = selected ? items.find((item) => item.id === selected) : undefined;
-      scrollTo(layout.getCenter(item?.location ?? { x: 0, y: 0 }), false);
-    }
+    return lensModel.onChange.on(() => updatePosition(true));
+  }, [lensModel]);
+
+  const [selected, setSelected] = useState<string>();
+
+  // Update when selection changed.
+  useEffect(() => {
+    const item = getItemById(selected);
+    lensModel.setAspect({ offset: item?.location ?? { x: 0, y: 0 } });
+  }, [items, selected]);
+
+  // Update on first render and when resized.
+  useEffect(() => {
+    updatePosition(false);
   }, [width, height]);
 
   //
-  // Create and select.
+  // Handlers
   //
 
-  const [selected, setSelected] = useState<string>();
-  useEffect(() => {
-    const item = selected ? items.find((item) => item.id === selected) : undefined;
-    setZoom(zoom);
-    scrollTo(layout.getCenter(item?.location ?? { x: 0, y: 0 }));
-  }, [items, selected]);
+  const handleSelect = (item: Item<T>) => {
+    setSelected(item.id);
+    onSelect?.(item);
+  };
 
   const handleCreate = async (point: Point) => {
     if (onCreate) {
@@ -131,29 +182,16 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
-  //
-  // DND
-  //
-
-  const mouseSensor = useSensor(MouseSensor, {
-    // TODO(burdon): Factor out.
-    activationConstraint: {
-      distance: 10 // Move 10px before activating.
-    }
-  });
-
-  // TODO(burdon): Dragging broken when scaled (disable until fixed).
-  // TODO(burdon): Smoothly drop into place.
+  // TODO(burdon): Dragging broken when scaled.
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const item = items.find((item) => item.id === active.id)!;
     if (over) {
       item.location = parseLocation(over.id as string);
       onChange?.(item, item.location);
-      forceUpdate({});
+      forceUpdate();
     }
   };
 
-  // TODO(burdon): Externalize Container.
   return (
     <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       {/* Full screen. */}
@@ -167,28 +205,39 @@ export const Grid = <T extends {} = {}>({
           )}
         >
           {/* Layout container. */}
-          <div className='flex justify-center items-center' style={{ ...containerDimensions, ...containerStyles }}>
+          <div className='flex justify-center items-center' style={containerStyles}>
             {/* Layout box. */}
             <div
               className='relative'
               style={layout.dimensions}
-              onClick={(event: any) => setZoom(event.detail === 2 ? options.zoomOut : 1)}
+              onClick={(event: any) => {
+                if (event.detail === 2) {
+                  lensModel.toggleZoom();
+                }
+              }}
             >
               {layout.cells.map((location) => {
                 const bounds = layout.getBounds(location);
-                const item = getItem(location);
+                const item = getItemByLocation(location);
 
                 return (
-                  <Cell key={serializeLocation(location)} location={location} bounds={bounds} onCreate={handleCreate}>
+                  <Cell
+                    key={serializeLocation(location)}
+                    location={location}
+                    bounds={bounds}
+                    slots={slots?.cell}
+                    onCreate={handleCreate}
+                  >
                     {item && (
                       <div className='z-50'>
                         <Tile<T>
                           slots={slots?.tile}
                           item={item}
+                          lensModel={lensModel}
                           bounds={bounds}
                           Content={Content}
                           selected={item.id === selected}
-                          onClick={() => setSelected(item.id)}
+                          onClick={() => handleSelect(item)}
                           onDelete={onDelete}
                         />
                       </div>

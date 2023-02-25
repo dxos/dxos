@@ -4,6 +4,7 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { GridLensModel } from 'packages/experimental/mosaic/src/components/Grid';
 import React, { FC } from 'react';
 
 import { mx } from '@dxos/react-components';
@@ -28,6 +29,7 @@ export type TileSlots = {
 export type TileProps<T extends {}> = {
   item: Item<T>;
   bounds?: Bounds;
+  lensModel: GridLensModel;
   slots?: TileSlots;
   selected?: boolean;
   Content: FC<TileContentProps<T>>;
@@ -41,6 +43,7 @@ export type TileProps<T extends {}> = {
 export const Tile = <T extends {} = {}>({
   item,
   bounds,
+  lensModel,
   slots = {},
   selected,
   Content,
@@ -49,12 +52,18 @@ export const Tile = <T extends {} = {}>({
 }: TileProps<T>) => {
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform:
+      transform &&
+      CSS.Transform.toString(
+        Object.assign(transform, {
+          x: transform.x / lensModel.zoom,
+          y: transform.y / lensModel.zoom
+        })
+      ),
     width: bounds?.width,
     height: bounds?.height
   };
 
-  // prettier-ignore
   return (
     <div
       {...attributes}

@@ -43,8 +43,8 @@ const Test = () => {
     });
   });
 
-  const handleSelect = (item: Item) => {
-    console.log(item);
+  const handleSelect = (item: Item<TestData>) => {
+    // console.log(item);
   };
 
   const handleCreate = async (location: Location) => {
@@ -72,6 +72,12 @@ const Test = () => {
           },
           selected: {
             className: 'shadow-lg ring-1 ring-orange-400'
+          }
+        },
+        cell: {
+          showLocation: true,
+          over: {
+            className: 'bg-zinc-200'
           }
         }
       }}

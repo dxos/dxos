@@ -220,7 +220,7 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.document';
+export const defaultFrameId = 'dxos.module.frame.note';
 
 // prettier-ignore
 export const defaultFrames = [

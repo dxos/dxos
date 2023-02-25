@@ -10,18 +10,28 @@ import { getSize, mx } from '@dxos/react-components';
 
 import { Bounds, Location, Point, serializeLocation } from '../layout';
 
+export type CellSlots = {
+  showLocation?: boolean;
+  root?: {
+    className?: string;
+  };
+  over?: {
+    className?: string;
+  };
+};
+
 export type CellProps = {
   children?: ReactNode;
   location: Location;
   bounds: Bounds;
-  debug?: boolean;
+  slots?: CellSlots;
   onCreate?: (point: Point) => void;
 };
 
 /**
  * Placeholder (drop target) for Tile.
  */
-export const Cell = ({ children, location, bounds, debug = false, onCreate }: CellProps) => {
+export const Cell = ({ children, location, bounds, slots = {}, onCreate }: CellProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: serializeLocation(location) });
 
   const handleClick = (event: any) => {
@@ -34,14 +44,15 @@ export const Cell = ({ children, location, bounds, debug = false, onCreate }: Ce
   return (
     <div
       ref={setNodeRef}
-      className='absolute flex flex-1 p-1'
+      className='absolute flex flex-1 p-0.5'
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >
       <div
         className={mx(
           'group relative flex w-full h-full justify-center items-center snap-center',
-          'rounded-lg cursor-pointer select-none',
-          isOver ? 'transition ease-in-out duration-500 bg-gray-300' : 'border border-gray-300 border-dashed'
+          'rounded-lg cursor-pointer select-none border border-gray-300 border-dashed',
+          slots.root?.className,
+          isOver && mx('transition ease-in-out duration-500', slots?.over?.className ?? 'bg-gray-200 border-solid')
         )}
       >
         {children || (
@@ -54,7 +65,9 @@ export const Cell = ({ children, location, bounds, debug = false, onCreate }: Ce
               </div>
             )}
 
-            {debug && <div className='absolute left-2 bottom-1 text-gray-300'>[{serializeLocation(location)}]</div>}
+            {slots?.showLocation && (
+              <div className='absolute left-2 bottom-1 text-gray-300'>[{serializeLocation(location)}]</div>
+            )}
           </>
         )}
       </div>
