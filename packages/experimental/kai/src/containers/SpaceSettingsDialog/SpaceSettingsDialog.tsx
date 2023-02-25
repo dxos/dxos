@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
 import { withReactor } from '@dxos/react-client';
-import { Button, Dialog, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Button, Dialog, DialogProps, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { icons, themes } from '../../hooks';
 
@@ -15,53 +15,57 @@ import { icons, themes } from '../../hooks';
 
 export type SpaceSettingsDialog = {
   space: Space;
-  open?: boolean;
-  onClose?: () => void;
-};
+} & Pick<DialogProps, 'open' | 'onOpenChange' | 'defaultOpen'>;
 
-export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(({ space, open, onClose }) => {
-  const { t } = useTranslation('kai');
+export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(
+  ({ space, open, onOpenChange, defaultOpen }) => {
+    const { t } = useTranslation('kai');
 
-  return (
-    <Dialog initiallyOpen={!!open} onClose={() => onClose?.()} title='Space Settings'>
-      <div className='mt-2 mb-6'>
-        <Input
-          variant='subdued'
-          label='Title'
-          labelVisuallyHidden
-          placeholder={t('space title placeholder')}
-          slots={{ input: { autoFocus: true, className: 'text-xl' } }}
-          value={space.properties.name}
-          onChange={(event) => {
-            space.properties.name = event.target.value;
-          }}
-        />
-      </div>
+    return (
+      <Dialog
+        title='Space Settings'
+        {...{ open, onOpenChange, defaultOpen }}
+        closeTriggers={[
+          <Button key='ok' variant='primary'>
+            OK
+          </Button>
+        ]}
+      >
+        <div className='mt-2 mb-6'>
+          <Input
+            variant='subdued'
+            label='Title'
+            labelVisuallyHidden
+            placeholder={t('space title placeholder')}
+            slots={{ input: { autoFocus: true, className: 'text-xl' } }}
+            value={space.properties.name}
+            onChange={(event) => {
+              space.properties.name = event.target.value;
+            }}
+          />
+        </div>
 
-      <div className='mb-6'>
-        <Themes
-          selected={space.properties.theme}
-          onSelect={(theme) => {
-            space.properties.theme = theme;
-          }}
-        />
-      </div>
+        <div className='mb-6'>
+          <Themes
+            selected={space.properties.theme}
+            onSelect={(theme) => {
+              space.properties.theme = theme;
+            }}
+          />
+        </div>
 
-      <div className='mb-8'>
-        <Icons
-          selected={space.properties.icon}
-          onSelect={(icon) => {
-            space.properties.icon = icon;
-          }}
-        />
-      </div>
-
-      <Button variant='primary' onClick={onClose}>
-        OK
-      </Button>
-    </Dialog>
-  );
-});
+        <div className='mb-8'>
+          <Icons
+            selected={space.properties.icon}
+            onSelect={(icon) => {
+              space.properties.icon = icon;
+            }}
+          />
+        </div>
+      </Dialog>
+    );
+  }
+);
 
 const Themes: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
   return (

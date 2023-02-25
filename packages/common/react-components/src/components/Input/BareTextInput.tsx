@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useForwardedRef, useThemeContext, useDensityContext } from '../../hooks';
+import { useButtonShadow, useThemeContext, useDensityContext } from '../../hooks';
 import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSize } from './InputProps';
@@ -20,15 +20,17 @@ export type BareTextInputProps = Omit<ComponentPropsWithRef<'input'>, 'size'> &
   Pick<InputProps, 'validationMessage' | 'validationValence' | 'size' | 'variant' | 'elevation' | 'density'>;
 
 export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
-  ({ validationValence, validationMessage, variant, elevation, density: propsDensity, size, ...inputSlot }, ref) => {
+  (
+    { validationValence, validationMessage, variant, elevation, density: propsDensity, size, ...inputSlot },
+    forwardedRef
+  ) => {
     const { themeVariant } = useThemeContext();
-    const inputRef = useForwardedRef(ref);
     const shadow = useButtonShadow(elevation);
     const density = useDensityContext(themeVariant === 'os' ? 'fine' : propsDensity);
     return (
       <input
         {...inputSlot}
-        ref={inputRef}
+        ref={forwardedRef}
         className={mx(
           (variant === 'subdued' ? subduedInput : defaultInput)(
             {
