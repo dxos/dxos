@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useState, useEffect, useSyncExternalStore, useRef } from 'react';
+import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
