@@ -10,6 +10,7 @@ import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } 
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
 import { Tooltip } from '../Tooltip';
 import { defaultOverlay } from './dialogStyles';
 
@@ -34,7 +35,6 @@ export interface DialogProps
   closeLabel?: string;
   mountAsSibling?: boolean;
   slots?: DialogSlots;
-  onClose?: () => void;
 }
 
 export const Dialog = ({
@@ -97,59 +97,63 @@ export const Dialog = ({
             slots.content?.className
           )}
         >
-          <DialogPrimitive.Title
-            {...slots.title}
-            className={mx(
-              'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
-              titleVisuallyHidden && 'sr-only',
-              defaultFocus,
-              slots.content?.className
-            )}
-            tabIndex={0}
-          >
-            {title}
-          </DialogPrimitive.Title>
-          {description && (
-            <DialogPrimitive.Description
-              {...slots.description}
-              className={mx('mt-2', defaultDescription, slots.description?.className)}
+          <ElevationProvider elevation='chrome'>
+            <DialogPrimitive.Title
+              {...slots.title}
+              className={mx(
+                'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+                titleVisuallyHidden && 'sr-only',
+                defaultFocus,
+                slots.content?.className
+              )}
+              tabIndex={0}
             >
-              {description}
-            </DialogPrimitive.Description>
-          )}
-
-          {children}
-
-          {closeLabel && (
-            <Tooltip zIndex='z-[51]' content={closeLabel}>
-              <DialogPrimitive.Close
-                className={mx(
-                  'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
-                  defaultFocus,
-                  hover(),
-                  slots.close?.className
-                )}
+              {title}
+            </DialogPrimitive.Title>
+            {description && (
+              <DialogPrimitive.Description
+                {...slots.description}
+                className={mx('mt-2', defaultDescription, slots.description?.className)}
               >
-                <X
+                {description}
+              </DialogPrimitive.Description>
+            )}
+
+            {children}
+
+            {closeLabel && (
+              <Tooltip zIndex='z-[51]' content={closeLabel}>
+                <DialogPrimitive.Close
                   className={mx(
-                    getSize(4),
-                    'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
-                    slots.closeIcon?.className
+                    'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
+                    defaultFocus,
+                    hover(),
+                    slots.close?.className
                   )}
-                />
-              </DialogPrimitive.Close>
-            </Tooltip>
-          )}
-          {closeTriggers && (
-            <div
-              {...slots.closeTriggers}
-              className={mx('flex flex-wrap justify-end gap-4', slots.closeTriggers?.className)}
-            >
-              {closeTriggers.map((closeTrigger, key) => (
-                <DialogPrimitive.Close key={key}>{closeTrigger}</DialogPrimitive.Close>
-              ))}
-            </div>
-          )}
+                >
+                  <X
+                    className={mx(
+                      getSize(4),
+                      'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
+                      slots.closeIcon?.className
+                    )}
+                  />
+                </DialogPrimitive.Close>
+              </Tooltip>
+            )}
+            {closeTriggers && (
+              <div
+                {...slots.closeTriggers}
+                className={mx('flex flex-wrap justify-end gap-4', slots.closeTriggers?.className)}
+              >
+                {closeTriggers.map((closeTrigger, key) => (
+                  <DialogPrimitive.Close key={key} asChild>
+                    {closeTrigger}
+                  </DialogPrimitive.Close>
+                ))}
+              </div>
+            )}
+          </ElevationProvider>
         </DialogPrimitive.Content>
       </Transition.Child>
     </Transition.Root>
@@ -161,7 +165,7 @@ export const Dialog = ({
       {mountAsSibling ? (
         dialogOverlayAndContent
       ) : (
-        <DialogPrimitive.Portal>{dialogOverlayAndContent}</DialogPrimitive.Portal>
+        <DialogPrimitive.Portal forceMount>{dialogOverlayAndContent}</DialogPrimitive.Portal>
       )}
     </DialogPrimitive.Root>
   );
