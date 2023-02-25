@@ -27,6 +27,8 @@ export const PanelDialog = ({ titleId, slots = {}, children }: PanelDialogProps)
       {slots.trigger && <Dialog.Trigger {...slots.trigger} />}
       <Dialog.Overlay {...slots.overlay} className={mx(defaultOverlay, 'z-40', slots.overlay?.className)}>
         <Dialog.Content
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
           {...slots.content}
           aria-labelledby={titleId}
           className={mx(defaultDialogContent, slots.content?.className)}

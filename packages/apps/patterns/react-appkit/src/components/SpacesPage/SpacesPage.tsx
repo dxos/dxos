@@ -66,7 +66,7 @@ export const SpacesPage = ({
               onJoin={handleJoin}
               acceptInvitation={acceptInvitation}
               dialogProps={{
-                initiallyOpen: Boolean(invitationParam),
+                defaultOpen: Boolean(invitationParam),
                 openTrigger: (
                   <Button className='grow flex gap-1'>
                     <Rocket className={getSize(5)} />
