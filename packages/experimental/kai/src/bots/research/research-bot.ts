@@ -6,8 +6,8 @@ import { Configuration, OpenAIApi } from 'openai';
 
 import { Subscription } from '@dxos/echo-schema';
 
-import { Organization } from '../proto';
-import { Bot } from './bot';
+import { Organization } from '../../proto';
+import { Bot } from '../bot';
 
 const config = {
   organization: process.env.OPENAI_ORG_ID,

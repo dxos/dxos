@@ -19,6 +19,7 @@ export abstract class Bot {
 
   async init(db: EchoDatabase) {
     this._db = db;
+    await this.onInit();
   }
 
   async start() {
@@ -28,6 +29,8 @@ export abstract class Bot {
   async stop() {
     return this.onStop();
   }
+
+  async onInit(): Promise<void> {}
 
   abstract onStart(): Promise<void>;
   abstract onStop(): Promise<void>;

@@ -5,7 +5,7 @@
 import { Game } from '@dxos/chess-app';
 import { Subscription } from '@dxos/echo-schema';
 
-import { Bot } from './bot';
+import { Bot } from '../bot';
 
 // TODO(burdon): Show bots in sidebar (DMG state).
 // TODO(burdon): Instantiate bot from fake bot selector (DMG view).
