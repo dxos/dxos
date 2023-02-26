@@ -10,5 +10,5 @@ import { Devtools } from './Devtools';
 export const App = () => {
   const client = useRemoteClient();
 
-  return <Devtools client={client} />;
+  return <Devtools context={client} />;
 };

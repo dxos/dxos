@@ -13,5 +13,5 @@ export const App = () => {
     return null;
   }
 
-  return <Devtools client={client} />;
+  return <Devtools context={client} />;
 };
