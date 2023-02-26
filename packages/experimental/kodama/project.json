@@ -19,7 +19,10 @@
         "entryPoints": [
           "packages/experimental/kodama/src/index.ts"
         ],
-        "outputPath": "packages/experimental/kodama/dist/lib"
+        "outputPath": "packages/experimental/kodama/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
