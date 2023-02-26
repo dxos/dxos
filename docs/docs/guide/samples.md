@@ -7,7 +7,7 @@ order: 30
 
 ## Tasks
 
-The canonical TODO list app built with [`vite`](https://vitejs.dev/), `react`, and `dxos` exercising the `DocumentModel`. Collaborative, offline-first.
+A simple list app built with the DXOS application [template](./cli/app-templates).
 
 *   Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/tasks-app)
 *   Run [Tasks](http://tasks.dxos.org) on `dxos.org`
@@ -15,7 +15,7 @@ The canonical TODO list app built with [`vite`](https://vitejs.dev/), `react`, a
 
 ## Composer
 
-A collaborative, real-time, offline-first full-text editor with [`TipTap`](https://tiptap.dev/) and `dxos`. Exercises the `TextModel`.
+A collaborative, real-time, offline-first full-text editor with [`TipTap`](https://tiptap.dev/) and `dxos`.
 
 *   Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/composer-app)
 *   Run [Composer](http://composer.dxos.org) on `dxos.org`

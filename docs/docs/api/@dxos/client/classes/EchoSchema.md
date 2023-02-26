@@ -1,5 +1,5 @@
 # Class `EchoSchema`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:43]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:44]()</sub>
 
 
 Constructed via generated protobuf class.

@@ -1,4 +1,0 @@
----
-title: Enumerations
----
-# Enumerations

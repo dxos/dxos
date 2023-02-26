@@ -1,0 +1,2 @@
+# Type `SpaceProviderProps`
+<sub>Declared in [packages/sdk/react-client/src/echo/SpaceContext.tsx:20](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/SpaceContext.tsx#L20)</sub>

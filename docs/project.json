@@ -28,18 +28,6 @@
         "{options.outputFile}"
       ]
     },
-    "generate:api": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "generate:api"
-      },
-      "outputs": [
-        "docs/docs/api"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

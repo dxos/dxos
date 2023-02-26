@@ -1,4 +1,5 @@
 @import './tailwind-colors.scss';
+
 $transform-transition: "0s linear";
 
 $theme-color: (
@@ -18,3 +19,9 @@ $border-color: (
   dark: $zinc-700
 )
 
+
+
+// $code-highlight-line-color: (
+//   light: $zinc-200,
+//   dark: $zinc-300
+// )

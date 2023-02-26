@@ -14,4 +14,4 @@ kube config autoupdate.interval 600 # How often to check for updates, in seconds
 sudo kube restart
 ```
 
-The happens from one of two channels (`dev` or `latest`), based on which was used during installation.
+The update happens from one of two channels (`dev` or `latest`), based on which was used during installation.
