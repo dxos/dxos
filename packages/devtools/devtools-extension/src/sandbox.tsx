@@ -59,7 +59,7 @@ const waitForRpc = async () =>
 const App = () => {
   log('initializing...');
 
-  const [value, setValue] = useState<ClientContextProps>();
+  const [context, setContext] = useState<ClientContextProps>();
 
   useAsyncEffect(async () => {
     const rpcPort = windowPort();
@@ -74,10 +74,10 @@ const App = () => {
       },
       (err) => log.catch(err)
     );
-    setValue({ client, services: servicesProvider.services });
+    setContext({ client, services: servicesProvider.services });
   }, []);
 
-  return <Devtools client={value} />;
+  return <Devtools context={context} />;
 };
 
 const init = async () => {
