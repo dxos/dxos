@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@faker-js/faker": "^7.6.0",
