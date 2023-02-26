@@ -8,8 +8,8 @@ import { HashRouter } from 'react-router-dom';
 import { appkitTranslations, Fallback, useTelemetry } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { ErrorBoundary } from '@dxos/react-toolkit';
 
+import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRemoteClient, useRoutes } from '../hooks';
 
 const Routes = () => {

@@ -9,13 +9,12 @@ import { HashRouter } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
-import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
+import { DevtoolsContextProvider, ErrorBoundary, useRoutes } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { appkitTranslations, Fallback } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext, ClientContextProps } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
 
 log.config({ filter: 'debug' });
