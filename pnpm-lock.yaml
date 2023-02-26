@@ -3158,6 +3158,7 @@ importers:
       '@dnd-kit/modifiers': ^6.0.0
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
+      '@dxos/async': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
       '@swc-node/register': ^1.5.4
@@ -3189,6 +3190,7 @@ importers:
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/async': link:../../common/async
       '@dxos/react-components': link:../../common/react-components
       '@dxos/util': link:../../common/util
       lodash.defaultsdeep: 4.6.1
