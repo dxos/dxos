@@ -19,13 +19,13 @@ const Footer = () => {
     return null;
   }
   return (
-    <div className='flex flex-col shrink-0 my-4'>
+    <div className='flex flex-col shrink-0 m-2'>
       <Button
-        variant='ghost'
-        onClick={() => {
-          services?.SystemService.reset();
+        variant='outline'
+        onClick={async () => {
+          await services?.SystemService.reset();
         }}
-        className='justify-start mli-2'
+        className='w-full'
       >
         <span className='mis-2'>Reset</span>
       </Button>
