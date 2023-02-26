@@ -8,10 +8,10 @@ import { Devtools } from '../../app';
 import { useProxiedClient } from '../../hooks';
 
 export const App = () => {
-  const client = useProxiedClient();
-  if (!client) {
+  const context = useProxiedClient();
+  if (!context) {
     return null;
   }
 
-  return <Devtools context={client} />;
+  return <Devtools context={context} />;
 };
