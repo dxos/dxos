@@ -23,13 +23,17 @@ const Telemetry = () => {
 };
 
 // Entry point that does not have opinion on Client, so it can be reused in extension.
-export const Devtools = ({ client }: { client?: { client: Client; services?: ClientServices } }) => {
+export const Devtools = ({ context }: { context?: { client: Client; services?: ClientServices } }) => {
   const fallback = <Fallback message='Loading...' />;
+
+  if (!context) {
+    return fallback;
+  }
 
   return (
     <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
       <ErrorBoundary>
-        <ClientContext.Provider value={client}>
+        <ClientContext.Provider value={context}>
           <DevtoolsContextProvider>
             <HashRouter>
               <Telemetry />
