@@ -6,8 +6,7 @@ import { capitalCase } from 'change-case';
 import matter from 'gray-matter';
 import { promises as fs } from 'node:fs';
 import path from 'path';
-// import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from 'vuepress';
-import { HopeThemeSidebarItem } from 'vuepress-theme-hope';
+import { SidebarItem } from 'vuepress-theme-hope';
 
 import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
 
@@ -19,7 +18,7 @@ export const link = {
   packageItem: (name: string, item: string) => path.join(link.package(name), item)
 };
 
-type AnySidebarItem = HopeThemeSidebarItem;
+type AnySidebarItem = SidebarItem;
 type MaybePromise<T> = T | Promise<T>;
 
 const isMarkdown = (file: string) => /\.md$/.test(file);

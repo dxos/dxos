@@ -6,6 +6,11 @@ Represents the invitation state passed between client and service.
 Defined in:
    file://./../../../dxos/client/services.proto
 ## Properties
+### [authMethod]()
+Type: <code>AuthMethod</code>
+
+Options:
+  - proto3_optional = true
 ### [authenticationCode]()
 Type: <code>string</code>
 

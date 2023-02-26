@@ -84,6 +84,7 @@ export const NoteFrame = () => {
     // TODO(burdon): Change API; make space-specific.
     // TODO(burdon): Don't create new subscription.
     const subscription = client.echo.dbRouter.createSubscription(() => {
+      console.log('!!!');
       setItems(doLayout(board, notes, layout));
     });
 

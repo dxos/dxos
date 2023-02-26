@@ -1,5 +1,10 @@
 version: 1
 
+schema:
+  files:
+    - 'src/proto/*.proto'
+  outdir: 'src/proto/gen'
+
 package:
   modules:
     - name: docs

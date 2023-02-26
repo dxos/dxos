@@ -10,12 +10,6 @@ To list all commands:
 kube --help
 ```
 
-To start the daemon process in the foreground:
-
-```bash
-kube daemon
-```
-
 To start daemon process as a system service:
 
 ```bash
@@ -26,6 +20,12 @@ To stop daemon process previously started as a system service:
 
 ```bash
 sudo kube stop
+```
+
+To start the KUBE process in the foreground:
+
+```bash
+kube daemon
 ```
 
 ## Logs
@@ -66,13 +66,11 @@ To display the current configuration:
 kube config --json
 ```
 
-To update config:
+Examples of updating configuration:
 
 ```bash
-kube config autoupdate.enabled true
-kube config autoupdate.interval 600 # seconds
 kube config host newkube.local # set a different hostname
-kube config port 9005
+kube config port 9005 # set a different port
 sudo kube restart
 ```
 
