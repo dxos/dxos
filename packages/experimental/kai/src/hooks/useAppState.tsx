@@ -7,7 +7,8 @@ import React, { Context, FC, ReactNode, createContext, useContext, useReducer } 
 import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { BotManager } from './useBots';
+import { BotManager } from '../bots';
+import { defs } from './useBots';
 
 export type AppState = {
   // Debug info.
@@ -44,17 +45,20 @@ type SetFrameAction = Action & {
 type ActionType = SetBotAction | SetFrameAction;
 
 // TODO(burdon): Inject.
-const botManager = new BotManager();
+const botManager = new BotManager(defs);
 
 const reducer = (state: AppState, action: ActionType): AppState => {
   switch (action.type) {
-    // TODO(burdon): Activate bot.
+    // TODO(burdon): Stop bot.
     case 'set-active-bot': {
       const { botId, active, space } = action as SetBotAction;
       const bots = (state.bots ?? []).filter((bot) => bot !== botId);
       if (active) {
         bots.push(botId);
-        botManager.start(botId, space!);
+        setTimeout(async () => {
+          const bot = await botManager.create(botId, space!);
+          await bot.start();
+        });
       }
 
       return { ...state, bots };

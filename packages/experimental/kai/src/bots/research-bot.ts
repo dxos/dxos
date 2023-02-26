@@ -4,7 +4,7 @@
 
 import { Configuration, OpenAIApi } from 'openai';
 
-import { EchoDatabase } from '@dxos/echo-schema';
+import { Subscription } from '@dxos/echo-schema';
 
 import { Organization } from '../proto';
 import { Bot } from './bot';
@@ -19,26 +19,37 @@ const config = {
 /**
  * Adds info to records.
  */
-export class ResearchBot extends Bot<Organization> {
-  private readonly _api: OpenAIApi;
+export class ResearchBot extends Bot {
   private readonly _cache = new Map<string, string>();
+  private _subscription?: Subscription;
+  private _api?: OpenAIApi;
 
-  constructor(db: EchoDatabase) {
-    super(db, Organization.filter());
-
+  override async onStart() {
     // TODO(burdon): Hack to workaround error:
     //  - Refused to set unsafe header "User-Agent".
     const configuration = new Configuration(config);
     delete configuration.baseOptions.headers['User-Agent'];
 
     this._api = new OpenAIApi(configuration);
+
+    // TODO(burdon): Update when object mutated.
+    const query = this.db.query(Organization.filter());
+    this._subscription = query.subscribe(async (query) => {
+      await Promise.all(
+        query.objects.map(async (object) => {
+          await this.onUpdate(object);
+        })
+      );
+    });
   }
 
-  override async onUpdate(object: Organization) {
+  override async onStop() {}
+
+  async onUpdate(object: Organization) {
     if (!object.description && !this._cache.has(object.name)) {
       object.description = '...';
 
-      const completion = await this._api.createCompletion({
+      const completion = await this._api!.createCompletion({
         model: 'text-davinci-003',
         prompt: `describe ${object.name}`,
         max_tokens: 128

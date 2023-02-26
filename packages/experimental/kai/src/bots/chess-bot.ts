@@ -3,7 +3,7 @@
 //
 
 import { Game } from '@dxos/chess-app';
-import { EchoDatabase } from '@dxos/echo-schema';
+import { Subscription } from '@dxos/echo-schema';
 
 import { Bot } from './bot';
 
@@ -11,15 +11,28 @@ import { Bot } from './bot';
 // TODO(burdon): Instantiate bot from fake bot selector (DMG view).
 // TODO(burdon): Add apps/bots from DMG grid view (Chess, Explorer, Calendar, Kanban, Maps).
 // TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine
-export class ChessBot extends Bot<Game> {
+export class ChessBot extends Bot {
   private readonly _player = 'b';
+  private _subscription?: Subscription;
 
-  constructor(db: EchoDatabase) {
-    super(db, Game.filter());
+  override async onStart() {
+    // TODO(burdon): Update when object mutated.
+    const query = this.db.query(Game.filter());
+    this._subscription = query.subscribe(async (query) => {
+      await Promise.all(
+        query.objects.map(async (object) => {
+          await this.onUpdate(object);
+        })
+      );
+    });
+  }
+
+  override async onStop() {
+    this._subscription?.();
   }
 
   // TODO(burdon): Only trigger if invited.
-  override async onUpdate(game: Game) {
+  async onUpdate(game: Game) {
     if (game.fen) {
       const { Chess } = await import('chess.js');
       const chess = new Chess();
