@@ -14,7 +14,7 @@ export abstract class Bot {
 
   get db(): EchoDatabase {
     assert(this._db);
-    return this._db!;
+    return this._db;
   }
 
   async init(db: EchoDatabase) {
