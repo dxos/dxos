@@ -5,7 +5,7 @@ heroImage: /images/dxos.svg
 heroImageDark: /images/dxos-white.svg
 actions:
   - text: Get started
-    link: /guide/get-started
+    link: /guide/getting-started
     type: primary
   - text: Learn more
     link: /guide/

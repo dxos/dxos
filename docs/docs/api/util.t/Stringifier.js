@@ -75,14 +75,14 @@ export class Stringifier {
         return name === '__namedParameters' ? 'options' : name;
     }
     method(ref) {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e;
         const signature = (_a = ref.signatures) === null || _a === void 0 ? void 0 : _a[ref.signatures.length - 1];
         const args = `(${(_c = (_b = signature === null || signature === void 0 ? void 0 : signature.parameters) === null || _b === void 0 ? void 0 : _b.map((p) => (p.flags.isOptional ? `\\[${this.paramName(p)}\\]` : this.paramName(p))).join(', ')) !== null && _c !== void 0 ? _c : ''})`;
         return text `
     ### [${ref.name.replace('[', '\\[').replace(']', '\\]')}${args}](${(_e = (_d = ref.sources) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.url})
     ${this.comment(ref.comment)}
 
-    ${(_f = ref.signatures) === null || _f === void 0 ? void 0 : _f.map((s) => this.signature(s))}
+    ${(ref === null || ref === void 0 ? void 0 : ref.signatures) ? this.signature(ref.signatures[ref.signatures.length - 1]) : ''}
     `;
     }
     property(ref, options) {
@@ -222,13 +222,17 @@ export class Stringifier {
             ? this.class(node, options)
             : node.kind === ReflectionKind.TypeAlias
                 ? this.type(node, options)
-                : node.kind === ReflectionKind.Property
+                : node.kind === ReflectionKind.Property || node.kind === ReflectionKind.Accessor
                     ? this.property(node, options)
-                    : node.kind === ReflectionKind.FunctionOrMethod || node.kind === ReflectionKind.Function
+                    : node.kind === ReflectionKind.FunctionOrMethod ||
+                        node.kind === ReflectionKind.Function ||
+                        node.kind === ReflectionKind.Method
                         ? this.method(node)
                         : node.kind === ReflectionKind.Interface
                             ? this.interface(node, options)
-                            : '';
+                            : process.env.DEBUG
+                                ? JSON.stringify(node, null, 2)
+                                : '';
     }
 }
 //# sourceMappingURL=Stringifier.js.map

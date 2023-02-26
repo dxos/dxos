@@ -15,6 +15,11 @@ export default defineTemplate(
     
     `
     }
+
+    .dxos img {
+      opacity: 0.05;
+    }
+
     ${!react && text`
     .dark img.no-dark {
       display: none;

@@ -59,7 +59,21 @@ export type InvitationAction =
       haltedAt: Invitation.State;
     };
 
-export const useInvitationStatus = (initialObservable?: CancellableInvitationObservable) => {
+export type InvitationStatus = {
+  id?: string;
+  invitationCode?: string;
+  authenticationCode?: string;
+  authMethod: Invitation['authMethod'];
+  status: Invitation.State;
+  haltedAt?: Invitation.State;
+  result: InvitationResult;
+  error?: number;
+  cancel(): void;
+  connect(observable: CancellableInvitationObservable): void;
+  authenticate(authenticationCode: string): Promise<void>;
+};
+
+export const useInvitationStatus = (initialObservable?: CancellableInvitationObservable): InvitationStatus => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) => {
       log('useInvitationStatus', { action });
@@ -170,10 +184,10 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       cancel,
       connect,
       authenticate,
-      id: state.observable?.invitation?.invitationId ?? null,
-      invitationCode: state.observable?.invitation ? InvitationEncoder.encode(state.observable?.invitation) : null,
-      authenticationCode: state.observable?.invitation?.authenticationCode ?? null,
-      authMethod: state.observable?.invitation?.authMethod ?? null
+      id: state.observable?.invitation?.invitationId,
+      invitationCode: state.observable?.invitation ? InvitationEncoder.encode(state.observable?.invitation) : undefined,
+      authenticationCode: state.observable?.invitation?.authenticationCode,
+      authMethod: state.observable?.invitation?.authMethod
     };
 
     // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.

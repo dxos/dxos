@@ -1,5 +1,5 @@
 # Type `EchoSchemaField`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:21]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/schema.d.ts:22]()</sub>
 
 
 

@@ -5,53 +5,53 @@ order: 100
 
 # Glossary
 
-### ECHO
+### [ECHO](./platform)
 
-Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers
+Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers.
 
-### HALO
+### [HALO](./platform/halo)
 
-A protocol, application, and SDK for managing a decentralized user identity for end users and developers
+A protocol, application, and SDK for managing a decentralized user identity for end users and developers.
 
 ### MESH
 
-The set of peer networking technologies behind ECHO, HALO and KUBE
+The set of peer networking technologies behind ECHO, HALO and KUBE.
 
-### KUBE
+### [KUBE](./platform/kube)
 
-A reslilient, self-contained set of services for hosting and supporting decentralized applications
+A reslilient, self-contained set of services for hosting and supporting decentralized applications.
 
-### Space
+### [Space](./platform/#spaces)
 
-An ECHO replication domain containing objects which all the peers in the space replicate
+An ECHO replication domain containing objects which all the peers in the space replicate continuously.
 
-### Object
+### [Object](./platform/#objects)
 
-A unit of data in a space, a bag of properties and values with a type and identity
+A unit of data in a [space](#space), a bag of properties and values with a type and identity.
 
 ### Signaling service
 
-A service provided by DXOS KUBEs which helps peers locate each other on the network
+A service provided by DXOS KUBEs which helps peers locate each other on the network and establish peer-to-peer connections.
 
 ### Invitation Code
 
-A special generated code or URL containing one which is used for peers to identify each other when joining a space
+A special generated code or URL containing one which is used for peers to identify each other when joining a [space](#space).
 
 ### Authorization Code
 
-A second factor provided to the invited member by the inviter to verify their identity when joining a space
+A second factor provided to the invited member by the inviter to verify their identity when joining a [space](#space).
 
 ### Space Key
 
-A value identifying a particular space
+A value identifying a particular [space](#space).
 
 ### Identity
 
-Represents an agent or actor in the system
+Represents an agent or actor in the system.
 
 ### Vault
 
-Data in ECHO and HALO identity is physically stored in browser storage on the HALO application's domain, not the consuming application's. Read more about [local vault topology](./echo/#local-vault-topology).
+ECHO data and HALO identities are physically stored in browser storage on the [HALO](./platform/halo) application's domain, not the consuming application's. **This enables data privacy and gives end-users control over their data**. Read more about [HALO vault topology](./platform/#local-vault-topology).
 
 ### Device
 
@@ -61,6 +61,14 @@ A running instance of the DXOS `Client` represents a device on the network. Ever
 
 Also known as a paper key. A string of values that make it possible to recover an identity in case of a lost device.
 
+### Snapshot
+
+A flat representation of a specific state of an ECHO [space](#space). An ECHO [space](#space) is made of feeds of mutations which are collapsed into a snapshot for the purposes of catching up a peer or downloading the state of the database without the log of changes.
+
+### Epoch
+
+A specific point in time when the members of a [space](#space) agree to drop or compress history older than a certain point in time. To call an epoch, peers periodically agree on a specific [snapshot](#snapshot) to refer to as the beginning of the current epoch. This mechanism allows ECHO [spaces](#space) to control their size on disk and on the wire.
+
 ### PWA
 
-[Progressive Web App](https://en.wikipedia.org/wiki/Progressive_web_app)
+[Progressive Web App](https://en.wikipedia.org/wiki/Progressive_web_app).

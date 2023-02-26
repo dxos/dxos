@@ -1,5 +1,5 @@
 # Class `IFrameProxyRuntime`
-<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/iframe-proxy-runtime.d.ts:10]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/iframe-proxy-runtime.d.ts:12]()</sub>
 
 
 Manages the client connection to the shared worker.
@@ -15,6 +15,8 @@ Arguments:
 `options`: <code>IFrameProxyRuntimeParams</code>
 
 ## Properties
+### [shell]()
+Type: <code>undefined | [ShellRuntime](/api/@dxos/react-client/interfaces/ShellRuntime)</code>
 
 ## Methods
 ### [close()]()

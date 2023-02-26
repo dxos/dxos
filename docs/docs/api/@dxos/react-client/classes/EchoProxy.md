@@ -1,5 +1,5 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:22]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:23]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -73,20 +73,30 @@ Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</co
 Arguments: 
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+### [getSpaces()]()
+
+
+Get list of all spaces.
+
+Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)[]</code>
+
+Arguments: none
 ### [open()]()
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [querySpaces()]()
+### [subscribeSpaces(callback)]()
 
 
-Query for all spaces.
+Subscribe to spaces changes.
 
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;[Space](/api/@dxos/react-client/interfaces/Space)&gt;</code>
+Returns: <code>UnsubscribeCallback</code>
 
-Arguments: none
+Arguments: 
+
+`callback`: <code>function</code>
 ### [toJSON()]()
 
 

@@ -1,5 +1,5 @@
 # Class `IFrameHostRuntime`
-<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/iframe-host-runtime.d.ts:14]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/iframe-host-runtime.d.ts:17]()</sub>
 
 
 Runs the client services in the main thread.
@@ -20,6 +20,10 @@ Arguments:
 ## Properties
 ### [origin]()
 Type: <code>string</code>
+### [services]()
+Type: <code>[ClientServicesHost](/api/@dxos/client/classes/ClientServicesHost)</code>
+### [shell]()
+Type: <code>undefined | [ShellRuntime](/api/@dxos/client/interfaces/ShellRuntime)</code>
 
 ## Methods
 ### [start()]()
