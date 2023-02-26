@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode } from 'phosphor-react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Space, SpaceProxy, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
@@ -22,9 +22,15 @@ export type PanelType = Space | 'identity' | 'devices' | 'join';
 
 const createInvitationUrl = (invitation: string) => invitation;
 
-const Panel = ({ panel, setPanel }: { panel?: PanelType; setPanel: (panel?: PanelType) => void }) => {
+const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPanel: (panel?: PanelType) => void }) => {
   const client = useClient();
   const spaces = useSpaces();
+
+  useMemo(() => {
+    if (panel instanceof SpaceProxy) {
+      (window as any)[`peer${id}space`] = panel;
+    }
+  }, [panel]);
 
   if (panel instanceof SpaceProxy) {
     return <SpacePanel space={panel} createInvitationUrl={createInvitationUrl} />;
@@ -92,6 +98,10 @@ const render = ({ id }: { id: number }) => {
   const identity = useIdentity();
   const [panel, setPanel] = useState<PanelType>();
 
+  useMemo(() => {
+    (window as any)[`peer${id}client`] = client;
+  }, [client]);
+
   const controls = (
     <ButtonGroup className='mbe-4'>
       <Tooltip content='Create Identity'>
@@ -142,7 +152,7 @@ const render = ({ id }: { id: number }) => {
       <Group label={{ children: header }} className='mbe-2'>
         {identity ? <IdentityListItem identity={identity} /> : <div className='text-center'>No identity</div>}
       </Group>
-      {identity || panel ? <Panel panel={panel} setPanel={setPanel} /> : null}
+      {identity || panel ? <Panel id={id} panel={panel} setPanel={setPanel} /> : null}
     </div>
   );
 };

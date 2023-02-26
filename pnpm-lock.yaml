@@ -612,6 +612,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
@@ -657,6 +658,7 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
+      '@dxos/client-services': link:../../../sdk/client-services
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@faker-js/faker': 7.6.0

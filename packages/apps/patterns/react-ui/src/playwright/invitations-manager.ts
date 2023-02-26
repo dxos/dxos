@@ -6,6 +6,7 @@ import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
+import type { InvitationsOptions } from '@dxos/client-services';
 import { setupPage } from '@dxos/test';
 
 // TODO(wittjosiah): Factor out.
@@ -88,10 +89,25 @@ export class InvitationsManager {
     await this._peer(id).getByTestId('invitations.create-space').click();
   }
 
-  async createInvitation(id: number, type: 'device' | 'space'): Promise<string> {
-    const peer = this._peer(id);
+  async createInvitation(id: number, type: 'device' | 'space', options?: InvitationsOptions): Promise<string> {
+    if (!options) {
+      const peer = this._peer(id);
+      this._invitationCode = new Trigger<string>();
+      await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+      return this._invitationCode.wait();
+    }
+
     this._invitationCode = new Trigger<string>();
-    await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+    await this.page.evaluate(
+      ({ id, type, options }) => {
+        if (type === 'device') {
+          (window as any)[`peer${id}client`].halo.createInvitation(options);
+        } else {
+          (window as any)[`peer${id}space`].createInvitation(options);
+        }
+      },
+      { id, type, options }
+    );
     return this._invitationCode.wait();
   }
 
@@ -116,6 +132,12 @@ export class InvitationsManager {
     const peer = this._peer(id);
     // TODO(wittjosiah): Update ids.
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
+  }
+
+  // TODO(wittjosiah): Remove.
+  async doneInvitation(id: number, type: 'device' | 'space') {
+    const peer = this._peer(id);
+    // TODO(wittjosiah): Update ids.
     await peer.getByTestId(type === 'device' ? 'identity-added-done' : 'space-invitation-accepted-done').click();
   }
 
