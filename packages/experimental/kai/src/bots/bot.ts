@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { EchoDatabase } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 /**
  * Adds info to records.
@@ -19,14 +20,17 @@ export abstract class Bot {
 
   async init(db: EchoDatabase) {
     this._db = db;
+    log('initializing...');
     await this.onInit();
   }
 
   async start() {
+    log('starting...');
     return this.onStart();
   }
 
   async stop() {
+    log('stopping...');
     return this.onStop();
   }
 

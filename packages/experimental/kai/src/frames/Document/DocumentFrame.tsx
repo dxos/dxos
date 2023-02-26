@@ -49,10 +49,10 @@ export const DocumentFrame = withReactor(() => {
             placeholder='Title'
             slots={{
               root: {
-                className: 'px-6 py-6 bg-paper-bg'
+                className: 'px-10 pt-8 pb-4 bg-paper-bg'
               },
               input: {
-                className: 'p-2 border-0 text-xl',
+                className: 'p-2 border-0 text-2xl text-black',
                 spellCheck
               }
             }}
@@ -68,7 +68,8 @@ export const DocumentFrame = withReactor(() => {
               root: { className: 'grow' },
               editor: {
                 className: mx(
-                  'z-0 bg-paper-bg text-black h-full w-full min-h-[12em] px-8 pb-16 min-bs-[12em]',
+                  'kai-composer',
+                  'z-0 bg-paper-bg text-black h-full w-full min-h-[12em] px-12 pb-16 min-bs-[12em]',
                   'text-xl md:text-base bg-paper-bg'
                 ),
                 spellCheck

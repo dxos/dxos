@@ -220,7 +220,7 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.mosaic';
+export const defaultFrameId = 'dxos.module.frame.note';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -228,11 +228,11 @@ export const defaultFrames = [
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
+  'dxos.module.frame.note'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer'
-  'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;

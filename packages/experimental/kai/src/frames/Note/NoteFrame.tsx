@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { GridLensModel, Grid, GridLayout, Item, Location } from '@dxos/mosaic';
-import { useClient, useQuery } from '@dxos/react-client';
+import { useClient, useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -47,7 +47,8 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
     .filter(Boolean) as Item<Note>[];
 };
 
-export const NoteFrame = () => {
+export const NoteFrame = withReactor(() => {
+  // TODO(burdon): withReactor?
   const range = { x: 4, y: 3 };
   const client = useClient();
   const navigate = useNavigate();
@@ -81,10 +82,11 @@ export const NoteFrame = () => {
       return;
     }
 
-    // TODO(burdon): Change API; make space-specific.
+    // TODO(burdon): Change API; make space and type-specific.
     // TODO(burdon): Don't create new subscription.
+    console.log('??');
     const subscription = client.echo.dbRouter.createSubscription(() => {
-      console.log('!!!');
+      console.log('!!'); // TODO(burdon): Never called.
       setItems(doLayout(board, notes, layout));
     });
 
@@ -99,6 +101,7 @@ export const NoteFrame = () => {
   }
 
   const handleChange = (item: Item, location: Location) => {
+    // TODO(burdon): Doesn't trigger update.
     setItemLocation(board, item.id, location);
   };
 
@@ -151,6 +154,6 @@ export const NoteFrame = () => {
       />
     </>
   );
-};
+});
 
 export default NoteFrame;

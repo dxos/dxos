@@ -38,9 +38,11 @@ export class ChessBot extends Bot {
       chess.loadPgn(game.fen);
       if (chess.turn() === this._player) {
         const moves = chess.moves();
-        const move = moves[Math.floor(Math.random() * moves.length)];
-        chess.move(move);
-        game.fen = chess.pgn();
+        if (moves.length) {
+          const move = moves[Math.floor(Math.random() * moves.length)];
+          chess.move(move);
+          game.fen = chess.pgn();
+        }
       }
     }
   }
