@@ -7,7 +7,7 @@ import React, { Context, FC, ReactNode, createContext, useContext, useReducer } 
 import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { BotManager } from '../bots';
+import { BotConstructor, BotManager } from '../bots';
 import { defs } from './useBots';
 
 export type AppState = {
@@ -45,7 +45,12 @@ type SetFrameAction = Action & {
 type ActionType = SetBotAction | SetFrameAction;
 
 // TODO(burdon): Inject.
-const botManager = new BotManager(defs);
+const botManager = new BotManager(
+  defs.reduce((map, def) => {
+    map.set(def.module.id!, def.runtime.constructor);
+    return map;
+  }, new Map<string, BotConstructor>())
+);
 
 const reducer = (state: AppState, action: ActionType): AppState => {
   switch (action.type) {

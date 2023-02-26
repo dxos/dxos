@@ -2,28 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Space } from '@dxos/client';
 
-import { BotDef } from '../hooks';
 import { Bot } from './bot';
+
+export type BotConstructor = () => Bot;
 
 /**
  * Mock bot manager.
  */
 export class BotManager {
-  private readonly _active = new Map<string, Bot>();
-
-  constructor(private readonly _defs: BotDef[]) {}
+  constructor(private readonly _botMap: Map<string, BotConstructor>) {}
 
   async create(botId: string, space: Space): Promise<Bot> {
-    const {
-      runtime: { constructor }
-    } = this._defs.find((def) => def.module.id === botId)!;
+    const constructor = this._botMap.get(botId);
+    assert(constructor);
 
     const bot = constructor();
     await bot.init(space.db);
-    this._active.set(botId, bot);
-
     return bot;
   }
 }
