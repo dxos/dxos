@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:27]()</sub>
 
 
 
@@ -31,20 +31,18 @@ Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 Type: <code>Internal</code>
 ### [invitations]()
 Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
-### [isActive]()
-Type: <code>boolean</code>
 ### [isOpen]()
 Type: <code>boolean</code>
 ### [key]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [properties]()
-Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
+Type: <code>[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;</code>
 
 ## Methods
 ### [_setOpen(open)]()
 
 
-Returns: <code>Promise&lt;void&gt;</code>
+Returns: <code>Promise&lt;never&gt;</code>
 
 Arguments: 
 
@@ -81,10 +79,12 @@ Called by EchoProxy close.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [getDetails()]()
+### [getMembers()]()
 
 
-Returns: <code>Promise&lt;SpaceDetails&gt;</code>
+Return set of space members.
+
+Returns: <code>[SpaceMember](/api/@dxos/react-client/interfaces/SpaceMember)[]</code>
 
 Arguments: none
 ### [initialize()]()
@@ -101,14 +101,6 @@ Arguments: none
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [queryMembers()]()
-
-
-Return set of space members.
-
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;[SpaceMember](/api/@dxos/react-client/interfaces/SpaceMember)&gt;</code>
-
-Arguments: none
 ### [removeInvitation(id)]()
 
 
@@ -119,11 +111,13 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-### [setActive(active)]()
+### [subscribeMembers(callback)]()
 
 
-Returns: <code>Promise&lt;void&gt;</code>
+Subscribe to changes to space members.
+
+Returns: <code>UnsubscribeCallback</code>
 
 Arguments: 
 
-`active`: <code>boolean</code>
+`callback`: <code>function</code>

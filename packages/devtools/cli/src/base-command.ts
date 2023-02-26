@@ -11,7 +11,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { Client, Config, fromHost } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -136,7 +136,7 @@ export abstract class BaseCommand extends Command {
 
     const configExists = await exists(configFile);
     const configContent = await readFile(
-      configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
+      configExists ? configFile : join(__dirname, '../config/config-default.yml'),
       'utf-8'
     );
     if (!configExists) {
@@ -180,7 +180,7 @@ export abstract class BaseCommand extends Command {
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromHost(this._clientConfig) });
+      this._client = new Client({ config: this._clientConfig });
       await this._client.initialize();
       log('Initialized');
     }

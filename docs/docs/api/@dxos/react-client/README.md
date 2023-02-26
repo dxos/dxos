@@ -10,7 +10,7 @@ pnpm i @dxos/react-client
 
 ## Usage
 
-The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
+The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user identity.
 
 ```javascript
 

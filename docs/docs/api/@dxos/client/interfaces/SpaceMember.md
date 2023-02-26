@@ -1,15 +1,10 @@
 # Interface `SpaceMember`
-> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client/services.d.ts`]()
 
 Defined in:
-   file://./../../dxos/client.proto
+   file://./../../../dxos/client/services.proto
 ## Properties
-### [identityKey]()
-Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+### [identity]()
+Type: <code>[Identity](/api/@dxos/client/interfaces/Identity)</code>
 ### [presence]()
 Type: <code>[PresenceState](/api/@dxos/client/enums#PresenceState)</code>
-### [profile]()
-Type: <code>[Profile](/api/@dxos/client/interfaces/Profile)</code>
-
-Options:
-  - proto3_optional = true
