@@ -6,6 +6,9 @@ import { Octokit } from '@octokit/rest';
 
 import { Bot } from '../bot';
 
+/**
+ * Sync records with Github.
+ */
 export class RepoBot extends Bot {
   private _octokit?: Octokit;
 

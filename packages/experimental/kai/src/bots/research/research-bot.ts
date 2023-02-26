@@ -21,15 +21,15 @@ const config = {
  */
 export class ResearchBot extends Bot {
   private readonly _cache = new Map<string, string>();
-  private _subscription?: Subscription;
+
   private _api?: OpenAIApi;
+  private _subscription?: Subscription;
 
   override async onStart() {
     // TODO(burdon): Hack to workaround error:
     //  - Refused to set unsafe header "User-Agent".
     const configuration = new Configuration(config);
     delete configuration.baseOptions.headers['User-Agent'];
-
     this._api = new OpenAIApi(configuration);
 
     // TODO(burdon): Update when object mutated.
@@ -43,7 +43,9 @@ export class ResearchBot extends Bot {
     });
   }
 
-  override async onStop() {}
+  override async onStop() {
+    this._subscription?.();
+  }
 
   async onUpdate(object: Organization) {
     if (!object.description && !this._cache.has(object.name)) {
