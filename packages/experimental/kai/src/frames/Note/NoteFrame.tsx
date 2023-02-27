@@ -77,7 +77,7 @@ export const NoteFrame = () => {
   const notes = useQuery(space, Note.filter()); // .filter((note) => board && getItemLocation(board, note.id));
 
   useSubscriptionEffect(() => {
-    if(board) {
+    if (board) {
       setItems(doLayout(board, notes, layout));
     }
   }, [board, notes]);

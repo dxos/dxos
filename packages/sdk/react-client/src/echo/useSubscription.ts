@@ -4,7 +4,7 @@
 
 import { useEffect, useReducer, useRef, useState } from 'react';
 
-import { Selection, SubscriptionHandle, UpdateInfo } from '@dxos/echo-schema';
+import { Selection, SubscriptionHandle } from '@dxos/echo-schema';
 
 import { useClient } from '../client';
 
@@ -43,14 +43,14 @@ export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
 
   handle.update(selection);
   return handle;
-}
+};
 
 /**
  * Create reactive selection.
  * Re-renders component when any object from the selection changes.
  */
 export const useSubscription = (selection: Selection): SubscriptionHandle => {
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
   return useSubscriptionEffect(() => {
     forceUpdate();

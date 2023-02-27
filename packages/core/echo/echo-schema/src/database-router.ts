@@ -30,9 +30,8 @@ export interface SubscriptionHandle {
 
 export type UpdateInfo = {
   // TODO(dmaretskyi): Include metadata about the update.
-
   // updatedIds: string[];
-}
+};
 
 /**
  * Manages cross-space databases.
@@ -144,7 +143,7 @@ const getIdsFromSelection = (selection: Selection): string[] => {
   }
 };
 
-const areSetsEqual = <T> (a: Set<T>, b: Set<T>) => {
+const areSetsEqual = <T>(a: Set<T>, b: Set<T>) => {
   if (a.size !== b.size) {
     return false;
   }
@@ -154,4 +153,4 @@ const areSetsEqual = <T> (a: Set<T>, b: Set<T>) => {
     }
   }
   return true;
-} 
+};
