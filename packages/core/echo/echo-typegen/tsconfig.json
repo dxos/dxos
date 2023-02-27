@@ -21,6 +21,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/plate"
+    },
+    {
       "path": "../document-model"
     },
     {

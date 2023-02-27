@@ -12,18 +12,18 @@ import { withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
-import { File, Path, Sketch } from '../../proto';
+import { File, Sketch } from '../../proto';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
-const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
+const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Sketch.Path => ({
   timestamp: startTimestamp,
   width: strokeWidth,
   color: strokeColor,
   points: paths
 });
 
-const convertToCanvasPath = ({ width, color, points }: Path): CanvasPath =>
+const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath =>
   ({
     drawMode: true,
     strokeWidth: width,
