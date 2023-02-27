@@ -1687,6 +1687,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/plate': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/mocha': ^8.2.2
@@ -1698,6 +1699,7 @@ importers:
     dependencies:
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
+      '@dxos/plate': link:../../../common/plate
       protobufjs: 6.11.3
     devDependencies:
       '@dxos/document-model': link:../document-model

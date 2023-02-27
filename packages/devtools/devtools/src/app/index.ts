@@ -3,4 +3,4 @@
 //
 
 export * from './App';
-export * from './RootContainer';
+export * from './Devtools';

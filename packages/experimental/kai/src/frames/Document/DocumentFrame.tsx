@@ -10,15 +10,15 @@ import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { TextDocument } from '../../proto';
+import { Document } from '../../proto';
 
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
-  const objects = useQuery(space, TextDocument.filter());
+  const objects = useQuery(space, Document.filter());
 
   // Default to first.
-  const object = objectId ? (space!.db.getObjectById(objectId) as TextDocument) : undefined;
+  const object = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
     if (frame && !object && objects.length) {
       navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: objects[0].id }));

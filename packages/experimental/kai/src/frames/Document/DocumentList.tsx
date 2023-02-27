@@ -9,13 +9,13 @@ import { Text, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
-import { TextDocument } from '../../proto';
+import { Document } from '../../proto';
 
 // TODO(burdon): Factor out.
 export const DocumentList = () => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
-  const objects = useQuery(space, TextDocument.filter());
+  const objects = useQuery(space, Document.filter());
   if (!space || !frame) {
     return null;
   }
@@ -32,7 +32,7 @@ export const DocumentList = () => {
   };
 
   const handleCreate = async () => {
-    const object = await space.db.add(new TextDocument());
+    const object = await space.db.add(new Document());
     object.content = new Text(); // TODO(burdon): Make automatic?
     return object.id;
   };
@@ -40,7 +40,7 @@ export const DocumentList = () => {
   const Icon = frame!.runtime.Icon;
 
   return (
-    <EditableObjectList<TextDocument>
+    <EditableObjectList<Document>
       objects={objects}
       selected={objectId}
       Icon={Icon}

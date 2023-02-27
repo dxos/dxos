@@ -93,7 +93,7 @@ message Kanban {
   string title = 1;
 }
 
-message TextDocument {
+message Document {
   option (object) = true;
 
   string title = 1;
