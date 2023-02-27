@@ -21,6 +21,7 @@ const Footer = () => {
   return (
     <div className='flex flex-col shrink-0 m-2'>
       <Button
+        disabled={true}
         variant='outline'
         onClick={async () => {
           await services?.SystemService.reset();
