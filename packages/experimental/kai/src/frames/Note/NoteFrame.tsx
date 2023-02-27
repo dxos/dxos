@@ -54,7 +54,7 @@ export const NoteFrame = () => {
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
   const boards = useQuery(space, NoteBoard.filter());
-  const notes: Note[] = useQuery(
+  const notes = useQuery(
     space,
     (object: Document) => board && object.__typename === Note.type.name && getItemLocation(board, object.id),
     [board]
@@ -116,7 +116,7 @@ export const NoteFrame = () => {
       return null;
     }
 
-    return <CenterButton frame={frame} label='Create Board' onCreate={handleCreateBoard} />;
+    return <CenterButton onCreate={handleCreateBoard} />;
   }
 
   return (
