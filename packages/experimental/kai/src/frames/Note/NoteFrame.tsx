@@ -56,7 +56,8 @@ export const NoteFrame = () => {
   const boards = useQuery(space, NoteBoard.filter());
   const notes = useQuery(
     space,
-    (object: Document) => board && object.__typename === Note.type.name && getItemLocation(board, object.id),
+    (object: Document) =>
+      !!(board !== undefined && object.__typename === Note.type.name && getItemLocation(board, object.id)),
     [board]
   ) as Note[];
 
