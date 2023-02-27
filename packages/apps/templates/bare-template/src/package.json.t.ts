@@ -32,7 +32,8 @@ export namespace Features {
     dependencies: {
       '@dxos/react-components': depVersion,
       '@dxos/react-appkit': depVersion,
-      'phosphor-react': '^1.4.1'
+      'phosphor-react': '^1.4.1',
+      'react-router-dom': '^6.3.0'
     }
   });
 
@@ -76,7 +77,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
   return {
     name: `${monorepo ? '@dxos/' : ''}${name}`,
     version: version,
-    description: `${name}${monorepo ? '' : '- a DXOS application'}`,
+    description: `${name}${monorepo ? '' : ' - a DXOS application'}`,
     private: true,
     scripts: {
       build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
