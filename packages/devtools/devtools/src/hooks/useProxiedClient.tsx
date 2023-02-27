@@ -11,7 +11,7 @@ import { ClientContextProps } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
 
 /**
- * Creates Client with services opened on window.__DXOS__ hook.
+ * Creates Client with services opened on parent window.__DXOS__ hook.
  */
 export const useProxiedClient = () => {
   const [client, setClient] = useState<ClientContextProps>();
