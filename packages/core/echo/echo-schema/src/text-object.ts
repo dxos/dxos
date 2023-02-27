@@ -35,6 +35,14 @@ export class Text extends EchoObject<TextModel> {
     return this._model.textContent;
   }
 
+  toJSON() {
+    return {
+      '@id': this.id,
+      '@model': TextModel.meta.type,
+      text: this.text
+    };
+  }
+
   protected override async _onBind(): Promise<void> {
     this._model.initialize();
     // TODO(dmaretskyi): Unsubscribe.
