@@ -6,6 +6,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
 import { Devtools } from '@dxos/devtools';
@@ -16,6 +17,8 @@ import { RpcPort } from '@dxos/rpc';
 
 log.config({ filter: 'debug' });
 log('Init Sandbox script.');
+
+const INIT_TIMEOUT = 10000;
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -68,9 +71,7 @@ const App = () => {
 
     const client = new Client({ services: servicesProvider });
     log('initializing client');
-    setContext({ client, services: servicesProvider.services });
-
-    await client.initialize().catch((err) => {
+    await asyncTimeout(client.initialize(), INIT_TIMEOUT, new Error('Client initialization error')).catch((err) => {
       log.catch(err);
     });
     setContext({ client, services: servicesProvider.services });
