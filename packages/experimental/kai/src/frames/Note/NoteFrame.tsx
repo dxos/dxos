@@ -86,6 +86,7 @@ export const NoteFrame = () => {
     const subscription = client.echo.dbRouter.createSubscription(() => {
       setItems(doLayout(board, notes, layout));
     });
+    subscription.update([board, notes]);
 
     // TODO(burdon): Subscription is initially out of date for newly created items.
     setItems(doLayout(board, notes, layout));
