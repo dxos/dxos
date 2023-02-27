@@ -20,7 +20,7 @@ if (navigator.storage?.estimate) {
 // TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
 // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
 export const getTelemetryIdentifier = (client: Client) => {
-  if (!client) {
+  if (!client?.initialized) {
     return undefined;
   }
   const profile = client.halo.identity;
