@@ -68,13 +68,13 @@ const App = () => {
 
     const client = new Client({ services: servicesProvider });
     log('initializing client');
-    void client.initialize().then(
-      () => {
-        log('client initialized');
-      },
-      (err) => log.catch(err)
-    );
     setContext({ client, services: servicesProvider.services });
+
+    await client.initialize().catch((err) => {
+      log.catch(err);
+    });
+    setContext({ client, services: servicesProvider.services });
+    log('client initialized');
   }, []);
 
   return <Devtools context={context} />;
