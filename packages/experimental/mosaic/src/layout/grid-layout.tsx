@@ -24,15 +24,15 @@ export class GridLayout implements Layout {
   ) {
     this._options = defaultsdeep(options, {
       range: { x: 1, y: 1 },
-      dimensions: { width: 300, height: 200 },
+      dimensions: { width: 300, height: 300 },
       padding: 16
     });
 
     const sx = (1 + this._options.range.x * 2);
     const sy = (1 + this._options.range.y * 2);
     this._dimensions = {
-      width: sx * this._options.dimensions.width + (sx + 1) * this._options.padding,
-      height: sy * this._options.dimensions.height + (sy + 1) * this._options.padding
+      width: Math.round(sx * this._options.dimensions.width + (sx + 1) * this._options.padding),
+      height: Math.round(sy * this._options.dimensions.height + (sy + 1) * this._options.padding)
     };
 
     this._center = { x: this._dimensions.width / 2, y: this._dimensions.height / 2 };

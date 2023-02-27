@@ -19,6 +19,7 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/plate": "workspace:*",
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {

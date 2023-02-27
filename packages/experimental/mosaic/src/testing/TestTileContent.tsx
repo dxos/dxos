@@ -19,7 +19,7 @@ export const TestTileContent = ({ item, onDelete }: TileContentProps<TestData>) 
   };
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
+    <div className='flex flex-1 flex-col overflow-hidden p-3'>
       <div className='flex w-full items-center mb-3'>
         {/* Title */}
         <div className='flex flex-1 overflow-hidden'>

@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L78)
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L77)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -33,7 +33,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/Clien
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
-### [fromIFrame(\[config\], \[channel\])]()
+### [fromIFrame(\[config\], \[options\])]()
 
 
 Create services provider proxy connected via iFrame to host.
@@ -44,7 +44,7 @@ Arguments:
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
-`channel`: <code>string</code>
+`options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 ### [generateSeedPhrase()]()
 
 
@@ -56,11 +56,11 @@ Arguments: none
 ### [isDocument(object)]()
 
 
-Returns: <code>object is [DocumentBase](/api/@dxos/react-client/classes/DocumentBase)</code>
+Returns: <code>object is [Document](/api/@dxos/react-client/values#Document)&lt;object&gt;</code>
 
 Arguments: 
 
-`object`: <code>any</code>
+`object`: <code>unknown</code>
 ### [isReferenceLike(value)]()
 
 
@@ -79,7 +79,7 @@ Returns: <code>any</code>
 Arguments: 
 
 `obj`: <code>any</code>
-### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L34)
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L33)
 
 
 Hook returning instance of DXOS client.
@@ -110,13 +110,13 @@ Returns all known Contacts across all Spaces.
 Contacts are known members of a common Space.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: <code>[Contact](/api/@dxos/react-client/interfaces/Contact)[]</code>
+Returns: <code>function</code>
 
 Arguments: none
 ### [useDevices()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useDevices.ts#L11)
 
 
-Returns: <code>DeviceInfo[]</code>
+Returns: <code>Device[]</code>
 
 Arguments: none
 ### [useDevtools()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useDevtools.ts#L13)
@@ -128,7 +128,7 @@ Arguments: none
 ### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L21)
 
 
-Returns: <code>object</code>
+Returns: <code>[InvitationStatus](/api/@dxos/react-client/types/InvitationStatus)</code>
 
 Arguments: 
 
@@ -145,15 +145,15 @@ Arguments: none
 Hook returning DXOS identity object.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: <code>undefined | [Profile](/api/@dxos/react-client/interfaces/Profile)</code>
+Returns: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
 
 Arguments: 
 
 `options`: <code>object</code>
-### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L62)
+### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L76)
 
 
-Returns: <code>object</code>
+Returns: <code>[InvitationStatus](/api/@dxos/react-client/types/InvitationStatus)</code>
 
 Arguments: 
 
@@ -174,28 +174,29 @@ Creates a network status subscription.
 Returns: <code>NetworkStatus</code>
 
 Arguments: none
+### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
+
+
+Returns the first space in the current spaces array. If none exist,  `null` 
+will be returned at first, then the hook will re-run and return a space once
+it has been created. Requires a ClientProvider somewhere in the parent tree.
+
+Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
+
+Arguments: none
 ### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
 
 
 Create subscription.
 
-Returns: <code>T[]</code>
-
-Arguments: 
-
-`space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
-
-`filter`: <code>[TypeFilter](/api/@dxos/react-client/types/TypeFilter)&lt;T&gt;</code>
-Create subscription.
-
-Returns: <code>[Document](/api/@dxos/react-client/classes/Document)[]</code>
+Returns: <code>[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;[]</code>
 
 Arguments: 
 
 `space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 `filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)&lt;T&gt;</code>
-### [useReactor(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L20)
+### [useReactor(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L34)
 
 
 Hook to update components that access the database when modified.
@@ -205,7 +206,7 @@ Returns: <code>[UseRector](/api/@dxos/react-client/types/UseRector)</code>
 Arguments: 
 
 `opts`: <code>[ReactorProps](/api/@dxos/react-client/types/ReactorProps)</code>
-### [useReactorContext(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L83)
+### [useReactorContext(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L121)
 
 
 Returns: <code>void</code>
@@ -224,23 +225,21 @@ Returns: <code>T[]</code>
 Arguments: 
 
 `resultSet`: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;T&gt;</code>
-### [useSpace(\[spaceKey\], \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
 
 
-Get a specific Space via its key.
-Requires ClientContext to be set via ClientProvider.
+Get a specific Space using its key. Returns undefined when no spaceKey is
+available. Requires a ClientProvider somewhere in the parent tree.
 
 Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 Arguments: 
 
-`spaceKey`: <code>"null" | PublicKeyLike</code>
-
-`options`: <code>object</code>
+`spaceKey`: <code>PublicKeyLike</code>
 ### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L24)
 
 
-Returns: <code>object</code>
+Returns: <code>[InvitationStatus](/api/@dxos/react-client/types/InvitationStatus)</code>
 
 Arguments: 
 
@@ -255,11 +254,11 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
-### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L42)
+### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L59)
 
 
 Get all Spaces available to current user.
-Requires ClientContext to be set via ClientProvider.
+Requires a ClientProvider somewhere in the parent tree.
 
 Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)[]</code>
 
@@ -267,7 +266,7 @@ Arguments: none
 ### [useStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useStatus.ts#L12)
 
 
-Returns: <code>undefined | [Status](/api/@dxos/react-client/enums#Status)</code>
+Returns: <code>undefined | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
 
 Arguments: none
 ### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/util/useStream.ts#L13)
@@ -294,7 +293,7 @@ Returns: <code>[SubscriptionHandle](/api/@dxos/react-client/interfaces/Subscript
 Arguments: 
 
 `selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
-### [withReactor(component, opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L64)
+### [withReactor(component, opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L78)
 
 
 Reactive HOC.
@@ -304,5 +303,17 @@ Returns: <code>FC&lt;P&gt;</code>
 Arguments: 
 
 `component`: <code>FC&lt;P&gt;</code>
+
+`opts`: <code>[WithReactorOpts](/api/@dxos/react-client/types/WithReactorOpts)</code>
+### [withReactorRef(component, opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L99)
+
+
+Reactive HOC which forwards refs.
+
+Returns: <code>ForwardRefExoticComponent&lt;PropsWithoutRef&lt;P&gt; & RefAttributes&lt;T&gt;&gt;</code>
+
+Arguments: 
+
+`component`: <code>ForwardRefRenderFunction&lt;T, P&gt;</code>
 
 `opts`: <code>[WithReactorOpts](/api/@dxos/react-client/types/WithReactorOpts)</code>
