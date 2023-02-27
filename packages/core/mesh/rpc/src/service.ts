@@ -16,7 +16,9 @@ export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescript
 
 export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
 
-export type ServiceTypesOf<Bundle extends ServiceBundle<any>> = Bundle extends ServiceBundle<infer Services> ? Services : never;
+export type ServiceTypesOf<Bundle extends ServiceBundle<any>> = Bundle extends ServiceBundle<infer Services>
+  ? Services
+  : never;
 
 /**
  * Groups multiple services together to be served by a single RPC peer.

@@ -1,11 +1,15 @@
-import { Client, Config, fromHost, PublicKey } from '@dxos/client'
-import { WebsocketRpcServer } from '@dxos/websocket-rpc'
-import { log } from '@dxos/log'
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Client, Config, fromHost, PublicKey } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
+import { log } from '@dxos/log';
+import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 const rpcPort = parseInt(process.env.DX_RPC_PORT ?? '3023');
 
-(async () => {
+void (async () => {
   const config = new Config({
     runtime: {
       client: {
@@ -34,42 +38,42 @@ const rpcPort = parseInt(process.env.DX_RPC_PORT ?? '3023');
         ]
       }
     }
-  })
+  });
 
-  log.info('config', { config: config.values })
+  log.info('config', { config: config.values });
 
   const client = new Client({
     config,
     services: fromHost(config)
-  })
+  });
 
   await client.initialize();
 
   log.info('client initialized', {
     identity: client.halo.identity?.identityKey,
-    spaces: client.echo.getSpaces().map(space => space.key.toHex())
-  })
+    spaces: client.echo.getSpaces().map((space) => space.key.toHex())
+  });
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
     onConnection: async (info) => {
       const id = PublicKey.random().toHex();
-      log.info('connection', { id })
+      log.info('connection', { id });
 
       return {
         exposed: client.services.descriptors,
         requested: {},
         handlers: client.services.services as ClientServices,
         onOpen: async () => {
-          log.info('open', { id })
+          log.info('open', { id });
         },
         onClose: async () => {
-          log.info('close', { id })
+          log.info('close', { id });
         }
-      }
+      };
     }
-  })
+  });
 
   await server.open();
-  log.info('listening ', { rpcPort })
-})()
+  log.info('listening ', { rpcPort });
+})();

@@ -56,7 +56,7 @@ export class WebsocketRpcClient<C, S> {
     this._socket = new WebSocket(this._params.url);
 
     this._socket.onopen = async () => {
-      log('Socket open')
+      log('Socket open');
       try {
         await this._rpc!.open();
         log(`RPC open ${this._params.url}`);
