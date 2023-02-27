@@ -10,11 +10,29 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { EchoDatabase, Selection, SubscriptionHandle } from './database';
+import { EchoDatabase } from './database';
 import { base } from './defs';
 import { EchoObject } from './object';
 import { getCurrentReactComponent } from './react-integration';
 import { EchoSchema } from './schema';
+
+export type SelectionFn = never; // TODO(burdon): Document or remove.
+
+export type Selection = EchoObject | SelectionFn | Selection[] | undefined | null | false;
+
+// TODO(dmaretskyi): Convert to class.
+export interface SubscriptionHandle {
+  update: (selection: Selection) => SubscriptionHandle;
+  subscribed: boolean;
+  unsubscribe: () => void;
+  selectedIds: Set<string>;
+}
+
+export type UpdateInfo = {
+  // TODO(dmaretskyi): Include metadata about the update.
+
+  // updatedIds: string[];
+}
 
 /**
  * Manages cross-space databases.
@@ -42,21 +60,34 @@ export class DatabaseRouter {
 
   /**
    * Subscribe to database updates.
+   * Calls the callback when any object from the selection changes.
+   * Calls the callback when the selection changes.
+   * Always calls the callback on the first `selection.update` call.
    */
   // TODO(burdon): Add filter?
-  createSubscription(onUpdate: () => void): SubscriptionHandle {
+  createSubscription(onUpdate: (info: UpdateInfo) => void): SubscriptionHandle {
     let subscribed = true;
 
     const unsubscribe = this._update.on(({ changedEntities }) => {
       subscribed = false;
       if (changedEntities.some((entity) => handle.selectedIds.has(entity.id))) {
-        onUpdate();
+        onUpdate({});
       }
     });
 
+    let firstUpdate = true;
+
     const handle = {
       update: (selection: Selection) => {
-        handle.selectedIds = new Set(getIdsFromSelection(selection));
+        const newIds = new Set(getIdsFromSelection(selection));
+
+        const changed = !areSetsEqual(newIds, handle.selectedIds);
+        handle.selectedIds = newIds;
+        if (changed || firstUpdate) {
+          firstUpdate = false;
+          onUpdate({});
+        }
+
         return handle;
       },
       subscribed,
@@ -112,3 +143,15 @@ const getIdsFromSelection = (selection: Selection): string[] => {
     return selection.flatMap(getIdsFromSelection);
   }
 };
+
+const areSetsEqual = <T> (a: Set<T>, b: Set<T>) => {
+  if (a.size !== b.size) {
+    return false;
+  }
+  for (const item of a) {
+    if (!b.has(item)) {
+      return false;
+    }
+  }
+  return true;
+} 
