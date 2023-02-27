@@ -92,9 +92,17 @@ jobs:
           git push
 
       - name: Fast-forward main
+        if: ${{ !steps.release.outputs.release_created }}
         run: |
           git switch main
           git merge --ff-only ${{ github.ref_name }}
+          git push
+
+      - name: Merge main
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into main"
           git push
 
       - name: Delete release branch
