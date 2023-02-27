@@ -43,6 +43,7 @@ describe('schema', () => {
       JSON.stringify({
         '@id': task1.id,
         '@type': task1.__typename,
+        '@model': 'dxos:model/document',
         subTasks: [],
         description: '',
         title: 'Task 1',
