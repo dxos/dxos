@@ -75,12 +75,12 @@ export const Actions = () => {
       {space && !isMobile && (
         <>
           <DropdownMenuItem onClick={handleExportSpace}>
-            <DownloadSimple className={getSize(5)} />
+            <UploadSimple className={getSize(5)} />
             <span className='mis-2'>Export data</span>
           </DropdownMenuItem>
           <FileUploader types={['json']} handleChange={handleImportSpace}>
             <DropdownMenuItem>
-              <UploadSimple className={getSize(5)} />
+              <DownloadSimple className={getSize(5)} />
               <span className='mis-2'>Import data</span>
             </DropdownMenuItem>
           </FileUploader>
