@@ -6,8 +6,8 @@ import { ArrowsIn, ArrowsOut } from 'phosphor-react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { GridLensModel, Grid, GridLayout, Item, Location } from '@dxos/mosaic';
-import { useClient, useQuery } from '@dxos/react-client';
+import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
+import { useQuery, useSubscriptionEffect } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -49,7 +49,6 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 
 export const NoteFrame = () => {
   const range = { x: 4, y: 3 };
-  const client = useClient();
   const navigate = useNavigate();
 
   const { space, frame, objectId } = useAppRouter();
@@ -76,21 +75,11 @@ export const NoteFrame = () => {
   // TODO(burdon): Filter by notes on board (could be multiple). Extend useQuery.
   //  Causes infinite useEffect loop if filtered after useQuery.
   const notes = useQuery(space, Note.filter()); // .filter((note) => board && getItemLocation(board, note.id));
-  useEffect(() => {
-    if (!board) {
-      return;
-    }
 
-    // TODO(burdon): Change API; make space-specific.
-    // TODO(burdon): Don't create new subscription.
-    const subscription = client.echo.dbRouter.createSubscription(() => {
+  useSubscriptionEffect(() => {
+    if (board) {
       setItems(doLayout(board, notes, layout));
-    });
-
-    // TODO(burdon): Subscription is initially out of date for newly created items.
-    setItems(doLayout(board, notes, layout));
-    // subscription.update([board, notes]);
-    return () => subscription.unsubscribe();
+    }
   }, [board, notes]);
 
   if (!board) {
