@@ -24,16 +24,6 @@ export type Filter<T extends Document> = PropertiesFilter | OperatorFilter<T>;
 // NOTE: `__phantom` property forces type.
 export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
 
-export type SelectionFn = never; // TODO(burdon): Document or remove.
-export type Selection = EchoObject | SelectionFn | Selection[];
-
-export interface SubscriptionHandle {
-  update: (selection: Selection) => void;
-  subscribed: boolean;
-  unsubscribe: () => void;
-  selectedIds: Set<string>;
-}
-
 /**
  * Database wrapper.
  */
