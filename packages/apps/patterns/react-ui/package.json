@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

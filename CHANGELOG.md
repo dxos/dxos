@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.1.27](https://github.com/dxos/dxos/compare/v0.1.26...v0.1.27) (2023-02-27)
+
+
+### Features
+
+* `withReactorRef` HOC for elements that forward refs that also need withReactor ([#2580](https://github.com/dxos/dxos/issues/2580)) ([887ee50](https://github.com/dxos/dxos/commit/887ee50b0ac84747d5aad5fa2f651cddf7f79557))
+* Add Devtools Extension smoke test ([#2441](https://github.com/dxos/dxos/issues/2441)) ([fc5c70c](https://github.com/dxos/dxos/commit/fc5c70c397a2c5da9e0e1fc991f86a9272e73228))
+* Add warning when withReactor is missing ([#2559](https://github.com/dxos/dxos/issues/2559)) ([655046e](https://github.com/dxos/dxos/commit/655046e00cba4708d6f318b2e168af8345f68a40))
+* AuthMethod for invitations ([#2384](https://github.com/dxos/dxos/issues/2384)) ([551e70b](https://github.com/dxos/dxos/commit/551e70b4e9c2b2811233dbf12f39c98de25950e5))
+* Database test rig ([#2553](https://github.com/dxos/dxos/issues/2553)) ([f62c4e2](https://github.com/dxos/dxos/commit/f62c4e28793fa1a32e614818fd946d0f2027abdb))
+* Density ([#2556](https://github.com/dxos/dxos/issues/2556)) ([deec499](https://github.com/dxos/dxos/commit/deec4995cf11b5e4a867f0efcae60710609f947e))
+* Fix notes frame flickering. ([#2584](https://github.com/dxos/dxos/issues/2584)) ([8291bff](https://github.com/dxos/dxos/commit/8291bffed0def6c4ed6d94f2b579150caf13d594))
+* Fix Notes NPE ([#2572](https://github.com/dxos/dxos/issues/2572)) ([65aaf62](https://github.com/dxos/dxos/commit/65aaf62e4648c23c8c4c0481192a3908b051d07c))
+* Fix space list tiles ([#2574](https://github.com/dxos/dxos/issues/2574)) ([78c76f8](https://github.com/dxos/dxos/commit/78c76f8c82876aa84b178c05bba93a16651a7537))
+* Fix space truncation ([#2534](https://github.com/dxos/dxos/issues/2534)) ([4fbe651](https://github.com/dxos/dxos/commit/4fbe651e73b72a6d74beae1e44ed6bc7a030e303))
+* Make halo.presentCredentials accept list of ids ([#2564](https://github.com/dxos/dxos/issues/2564)) ([59fb041](https://github.com/dxos/dxos/commit/59fb041c388e38ae70994a514399baafa5ad41f1))
+* Misc fixes ([#2575](https://github.com/dxos/dxos/issues/2575)) ([d2a98b6](https://github.com/dxos/dxos/commit/d2a98b6d4f2dbb352e8c491f82e9b04d2962ce49))
+* Mix fixes ([#2570](https://github.com/dxos/dxos/issues/2570)) ([1d9070f](https://github.com/dxos/dxos/commit/1d9070f8cf5961eeb4e3b6e00149262c1e3817f8))
+* Multiple Notes board ([#2582](https://github.com/dxos/dxos/issues/2582)) ([227dcd7](https://github.com/dxos/dxos/commit/227dcd79330cec8b73ec35822f848967d5264f2a))
+* Notes Board bug fixes and content document. ([#2560](https://github.com/dxos/dxos/issues/2560)) ([361be4b](https://github.com/dxos/dxos/commit/361be4b8a391fc50a4aadc033ef9f31d36bd3359))
+* Object list styles ([#2579](https://github.com/dxos/dxos/issues/2579)) ([b331c7b](https://github.com/dxos/dxos/commit/b331c7b3850ddbbef33853ef7d30675c362c488a))
+* react-components/select ([#2573](https://github.com/dxos/dxos/issues/2573)) ([4bccff6](https://github.com/dxos/dxos/commit/4bccff60870602bc264bf3af0d204c86847c9bcc))
+* Space settings dialog ([#2555](https://github.com/dxos/dxos/issues/2555)) ([e46adf8](https://github.com/dxos/dxos/commit/e46adf82e69c1eb94c009ccd360bf732f0c95215))
+* Text usability improvements ([#2565](https://github.com/dxos/dxos/issues/2565)) ([4235176](https://github.com/dxos/dxos/commit/4235176ccc8ea0a188345ec3c87af6eb3dcaee88))
+* Updated theme w/translations ([#2557](https://github.com/dxos/dxos/issues/2557)) ([b43f918](https://github.com/dxos/dxos/commit/b43f918837c014548faa2ba066944ebff30a1faa))
+
+
+### Bug Fixes
+
+* broken links and peer deps in bare template ([#2590](https://github.com/dxos/dxos/issues/2590)) ([9770b5a](https://github.com/dxos/dxos/commit/9770b5a9986c9d6627107aa42dd6ef5a5398717d))
+* Component issues from kai ([#2583](https://github.com/dxos/dxos/issues/2583)) ([5d51c6b](https://github.com/dxos/dxos/commit/5d51c6bc758cf3aa6681be41f25bcabe66c16c39))
+* Input value ([#2568](https://github.com/dxos/dxos/issues/2568)) ([b212ad2](https://github.com/dxos/dxos/commit/b212ad23f2b50b0926ab4e3488c3cbbac54b9ac2))
+* Kai polish ([#2571](https://github.com/dxos/dxos/issues/2571)) ([13ae41c](https://github.com/dxos/dxos/commit/13ae41cca96ae48d5bf35725e03f8c2b710b935c))
+* **kai:** create space in dev mode ([#2569](https://github.com/dxos/dxos/issues/2569)) ([3fc4466](https://github.com/dxos/dxos/commit/3fc4466d9310aaa32373bbfaa67852bb20a7a822))
+
 ## [0.1.26](https://github.com/dxos/dxos/compare/v0.1.25...v0.1.26) (2023-02-21)
 
 
