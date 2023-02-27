@@ -9,7 +9,7 @@ import { Document, Filter, Query, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
   <T extends Document>(space?: Space, filter?: TypeFilter<T>): T[];
-  <T extends Document>(space?: Space, filter?: Filter<T>): Document[];
+  <T extends Document>(space?: Space, filter?: Filter<T>, deps?: any[]): Document[];
 };
 
 /**
