@@ -59,6 +59,7 @@ describe('schema', () => {
     expect(contact.toJSON()).to.deep.eq({
       '@id': contact.id,
       '@type': contact.__typename,
+      '@model': 'dxos:model/document',
       name: 'User 1',
       tasks: [
         {

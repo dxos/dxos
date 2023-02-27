@@ -6,7 +6,7 @@ import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';
-import { base, schema } from './defs';
+import { base } from './defs';
 import { Document } from './document';
 import { Text } from './text-object';
 import { strip } from './util';
