@@ -35,7 +35,7 @@ export default defineTemplate<typeof config>(({ input }) => {
   \`\`\`
   `}
 
-  [📚 Using ECHO with React](https://docs.dxos.org/guide/echo/react)
+  [📚 Using ECHO with React](https://docs.dxos.org/guide/react)
   [📚 DXOS Documentation](https://docs.dxos.org)
   `
 })

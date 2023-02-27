@@ -214,7 +214,7 @@ export const executeDirectoryTemplate = async <TInput>(
             const result = !dry ? await f.save() : null;
             filesWritten += result ? 1 : 0;
             if (printFiles) {
-              info(`${result ? 'saved  ' : chalk.gray('skipped')} ${result ? description : chalk.gray(description)}`);
+              info(`${result ? 'wrote  ' : chalk.gray('skipped')} ${result ? description : chalk.gray(description)}`);
             }
             return result;
           } catch (err: any) {
