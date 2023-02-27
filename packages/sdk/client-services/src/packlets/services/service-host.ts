@@ -104,6 +104,10 @@ export class ClientServicesHost implements ClientServicesProvider {
       onReset: async () => {
         assert(this._serviceContext, 'service host is closed');
         await this._serviceContext.reset();
+        this._open = false;
+        await this._serviceContext.open();
+        this._open = true;
+        this._statusUpdate.emit();
       }
     });
 
