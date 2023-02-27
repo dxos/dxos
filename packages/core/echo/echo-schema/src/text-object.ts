@@ -7,8 +7,11 @@ import { TextModel, type Doc } from '@dxos/text-model';
 import { EchoObject } from './object';
 
 export class Text extends EchoObject<TextModel> {
-  constructor() {
+  constructor(text?: string) {
     super(TextModel);
+    if (text) {
+      this.model?.insert(text, 0);
+    }
   }
 
   override toString() {

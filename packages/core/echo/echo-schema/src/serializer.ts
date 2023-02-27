@@ -15,6 +15,10 @@ export type SerializedObject = {
   '@id': string;
   '@type'?: string;
   '@model'?: string;
+  /**
+   * Text content of Text object.
+   */
+  text: string;
 };
 
 export type SerializedSpace = {
@@ -45,17 +49,20 @@ export class Serializer {
       switch (model) {
         case DocumentModel.meta.type: {
           const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
+          const echoSchema = type ? database.router.schema?.getType(type) : undefined;
 
-          const obj = new Prototype({
-            '@type': type,
-            ...data
-          });
+          const obj = new Prototype(
+            {
+              ...data
+            },
+            echoSchema
+          );
           obj[base]._id = id;
           await database.add(obj);
           break;
         }
         case TextModel.meta.type: {
-          const obj = new Text();
+          const obj = new Text(data.text);
           obj[base]._id = id;
           await database.add(obj);
           break;

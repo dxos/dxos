@@ -29,6 +29,7 @@ describe.only('Serializer', () => {
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
+        '@model': 'dxos:model/document',
         title: 'Test'
       });
     }
@@ -87,14 +88,16 @@ describe.only('Serializer', () => {
     }
   });
 
-  test.only('Text', async () => {
+  test('Text', async () => {
     const serializer = new Serializer();
 
     let data: SerializedSpace;
+    const content = 'Hello world!';
     {
       const db = await createDatabase();
-      const text = new Text();
+      const text = new Text(content);
       await db.add(text);
+      expect(text.text).to.deep.eq(content);
       expect(db.objects).to.have.length(1);
 
       data = await serializer.export(db);
@@ -102,7 +105,7 @@ describe.only('Serializer', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': text.id,
         '@model': 'dxos:model/text',
-        text: ''
+        text: content
       });
     }
 
@@ -113,7 +116,7 @@ describe.only('Serializer', () => {
       const { objects } = db.query();
       expect(objects[0] instanceof Text).to.be.true;
       expect(objects).to.have.length(1);
-      expect(objects[0].text).to.eq('');
+      expect(objects[0].text).to.deep.eq(content);
     }
   });
 
