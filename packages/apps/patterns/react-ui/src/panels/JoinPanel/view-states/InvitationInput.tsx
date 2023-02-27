@@ -43,10 +43,10 @@ export const InvitationInput = ({ invitationType, ...viewStateProps }: Invitatio
           label: { className: 'sr-only' },
           input: {
             'data-autofocus': `${invitationType} invitation acceptor; invitation input`,
+            'data-testid': `${invitationType}-invitation-input`,
             onKeyUp: ({ key }) => key === 'Enter' && handleNext()
           } as ComponentPropsWithoutRef<'input'>
         }}
-        data-testid='invitation-input'
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>

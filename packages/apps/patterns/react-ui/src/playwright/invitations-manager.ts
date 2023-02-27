@@ -5,8 +5,9 @@
 import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import type { InvitationsOptions } from '@dxos/client-services';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { setupPage } from '@dxos/test';
 
 // TODO(wittjosiah): Factor out.
@@ -52,7 +53,28 @@ export class InvitationsManager {
     return this._peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
+  authenticatorIsVisible(id: number, type: 'device' | 'space') {
+    // TODO(wittjosiah): Update id.
+    return this._peer(id)
+      .getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`)
+      .isVisible();
+  }
+
+  invitationFailed(id: number) {
+    // TODO(wittjosiah): Update id.
+    return this._peer(id).getByTestId('invitation-rescuer-reset').isVisible();
+  }
+
   // Actions
+
+  async setConnectionState(id: number, state: ConnectionState) {
+    await this.page.evaluate(
+      ({ id, state }) => {
+        (window as any)[`peer${id}client`].mesh.setConnectionState(state);
+      },
+      { id, state }
+    );
+  }
 
   async openPanel(id: number, panel: PanelType) {
     const peer = this._peer(id);
@@ -115,8 +137,22 @@ export class InvitationsManager {
     const peer = this._peer(id);
     // TODO(wittjosiah): Update ids.
     await peer.getByTestId(type === 'device' ? 'join-identity' : 'select-identity').click();
-    await this.page.keyboard.type(invitation);
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
     await this.page.keyboard.press('Enter');
+  }
+
+  async cancelInvitation(id: number, type: 'device' | 'space', kind: 'host' | 'guest') {
+    const peer = this._peer(id);
+    if (kind === 'guest') {
+      await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-cancel`).click();
+    }
+  }
+
+  async invitationInputContinue(id: number, type: 'device' | 'space') {
+    // TODO(wittjosiah): Update ids.
+    await this._peer(id)
+      .getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`)
+      .click();
   }
 
   async getAuthenticationCode(): Promise<string> {
@@ -125,13 +161,23 @@ export class InvitationsManager {
   }
 
   async authenticateInvitation(id: number, type: 'device' | 'space', authenticationCode: string) {
-    // Wait for focus to shift before typing.
-    await sleep(100);
-    await this.page.keyboard.type(authenticationCode);
-
     const peer = this._peer(id);
     // TODO(wittjosiah): Update ids.
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).type(authenticationCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
+  }
+
+  async clearAuthenticationCode(id: number, type: 'device' | 'space') {
+    const peer = this._peer(id);
+    // TODO(wittjosiah): Update ids.
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill('');
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).focus();
+  }
+
+  async resetInvitation(id: number) {
+    const peer = this._peer(id);
+    // TODO(wittjosiah): Update ids.
+    await peer.getByTestId('invitation-rescuer-reset').click();
   }
 
   // TODO(wittjosiah): Remove.
