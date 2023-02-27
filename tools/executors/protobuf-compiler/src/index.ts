@@ -3,3 +3,4 @@
 //
 
 export { generateSchema, GenerateSchemaOptions } from './type-generator';
+export * from './namespaces';

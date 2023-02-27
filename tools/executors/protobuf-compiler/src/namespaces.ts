@@ -18,7 +18,7 @@ export const getFullNestedTypeName = (type: pb.ReflectionObject): DeclarationFul
   }
 };
 
-const isType = (obj: pb.ReflectionObject): obj is pb.Type | pb.Enum | pb.Service =>
+export const isType = (obj: pb.ReflectionObject): obj is pb.Type | pb.Enum | pb.Service =>
   obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
 
 export const getNamespaceName = (type: pb.ReflectionObject): DeclarationFullName => {
