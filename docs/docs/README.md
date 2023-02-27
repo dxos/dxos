@@ -22,6 +22,6 @@ features:
   - title: 'Devtools'
     details: Command line and browser tools to create and publish applications, and manage KUBE infrastructure.
   - title: 'Apps and Components'
-    details: UI components to create real-time data-driven PWA applications.
+    details: PWA project templates and UI components for react.
 footer: MIT Licensed | Copyright © DXOS.org
 ---
