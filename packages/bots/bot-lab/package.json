@@ -1,7 +1,7 @@
 {
   "name": "@dxos/bot-lab",
   "version": "0.1.26",
-  "private": false,
+  "private": true,
   "description": "Bot experiments incubator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,8 +26,5 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "esbuild": "^0.16.14"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
