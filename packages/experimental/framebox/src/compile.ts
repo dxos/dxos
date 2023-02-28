@@ -9,7 +9,7 @@ import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 
 import { sha256 } from '@dxos/crypto';
 
-import { Frame, Import } from './proto/gen/schema';
+import { Frame, Artifact } from './proto/gen/schema';
 
 let initializePromise;
 
@@ -55,11 +55,11 @@ export const compile = async (frame: Frame) => {
 
 // TODO(dmaretskyi): This looks pretty bad but should work fine in short term.
 //                   In the future we can replace the compiler with SWC with plugins running in WASM.
-const analyzeImports = (build: BuildResult): Import[] => {
+const analyzeImports = (build: BuildResult): Artifact.Import[] => {
   const parsedImports = allMatches(IMPORT_REGEX, build.outputFiles![0].text);
 
   // TODO(dmaretskyi): Support import aliases and wildcard imports.
-  return Object.values(build.metafile!.outputs)[0].imports.map((entry): Import => {
+  return Object.values(build.metafile!.outputs)[0].imports.map((entry): Artifact.Import => {
     const parsedImport = parsedImports.find((capture) => capture?.[4] === entry.path);
 
     const namedImports: string[] = [];
