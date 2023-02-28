@@ -12,7 +12,7 @@ import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
 
-describe.only('Serializer', () => {
+describe('Serializer', () => {
   test('Basic', async () => {
     const serializer = new Serializer();
 
