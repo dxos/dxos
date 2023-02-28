@@ -89,7 +89,7 @@ export const Actions = () => {
             <span className='mis-2'>Export data</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <FileUploader className='flex-1 flex-row' types={['json']} handleChange={handleImportSpace}>
+            <FileUploader classes='flex flex-row flex-1' types={['json']} handleChange={handleImportSpace}>
               <DownloadSimple className={getSize(5)} />
               <span className='mis-2'>Import data</span>
             </FileUploader>
