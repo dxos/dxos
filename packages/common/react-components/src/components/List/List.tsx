@@ -6,24 +6,26 @@ import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { DotsSixVertical } from 'phosphor-react';
+import { CaretDown, CaretRight, DotsSixVertical } from 'phosphor-react';
 import React, {
   ComponentProps,
   ComponentPropsWithoutRef,
   ComponentPropsWithRef,
   FC,
   forwardRef,
+  ReactHTMLElement,
   ReactNode
 } from 'react';
 
 import { useDensityContext, useId, useThemeContext } from '../../hooks';
 import { Density, ScopedProps } from '../../props';
-import { getSize, themeVariantFocus } from '../../styles';
+import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus } from '../../styles';
 import { mx } from '../../util';
 import { Checkbox, CheckboxProps } from '../Checkbox';
 import { DensityProvider } from '../DensityProvider';
@@ -49,11 +51,13 @@ interface SharedListProps {
   labelId: string;
   children?: ReactNode;
   selectable?: boolean;
+  collapsible?: boolean;
   variant?: ListVariant;
   onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
   listItemIds?: string[];
   slots?: SharedListSlots;
   density?: Density;
+  toggleOpenLabel?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
 }
 
 interface DraggableListProps
@@ -75,15 +79,27 @@ interface ListItemSlots {
   root?: Omit<ComponentPropsWithRef<'li'>, 'id' | 'children'>;
   dragHandle?: ComponentPropsWithoutRef<typeof ListItemDragHandle>;
   dragHandleIcon?: ComponentPropsWithoutRef<typeof DotsSixVertical>;
+  openTrigger?: ComponentPropsWithoutRef<typeof ListItemOpenTrigger>;
+  openTriggerIcon?: ComponentPropsWithoutRef<typeof CaretDown>;
 }
 
-interface ListItemProps extends Omit<ListItemData, 'id'> {
+interface NonCollapsibleListItemProps extends Omit<ListItemData, 'id'> {
   children?: ReactNode;
   onSelectedChange?: CheckboxProps['onCheckedChange'];
   defaultSelected?: CheckboxProps['defaultChecked'];
   slots?: ListItemSlots;
   id?: string;
+  collapsible?: false;
 }
+
+interface CollapsibleListItemProps extends Omit<NonCollapsibleListItemProps, 'collapsible'> {
+  collapsible: true;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (nextOpen: boolean) => void;
+}
+
+type ListItemProps = NonCollapsibleListItemProps | CollapsibleListItemProps;
 
 type ListItemElement = React.ElementRef<typeof Primitive.li>;
 
@@ -91,7 +107,7 @@ type ListItemElement = React.ElementRef<typeof Primitive.li>;
 
 const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 
-type ListContextValue = Pick<ListProps, 'selectable' | 'variant'>;
+type ListContextValue = Pick<ListProps, 'selectable' | 'collapsible' | 'variant' | 'toggleOpenLabel'>;
 
 const [ListProvider, useListContext] = createListContext<ListContextValue>(LIST_NAME);
 
@@ -101,7 +117,15 @@ const useListDensity = ({ density, variant }: Pick<SharedListProps, 'density' | 
 };
 
 const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
-  const { __scopeSelect, variant = 'ordered', selectable = false, children, slots = {} } = props;
+  const {
+    __scopeSelect,
+    variant = 'ordered',
+    selectable = false,
+    collapsible = false,
+    toggleOpenLabel = 'Expand/collapse item',
+    children,
+    slots = {}
+  } = props;
   const ListRoot = variant === 'ordered' || variant === 'ordered-draggable' ? Primitive.ol : Primitive.ul;
   const density = useListDensity(props);
   return (
@@ -115,7 +139,9 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
           {...{
             scope: __scopeSelect,
             variant,
-            selectable
+            collapsible,
+            selectable,
+            toggleOpenLabel
           }}
         >
           {variant === 'ordered-draggable' ? (
@@ -137,7 +163,7 @@ List.displayName = LIST_NAME;
 
 const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
 
-type ListItemContextValue = { headingId: string };
+type ListItemContextValue = { headingId: string; open: boolean };
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
@@ -195,6 +221,34 @@ const ListItemDragHandle = ({
   );
 };
 
+type ListItemOpenTriggerProps = ScopedProps<Omit<ComponentPropsWithoutRef<'div'>, 'children'>> & {
+  openTriggerIconSlot?: ListItemSlots['dragHandleIcon'];
+};
+
+const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerProps>(
+  ({ className, openTriggerIconSlot = {}, __scopeSelect, ...props }: ListItemOpenTriggerProps, forwardedRef) => {
+    const { themeVariant } = useThemeContext();
+    const density = useDensityContext();
+    const { toggleOpenLabel } = useListContext(LIST_NAME, __scopeSelect);
+    const { open } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
+    return (
+      <Collapsible.Trigger
+        ref={forwardedRef}
+        {...props}
+        className={mx(
+          'is-5 rounded flex justify-center items-center',
+          density === 'fine' ? fineBlockSize : coarseBlockSize,
+          themeVariantFocus(themeVariant),
+          className
+        )}
+      >
+        {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
+        {open ? <CaretDown /> : <CaretRight />}
+      </Collapsible.Trigger>
+    );
+  }
+);
+
 const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
   (props: ScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
     const {
@@ -203,11 +257,12 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
       selected: propsSelected,
       defaultSelected,
       onSelectedChange,
+      collapsible,
       id,
       slots = {}
     } = props;
     const density = useDensityContext();
-    const { variant, selectable } = useListContext(LIST_NAME, __scopeSelect);
+    const { variant, selectable, collapsible: listCollapsible } = useListContext(LIST_NAME, __scopeSelect);
     const draggable = variant === 'ordered-draggable';
 
     const [selected = false, setSelected] = useControllableState({
@@ -216,40 +271,57 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
       onChange: onSelectedChange
     });
 
+    const [open = false, setOpen] = useControllableState({
+      prop: (props as CollapsibleListItemProps).open,
+      defaultProp: (props as CollapsibleListItemProps).defaultOpen,
+      onChange: (props as CollapsibleListItemProps).onOpenChange
+    });
+
     const headingId = useId('listItem__heading');
 
-    return (
-      <ListItemProvider scope={__scopeSelect} headingId={headingId}>
-        <Primitive.li
-          {...slots.root}
-          id={id}
-          ref={forwardedRef}
-          aria-labelledby={headingId}
-          {...(selectable && { role: 'option', 'aria-selected': !!selected })}
-          className={mx('flex', slots.root?.className)}
-        >
-          {draggable && (
-            <ListItemDragHandle
-              {...slots.dragHandle}
-              className={slots.dragHandle?.className}
-              dragHandleIconSlot={slots.dragHandleIcon}
+    const listItem = (
+      <Primitive.li
+        {...slots.root}
+        id={id}
+        ref={forwardedRef}
+        aria-labelledby={headingId}
+        {...(selectable && { role: 'option', 'aria-selected': !!selected })}
+        className={mx('flex', slots.root?.className)}
+      >
+        {draggable && <ListItemDragHandle {...slots.dragHandle} dragHandleIconSlot={slots.dragHandleIcon} />}
+        {listCollapsible && (
+          <div role='none' className={mx('is-5', density === 'fine' ? fineBlockSize : coarseBlockSize)}>
+            {collapsible && <ListItemOpenTrigger {...slots.openTrigger} openTriggerIconSlot={slots.openTriggerIcon} />}
+          </div>
+        )}
+        {selectable && (
+          <ListItemEndcap>
+            <Checkbox
+              labelId={headingId}
+              className={density === 'fine' ? 'mbs-1.5' : 'mbs-2.5'}
+              {...{ checked: selected, onCheckedChange: setSelected }}
             />
-          )}
-          {selectable && (
-            <ListItemEndcap>
-              <Checkbox
-                labelId={headingId}
-                className={density === 'fine' ? 'mbs-1.5' : 'mbs-2.5'}
-                {...{ checked: selected, onCheckedChange: setSelected }}
-              />
-            </ListItemEndcap>
-          )}
-          {children}
-        </Primitive.li>
+          </ListItemEndcap>
+        )}
+        {children}
+      </Primitive.li>
+    );
+
+    return (
+      <ListItemProvider scope={__scopeSelect} headingId={headingId} open={open}>
+        {collapsible ? (
+          <Collapsible.Root asChild open={open} onOpenChange={setOpen}>
+            {listItem}
+          </Collapsible.Root>
+        ) : (
+          listItem
+        )}
       </ListItemProvider>
     );
   }
 );
+
+const ListItemCollapsibleContent = Collapsible.Content;
 
 const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
   (props: ScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
@@ -292,6 +364,7 @@ export {
   useListDensity,
   ListItem,
   ListItemHeading,
+  ListItemCollapsibleContent,
   ListItemEndcap,
   ListItemDragHandle,
   createListItemScope
