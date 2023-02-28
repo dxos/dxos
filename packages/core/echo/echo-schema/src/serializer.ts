@@ -46,6 +46,9 @@ export class Serializer {
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;
+      if (type === 'dxos.sdk.client.Properties') {
+        continue;
+      }
       switch (model) {
         case DocumentModel.meta.type: {
           const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
