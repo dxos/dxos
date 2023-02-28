@@ -23,7 +23,7 @@ export const getPersistentContext = (browserType: BrowserType) => {
   const options: LaunchOptions = {
     headless: process.env.HEADLESS !== 'false',
     args:
-      // playwright does not support extensions in headless mode.
+      // NOTE: Playwright does not support extensions in headless mode.
       process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
         ? [
             `--disable-extensions-except=${process.env.EXTENSION_PATH}`,

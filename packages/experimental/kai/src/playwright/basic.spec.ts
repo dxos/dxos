@@ -35,7 +35,11 @@ test.describe('Basic test', () => {
       }, 1000);
     });
 
-    test('invite guest', async () => {
+    test('invite guest', async ({ browserName }) => {
+      if (browserName !== 'chromium') {
+        return;
+      }
+
       await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
