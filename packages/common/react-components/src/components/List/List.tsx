@@ -221,7 +221,7 @@ const ListItemDragHandle = ({
   );
 };
 
-type ListItemOpenTriggerProps = ScopedProps<Omit<ComponentPropsWithoutRef<'div'>, 'children'>> & {
+type ListItemOpenTriggerProps = ScopedProps<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> & {
   openTriggerIconSlot?: ListItemSlots['dragHandleIcon'];
 };
 
@@ -231,6 +231,11 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     const density = useDensityContext();
     const { toggleOpenLabel } = useListContext(LIST_NAME, __scopeSelect);
     const { open } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
+    const iconProps: ListItemOpenTriggerProps['openTriggerIconSlot'] = {
+      weight: 'bold',
+      className: mx(getSize(4), openTriggerIconSlot.className)
+    };
+    const Icon = open ? CaretDown : CaretRight;
     return (
       <Collapsible.Trigger
         ref={forwardedRef}
@@ -243,7 +248,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
         )}
       >
         {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
-        {open ? <CaretDown /> : <CaretRight />}
+        <Icon {...iconProps} />
       </Collapsible.Trigger>
     );
   }
