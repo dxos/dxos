@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Context as MochaContext } from 'mocha';
-import type { ConsoleMessage, Page } from 'playwright';
+import type { Browser, ConsoleMessage, Page } from 'playwright';
 
 import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/halo-app/testing';
-import { setupPage } from '@dxos/test';
+import { setupPage } from '@dxos/test/playwright';
 
 export class AppManager {
   page!: Page;
@@ -17,15 +16,14 @@ export class AppManager {
   private _invitationCode = new Trigger<string>();
   private _authenticationCode = new Trigger<string>();
 
-  constructor(private readonly mochaContext: MochaContext) {}
+  constructor(private readonly _browser: Browser) {}
 
   async init() {
     if (this._initialized) {
       return;
     }
 
-    const { page } = await setupPage(this.mochaContext, {
-      url: mochaExecutor.executorResult.baseUrl,
+    const { page } = await setupPage(this._browser, {
       waitFor: (page) => page.getByTestId('create-identity').isVisible(),
       bridgeLogs: true
     });
