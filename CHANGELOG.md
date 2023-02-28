@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.28](https://github.com/dxos/dxos/compare/v0.1.27...v0.1.28) (2023-02-27)
+
+
+### Features
+
+* Add useSubscriptionEffect hook ([#2594](https://github.com/dxos/dxos/issues/2594)) ([bad2352](https://github.com/dxos/dxos/commit/bad2352751cb3117b04d5c4c25d1c9b88ecf23b2))
+* Devtools stability ([#2577](https://github.com/dxos/dxos/issues/2577)) ([ee65e9a](https://github.com/dxos/dxos/commit/ee65e9a522d0cd13929ab264b8e4c9ee8e65c3d1))
+* Ignore unexpected config fields ([#2596](https://github.com/dxos/dxos/issues/2596)) ([17206a5](https://github.com/dxos/dxos/commit/17206a5b42a29a877ff16f7d726bdbfce3a9047e))
+
+
+### Bug Fixes
+
+* **config:** read dynamic env var in vite plugin ([#2606](https://github.com/dxos/dxos/issues/2606)) ([eb70f20](https://github.com/dxos/dxos/commit/eb70f2076cc13dc227ae92c5a76ab7cf49c198f4))
+
 ## [0.1.27](https://github.com/dxos/dxos/compare/v0.1.26...v0.1.27) (2023-02-27)
 
 
