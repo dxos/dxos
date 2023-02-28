@@ -60,7 +60,7 @@ export class ShellManager {
   async createSpaceInvitation(): Promise<string> {
     await this.openCurrentSpace();
     this._invitationCode = new Trigger<string>();
-    await this.shell.getByTestId('create-space-invitation').click();
+    await this.shell.getByTestId('spaces-panel.create-invitation').click();
     return await this._invitationCode.wait();
   }
 

@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
-
-import { beforeAll, describe, test } from '@dxos/test';
 
 import { FILTER } from '../constants';
 import { AppManager } from './app-manager';
@@ -18,23 +17,21 @@ enum Groceries {
   Flour = 'flour'
 }
 
-describe('Basic test', () => {
+test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  beforeAll(function () {
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
-    if (mochaExecutor.environment === 'firefox') {
-      return;
-    }
+  // TODO(wittjosiah): Currently not running in Firefox.
+  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+  test.beforeAll(({ browser, browserName }) => {
+    host = new AppManager(browser);
 
-    host = new AppManager(this);
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
     //   https://github.com/microsoft/playwright/issues/2973
-    guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
+    guest = browserName === 'chromium' ? new AppManager(browser) : host;
   });
 
-  describe('Default space', () => {
+  test.describe('Default space', () => {
     test('create identity', async () => {
       await host.init();
 
@@ -48,16 +45,20 @@ describe('Basic test', () => {
         expect(await host.isPlaceholderVisible()).to.be.false;
         expect(await host.isNewTodoVisible()).to.be.true;
       }, 1000);
-    }).skipEnvironments('firefox');
+    });
 
     test('create a task', async () => {
       await host.createTodo(Groceries.Eggs);
 
       expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
       expect(await host.todoCount()).to.equal(1);
-    }).skipEnvironments('firefox');
+    });
 
-    test('invite guest', async () => {
+    test('invite guest', async ({ browserName }) => {
+      if (browserName !== 'chromium') {
+        return;
+      }
+
       await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
@@ -74,7 +75,7 @@ describe('Basic test', () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
       }, 1000);
-    }).onlyEnvironments('chromium');
+    });
 
     test('toggle a task', async () => {
       await host.toggleTodo(Groceries.Eggs);
@@ -84,7 +85,7 @@ describe('Basic test', () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.true;
         expect(await guest.todoCount()).to.equal(0);
       }, 10);
-    }).skipEnvironments('firefox');
+    });
 
     test('untoggle a task', async () => {
       await host.toggleTodo(Groceries.Eggs);
@@ -94,7 +95,7 @@ describe('Basic test', () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.false;
         expect(await guest.todoCount()).to.equal(1);
       }, 10);
-    }).skipEnvironments('firefox');
+    });
 
     test('edit a task', async () => {
       await host.setTodoEditing(Groceries.Eggs);
@@ -107,7 +108,7 @@ describe('Basic test', () => {
         expect(await guest.todoIsVisible(Groceries.Eggnog)).to.be.true;
         expect(await guest.todoCount()).to.equal(1);
       }, 10);
-    }).skipEnvironments('firefox');
+    });
 
     test('cancel editing a task', async () => {
       await host.setTodoEditing(Groceries.Eggnog);
@@ -115,7 +116,7 @@ describe('Basic test', () => {
 
       expect(await host.todoIsVisible(Groceries.Eggnog)).to.be.true;
       expect(await host.todoCount()).to.equal(1);
-    }).skipEnvironments('firefox');
+    });
 
     test('delete a task', async () => {
       await host.deleteTodo(Groceries.Eggnog);
@@ -124,7 +125,7 @@ describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.textIsVisible(Groceries.Eggnog)).to.be.false;
       }, 10);
-    }).skipEnvironments('firefox');
+    });
 
     test('filter active tasks', async () => {
       await host.createTodo(Groceries.Eggs);
@@ -141,7 +142,7 @@ describe('Basic test', () => {
       expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
       expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
       expect(await host.todoCount()).to.equal(2);
-    }).skipEnvironments('firefox');
+    });
 
     test('filter completed tasks', async () => {
       await host.filterTodos(FILTER.COMPLETED);
@@ -150,7 +151,7 @@ describe('Basic test', () => {
       expect(await host.textIsVisible(Groceries.Flour)).to.be.false;
       expect(await host.todoIsVisible(Groceries.Milk)).to.be.true;
       expect(await host.todoIsVisible(Groceries.Butter)).to.be.true;
-    }).skipEnvironments('firefox');
+    });
 
     test('toggle all tasks', async () => {
       await host.filterTodos(FILTER.ALL);
@@ -161,7 +162,7 @@ describe('Basic test', () => {
       expect(await host.todoIsCompleted(Groceries.Butter)).to.be.true;
       expect(await host.todoIsCompleted(Groceries.Flour)).to.be.true;
       expect(await host.todoCount()).to.equal(0);
-    }).skipEnvironments('firefox');
+    });
 
     test('clear completed tasks', async () => {
       await host.clearCompleted();
@@ -170,6 +171,6 @@ describe('Basic test', () => {
       expect(await host.textIsVisible(Groceries.Milk)).to.be.false;
       expect(await host.textIsVisible(Groceries.Butter)).to.be.false;
       expect(await host.textIsVisible(Groceries.Flour)).to.be.false;
-    }).skipEnvironments('firefox');
+    });
   });
 });

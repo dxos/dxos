@@ -10,6 +10,7 @@ import { BrowserType } from '../types';
 
 export type BrowserOptions = {
   headless: boolean;
+  page?: boolean;
   browserArgs?: string[];
 };
 

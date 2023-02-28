@@ -105,6 +105,8 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
+      - store_artifacts:
+          path: tmp/playwright
 
   #
   # Publish applications.
