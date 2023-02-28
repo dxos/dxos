@@ -58,5 +58,8 @@ export const os = {
   'all spaces label': 'All spaces',
   'create space label': 'Create a new space',
   'join space label': 'Join a space',
-  'show current space label': 'Current space'
+  'show current space label': 'Current space',
+  'toggle sidebar label': 'Open/close DXOS menu',
+  'open sidebar label': 'Open DXOS menu',
+  'close sidebar label': 'Close DXOS menu'
 };

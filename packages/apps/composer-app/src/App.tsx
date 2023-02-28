@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations, ShellProvider } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -53,7 +53,9 @@ export const App = () => {
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
             <HashRouter>
-              <Routes />
+              <ShellProvider>
+                <Routes />
+              </ShellProvider>
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
