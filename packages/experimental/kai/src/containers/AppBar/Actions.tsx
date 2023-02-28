@@ -9,7 +9,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
-import { useClient } from '@dxos/react-client';
+import { Properties, useClient } from '@dxos/react-client';
 import { DropdownMenuItem, getSize } from '@dxos/react-components';
 
 import { createPath, defaultFrameId, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
@@ -41,11 +41,21 @@ export const Actions = () => {
     download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
   };
 
-  const handleImportSpace = async (files: File) => {
-    const data = new Uint8Array(await files.arrayBuffer());
+  const handleImportSpace = async (file: File) => {
+    const data = new Uint8Array(await file.arrayBuffer());
     const json = new TextDecoder('utf-8').decode(data);
     const space = await client.echo.createSpace();
     await serializer.import(space.db, JSON.parse(json));
+    {
+      // Handle Properties.
+      Object.entries(JSON.parse(json).objects.find((item: any) => item['@type'] === Properties.type.name)).forEach(
+        ([name, value]) => {
+          if (!name.startsWith('@')) {
+            space.properties[name] = value;
+          }
+        }
+      );
+    }
     navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
@@ -78,12 +88,12 @@ export const Actions = () => {
             <UploadSimple className={getSize(5)} />
             <span className='mis-2'>Export data</span>
           </DropdownMenuItem>
-          <FileUploader types={['json']} handleChange={handleImportSpace}>
-            <DropdownMenuItem>
+          <DropdownMenuItem>
+            <FileUploader className='flex-1 flex-row' types={['json']} handleChange={handleImportSpace}>
               <DownloadSimple className={getSize(5)} />
               <span className='mis-2'>Import data</span>
-            </DropdownMenuItem>
-          </FileUploader>
+            </FileUploader>
+          </DropdownMenuItem>
         </>
       )}
       <DropdownMenuItem onClick={handleGenerateData}>
