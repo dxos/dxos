@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
@@ -12,10 +13,9 @@ import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-// TODO(burdon): Move back to @dxos/react-client/testing after resolving ESM issues.
+import { ClientProvider } from '../client';
 
 export type ClientSpaceDecoratorOptions = {
   schema?: EchoSchema;
@@ -29,13 +29,14 @@ export type ClientSpaceDecoratorOptions = {
  * @param {number} count Number of peers to join.
  * @returns {DecoratorFunction}
  */
+// TODO(wittjosiah): Factor out setup to hook.
 export const ClientSpaceDecorator =
   ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
   (Story, context) => {
     const clients = useMemo(() => {
       const testBuilder = new TestBuilder();
       return [...Array(count)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
-    }, []);
+    }, [count]);
 
     const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
@@ -49,10 +50,10 @@ export const ClientSpaceDecorator =
         log('echo schema set');
       }
 
-      await Promise.all(clients.map((client) => client.halo.createIdentity()));
+      await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.name.firstName() })));
       log('identity created');
 
-      const space = await clients[0].echo.createSpace();
+      const space = await clients[0].echo.createSpace({ name: faker.animal.bird() });
       log('space created', { space: space.key });
 
       await Promise.all(
@@ -91,7 +92,7 @@ export const ClientSpaceDecorator =
       return () => {
         void Promise.all(clients.map((client) => client.destroy()));
       };
-    }, clients);
+    }, [clients, schema]);
 
     if (!spaceKey) {
       return <Loading label='Loading…' />;

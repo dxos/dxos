@@ -12,7 +12,7 @@ export const SpaceListItem = forwardRef(
   ({ space, onClick }: { space: Space; onClick?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
     return (
       <li
-        className={mx('flex gap-2 items-center', onClick && 'cursor-pointer')}
+        className={mx('flex gap-2 items-center mbe-2', onClick && 'cursor-pointer')}
         onClick={() => onClick?.()}
         ref={ref}
         data-testid='space-list-item'

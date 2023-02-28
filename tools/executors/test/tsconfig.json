@@ -7,6 +7,7 @@
   },
   "include": [
     "index.d.ts",
+    "playwright.d.ts",
     "src"
   ],
   "references": []

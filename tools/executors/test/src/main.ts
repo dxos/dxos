@@ -6,13 +6,15 @@ import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
 import chalk from 'chalk';
 import { resolve } from 'node:path';
 
-import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
+import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
-import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
+import { PlaywrightOptions, runPlaywright } from './run-playwright';
+import { BrowserType, BrowserTypes, TestEnvironment, TestEnvironments } from './types';
 import { runSetup } from './util';
 
 export type MochaExecutorOptions = NodeOptions &
-  BrowserOptions & {
+  BrowserOptions &
+  PlaywrightOptions & {
     environments?: (TestEnvironment | 'all')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
@@ -22,14 +24,16 @@ export type MochaExecutorOptions = NodeOptions &
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  logger.info('Executing mocha...');
+  logger.info('Executing test...');
   if (context.isVerbose) {
     logger.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
+  const environments = getEnvironments(options);
   const resolvedOptions: RunTestsOptions = {
     ...options,
-    environments: getEnvironments(options),
+    environments,
+    browsers: environments.filter((env): env is BrowserType => env !== 'nodejs'),
     setup: options.setup ? resolve(context.root, options.setup) : options.setup,
     testPatterns: options.testPatterns.map((pattern) => resolve(context.root, pattern)),
     watchPatterns: options.watchPatterns?.map((pattern) => resolve(context.root, pattern)),
@@ -40,7 +44,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   };
 
   const includesBrowserEnv =
-    !options.playwright &&
+    !options.playwrightConfigPath &&
     resolvedOptions.environments.filter((environment) => ([...BrowserTypes.values()] as string[]).includes(environment))
       .length > 0;
 
@@ -85,12 +89,12 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
       ? Array.from(TestEnvironments)
       : (options.environments as TestEnvironment[]);
   } else if (process.env.CI) {
-    return options.playwright ? options.ciEnvironments.filter((env) => env !== 'nodejs') : options.ciEnvironments;
+    return options.ciEnvironments;
   } else if (options.devEnvironments) {
     return options.devEnvironments;
   }
 
-  return options.playwright ? ['chromium'] : ['nodejs'];
+  return options.playwrightConfigPath ? ['chromium'] : ['nodejs'];
 };
 
 // TODO(wittjosiah): Clean up the types used in this executor.
@@ -103,6 +107,11 @@ export type RunTestsOptions = Omit<MochaExecutorOptions, 'environments'> & {
 // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
 // TODO(wittjosiah): Run all even if there are failures.
 const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
+  if (options.playwrightConfigPath) {
+    const exitCode = await runPlaywright(context, options);
+    return exitCode === 0;
+  }
+
   let success = true;
   for (const env of options.environments) {
     let exitCode: number | null;
@@ -116,7 +125,6 @@ const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
           break;
         }
 
-        const runBrowser = options.playwright ? runNode : runBrowserMocha;
         exitCode = await runBrowser(context, { ...options, browser: env });
         break;
       }

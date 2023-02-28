@@ -58,9 +58,9 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
         <Button
           className='is-full flex gap-2 mbs-2'
           onClick={() => client.halo.createInvitation()}
-          data-testid='create-space-invitation'
+          data-testid='devices-panel.create-invitation'
         >
-          <span>{t('create space invitation label')}</span>
+          <span>{t('create device invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
         </Button>
         <PanelSeparator />
