@@ -43,7 +43,7 @@ export const Default = {
             <ListItemEndcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
-            <ListItemHeading className='mbs-2'>{text}</ListItemHeading>
+            <ListItemHeading className='grow mbs-2'>{text}</ListItemHeading>
             <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
@@ -72,16 +72,15 @@ export const Collapsible = {
       <List {...args} labelId='excluded'>
         {items.map(({ id, text, body }, index) => (
           <ListItem key={id} id={id} collapsible={index !== 2}>
-            <ListItemEndcap>
-              <Play className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItemEndcap>
-            <ListItemHeading>
-              <p className='mbs-2'>{text}</p>
-              {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
+            <ListItemHeading asChild>
+              <div className='flex'>
+                <p className='grow mbs-2'>{text}</p>
+                <ListItemEndcap>
+                  <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+                </ListItemEndcap>
+              </div>
             </ListItemHeading>
-            <ListItemEndcap>
-              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItemEndcap>
+            {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
           </ListItem>
         ))}
       </List>

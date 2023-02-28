@@ -29,7 +29,7 @@ import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus } from '../.
 import { mx } from '../../util';
 import { Checkbox, CheckboxProps } from '../Checkbox';
 import { DensityProvider } from '../DensityProvider';
-import { defaultListItemHeading, defaultListItemEndcap } from './listStyles';
+import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';
 
 // TODO (thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
@@ -81,6 +81,7 @@ interface ListItemSlots {
   dragHandleIcon?: ComponentPropsWithoutRef<typeof DotsSixVertical>;
   openTrigger?: ComponentPropsWithoutRef<typeof ListItemOpenTrigger>;
   openTriggerIcon?: ComponentPropsWithoutRef<typeof CaretDown>;
+  mainContent?: ComponentPropsWithoutRef<'div'>;
 }
 
 interface NonCollapsibleListItemProps extends Omit<ListItemData, 'id'> {
@@ -188,17 +189,12 @@ const ListItemHeading = ({
   asChild,
   __scopeSelect,
   ...props
-}: ScopedProps<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean }) => {
+}: ScopedProps<ComponentPropsWithoutRef<'p'>> & { asChild?: boolean }) => {
   const { headingId } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
   const Root = asChild ? Slot : 'div';
   const density = useDensityContext();
   return (
-    <Root
-      {...(!asChild && { role: 'none' })}
-      {...props}
-      id={headingId}
-      className={mx(defaultListItemHeading({ density }), className)}
-    >
+    <Root {...props} id={headingId} className={mx(defaultListItemHeading({ density }), className)}>
       {children}
     </Root>
   );
@@ -308,7 +304,13 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
             />
           </ListItemEndcap>
         )}
-        {children}
+        <div
+          role='none'
+          {...slots.mainContent}
+          className={mx(defaultListItemMainContent({ collapsible: listCollapsible }), slots.mainContent?.className)}
+        >
+          {children}
+        </div>
       </Primitive.li>
     );
 
