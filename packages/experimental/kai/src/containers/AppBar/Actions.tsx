@@ -46,16 +46,6 @@ export const Actions = () => {
     const json = new TextDecoder('utf-8').decode(data);
     const space = await client.echo.createSpace();
     await serializer.import(space.db, JSON.parse(json));
-    {
-      // Handle Properties.
-      Object.entries(JSON.parse(json).objects.find((item: any) => item['@type'] === Properties.type.name)).forEach(
-        ([name, value]) => {
-          if (!name.startsWith('@')) {
-            space.properties[name] = value;
-          }
-        }
-      );
-    }
     navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 

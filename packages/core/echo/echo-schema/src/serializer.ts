@@ -43,12 +43,24 @@ export class Serializer {
   }
 
   async import(database: EchoDatabase, data: SerializedSpace) {
+    const {
+      objects: [properties]
+    } = database.query({ '@type': 'dxos.sdk.client.Properties' });
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;
-      if (type === 'dxos.sdk.client.Properties') {
+
+      // Handle Space Properties
+      // TODO(mykola): move to @dxos/client
+      if (properties && type === 'dxos.sdk.client.Properties') {
+        Object.entries(data).forEach(([name, value]) => {
+          if (!name.startsWith('@')) {
+            properties[name] = value;
+          }
+        });
         continue;
       }
+
       switch (model) {
         case DocumentModel.meta.type: {
           const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
