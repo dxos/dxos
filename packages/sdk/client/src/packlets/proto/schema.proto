@@ -12,5 +12,5 @@ package dxos.sdk.client;
 message Properties {
   option (object) = true;
 
-  string title = 1;
+  string name = 1;
 }

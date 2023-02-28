@@ -28,6 +28,28 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/patterns/react-ui",
+        "outputPath": "tmp/playwright/packages/apps/patterns/react-ui",
+        "playwrightConfigPath": "packages/apps/patterns/react-ui/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/apps/patterns/react-ui",
+        "serve": "react-ui:storybook",
+        "testPatterns": [
+          "packages/apps/patterns/react-ui/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "timeout": 60000,
+        "watchPatterns": [
+          "packages/apps/patterns/react-ui/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
