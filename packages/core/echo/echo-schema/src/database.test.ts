@@ -33,6 +33,7 @@ describe('EchoDatabase', () => {
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
+      '@model': 'dxos:model/document',
       title: 'Test title',
       description: 'Test description'
     });
@@ -192,6 +193,7 @@ describe('EchoDatabase', () => {
     expect(task.toJSON()).toEqual({
       '@id': task.id,
       '@type': undefined,
+      '@model': 'dxos:model/document',
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
