@@ -24,6 +24,7 @@ export * from './Tag';
 export * from './Toast';
 export * from './Tooltip';
 export * from './ThemeProvider';
+export * from './Tree';
 export * from './TreeView';
 export * from './Select';
 export * from './Searchbar';

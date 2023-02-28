@@ -14,14 +14,14 @@
     "e2e": {
       "dependsOn": [
         "^build",
-        "prebuild",
-        "bundle"
+        "bundle",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/devtools/devtools-extension",
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "headless": false, 
+        "headless": false,
         "outputPath": "tmp/playwright/packages/devtools/devtools-extension",
         "playwrightConfigPath": "packages/devtools/devtools-extension/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/devtools/devtools-extension",
