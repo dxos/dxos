@@ -8,7 +8,7 @@ import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
+import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -17,14 +17,13 @@ import React, {
   ComponentProps,
   ComponentPropsWithoutRef,
   ComponentPropsWithRef,
-  FC,
   forwardRef,
   ReactHTMLElement,
   ReactNode
 } from 'react';
 
 import { useDensityContext, useId, useThemeContext } from '../../hooks';
-import { Density, ScopedProps } from '../../props';
+import { Density } from '../../props';
 import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus } from '../../styles';
 import { mx } from '../../util';
 import { Checkbox, CheckboxProps } from '../Checkbox';
@@ -35,6 +34,8 @@ import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainConte
 
 const LIST_NAME = 'List';
 const LIST_ITEM_NAME = 'ListItem';
+
+type ListScopedProps<P> = P & { __listScope?: Scope };
 
 type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
@@ -117,9 +118,9 @@ const useListDensity = ({ density, variant }: Pick<SharedListProps, 'density' | 
   return variant === 'ordered-draggable' ? 'coarse' : contextDensity ?? 'coarse';
 };
 
-const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
+const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
   const {
-    __scopeSelect,
+    __listScope,
     variant = 'ordered',
     selectable = false,
     collapsible = false,
@@ -134,11 +135,12 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
       {...(selectable && { role: 'listbox', 'aria-multiselectable': true })}
       {...slots.root}
       aria-labelledby={props.labelId}
+      ref={forwardedRef}
     >
       <DensityProvider density={density}>
         <ListProvider
           {...{
-            scope: __scopeSelect,
+            scope: __listScope,
             variant,
             collapsible,
             selectable,
@@ -156,7 +158,7 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
       </DensityProvider>
     </ListRoot>
   );
-};
+});
 
 List.displayName = LIST_NAME;
 
@@ -168,12 +170,9 @@ type ListItemContextValue = { headingId: string; open: boolean };
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-const ListItemEndcap = ({
-  children,
-  className,
-  asChild,
-  ...props
-}: ComponentPropsWithoutRef<'div'> & { asChild?: boolean }) => {
+type ListItemEndcapProps = ComponentPropsWithoutRef<'div'> & { asChild?: boolean };
+
+const ListItemEndcap = ({ children, className, asChild, ...props }: ListItemEndcapProps) => {
   const Root = asChild ? Slot : 'div';
   const density = useDensityContext();
   return (
@@ -183,14 +182,10 @@ const ListItemEndcap = ({
   );
 };
 
-const ListItemHeading = ({
-  children,
-  className,
-  asChild,
-  __scopeSelect,
-  ...props
-}: ScopedProps<ComponentPropsWithoutRef<'p'>> & { asChild?: boolean }) => {
-  const { headingId } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
+type ListItemHeadingProps = ListScopedProps<ComponentPropsWithoutRef<'p'>> & { asChild?: boolean };
+
+const ListItemHeading = ({ children, className, asChild, __listScope, ...props }: ListItemHeadingProps) => {
+  const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
   const Root = asChild ? Slot : 'div';
   const density = useDensityContext();
   return (
@@ -200,11 +195,11 @@ const ListItemHeading = ({
   );
 };
 
-const ListItemDragHandle = ({
-  className,
-  dragHandleIconSlot = {},
-  ...props
-}: Omit<ComponentPropsWithoutRef<'div'>, 'children'> & { dragHandleIconSlot?: ListItemSlots['dragHandleIcon'] }) => {
+type ListItemDragHandleProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
+  dragHandleIconSlot?: ListItemSlots['dragHandleIcon'];
+};
+
+const ListItemDragHandle = ({ className, dragHandleIconSlot = {}, ...props }: ListItemDragHandleProps) => {
   const { themeVariant } = useThemeContext();
   return (
     <div
@@ -217,16 +212,16 @@ const ListItemDragHandle = ({
   );
 };
 
-type ListItemOpenTriggerProps = ScopedProps<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> & {
+type ListItemOpenTriggerProps = ListScopedProps<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> & {
   openTriggerIconSlot?: ListItemSlots['dragHandleIcon'];
 };
 
 const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerProps>(
-  ({ className, openTriggerIconSlot = {}, __scopeSelect, ...props }: ListItemOpenTriggerProps, forwardedRef) => {
+  ({ className, openTriggerIconSlot = {}, __listScope, ...props }: ListItemOpenTriggerProps, forwardedRef) => {
     const { themeVariant } = useThemeContext();
     const density = useDensityContext();
-    const { toggleOpenLabel } = useListContext(LIST_NAME, __scopeSelect);
-    const { open } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
+    const { toggleOpenLabel } = useListContext(LIST_NAME, __listScope);
+    const { open } = useListItemContext(LIST_ITEM_NAME, __listScope);
     const iconProps: ListItemOpenTriggerProps['openTriggerIconSlot'] = {
       weight: 'bold',
       className: mx(getSize(4), openTriggerIconSlot.className)
@@ -251,9 +246,9 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
 );
 
 const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
-  (props: ScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
+  (props: ListScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
     const {
-      __scopeSelect,
+      __listScope,
       children,
       selected: propsSelected,
       defaultSelected,
@@ -263,7 +258,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
       slots = {}
     } = props;
     const density = useDensityContext();
-    const { variant, selectable, collapsible: listCollapsible } = useListContext(LIST_NAME, __scopeSelect);
+    const { variant, selectable, collapsible: listCollapsible } = useListContext(LIST_NAME, __listScope);
     const draggable = variant === 'ordered-draggable';
 
     const [selected = false, setSelected] = useControllableState({
@@ -315,7 +310,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
     );
 
     return (
-      <ListItemProvider scope={__scopeSelect} headingId={headingId} open={open}>
+      <ListItemProvider scope={__listScope} headingId={headingId} open={open}>
         {collapsible ? (
           <Collapsible.Root asChild open={open} onOpenChange={setOpen}>
             {listItem}
@@ -328,10 +323,12 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
   }
 );
 
+type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content>;
+
 const ListItemCollapsibleContent = Collapsible.Content;
 
 const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
-  (props: ScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
+  (props: ListScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
       id: props.id
     });
@@ -354,8 +351,8 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
   }
 );
 
-const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<ListItemProps>, forwardedRef) => {
-  const { variant } = useListContext(LIST_NAME, props.__scopeSelect);
+const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
+  const { variant } = useListContext(LIST_NAME, props.__listScope);
   const listItemId = useId('listItem');
 
   if (variant === 'ordered-draggable') {
@@ -369,12 +366,23 @@ export {
   List,
   createListScope,
   useListDensity,
+  useListContext,
+  LIST_NAME,
   ListItem,
   ListItemHeading,
   ListItemCollapsibleContent,
   ListItemEndcap,
-  ListItemDragHandle,
-  createListItemScope
+  createListItemScope,
+  useListItemContext,
+  LIST_ITEM_NAME
 };
 
-export type { ListProps, ListVariant, ListItemProps };
+export type {
+  ListProps,
+  ListVariant,
+  ListItemProps,
+  ListItemHeadingProps,
+  ListItemCollapsibleContentProps,
+  ListItemEndcapProps,
+  ListScopedProps
+};
