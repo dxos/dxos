@@ -4,10 +4,10 @@
 
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { JSONTree } from 'react-json-tree';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
@@ -50,7 +50,7 @@ const App = ({ port }: { port: MessagePort }) => {
   }, []);
 
   return (
-    <JsonTreeView
+    <JSONTree
       data={{
         closed,
         error,
