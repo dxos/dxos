@@ -2,24 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
+import { test } from '@playwright/test';
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { beforeEach, describe, test } from '@dxos/test';
 
 import { InvitationsManager } from './invitations-manager';
 
-describe('Invitations', () => {
+test.describe('Invitations', () => {
   let manager: InvitationsManager;
 
-  beforeEach(async function () {
-    manager = new InvitationsManager(this);
+  test.beforeEach(async ({ browser }) => {
+    manager = new InvitationsManager(browser);
     await manager.init();
   });
 
-  describe('device', () => {
+  test.describe('device', () => {
     test('happy path', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
@@ -165,7 +165,7 @@ describe('Invitations', () => {
     });
   });
 
-  describe('space', () => {
+  test.describe('space', () => {
     test('happy path', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);

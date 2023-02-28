@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Context as MochaContext } from 'mocha';
-import type { ConsoleMessage, Page } from 'playwright';
+import { expect } from 'chai';
+import type { Browser, ConsoleMessage, Page } from 'playwright';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
 import type { InvitationsOptions } from '@dxos/client-services';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { setupPage } from '@dxos/test';
+import { setupPage } from '@dxos/test/playwright';
 
 // TODO(wittjosiah): Factor out.
 // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
@@ -23,16 +24,15 @@ export class InvitationsManager {
   private _invitationCode = new Trigger<string>();
   private _authenticationCode = new Trigger<string>();
 
-  constructor(private readonly mochaContext: MochaContext) {}
+  constructor(private readonly _browser: Browser) {}
 
   async init() {
     if (this._initialized) {
       return;
     }
 
-    const { page } = await setupPage(this.mochaContext, {
+    const { page } = await setupPage(this._browser, {
       url: storybookUrl('invitations--default'),
-      timeout: 120_000, // TODO(wittjosiah): Storybook startup is slower than it should be.
       waitFor: (page) => page.getByTestId('invitations.identity-header').nth(0).isVisible()
     });
 
@@ -104,7 +104,12 @@ export class InvitationsManager {
   }
 
   async createIdentity(id: number) {
-    await this._peer(id).getByTestId('invitations.create-identity').click();
+    const createIdentity = this._peer(id).getByTestId('invitations.create-identity');
+    // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
+    await createIdentity.click();
+    await waitForExpect(async () => {
+      expect(await createIdentity.isDisabled()).to.be.true;
+    });
   }
 
   async createSpace(id: number) {

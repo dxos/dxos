@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Space, SpaceProxy, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, getSize, Group, Tooltip } from '@dxos/react-components';
+import { Button, ButtonGroup, getSize, Group } from '@dxos/react-components';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { DevicesPanel, JoinPanel, SpacePanel } from '../panels';
@@ -50,21 +50,22 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     }
 
     default: {
+      // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
         <ButtonGroup className='mbe-4'>
-          <Tooltip content='Create Space'>
-            <Button
-              onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}
-              data-testid='invitations.create-space'
-            >
-              <PlusCircle className={getSize(6)} />
-            </Button>
-          </Tooltip>
-          <Tooltip content='Join Space'>
-            <Button onClick={() => setPanel('join')} data-testid='invitations.open-join-space'>
-              <Intersect weight='fill' className={getSize(6)} />
-            </Button>
-          </Tooltip>
+          {/* <Tooltip content='Create Space'> */}
+          <Button
+            onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}
+            data-testid='invitations.create-space'
+          >
+            <PlusCircle className={getSize(6)} />
+          </Button>
+          {/* </Tooltip>
+          <Tooltip content='Join Space'> */}
+          <Button onClick={() => setPanel('join')} data-testid='invitations.open-join-space'>
+            <Intersect weight='fill' className={getSize(6)} />
+          </Button>
+          {/* </Tooltip> */}
         </ButtonGroup>
       );
 
@@ -102,40 +103,41 @@ const render = ({ id }: { id: number }) => {
     (window as any)[`peer${id}client`] = client;
   }, [client]);
 
+  // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
     <ButtonGroup className='mbe-4'>
-      <Tooltip content='Create Identity'>
-        <Button
-          onClick={() => client.halo.createIdentity({ displayName: faker.name.firstName() })}
-          disabled={Boolean(identity)}
-          data-testid='invitations.create-identity'
-        >
-          <Plus className={getSize(6)} />
-        </Button>
-      </Tooltip>
-      <Tooltip content='Join Existing Identity'>
-        <Button
-          onClick={() => setPanel('identity')}
-          disabled={panel === 'identity'}
-          data-testid='invitations.open-join-identity'
-        >
-          <QrCode weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
-      <Tooltip content='Devices'>
-        <Button
-          onClick={() => setPanel('devices')}
-          disabled={!identity || panel === 'devices'}
-          data-testid='invitations.open-devices'
-        >
-          <Laptop weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
-      <Tooltip content='List Spaces'>
-        <Button onClick={() => setPanel(undefined)} disabled={!panel} data-testid='invitations.list-spaces'>
-          <Planet weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
+      {/* <Tooltip content='Create Identity'> */}
+      <Button
+        onClick={() => client.halo.createIdentity({ displayName: faker.name.firstName() })}
+        disabled={Boolean(identity)}
+        data-testid='invitations.create-identity'
+      >
+        <Plus className={getSize(6)} />
+      </Button>
+      {/* </Tooltip>
+      <Tooltip content='Join Existing Identity'> */}
+      <Button
+        onClick={() => setPanel('identity')}
+        disabled={panel === 'identity'}
+        data-testid='invitations.open-join-identity'
+      >
+        <QrCode weight='fill' className={getSize(6)} />
+      </Button>
+      {/* </Tooltip>
+      <Tooltip content='Devices'> */}
+      <Button
+        onClick={() => setPanel('devices')}
+        disabled={!identity || panel === 'devices'}
+        data-testid='invitations.open-devices'
+      >
+        <Laptop weight='fill' className={getSize(6)} />
+      </Button>
+      {/* </Tooltip>
+      <Tooltip content='List Spaces'> */}
+      <Button onClick={() => setPanel(undefined)} disabled={!panel} data-testid='invitations.list-spaces'>
+        <Planet weight='fill' className={getSize(6)} />
+      </Button>
+      {/* </Tooltip> */}
     </ButtonGroup>
   );
 

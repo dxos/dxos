@@ -2,21 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { test } from '@playwright/test';
 import { expect } from 'chai';
 import { Page } from 'playwright';
 
-import { beforeAll, describe, setupPage, test } from '@dxos/test';
+import { setupPage } from '@dxos/test/playwright';
 
-describe('Smoke test', function () {
+test.describe('Smoke test', () => {
   let page: Page;
 
-  beforeAll(async function () {
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
-    if (mochaExecutor.environment === 'firefox') {
-      return;
-    }
-
-    const result = await setupPage(this, {
+  // TODO(wittjosiah): Currently not running in Firefox.
+  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+  test.beforeAll(async ({ browser }) => {
+    const result = await setupPage(browser, {
       url: 'http://localhost:3967',
       waitFor: async (page) => page.isVisible(':has-text("HALO")')
     });
@@ -27,5 +25,5 @@ describe('Smoke test', function () {
   test('connects to shared worker', async () => {
     const isVisible = await page.isVisible(':has-text("HALO")');
     expect(isVisible).to.be.true;
-  }).skipEnvironments('firefox'); // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+  });
 });

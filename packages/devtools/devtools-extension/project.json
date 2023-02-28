@@ -12,16 +12,19 @@
       ]
     },
     "e2e": {
+      "dependsOn": [
+        "^build",
+        "prebuild",
+        "bundle"
+      ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/devtools/devtools-extension",
         "extensionPath": "packages/devtools/devtools-extension/out/devtools-extension",
-        "headless": true,
-        "incognito": false,
-        "outputPath": "tmp/mocha/packages/devtools/devtools-extension",
-        "playwright": true,
+        "headless": false, 
+        "outputPath": "tmp/playwright/packages/devtools/devtools-extension",
+        "playwrightConfigPath": "packages/devtools/devtools-extension/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/devtools/devtools-extension",
-        "serve": "devtools-extension:bundle",
         "testPatterns": [
           "packages/devtools/devtools-extension/src/playwright/**/*.spec.{ts,js}"
         ],
