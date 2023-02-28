@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { DocumentModel } from '@dxos/document-model';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -16,7 +15,7 @@ describe('schema', () => {
   test('keys', () => {
     const contact = new Contact({ name: 'Test User' });
     expect(contact.id).to.exist;
-    expect(Object.keys(contact).length).to.eq(5);
+    expect(Object.keys(contact).length).to.eq(6);
     contact.email = 'test@example.com';
 
     // TODO(burdon): Address should be auto-created?
@@ -80,42 +79,18 @@ describe('schema', () => {
 
   test('fields', () => {
     expect(Contact.type.fields).to.deep.eq([
-      {
-        name: 'name',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'username',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'email',
-        type: {
-          kind: 'string'
-        }
-      },
-      {
-        name: 'address',
-        type: {
-          kind: 'record',
-          objectType: 'example.test.Address'
-        }
-      },
+      { name: 'name', type: { kind: 'string' } },
+      { name: 'username', type: { kind: 'string' } },
+      { name: 'email', type: { kind: 'string' } },
+      { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },
       {
         name: 'tasks',
         type: {
           kind: 'array',
-          elementType: {
-            kind: 'ref',
-            objectType: 'example.test.Task',
-            modelType: DocumentModel.meta.type
-          }
+          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos:model/document' }
         }
-      }
+      },
+      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } }
     ]);
   });
 });

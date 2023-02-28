@@ -4,6 +4,9 @@
 
 import * as pb from 'protobufjs';
 
+import { text } from '@dxos/plate';
+import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
+
 const packageName = '@dxos/echo-schema';
 const namespaceName = 'dxosEchoSchema';
 
@@ -11,34 +14,6 @@ const namespaceName = 'dxosEchoSchema';
 const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'Text'];
 
 const reservedFieldNames = ['id', '__typename', '__deleted'];
-
-/**
- * Source builder and formatter.
- */
-export class SourceBuilder {
-  private _content: string[] = [];
-
-  // TODO(burdon): Reformat using prettier.
-  get content() {
-    return this._content.join('\n');
-  }
-
-  push(line: string | string[], indent = 0) {
-    const prefix = ' '.repeat(indent * 2);
-    if (typeof line === 'string') {
-      this._content.push(prefix + line);
-    } else {
-      this._content.push(...line.map((line) => prefix + line));
-    }
-
-    return this;
-  }
-
-  nl() {
-    this._content.push('');
-    return this;
-  }
-}
 
 /**
  * Protobuf schema as JSON object.
@@ -75,7 +50,9 @@ export const createType = (field: pb.Field): string => {
         return `${namespaceName}.Text`;
       }
 
-      return field.resolvedType.name;
+      return stringifyFullyQualifiedName(
+        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!))
+      );
     } else {
       switch (field.type) {
         case 'string':
@@ -117,35 +94,69 @@ export const createType = (field: pb.Field): string => {
   }
 };
 
+const isSchemaNamespace = (ns: pb.ReflectionObject) =>
+  (ns instanceof pb.Namespace &&
+    ns.name === 'dxos' &&
+    ns.nestedArray.length === 1 &&
+    ns.nestedArray[0].name === 'schema') ||
+  (ns instanceof pb.Namespace && ns.name === 'schema' && ns.parent?.name === 'dxos');
+
+const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
+  const nestedArray = ns.nestedArray.filter((nested) => !isSchemaNamespace(nested));
+  if (nestedArray.length === 1 && nestedArray[0] instanceof pb.Namespace && !isType(nestedArray[0])) {
+    return getStartingNamespace(nestedArray[0]);
+  }
+
+  return ns;
+};
+
 /**
  * Generate type definitions.
  */
-export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
-  // prettier-ignore
-  builder
-    .push(`import * as ${namespaceName} from '${packageName}';`).nl()
-    .push(createSchema(root)).nl()
-    .push(`export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);`).nl();
+export const generate = (root: pb.NamespaceBase): string => {
+  const startNamespace = getStartingNamespace(root);
 
-  for (const type of iterTypes(root)) {
-    if (type.name === 'Text') {
-      continue;
-    }
+  const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
-    if (type.options?.['(object)'] !== true) {
-      createPlainInterface(builder, type);
-    } else {
-      createObjectClass(builder, type);
-    }
+  return text`
+  import * as ${namespaceName} from '${packageName}';
 
-    builder.nl();
-  }
+  ${createSchema(root)}
+
+  export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);
+
+  ${declarations}
+
+  `;
 };
+
+function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
+  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
+    yield text`
+      export namespace ${ns.name} {
+        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
+      }
+      
+    `;
+  }
+
+  if (ns instanceof pb.Type) {
+    if (ns.name === 'Text') {
+      return;
+    }
+
+    if (ns.options?.['(object)'] !== true) {
+      yield createPlainInterface(ns);
+    } else {
+      yield createObjectClass(ns);
+    }
+  }
+}
 
 /**
  * Generate class definition.
  */
-export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
+export const createObjectClass = (type: pb.Type) => {
   if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
@@ -157,34 +168,35 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
 
   const name = type.name;
   const fullName = type.fullName.slice(1);
-  const initializer = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)}`).join(', ');
+  const initializer = type.fieldsArray.map((field) => `${field.name}: ${createType(field)};`);
   const fields = type.fieldsArray.map((field) => `declare ${field.name}: ${createType(field)};`);
 
   // prettier-ignore
-  builder
-    .push(`export type ${name}Options = { ${initializer} };`).nl()
+  return text`
+    export type ${name}Props = {\n${initializer}\n};
 
-    .push(`export class ${name} extends ${namespaceName}.Document<{}> {`)
-    .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
+    export class ${name} extends ${namespaceName}.Document<{}> {
+      static readonly type = schema.getType('${fullName}');
 
-    .push(`static filter(opts?: ${name}Options): ${namespaceName}.TypeFilter<${name}> {`, 1)
-    .push(`return ${name}.type.createFilter(opts);`, 2)
-    .push('}', 1).nl()
+      static filter(opts?: Partial<${name}Props>): ${namespaceName}.TypeFilter<${name}> {
+      return ${name}.type.createFilter(opts);
+      }
 
-    .push(`constructor(opts?: ${name}Options) {`, 1)
-    .push(`super({ ...opts}, ${name}.type);`, 2)
-    .push('}', 1).nl()
+      constructor(opts?: Partial<${name}Props>) {
+        super({ ...opts}, ${name}.type);
+      }
+      ${fields}
+    }
 
-    .push(fields, 1)
-    .push('}').nl()
+    schema.registerPrototype(${name});
 
-    .push(`schema.registerPrototype(${name});`);
+  `;
 };
 
 /**
  * Plain objects.
  */
-export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
+export const createPlainInterface = (type: pb.Type) => {
   if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
@@ -193,8 +205,10 @@ export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
   const fields = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)};`);
 
   // prettier-ignore
-  builder
-    .push(`export interface ${name} {`)
-    .push(fields, 1)
-    .push('}');
+  return text`
+  export interface ${name} {
+    ${fields}
+  }
+
+  `;
 };

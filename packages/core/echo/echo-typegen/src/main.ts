@@ -7,7 +7,9 @@ import path from 'node:path';
 import { argv } from 'node:process';
 import * as pb from 'protobufjs';
 
-import { SourceBuilder, generate } from './codegen';
+import { ts } from '@dxos/plate';
+
+import { generate } from './codegen';
 
 export type ProtoResolver = (origin: string, target: string) => string | any | null;
 
@@ -60,12 +62,16 @@ const main = (source: string, out: string) => {
   const root = new pb.Root();
   root.loadSync(source);
 
-  const builder = new SourceBuilder();
-  builder.push('/**').push(` * @generated @dxos/echo-typegen ${source}`).push(' **/').nl();
-  generate(builder, root);
+  const code = ts`
+  /**
+   * @generated @dxos/echo-typegen ${source}
+   **/
+
+  ${generate(root)}
+  `;
 
   mkdirSync(path.dirname(out), { recursive: true });
-  writeFileSync(out, builder.content);
+  writeFileSync(out, code);
   console.log(`Output: ${out}`);
 };
 

@@ -43,7 +43,6 @@ for APP in "${APPS[@]}"; do
       --config=$DX_CONFIG \
       --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
-      --skipExisting \
       --verbose
   else
     export DX_ENVIRONMENT=development
