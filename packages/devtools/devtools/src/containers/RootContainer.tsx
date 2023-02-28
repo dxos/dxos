@@ -28,7 +28,7 @@ const Footer = () => {
         }}
         className='w-full'
       >
-        <span className='mis-2'>Reset</span>
+        <span className='mis-2'>Reset Storage</span>
       </Button>
     </div>
   );
