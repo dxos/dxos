@@ -77,6 +77,7 @@ message SignPresentationRequest {
   optional bytes nonce = 2;
 }
 
+// TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
   rpc CreateIdentity(halo.credentials.ProfileDocument) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
@@ -293,6 +294,7 @@ message SetNetworkOptionsRequest {
 
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
+  // TODO(wittjosiah): Align verbs with other services.
   rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
 }
