@@ -45,7 +45,7 @@ describe('schema', () => {
         '@type': task1.__typename,
         '@model': 'dxos:model/document',
         subTasks: [],
-        description: '',
+        description: { '@id': task1.description.id },
         title: 'Task 1',
         assignee: { '@id': contact.id }
       })

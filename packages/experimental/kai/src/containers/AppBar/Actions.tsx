@@ -9,7 +9,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
-import { Properties, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { DropdownMenuItem, getSize } from '@dxos/react-components';
 
 import { createPath, defaultFrameId, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
