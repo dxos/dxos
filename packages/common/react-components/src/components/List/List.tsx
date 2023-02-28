@@ -372,6 +372,8 @@ export {
   ListItemHeading,
   ListItemCollapsibleContent,
   ListItemEndcap,
+  ListItemDragHandle,
+  ListItemOpenTrigger,
   createListItemScope,
   useListItemContext,
   LIST_ITEM_NAME
@@ -384,5 +386,7 @@ export type {
   ListItemHeadingProps,
   ListItemCollapsibleContentProps,
   ListItemEndcapProps,
+  ListItemDragHandleProps,
+  ListItemOpenTriggerProps,
   ListScopedProps
 };
