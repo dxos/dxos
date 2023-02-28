@@ -19,6 +19,8 @@ package:
       description: Kai Demo.
       build:
         command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
+        env:
+          VITE_DEV: true
 
 runtime:
   client:

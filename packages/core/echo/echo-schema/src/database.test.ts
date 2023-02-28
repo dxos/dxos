@@ -33,6 +33,7 @@ describe('EchoDatabase', () => {
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
+      '@model': 'dxos:model/document',
       title: 'Test title',
       description: 'Test description'
     });
@@ -138,18 +139,20 @@ describe('EchoDatabase', () => {
       const task = new Document();
       await db.add(task);
 
-      const actions = [];
+      const actions: string[] = [];
       const selection = router.createSubscription(() => {
         actions.push('update');
       });
       selection.update([task]);
+      // Initial update caused by changed selection.
+      expect(actions).toEqual(['update']);
 
       actions.push('before');
       task.title = 'Test title';
       actions.push('after');
 
       // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-      expect(actions).toEqual(['before', 'update', 'after']);
+      expect(actions).toEqual(['update', 'before', 'update', 'after']);
     });
   });
 
@@ -190,6 +193,7 @@ describe('EchoDatabase', () => {
     expect(task.toJSON()).toEqual({
       '@id': task.id,
       '@type': undefined,
+      '@model': 'dxos:model/document',
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {

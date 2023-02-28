@@ -22,7 +22,7 @@ export const sanitize = (type: Type, value: any, path: string, context: Sanitize
 
   for (const key of Object.keys(value)) {
     if (!type.fields[key]) {
-      context.errors.push(`Unexpected key: ${path}.${key}`);
+      // Ignore unknown fields.
       continue;
     }
 

@@ -5,7 +5,7 @@
 import React from 'react';
 import { useRoutes as useRouterRoutes } from 'react-router-dom';
 
-import { RootContainer } from '../app';
+import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
