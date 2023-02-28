@@ -44,7 +44,7 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
             onReset?.();
           }}
         >
-          <span className='mis-2'>Reset</span>
+          <span>Reset</span>
         </Button>
       </div>
     </div>
