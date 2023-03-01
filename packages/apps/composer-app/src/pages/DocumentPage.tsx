@@ -11,38 +11,7 @@ import { Composer } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
-const DocumentPageContent = withReactor(({ document }: { document: ComposerDocument }) => {
-  const { t } = useTranslation('composer');
-
-  return (
-    <div role='none' className='mli-auto pli-6 pbs-3 max-is-[50rem] min-bs-screen border border-neutral-500/20'>
-      <Input
-        key={document.id}
-        variant='subdued'
-        label={t('document title label')}
-        labelVisuallyHidden
-        placeholder={t('untitled document title')}
-        value={document.title ?? ''}
-        onChange={({ target: { value } }) => (document.title = value)}
-        size='lg'
-      />
-      <Composer
-        document={document.content}
-        slots={{
-          root: {
-            role: 'none',
-            className: 'mbs-4'
-          },
-          editor: {
-            className: 'pbe-20'
-          }
-        }}
-      />
-    </div>
-  );
-});
-
-export const DocumentPage = () => {
+export const DocumentPage = withReactor(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
@@ -50,7 +19,30 @@ export const DocumentPage = () => {
   return (
     <div role='none' className='pli-14 plb-11'>
       {document ? (
-        <DocumentPageContent document={document} />
+        <div role='none' className='mli-auto pli-6 pbs-3 max-is-[50rem] min-bs-screen border border-neutral-500/20'>
+          <Input
+            key={document.id}
+            variant='subdued'
+            label={t('document title label')}
+            labelVisuallyHidden
+            placeholder={t('untitled document title')}
+            value={document.title ?? ''}
+            onChange={({ target: { value } }) => (document.title = value)}
+            size='lg'
+          />
+          <Composer
+            document={document.content}
+            slots={{
+              root: {
+                role: 'none',
+                className: 'mbs-4'
+              },
+              editor: {
+                className: 'pbe-20'
+              }
+            }}
+          />
+        </div>
       ) : (
         <p role='alert' className='p-8 text-center'>
           {t('loading document message')}
@@ -58,4 +50,4 @@ export const DocumentPage = () => {
       )}
     </div>
   );
-};
+});
