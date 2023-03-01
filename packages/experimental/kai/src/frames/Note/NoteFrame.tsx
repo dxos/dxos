@@ -6,7 +6,6 @@ import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Document } from '@dxos/echo-schema';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { useQuery, useSubscriptionEffect } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
@@ -32,7 +31,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
   // TODO(burdon): Memoize and update existing map.
   return notes
     .map((note) => {
-      const location = getItemLocation(board, note.id);
+      const location = getItemLocation(board, note.id); // TODO(burdon): See query below.
       if (!location) {
         return undefined;
       }
@@ -54,12 +53,10 @@ export const NoteFrame = () => {
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
   const boards = useQuery(space, NoteBoard.filter());
-  const notes = useQuery(
-    space,
-    (object: Document) =>
-      !!(board !== undefined && object.__typename === Note.type.name && getItemLocation(board, object.id)),
-    [board]
-  ) as Note[];
+  const notes = useQuery(space, Note.filter());
+
+  const n: Note[] = notes;
+  console.log(n);
 
   // Rerender when offset, zoom changed.
   const [, forceUpdate] = useReducer((x) => x + 1, 0);

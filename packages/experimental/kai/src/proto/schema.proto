@@ -102,6 +102,13 @@ message Document {
   string tag = 3;
 }
 
+message DocumentStack {
+  option (object) = true;
+
+  string title = 1;
+  repeated Document documents = 2;
+}
+
 message Message {
   option (object) = true;
 

@@ -251,6 +251,7 @@ message Runtime {
       optional string server = 2;
     }
 
+    // TODO(burdon): Delete.
     message Dxns {
       /// DXNS endpoint.
       optional string server = 1;

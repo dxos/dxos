@@ -14,9 +14,10 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
+  Stack,
   Sword,
   Table,
-  Wall
+  Tray
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -26,17 +27,18 @@ import { useModules } from '@dxos/react-metagraph';
 import {
   CalendarFrame,
   ChessFrame,
-  StackFrame,
   Document,
   ExplorerFrame,
   File,
   KanbanFrame,
   MapFrame,
+  MasonryFrame,
   Note,
   SketchFrame,
   TableFrame,
   TaskFrame,
-  SandboxFrame
+  SandboxFrame,
+  StackFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -56,14 +58,14 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.mosaic',
+      id: 'dxos.module.frame.masonry',
       type: 'dxos:type/frame',
-      displayName: 'Mosaic',
+      displayName: 'Inbox',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Wall,
-      Component: StackFrame
+      Icon: Tray,
+      Component: MasonryFrame
     }
   },
   {
@@ -127,6 +129,18 @@ const defs: FrameDef[] = [
       Icon: Article,
       Component: Document.Frame,
       Tile: Document.Tile
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.stack',
+      type: 'dxos:type/frame',
+      displayName: 'Stacks',
+      description: 'Structured documents.'
+    },
+    runtime: {
+      Icon: Stack,
+      Component: StackFrame
     }
   },
   {
@@ -220,15 +234,16 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.note';
+export const defaultFrameId = 'dxos.module.frame.stack';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.mosaic',
+  'dxos.module.frame.masonry',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
+  'dxos.module.frame.note',
   'dxos.module.frame.document',
-  'dxos.module.frame.note'
+  'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

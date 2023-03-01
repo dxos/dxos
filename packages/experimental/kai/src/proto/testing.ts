@@ -161,15 +161,14 @@ export class Generator {
 // TODO(burdon): Text initial state isn't replicated.
 // TODO(burdon): Factor out into TextModel.
 const createTextObjectContent = (content: Text, sentences = 5) => {
+  const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
+    schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
+    schema.node('paragraph')
+  ]);
+  paragraphs.pop();
+
   // https://prosemirror.net/docs/guide/#doc
-  const doc = schema.node(
-    'doc',
-    null,
-    range({ min: 1, max: 5 }).flatMap(() => [
-      schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
-      schema.node('paragraph')
-    ])
-  );
+  const doc = schema.node('doc', null, paragraphs);
 
   // TODO(burdon): Cannot update until saved.
   // TODO(burdon): Configure 'content' field.
