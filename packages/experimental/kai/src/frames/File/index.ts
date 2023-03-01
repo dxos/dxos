@@ -5,3 +5,5 @@
 import { FileFrame } from './FileFrame';
 
 export default FileFrame;
+
+export * from './FileList';

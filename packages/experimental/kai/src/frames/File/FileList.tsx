@@ -37,7 +37,13 @@ const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
   );
 };
 
-export const FileList = () => {
+export type FileListProps = {
+  onSelect?: (objectId: string) => void;
+};
+
+// TODO(burdon): Separate Tile from component.
+// TODO(burdon): Download optional.
+export const FileList: FC<FileListProps> = ({ onSelect }) => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
@@ -50,7 +56,12 @@ export const FileList = () => {
   }
 
   const handleSelect = (objectId: string) => {
-    navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
+    if (onSelect) {
+      onSelect(objectId);
+    } else {
+      // TODO(burdon): Factor out (based on context).
+      navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
+    }
   };
 
   const handleUpdate = async (objectId: string, text: string) => {

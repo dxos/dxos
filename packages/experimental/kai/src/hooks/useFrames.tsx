@@ -14,10 +14,10 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
+  Monitor,
   Stack,
   Sword,
-  Table,
-  Tray
+  Table
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -58,13 +58,13 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.masonry',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
-      displayName: 'Inbox',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Tray,
+      Icon: Monitor,
       Component: MasonryFrame
     }
   },
@@ -109,7 +109,7 @@ const defs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.calendar',
       type: 'dxos:type/frame',
-      displayName: 'Events',
+      displayName: 'Calendar',
       description: 'Calendar and time management tools.'
 
     },
@@ -211,7 +211,8 @@ const defs: FrameDef[] = [
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
       displayName: 'Chess',
-      description: 'Peer-to-peer and engine powered games.'
+      description: 'Peer-to-peer and engine powered games.',
+      tags: ['community']
     },
     runtime: {
       Icon: Sword,
@@ -234,11 +235,12 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.document';
+// TODO(burdon): Make switchable based on dev/prod mode.
+export const defaultFrameId = 'dxos.module.frame.stack';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.masonry',
+  'dxos.module.frame.dashboard',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',

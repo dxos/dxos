@@ -45,8 +45,14 @@ message Link {
 // Objects
 //
 
+message Table {
+  option (object) = true;
+
+  string type = 1;
+}
+
 message Organization {
-  option (object) = true; // TODO(burdon): Fix protobuf plugin.
+  option (object) = true;
 
   string name = 1;
   string description = 2;
@@ -73,6 +79,13 @@ message Task {
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
+}
+
+message TaskList {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 2;
 }
 
 message Project {
@@ -161,7 +174,7 @@ message File {
   option (object) = true;
 
   string name = 1;
-  string timestamp = 2;
+  string timestamp = 2;  // TODO(burdon): Common metadata.
   string cid = 3;
 }
 
