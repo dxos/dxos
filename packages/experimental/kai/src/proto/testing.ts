@@ -37,7 +37,7 @@ export class Generator {
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
-      documents: { min: 1, max: 3 }
+      documents: { min: 2, max: 5 }
     }
   ) {}
 
