@@ -164,7 +164,9 @@ const SidebarContent = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
-    navigate(getPath(space));
+    const document = await space.db.add(new ComposerDocument());
+    document.content = new Text(); // TODO(burdon): Make automatic?
+    return navigate(getPath(space, document));
   };
 
   const handleJoinSpace = () => {

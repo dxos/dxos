@@ -39,16 +39,6 @@ export const Routes = () => {
       ]
     },
     {
-      path: '/:spaceKey',
-      element: <DocumentLayout />,
-      children: [
-        {
-          path: '/:spaceKey',
-          element: <FirstRunPage />
-        }
-      ]
-    },
-    {
       path: '/:spaceKey/:docKey',
       element: <DocumentLayout />,
       children: [
