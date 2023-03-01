@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -47,9 +45,12 @@ export class DatabaseRouter {
     return this._schema;
   }
 
-  setSchema(schema: EchoSchema) {
-    assert(!this._schema);
-    this._schema = schema;
+  addSchema(schema: EchoSchema) {
+    if (!schema) {
+      this._schema = schema;
+    } else {
+      this._schema?.mergeSchema(schema);
+    }
   }
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
