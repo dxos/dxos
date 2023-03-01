@@ -57,7 +57,7 @@ export class EchoDatabase {
   }
 
   // TODO(burdon): Return type via generic?
-  getObjectById(id: string) {
+  getObjectById<T>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
@@ -66,7 +66,7 @@ export class EchoDatabase {
       return undefined;
     }
 
-    return obj;
+    return obj as T;
   }
 
   /**
