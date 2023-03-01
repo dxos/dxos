@@ -20,7 +20,6 @@ import {
 import {
   Button,
   buttonStyles,
-  defaultDisabled,
   DensityProvider,
   ElevationProvider,
   getSize,
@@ -55,7 +54,10 @@ const DocumentTreeItem = withReactor(({ document, linkTo }: { document: Composer
           <FileText weight='regular' className={mx(getSize(4), 'mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           <ListItemEndcap className='is-6 flex items-center'>
-            <Circle weight='fill' className={mx(getSize(3), 'text-primary-500', !active && 'invisible')} />
+            <Circle
+              weight='fill'
+              className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}
+            />
           </ListItemEndcap>
         </Link>
       </TreeItemHeading>
@@ -89,10 +91,11 @@ const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
     <TreeItem
       collapsible
       open={open}
-      onOpenChange={(nextOpen) => setOpen(hasActiveDocument ? true : nextOpen)}
+      onOpenChange={setOpen}
       slots={{
         root: { className: 'mbe-2' },
-        ...(hasActiveDocument && { openTrigger: { className: defaultDisabled } })
+        ...(hasActiveDocument &&
+          !open && { openTriggerIcon: { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' } })
       }}
     >
       <div role='none' className='flex mis-1 items-start'>
@@ -134,7 +137,7 @@ const DocumentTree = () => {
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
   return (
-    <div className='grow pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow plb-2 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
@@ -168,8 +171,8 @@ const SidebarContent = () => {
     <ThemeContext.Provider value={{ themeVariant: 'os' }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
-          <div role='none' className='flex flex-col bs-full gap-2 plb-2'>
-            <h1 className={mx('shrink-0 font-system-medium text-lg pli-2')}>{t('current app name')}</h1>
+          <div role='none' className='flex flex-col bs-full plb-2'>
+            <h1 className={mx('shrink-0 font-system-medium text-lg pli-3')}>{t('current app name')}</h1>
             <DocumentTree />
             <div role='none' className='shrink-0 flex flex-wrap gap-1 pli-1.5'>
               <Button className='grow gap-1' onClick={handleJoinSpace}>

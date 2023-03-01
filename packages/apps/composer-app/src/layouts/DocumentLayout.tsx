@@ -17,7 +17,10 @@ export const DocumentLayout = () => {
   return (
     <PanelSidebarProvider
       slots={{
-        content: { children: <SidebarContent />, className: mx(defaultOsButtonColors, shadow, 'backdrop-blur') },
+        content: {
+          children: <SidebarContent />,
+          className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible')
+        },
         main: { role: 'main' }
       }}
     >
