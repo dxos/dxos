@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -41,15 +39,14 @@ export class DatabaseRouter {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Item<any>[] }>();
 
-  private _schema?: EchoSchema;
+  private readonly _schema = EchoSchema.fromJson('{}');
 
   get schema(): EchoSchema | undefined {
     return this._schema;
   }
 
-  setSchema(schema: EchoSchema) {
-    assert(!this._schema);
-    this._schema = schema;
+  addSchema(schema: EchoSchema) {
+    this._schema.mergeSchema(schema);
   }
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
