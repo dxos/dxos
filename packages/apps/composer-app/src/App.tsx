@@ -23,7 +23,7 @@ import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations, ShellProvider } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
-import { Routes } from './Routes';
+import { Routes } from './routes/Routes';
 import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());

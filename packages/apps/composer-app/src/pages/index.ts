@@ -3,3 +3,4 @@
 //
 
 export * from './DocumentPage';
+export * from './FirstRunPage';
