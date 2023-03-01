@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DndContext } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Plus, Trash } from 'phosphor-react';
-import React, { FC, ReactNode, useEffect, useRef } from 'react';
+import React, { FC, ForwardedRef, forwardRef, ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, DropdownMenu, DropdownMenuItem, getSize, Input, mx } from '@dxos/react-components';
+import { Button, DragEndEvent, DropdownMenu, DropdownMenuItem, getSize, Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -55,6 +59,27 @@ export const StackFrame = withReactor(() => {
     }
   };
 
+  // TODO(burdon): Error if dragging down.
+  const [activeId, setActiveId] = useState<string>();
+  const handleDragStart = (event: DragEndEvent) => {
+    setActiveId(event.active?.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (stack && active && over && active.id !== over.id) {
+      const activeIndex = stack.documents.findIndex((document) => document.id === active.id);
+      const activeDocument = stack.documents[activeIndex];
+      stack.documents.splice(activeIndex, 1);
+
+      const overIndex = stack.documents.findIndex((document) => document.id === over.id);
+      const delta = activeIndex <= overIndex ? 1 : 0;
+      stack.documents.splice(overIndex + delta, 0, activeDocument);
+    }
+
+    setActiveId(undefined);
+  };
+
   if (!stack) {
     return null;
   }
@@ -87,78 +112,114 @@ export const StackFrame = withReactor(() => {
           </StackRow>
 
           {/* TODO(burdon): Hide while typing. */}
-          {stack.documents.map((document, i) => (
-            <StackRow
-              key={document.id}
-              className='border-b'
-              showMenu
-              onCreate={() => handleInsertSection(i)}
-              onDelete={() => handleDeleteSection(i)}
+          <DndContext modifiers={[restrictToVerticalAxis]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <SortableContext
+              strategy={verticalListSortingStrategy}
+              items={stack.documents.map((document) => document.id)}
             >
-              <Composer
-                document={document.content}
-                slots={{
-                  root: { className: 'grow' },
-                  editor: {
-                    className: 'kai-composer z-0 text-black text-xl md:text-base',
-                    spellCheck
-                  }
-                }}
-              />
-            </StackRow>
-          ))}
+              {stack.documents.map((document, i) => (
+                <SortableStackRow
+                  key={document.id}
+                  id={document.id}
+                  className='py-6 border-b'
+                  showMenu
+                  onCreate={() => handleInsertSection(i)}
+                  onDelete={() => handleDeleteSection(i)}
+                >
+                  <Composer
+                    document={document.content}
+                    slots={{
+                      root: { className: 'grow' },
+                      editor: {
+                        className: 'kai-composer z-0 text-black text-xl md:text-base',
+                        spellCheck
+                      }
+                    }}
+                  />
+                </SortableStackRow>
+              ))}
 
-          <StackRow showMenu onCreate={() => handleInsertSection(-1)} />
+              {/* <DragOverlay>{activeId ? <StackRow>{activeId}</StackRow> : null}</DragOverlay> */}
+            </SortableContext>
+          </DndContext>
+
+          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(-1)} />
         </div>
       </div>
     </div>
   );
 });
 
-const StackRow: FC<{
+type StackRowProps = {
+  style?: any;
+  dragAttributes?: any;
   children?: ReactNode;
+  Handle?: JSX.Element;
   className?: string;
   showMenu?: boolean;
   onCreate?: () => void;
   onDelete?: () => void;
-}> = ({ children, showMenu, className, onCreate, onDelete }) => {
-  return (
-    <div className={mx('group flex mx-6 md:mx-0 py-4', className)}>
-      <div className='hidden md:flex w-24 text-gray-400'>
-        {showMenu && (
-          <div className='flex ml-6 invisible group-hover:visible'>
-            <div>
-              <DropdownMenu
-                trigger={
-                  <Button variant='ghost' className='p-1' onClick={onCreate}>
-                    <Plus className={getSize(4)} />
-                  </Button>
-                }
-                slots={{ content: { className: 'z-50' } }}
-              >
-                {onCreate && (
-                  <DropdownMenuItem onClick={onCreate}>
-                    <Plus className={getSize(5)} />
-                    <span className='mis-2'>Insert section</span>
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem onClick={onDelete}>
-                    <Trash className={getSize(5)} />
-                    <span className='mis-2'>Remove section</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenu>
-            </div>
-            <div className='p-1 cursor-pointer'>
-              <DotsSixVertical className={getSize(6)} />
-            </div>
-          </div>
-        )}
-      </div>
-      <div className='flex flex-1 mr-2 md:mr-16'>{children}</div>
+};
+
+const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...rest }) => {
+  // https://docs.dndkit.com/presets/sortable/usesortable
+  const { attributes, listeners, transform, transition, setNodeRef } = useSortable({ id });
+  const t = transform ? Object.assign(transform, { scaleY: 1 }) : undefined;
+
+  const Handle = (
+    <div className='p-1 cursor-pointer'>
+      <button {...attributes} {...listeners}>
+        <DotsSixVertical className={getSize(6)} />
+      </button>
     </div>
   );
+
+  return (
+    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} Handle={Handle} {...rest} />
+  );
 };
+
+const StackRow = forwardRef(
+  (
+    { children, Handle, style, dragAttributes, showMenu, className, onCreate, onDelete }: StackRowProps,
+    ref: ForwardedRef<HTMLDivElement>
+  ) => {
+    return (
+      <div ref={ref} style={style} className={mx('group flex mx-6 md:mx-0', className)}>
+        <div className='hidden md:flex w-24 text-gray-400'>
+          {showMenu && (
+            <div className='flex invisible group-hover:visible ml-6 -mt-0.5'>
+              <div>
+                <DropdownMenu
+                  trigger={
+                    <Button variant='ghost' className='p-1' onClick={onCreate}>
+                      <Plus className={getSize(4)} />
+                    </Button>
+                  }
+                  slots={{ content: { className: 'z-50' } }}
+                >
+                  {onCreate && (
+                    <DropdownMenuItem onClick={onCreate}>
+                      <Plus className={getSize(5)} />
+                      <span className='mis-2'>Insert section</span>
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem onClick={onDelete}>
+                      <Trash className={getSize(5)} />
+                      <span className='mis-2'>Remove section</span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenu>
+              </div>
+              {Handle}
+            </div>
+          )}
+        </div>
+        <div className='flex flex-1 mr-2 md:mr-16'>{children}</div>
+      </div>
+    );
+  }
+);
 
 export default StackFrame;
