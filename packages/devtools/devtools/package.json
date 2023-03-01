@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -32,7 +32,6 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
-    "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",

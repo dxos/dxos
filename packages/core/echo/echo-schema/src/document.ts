@@ -33,13 +33,7 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => {
-    if (obj instanceof Text) {
-      return obj.toString();
-    } else {
-      return { '@id': id };
-    }
-  }
+  onRef: (id, obj) => ({ '@id': id })
 };
 
 /**
@@ -122,6 +116,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
     return {
       '@id': this.id,
       '@type': this.__typename,
+      '@model': DocumentModel.meta.type,
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
       })
@@ -158,6 +153,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
     return {
       '@id': this.id,
       '@type': this.__typename,
+      '@model': DocumentModel.meta.type,
       ...convert(this._model?.toObject())
     };
   }

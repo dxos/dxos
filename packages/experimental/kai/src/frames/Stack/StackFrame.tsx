@@ -62,42 +62,45 @@ export const StackFrame = withReactor(() => {
   return (
     <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full md:max-w-[800px]'>
-        <div ref={scrollRef} className='m-0 md:m-4 pb-8 overflow-y-auto bg-paper-bg shadow-1'>
-          <Input
-            variant='subdued'
-            label='Title'
-            labelVisuallyHidden
-            placeholder='Title'
-            slots={{
-              root: {
-                className: 'px-20 pt-8 bg-paper-bg'
-              },
-              input: {
-                className: 'p-2 border-0 text-2xl text-black',
-                spellCheck,
-                autoFocus: true
-              }
-            }}
-            value={stack.title ?? ''}
-            onChange={(event) => {
-              stack.title = event.target.value;
-            }}
-          />
+        <div ref={scrollRef} className='m-0 md:m-4 py-12 overflow-y-auto bg-paper-bg shadow-1'>
+          <StackRow>
+            <Input
+              variant='subdued'
+              label='Title'
+              labelVisuallyHidden
+              placeholder='Title'
+              slots={{
+                root: {
+                  className: 'w-full'
+                },
+                input: {
+                  className: 'border-0 text-2xl text-black',
+                  autoFocus: true,
+                  spellCheck
+                }
+              }}
+              value={stack.title ?? ''}
+              onChange={(event) => {
+                stack.title = event.target.value;
+              }}
+            />
+          </StackRow>
 
           {/* TODO(burdon): Hide while typing. */}
           {stack.documents.map((document, i) => (
             <StackRow
               key={document.id}
               className='border-b'
+              showMenu
               onCreate={() => handleInsertSection(i)}
               onDelete={() => handleDeleteSection(i)}
             >
               <Composer
                 document={document.content}
                 slots={{
-                  root: { className: 'grow mb-4' },
+                  root: { className: 'grow' },
                   editor: {
-                    className: mx('kai-composer', 'z-0 text-black text-xl md:text-base'),
+                    className: 'kai-composer z-0 text-black text-xl md:text-base',
                     spellCheck
                   }
                 }}
@@ -105,48 +108,55 @@ export const StackFrame = withReactor(() => {
             </StackRow>
           ))}
 
-          <StackRow onCreate={() => handleInsertSection(-1)} />
+          <StackRow showMenu onCreate={() => handleInsertSection(-1)} />
         </div>
       </div>
     </div>
   );
 });
 
-const StackRow: FC<{ children?: ReactNode; className?: string; onCreate: () => void; onDelete?: () => void }> = ({
-  children,
-  className,
-  onCreate,
-  onDelete
-}) => {
+const StackRow: FC<{
+  children?: ReactNode;
+  className?: string;
+  showMenu?: boolean;
+  onCreate?: () => void;
+  onDelete?: () => void;
+}> = ({ children, showMenu, className, onCreate, onDelete }) => {
   return (
-    <div className={mx('group flex pr-16 pt-8 pb-4', className)}>
-      <div className='flex w-8 -mt-1 ml-6 mr-8 text-gray-400 invisible group-hover:visible'>
-        <div>
-          <DropdownMenu
-            trigger={
-              <Button variant='ghost' className='p-1' onClick={onCreate}>
-                <Plus className={getSize(4)} />
-              </Button>
-            }
-            slots={{ content: { className: 'z-50' } }}
-          >
-            <DropdownMenuItem onClick={onCreate}>
-              <Plus className={getSize(5)} />
-              <span className='mis-2'>Insert section</span>
-            </DropdownMenuItem>
-            {onDelete && (
-              <DropdownMenuItem onClick={onDelete}>
-                <Trash className={getSize(5)} />
-                <span className='mis-2'>Remove section</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenu>
-        </div>
-        <div className='p-1 cursor-pointer'>
-          <DotsSixVertical className={getSize(6)} />
-        </div>
+    <div className={mx('group flex mx-6 md:mx-0 py-4', className)}>
+      <div className='hidden md:flex w-24 text-gray-400'>
+        {showMenu && (
+          <div className='flex ml-6 invisible group-hover:visible'>
+            <div>
+              <DropdownMenu
+                trigger={
+                  <Button variant='ghost' className='p-1' onClick={onCreate}>
+                    <Plus className={getSize(4)} />
+                  </Button>
+                }
+                slots={{ content: { className: 'z-50' } }}
+              >
+                {onCreate && (
+                  <DropdownMenuItem onClick={onCreate}>
+                    <Plus className={getSize(5)} />
+                    <span className='mis-2'>Insert section</span>
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem onClick={onDelete}>
+                    <Trash className={getSize(5)} />
+                    <span className='mis-2'>Remove section</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenu>
+            </div>
+            <div className='p-1 cursor-pointer'>
+              <DotsSixVertical className={getSize(6)} />
+            </div>
+          </div>
+        )}
       </div>
-      {children}
+      <div className='flex flex-1 mr-2 md:mr-16'>{children}</div>
     </div>
   );
 };

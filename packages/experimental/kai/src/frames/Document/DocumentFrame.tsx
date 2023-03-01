@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useQuery, withReactor } from '@dxos/react-client';
-import { Input, mx } from '@dxos/react-components';
+import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -36,41 +36,40 @@ export const DocumentFrame = withReactor(() => {
   return (
     <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full md:max-w-[800px]'>
-        <div className='m-0 md:m-4 overflow-y-auto bg-paper-bg shadow-1'>
-          <Input
-            variant='subdued'
-            label='Title'
-            labelVisuallyHidden
-            placeholder='Title'
-            slots={{
-              root: {
-                className: 'px-10 pt-8 pb-4 bg-paper-bg'
-              },
-              input: {
-                className: 'p-2 border-0 text-2xl text-black',
-                spellCheck
-              }
-            }}
-            value={document.title}
-            onChange={(event) => {
-              document.title = event.target.value;
-            }}
-          />
+        <div className='m-0 md:m-4 py-12 overflow-y-auto bg-paper-bg shadow-1'>
+          <div className='mx-6 md:mx-16'>
+            <Input
+              variant='subdued'
+              label='Title'
+              labelVisuallyHidden
+              placeholder='Title'
+              slots={{
+                root: {
+                  className: 'w-full pb-8'
+                },
+                input: {
+                  className: 'border-0 text-2xl text-black',
+                  autoFocus: true,
+                  spellCheck
+                }
+              }}
+              value={document.title}
+              onChange={(event) => {
+                document.title = event.target.value;
+              }}
+            />
 
-          <Composer
-            document={document.content}
-            slots={{
-              root: { className: 'grow' },
-              editor: {
-                className: mx(
-                  'kai-composer',
-                  'z-0 text-black h-full w-full min-h-[12em] px-12 min-bs-[12em]',
-                  'text-xl md:text-base bg-paper-bg'
-                ),
-                spellCheck
-              }
-            }}
-          />
+            <Composer
+              document={document.content}
+              slots={{
+                root: { className: 'grow' },
+                editor: {
+                  className: 'kai-composer z-0 text-black text-xl md:text-base',
+                  spellCheck
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
