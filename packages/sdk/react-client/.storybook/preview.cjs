@@ -22,20 +22,22 @@ export const globalTypes = {
       // Array of options
       items: [
         { value: 'light', icon: 'circlehollow', title: 'light' },
-        { value: 'dark', icon: 'circle', title: 'dark' },
+        { value: 'dark', icon: 'circle', title: 'dark' }
       ],
       // Property that specifies if the name of the item will be displayed
-      showName: true,
-    },
-  },
-}
+      showName: true
+    }
+  }
+};
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
-    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn)})
-}
+
+  useEffect(() => {
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
+  }, [theme]);
+
+  return createElement(ThemeProvider, { children: StoryFn() });
+};
 
 export const decorators = [withTheme];

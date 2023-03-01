@@ -3,6 +3,8 @@
 //
 
 import '@dxosTheme';
+import { StrictMode } from 'react';
+
 import {
   Client,
   ClientServicesProvider,
@@ -31,13 +33,16 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const client = new Client({ config, services });
   await client.initialize();
 
-  // TODO(wittjosiah): StrictMode.
   root.render(
     createElement(
-      ThemeProvider,
-      { themeVariant: 'os', resourceExtensions: [osTranslations] },
-      // NOTE: Using context provider directly to avoid duplicate banners being logged.
-      createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
+      StrictMode,
+      {},
+      createElement(
+        ThemeProvider,
+        { themeVariant: 'os', resourceExtensions: [osTranslations] },
+        // NOTE: Using context provider directly to avoid duplicate banners being logged.
+        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
+      )
     )
   );
 };

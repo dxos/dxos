@@ -1,6 +1,6 @@
 import React, { createElement, useEffect } from 'react';
 import { ThemeProvider } from '@dxos/react-components';
-import {osTranslations} from '../src'
+import { osTranslations } from '../src';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -23,23 +23,25 @@ export const globalTypes = {
       // Array of options
       items: [
         { value: 'light', icon: 'circlehollow', title: 'light' },
-        { value: 'dark', icon: 'circle', title: 'dark' },
+        { value: 'dark', icon: 'circle', title: 'dark' }
       ],
       // Property that specifies if the name of the item will be displayed
-      showName: true,
-    },
-  },
-}
+      showName: true
+    }
+  }
+};
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
-    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
+
+  useEffect(() => {
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
+  }, [theme]);
+
   return createElement(ThemeProvider, {
     resourceExtensions: [osTranslations],
-    children: createElement(StoryFn)
-  })
-}
+    children: StoryFn()
+  });
+};
 
 export const decorators = [withTheme];
