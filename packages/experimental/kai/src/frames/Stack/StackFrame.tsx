@@ -7,7 +7,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Plus, Trash } from 'phosphor-react';
-import React, { FC, ForwardedRef, forwardRef, ReactNode, useEffect, useRef, useState } from 'react';
+import React, { FC, ForwardedRef, forwardRef, ReactNode, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useQuery, withReactor } from '@dxos/react-client';
@@ -59,12 +59,6 @@ export const StackFrame = withReactor(() => {
     }
   };
 
-  // TODO(burdon): Error if dragging down.
-  const [activeId, setActiveId] = useState<string>();
-  const handleDragStart = (event: DragEndEvent) => {
-    setActiveId(event.active?.id as string);
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (stack && active && over && active.id !== over.id) {
@@ -76,8 +70,6 @@ export const StackFrame = withReactor(() => {
       const delta = activeIndex <= overIndex ? 1 : 0;
       stack.documents.splice(overIndex + delta, 0, activeDocument);
     }
-
-    setActiveId(undefined);
   };
 
   if (!stack) {
@@ -112,7 +104,7 @@ export const StackFrame = withReactor(() => {
           </StackRow>
 
           {/* TODO(burdon): Hide while typing. */}
-          <DndContext modifiers={[restrictToVerticalAxis]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
             <SortableContext
               strategy={verticalListSortingStrategy}
               items={stack.documents.map((document) => document.id)}
@@ -164,7 +156,7 @@ type StackRowProps = {
 const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...rest }) => {
   // https://docs.dndkit.com/presets/sortable/usesortable
   const { attributes, listeners, transform, transition, setNodeRef } = useSortable({ id });
-  const t = transform ? Object.assign(transform, { scaleY: 1 }) : undefined;
+  const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   const Handle = (
     <div className='p-1 cursor-pointer'>
