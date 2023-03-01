@@ -14,10 +14,10 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
+  Monitor,
   Stack,
   Sword,
-  Table,
-  Tray
+  Table
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -58,13 +58,13 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.masonry',
+      id: 'dxos.module.frame.matrix',
       type: 'dxos:type/frame',
-      displayName: 'Inbox',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Tray,
+      Icon: Monitor,
       Component: MasonryFrame
     }
   },
@@ -234,16 +234,16 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.matrix';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.masonry',
+  'dxos.module.frame.matrix',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',
-  'dxos.module.frame.document',
-  'dxos.module.frame.stack'
+  'dxos.module.frame.document'
+  // 'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

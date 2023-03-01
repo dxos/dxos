@@ -86,9 +86,14 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
+  const sorter = (
+    { module: { displayName: a } }: FrameDef | BotDef,
+    { module: { displayName: b } }: FrameDef | BotDef
+  ) => (a! < b! ? -1 : a! > b! ? 1 : 0);
+
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex my-8 justify-center'>
+      <div className='flex py-8 justify-center'>
         <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
           <Searchbar />
           <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
@@ -108,23 +113,25 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
         <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
-            {Array.from(modules.values()).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-              <Tile
-                key={id!}
-                id={id!}
-                label={displayName ?? id!}
-                description={description}
-                slots={slots}
-                Icon={Icon}
-                onSelect={handleSelect}
-                active={
-                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                    (active) => active === id
-                  )
-                }
-              />
-            ))}
+          <div className='flex flex-col grid-cols-1 gap-6 lg:grid lg:grid-cols-3 pb-24'>
+            {Array.from(modules.values())
+              .sort(sorter)
+              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+                <Tile
+                  key={id!}
+                  id={id!}
+                  label={displayName ?? id!}
+                  description={description}
+                  slots={slots}
+                  Icon={Icon}
+                  onSelect={handleSelect}
+                  active={
+                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                      (active) => active === id
+                    )
+                  }
+                />
+              ))}
           </div>
         </div>
       </div>
