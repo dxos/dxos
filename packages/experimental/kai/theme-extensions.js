@@ -36,6 +36,10 @@ module.exports = {
       column: '390px'
     },
 
+    listStyleType: {
+      square: 'square'
+    },
+
     // TODO(burdon): Levels.
     // TODO(burdon): Custom or redefine what shadow-md means?
     // https://tailwindcss.com/docs/box-shadow

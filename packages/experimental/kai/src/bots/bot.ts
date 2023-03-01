@@ -2,41 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Document, EchoDatabase, Subscription, TypeFilter } from '@dxos/echo-schema';
+import assert from 'assert';
+
+import { EchoDatabase } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 /**
  * Adds info to records.
  */
-// TODO(burdon): Bot should not be typed by document.
-export class Bot<T extends Document> {
-  protected _subscription?: Subscription;
+export abstract class Bot {
+  protected _db?: EchoDatabase;
 
-  // prettier-ignore
-  constructor(
-    protected readonly _db: EchoDatabase,
-    protected readonly _filter: TypeFilter<T>
-  ) {}
-
-  start() {
-    stop();
-
-    // TODO(burdon): Update when object mutated.
-    const query = this._db.query(this._filter);
-    this._subscription = query.subscribe(async (query) => {
-      await Promise.all(
-        query.objects.map(async (object) => {
-          await this.onUpdate(object);
-        })
-      );
-    });
-
-    return this;
+  get db(): EchoDatabase {
+    assert(this._db);
+    return this._db;
   }
 
-  stop() {
-    this._subscription?.();
-    return this;
+  async init(db: EchoDatabase) {
+    this._db = db;
+    log('initializing...');
+    await this.onInit();
   }
 
-  async onUpdate(object: T): Promise<void> {}
+  async start() {
+    log('starting...');
+    return this.onStart();
+  }
+
+  async stop() {
+    log('stopping...');
+    return this.onStop();
+  }
+
+  async onInit(): Promise<void> {}
+
+  abstract onStart(): Promise<void>;
+  abstract onStop(): Promise<void>;
 }
