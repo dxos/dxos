@@ -216,13 +216,6 @@ const filterNamespaces = ({
 }) => {
   const filtered = pb.Root.fromJSON(toFilter.toJSON());
 
-  assert(
-    filtered.nestedArray.length === 1 &&
-      filtered.nestedArray[0].name === 'dxos' &&
-      filtered.nestedArray[0] instanceof pb.Namespace,
-    'Invalid root.'
-  );
-
   namespacesToRemove.forEach((namespace) => {
     const isNamespacePresent = !!base.lookup(namespace);
     const namespaceToRemove = filtered.lookup(namespace);
