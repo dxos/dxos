@@ -243,8 +243,8 @@ export const defaultFrames = [
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',
-  'dxos.module.frame.document'
-  // 'dxos.module.frame.stack'
+  'dxos.module.frame.document',
+  'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

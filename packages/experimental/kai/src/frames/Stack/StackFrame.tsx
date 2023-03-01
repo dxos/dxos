@@ -123,15 +123,13 @@ export const StackFrame = withReactor(() => {
                     slots={{
                       root: { className: 'grow' },
                       editor: {
-                        className: 'kai-composer z-0 text-black text-xl md:text-base',
+                        className: 'kai-composer z-0 md:text-base',
                         spellCheck
                       }
                     }}
                   />
                 </SortableStackRow>
               ))}
-
-              {/* <DragOverlay>{activeId ? <StackRow>{activeId}</StackRow> : null}</DragOverlay> */}
             </SortableContext>
           </DndContext>
 
@@ -144,6 +142,7 @@ export const StackFrame = withReactor(() => {
 
 type StackRowProps = {
   style?: any;
+  dragging?: boolean;
   dragAttributes?: any;
   children?: ReactNode;
   Handle?: JSX.Element;
@@ -155,7 +154,7 @@ type StackRowProps = {
 
 const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...rest }) => {
   // https://docs.dndkit.com/presets/sortable/usesortable
-  const { attributes, listeners, transform, transition, setNodeRef } = useSortable({ id });
+  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id });
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   const Handle = (
@@ -167,17 +166,24 @@ const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...rest }) =
   );
 
   return (
-    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} Handle={Handle} {...rest} />
+    <StackRow
+      ref={setNodeRef}
+      dragging={isDragging}
+      Handle={Handle}
+      style={{ transform: CSS.Transform.toString(t), transition }}
+      {...rest}
+    />
   );
 };
 
+// TODO(burdon): Remove transparency while dragging.
 const StackRow = forwardRef(
   (
-    { children, Handle, style, dragAttributes, showMenu, className, onCreate, onDelete }: StackRowProps,
+    { children, Handle, dragging, style, dragAttributes, showMenu, className, onCreate, onDelete }: StackRowProps,
     ref: ForwardedRef<HTMLDivElement>
   ) => {
     return (
-      <div ref={ref} style={style} className={mx('group flex mx-6 md:mx-0', className)}>
+      <div ref={ref} style={style} className={mx('group flex mx-6 md:mx-0', dragging && 'bg-zinc-100', className)}>
         <div className='hidden md:flex w-24 text-gray-400'>
           {showMenu && (
             <div className='flex invisible group-hover:visible ml-6 -mt-0.5'>
