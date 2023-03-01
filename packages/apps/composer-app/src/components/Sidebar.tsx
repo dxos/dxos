@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, CircleHalf, FilePlus, FileText, Intersect, Planet, StarFour } from 'phosphor-react';
+import { Circle, FileText, Intersect, Planet, Plus, Share, StarFour } from 'phosphor-react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
@@ -20,10 +20,10 @@ import {
 import {
   Button,
   buttonStyles,
+  defaultDisabled,
   DensityProvider,
   ElevationProvider,
   getSize,
-  Input,
   ListItemEndcap,
   mx,
   ThemeContext,
@@ -52,9 +52,9 @@ const DocumentTreeItem = withReactor(({ document, linkTo }: { document: Composer
           to={linkTo}
           className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
         >
-          <FileText weight='regular' className={mx(getSize(5), 'mbs-1.5')} />
+          <FileText weight='regular' className={mx(getSize(4), 'mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
-          <ListItemEndcap className='flex items-center'>
+          <ListItemEndcap className='is-6 flex items-center'>
             <Circle weight='fill' className={mx(getSize(3), 'text-primary-500', !active && 'invisible')} />
           </ListItemEndcap>
         </Link>
@@ -67,6 +67,7 @@ const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
   const documents = useQuery(space, ComposerDocument.filter());
   const { t } = useTranslation('composer');
   const navigate = useNavigate();
+  const shell = useShell();
   const { spaceKey, docKey } = useParams();
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
 
@@ -76,33 +77,44 @@ const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
     return navigate(getPath(space, document));
   }, [space, navigate]);
 
+  const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+
   const [open, setOpen] = useState(spaceKey === abbreviateKey(space.key));
 
   useEffect(() => {
-    setOpen(spaceKey === abbreviateKey(space.key));
+    spaceKey === abbreviateKey(space.key) && setOpen(true);
   }, [spaceKey]);
 
   return (
-    <TreeItem collapsible open={open} onOpenChange={setOpen} slots={{ root: { className: 'mbe-2' } }}>
-      <TreeItemHeading className='sr-only'>{space.properties.name ?? space.key.truncate()}</TreeItemHeading>
-      <div role='none' className='flex mis-1'>
-        <Input
-          variant='subdued'
-          label='Space name'
-          labelVisuallyHidden
-          value={space.properties.name ?? ''}
-          onChange={({ target: { value } }) => {
-            space.properties.name = value;
-          }}
-          placeholder={space.key.truncate()}
-          slots={{ root: { className: 'grow' } }}
-        />
-        <ListItemEndcap className='flex items-center'>
-          <CircleHalf
-            weight='fill'
-            className={mx(getSize(3), 'text-primary-500', !(hasActiveDocument && !open) && 'invisible')}
-          />
-        </ListItemEndcap>
+    <TreeItem
+      collapsible
+      open={open}
+      onOpenChange={(nextOpen) => setOpen(hasActiveDocument ? true : nextOpen)}
+      slots={{
+        root: { className: 'mbe-2' },
+        ...(hasActiveDocument && { openTrigger: { className: defaultDisabled } })
+      }}
+    >
+      <div role='none' className='flex mis-1 items-start'>
+        <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
+          {space.properties.name ?? space.key.truncate()}
+        </TreeItemHeading>
+        <Tooltip
+          content={t('view space invitations label', { ns: 'os' })}
+          tooltipLabelsTrigger
+          side='bottom'
+          zIndex='z-40'
+        >
+          <Button variant='ghost' className='shrink-0 pli-1' onClick={handleViewInvitations}>
+            <Share className={getSize(4)} />
+          </Button>
+        </Tooltip>
+        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
+          <Button variant='ghost' className='shrink-0 pli-1' onClick={handleCreate}>
+            <span className='sr-only'>{t('create document label')}</span>
+            <Plus className={getSize(4)} />
+          </Button>
+        </Tooltip>
       </div>
       <TreeItemBody>
         {documents.length > 0 && (
@@ -112,10 +124,6 @@ const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
             ))}
           </TreeBranch>
         )}
-        <Button variant='ghost' className='is-full gap-1 justify-start -mis-2.5' onClick={handleCreate}>
-          <FilePlus weight='regular' className={getSize(5)} />
-          <span>{t('create document label')}</span>
-        </Button>
       </TreeItemBody>
     </TreeItem>
   );
@@ -126,7 +134,7 @@ const DocumentTree = () => {
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
   return (
-    <div className='grow pli-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
