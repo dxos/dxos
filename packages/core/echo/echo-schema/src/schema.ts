@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
 import * as pb from 'protobufjs';
 
 import { DocumentModel } from '@dxos/document-model';
@@ -178,6 +179,17 @@ export class EchoSchema {
     return new EchoSchemaType(this._root.lookupType(name));
   }
 
+  mergeSchema(schema: EchoSchema) {
+    const rootToMerge = filterNamespaces({ base: this._root, toFilter: schema._root });
+    rootToMerge.nestedArray.forEach((nested) => {
+      this._root.add(nested);
+    });
+    Array.from(schema._prototypes.entries()).forEach(([name, prototype]) => {
+      assert(!this._prototypes.has(name), 'Names collision');
+      this._prototypes.set(name, prototype);
+    });
+  }
+
   /**
    * Called from generated code.
    */
@@ -189,3 +201,31 @@ export class EchoSchema {
     return this._prototypes.get(name);
   }
 }
+
+/**
+ * Deletes `namespacesToRemove` from `toFilter` that are already present in `base`.
+ */
+const filterNamespaces = ({
+  base,
+  toFilter,
+  namespacesToRemove = ['.dxos.schema']
+}: {
+  base: pb.Root;
+  toFilter: pb.Root;
+  namespacesToRemove?: string[];
+}) => {
+  const filtered = pb.Root.fromJSON(toFilter.toJSON());
+
+  namespacesToRemove.forEach((namespace) => {
+    const isNamespacePresent = !!base.lookup(namespace);
+    const namespaceToRemove = filtered.lookup(namespace);
+
+    if (isNamespacePresent && namespaceToRemove) {
+      const parentNamespace = namespace.split('.').slice(0, -1).join('.');
+      const parent = filtered.lookup(parentNamespace);
+      (parent as pb.Namespace)?.remove(namespaceToRemove);
+    }
+  });
+
+  return filtered;
+};
