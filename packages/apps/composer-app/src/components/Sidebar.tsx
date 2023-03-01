@@ -53,7 +53,7 @@ const DocumentTreeItem = withReactor(({ document, linkTo }: { document: Composer
           to={linkTo}
           className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
         >
-          <FileText weight='regular' className={mx(getSize(4), 'mbs-2')} />
+          <FileText weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           <ListItemEndcap className='is-6 flex items-center'>
             <Circle
