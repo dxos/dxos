@@ -56,6 +56,14 @@ const Tile: FC<{
   );
 };
 
+// Rank last if tags.
+// TODO(burdon): Create sections (e.g., Community).
+const len = (array?: any[]) => array?.length ?? 0;
+const sorter = (
+  { module: { displayName: a, tags: t1 } }: FrameDef | BotDef,
+  { module: { displayName: b, tags: t2 } }: FrameDef | BotDef
+) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
+
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
   const { space } = useAppRouter();
   const navigate = useNavigate();
@@ -85,11 +93,6 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
   };
 
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
-
-  const sorter = (
-    { module: { displayName: a } }: FrameDef | BotDef,
-    { module: { displayName: b } }: FrameDef | BotDef
-  ) => (a! < b! ? -1 : a! > b! ? 1 : 0);
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>

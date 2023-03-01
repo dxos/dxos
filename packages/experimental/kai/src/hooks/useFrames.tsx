@@ -58,7 +58,7 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.matrix',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
       displayName: 'Dashboard',
       description: 'Configurable tiles.'
@@ -109,7 +109,7 @@ const defs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.calendar',
       type: 'dxos:type/frame',
-      displayName: 'Events',
+      displayName: 'Calendar',
       description: 'Calendar and time management tools.'
 
     },
@@ -211,7 +211,8 @@ const defs: FrameDef[] = [
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
       displayName: 'Chess',
-      description: 'Peer-to-peer and engine powered games.'
+      description: 'Peer-to-peer and engine powered games.',
+      tags: ['community']
     },
     runtime: {
       Icon: Sword,
@@ -234,15 +235,11 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-<<<<<<< HEAD
-export const defaultFrameId = 'dxos.module.frame.matrix';
-=======
-export const defaultFrameId = 'dxos.module.frame.stack';
->>>>>>> main
+export const defaultFrameId = 'dxos.module.frame.dashboard';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.matrix',
+  'dxos.module.frame.dashboard',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',
