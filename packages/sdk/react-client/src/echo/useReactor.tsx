@@ -9,13 +9,13 @@ import {
   useContext,
   useEffect,
   useReducer,
-  useState,
   ForwardRefRenderFunction,
   forwardRef,
   ForwardedRef,
   ForwardRefExoticComponent,
   PropsWithoutRef,
-  RefAttributes
+  RefAttributes,
+  useMemo
 } from 'react';
 
 import { useClient } from '../client';
@@ -37,11 +37,13 @@ export const useReactor = (opts?: ReactorProps): UseRector => {
   const [, forceUpdate] = useReducer((tick) => tick + 1, 0);
 
   // Create subscription.
-  const [handle] = useState(() =>
-    client.echo.dbRouter.createSubscription(() => {
-      forceUpdate();
-      opts?.onChange?.(); // TODO(burdon): Pass in modified objects.
-    })
+  const handle = useMemo(
+    () =>
+      client.echo.dbRouter.createSubscription(() => {
+        forceUpdate();
+        opts?.onChange?.(); // TODO(burdon): Pass in modified objects.
+      }),
+    [client, forceUpdate]
   );
 
   // Cancel subscription on exit.
@@ -53,8 +55,8 @@ export const useReactor = (opts?: ReactorProps): UseRector => {
     return () => handle.unsubscribe();
   }, []);
 
-  // Watch accessed objects.
   return {
+    // Watch accessed objects.
     render: (component: ReactElement<any, any> | null) => {
       try {
         return component;
@@ -79,7 +81,7 @@ export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): F
   const Component = (props: P) => {
     const { render } = useReactor({
       onChange: () => {
-        // console.log('UPDATED');
+        console.log('UPDATED');
       }
     });
 

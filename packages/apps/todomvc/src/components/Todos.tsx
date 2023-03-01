@@ -67,6 +67,8 @@ export const Todos = withReactor(() => {
 
   const completedCount = allTodos.length - activeTodoCount;
 
+  console.log('[[list]]', todos);
+
   return (
     <div>
       <Header onKeyDown={list && handleNewTodoKeyDown} ref={inputRef} />

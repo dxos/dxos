@@ -22,6 +22,8 @@ export type ClientSpaceDecoratorOptions = {
   count?: number;
 };
 
+let init = false;
+
 /**
  * Storybook decorator to setup identity for n peers and join them into a single space.
  * The story is rendered n times, once for each peer and the space is passed to the story as an arg.
@@ -42,6 +44,10 @@ export const ClientSpaceDecorator =
 
     // TODO(wittjosiah): Remove useEffect?
     useAsyncEffect(async () => {
+      if (init) {
+        return;
+      }
+      init = true;
       await Promise.all(clients.map((client) => client.initialize()));
       log('initialized');
 
@@ -50,7 +56,11 @@ export const ClientSpaceDecorator =
         log('echo schema set');
       }
 
-      await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.name.firstName() })));
+      await Promise.all(
+        clients.map(
+          (client) => client.halo.identity ?? client.halo.createIdentity({ displayName: faker.name.firstName() })
+        )
+      );
       log('identity created');
 
       const space = await clients[0].echo.createSpace({ name: faker.animal.bird() });
@@ -88,10 +98,6 @@ export const ClientSpaceDecorator =
       );
 
       setSpaceKey(space.key);
-
-      return () => {
-        void Promise.all(clients.map((client) => client.destroy()));
-      };
     }, [clients, schema]);
 
     if (!spaceKey) {

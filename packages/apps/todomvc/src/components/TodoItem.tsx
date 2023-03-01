@@ -63,6 +63,8 @@ export const TodoItem = ({
     [setEditText]
   );
 
+  console.log('[[item]]', { title, completed, editing });
+
   return (
     <li className={cx({ completed, editing })} data-testid='todo'>
       <div className='view'>
