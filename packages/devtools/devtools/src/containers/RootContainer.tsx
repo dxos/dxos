@@ -8,6 +8,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useClientServices } from '@dxos/react-client';
 import { Button, TreeView, TreeViewItem } from '@dxos/react-components';
 
+import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
 // TODO(burdon): Restructure sections (panels).
@@ -21,14 +22,13 @@ const Footer = () => {
   return (
     <div className='flex flex-col shrink-0 m-2'>
       <Button
-        disabled={true}
         variant='outline'
         onClick={async () => {
           await services?.SystemService.reset();
         }}
         className='w-full'
       >
-        <span className='mis-2'>Reset</span>
+        <span className='mis-2'>Reset Storage</span>
       </Button>
     </div>
   );
@@ -57,7 +57,9 @@ export const RootContainer = () => {
       </div>
 
       <div className='flex flex-1 flex-col overflow-hidden bg-white'>
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </div>
     </div>
   );
