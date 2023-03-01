@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, FileText, Intersect, Planet, Plus, Share, StarFour } from 'phosphor-react';
+import { ArrowLineLeft, Circle, FileText, Intersect, PaperPlaneTilt, Planet, Plus, Sidebar } from 'phosphor-react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
@@ -12,12 +12,14 @@ import {
   Space,
   Text,
   useClient,
+  useIdentity,
   useQuery,
   useSpace,
   useSpaces,
   withReactor
 } from '@dxos/react-client';
 import {
+  Avatar,
   Button,
   buttonStyles,
   DensityProvider,
@@ -109,7 +111,7 @@ const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
           zIndex='z-40'
         >
           <Button variant='ghost' className='shrink-0 pli-1' onClick={handleViewInvitations}>
-            <Share className={getSize(4)} />
+            <PaperPlaneTilt className={getSize(4)} />
           </Button>
         </Tooltip>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
@@ -137,7 +139,7 @@ const DocumentTree = () => {
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
   return (
-    <div className='grow plb-2 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
@@ -157,6 +159,8 @@ const SidebarContent = () => {
   const { t } = useTranslation('composer');
   const { spaceKey } = useParams();
   const space = useSpace(spaceKey ? PublicKey.fromHex(spaceKey) : undefined);
+  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const identity = useIdentity();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -171,19 +175,58 @@ const SidebarContent = () => {
     <ThemeContext.Provider value={{ themeVariant: 'os' }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
-          <div role='none' className='flex flex-col bs-full plb-2'>
-            <h1 className={mx('shrink-0 font-system-medium text-lg pli-3')}>{t('current app name')}</h1>
-            <DocumentTree />
-            <div role='none' className='shrink-0 flex flex-wrap gap-1 pli-1.5'>
-              <Button className='grow gap-1' onClick={handleJoinSpace}>
-                <Intersect className={getSize(4)} />
-                <span>{t('join space label', { ns: 'appkit' })}</span>
-              </Button>
-              <Button className='grow gap-1' onClick={handleCreateSpace}>
-                <Planet className={getSize(4)} />
-                <span>{t('create space label', { ns: 'appkit' })}</span>
-              </Button>
+          <div role='none' className='flex flex-col bs-full'>
+            <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>
+              <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
+              <Tooltip
+                content={t('create space label', { ns: 'appkit' })}
+                zIndex='z-40'
+                side='bottom'
+                tooltipLabelsTrigger
+              >
+                <Button variant='ghost' onClick={handleCreateSpace} className='pli-1'>
+                  <Planet className={getSize(4)} />
+                </Button>
+              </Tooltip>
+              <Tooltip
+                content={t('join space label', { ns: 'appkit' })}
+                zIndex='z-40'
+                side='bottom'
+                tooltipLabelsTrigger
+              >
+                <Button variant='ghost' onClick={handleJoinSpace} className='pli-1'>
+                  <Intersect className={getSize(4)} />
+                </Button>
+              </Tooltip>
+              <Tooltip
+                content={t('close sidebar label', { ns: 'os' })}
+                zIndex='z-40'
+                side='bottom'
+                tooltipLabelsTrigger
+              >
+                <Button
+                  variant='ghost'
+                  onClick={() => setDisplayState(displayState === 'show' ? 'hide' : 'show')}
+                  className='pli-1'
+                >
+                  <ArrowLineLeft className={getSize(4)} />
+                </Button>
+              </Tooltip>
             </div>
+            <div role='separator' className='bs-px mli-2.5 bg-neutral-500/20' />
+            <DocumentTree />
+            <div role='separator' className='bs-px mli-2.5 bg-neutral-500/20' />
+            {identity && (
+              <div role='none' className='shrink-0 flex items-center gap-1 pli-3 plb-1.5'>
+                <Avatar
+                  size={6}
+                  variant='circle'
+                  fallbackValue={identity.identityKey.toHex()}
+                  status='active'
+                  label={<p className='text-sm'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>}
+                />
+              </div>
+            )}
           </div>
         </DensityProvider>
       </ElevationProvider>
@@ -195,26 +238,27 @@ const SidebarToggle = () => {
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const { t } = useTranslation('os');
   const open = displayState === 'show';
+  const button = (
+    <Button onClick={() => setDisplayState('show')} className='p-0 is-[40px] shadow-md'>
+      <Sidebar className={getSize(6)} />
+    </Button>
+  );
   return (
     <ThemeContext.Provider value={{ themeVariant: 'os' }}>
       <div
         role='none'
         className={mx(
-          'fixed block-end-0 p-2 transition-[inset-inline-start] ease-in-out duration-200',
-          open ? 'inline-start-sidebar' : 'inline-start-0'
+          'fixed block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200',
+          open ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
         )}
       >
-        <Tooltip content={t(open ? 'close sidebar label' : 'open sidebar label')} tooltipLabelsTrigger side='right'>
-          <Button onClick={() => setDisplayState(open ? 'hide' : 'show')} className='p-0 bs-[40px] is-[40px] shadow-md'>
-            <StarFour
-              className={mx(
-                getSize(6),
-                'transition-transform ease-in-out duration-200',
-                open ? 'rotate-45' : 'rotate-0'
-              )}
-            />
-          </Button>
-        </Tooltip>
+        {open ? (
+          button
+        ) : (
+          <Tooltip content={t('open sidebar label')} tooltipLabelsTrigger side='right'>
+            {button}
+          </Tooltip>
+        )}
       </div>
     </ThemeContext.Provider>
   );

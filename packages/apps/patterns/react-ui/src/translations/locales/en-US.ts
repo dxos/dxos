@@ -60,7 +60,7 @@ export const os = {
   'join space label': 'Join a space',
   'show current space label': 'Current space',
   'view space invitations label': 'View space invitations',
-  'toggle sidebar label': 'Open/close DXOS menu',
-  'open sidebar label': 'Open DXOS menu',
-  'close sidebar label': 'Close DXOS menu'
+  'toggle sidebar label': 'Open/close sidebar',
+  'open sidebar label': 'Open sidebar',
+  'close sidebar label': 'Close sidebar'
 };
