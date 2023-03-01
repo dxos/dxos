@@ -2,17 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
 import React, { useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/client';
+import { log } from '@dxos/log';
 import { Button } from '@dxos/react-components';
 
-import { ClientSpaceDecorator } from '../testing';
+import { useClient } from '../client';
+import { ClientDecorator, ClientSpaceDecorator } from '../testing';
 import { withReactor } from './useReactor';
 import { useSpace } from './useSpaces';
 
+log.config({ filter: 'ClientContext:debug,ClientSpaceDecorator:debug,useReactor:debug,warn' });
+
 export default {
   title: 'echo/useReactor'
+};
+
+export const Test = {
+  render: () => {
+    const client = useClient();
+
+    return <div>{JSON.stringify(client.toJSON())}</div>;
+  },
+  decorators: [ClientDecorator()]
 };
 
 export const Default = {
@@ -20,7 +34,7 @@ export const Default = {
     const ref = useRef<HTMLElement>(null);
     const space = useSpace(spaceKey);
     console.log('render', space?.properties.count);
-    console.log({ ref });
+    console.log(ref.current);
 
     return (
       <div>

@@ -20,7 +20,7 @@ import {
 
 import { useClient } from '../client';
 
-export type UseRector = {
+export type UseReactor = {
   render: (component: ReactElement<any, any> | null) => ReactElement<any, any> | null;
 };
 
@@ -31,7 +31,7 @@ export type ReactorProps = {
 /**
  * Hook to update components that access the database when modified.
  */
-export const useReactor = (opts?: ReactorProps): UseRector => {
+export const useReactor = (opts?: ReactorProps): UseReactor => {
   const client = useClient();
   const observer = client.echo.dbRouter.createAccessObserver();
   const [, forceUpdate] = useReducer((tick) => tick + 1, 0);

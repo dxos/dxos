@@ -94,12 +94,15 @@ export const ClientProvider = ({
       return;
     }
 
-    return client.subscribeStatus((status) => setStatus(status));
-  }, [client]);
+    return client.subscribeStatus((newStatus) => {
+      console.log({ newStatus, setStatus });
+      setStatus(newStatus);
+    });
+  }, [client, setStatus]);
 
   useEffect(() => {
     const done = async (client: Client) => {
-      log('client ready', { client });
+      log('client ready');
       await onInitialize?.(client);
       setClient(client);
       setStatus(client.getStatus() ?? SystemStatus.ACTIVE);
@@ -118,7 +121,7 @@ export const ClientProvider = ({
         const services = createServices?.(config);
         log('created services', { services });
         const client = new Client({ config, services });
-        log('created client', { client });
+        log('created client');
         await client
           .initialize()
           .then(() => done(client))
@@ -129,7 +132,7 @@ export const ClientProvider = ({
     return () => {
       log('clean up');
       clearTimeout(timeout);
-      // void client?.destroy().catch((err) => log.catch(err));
+      void client?.destroy().catch((err) => log.catch(err));
     };
   }, [clientProvider, configProvider, createServices]);
 
