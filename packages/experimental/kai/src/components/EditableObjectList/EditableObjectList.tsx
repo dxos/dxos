@@ -91,7 +91,7 @@ export const EditableObjectList = <T extends Document>({
                   root: { className: 'grow' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
-                value={getTitle(object)}
+                value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
               {onAction && (

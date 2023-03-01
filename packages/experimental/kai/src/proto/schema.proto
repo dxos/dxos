@@ -93,13 +93,20 @@ message Kanban {
   string title = 1;
 }
 
-message TextDocument {
+message Document {
   option (object) = true;
 
   string title = 1;
   dxos.schema.Text content = 2;
 //  repeated string tags = 2;
   string tag = 3;
+}
+
+message DocumentStack {
+  option (object) = true;
+
+  string title = 1;
+  repeated Document documents = 2;
 }
 
 message Message {

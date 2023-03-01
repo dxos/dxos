@@ -7,12 +7,11 @@ import * as pb from 'protobufjs';
 import { text } from '@dxos/plate';
 import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
-const packageName = '@dxos/echo-schema';
-const namespaceName = 'dxosEchoSchema';
+const importPackage = '@dxos/echo-schema';
+const importNamespace = 'dxos_echo_schema';
 
 // There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'Text'];
-
+const reservedTypeNames = [importNamespace, 'EchoSchema', 'TypeFilter', 'Text'];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 /**
@@ -47,7 +46,7 @@ export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
       if (field.resolvedType.name === 'Text') {
-        return `${namespaceName}.Text`;
+        return `${importNamespace}.Text`;
       }
 
       return stringifyFullyQualifiedName(
@@ -119,11 +118,11 @@ export const generate = (root: pb.NamespaceBase): string => {
   const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return text`
-  import * as ${namespaceName} from '${packageName}';
+  import * as ${importNamespace} from '${importPackage}';
 
   ${createSchema(root)}
 
-  export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);
+  export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
 
@@ -175,10 +174,10 @@ export const createObjectClass = (type: pb.Type) => {
   return text`
     export type ${name}Props = {\n${initializer}\n};
 
-    export class ${name} extends ${namespaceName}.Document<{}> {
+    export class ${name} extends ${importNamespace}.Document<{}> {
       static readonly type = schema.getType('${fullName}');
 
-      static filter(opts?: Partial<${name}Props>): ${namespaceName}.TypeFilter<${name}> {
+      static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
       }
 
