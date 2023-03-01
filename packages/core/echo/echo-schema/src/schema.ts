@@ -180,7 +180,7 @@ export class EchoSchema {
   }
 
   mergeSchema(schema: EchoSchema) {
-    const rootToMerge = filterNamespaces(schema._root);
+    const rootToMerge = filterNamespaces({ base: this._root, toFilter: schema._root });
     rootToMerge.nestedArray.forEach((nested) => {
       this._root.add(nested);
     });
@@ -202,16 +202,37 @@ export class EchoSchema {
   }
 }
 
-const filterNamespaces = (root: pb.Root) => {
-  const copy = pb.Root.fromJSON(root.toJSON());
-  const textNamespace = copy.lookup('.dxos.schema');
-  if (
-    textNamespace &&
-    copy.nestedArray.length === 1 &&
-    copy.nestedArray[0].name === 'dxos' &&
-    copy.nestedArray[0] instanceof pb.Namespace
-  ) {
-    copy.nestedArray[0].remove(textNamespace);
-  }
-  return copy;
+/**
+ * Deletes `namespacesToRemove` from `toFilter` that are already present in `base`.
+ */
+const filterNamespaces = ({
+  base,
+  toFilter,
+  namespacesToRemove = ['.dxos.schema']
+}: {
+  base: pb.Root;
+  toFilter: pb.Root;
+  namespacesToRemove?: string[];
+}) => {
+  const filtered = pb.Root.fromJSON(toFilter.toJSON());
+
+  assert(
+    filtered.nestedArray.length === 1 &&
+      filtered.nestedArray[0].name === 'dxos' &&
+      filtered.nestedArray[0] instanceof pb.Namespace,
+    'Invalid root.'
+  );
+
+  namespacesToRemove.forEach((namespace) => {
+    const isNamespacePresent = !!base.lookup(namespace);
+    const namespaceToRemove = filtered.lookup(namespace);
+
+    if (isNamespacePresent && namespaceToRemove) {
+      const parentNamespace = namespace.split('.').slice(0, -1).join('.');
+      const parent = filtered.lookup(parentNamespace);
+      (parent as pb.Namespace)?.remove(namespaceToRemove);
+    }
+  });
+
+  return filtered;
 };
