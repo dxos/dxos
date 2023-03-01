@@ -46,7 +46,7 @@ export class DatabaseRouter {
   }
 
   addSchema(schema: EchoSchema) {
-    this._schema!.mergeSchema(schema);
+    this._schema.mergeSchema(schema);
   }
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
