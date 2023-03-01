@@ -15,7 +15,7 @@ import { SupervisorRpcPeer } from '../../util';
 
 const timeout = 500;
 
-const findCredentials = async (client: Client, type: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> => {
+const getCredentials = async (client: Client, type: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> => {
   const credentialsQuery = client.halo.queryCredentials({ type });
   const trigger = new Trigger<Credential[]>();
   credentialsQuery.subscribe({
@@ -47,11 +47,10 @@ export default class Auth extends BaseCommand {
     this.log(chalk`{gray Initiating presentation sequence..}`);
     // TODO(egorgripasov): Find AuthorizedDevice by KubeAccess credential.
     const { deviceKey } = client.halo.identity!;
-    const authDeviceCreds = await findCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', cred => PublicKey.equals(cred.subject.id, deviceKey!));
+    const authDeviceCreds = await getCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', cred => PublicKey.equals(cred.subject.id, deviceKey!));
 
     if (!authDeviceCreds.length) {
-      this.log(chalk`{red No authorized devices.}`);
-      return {};
+      throw new Error("No authorized devices");
     }
 
     // Init auth sequence.
@@ -59,7 +58,7 @@ export default class Auth extends BaseCommand {
       const { nonce, kubeKey } = await supervisor.rpc.initAuthSequence();
 
       // Find proper KubeAccess credential.
-      const kubeAccessCreds = await findCredentials(client, 'dxos.halo.credentials.KubeAccess', cred => PublicKey.equals(cred.issuer, kubeKey));
+      const kubeAccessCreds = await getCredentials(client, 'dxos.halo.credentials.KubeAccess', cred => PublicKey.equals(cred.issuer, kubeKey));
 
       if (!kubeAccessCreds.length) {
         this.log(chalk`{gray No kube access credentials - requesting..}`);
@@ -87,7 +86,7 @@ export default class Auth extends BaseCommand {
         // TODO(burdon): Error if called twice with no halo.
         //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Profile not initialized.}`);
-        return {};
+        return;
       } else {
         const { credential, token } = await this.presentAuthCredentials(client);
         assert(!!credential || !!token, 'No credentials or token received.');

@@ -254,6 +254,7 @@ export abstract class BaseCommand extends Command {
 
       return value;
     } catch (err: any) {
+      // TODO(egorgripasov): Move Sentry into this.error?
       Sentry.captureException(err);
       this.error(err);
     } finally {

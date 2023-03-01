@@ -13,26 +13,31 @@ package dxos.service.supervisor;
 
 option go_package = "github.com/dxos/kube/supervisor/core";
 
-enum Status {
-  STARTED = 0;
-  STOPPED = 1;
-  FAILED  = 2;
-}
+//
+// Basic methods to operate with KUBE core, inc. authentication & configuration.
+//
 
-enum Type {
-  PROCESS = 0;
-  SERVICE = 1;
-}
-
-// Service record.
 message Service {
+  enum Status {
+    UNKNOWN = 0;
+    STARTED = 1;
+    STOPPED = 2;
+    FAILED  = 3;
+  }
+
+  enum Type {
+    NONE = 0;
+    PROCESS = 1;
+    SERVICE = 2;
+  }
+
   string name = 1;
   Status status = 2;
   repeated string addresses = 4;
   Type type = 5;
 }
 
-// .well-known endpoint.
+// Public .well-known endpoint.
 message Services {
   repeated Service services = 1;
 }
@@ -59,7 +64,7 @@ message InitAuthSequenceResponse {
   dxos.keys.PublicKey kube_key = 2;
 }
 
-message AuthenticateRequest {
+message Authentication {
   dxos.halo.credentials.Presentation presentation = 1;
 }
 
@@ -70,9 +75,18 @@ message AuthenticateResponse {
 }
 
 service Supervisor {
-  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  // Authenticate with KUBE.
+  rpc Authenticate(Authentication) returns (AuthenticateResponse);
+
+  // Init authentication sequence. Used to obtain nonce & KUBE identity (public key).
   rpc InitAuthSequence(google.protobuf.Empty) returns (InitAuthSequenceResponse);
+
+  // Read KUBE config.
   rpc GetConfig(google.protobuf.Empty) returns (GetConfigResponse);
+
+  // Set KUBE config.
   rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
+
+  // Obtain KUBE status & list running services.
   rpc Status(google.protobuf.Empty) returns (Services);
 }
