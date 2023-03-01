@@ -55,6 +55,6 @@ const PWA = () => {
   ) : null;
 };
 
-const router = createRouter(initialState, initialState ? <PWA /> : undefined);
+const router = createRouter(initialState, initialState.pwa ? <PWA /> : undefined);
 const root = createRoot(document.getElementById('root')!);
 root.render(<RouterProvider router={router} />);

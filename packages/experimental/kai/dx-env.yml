@@ -5,3 +5,7 @@ LOG_FILTER:
 LOG_PREFIX:
   path: runtime.client.log.prefix
   type: string
+
+DX_PERSIST:
+  path: runtime.client.storage.persistent
+  type: boolean
