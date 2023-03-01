@@ -4,8 +4,10 @@
 
 import { useCallback } from 'react';
 
+import { schema as chessSchema } from '@dxos/chess-app';
 import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { schema as frameboxSchema } from '@dxos/framebox';
 import { fromLocal } from '@dxos/halo-app';
 
 import { Generator, schema } from '../proto';
@@ -36,6 +38,8 @@ export const useClientProvider = (dev: boolean) => {
 
     // TODO(burdon): Document.
     client.echo.addSchema(schema);
+    client.echo.addSchema(chessSchema);
+    client.echo.addSchema(frameboxSchema);
 
     if (dev && client.halo.identity && client.echo.getSpaces().length === 0) {
       const space = await client.echo.createSpace();

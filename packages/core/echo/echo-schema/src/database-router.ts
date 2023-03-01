@@ -46,10 +46,10 @@ export class DatabaseRouter {
   }
 
   addSchema(schema: EchoSchema) {
-    if (!schema) {
+    if (!this._schema) {
       this._schema = schema;
     } else {
-      this._schema?.mergeSchema(schema);
+      this._schema!.mergeSchema(schema);
     }
   }
 
