@@ -50,14 +50,14 @@ const PureInvitationAuthenticatorContent = ({
             disabled,
             inputMode: 'numeric',
             pattern: '\\d*',
-            'data-autofocus': `${invitationType} invitation acceptor; invitation authenticator`
+            'data-autofocus': `${invitationType} invitation acceptor; invitation authenticator`,
+            'data-testid': `${invitationType}-auth-code-input`
           } as ComponentPropsWithoutRef<'input'>
         }}
         {...(failed && {
           validationValence: 'error',
           validationMessage: t('failed to authenticate message')
         })}
-        data-testid='auth-code-input'
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>

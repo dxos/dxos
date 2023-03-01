@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 
 import { getSize } from '../../styles';
 import { mx } from '../../util';
-import { List, ListItem, ListItemEndcap, ListItemHeading } from './List';
+import { List, ListItem, ListItemCollapsibleContent, ListItemEndcap, ListItemHeading } from './List';
 
 export default {
   component: List
@@ -43,7 +43,7 @@ export const Default = {
             <ListItemEndcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
-            <ListItemHeading className='mbs-2'>{text}</ListItemHeading>
+            <ListItemHeading className='grow mbs-2'>{text}</ListItemHeading>
             <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
@@ -55,5 +55,40 @@ export const Default = {
   args: {
     selectable: true,
     variant: 'ordered-draggable'
+  }
+};
+
+export const Collapsible = {
+  render: ({ ...args }) => {
+    const [items, _setItems] = useState(
+      [...Array(12)].map((_, index) => ({
+        id: `listItem-${index}`,
+        text: `List item ${index + 1}`,
+        body: `Collapsible content for item ${index + 1}`
+      }))
+    );
+
+    return (
+      <List {...args} labelId='excluded'>
+        {items.map(({ id, text, body }, index) => (
+          <ListItem key={id} id={id} collapsible={index !== 2}>
+            <ListItemHeading asChild>
+              <div className='flex'>
+                <p className='grow mbs-2'>{text}</p>
+                <ListItemEndcap>
+                  <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+                </ListItemEndcap>
+              </div>
+            </ListItemHeading>
+            {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
+          </ListItem>
+        ))}
+      </List>
+    );
+  },
+  args: {
+    variant: 'unordered',
+    collapsible: true,
+    toggleOpenLabel: 'Open/close storybook list item'
   }
 };
