@@ -4,7 +4,7 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React from 'react';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame } from '@dxos/client';
@@ -20,10 +20,10 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations, ShellProvider } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
-import { Routes } from './routes/Routes';
+import { Routes } from './routes';
 import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
@@ -52,16 +52,14 @@ export const App = () => {
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-            <HashRouter>
-              <ShellProvider>
-                <Routes />
-              </ShellProvider>
+            <BrowserRouter>
+              <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
                 <ServiceWorkerToast variant='offlineReady' />
               ) : null}
-            </HashRouter>
+            </BrowserRouter>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
