@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
 import * as pb from 'protobufjs';
 
 import { DocumentModel } from '@dxos/document-model';
@@ -176,6 +177,14 @@ export class EchoSchema {
 
   getType(name: string): EchoSchemaType {
     return new EchoSchemaType(this._root.lookupType(name));
+  }
+
+  mergeSchema(schema: EchoSchema) {
+    this._root.add(schema._root);
+    Array.from(schema._prototypes.entries()).forEach(([name, prototype]) => {
+      assert(!this._prototypes.has(name), 'Names collision');
+      this._prototypes.set(name, prototype);
+    });
   }
 
   /**
