@@ -46,7 +46,7 @@ export const ClientSpaceDecorator =
       log('initialized');
 
       if (schema) {
-        clients.forEach((client) => client.echo.dbRouter.setSchema(schema));
+        clients.forEach((client) => client.echo.addSchema(schema));
         log('echo schema set');
       }
 
