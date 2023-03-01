@@ -46,7 +46,7 @@ export default class Auth extends BaseCommand {
   async presentAuthCredentials(client: Client): Promise<any> {
     this.log(chalk`{gray Initiating presentation sequence..}`);
     // TODO(egorgripasov): Find AuthorizedDevice by KubeAccess credential.
-    const { deviceKey } = client.halo.identity!;
+    const { deviceKey } = client.halo.device!;
     const authDeviceCreds = await getCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', cred => PublicKey.equals(cred.subject.id, deviceKey!));
 
     if (!authDeviceCreds.length) {
