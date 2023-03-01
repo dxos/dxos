@@ -5,25 +5,20 @@
 import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { FC, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import urlJoin from 'url-join';
 
-import { Document } from '@dxos/echo-schema';
-import { EchoSchemaType, Space, useConfig, useQuery, withReactor } from '@dxos/react-client';
-import { DragEndEvent, Input, mx, Table as TableComponent } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { EchoSchemaType, useConfig, useQuery, withReactor } from '@dxos/react-client';
+import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
-import { FilePreview } from '../../components';
-import { TaskList as TaskListComponent } from '../../containers';
 import { createPath, useAppRouter } from '../../hooks';
-import { Contact, Document as DocumentType, DocumentStack, File, Table, TaskList } from '../../proto';
-import { getColumnType } from '../Table';
+import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '../../proto';
+import { StackContent } from './StackContent';
 import { SortableStackRow, StackRow } from './StackRow';
 
-// TODO(burdon): Factor out menu options and renderers.
-// TODO(burdon): Factor out factories.
-// TODO(burdon): Factor out Frame components (pure from containers).
+// TODO(burdon): Configurable menu options and section renderers (like frames).
+// TODO(burdon): Factor out new section data factories.
+// TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
 
 export const StackFrame = withReactor(() => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -50,9 +45,6 @@ export const StackFrame = withReactor(() => {
       });
     }
   }, [space, frame, stacks, stack]);
-
-  // TODO(burdon): Spellcheck false in dev mode.
-  const spellCheck = false;
 
   // TODO(burdon): Drag (mosaic).
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
@@ -104,6 +96,9 @@ export const StackFrame = withReactor(() => {
     }
   };
 
+  // TODO(burdon): Spellcheck false in dev mode.
+  const spellCheck = false;
+
   if (!stack) {
     return null;
   }
@@ -139,7 +134,6 @@ export const StackFrame = withReactor(() => {
               items={stack.sections.map((section) => section.objectId!)}
             >
               {stack.sections.map((section, i) => {
-                // TODO(burdon): Remove coercion: see __typename access below.
                 const object = space!.db.getObjectById(section.objectId!)!;
 
                 return (
@@ -151,42 +145,7 @@ export const StackFrame = withReactor(() => {
                     onCreate={(type, objectId) => handleInsertSection(type, objectId, i)}
                     onDelete={() => handleDeleteSection(i)}
                   >
-                    {(object as any).__typename === DocumentType.type.name && (
-                      <Composer
-                        document={(object as DocumentType).content}
-                        slots={{
-                          editor: {
-                            className: 'kai-composer',
-                            spellCheck
-                          }
-                        }}
-                      />
-                    )}
-
-                    {(object as any).__typename === Table.type.name && (
-                      <div className='flex w-full h-[400px]'>
-                        <TableContainer space={space!} table={object as Table} />
-                      </div>
-                    )}
-
-                    {/* TODO(burdon): Add/delete/sort. */}
-                    {/* TODO(burdon): Hide controls if not highlighted. */}
-                    {(object as any).__typename === TaskList.type.name && (
-                      <TaskListComponent
-                        space={space!}
-                        tasks={(object as TaskList).tasks}
-                        onCreate={(task) => (object as TaskList).tasks.push(task)}
-                      />
-                    )}
-
-                    {(object as any).__typename === File.type.name && (
-                      <div className='flex w-full h-[400px]'>
-                        <FilePreview
-                          url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, (object as File).cid)}
-                          image
-                        />
-                      </div>
-                    )}
+                    <StackContent config={config} space={space!} object={object!} spellCheck={spellCheck} />
                   </SortableStackRow>
                 );
               })}
@@ -200,21 +159,5 @@ export const StackFrame = withReactor(() => {
     </div>
   );
 });
-
-// TODO(burdon): Factor out.
-const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) => {
-  const type = getColumnType(table.type);
-  const objects = useQuery(space, type.filter);
-
-  return (
-    <TableComponent<Document>
-      columns={type.columns.filter((column) => column.Header === 'name' || column.Header === 'email')}
-      data={objects}
-      slots={{
-        header: { className: 'bg-paper-bg' }
-      }}
-    />
-  );
-};
 
 export default StackFrame;
