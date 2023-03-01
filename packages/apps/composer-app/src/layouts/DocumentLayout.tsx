@@ -21,7 +21,7 @@ export const DocumentLayout = () => {
           children: <SidebarContent />,
           className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible')
         },
-        main: { role: 'main' }
+        main: { role: 'main', className: 'min-bs-full' }
       }}
     >
       <Outlet context={{ space }} />
