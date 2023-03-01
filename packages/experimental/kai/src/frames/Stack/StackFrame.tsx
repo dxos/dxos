@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DotsSixVertical, Plus, Trash } from 'phosphor-react';
-import React, { FC, ReactNode, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, DropdownMenu, DropdownMenuItem, getSize, Input, mx } from '@dxos/react-components';
+import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
 import { Document, DocumentStack } from '../../proto';
+import { StackRow } from './StackRow';
 
 export const StackFrame = withReactor(() => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export const StackFrame = withReactor(() => {
         let stack = stacks[0];
         if (!stacks.length) {
           stack = await space.db.add(new DocumentStack());
-          stack.documents.push(...documents);
+          documents.forEach((document) => stack.sections.push({ objectId: document.id }));
         }
 
         navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
@@ -40,18 +40,18 @@ export const StackFrame = withReactor(() => {
   // TODO(burdon): Spellcheck false in dev mode.
   const spellCheck = false;
 
-  // TODO(burdon): Drag (mosaic).
   // TODO(burdon): Task/Image sections.
 
+  // TODO(burdon): Drag (mosaic).
   const handleInsertSection = (index: number) => {
     if (stack) {
-      stack.documents.splice(index === -1 ? stack.documents.length : index, 0, new Document());
+      stack.sections.splice(index === -1 ? stack.documents.length : index, 0, { document: new Document() });
     }
   };
 
   const handleDeleteSection = (index: number) => {
     if (stack) {
-      stack.documents.splice(index, 1);
+      stack.sections.splice(index, 1);
     }
   };
 
@@ -87,26 +87,30 @@ export const StackFrame = withReactor(() => {
           </StackRow>
 
           {/* TODO(burdon): Hide while typing. */}
-          {stack.documents.map((document, i) => (
-            <StackRow
-              key={document.id}
-              className='border-b'
-              showMenu
-              onCreate={() => handleInsertSection(i)}
-              onDelete={() => handleDeleteSection(i)}
-            >
-              <Composer
-                document={document.content}
-                slots={{
-                  root: { className: 'grow' },
-                  editor: {
-                    className: 'kai-composer z-0 text-black text-xl md:text-base',
-                    spellCheck
-                  }
-                }}
-              />
-            </StackRow>
-          ))}
+          {stack.sections.map(({ objectId }, i) => {
+            const document = space?.db.getObjectById(objectId!) as Document;
+
+            return (
+              <StackRow
+                key={document!.id}
+                className='border-b'
+                showMenu
+                onCreate={() => handleInsertSection(i)}
+                onDelete={() => handleDeleteSection(i)}
+              >
+                <Composer
+                  document={document!.content}
+                  slots={{
+                    root: { className: 'grow' },
+                    editor: {
+                      className: 'kai-composer z-0 text-black text-xl md:text-base',
+                      spellCheck
+                    }
+                  }}
+                />
+              </StackRow>
+            );
+          })}
 
           <StackRow showMenu onCreate={() => handleInsertSection(-1)} />
         </div>
@@ -114,51 +118,5 @@ export const StackFrame = withReactor(() => {
     </div>
   );
 });
-
-const StackRow: FC<{
-  children?: ReactNode;
-  className?: string;
-  showMenu?: boolean;
-  onCreate?: () => void;
-  onDelete?: () => void;
-}> = ({ children, showMenu, className, onCreate, onDelete }) => {
-  return (
-    <div className={mx('group flex mx-6 md:mx-0 py-4', className)}>
-      <div className='hidden md:flex w-24 text-gray-400'>
-        {showMenu && (
-          <div className='flex ml-6 invisible group-hover:visible'>
-            <div>
-              <DropdownMenu
-                trigger={
-                  <Button variant='ghost' className='p-1' onClick={onCreate}>
-                    <Plus className={getSize(4)} />
-                  </Button>
-                }
-                slots={{ content: { className: 'z-50' } }}
-              >
-                {onCreate && (
-                  <DropdownMenuItem onClick={onCreate}>
-                    <Plus className={getSize(5)} />
-                    <span className='mis-2'>Insert section</span>
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem onClick={onDelete}>
-                    <Trash className={getSize(5)} />
-                    <span className='mis-2'>Remove section</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenu>
-            </div>
-            <div className='p-1 cursor-pointer'>
-              <DotsSixVertical className={getSize(6)} />
-            </div>
-          </div>
-        )}
-      </div>
-      <div className='flex flex-1 mr-2 md:mr-16'>{children}</div>
-    </div>
-  );
-};
 
 export default StackFrame;

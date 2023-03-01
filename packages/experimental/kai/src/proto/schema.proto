@@ -105,8 +105,15 @@ message Document {
 message DocumentStack {
   option (object) = true;
 
+  message Section {
+    string object_id = 1;
+    Document document = 10; // TODO(burdon): Recursion error.
+    File file = 11;
+  }
+
   string title = 1;
   repeated Document documents = 2;
+  repeated Section sections = 3;
 }
 
 message Message {
