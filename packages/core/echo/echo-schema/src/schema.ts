@@ -180,16 +180,7 @@ export class EchoSchema {
   }
 
   mergeSchema(schema: EchoSchema) {
-    const rootToMerge = pb.Root.fromJSON(schema._root.toJSON());
-    const textNamespace = rootToMerge.lookup('.dxos.schema');
-    if (
-      textNamespace &&
-      rootToMerge.nestedArray.length === 1 &&
-      rootToMerge.nestedArray[0].name === 'dxos' &&
-      rootToMerge.nestedArray[0] instanceof pb.Namespace
-    ) {
-      rootToMerge.nestedArray[0].remove(textNamespace);
-    }
+    const rootToMerge = filterNamespaces(schema._root);
     rootToMerge.nestedArray.forEach((nested) => {
       this._root.add(nested);
     });
@@ -210,3 +201,17 @@ export class EchoSchema {
     return this._prototypes.get(name);
   }
 }
+
+const filterNamespaces = (root: pb.Root) => {
+  const copy = pb.Root.fromJSON(root.toJSON());
+  const textNamespace = copy.lookup('.dxos.schema');
+  if (
+    textNamespace &&
+    copy.nestedArray.length === 1 &&
+    copy.nestedArray[0].name === 'dxos' &&
+    copy.nestedArray[0] instanceof pb.Namespace
+  ) {
+    copy.nestedArray[0].remove(textNamespace);
+  }
+  return copy;
+};

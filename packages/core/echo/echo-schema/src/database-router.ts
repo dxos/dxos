@@ -39,18 +39,14 @@ export class DatabaseRouter {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Item<any>[] }>();
 
-  private _schema?: EchoSchema;
+  private readonly _schema = EchoSchema.fromJson('{}');
 
   get schema(): EchoSchema | undefined {
     return this._schema;
   }
 
   addSchema(schema: EchoSchema) {
-    if (!this._schema) {
-      this._schema = schema;
-    } else {
-      this._schema!.mergeSchema(schema);
-    }
+    this._schema!.mergeSchema(schema);
   }
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
