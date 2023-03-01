@@ -3,5 +3,8 @@
 //
 
 export const composer = {
-  'current app name': 'Composer'
+  'current app name': 'Composer',
+  'sidebar tree label': 'Spaces with documents',
+  'create document label': 'New',
+  'untitled document title': 'Untitled document'
 };

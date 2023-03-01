@@ -34,9 +34,9 @@ const TreeBranch = forwardRef<HTMLOListElement, TreeBranchProps>(
 
     return (
       <List
+        collapsible
         {...props}
         labelId={headingId}
-        collapsible
         slots={{ ...props.slots, root: { ...props.slots?.root, role: 'none' } }}
         ref={forwardedRef}
       />
