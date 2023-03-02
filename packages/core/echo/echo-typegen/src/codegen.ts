@@ -11,8 +11,11 @@ const importPackage = '@dxos/echo-schema';
 const importNamespace = 'dxos_echo_schema';
 
 // There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [importNamespace, 'EchoSchema', 'TypeFilter', 'Text'];
+const reservedTypeNames = [importNamespace, 'EchoSchema', 'TypeFilter', 'Text', 'Document'];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
+
+// Types that are injected from `importNamespace`.
+const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Document'];
 
 /**
  * Protobuf schema as JSON object.
@@ -45,8 +48,8 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      if (field.resolvedType.name === 'Text') {
-        return `${importNamespace}.Text`;
+      if (injectedTypes.includes(field.resolvedType.fullName)) {
+        return `${importNamespace}.${field.resolvedType.name}`;
       }
 
       return stringifyFullyQualifiedName(
@@ -125,22 +128,12 @@ export const generate = (root: pb.NamespaceBase): string => {
   export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
-
   `;
 };
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
-  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
-    yield text`
-      export namespace ${ns.name} {
-        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
-      }
-      
-    `;
-  }
-
   if (ns instanceof pb.Type) {
-    if (ns.name === 'Text') {
+    if (injectedTypes.includes(ns.fullName)) {
       return;
     }
 
@@ -149,6 +142,14 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
     } else {
       yield createObjectClass(ns);
     }
+  }
+
+  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
+    yield text`
+      export namespace ${ns.name} {
+        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
+      }
+    `;
   }
 }
 
@@ -188,7 +189,6 @@ export const createObjectClass = (type: pb.Type) => {
     }
 
     schema.registerPrototype(${name});
-
   `;
 };
 
@@ -208,6 +208,5 @@ export const createPlainInterface = (type: pb.Type) => {
   export interface ${name} {
     ${fields}
   }
-
   `;
 };
