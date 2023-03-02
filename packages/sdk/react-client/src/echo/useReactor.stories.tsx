@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import React, { useRef, useState } from 'react';
+import React, { experimental_useEvent, useEffect, useId, useReducer, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -13,6 +13,7 @@ import { useClient } from '../client';
 import { ClientDecorator, ClientSpaceDecorator } from '../testing';
 import { withReactor } from './useReactor';
 import { useSpace } from './useSpaces';
+import { useSubscription, useSubscriptionEffect } from './useSubscription';
 
 log.config({ filter: 'ClientContext:debug,ClientSpaceDecorator:debug,useReactor:debug,warn' });
 
@@ -30,11 +31,62 @@ export const Test = {
 };
 
 export const Default = {
-  render: withReactor(({ spaceKey }: { spaceKey: PublicKey }) => {
+  render: ({ spaceKey }: { spaceKey: PublicKey }) => {
     const ref = useRef<HTMLElement>(null);
     const space = useSpace(spaceKey);
-    console.log('render', space?.properties.count);
     console.log(ref.current);
+
+    const id = useId();
+
+    const [x__, forceUpdate] = useReducer((x) => {
+      console.log('reduce');
+      return x + 1
+    }, 0);
+
+    const state = useRef({
+      mounted: false,
+      updateBeforeMount: false
+    });
+
+    const triggerForceUpdate = () => {
+      console.log('trigger', {
+        count: space?.properties.count,
+        id
+      });
+      if (!state.current.mounted) {
+        state.current.updateBeforeMount = true;
+        return;
+      }
+      forceUpdate();
+    }
+
+    console.log('render',{
+      count: space?.properties.count,
+      id
+    });
+
+    useEffect(() => {
+      console.log('mount', {
+        count: space?.properties.count,
+        id
+      })
+      state.current.mounted = true;
+      if (state.current.updateBeforeMount) {
+        triggerForceUpdate();
+      }
+      return () => {
+        console.log('unmount', {
+          count: space?.properties.count,
+          id
+        })
+      }
+    })
+
+    useSubscriptionEffect(() => {
+      console.log("CHANGED!")
+      triggerForceUpdate()
+    }, [space?.properties])
+
 
     return (
       <div>
@@ -63,9 +115,10 @@ export const Default = {
         >
           +
         </Button>
+        <button onClick={triggerForceUpdate}>forceUpdate</button>
       </div>
     );
-  }),
+  },
   decorators: [ClientSpaceDecorator()]
 };
 

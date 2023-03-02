@@ -56,6 +56,7 @@ export const useReactor = (opts?: ReactorProps): UseReactor => {
   }, []);
 
   return {
+    forceUpdate,
     // Watch accessed objects.
     render: (component: ReactElement<any, any> | null) => {
       try {
@@ -79,13 +80,13 @@ export type WithReactorOpts = {
  */
 export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): FC<P> => {
   const Component = (props: P) => {
-    const { render } = useReactor({
+    const { render, forceUpdate } = useReactor({
       onChange: () => {
         console.log('UPDATED');
       }
     });
 
-    return render(component(props));
+    return render(component({ ...props, forceUpdate }));
   };
 
   if (opts.componentName) {
