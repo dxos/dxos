@@ -41,6 +41,7 @@ export const DEFAULT_VISITORS: ConvertVisitors = {
  *
  * NOTE: See exported `Document` declaration below.
  */
+// TODO(burdon): Rename (NOT Document_)!
 // TODO(burdon): Support immutable objects?
 class Document_<T> extends EchoObject<DocumentModel> {
   /**

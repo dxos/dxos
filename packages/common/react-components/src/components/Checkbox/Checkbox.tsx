@@ -27,14 +27,14 @@ export const Checkbox = (props: CheckboxProps) => {
       {...{ defaultChecked, checked, onCheckedChange }}
       className={mx(
         getSize(5),
-        'flex items-center justify-center rounded',
+        'flex items-center justify-center rounded text-white',
         'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
         themeVariantFocus(themeVariant),
         className
       )}
     >
       <CheckboxPrimitive.Indicator>
-        <Check weight='bold' className={mx(getSize(4), 'text-white')} />
+        <Check weight='bold' className={getSize(4)} />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );
