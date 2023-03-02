@@ -125,7 +125,6 @@ export const generate = (root: pb.NamespaceBase): string => {
   export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
-
   `;
 };
 
@@ -135,7 +134,6 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
       export namespace ${ns.name} {
         ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
       }
-      
     `;
   }
 
@@ -188,7 +186,6 @@ export const createObjectClass = (type: pb.Type) => {
     }
 
     schema.registerPrototype(${name});
-
   `;
 };
 
@@ -208,6 +205,5 @@ export const createPlainInterface = (type: pb.Type) => {
   export interface ${name} {
     ${fields}
   }
-
   `;
 };
