@@ -226,7 +226,8 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     const { open } = useListItemContext(LIST_ITEM_NAME, __listScope);
     const iconProps: ListItemOpenTriggerProps['openTriggerIconSlot'] = {
       weight: 'bold',
-      className: mx(getSize(4), openTriggerIconSlot.className)
+      ...openTriggerIconSlot,
+      className: mx(getSize(3.5), openTriggerIconSlot.className)
     };
     const Icon = open ? CaretDown : CaretRight;
     return (
