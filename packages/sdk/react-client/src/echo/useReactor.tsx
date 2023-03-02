@@ -15,7 +15,9 @@ import {
   ForwardRefExoticComponent,
   PropsWithoutRef,
   RefAttributes,
-  useMemo
+  useMemo,
+  useRef,
+  useCallback
 } from 'react';
 
 import { useClient } from '../client';
@@ -28,6 +30,11 @@ export type ReactorProps = {
   onChange?: () => void;
 };
 
+export type ObserverState = {
+  mounted: boolean;
+  updateBeforeMount: boolean;
+};
+
 /**
  * Hook to update components that access the database when modified.
  */
@@ -36,27 +43,59 @@ export const useReactor = (opts?: ReactorProps): UseReactor => {
   const observer = client.echo.dbRouter.createAccessObserver();
   const [, forceUpdate] = useReducer((tick) => tick + 1, 0);
 
+  // Inspired by https://github.com/mobxjs/mobx/blob/4ef8ff3/packages/mobx-react-lite/src/useObserver.ts.
+  const stateRef = useRef<ObserverState | null>(null);
+
+  if (!stateRef.current) {
+    // First render.
+    stateRef.current = {
+      mounted: false,
+      updateBeforeMount: false
+    };
+  }
+
+  const state = stateRef.current!;
+
+  const handleUpdate = useCallback(() => {
+    forceUpdate();
+    opts?.onChange?.(); // TODO(burdon): Pass in modified objects.
+  }, [forceUpdate, opts?.onChange]);
+
   // Create subscription.
   const handle = useMemo(
     () =>
       client.echo.dbRouter.createSubscription(() => {
-        forceUpdate();
-        opts?.onChange?.(); // TODO(burdon): Pass in modified objects.
+        if (state.mounted) {
+          handleUpdate();
+        } else {
+          state.updateBeforeMount = true;
+        }
       }),
-    [client, forceUpdate]
+    [client, handleUpdate]
   );
 
   // Cancel subscription on exit.
   useEffect(() => {
+    state.mounted = true;
+
+    if (state.updateBeforeMount) {
+      state.updateBeforeMount = false;
+      handleUpdate();
+      return;
+    }
+
     if (!handle.subscribed) {
       console.error('bug: subscription lost'); // TODO(dmaretskyi): Fix this.
     }
 
-    return () => handle.unsubscribe();
+    return () => {
+      state.mounted = false;
+      state.updateBeforeMount = false;
+      handle.unsubscribe();
+    };
   }, []);
 
   return {
-    forceUpdate,
     // Watch accessed objects.
     render: (component: ReactElement<any, any> | null) => {
       try {
@@ -80,13 +119,13 @@ export type WithReactorOpts = {
  */
 export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): FC<P> => {
   const Component = (props: P) => {
-    const { render, forceUpdate } = useReactor({
-      onChange: () => {
-        console.log('UPDATED');
-      }
-    });
+    const onChange = useCallback(() => {
+      console.log('UPDATED');
+    }, []);
 
-    return render(component({ ...props, forceUpdate }));
+    const { render } = useReactor({ onChange });
+
+    return render(component(props));
   };
 
   if (opts.componentName) {
