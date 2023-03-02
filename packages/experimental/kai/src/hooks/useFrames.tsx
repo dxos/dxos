@@ -15,7 +15,7 @@ import {
   Kanban as KanbanIcon,
   ListChecks,
   Monitor,
-  Stack,
+  Stack as StackIcon,
   Sword,
   Table
 } from 'phosphor-react';
@@ -38,7 +38,7 @@ import {
   TableFrame,
   TaskFrame,
   SandboxFrame,
-  StackFrame
+  Stack
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -139,8 +139,9 @@ const defs: FrameDef[] = [
       description: 'Structured documents.'
     },
     runtime: {
-      Icon: Stack,
-      Component: StackFrame
+      Icon: StackIcon,
+      Component: Stack.Frame,
+      Tile: Stack.Tile
     }
   },
   {
