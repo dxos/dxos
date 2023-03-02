@@ -55,7 +55,7 @@ export class Generator {
             lat: city.coordinates[1],
             lng: city.coordinates[0]
           },
-          // TODO (mykola): Add zip and state.
+          // TODO(mykola): Add zip and state.
           state: 'NY',
           zip: '11205'
         };

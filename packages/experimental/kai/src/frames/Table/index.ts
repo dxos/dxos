@@ -4,4 +4,6 @@
 
 import { TableFrame } from './TableFrame';
 
+export * from './TableFrame';
+
 export default TableFrame;

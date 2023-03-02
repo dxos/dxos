@@ -57,7 +57,7 @@ export class EchoDatabase {
   }
 
   // TODO(burdon): Return type via generic?
-  getObjectById<T>(id: string): T | undefined {
+  getObjectById<T extends EchoObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
