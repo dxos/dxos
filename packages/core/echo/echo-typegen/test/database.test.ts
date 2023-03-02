@@ -4,10 +4,9 @@
 
 import { expect } from 'chai';
 
-import { base, data, db, Text } from '@dxos/echo-schema';
+import { base, db, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
-import { range } from '@dxos/util';
 
 import { Container, Document, Task } from './proto';
 
