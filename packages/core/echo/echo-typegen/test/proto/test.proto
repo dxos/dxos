@@ -42,14 +42,6 @@ message Task {
   dxos.schema.Text description = 6;
 }
 
-
-message Document {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text text = 2;
-}
-
 message Container {
   option (object) = true;
 
@@ -57,7 +49,7 @@ message Container {
     option (object) = true;
     
     string title = 1;
-    Document document = 2;
+    dxos.schema.Document document = 2;
   }
 
   repeated Section sections = 1;
