@@ -16,10 +16,10 @@ import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
+import { SpaceList, SpaceListAction } from '../../components';
 import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { SpaceList, SpaceListAction } from '../SpaceList';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -162,7 +162,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
         <div className='flex overflow-y-auto'>
-          <SpaceList spaces={spaces} selected={space?.key} onAction={handleSpaceListAction} />
+          <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
         </div>
 
         <div className='flex-1' />
