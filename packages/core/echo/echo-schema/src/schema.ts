@@ -125,6 +125,7 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
 /**
  * Wraps protocol generated type.
  */
+// TODO(burdon): Rename SchemaType (since part of API).
 export class EchoSchemaType {
   public readonly fields: EchoSchemaField[] = [];
 

@@ -49,8 +49,8 @@ const ensureContentHasPeerPackages = (content: string[], rootPath: string) => {
   return result;
 };
 
-// TODO (zhenyasav): make it easy to override the tailwind config
-// TODO (zhenyasav): make it easy to add postcss plugins?
+// TODO(zhenyasav): make it easy to override the tailwind config
+// TODO(zhenyasav): make it easy to add postcss plugins?
 export const ThemePlugin = (
   options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
 ) => {

@@ -36,9 +36,9 @@ export const ThemePlugins = (options: {
         });
       }
     },
-    // TODO (thure): theme.css must be part of entryPoints in order to be processed with `stylePlugin`, but this should not be necessary. ESBuild would not load theme.css using stylePlugin if referenced within index.ts(x) as with the Vite plugin.
-    // TODO (thure): Note also that because it is an entryPoint, the developer has to reference the built theme.css from `index.html`, which is inflexible and possibly inconvenient.
-    // TODO (zhenyasav): autoprefixer version misalignment with esbuild-style-plugin requires the `as any`
+    // TODO(thure): theme.css must be part of entryPoints in order to be processed with `stylePlugin`, but this should not be necessary. ESBuild would not load theme.css using stylePlugin if referenced within index.ts(x) as with the Vite plugin.
+    // TODO(thure): Note also that because it is an entryPoint, the developer has to reference the built theme.css from `index.html`, which is inflexible and possibly inconvenient.
+    // TODO(zhenyasav): autoprefixer version misalignment with esbuild-style-plugin requires the `as any`
     stylePlugin({
       postcss: {
         plugins: [
