@@ -41,7 +41,7 @@ export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) =>
 };
 
 export const text = (literals: TemplateStringsArray, ...args: any[]) =>
-  trim(terminalNewline(textUntrimmed(literals, ...args)));
+  terminalNewline(trim(textUntrimmed(literals, ...args)));
 
 export const ts = (literals: TemplateStringsArray, ...args: any[]) => {
   const result = text(literals, ...args);
