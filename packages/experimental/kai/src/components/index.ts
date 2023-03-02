@@ -4,3 +4,4 @@
 
 export * from './EditableObjectList';
 export * from './FilePreview';
+export * from './SpaceList';

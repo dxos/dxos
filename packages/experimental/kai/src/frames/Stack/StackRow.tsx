@@ -138,13 +138,18 @@ export const StackRow = forwardRef(
               {/* TODO(burdon): Standardize dialogs. */}
               <div className='mt-4'>
                 <FileList
+                  disableDownload
                   onSelect={(objectId) => {
                     setFileDialogVisible(false);
                     onCreate?.(File.type, objectId);
                   }}
                 />
               </div>
-              <Button onClick={() => setFileDialogVisible(false)}>Cancel</Button>
+              <div className='flex flex-row-reverse'>
+                <Button variant='primary' onClick={() => setFileDialogVisible(false)}>
+                  Cancel
+                </Button>
+              </div>
             </Dialog>
           )}
         </div>
