@@ -54,6 +54,8 @@ message Container {
   option (object) = true;
 
   message Section {
+    option (object) = true;
+    
     string title = 1;
     Document document = 2;
   }

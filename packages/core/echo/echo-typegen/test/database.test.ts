@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db, Text } from '@dxos/echo-schema';
+import { base, data, db, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -41,13 +41,21 @@ describe('database', () => {
       expect(task.description.model!.textContent).to.eq('test');
     });
 
-    test.only('nested text', async () => {
+    test('nested text', async () => {
       const database = await createDatabase();
 
       const container = new Container();
       await database.add(container);
 
-      container.sections.push({ document: new Document() });
+      const title = 'Our doc';
+      const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+      container.sections.push(
+        new Container.Section({ document: new Document({ title: 'Our doc', text: new Text(text) }) })
+      );
+
+      const queriedDoc = database.query(Document.filter({ title })).objects[0];
+      expect(queriedDoc.title).to.equal(title);
+      expect(queriedDoc.text.text).to.equal(text);
     });
   });
 });
