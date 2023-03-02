@@ -127,7 +127,7 @@ message DocumentStack {
   }
 
   string title = 1;
-  repeated Document documents = 2;
+  repeated TextDocument documents = 2;
   repeated Section sections = 3;
 }
 
@@ -153,17 +153,21 @@ message Event {
 }
 
 message Sketch {
-  message SketchPoint {
+  message Point {
+    option (object) = true;
+
     int32 x = 1;
     int32 y = 2;
   }
 
   // TODO(burdon): Should be sub-type but is compiled to top level.
   message Path {
+    option (object) = true;
+
     int32 timestamp = 1; // TODO(burdon): Is this required.
     int32 width = 2;
     string color = 3;
-    repeated SketchPoint points = 4;
+    repeated Point points = 4;
   }
 
   option (object) = true;
@@ -182,6 +186,8 @@ message File {
 
 message NoteBoard {
   message Location { // TODO(burdon): Name collision.
+    option (object) = true;
+
     string object_id = 1;
     int32 x = 2;
     int32 y = 3;
