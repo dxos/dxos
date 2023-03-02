@@ -385,6 +385,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -404,6 +405,7 @@ importers:
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
