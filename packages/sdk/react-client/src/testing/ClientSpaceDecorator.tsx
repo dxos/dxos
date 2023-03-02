@@ -27,7 +27,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.name.firstName() });
-        schema && client.echo.setSchema(schema);
+        schema && client.echo.addSchema(schema);
 
         const success1 = new Trigger<Invitation>();
         const success2 = new Trigger<Invitation>();
@@ -86,7 +86,7 @@ export const ClientSpaceDecorator =
           services={services}
           onInitialized={async (client) => {
             await client.halo.createIdentity({ displayName: faker.name.firstName() });
-            schema && client.echo.setSchema(schema);
+            schema && client.echo.addSchema(schema);
             const space = await client.echo.createSpace({ name: faker.animal.bird() });
             setSpace(space);
           }}

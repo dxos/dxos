@@ -5,13 +5,13 @@ import React from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { Input, useTranslation } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
-export const DocumentPage = withReactor(() => {
+export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
