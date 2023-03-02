@@ -15,7 +15,7 @@ import {
   Kanban as KanbanIcon,
   ListChecks,
   Monitor,
-  Stack,
+  Stack as StackIcon,
   Sword,
   Table
 } from 'phosphor-react';
@@ -38,7 +38,7 @@ import {
   TableFrame,
   TaskFrame,
   SandboxFrame,
-  StackFrame
+  Stack
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -47,7 +47,7 @@ export type FrameDef = {
   runtime: {
     Icon: FC<any>;
     Component: FC<any>;
-    Tile?: FC<any>;
+    List?: FC<any>;
   };
 };
 
@@ -128,7 +128,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Article,
       Component: Document.Frame,
-      Tile: Document.Tile
+      List: Document.List
     }
   },
   {
@@ -139,8 +139,9 @@ const defs: FrameDef[] = [
       description: 'Structured documents.'
     },
     runtime: {
-      Icon: Stack,
-      Component: StackFrame
+      Icon: StackIcon,
+      Component: Stack.Frame,
+      List: Stack.List
     }
   },
   {
@@ -154,7 +155,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Cards,
       Component: Note.Frame,
-      Tile: Note.Tile
+      List: Note.List
     }
   },
   {
@@ -167,7 +168,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Files,
       Component: File.Frame,
-      Tile: File.Tile
+      List: File.List
     }
   },
   {
@@ -236,7 +237,7 @@ const defs: FrameDef[] = [
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.document';
 
 // prettier-ignore
 export const defaultFrames = [

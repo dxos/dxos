@@ -11,5 +11,4 @@ export * from './FrameSelector';
 export * from './MembersList';
 export * from './Root';
 export * from './Sidebar';
-export * from './SpaceList';
 export * from './SpaceSettingsDialog';
