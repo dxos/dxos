@@ -121,6 +121,7 @@ message DocumentStack {
   message Section {
     option (object) = true;
 
+    // TODO(burdon): Reconcile -- either JUST store object IDs or an array of objects.
     string object_id = 1;
     dxos.schema.Document document = 10;
     File file = 11;

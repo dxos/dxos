@@ -120,7 +120,6 @@ export const StackFrame = withReactor(() => {
               slots={{
                 input: {
                   className: 'border-0 text-2xl text-black',
-                  autoFocus: true,
                   spellCheck
                 }
               }}

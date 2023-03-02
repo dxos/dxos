@@ -26,7 +26,7 @@ export type EditableObjectListProps<T extends Document> = {
   Action?: FC<any>;
   slots?: EditableObjectListSlots;
   onSelect?: (id: string) => void;
-  onAction?: (id: string) => Promise<void>;
+  onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
   onCreate?: () => Promise<string>;
 };

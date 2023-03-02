@@ -48,11 +48,10 @@ export const DocumentFrame = withReactor(() => {
               },
               input: {
                 className: 'border-0 text-2xl text-black',
-                autoFocus: true,
                 spellCheck
               }
             }}
-            value={document.title}
+            value={document.title ?? ''}
             onChange={(event) => {
               document.title = event.target.value;
             }}
