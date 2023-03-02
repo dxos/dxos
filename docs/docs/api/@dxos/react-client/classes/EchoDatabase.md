@@ -47,14 +47,7 @@ Arguments:
 ### [query(\[filter\])]()
 
 
-Filter by type.
-
-Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;T&gt;</code>
-
-Arguments: 
-
-`filter`: <code>[TypeFilter](/api/@dxos/react-client/types/TypeFilter)&lt;T&gt;</code>
-Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[Document](/api/@dxos/react-client/classes/Document)&gt;</code>
+Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;&gt;</code>
 
 Arguments: 
 

@@ -170,7 +170,7 @@ ISSUES
 ![Architecture](./diagrams/echo-architecture.drawio.svg)
 
 Processes mutations and snapshots to maintain a set of items and links with models.
-ECHO is a hierrahical graph database where items a stored in a tree structure, connected by links.
+ECHO is a hierahical graph database where items a stored in a tree structure, connected by links.
 Each item or link has state-machine and a model.
 
 *   TODO: Set-out basic design-doc process and structure

@@ -251,6 +251,7 @@ message Runtime {
       optional string server = 2;
     }
 
+    // TODO(burdon): Delete.
     message Dxns {
       /// DXNS endpoint.
       optional string server = 1;
@@ -312,6 +313,10 @@ message Runtime {
       optional string server = 1;
     }
 
+    message Supervisor {
+      optional string server = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -321,6 +326,7 @@ message Runtime {
     optional Machine machine = 7;
     optional BotFactory bot = 8;
     optional Publisher publisher = 9;
+    optional Supervisor supervisor = 10;
   }
 
   message Keys {

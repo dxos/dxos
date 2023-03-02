@@ -2,7 +2,7 @@
 <sub>Declared in [packages/sdk/client/src/packlets/proto/gen/schema.ts:13]()</sub>
 
 
-Base class for generated document types and dynamic objects.
+
 
 ## Constructors
 ### [constructor(\[opts\])]()
@@ -31,6 +31,8 @@ Type: <code>undefined | [EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</
 Database reference if bound.
 ### [[schema]]()
 Type: <code>undefined | [EchoSchemaType](/api/@dxos/client/classes/EchoSchemaType)</code>
+
+Returns the schema type descriptor for the object.
 ### [[toStringTag]]()
 Type: <code>string</code>
 ### [__deleted]()
@@ -39,6 +41,8 @@ Type: <code>boolean</code>
 Deletion.
 ### [__typename]()
 Type: <code>undefined | string</code>
+
+Fully qualified name of the object type for objects created from the schema.
 ### [id]()
 Type: <code>string</code>
 
@@ -57,37 +61,6 @@ Arguments:
 `options`: <code>InspectOptionsStylized</code>
 
 `inspect_`: <code>function</code>
-### [_getState()]()
-
-
-Returns: <code>DocumentModelState</code>
-
-Arguments: none
-### [_isPersisted()]()
-
-
-Returns: <code>boolean</code>
-
-Arguments: none
-### [_mutate(mutation)]()
-
-
-Perform mutation on this object's state.
-Mutation is applied optimistically: calls to _getState() will return mutated state.
-
-Returns: <code>undefined | MutateResult</code>
-
-Arguments: 
-
-`mutation`: <code>ObjectMutationSet</code>
-### [_onBind()]()
-
-
-Called after object is bound to database.
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
 ### [toJSON()]()
 
 

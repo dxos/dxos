@@ -8,9 +8,10 @@ import { Link } from 'react-router-dom';
 
 import { ShellLayout, withReactor } from '@dxos/react-client';
 import { Button, DensityProvider, DropdownMenu, getSize, mx } from '@dxos/react-components';
+import { useShell } from '@dxos/react-ui';
 
 import { SpaceSettingsDialog } from '../../containers';
-import { getIcon, useAppRouter, useShell, useTheme } from '../../hooks';
+import { getIcon, useAppRouter, useTheme } from '../../hooks';
 import { Actions } from './Actions';
 
 // TODO(burdon): Show search box or Space name in title.

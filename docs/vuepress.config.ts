@@ -7,7 +7,7 @@ import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
 import { resolve } from 'node:path';
 import { defineUserConfig, UserConfig } from 'vuepress';
-import { hopeTheme } from 'vuepress-theme-hope';
+import { hopeTheme, sidebar } from 'vuepress-theme-hope';
 
 import { MarkdownIt } from '@dxos/apidoc';
 
@@ -44,10 +44,10 @@ const config: UserConfig = defineUserConfig({
     // TODO(wittjosiah): Use release tag?
     docsBranch: 'main',
     docsDir: 'docs/docs',
-    sidebar: {
+    sidebar: sidebar({
       '/guide/': 'structure',
       '/api/': await apiSidebar()
-    },
+    }),
     navbarLayout: {
       left: ['Brand', 'Links'],
       center: [],

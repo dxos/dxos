@@ -19,6 +19,7 @@ export const generateApiDocs = async (config: Config) => {
     outputDirectory: apiDocsPath,
     templateDirectory: path.resolve(__dirname, 'templates/api'),
     input: api,
+    overwrite: true,
     compilerOptions: {
       module: 'esnext'
     },

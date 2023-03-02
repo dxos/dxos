@@ -24,6 +24,8 @@ Options:
 ### [remoteSource]()
 Type: <code>string</code>
 
+Location of the remote client host.
+
 Options:
   - proto3_optional = true
 ### [snapshotInterval]()

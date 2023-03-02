@@ -31,7 +31,7 @@ export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(
           </Button>
         ]}
       >
-        <div className='mt-2 mb-6'>
+        <div className='mt-2 mt-4 mb-6'>
           <Input
             variant='subdued'
             label='Title'
@@ -73,7 +73,7 @@ const Themes: FC<{ selected: string; onSelect: (selected: string) => void }> = (
       <div className='grid grid-cols-6'>
         {themes.map(({ id, classes }) => (
           <Button key={id} variant='ghost' onClick={() => onSelect(id)}>
-            <div className={mx('m-1', selected === id && 'ring-2 ring-black')}>
+            <div className={mx('m-2', selected === id && 'ring-2 ring-black')}>
               <Square className={mx(getSize(6), classes.header, 'text-transparent')} />
             </div>
           </Button>
@@ -89,7 +89,7 @@ const Icons: FC<{ selected: string; onSelect: (selected: string) => void }> = ({
       <div className='grid grid-cols-6'>
         {icons.map(({ id, Icon }) => (
           <Button key={id} variant='ghost' onClick={() => onSelect(id)}>
-            <div className={mx('p-1', selected === id && 'ring-2 ring-black')}>
+            <div className={mx('m-1 p-1', selected === id && 'ring-2 ring-black')}>
               <Icon className={getSize(6)} />
             </div>
           </Button>

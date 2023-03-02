@@ -14,7 +14,7 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,7 +23,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { Properties, PropertiesOptions } from '../proto';
+import { Properties, PropertiesProps } from '../proto';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -151,6 +151,10 @@ export class EchoProxy implements Echo {
     this._invitationProxy = undefined;
   }
 
+  addSchema(schema: EchoSchema) {
+    this.dbRouter.addSchema(schema);
+  }
+
   //
   // Spaces.
   //
@@ -158,7 +162,7 @@ export class EchoProxy implements Echo {
   /**
    * Creates a new space.
    */
-  async createSpace(meta?: PropertiesOptions): Promise<Space> {
+  async createSpace(meta?: PropertiesProps): Promise<Space> {
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 

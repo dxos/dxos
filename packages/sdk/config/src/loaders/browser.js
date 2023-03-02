@@ -24,7 +24,7 @@ export const Dynamics = async () => {
     .then((res) => res.json())
     .catch((error) => {
       log.warn('Failed to fetch dynamic config.', error);
-      return __CONFIG_DYNAMICS__;
+      return {};
     });
 };
 

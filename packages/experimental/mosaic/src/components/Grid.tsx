@@ -213,6 +213,8 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
+  // TODO(burdon): Jumps on first render.
+
   return (
     <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       {/* Full screen. */}
@@ -228,7 +230,10 @@ export const Grid = <T extends {} = {}>({
           )}
         >
           {/* Layout container. */}
-          <div className='flex justify-center items-center' style={containerStyles}>
+          <div
+            className={mx('flex justify-center items-center', visible ? 'visible' : 'invisible')}
+            style={containerStyles}
+          >
             {/* Layout box. */}
             <div
               className='relative'

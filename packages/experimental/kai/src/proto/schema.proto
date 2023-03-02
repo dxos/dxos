@@ -45,8 +45,14 @@ message Link {
 // Objects
 //
 
+message Table {
+  option (object) = true;
+
+  string type = 1;
+}
+
 message Organization {
-  option (object) = true; // TODO(burdon): Fix protobuf plugin.
+  option (object) = true;
 
   string name = 1;
   string description = 2;
@@ -75,6 +81,13 @@ message Task {
   repeated Task sub_tasks = 5;
 }
 
+message TaskList {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 2;
+}
+
 message Project {
   option (object) = true;
 
@@ -93,13 +106,27 @@ message Kanban {
   string title = 1;
 }
 
-message TextDocument {
+message Document {
   option (object) = true;
 
   string title = 1;
   dxos.schema.Text content = 2;
 //  repeated string tags = 2;
   string tag = 3;
+}
+
+message DocumentStack {
+  option (object) = true;
+
+  message Section {
+    string object_id = 1;
+    Document document = 10; // TODO(burdon): Recursion error.
+    File file = 11;
+  }
+
+  string title = 1;
+  repeated Document documents = 2;
+  repeated Section sections = 3;
 }
 
 message Message {
@@ -147,7 +174,7 @@ message File {
   option (object) = true;
 
   string name = 1;
-  string timestamp = 2;
+  string timestamp = 2;  // TODO(burdon): Common metadata.
   string cid = 3;
 }
 

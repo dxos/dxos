@@ -4,7 +4,7 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React from 'react';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame } from '@dxos/client';
@@ -23,7 +23,7 @@ import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
-import { Routes } from './Routes';
+import { Routes } from './routes';
 import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
@@ -47,19 +47,20 @@ export const App = () => {
       resourceExtensions={[osTranslations, appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
+      tooltipProviderProps={{ delayDuration: 100, skipDelayDuration: 400, disableHoverableContent: true }}
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-            <HashRouter>
+            <BrowserRouter>
               <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
                 <ServiceWorkerToast variant='offlineReady' />
               ) : null}
-            </HashRouter>
+            </BrowserRouter>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

@@ -1,13 +1,8 @@
 # Interface `Contact`
-> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client/services.d.ts`]()
 
 Defined in:
-   file://./../../dxos/client.proto
+   file://./../../../dxos/client/services.proto
 ## Properties
-### [displayName]()
-Type: <code>string</code>
-
-Options:
-  - proto3_optional = true
-### [publicKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+### [profile]()
+Type: <code>ProfileDocument</code>

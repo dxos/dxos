@@ -50,11 +50,6 @@ Returns: <code>T[]</code>
 
 Arguments: 
 
-`items`: <code>ConcatArray&lt;T&gt;[]</code>
-Returns: <code>T[]</code>
-
-Arguments: 
-
 `items`: <code>(T | ConcatArray&lt;T&gt;)[]</code>
 ### [copyWithin(target, start, \[end\])]()
 
@@ -77,13 +72,6 @@ Arguments: none
 ### [every(predicate, \[thisArg\])]()
 
 
-Returns: <code>this is S[]</code>
-
-Arguments: 
-
-`predicate`: <code>function</code>
-
-`thisArg`: <code>any</code>
 Returns: <code>boolean</code>
 
 Arguments: 
@@ -106,13 +94,6 @@ Arguments:
 ### [filter(predicate, \[thisArg\])]()
 
 
-Returns: <code>S[]</code>
-
-Arguments: 
-
-`predicate`: <code>function</code>
-
-`thisArg`: <code>any</code>
 Returns: <code>T[]</code>
 
 Arguments: 
@@ -123,13 +104,6 @@ Arguments:
 ### [find(predicate, \[thisArg\])]()
 
 
-Returns: <code>undefined | S</code>
-
-Arguments: 
-
-`predicate`: <code>function</code>
-
-`thisArg`: <code>any</code>
 Returns: <code>undefined | T</code>
 
 Arguments: 
@@ -248,18 +222,6 @@ Arguments:
 ### [reduce(callbackfn, initialValue)]()
 
 
-Returns: <code>T</code>
-
-Arguments: 
-
-`callbackfn`: <code>function</code>
-Returns: <code>T</code>
-
-Arguments: 
-
-`callbackfn`: <code>function</code>
-
-`initialValue`: <code>T</code>
 Returns: <code>U</code>
 
 Arguments: 
@@ -270,18 +232,6 @@ Arguments:
 ### [reduceRight(callbackfn, initialValue)]()
 
 
-Returns: <code>T</code>
-
-Arguments: 
-
-`callbackfn`: <code>function</code>
-Returns: <code>T</code>
-
-Arguments: 
-
-`callbackfn`: <code>function</code>
-
-`initialValue`: <code>T</code>
 Returns: <code>U</code>
 
 Arguments: 
@@ -332,13 +282,6 @@ Arguments:
 ### [splice(start, deleteCount, items)]()
 
 
-Returns: <code>T[]</code>
-
-Arguments: 
-
-`start`: <code>number</code>
-
-`deleteCount`: <code>number</code>
 Returns: <code>T[]</code>
 
 Arguments: 

@@ -38,7 +38,10 @@ export {
   IFrameProxyRuntime,
   WorkerRuntime,
   WorkerSession,
-  type ShellRuntime
+  type ShellRuntime,
+  MemoryShellRuntime,
+  ShellRuntimeImpl,
+  ShellController
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
@@ -56,7 +59,7 @@ export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
 
-export { Properties, PropertiesOptions } from './packlets/proto';
+export { Properties, PropertiesProps } from './packlets/proto';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';
