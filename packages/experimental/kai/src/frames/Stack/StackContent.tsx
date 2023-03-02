@@ -15,14 +15,14 @@ import { TaskList as TaskListComponent } from '../../containers';
 import { TextDocument, File, Table, TaskList } from '../../proto';
 import { getColumnType } from '../Table';
 
-export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
+export const StackContent: FC<{ config: Config; space: Space; object: EchoObject; spellCheck: boolean }> = ({
   config,
   space,
   object,
   spellCheck
 }) => {
   // TODO(burdon): Type?
-  switch (object.__typename) {
+  switch ((object as any).__typename) {
     case TextDocument.type.name: {
       return (
         <Composer
