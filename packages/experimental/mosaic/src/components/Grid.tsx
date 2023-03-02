@@ -222,9 +222,11 @@ export const Grid = <T extends {} = {}>({
         <div
           ref={containerRef}
           className={mx(
-            'absolute w-full h-full overflow-auto',
+            'absolute w-full h-full',
             'snap-mandatory snap-both md:snap-none',
-            slots.root?.className
+            slots.root?.className,
+            // Prevents flickering on initial render.
+            visible ? 'visible overflow-auto' : 'invisible overflow-hidden'
           )}
         >
           {/* Layout container. */}
