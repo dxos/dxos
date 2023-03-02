@@ -17,20 +17,20 @@ export const TaskFrame = React.lazy(() => import('./Task'));
 
 export const Document = {
   Frame: React.lazy(() => import('./Document/DocumentFrame')),
-  Tile: React.lazy(() => import('./Document/DocumentList'))
+  List: React.lazy(() => import('./Document/DocumentList'))
 };
 
 export const Stack = {
   Frame: React.lazy(() => import('./Stack/StackFrame')),
-  Tile: React.lazy(() => import('./Stack/StackList'))
+  List: React.lazy(() => import('./Stack/StackList'))
 };
 
 export const Note = {
   Frame: React.lazy(() => import('./Note/NoteFrame')),
-  Tile: React.lazy(() => import('./Note/NoteList'))
+  List: React.lazy(() => import('./Note/NoteList'))
 };
 
 export const File = {
   Frame: React.lazy(() => import('./File/FileFrame')),
-  Tile: React.lazy(() => import('./File/FileList'))
+  List: React.lazy(() => import('./File/FileList'))
 };

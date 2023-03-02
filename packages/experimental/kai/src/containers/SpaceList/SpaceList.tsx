@@ -25,7 +25,7 @@ export type SpaceListProps = {
 
 export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
   const { frame } = useAppRouter();
-  const Tile = frame?.runtime.Tile;
+  const List = frame?.runtime.List;
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden m-2'>
@@ -37,7 +37,7 @@ export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
           onAction={(intent) => onAction?.(intent)}
         >
           <DensityProvider density='coarse'>
-            <Suspense>{Tile && <Tile />}</Suspense>
+            <Suspense>{List && <List />}</Suspense>
           </DensityProvider>
         </SpaceItem>
       ))}

@@ -47,7 +47,7 @@ export type FrameDef = {
   runtime: {
     Icon: FC<any>;
     Component: FC<any>;
-    Tile?: FC<any>;
+    List?: FC<any>;
   };
 };
 
@@ -128,7 +128,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Article,
       Component: Document.Frame,
-      Tile: Document.Tile
+      List: Document.List
     }
   },
   {
@@ -141,7 +141,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: StackIcon,
       Component: Stack.Frame,
-      Tile: Stack.Tile
+      List: Stack.List
     }
   },
   {
@@ -155,7 +155,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Cards,
       Component: Note.Frame,
-      Tile: Note.Tile
+      List: Note.List
     }
   },
   {
@@ -168,7 +168,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Files,
       Component: File.Frame,
-      Tile: File.Tile
+      List: File.List
     }
   },
   {
