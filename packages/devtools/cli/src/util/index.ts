@@ -4,4 +4,5 @@
 
 export * from './telemetry';
 export * from './publish';
+export * from './supervisor';
 export * from './util';

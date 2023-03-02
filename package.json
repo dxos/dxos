@@ -38,6 +38,7 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log-hook": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
