@@ -72,7 +72,11 @@ export const StackFrame = withReactor(() => {
       }
 
       if (objectId) {
-        stack.sections.splice(index === -1 ? stack.documents.length : index, 0, { objectId });
+        stack.sections.splice(
+          index === -1 ? stack.documents.length : index,
+          0,
+          new DocumentStack.Section({ objectId })
+        );
       }
     }
   };
