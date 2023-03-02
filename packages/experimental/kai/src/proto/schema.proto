@@ -106,7 +106,7 @@ message Kanban {
   string title = 1;
 }
 
-message Document {
+message TextDocument {
   option (object) = true;
 
   string title = 1;
@@ -119,14 +119,15 @@ message DocumentStack {
   option (object) = true;
 
   message Section {
+    option (object) = true;
+
     string object_id = 1;
-    Document document = 10; // TODO(burdon): Recursion error.
+    dxos.schema.Document document = 10;
     File file = 11;
   }
 
   string title = 1;
-  repeated Document documents = 2;
-  repeated Section sections = 3;
+  repeated Section sections = 2;
 }
 
 message Message {

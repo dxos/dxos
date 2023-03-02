@@ -26,7 +26,7 @@ import {
   mx
 } from '@dxos/react-components';
 
-import { Document, File, Table, TaskList } from '../../proto';
+import { TextDocument, File, Table, TaskList } from '../../proto';
 import { FileList } from '../File';
 
 type StackRowProps = {
@@ -95,7 +95,7 @@ export const StackRow = forwardRef(
                     {onCreate && (
                       <>
                         {/* TODO(burdon): Factor out options (and renderers). */}
-                        <DropdownMenuItem onClick={() => onCreate(Document.type)}>
+                        <DropdownMenuItem onClick={() => onCreate(TextDocument.type)}>
                           <TextAlignLeft className={getSize(5)} />
                           <span className='mis-2'>Text</span>
                         </DropdownMenuItem>

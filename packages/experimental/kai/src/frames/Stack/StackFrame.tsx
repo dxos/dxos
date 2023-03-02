@@ -12,7 +12,7 @@ import { EchoSchemaType, useConfig, useQuery, withReactor } from '@dxos/react-cl
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '../../proto';
+import { Contact, TextDocument, DocumentStack, Table, TaskList } from '../../proto';
 import { StackContent } from './StackContent';
 import { SortableStackRow, StackRow } from './StackRow';
 
@@ -28,7 +28,7 @@ export const StackFrame = withReactor(() => {
 
   // TODO(burdon): Arrow of documents (part of stack).
   const stacks = useQuery(space, DocumentStack.filter());
-  const documents = useQuery(space, DocumentType.filter());
+  const documents = useQuery(space, TextDocument.filter());
 
   const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
   useEffect(() => {
@@ -51,8 +51,8 @@ export const StackFrame = withReactor(() => {
     if (stack) {
       if (!objectId) {
         switch (type) {
-          case DocumentType.type: {
-            const object = await space!.db.add(new DocumentType());
+          case TextDocument.type: {
+            const object = await space!.db.add(new TextDocument());
             objectId = object.id;
             break;
           }
@@ -152,7 +152,7 @@ export const StackFrame = withReactor(() => {
             </SortableContext>
           </DndContext>
 
-          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} />
+          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(TextDocument.type, undefined, -1)} />
         </div>
         <div className='pb-4' />
       </div>
