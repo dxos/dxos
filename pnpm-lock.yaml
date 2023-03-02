@@ -34,6 +34,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log-hook': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protobuf-compiler': workspace:*
@@ -132,6 +133,7 @@ importers:
       '@dxos/esbuild-plugins': link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
+      '@dxos/keys': link:packages/common/keys
       '@dxos/log-hook': link:tools/log-hook
       '@dxos/plate': link:packages/common/plate
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
@@ -2207,6 +2209,7 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hello-template': workspace:*
@@ -2256,6 +2259,7 @@ importers:
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/hello-template': link:../../apps/templates/hello-template
