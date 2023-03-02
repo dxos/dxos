@@ -7,7 +7,7 @@ import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
-import { useQuery, useSubscriptionEffect } from '@dxos/react-client';
+import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -78,7 +78,7 @@ export const NoteFrame = () => {
 
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
-  useSubscriptionEffect(() => {
+  useSubscription(() => {
     // TODO(burdon): Rename.
     if (board) {
       setItems(doLayout(board, notes, layout));
