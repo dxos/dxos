@@ -6,18 +6,7 @@ import { ArrowLineLeft, Circle, FileText, Intersect, PaperPlaneTilt, Planet, Plu
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
-import {
-  PublicKey,
-  ShellLayout,
-  Space,
-  Text,
-  useClient,
-  useIdentity,
-  useQuery,
-  useSpace,
-  useSpaces,
-  withReactor
-} from '@dxos/react-client';
+import { ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces, withReactor } from '@dxos/react-client';
 import {
   Avatar,
   Button,
@@ -157,10 +146,9 @@ const SidebarContent = () => {
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { spaceKey } = useParams();
-  const space = useSpace(spaceKey ? PublicKey.fromHex(spaceKey) : undefined);
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const identity = useIdentity();
+  const spaces = useSpaces();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -170,7 +158,7 @@ const SidebarContent = () => {
   };
 
   const handleJoinSpace = () => {
-    void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key });
+    void shell.setLayout(ShellLayout.JOIN_SPACE);
   };
 
   return (

@@ -34,7 +34,9 @@ export const DocumentLayout = () => {
         slots={{
           content: {
             children: <SidebarContent />,
-            className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible')
+            className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
+            onOpenAutoFocus: (event) => event.preventDefault(),
+            onCloseAutoFocus: (event) => event.preventDefault()
           },
           main: { role: 'main', className: 'min-bs-full' }
         }}

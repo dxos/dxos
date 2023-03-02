@@ -14,7 +14,7 @@ export const FirstRunPage = () => {
         role='alert'
         className={mx(
           defaultDescription,
-          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-medium text-lg'
+          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg'
         )}
       >
         {t('first run message')}
