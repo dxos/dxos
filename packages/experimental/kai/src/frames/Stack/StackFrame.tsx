@@ -38,7 +38,7 @@ export const StackFrame = withReactor(() => {
         if (!stacks.length) {
           stack = await space.db.add(new DocumentStack());
           // TODO(burdon): Cannot add documents directly (recursion bug).
-          documents.forEach((document) => stack.sections.push({ objectId: document.id }));
+          documents.forEach((document) => stack.sections.push(new DocumentStack.Section({ objectId: document.id })));
         }
 
         navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
