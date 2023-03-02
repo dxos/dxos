@@ -30,7 +30,7 @@ import { Checkbox, CheckboxProps } from '../Checkbox';
 import { DensityProvider } from '../DensityProvider';
 import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';
 
-// TODO (thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
+// TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
 const LIST_NAME = 'List';
 const LIST_ITEM_NAME = 'ListItem';
