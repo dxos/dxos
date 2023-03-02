@@ -127,7 +127,8 @@ message DocumentStack {
   }
 
   string title = 1;
-  repeated Section sections = 2;
+  repeated Document documents = 2;
+  repeated Section sections = 3;
 }
 
 message Message {
