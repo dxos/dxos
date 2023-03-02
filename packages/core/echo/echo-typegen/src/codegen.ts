@@ -129,14 +129,6 @@ export const generate = (root: pb.NamespaceBase): string => {
 };
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
-  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
-    yield text`
-      export namespace ${ns.name} {
-        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
-      }
-    `;
-  }
-
   if (ns instanceof pb.Type) {
     if (ns.name === 'Text') {
       return;
@@ -147,6 +139,14 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
     } else {
       yield createObjectClass(ns);
     }
+  }
+
+  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
+    yield text`
+      export namespace ${ns.name} {
+        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
+      }
+    `;
   }
 }
 
