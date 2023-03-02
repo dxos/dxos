@@ -15,7 +15,7 @@ const reservedTypeNames = [importNamespace, 'EchoSchema', 'TypeFilter', 'Text', 
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 // Types that are injected from `importNamespace`.
-const injectedTypes = ['Text', 'Document'];
+const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Document'];
 
 /**
  * Protobuf schema as JSON object.
@@ -48,7 +48,7 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      if (injectedTypes.includes(field.resolvedType.name)) {
+      if (injectedTypes.includes(field.resolvedType.fullName)) {
         return `${importNamespace}.${field.resolvedType.name}`;
       }
 
@@ -133,7 +133,7 @@ export const generate = (root: pb.NamespaceBase): string => {
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
   if (ns instanceof pb.Type) {
-    if (injectedTypes.includes(ns.name)) {
+    if (injectedTypes.includes(ns.fullName)) {
       return;
     }
 
