@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
-import { base, db, schema, Text } from '@dxos/echo-schema';
+import { base, db, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
-import { Task } from './proto';
+import { Container, Document, Task } from './proto';
 
 describe('database', () => {
   test('saving', async () => {
@@ -38,6 +38,23 @@ describe('database', () => {
 
       task.description.model!.insert('test', 0);
       expect(task.description.model!.textContent).to.eq('test');
-    })
-  })
+    });
+
+    test('nested text', async () => {
+      const database = await createDatabase();
+
+      const container = new Container();
+      await database.add(container);
+
+      const title = 'Our doc';
+      const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+      container.sections.push(
+        new Container.Section({ document: new Document({ title: 'Our doc', text: new Text(text) }) })
+      );
+
+      const queriedDoc = database.query(Document.filter({ title })).objects[0];
+      expect(queriedDoc.title).to.equal(title);
+      expect(queriedDoc.text.text).to.equal(text);
+    });
+  });
 });
