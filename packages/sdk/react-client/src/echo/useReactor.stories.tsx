@@ -9,8 +9,7 @@ import { PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-components';
 
-import { useClient } from '../client';
-import { ClientDecorator, ClientSpaceDecorator } from '../testing';
+import { ClientSpaceDecorator } from '../testing';
 import { withReactor } from './useReactor';
 import { useSpace } from './useSpaces';
 import { useSubscription, useSubscriptionEffect } from './useSubscription';
@@ -23,11 +22,9 @@ export default {
 
 export const Test = {
   render: () => {
-    const client = useClient();
-
-    return <div>{JSON.stringify(client.toJSON())}</div>;
+    return <div>client active</div>;
   },
-  decorators: [ClientDecorator()]
+  decorators: [ClientSpaceDecorator()]
 };
 
 export const Default = {

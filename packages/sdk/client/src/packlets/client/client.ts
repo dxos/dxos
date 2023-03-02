@@ -54,6 +54,7 @@ export class Client {
 
   private _initialized = false;
   private _statusStream?: Stream<SystemStatusResponse>;
+  private _statusTimeout?: NodeJS.Timeout;
   private _status?: SystemStatus;
 
   // prettier-ignore
@@ -159,18 +160,17 @@ export class Client {
 
     assert(this._services.services.SystemService, 'SystemService is not available.');
 
-    let timeout: NodeJS.Timeout | undefined;
     const trigger = new Trigger<Error | undefined>();
     this._statusStream = this._services.services.SystemService.queryStatus();
     this._statusStream.subscribe(
       async ({ status }) => {
-        timeout && clearTimeout(timeout);
+        this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
         this._status = status;
         this._statusUpdate.emit(this._status);
 
-        timeout = setTimeout(() => {
+        this._statusTimeout = setTimeout(() => {
           this._status = undefined;
           this._statusUpdate.emit(this._status);
         }, 5000);
@@ -209,6 +209,7 @@ export class Client {
     await this._echo.close();
     await this._mesh.close();
 
+    this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
     await this._services.close();
 
