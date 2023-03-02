@@ -83,6 +83,8 @@ interface ListItemSlots {
   openTrigger?: ComponentPropsWithoutRef<typeof ListItemOpenTrigger>;
   openTriggerIcon?: ComponentPropsWithoutRef<typeof CaretDown>;
   mainContent?: ComponentPropsWithoutRef<'div'>;
+  selectableCheckbox?: Omit<CheckboxProps, 'default' | 'checked' | 'onCheckedChange'>;
+  selectableEndcap?: Omit<ListItemEndcapProps, 'children'>;
 }
 
 interface NonCollapsibleListItemProps extends Omit<ListItemData, 'id'> {
@@ -291,10 +293,11 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
           </div>
         )}
         {selectable && (
-          <ListItemEndcap>
+          <ListItemEndcap {...slots.selectableEndcap}>
             <Checkbox
+              {...slots.selectableCheckbox}
               labelId={headingId}
-              className={density === 'fine' ? 'mbs-1.5' : 'mbs-2.5'}
+              className={mx(density === 'fine' ? 'mbs-1.5' : 'mbs-2.5', slots.selectableCheckbox?.className)}
               {...{ checked: selected, onCheckedChange: setSelected }}
             />
           </ListItemEndcap>

@@ -74,7 +74,11 @@ export const StackRow = forwardRef(
     const [fileDialogVisible, setFileDialogVisible] = useState(false);
 
     return (
-      <div ref={ref} style={style} className={mx('group flex mx-6 md:mx-0', dragging && 'bg-zinc-100', className)}>
+      <div
+        ref={ref}
+        style={style}
+        className={mx('group flex mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
+      >
         <div className='hidden md:flex w-24 text-gray-400'>
           {showMenu && (
             <div className='flex invisible group-hover:visible ml-6 -mt-0.5'>

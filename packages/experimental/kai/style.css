@@ -15,13 +15,6 @@ body {
 }
 
 /**
- * Checkbox
- */
-.radix-state-unchecked {
-  background-color: white !important;
-}
-
-/**
  * Composer
  */
 .kai-composer {}

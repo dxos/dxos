@@ -116,7 +116,15 @@ export const TaskItem: FC<{
         id={task.id}
         completed={task.completed}
         title={task.title}
-        slots={slots}
+        slots={{
+          ...slots,
+          listItem: {
+            selectableCheckbox: {
+              className:
+                'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
+            }
+          }
+        }}
         onChangeCompleted={(completed) => (task.completed = completed)}
         onChangeTitle={({ target: { value } }) => {
           task.title = value ?? '';
