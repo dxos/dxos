@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Space, useQuery, Document, withReactor } from '@dxos/react-client';
+import { Space, useQuery, Document, observer } from '@dxos/react-client';
 
 import { TaskList as TaskListComponent } from '../components/TaskList';
 
@@ -12,7 +12,7 @@ export type TaskListProps = {
   space: Space;
 };
 
-export const TaskList = withReactor((props: TaskListProps) => {
+export const TaskList = observer((props: TaskListProps) => {
   const { space } = props;
   const [list] = useQuery(space, { type: 'list' });
   const { tasks, title } = list ?? {};

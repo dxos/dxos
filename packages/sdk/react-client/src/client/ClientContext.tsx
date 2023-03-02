@@ -129,7 +129,7 @@ export const ClientProvider = ({
     return () => {
       log('clean up');
       clearTimeout(timeout);
-      // void client?.destroy().catch((err) => log.catch(err));
+      void client?.destroy().catch((err) => log.catch(err));
     };
   }, [clientProvider, configProvider, createServices]);
 

@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
@@ -41,7 +41,7 @@ const sizes: any[] = [
 
 const dimensions = { width: 900, height: 600 };
 
-export const SketchFrame = withReactor(() => {
+export const SketchFrame = observer(() => {
   const download = useFileDownload();
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');

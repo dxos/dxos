@@ -19,6 +19,7 @@ import { ClientProvider } from '../client';
 const testBuilder = new TestBuilder();
 const services = () => testBuilder.createClientServicesHost();
 
+// TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
 const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
   return (
     <ClientProvider
@@ -76,36 +77,6 @@ export type ClientSpaceDecoratorOptions = {
 export const ClientSpaceDecorator =
   ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
   (Story, context) => {
-    // const [clients, setClients] = useState<Client[]>();
-
-    // useEffect(() => {
-    //   const timeout = setTimeout(async () => {
-    //     const clients = [...Array(count)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
-    //     await Promise.all(clients.map((client) => client.initialize()));
-    //     log('initialized');
-
-    //     setClients(clients);
-    //   });
-
-    //   return () => {
-    //     clearTimeout(timeout);
-    //   };
-    // }, [count]);
-
-    // if (!clients) {
-    //   return <Loading label='Loading…' />;
-    // }
-
-    // return (
-    //   <div className='flex' style={{ display: 'flex' }}>
-    //     {clients.map((client, index) => (
-    //       <ClientProvider key={index} client={client} fallback={() => <Loading label='Loading…' />}>
-    //         <Story args={{ id: index, ...context.args }} />
-    //       </ClientProvider>
-    //     ))}
-    //   </div>
-    // );
-
     const [space, setSpace] = useState<Space>();
 
     return (
@@ -121,13 +92,13 @@ export const ClientSpaceDecorator =
           }}
         >
           <Story args={{ spaceKey: space?.key, id: 0, ...context.args }} />
-          {space &&
-            [...Array(count - 1)].map((_, index) => (
-              <ChildClient key={index} rootSpace={space} schema={schema}>
-                <Story args={{ spaceKey: space?.key, id: index + 1, ...context.args }} />
-              </ChildClient>
-            ))}
         </ClientProvider>
+        {space &&
+          [...Array(count - 1)].map((_, index) => (
+            <ChildClient key={index} rootSpace={space} schema={schema}>
+              <Story args={{ spaceKey: space?.key, id: index + 1, ...context.args }} />
+            </ChildClient>
+          ))}
       </div>
     );
   };

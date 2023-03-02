@@ -5,14 +5,14 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
 import { TextDocument } from '../../proto';
 
-export const DocumentFrame = withReactor(() => {
+export const DocumentFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
   const documents = useQuery(space, TextDocument.filter());

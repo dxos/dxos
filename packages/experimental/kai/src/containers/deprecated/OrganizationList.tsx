@@ -6,7 +6,7 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { getSize, List, ListItem, Input, ListItemEndcap, mx, ListItemHeading } from '@dxos/react-components';
 
 import { Address, Organization } from '../../proto';
@@ -23,7 +23,7 @@ export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   );
 };
 
-export const OrganizationListItem: FC<{ organization: Organization }> = withReactor(({ organization }) => {
+export const OrganizationListItem: FC<{ organization: Organization }> = observer(({ organization }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (

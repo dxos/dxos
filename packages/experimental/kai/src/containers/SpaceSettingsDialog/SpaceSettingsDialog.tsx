@@ -6,7 +6,7 @@ import { Square } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { Button, Dialog, DialogProps, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { icons, themes } from '../../hooks';
@@ -17,7 +17,7 @@ export type SpaceSettingsDialog = {
   space: Space;
 } & Pick<DialogProps, 'open' | 'onOpenChange' | 'defaultOpen'>;
 
-export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = withReactor(
+export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = observer(
   ({ space, open, onOpenChange, defaultOpen }) => {
     const { t } = useTranslation('kai');
 
