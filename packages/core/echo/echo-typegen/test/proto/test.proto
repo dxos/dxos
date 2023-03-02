@@ -41,3 +41,16 @@ message Task {
   repeated Task sub_tasks = 5;
   dxos.schema.Text description = 6;
 }
+
+message Container {
+  option (object) = true;
+
+  message Section {
+    option (object) = true;
+    
+    string title = 1;
+    dxos.schema.Document document = 2;
+  }
+
+  repeated Section sections = 1;
+}
