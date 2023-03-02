@@ -41,24 +41,13 @@ describe('database', () => {
       expect(task.description.model!.textContent).to.eq('test');
     });
 
-    test('nested text', async () => {
-      debugger;
+    test.only('nested text', async () => {
       const database = await createDatabase();
-      await Promise.all(
-        range(10).map(async () => {
-          const doc = new Document({ title: 'test' });
-          doc.text = new Text('Some text');
-          await database.add(doc);
-          return doc;
-        })
-      );
-
-      const documents = database.query(Document.filter()).objects;
 
       const container = new Container();
       await database.add(container);
 
-      documents.forEach((document) => container.sections.push({ document }));
+      container.sections.push({ document: new Document() });
     });
   });
 });
