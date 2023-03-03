@@ -14,7 +14,10 @@ export type BotConstructor = () => Bot;
  * Mock bot manager.
  */
 export class BotManager {
-  constructor(private readonly _botMap: Map<string, BotConstructor>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _botMap: Map<string, BotConstructor>
+  ) {}
 
   async create(botId: string, space: Space): Promise<Bot> {
     const constructor = this._botMap.get(botId);

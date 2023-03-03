@@ -27,7 +27,7 @@ export class ChatModel {
       apiKey: this._options.apiKey
     });
 
-    // TODO(burdon): Hack to workaround error when running in browser: Refused to set unsafe header "User-Agent".
+    // Hack to workaround error when running in browser: Refused to set unsafe header "User-Agent".
     delete configuration.baseOptions.headers['User-Agent'];
 
     // https://www.npmjs.com/package/openai
@@ -35,8 +35,8 @@ export class ChatModel {
   }
 
   // TODO(burdon): Extract name and company from email/calendar event and create a Stack for the company.
-  // TODO(burdon): Remove from the context any bad answers or prompts. Clip previous tokens.
-  // TODO(burdon): Coerce output format.
+  // TODO(burdon): Remove from the context any bad answers or prompts.
+  // TODO(burdon): Coerce output format (e.g., to JSON).
 
   async request(messages: ChatCompletionRequestMessage[]) {
     // https://platform.openai.com/docs/guides/chat
