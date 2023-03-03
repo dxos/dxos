@@ -31,13 +31,11 @@ describe('openai', () => {
   };
 
   const loadJson = (filename: string) => {
-    return yaml.load(
-      String(fs.readFileSync(path.join(process.cwd(), 'packages/experimental/bots/data/messages.json')))
-    ) as any;
+    return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
   };
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('basic', async () => {
+  test('basic', async () => {
     const chat = createChatModel();
     if (!chat) {
       return;
