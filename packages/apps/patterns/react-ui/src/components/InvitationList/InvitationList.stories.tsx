@@ -26,7 +26,7 @@ export const Default = {
     (Story: StoryFn) => {
       const testBuilder = new TestBuilder();
       const clients = useMemo(() => {
-        return [...Array(1)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
+        return [...Array(1)].map(() => new Client({ services: testBuilder.createLocal() }));
       }, []);
 
       const [invitations, setInvitations] = useState<CancellableInvitationObservable[]>([]);

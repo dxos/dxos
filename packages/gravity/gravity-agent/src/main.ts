@@ -69,7 +69,7 @@ const main = () => {
             log.info('spec', { spec });
           }
           const testBuilder = new TestBuilder(new Config(config));
-          const services = testBuilder.createClientServicesHost();
+          const services = testBuilder.createLocal();
           const stateMachine = testStateMachineFactory(spec.stateMachine!);
           const agent = new Agent({ config, services, spec, stateMachine });
           await agent.initialize();

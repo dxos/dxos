@@ -12,7 +12,7 @@ import { Loading } from '@dxos/react-components';
 import { ClientProvider } from '../client';
 
 const testBuilder = new TestBuilder();
-const services = () => testBuilder.createClientServicesHost();
+const services = () => testBuilder.createLocal();
 
 export type ClientDecoratorOptions = {
   count?: number;
