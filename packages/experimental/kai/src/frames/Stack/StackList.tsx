@@ -9,7 +9,7 @@ import { useQuery } from '@dxos/react-client';
 
 import { ObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
-import { DocumentStack, TextDocument } from '../../proto';
+import { DocumentStack, Document } from '../../proto';
 
 export const StackList = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const StackList = () => {
       onSelect={(objectId) => navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))}
       onCreate={async () => {
         const stack = await space.db.add(new DocumentStack());
-        const document = await space.db.add(new TextDocument());
+        const document = await space.db.add(new Document());
         stack.sections.push(new DocumentStack.Section({ objectId: document.id }));
         return stack;
       }}

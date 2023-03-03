@@ -10,16 +10,16 @@ import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { TextDocument } from '../../proto';
+import { Document } from '../../proto';
 
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
-  const documents = useQuery(space, TextDocument.filter());
+  const documents = useQuery(space, Document.filter());
 
   // Default to first.
   // TODO(burdon): Factor out pattern.
-  const document = objectId ? (space!.db.getObjectById(objectId) as TextDocument) : undefined;
+  const document = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
     if (frame && !document && documents.length) {
       navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: documents[0].id }));
