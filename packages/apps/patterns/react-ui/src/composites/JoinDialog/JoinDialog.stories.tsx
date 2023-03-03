@@ -24,7 +24,7 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
   const n = 2;
   const testBuilder = new TestBuilder();
   const clients = useMemo(() => {
-    return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
+    return [...Array(n)].map(() => new Client({ services: testBuilder.createLocal() }));
   }, []);
 
   const [invitationCode, setInvitationCode] = useState<string>();

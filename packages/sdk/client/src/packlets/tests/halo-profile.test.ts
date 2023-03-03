@@ -15,7 +15,7 @@ describe('Halo', () => {
   test('creates a identity', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     afterTest(() => client.destroy());
     await client.initialize();
 
@@ -29,7 +29,7 @@ describe('Halo', () => {
   test('device invitations', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createClientServicesHost() });
+    const client1 = new Client({ services: testBuilder.createLocal() });
     afterTest(() => client1.destroy());
     await client1.initialize();
 
@@ -38,7 +38,7 @@ describe('Halo', () => {
 
     expect(await client1.halo.getDevices()).to.have.lengthOf(1);
 
-    const client2 = new Client({ services: testBuilder.createClientServicesHost() });
+    const client2 = new Client({ services: testBuilder.createLocal() });
     afterTest(() => client2.destroy());
     await client2.initialize();
 
