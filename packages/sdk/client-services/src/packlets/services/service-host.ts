@@ -27,7 +27,7 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
-import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
+import { ClientServices, clientServiceBundle } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Factor out to spaces.

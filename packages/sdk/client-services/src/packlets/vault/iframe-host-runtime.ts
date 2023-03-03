@@ -10,7 +10,7 @@ import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-mana
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, Provider } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices, ClientServicesHost, LocalClientServices } from '../services';
+import { clientServiceBundle, ClientServices, LocalClientServices } from '../services';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';

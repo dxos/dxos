@@ -1,6 +1,11 @@
-import { ServiceBundle } from "@dxos/rpc";
-import { ClientServices, ClientServicesProvider } from "./service-definitions";
-import { ClientServicesHost, ClientServicesHostParams } from "./service-host";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { ServiceBundle } from '@dxos/rpc';
+
+import { ClientServices, ClientServicesProvider } from './service-definitions';
+import { ClientServicesHost, ClientServicesHostParams } from './service-host';
 
 /**
  * Starts a local instance of the service host.

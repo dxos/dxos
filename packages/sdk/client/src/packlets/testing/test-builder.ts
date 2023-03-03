@@ -81,7 +81,7 @@ export class TestBuilder {
 
   /**
    * Create backend service handlers.
-  */
+   */
   createClientServicesHost() {
     return new ClientServicesHost({
       config: this._config,
@@ -95,12 +95,12 @@ export class TestBuilder {
    * Create local services host.
    */
   createLocal() {
-    return new LocalClientServices({ 
+    return new LocalClientServices({
       config: this._config,
       modelFactory: this._modelFactory,
       networkManager: this.networkManager,
       storage: this.storage
-     });
+    });
   }
 
   /**
