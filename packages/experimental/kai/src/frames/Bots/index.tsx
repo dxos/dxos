@@ -21,7 +21,8 @@ import { useAppRouter } from '../../hooks';
 // socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
 // cors-proxy-server
 
-const DOCKER_URL = 'http://127.0.0.1:2376';
+// const DOCKER_URL = 'http://127.0.0.1:2376';
+const DOCKER_URL = 'http://127.0.0.1:2376/docker';
 
 export const BotsFrame = () => {
   const [resp, setResp] = useState({});
@@ -78,11 +79,13 @@ export const BotsFrame = () => {
     });
     refresh();
     setStatus('Waiting for bot to start...');
-    const botEndpoint = `ws://127.0.0.1:${port}`;
+
+    // const botEndpoint = `127.0.0.1:${port}`;
+    const botEndpoint = `localhost:2376/proxy/${port}`;
 
     while (true) {
       try {
-        await fetch(`http://127.0.0.1:${port}`);
+        await fetch(`http://${botEndpoint}`);
         break;
       } catch (err) {
         console.log(err);
@@ -92,7 +95,7 @@ export const BotsFrame = () => {
     setStatus('Connecting to bot...');
 
     const botClient = new Client({
-      services: fromRemote(botEndpoint)
+      services: fromRemote(`ws://${botEndpoint}`)
     });
 
     await botClient.initialize();
