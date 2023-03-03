@@ -34,11 +34,11 @@ type Levels = 1 | 2 | 3 | 4 | 5 | 6;
 
 const headingClassNames: Record<Levels, string> = {
   1: 'mbs-4 mbe-2 text-4xl font-semibold',
-  2: 'mbs-4 mbe-2 text-3xl font-semibold',
+  2: 'mbs-4 mbe-2 text-3xl font-bold',
   3: 'mbs-4 mbe-2 text-2xl font-bold',
-  4: 'mbs-4 mbe-2 text-xl font-bold',
+  4: 'mbs-4 mbe-2 text-xl font-extrabold',
   5: 'mbs-4 mbe-2 text-lg font-extrabold',
-  6: 'mbs-4 mbe-2 font-extrabold'
+  6: 'mbs-4 mbe-2 font-black'
 };
 
 export const Composer = ({ document, field = 'content', placeholder, slots = {} }: ComposerProps) => {
