@@ -10,55 +10,29 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-// TODO(burdon): Configure log.
-
-// const DOCKER_URL = 'https://cors-anywhere.herokuapp.com/' + 'http://198.211.114.136:4243';
-// socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
-// cors-proxy-server
-
-// const DOCKER_URL = 'http://127.0.0.1:2376';
-const DOCKER_URL = 'http://127.0.0.1:2376/docker';
-
-export const fromRemote = (url: string): ClientServicesProvider => {
-  const dxrpcClient = new WebsocketRpcClient({
-    url,
-    requested: clientServiceBundle,
-    exposed: {},
-    handlers: {}
-  });
-
-  return {
-    get descriptors() {
-      return clientServiceBundle;
-    },
-
-    get services() {
-      return dxrpcClient.rpc;
-    },
-
-    open: () => dxrpcClient.open(),
-    close: () => dxrpcClient.close()
-  };
-};
+// TODO(burdon): Import from @dxos/bot-lab.
+const PROXY_PORT = 2376;
+const PROXY_ENDPOINT = `http://127.0.0.1:${PROXY_PORT}/docker`;
 
 /**
- *
+ * Bot client connects to Docker proxy server.
  */
 export class BotClient {
   public readonly onStatusUpdate = new Event<string>();
 
   constructor(private readonly _space: Space) {}
 
-  async refresh(): Promise<any> {
+  async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${DOCKER_URL}/containers/json?all=true`).then((r) => r.json());
+    return fetch(`${PROXY_ENDPOINT}/containers/json?all=true`).then((r) => r.json());
   }
 
-  async addBot(botName = 'dxos.bot.test') {
+  async startBot(botName: string) {
     this.onStatusUpdate.emit('Creating container...');
+
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
     const port = Math.floor(Math.random() * 1000) + 3000;
-    const response = await fetch(`${DOCKER_URL}/containers/create?name=${botInstanceId}`, {
+    const response = await fetch(`${PROXY_ENDPOINT}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -85,19 +59,16 @@ export class BotClient {
         }
       })
     });
-    const data = await response.json();
-    log(data);
 
-    this.onStatusUpdate.emit('Starting container...');
-    await fetch(`${DOCKER_URL}/containers/${data.Id}/start`, {
+    const data = await response.json();
+    this.onStatusUpdate.emit('Starting bot container...');
+    await fetch(`${PROXY_ENDPOINT}/containers/${data.Id}/start`, {
       method: 'POST'
     });
 
-    this.onStatusUpdate.emit('Waiting for bot to start...');
-
+    // Poll proxy until container starts.
     // const botEndpoint = `127.0.0.1:${port}`;
     const botEndpoint = `localhost:2376/proxy/${port}`;
-
     while (true) {
       try {
         await fetch(`http://${botEndpoint}`);
@@ -107,56 +78,77 @@ export class BotClient {
       }
       await sleep(500);
     }
+
     this.onStatusUpdate.emit('Connecting to bot...');
-
-    const botClient = new Client({
-      services: fromRemote(`ws://${botEndpoint}`)
-    });
-
+    const botClient = new Client({ services: fromRemote(`ws://${botEndpoint}`) });
     await botClient.initialize();
-
     log('status', await botClient.getStatus());
-    this.onStatusUpdate.emit('Initializing bot...');
 
-    await botClient.halo.createIdentity({
-      displayName: botInstanceId
-    });
+    this.onStatusUpdate.emit('Initializing bot...');
+    await botClient.halo.createIdentity({ displayName: botInstanceId });
 
     this.onStatusUpdate.emit('Joining space...');
     log('joining', { space: this._space.key });
+    await this.inviteBotToSpace(botClient);
 
-    {
-      const trg = new Trigger();
-      const invitation = this._space.createInvitation({
-        authMethod: AuthMethod.NONE
-      });
-      invitation.subscribe({
-        onConnecting: async (invitation1) => {
-          log('invitation1', invitation1);
-          const observable2 = botClient.echo.acceptInvitation(invitation1);
-          observable2.subscribe({
-            onSuccess: async (invitation2) => {
-              trg.wake();
-            },
-            onCancelled: () => console.error(new Error('cancelled')),
-            onTimeout: (err: Error) => console.error(new Error(err.message)),
-            onError: (err: Error) => console.error(new Error(err.message))
-          });
-        },
-        onConnected: async (invitation1) => {
-          log('connected');
-        },
-        onSuccess: async (invitation1) => {
-          log('success');
-        },
-        onCancelled: () => console.error(new Error('cancelled')),
-        onTimeout: (err: Error) => console.error(new Error(err.message)),
-        onError: (err: Error) => console.error(new Error(err.message))
-      });
+    this.onStatusUpdate.emit('Connected');
+  }
 
-      await trg.wait();
-    }
+  private async inviteBotToSpace(botClient: Client) {
+    const connected = new Trigger();
+    const invitation = this._space.createInvitation({
+      authMethod: AuthMethod.NONE
+    });
 
-    this.onStatusUpdate.emit('Done');
+    invitation.subscribe({
+      onConnecting: async (invitation1) => {
+        log('invitation1', invitation1);
+        const observable2 = botClient.echo.acceptInvitation(invitation1);
+        observable2.subscribe({
+          onSuccess: async () => {
+            connected.wake();
+          },
+          onCancelled: () => console.error(new Error('cancelled')),
+          onTimeout: (err: Error) => console.error(new Error(err.message)),
+          onError: (err: Error) => console.error(new Error(err.message))
+        });
+      },
+      onConnected: async () => {
+        log('connected');
+      },
+      onSuccess: async () => {
+        log('success');
+      },
+      onCancelled: () => console.error(new Error('cancelled')),
+      onTimeout: (err: Error) => console.error(new Error(err.message)),
+      onError: (err: Error) => console.error(new Error(err.message))
+    });
+
+    await connected.wait();
   }
 }
+
+/**
+ * Proxied access to remove Bot client.
+ */
+const fromRemote = (url: string): ClientServicesProvider => {
+  const dxRpcClient = new WebsocketRpcClient({
+    url,
+    requested: clientServiceBundle,
+    exposed: {},
+    handlers: {}
+  });
+
+  return {
+    get descriptors() {
+      return clientServiceBundle;
+    },
+
+    get services() {
+      return dxRpcClient.rpc;
+    },
+
+    open: () => dxRpcClient.open(),
+    close: () => dxRpcClient.close()
+  };
+};

@@ -8,6 +8,11 @@ import { join } from 'node:path';
 
 const EXTERNALIZED_PACKAGES = ['@koush/wrtc', 'sodium-universal', 'xsalsa20-universal'];
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\BODY');
+
+/**
+ * Builds the bot Docker image.
+ */
 void (async () => {
   const ourdir = './dist/bot';
 
@@ -18,8 +23,6 @@ void (async () => {
   await mkdir(ourdir, { recursive: true });
 
   const externalDeps: Record<string, string> = {};
-
-  const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\BODY');
 
   await build({
     entryPoints: ['./src/main.ts'],

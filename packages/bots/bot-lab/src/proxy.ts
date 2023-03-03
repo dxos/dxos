@@ -7,8 +7,16 @@ import express from 'express';
 import { request, createServer } from 'http';
 import httpProxy from 'http-proxy';
 
+/**
+ * Web server proxies web socket requests from DXOS Apps to the Docker daemon.
+ */
+
+const PROXY_PORT = 2376; // TODO(burdon): Config.
+
 const app = express();
 const server = createServer(app);
+const proxy = httpProxy.createProxyServer({ ws: true });
+
 app.use(
   cors({
     preflightContinue: true
@@ -16,34 +24,25 @@ app.use(
 );
 
 app.use('/docker', (req, res) => {
-  const creq = request(
+  const proxiedReq = request(
     {
       method: req.method,
       path: req.url,
       headers: req.headers,
       socketPath: '/var/run/docker.sock'
     },
-    (cres) => {
-      res.status(cres.statusCode!);
-      res.set(cres.headers);
-      cres.pipe(res);
+    (proxiedRes) => {
+      res.status(proxiedRes.statusCode!);
+      res.set(proxiedRes.headers);
+      proxiedRes.pipe(res);
     }
   );
+
   console.log(req.method, req.path);
-  req.pipe(creq, { end: true });
+  req.pipe(proxiedReq, { end: true });
 });
 
-const proxy = httpProxy.createProxyServer({ ws: true });
-
 app.use('/proxy/:port', (req, res) => {
-  // const socket = new Socket()
-  // socket.connect(parseInt(req.params.port), 'localhost', () => {
-  //   req.pipe(socket, { end: true })
-  //   socket.pipe(res, { end: true })
-  // })
-
-  console.log(req.method, req.protocol, req.url);
-
   proxy.web(
     req,
     res,
@@ -67,6 +66,6 @@ server.on('upgrade', (req, socket, head) => {
   });
 });
 
-server.listen(2376, () => {
-  console.log('Proxy listening on port 2376');
+server.listen(PROXY_PORT, () => {
+  console.log(`Proxy listening on port ${PROXY_PORT}`);
 });

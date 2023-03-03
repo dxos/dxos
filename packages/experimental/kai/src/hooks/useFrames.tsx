@@ -5,7 +5,7 @@
 import assert from 'assert';
 import {
   Article,
-  BugBeetle,
+  Robot,
   Calendar,
   Cards,
   Code,
@@ -115,7 +115,7 @@ const defs: FrameDef[] = [
       description: 'Bot management.'
     },
     runtime: {
-      Icon: BugBeetle,
+      Icon: Robot,
       Component: BotFrame
     }
   },

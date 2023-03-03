@@ -71,7 +71,6 @@ const init = async () => {
 
       return {
         exposed: client.services.descriptors,
-        requested: {},
         handlers: client.services.services as ClientServices,
         onOpen: async () => {
           log.info('open', { id });
