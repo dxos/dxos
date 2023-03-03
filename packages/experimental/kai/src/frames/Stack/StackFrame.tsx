@@ -5,6 +5,7 @@
 import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,38 +47,33 @@ export const StackFrame = withReactor(() => {
     }
   }, [space, frame, stacks, stack]);
 
-  // TODO(burdon): Drag (mosaic).
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
-    if (stack) {
-      if (!objectId) {
-        switch (type) {
-          case TextDocument.type: {
-            const object = await space!.db.add(new TextDocument());
-            objectId = object.id;
-            break;
-          }
+    assert(stack);
 
-          case Table.type: {
-            const object = await space!.db.add(new Table({ type: Contact.type.name }));
-            objectId = object.id;
-            break;
-          }
+    if (!objectId) {
+      switch (type) {
+        case TextDocument.type: {
+          const object = await space!.db.add(new TextDocument());
+          objectId = object.id;
+          break;
+        }
 
-          case TaskList.type: {
-            const object = await space!.db.add(new TaskList());
-            objectId = object.id;
-            break;
-          }
+        case Table.type: {
+          const object = await space!.db.add(new Table({ type: Contact.type.name }));
+          objectId = object.id;
+          break;
+        }
+
+        case TaskList.type: {
+          const object = await space!.db.add(new TaskList());
+          objectId = object.id;
+          break;
         }
       }
+    }
 
-      if (objectId) {
-        stack.sections.splice(
-          index === -1 ? stack.documents.length : index,
-          0,
-          new DocumentStack.Section({ objectId })
-        );
-      }
+    if (objectId) {
+      stack.sections.splice(index === -1 ? stack.sections.length : index, 0, new DocumentStack.Section({ objectId }));
     }
   };
 
