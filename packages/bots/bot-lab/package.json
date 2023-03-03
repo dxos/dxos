@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "build": "node -r @swc-node/register src/build.ts",
+    "build:image": "pnpm -w nx compile bot-lab && pnpm run build && docker build -t bot-test .",
     "proxy": "node -r @swc-node/register src/proxy.ts"
   },
   "dependencies": {
