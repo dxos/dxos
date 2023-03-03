@@ -1,9 +1,9 @@
-# Metagraph
+# Bots
 
 ## Testing
 
-Start the test server.
+Create a local config file with your test keys:
 
 ```bash
-LOG_FILTER="metagraph:debug" npm run start-server
+TEST_CONFIG=packages/experimental/bots/config-local.yml p test
 ```
