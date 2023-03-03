@@ -32,11 +32,13 @@
     "assert": "^2.0.0",
     "chess.js": "^1.0.0-alpha.0",
     "cross-fetch": "^3.1.5",
+    "html-to-text": "^9.0.4",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
     "openai": "^3.2.1"
   },
   "devDependencies": {
+    "@types/html-to-text": "^9.0.0",
     "@types/imap-simple": "^4.2.5",
     "@types/js-yaml": "^4.0.5"
   }

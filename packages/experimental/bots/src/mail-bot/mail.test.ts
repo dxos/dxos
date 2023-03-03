@@ -3,6 +3,7 @@
 //
 
 import fs from 'fs';
+// import { convert } from 'html-to-text';
 import imaps from 'imap-simple';
 import path from 'path';
 
@@ -12,6 +13,12 @@ import { describe, test } from '@dxos/test';
 // https://proton.me/blog/bridge-security-model
 // Runs local IMAP server.
 // NOTE: Configure bridge settings: SSL; download the cert.
+
+type Message = {
+  from: string;
+  subject: string;
+  body: string;
+};
 
 describe('Mail', () => {
   const config = {
@@ -33,12 +40,38 @@ describe('Mail', () => {
     // TODO(burdon): Poll and parse email.
     // TODO(burdon): Generate contact list.
 
-    const messages = await connection.search(['UNSEEN'], {
+    const raw = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT'],
-      markSeen: false
+      markSeen: true
     });
 
-    const subjects = messages.map((res) => res.parts.filter((part) => part.which === 'HEADER')[0].body.subject[0]);
-    console.log(JSON.stringify(subjects.slice(0, 10), undefined, 2));
+    const messages = raw.map(({ parts }) => {
+      return parts.reduce<Message>((result, part) => {
+        switch (part.which) {
+          case 'HEADER': {
+            // TODO(burdon): Get list of headers.
+            // TODO(burdon): Content type.
+            // TODO(burdon): Parse email headers (e.g., from).
+            result.from = part.body.from[0];
+            result.subject = part.body.subject[0];
+            break;
+          }
+
+          case 'TEXT': {
+            // TODO(burdon): Able to select plain text?
+            // https://www.npmjs.com/package/html-to-text
+            // result.body = convert(part.body);
+            result.body = part.body.slice(0, 100);
+            break;
+          }
+        }
+
+        return result;
+      }, {} as Message);
+    });
+
+    console.log(JSON.stringify(messages, undefined, 2));
+
+    await connection.end();
   });
 });
