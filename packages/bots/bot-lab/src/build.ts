@@ -14,20 +14,20 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\BODY');
  * Builds the bot Docker image.
  */
 void (async () => {
-  const ourdir = './dist/bot';
+  const outDir = './dist/bot';
 
   try {
-    await rm(ourdir, { recursive: true, force: true });
+    await rm(outDir, { recursive: true, force: true });
   } catch (err) {}
 
-  await mkdir(ourdir, { recursive: true });
+  await mkdir(outDir, { recursive: true });
 
   const externalDeps: Record<string, string> = {};
 
   await build({
     entryPoints: ['./src/main.ts'],
     bundle: true,
-    outfile: join(ourdir, 'bundle.js'),
+    outfile: join(outDir, 'bundle.js'),
     platform: 'node',
     format: 'cjs',
     plugins: [
@@ -48,7 +48,7 @@ void (async () => {
   });
 
   await writeFile(
-    join(ourdir, 'package.json'),
+    join(outDir, 'package.json'),
     JSON.stringify({
       name: 'dxos-bot',
       version: '0.0.1',
