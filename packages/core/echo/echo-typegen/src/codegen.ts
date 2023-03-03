@@ -10,8 +10,7 @@ import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, is
 const importPackage = '@dxos/echo-schema';
 const importNamespace = 'dxos_echo_schema';
 
-// There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [importNamespace, 'EchoSchema', 'TypeFilter', 'Text', 'Document'];
+const reservedTypeNames = [importNamespace];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 // Types that are injected from `importNamespace`.
