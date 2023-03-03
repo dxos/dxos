@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Selection, SubscriptionHandle } from '@dxos/echo-schema';
 
@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Calls the callback when any object from the selection changes.
  * Also calls the callback when the selection changes and during the first render.
  */
-export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
+export const useSubscription = (cb: () => void, selection: Selection) => {
   const client = useClient();
 
   // Make sure that the callback is always the one from the latest render.
@@ -24,7 +24,7 @@ export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
 
   const [handle, setHandle] = useState<SubscriptionHandle>(() =>
     client.echo.dbRouter.createSubscription(() => {
-      callbackRef.current();
+      cb();
     })
   );
 
@@ -32,7 +32,7 @@ export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
     // TODO(dmaretskyi): Is this branch ever taken?
     if (!handle.subscribed) {
       const newHandle = client.echo.dbRouter.createSubscription(() => {
-        callbackRef.current();
+        cb();
       });
       setHandle(newHandle);
       newHandle.update(selection);
@@ -43,16 +43,4 @@ export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
 
   handle.update(selection);
   return handle;
-};
-
-/**
- * Create reactive selection.
- * Re-renders component when any object from the selection changes.
- */
-export const useSubscription = (selection: Selection): SubscriptionHandle => {
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
-
-  return useSubscriptionEffect(() => {
-    forceUpdate();
-  }, selection);
 };

@@ -18,5 +18,7 @@ runtime:
         credential: dxos
     publisher:
       server: ws://127.0.0.1/.well-known/dx/deploy
+    supervisor:
+      server: ws://127.0.0.1/.well-known/dx/supervisor
     machine:
       doAccessToken: ''

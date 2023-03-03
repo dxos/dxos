@@ -5,7 +5,7 @@ title: Getting started
 
 # Getting started
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. 
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 
 Learn about the [mission](why).
 

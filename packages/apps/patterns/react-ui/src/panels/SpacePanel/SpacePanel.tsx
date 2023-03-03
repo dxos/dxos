@@ -6,7 +6,7 @@ import { UserPlus } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
-import { useSpaceInvitations } from '@dxos/react-client';
+import { useSpaceInvitations, observer } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
@@ -14,7 +14,7 @@ import { defaultSurface, subduedSurface } from '../../styles';
 
 export type SpacePanelProps = {
   titleId?: string;
-  space?: Space;
+  space: Space;
   createInvitationUrl: (invitationCode: string) => string;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: () => void;
@@ -22,7 +22,7 @@ export type SpacePanelProps = {
 
 export type SpaceView = 'current space';
 
-const CurrentSpaceView = ({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
+const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
   const name = space?.properties.name;
@@ -48,7 +48,7 @@ const CurrentSpaceView = ({ space, createInvitationUrl, titleId }: SpacePanelPro
         <Button
           className='is-full flex gap-2 mbs-2'
           onClick={() => space?.createInvitation()}
-          data-testid='create-space-invitation'
+          data-testid='spaces-panel.create-invitation'
         >
           <span>{t('create space invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
@@ -58,7 +58,7 @@ const CurrentSpaceView = ({ space, createInvitationUrl, titleId }: SpacePanelPro
       </div>
     </div>
   );
-};
+});
 
 interface SpacePanelState {
   activeView: SpaceView;

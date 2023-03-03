@@ -7,13 +7,14 @@ import * as pb from 'protobufjs';
 import { text } from '@dxos/plate';
 import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
-const packageName = '@dxos/echo-schema';
-const namespaceName = 'dxosEchoSchema';
+const importPackage = '@dxos/echo-schema';
+const importNamespace = 'dxos_echo_schema';
 
-// There's no technical requirement to reserve those, but doing this avoids any potential confusion.
-const reservedTypeNames = [namespaceName, 'EchoSchema', 'Document', 'TypeFilter', 'Text'];
-
+const reservedTypeNames = [importNamespace];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
+
+// Types that are injected from `importNamespace`.
+const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Document'];
 
 /**
  * Protobuf schema as JSON object.
@@ -46,8 +47,8 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      if (field.resolvedType.name === 'Text') {
-        return `${namespaceName}.Text`;
+      if (injectedTypes.includes(field.resolvedType.fullName)) {
+        return `${importNamespace}.${field.resolvedType.name}`;
       }
 
       return stringifyFullyQualifiedName(
@@ -119,29 +120,19 @@ export const generate = (root: pb.NamespaceBase): string => {
   const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return text`
-  import * as ${namespaceName} from '${packageName}';
+  import * as ${importNamespace} from '${importPackage}';
 
   ${createSchema(root)}
 
-  export const schema = ${namespaceName}.EchoSchema.fromJson(schemaJson);
+  export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
-
   `;
 };
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
-  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
-    yield text`
-      export namespace ${ns.name} {
-        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
-      }
-      
-    `;
-  }
-
   if (ns instanceof pb.Type) {
-    if (ns.name === 'Text') {
+    if (injectedTypes.includes(ns.fullName)) {
       return;
     }
 
@@ -150,6 +141,14 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
     } else {
       yield createObjectClass(ns);
     }
+  }
+
+  if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
+    yield text`
+      export namespace ${ns.name} {
+        ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
+      }
+    `;
   }
 }
 
@@ -175,10 +174,10 @@ export const createObjectClass = (type: pb.Type) => {
   return text`
     export type ${name}Props = {\n${initializer}\n};
 
-    export class ${name} extends ${namespaceName}.Document<{}> {
+    export class ${name} extends ${importNamespace}.Document<{}> {
       static readonly type = schema.getType('${fullName}');
 
-      static filter(opts?: Partial<${name}Props>): ${namespaceName}.TypeFilter<${name}> {
+      static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
       }
 
@@ -189,7 +188,6 @@ export const createObjectClass = (type: pb.Type) => {
     }
 
     schema.registerPrototype(${name});
-
   `;
 };
 
@@ -209,6 +207,5 @@ export const createPlainInterface = (type: pb.Type) => {
   export interface ${name} {
     ${fields}
   }
-
   `;
 };

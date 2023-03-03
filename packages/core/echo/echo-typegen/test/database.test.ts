@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
-import { base, db, schema, Text } from '@dxos/echo-schema';
+import { base, db, Text, Document } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
-import { Task } from './proto';
+import { Contact, Container, Task } from './proto';
 
 describe('database', () => {
   test('saving', async () => {
@@ -27,6 +27,21 @@ describe('database', () => {
     expect(tasks[0].id).to.eq(task.id);
   });
 
+  test('document field', async () => {
+    const database = await createDatabase();
+
+    const container = new Container();
+    await database.add(container);
+
+    container.sections.push(new Container.Section({ document: new Task() }));
+    container.sections.push(new Container.Section({ document: new Contact() }));
+
+    const queriedContainer = database.query(Container.filter()).objects[0];
+    expect(queriedContainer.sections).to.have.length(2);
+    expect(queriedContainer.sections[0].document.__typename).to.equal(Task.type.name);
+    expect(queriedContainer.sections[1].document.__typename).to.equal(Contact.type.name);
+  });
+
   describe('text', () => {
     test('text objects are auto-created on schema', async () => {
       const task = new Task();
@@ -38,6 +53,6 @@ describe('database', () => {
 
       task.description.model!.insert('test', 0);
       expect(task.description.model!.textContent).to.eq('test');
-    })
-  })
+    });
+  });
 });

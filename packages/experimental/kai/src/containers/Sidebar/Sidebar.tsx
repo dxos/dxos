@@ -14,12 +14,12 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useShell, useTheme } from '../../hooks';
+import { SpaceList, SpaceListAction } from '../../components';
+import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { SpaceList, SpaceListAction } from '../SpaceList';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -162,7 +162,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
         <div className='flex overflow-y-auto'>
-          <SpaceList spaces={spaces} selected={space?.key} onAction={handleSpaceListAction} />
+          <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
         </div>
 
         <div className='flex-1' />

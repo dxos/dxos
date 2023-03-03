@@ -2,20 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { test } from '@playwright/test';
 import { expect } from 'chai';
-
-import { beforeAll, describe, test } from '@dxos/test';
 
 import { ExtensionManager } from './extension-manager';
 
 // CircleCI does not support headed mode of Playwright.
 // And Playwright does not support extensions in headless mode.
 // So we skip this test on CI.
-describe.skip('Basic test', () => {
+test.describe.skip('Basic test', () => {
   let extensionManager: ExtensionManager;
 
-  beforeAll(async function () {
-    extensionManager = new ExtensionManager(this);
+  test.beforeAll(async ({ browserName }) => {
+    extensionManager = new ExtensionManager(browserName);
   });
 
   test('our extension loads', async () => {

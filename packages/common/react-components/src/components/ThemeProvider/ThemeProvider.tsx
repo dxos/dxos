@@ -28,9 +28,9 @@ export interface ThemeContextValue {
 }
 
 export type ThemeProviderProps = PropsWithChildren<{
-  tooltipProviderProps?: TooltipProviderProps;
-  toastProviderProps?: ToastProviderProps;
-  toastViewportProps?: ToastViewportProps;
+  tooltipProviderProps?: Omit<TooltipProviderProps, 'children'>;
+  toastProviderProps?: Omit<ToastProviderProps, 'children'>;
+  toastViewportProps?: Omit<ToastViewportProps, 'children'>;
 }> &
   Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue>;

@@ -9,7 +9,8 @@ import {
   ClientServices,
   ClientServicesHost,
   ClientServicesProxy,
-  createDefaultModelFactory
+  createDefaultModelFactory,
+  LocalClientServices
 } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { DocumentModel } from '@dxos/document-model';
@@ -91,6 +92,18 @@ export class TestBuilder {
   }
 
   /**
+   * Create local services host.
+   */
+  createLocal() {
+    return new LocalClientServices({
+      config: this._config,
+      modelFactory: this._modelFactory,
+      networkManager: this.networkManager,
+      storage: this.storage
+    });
+  }
+
+  /**
    * Create client/server.
    */
   createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
@@ -100,6 +113,7 @@ export class TestBuilder {
       handlers: host.services as ClientServices,
       port: hostPort
     });
+    // TODO(dmaretskyi): Refactor.
 
     const client = new Client({ services: new ClientServicesProxy(proxyPort) });
     return [client, server];

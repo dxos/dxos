@@ -2,81 +2,163 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import { DndContext } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { mx } from '@dxos/react-components';
+import { EchoSchemaType, useConfig, useQuery, observer, Document } from '@dxos/react-client';
+import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
-import { ContactList, OrganizationList, ProjectHierarchy, UnorderedTaskList } from '../../containers';
-import { useAppRouter } from '../../hooks';
+import { createPath, useAppRouter } from '../../hooks';
+import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '../../proto';
+import { StackContent } from './StackContent';
+import { SortableStackRow, StackRow } from './StackRow';
 
-export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
-  return (
-    <div className='flex w-full p-2 px-2 items-center border-b'>
-      <h2>{title}</h2>
-      <div className='flex-1' />
-      {children}
-    </div>
-  );
-};
+// TODO(burdon): Configurable menu options and section renderers (like frames).
+// TODO(burdon): Factor out new section data factories.
+// TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
 
-export const Tile: FC<{
-  children?: ReactNode;
-  scrollbar?: boolean;
-  header?: JSX.Element;
-}> = ({ scrollbar, header, children }) => {
-  return (
-    <div className='flex flex-col w-full bg-paper-bg border-r overflow-hidden'>
-      {header}
-      <div className={mx('flex flex-1 flex-col bg-paper-bg', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>
-        {children}
-      </div>
-    </div>
-  );
-};
+export const StackFrame = observer(() => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { space, frame, objectId } = useAppRouter();
+  const config = useConfig();
 
-export const StackFrame: FC = () => {
-  const { space } = useAppRouter();
-  const { ref } = useResizeDetector();
-  const cardStyles = 'flex shrink-0';
+  // TODO(burdon): Arrow of documents (part of stack).
+  const stacks = useQuery(space, DocumentStack.filter());
+  const documents = useQuery(space, DocumentType.filter());
 
-  if (!space) {
+  const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
+  useEffect(() => {
+    if (space && frame && !stack) {
+      setTimeout(async () => {
+        let stack = stacks[0];
+        if (!stacks.length) {
+          stack = await space.db.add(new DocumentStack());
+          // TODO(burdon): Cannot add documents directly (recursion bug).
+          documents.forEach((document) => stack.sections.push(document));
+        }
+
+        navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
+      });
+    }
+  }, [space, frame, stacks, stack]);
+
+  // TODO(burdon): Drag (mosaic).
+  const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
+    if (stack) {
+      let object: Document;
+      if (!objectId) {
+        switch (type) {
+          case DocumentType.type: {
+            object = await space!.db.add(new DocumentType());
+            break;
+          }
+
+          case Table.type: {
+            object = await space!.db.add(new Table({ type: Contact.type.name }));
+            break;
+          }
+
+          case TaskList.type: {
+            object = await space!.db.add(new TaskList());
+            break;
+          }
+          default: {
+            object = await space!.db.add(new DocumentType());
+            break;
+          }
+        }
+      } else {
+        object = space!.db.getObjectById(objectId)!;
+      }
+
+      stack.sections.splice(index === -1 ? stack.sections.length : index, 0, object);
+    }
+  };
+
+  const handleDeleteSection = (index: number) => {
+    if (stack) {
+      stack.sections.splice(index, 1);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (stack && active && over && active.id !== over.id) {
+      const activeIndex = stack.sections.findIndex((section) => section.id === active.id);
+      const activeSection = stack.sections[activeIndex];
+      stack.sections.splice(activeIndex, 1);
+
+      const overIndex = stack.sections.findIndex((section) => section.id === over.id);
+      const delta = activeIndex <= overIndex ? 1 : 0;
+      stack.sections.splice(overIndex + delta, 0, activeSection);
+    }
+  };
+
+  // TODO(burdon): Spellcheck false in dev mode.
+  const spellCheck = false;
+
+  if (!stack) {
     return null;
   }
 
   return (
-    <div
-      ref={ref}
-      className={mx(
-        'flex flex-col h-full overflow-x-hidden overflow-y-scroll gap-0',
-        'p-0', // Full width for mobile.
-        'md:p-2 md:gap-1 md:grid md:overflow-hidden md:grid-cols-2 md:grid-rows-2',
-        'lg:p-2 lg:gap-1 lg:grid lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
-      )}
-    >
-      <div className={mx(cardStyles)}>
-        <Tile scrollbar header={<TileMenu title='Organizations' />}>
-          <OrganizationList space={space} />
-        </Tile>
-      </div>
+    <div ref={scrollRef} className='flex flex-1 justify-center overflow-y-auto'>
+      <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
+        <div className='py-12 bg-paper-bg shadow-1'>
+          <StackRow>
+            <Input
+              variant='subdued'
+              label='Title'
+              labelVisuallyHidden
+              placeholder='Title'
+              slots={{
+                input: {
+                  className: 'border-0 text-2xl text-black',
+                  spellCheck
+                }
+              }}
+              value={stack.title ?? ''}
+              onChange={(event) => {
+                stack.title = event.target.value;
+              }}
+            />
+          </StackRow>
 
-      <div className={mx(cardStyles, 'row-span-2')}>
-        <Tile scrollbar header={<TileMenu title='Contacts' />}>
-          <ContactList space={space} />
-        </Tile>
-      </div>
+          {/* TODO(burdon): Hide while typing. */}
+          <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
+            <SortableContext
+              strategy={verticalListSortingStrategy}
+              items={stack.sections.map((section) => {
+                return section.id!;
+              })}
+            >
+              {stack.sections.map((object, i) => {
+                return (
+                  <SortableStackRow
+                    key={object.id}
+                    id={object.id}
+                    className={mx('py-6', i < stack.sections.length - 1 && 'border-b')}
+                    showMenu
+                    onCreate={(type, objectId) => handleInsertSection(type, objectId, i)}
+                    onDelete={() => handleDeleteSection(i)}
+                  >
+                    <StackContent config={config} space={space!} object={object!} spellCheck={spellCheck} />
+                  </SortableStackRow>
+                );
+              })}
+            </SortableContext>
+          </DndContext>
 
-      <div className={mx(cardStyles, 'row-span-2')}>
-        <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <UnorderedTaskList space={space} />
-        </Tile>
-      </div>
-
-      <div className={mx(cardStyles)}>
-        <Tile scrollbar header={<TileMenu title='Projects' />}>
-          <ProjectHierarchy space={space} />
-        </Tile>
+          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} />
+        </div>
+        <div className='pb-4' />
       </div>
     </div>
   );
-};
+});
+
+export default StackFrame;

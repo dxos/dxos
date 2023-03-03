@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -43,13 +44,7 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_SENTRY_DESTINATION',
-        'DX_TELEMETRY_API_KEY',
-        'DX_VAULT'
-      ]
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
     ThemePlugin({
       content: [
@@ -59,7 +54,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
-      ]
+      ],
+      extensions: [osThemeExtension]
     }),
     ReactPlugin(),
     VitePWA({
