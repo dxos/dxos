@@ -48,6 +48,7 @@
     "hello-template": "packages/apps/templates/hello-template",
     "hypercore": "packages/common/hypercore",
     "kai": "packages/experimental/kai",
+    "kai-types": "packages/experimental/kai-types",
     "keyring": "packages/core/halo/keyring",
     "keys": "packages/common/keys",
     "kodama": "packages/experimental/kodama",

@@ -38,10 +38,11 @@ describe('openai', () => {
   test('basic', async () => {
     const chat = createChatModel();
     if (!chat) {
+      console.log('invalid');
       return;
     }
 
-    const { messages } = loadJson(path.join(process.cwd(), 'packages/experimental/bots/data/messages.json'));
+    const { messages } = loadJson('packages/experimental/bots/data/messages.json');
     await chat.request(messages);
   });
 });

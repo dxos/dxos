@@ -7,6 +7,7 @@ import {
   Article,
   Calendar,
   Cards,
+  ChatText,
   Code,
   Compass,
   Files,
@@ -33,6 +34,7 @@ import {
   KanbanFrame,
   MapFrame,
   MasonryFrame,
+  MessageFrame,
   Note,
   SketchFrame,
   TableFrame,
@@ -103,6 +105,18 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: ListChecks,
       Component: TaskFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.message',
+      type: 'dxos:type/frame',
+      displayName: 'Messages',
+      description: 'Universal messagaging.'
+    },
+    runtime: {
+      Icon: ChatText,
+      Component: MessageFrame
     }
   },
   {
@@ -237,15 +251,15 @@ const defs: FrameDef[] = [
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.document';
+export const defaultFrameId = 'dxos.module.frame.message';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
+  'dxos.module.frame.message',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',
-  'dxos.module.frame.document',
   'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',

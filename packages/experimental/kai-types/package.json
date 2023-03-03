@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/kai-types",
+  "version": "0.1.28",
+  "private": true,
+  "description": "Data types defined by Kai and experimental bots.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./testing.js": "./dist/lib/browser/testing/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@octokit/rest": "^19.0.5",
+    "assert": "^2.0.0"
+  }
+}

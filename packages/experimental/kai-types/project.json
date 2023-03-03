@@ -1,0 +1,97 @@
+{
+  "sourceRoot": "packages/experimental/kai-types/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/kai-types/src/index.ts",
+        "outputPath": "packages/experimental/kai-types/dist/types",
+        "tsConfig": "packages/experimental/kai-types/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/kai-types/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/kai-types/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/kai-types/src/testing/index.ts"
+        ],
+        "outputPath": "packages/experimental/kai-types/dist/testing",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/kai-types/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/kai-types",
+        "outputPath": "tmp/mocha/packages/experimental/kai-types",
+        "resultsPath": "test-results/packages/experimental/kai-types",
+        "testPatterns": [
+          "packages/experimental/kai-types/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kai-types/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

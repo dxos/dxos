@@ -14,7 +14,7 @@ import { describe, test } from '@dxos/test';
 // Runs local IMAP server.
 // NOTE: Configure bridge settings: SSL; download the cert.
 
-type Message = {
+export type Message = {
   from: string;
   subject: string;
   body: string;
@@ -32,7 +32,7 @@ describe('Mail', () => {
     }
   };
 
-  test('IMAP', async () => {
+  test.skip('IMAP', async () => {
     // https://www.npmjs.com/package/imap-simple
     const connection = await imaps.connect({ imap: config });
     await connection.openBox('INBOX');

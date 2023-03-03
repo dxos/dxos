@@ -135,11 +135,12 @@ message DocumentStack {
 message Message {
   option (object) = true;
 
-  // TODO(burdon): Timestamp.
+  // TODO(burdon): Timestamp (across all objects).
   string date = 1;
   string from = 2;
   string to = 3;
-  string text = 4;
+  string subject = 4;
+  string text = 5;
 }
 
 message Event {
