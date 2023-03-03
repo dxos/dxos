@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document, EchoObject } from '@dxos/echo-schema';
+import { Document } from '@dxos/echo-schema';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
@@ -15,18 +15,21 @@ import { TaskList as TaskListComponent } from '../../containers';
 import { Document as TypeDocument, File, Table, TaskList } from '../../proto';
 import { getColumnType } from '../Table';
 
-export const StackContent: FC<{ config: Config; space: Space; object: EchoObject; spellCheck: boolean }> = ({
+export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
   config,
   space,
   object,
   spellCheck
 }) => {
   // TODO(burdon): Type?
-  switch ((object as any).__typename) {
+  switch (object.__typename) {
     case TypeDocument.type.name: {
+      if (!(object instanceof TypeDocument)) {
+        throw new Error(`Invalid object type: ${object.__typename}`);
+      }
       return (
         <Composer
-          document={(object as TypeDocument).content}
+          document={object.content}
           slots={{
             editor: {
               className: 'kai-composer',
@@ -38,9 +41,12 @@ export const StackContent: FC<{ config: Config; space: Space; object: EchoObject
     }
 
     case Table.type.name: {
+      if (!(object instanceof Table)) {
+        throw new Error(`Invalid object type: ${object.__typename}`);
+      }
       return (
         <div className='flex w-full h-[400px]'>
-          <TableContainer space={space!} table={object as Table} />
+          <TableContainer space={space!} table={object} />
         </div>
       );
     }
@@ -48,19 +54,25 @@ export const StackContent: FC<{ config: Config; space: Space; object: EchoObject
     // TODO(burdon): Add/delete/sort.
     // TODO(burdon): Hide controls if not highlighted.
     case TaskList.type.name: {
+      if (!(object instanceof TaskList)) {
+        throw new Error(`Invalid object type: ${object.__typename}`);
+      }
       return (
         <TaskListComponent
           space={space!}
           tasks={(object as TaskList).tasks}
-          onCreate={(task) => (object as TaskList).tasks.push(task)}
+          onCreate={(task) => object.tasks.push(task)}
         />
       );
     }
 
     case File.type.name: {
+      if (!(object instanceof File)) {
+        throw new Error(`Invalid object type: ${object.__typename}`);
+      }
       return (
         <div className='flex w-full h-[400px]'>
-          <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, (object as File).cid)} image />
+          <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid)} image />
         </div>
       );
     }
