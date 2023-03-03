@@ -11,7 +11,7 @@ describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     afterTest(() => client.destroy());
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });

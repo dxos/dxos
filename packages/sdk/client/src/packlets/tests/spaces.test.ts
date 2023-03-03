@@ -16,7 +16,7 @@ describe('Spaces', () => {
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     afterTest(() => client.destroy());
 
     await client.initialize();
@@ -33,7 +33,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder(new Config({ version: 1 }));
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
 
