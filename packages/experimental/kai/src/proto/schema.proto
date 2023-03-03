@@ -106,7 +106,7 @@ message Kanban {
   string title = 1;
 }
 
-message TextDocument {
+message Document {
   option (object) = true;
 
   string title = 1;
@@ -128,7 +128,7 @@ message DocumentStack {
   }
 
   string title = 1;
-  repeated TextDocument documents = 2;
+  repeated Document documents = 2;
   repeated Section sections = 3;
 }
 

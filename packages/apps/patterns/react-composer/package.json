@@ -22,6 +22,8 @@
     "@dxos/react-components": "workspace:*",
     "@tiptap/core": "2.0.0-beta.199",
     "@tiptap/extension-collaboration": "2.0.0-beta.199",
+    "@tiptap/extension-heading": "2.0.0-beta.220",
+    "@tiptap/extension-list-item": "2.0.0-beta.220",
     "@tiptap/extension-placeholder": "2.0.0-beta.199",
     "@tiptap/react": "2.0.0-beta.199",
     "@tiptap/starter-kit": "2.0.0-beta.199",
