@@ -20,6 +20,10 @@ export type ChatModelOptions = {
 export class ChatModel {
   private readonly _api: OpenAIApi;
 
+  // TODO(burdon): Extract name and company from email/calendar event and create a Stack for the company.
+  // TODO(burdon): Remove from the context any bad answers or prompts.
+  // TODO(burdon): Coerce output format (e.g., to JSON).
+
   constructor(private readonly _options: ChatModelOptions) {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({
@@ -33,10 +37,6 @@ export class ChatModel {
     // https://www.npmjs.com/package/openai
     this._api = new OpenAIApi(configuration);
   }
-
-  // TODO(burdon): Extract name and company from email/calendar event and create a Stack for the company.
-  // TODO(burdon): Remove from the context any bad answers or prompts.
-  // TODO(burdon): Coerce output format (e.g., to JSON).
 
   async request(messages: ChatCompletionRequestMessage[]) {
     // https://platform.openai.com/docs/guides/chat

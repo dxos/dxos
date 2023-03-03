@@ -37,7 +37,7 @@ describe('openai', () => {
   };
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test('basic', async () => {
+  test.skip('basic', async () => {
     const chat = createChatModel();
     if (!chat) {
       return;
