@@ -10,7 +10,7 @@ import { Bot } from '../bot';
 /**
  * Sync records with Github.
  */
-export class RepoBot extends Bot {
+export class GithubBot extends Bot {
   // private _octokit?: Octokit;
 
   // TODO(burdon): Get API key from config.
