@@ -31,7 +31,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder(config);
 
     {
-      const client = new Client({ config, services: testBuilder.createClientServicesHost() });
+      const client = new Client({ config, services: testBuilder.createLocal() });
       afterTest(() => client.destroy());
       await client.initialize();
 
@@ -40,7 +40,7 @@ describe('Halo', () => {
     }
 
     {
-      const client = new Client({ config, services: testBuilder.createClientServicesHost() });
+      const client = new Client({ config, services: testBuilder.createLocal() });
       afterTest(() => client.destroy());
       await client.initialize();
 

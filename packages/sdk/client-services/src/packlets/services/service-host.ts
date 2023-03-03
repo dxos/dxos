@@ -36,7 +36,7 @@ export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 };
 
-type ClientServicesHostParams = {
+export type ClientServicesHostParams = {
   config: Config;
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
@@ -47,7 +47,7 @@ type ClientServicesHostParams = {
 /**
  * Remote service implementation.
  */
-export class ClientServicesHost implements ClientServicesProvider {
+export class ClientServicesHost {
   private readonly _resourceLock?: VaultResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
