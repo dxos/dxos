@@ -24,6 +24,7 @@ type BotRecord = {
 const columns: Column<BotRecord>[] = [
   {
     Header: 'id',
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => PublicKey.from(record.id).truncate(),
     width: 120
   },
