@@ -13,6 +13,7 @@ import { clientServiceBundle, ClientServicesProvider } from '@dxos/client-servic
 import { PublicKey } from '@dxos/keys';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
+
 import { useAppRouter } from '../../hooks';
 
 // const DOCKER_URL = 'https://cors-anywhere.herokuapp.com/' + 'http://198.211.114.136:4243';
@@ -104,7 +105,7 @@ export const BotsFrame = () => {
     });
 
     setStatus('Adding bot to space...');
-    console.log({ space })
+    console.log({ space });
 
     {
       const trg = new Trigger();
