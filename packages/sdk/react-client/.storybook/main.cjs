@@ -13,7 +13,9 @@ module.exports = {
   ],
   framework: {
     name: '@storybook/react-vite',
-    options: {}
+    options: {
+      strictMode: true
+    }
   },
   viteFinal: async (config) =>
     mergeConfig(config, {

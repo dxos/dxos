@@ -22,6 +22,7 @@ import {
   getTelemetryContext,
   IPDATA_API_KEY,
   PublisherRpcPeer,
+  SupervisorRpcPeer,
   SENTRY_DESTINATION,
   TelemetryContext,
   TELEMETRY_API_KEY
@@ -228,6 +229,32 @@ export abstract class BaseCommand extends Command {
 
       return value;
     } catch (err: any) {
+      Sentry.captureException(err);
+      this.error(err);
+    } finally {
+      if (rpc) {
+        await rpc.close();
+      }
+    }
+  }
+
+  async execWithSupervisor<T>(callback: (rpc: SupervisorRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    let rpc: SupervisorRpcPeer | undefined;
+    try {
+      assert(this._clientConfig);
+
+      const wsEndpoint = this._clientConfig.get('runtime.services.supervisor.server');
+      assert(wsEndpoint);
+
+      rpc = new SupervisorRpcPeer(wsEndpoint);
+
+      await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
+
+      const value = await callback(rpc);
+
+      return value;
+    } catch (err: any) {
+      // TODO(egorgripasov): Move Sentry into this.error?
       Sentry.captureException(err);
       this.error(err);
     } finally {

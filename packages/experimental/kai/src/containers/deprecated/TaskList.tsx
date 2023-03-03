@@ -12,7 +12,7 @@ import {
   EditableListProps,
   useEditableListKeyboardInteractions
 } from '@dxos/react-appkit';
-import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
@@ -34,16 +34,19 @@ interface UnorderedTaskListProps extends Omit<TaskListProps, 'tasks' | 'unordere
   filter?: Parameters<typeof Task.filter>[0];
 }
 
+// TODO(burdon): Space is passed in as a prop.
 export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props }) => {
   const { space } = useAppRouter();
   const tasks = useQuery(space, Task.filter(filter));
   return <TaskList unordered tasks={tasks} {...props} />;
 };
 
-export const TaskList: FC<TaskListProps> = withReactor(
+// TODO(burdon): Make pure.
+export const TaskList: FC<TaskListProps> = observer(
   ({ space, id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const listId = propsId ?? space.key.toHex() ?? randomString();
+
     const handleCreateTask = async () => {
       if (newTaskTitle.length) {
         const task = new Task({ title: newTaskTitle ?? '' });
@@ -57,17 +60,6 @@ export const TaskList: FC<TaskListProps> = withReactor(
       await space.db.remove(task);
       onDelete?.(task);
     };
-
-    // TODO(burdon): DND prevents being editable.
-    // TODO(burdon): Delete row.
-    // TODO(burdon): Track index position; move up/down.
-    // TODO(burdon): Highlight active row.
-    // TODO(burdon): Check editable.
-    // TODO(burdon): DragOverlay
-
-    // TODO(burdon): Workflowy
-    //  - Tab to indent.
-    //  - Split current task if pressing Enter in the middle.
 
     const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
 
@@ -111,27 +103,33 @@ export const TaskItem: FC<{
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
   slots?: EditableListItemSlots;
-}> = withReactor(
-  ({ task, onDelete, onSave, slots }) => {
-    useReactorContext({
-      onChange: () => {
-        onSave?.(task);
-      }
-    });
+}> = observer(({ task, onDelete, onSave, slots }) => {
+  // TODO(wittjosiah): Remove?
+  // useReactorContext({
+  //   onChange: () => {
+  //     onSave?.(task);
+  //   }
+  // });
 
-    return (
-      <EditableListItem
-        id={task.id}
-        completed={task.completed}
-        title={task.title}
-        slots={slots}
-        onChangeCompleted={(completed) => (task.completed = completed)}
-        onChangeTitle={({ target: { value } }) => {
-          task.title = value ?? '';
-        }}
-        {...(onDelete && { onClickDelete: () => onDelete(task) })}
-      />
-    );
-  },
-  { componentName: 'TaskItem' }
-);
+  return (
+    <EditableListItem
+      id={task.id}
+      completed={task.completed}
+      title={task.title}
+      slots={{
+        ...slots,
+        listItem: {
+          selectableCheckbox: {
+            className:
+              'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
+          }
+        }
+      }}
+      onChangeCompleted={(completed) => (task.completed = completed)}
+      onChangeTitle={({ target: { value } }) => {
+        task.title = value ?? '';
+      }}
+      {...(onDelete && { onClickDelete: () => onDelete(task) })}
+    />
+  );
+});

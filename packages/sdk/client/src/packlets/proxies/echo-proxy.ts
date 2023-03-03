@@ -14,7 +14,7 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -149,6 +149,10 @@ export class EchoProxy implements Echo {
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;
+  }
+
+  addSchema(schema: EchoSchema) {
+    this.dbRouter.addSchema(schema);
   }
 
   //

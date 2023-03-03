@@ -27,7 +27,7 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
-import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
+import { ClientServices, clientServiceBundle } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Factor out to spaces.
@@ -36,7 +36,7 @@ export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 };
 
-type ClientServicesHostParams = {
+export type ClientServicesHostParams = {
   config: Config;
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
@@ -47,7 +47,7 @@ type ClientServicesHostParams = {
 /**
  * Remote service implementation.
  */
-export class ClientServicesHost implements ClientServicesProvider {
+export class ClientServicesHost {
   private readonly _resourceLock?: VaultResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;

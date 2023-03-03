@@ -3,5 +3,4 @@
 //
 
 export * from './after-test';
-export * from './playwright';
 export * from './timeout';

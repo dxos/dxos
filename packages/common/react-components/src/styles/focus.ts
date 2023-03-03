@@ -29,8 +29,7 @@ export const themeVariantFocus = (themeVariant: ThemeVariant) => (themeVariant =
 /**
  * @deprecated
  */
-export const themeVariantSubduedFocus = (themeVariant: ThemeVariant) =>
-  themeVariant === 'os' ? osFocus : subduedFocus;
+export const themeVariantSubduedFocus = (_themeVariant: ThemeVariant) => subduedFocus;
 
 export const focus = (
   { variant, disabled }: { variant?: 'default' | 'subdued' | 'static'; disabled?: boolean } = {},

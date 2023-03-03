@@ -15,7 +15,7 @@ import { imageTypes } from './defs';
 export const FileFrame = () => {
   const config = useConfig();
   const { space, objectId } = useAppRouter();
-  const object = objectId ? (space!.db.getObjectById(objectId) as File) : undefined;
+  const object = objectId ? space!.db.getObjectById<File>(objectId) : undefined;
   if (!object) {
     return null;
   }

@@ -9,14 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { useAppRouter } from '../../hooks';
+
 // const DOCKER_URL = 'https://cors-anywhere.herokuapp.com/' + 'http://198.211.114.136:4243';
 
 // socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
 // cors-proxy-server
 
-export const DOCKER_URL = 'http://127.0.0.1:2376';
+// const DOCKER_URL = 'http://127.0.0.1:2376';
+const DOCKER_URL = 'http://127.0.0.1:2376/docker';
 
-// TODO(dmaretskyi): Extract.
 export const fromRemote = (url: string): ClientServicesProvider => {
   const dxrpcClient = new WebsocketRpcClient({
     url,
@@ -91,11 +93,13 @@ export class BotClient {
     });
 
     this.onStatusUpdate.emit('Waiting for bot to start...');
-    const botEndpoint = `ws://127.0.0.1:${port}`;
+
+    // const botEndpoint = `127.0.0.1:${port}`;
+    const botEndpoint = `localhost:2376/proxy/${port}`;
 
     while (true) {
       try {
-        await fetch(`http://127.0.0.1:${port}`);
+        await fetch(`http://${botEndpoint}`);
         break;
       } catch (err) {
         console.log(err);
@@ -105,7 +109,7 @@ export class BotClient {
     this.onStatusUpdate.emit('Connecting to bot...');
 
     const botClient = new Client({
-      services: fromRemote(botEndpoint)
+      services: fromRemote(`ws://${botEndpoint}`)
     });
 
     await botClient.initialize();

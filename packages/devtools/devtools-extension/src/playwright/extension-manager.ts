@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context as MochaContext } from 'mocha';
-import { Page } from 'playwright';
+import type { Page } from 'playwright';
 
 import { asyncTimeout } from '@dxos/async';
-import { setupPage, extensionId } from '@dxos/test';
+import { setupPage, extensionId, BrowserType, getPersistentContext } from '@dxos/test/playwright';
 
 export class ExtensionManager {
   extensionId!: string;
@@ -14,19 +13,22 @@ export class ExtensionManager {
 
   private _initialized = false;
 
-  constructor(private readonly mochaContext: MochaContext) {}
+  constructor(private readonly _browserName: BrowserType) {}
 
   async init() {
     if (this._initialized) {
       return;
     }
 
-    const { page, context } = await setupPage(this.mochaContext, { bridgeLogs: true });
-
+    const context = await getPersistentContext(this._browserName);
     this.extensionId = await asyncTimeout(extensionId(context), 2000);
-    await page.goto(`chrome-extension://${this.extensionId}/popup.html`);
 
-    await page.waitForSelector('body');
+    const { page } = await setupPage(context, {
+      url: `chrome-extension://${this.extensionId}/popup.html`,
+      // TODO(wittjosiah): Use data-testid.
+      waitFor: (page) => page.locator('body').isVisible(),
+      bridgeLogs: true
+    });
 
     this.page = page;
     this._initialized = true;

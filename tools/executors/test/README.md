@@ -17,9 +17,37 @@ describe('Class', () => {
   })
     .timeout(10_000) // Set test-specific timeout.
     .retries(3) // Set test-specific retry count.
-    .tag('e2e', 'fuzz') // Tag test to differentiate test streams.
+    .tag('fuzz') // Tag test to differentiate test streams.
     .onlyEnvironments('nodejs') // Only run test in these environments.
     .skipEnvironments('webkit', 'firefox') // Skip running test in these environments.
+});
+```
+
+### Playwright
+
+The default config will save traces of the first retry to the executor output path.
+See [playwright docs](https://playwright.dev/docs/trace-viewer) for viewing traces.
+Using `--inspect` when running playwright tests will enable debug mode and open the [playwright inspector](https://playwright.dev/docs/debug#playwright-inspector).
+
+```ts
+// playwright/playwright.config.ts
+
+import { defaultPlaywrightConfig } from '@dxos/test/playwright';
+
+export default defaultPlaywrightConfig;
+```
+
+```ts
+// playwright/example.spec.ts
+
+import { test } from '@playwright/test';
+
+import { setupPage } from '@dxos/test/playwright';
+
+test.beforeAll(async ({ browser }) => {
+  const { context, page } = setupPage(browser, {
+    waitFor: (page) => page.getByTestId('example').isVisible()
+  });
 });
 ```
 

@@ -94,9 +94,13 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
+        "ciEnvironments": [
+          "chromium",
+          "webkit"
+        ],
         "coveragePath": "coverage/packages/apps/halo-app",
-        "outputPath": "tmp/mocha/packages/apps/halo-app",
-        "playwright": true,
+        "outputPath": "tmp/playwright/packages/apps/halo-app",
+        "playwrightConfigPath": "packages/apps/halo-app/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/apps/halo-app",
         "serve": "halo-app:preview",
         "testPatterns": [

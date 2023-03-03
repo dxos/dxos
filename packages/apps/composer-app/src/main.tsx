@@ -10,7 +10,7 @@ import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit';
 
 import { App } from './App';
-import { namespace } from './Routes';
+import { namespace } from './routes/Routes';
 
 void initializeAppTelemetry(namespace, new Config(Defaults()));
 

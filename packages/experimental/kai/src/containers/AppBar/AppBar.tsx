@@ -6,15 +6,16 @@ import { Command, Info, User } from 'phosphor-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { ShellLayout, withReactor } from '@dxos/react-client';
+import { ShellLayout, observer } from '@dxos/react-client';
 import { Button, DensityProvider, DropdownMenu, getSize, mx } from '@dxos/react-components';
+import { useShell } from '@dxos/react-ui';
 
 import { SpaceSettingsDialog } from '../../containers';
-import { getIcon, useAppRouter, useShell, useTheme } from '../../hooks';
+import { getIcon, useAppRouter, useTheme } from '../../hooks';
 import { Actions } from './Actions';
 
 // TODO(burdon): Show search box or Space name in title.
-export const AppBar = withReactor(() => {
+export const AppBar = observer(() => {
   const theme = useTheme();
   const { space } = useAppRouter();
   const shell = useShell();

@@ -6,8 +6,6 @@ import assert from 'assert';
 import { Binoculars, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
-import { Space } from '@dxos/client';
-import { EchoDatabase } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
@@ -18,7 +16,7 @@ export type BotDef = {
   module: Module;
   runtime: {
     Icon: FC<any>;
-    constructor: (db: EchoDatabase) => Bot<any>;
+    constructor: () => Bot;
   };
 };
 
@@ -32,7 +30,7 @@ export const defs: BotDef[] = [
     },
     runtime: {
       Icon: Binoculars,
-      constructor: (db: EchoDatabase) => new ResearchBot(db)
+      constructor: () => new ResearchBot()
     }
   },
   {
@@ -44,33 +42,10 @@ export const defs: BotDef[] = [
     },
     runtime: {
       Icon: Sword,
-      constructor: (db: EchoDatabase) => new ChessBot(db)
+      constructor: () => new ChessBot()
     }
   }
 ];
-
-/**
- * Mock bot manager.
- */
-export class BotManager {
-  private readonly _active = new Map<string, Bot<any>>();
-
-  start(botId: string, space: Space) {
-    const def = defs.find((def) => def.module.id === botId);
-    assert(def);
-    const { constructor } = def.runtime;
-    const bot = constructor(space.db); // TODO(burdon): New API.
-    this._active.set(botId, bot);
-    void bot.start();
-  }
-
-  stop(botId: string) {
-    const bot = this._active.get(botId);
-    if (bot) {
-      bot.stop();
-    }
-  }
-}
 
 export const botModules: Module[] = defs.map(({ module }) => module);
 

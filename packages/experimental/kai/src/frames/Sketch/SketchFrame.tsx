@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
@@ -16,12 +16,13 @@ import { File, Sketch } from '../../proto';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
-const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Sketch.Path => ({
-  timestamp: startTimestamp,
-  width: strokeWidth,
-  color: strokeColor,
-  points: paths
-});
+const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Sketch.Path =>
+  new Sketch.Path({
+    timestamp: startTimestamp,
+    width: strokeWidth,
+    color: strokeColor,
+    points: paths.map((path) => new Sketch.Point(path))
+  });
 
 const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath =>
   ({
@@ -40,7 +41,7 @@ const sizes: any[] = [
 
 const dimensions = { width: 900, height: 600 };
 
-export const SketchFrame = withReactor(() => {
+export const SketchFrame = observer(() => {
   const download = useFileDownload();
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');

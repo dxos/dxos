@@ -7,8 +7,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { execTool, getBin, resolveFiles } from './node-util';
-import { mochaComment } from './util';
-import { formatArgs } from './util/formatArgs';
+import { formatArgs, mochaComment } from './util';
 
 export type NodeOptions = {
   testPatterns: string[];
@@ -25,18 +24,11 @@ export type NodeOptions = {
   forceExit: boolean;
   domRequired: boolean;
   executorResult?: object;
-  playwright: boolean;
-  browser?: string;
-  headless: boolean;
-  stayOpen: boolean;
-  browserArgs?: string[];
   reporter?: string;
   inspect?: boolean;
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
-  extensionPath?: string;
-  incognito?: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -46,14 +38,10 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     env: {
       ...process.env,
       FORCE_COLOR: '2',
-      HEADLESS: String(options.headless),
-      STAY_OPEN: String(options.stayOpen),
       MOCHA_TAGS: options.tags.join(','),
-      MOCHA_ENV: options.browser ?? 'nodejs',
+      MOCHA_ENV: 'nodejs',
       EXECUTOR_RESULT: JSON.stringify(options.executorResult),
       DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
-      EXTENSION_PATH: options.extensionPath,
-      INCOGNITO: String(options.incognito),
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
@@ -67,7 +55,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
-  const setupArgs = getSetupArgs(context.root, options.domRequired, options.playwright, options.trackLeakedResources);
+  const setupArgs = getSetupArgs(context.root, options.domRequired, options.trackLeakedResources);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
@@ -134,14 +122,13 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
     .flat();
 };
 
-const getSetupArgs = (root: string, domRequired: boolean, playwright: boolean, trackLeakedResources: boolean) => {
+const getSetupArgs = (root: string, domRequired: boolean, trackLeakedResources: boolean) => {
   const scripts = [
     'colors',
     'mocha-env',
     'catch-unhandled-rejections',
     ...(trackLeakedResources ? ['trackLeakedResources'] : []),
-    ...(domRequired ? ['react-setup'] : []),
-    ...(playwright ? ['playwright'] : [])
+    ...(domRequired ? ['react-setup'] : [])
   ];
 
   return scripts

@@ -10,7 +10,7 @@ KUBE is a set of runtime services for static web apps and peer-to-peer applicati
 *   Runs as a service.
 *   Exposes a command line interface and API.
 
-KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) networks of DXOS. 
+KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) networks of DXOS.
 
 Some of the services offered by KUBE:
 | Service | Description |

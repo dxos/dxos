@@ -48,6 +48,7 @@ export const useOrCreateFirstSpace = () => {
     });
     return () => clearTimeout(timeout);
   }, [space]);
+
   return space;
 };
 
@@ -62,5 +63,6 @@ export const useSpaces = (): Space[] => {
     (listener) => client.echo.subscribeSpaces(listener),
     () => client.echo.getSpaces()
   );
+
   return spaces;
 };

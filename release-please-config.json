@@ -303,16 +303,6 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/react-components-deprecated/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/react-toolkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/cli/package.json",
           "jsonpath": "$.version"
         },
@@ -364,6 +354,11 @@
         {
           "type": "json",
           "path": "packages/experimental/kai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kodama/package.json",
           "jsonpath": "$.version"
         },
         {
