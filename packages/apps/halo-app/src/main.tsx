@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxosTheme';
@@ -16,7 +16,7 @@ void initializeAppTelemetry(namespace, new Config(Defaults()));
 const root = createRoot(document.getElementById('root')!);
 
 root.render(
-  // <StrictMode>
-  <App />
-  // </StrictMode>
+  <StrictMode>
+    <App />
+  </StrictMode>
 );

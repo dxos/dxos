@@ -6,7 +6,7 @@ import { UserPlus } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
-import { useSpaceInvitations, withReactor } from '@dxos/react-client';
+import { useSpaceInvitations, observer } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
@@ -22,7 +22,7 @@ export type SpacePanelProps = {
 
 export type SpaceView = 'current space';
 
-const CurrentSpaceView = withReactor(({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
+const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
   const name = space?.properties.name;

@@ -31,6 +31,7 @@ export const useTestProfile = () => {
 /**
  * Automatically creates a random DXOS profile and renders children.
  */
+// TODO(wittjosiah): Just use `onInitialized` in `ClientProvider`?
 export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
   const profile = useTestProfile();
 
