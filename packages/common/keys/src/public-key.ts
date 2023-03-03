@@ -189,7 +189,7 @@ export class PublicKey {
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
   [inspect.custom](depth: number, options: InspectOptionsStylized) {
-    if (!options.colors || !process.stdout.hasColors()) {
+    if (!options.colors || typeof process.stdout.hasColors !== 'function' || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
     }
 

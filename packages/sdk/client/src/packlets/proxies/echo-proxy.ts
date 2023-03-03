@@ -217,6 +217,7 @@ export class EchoProxy implements Echo {
   /**
    * Subscribe to spaces changes.
    */
+  // TODO(burdon): Subscriptions?
   subscribeSpaces(callback: (spaces: Space[]) => void) {
     return this._spacesChanged.on(callback);
   }
