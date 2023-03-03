@@ -21,6 +21,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

@@ -2592,6 +2592,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/chess-app': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -2608,6 +2609,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
+      '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema

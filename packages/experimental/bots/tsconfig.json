@@ -28,6 +28,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
