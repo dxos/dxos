@@ -576,6 +576,7 @@ importers:
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
       '@tiptap/extension-heading': 2.0.0-beta.220
+      '@tiptap/extension-list-item': 2.0.0-beta.220
       '@tiptap/extension-placeholder': 2.0.0-beta.199
       '@tiptap/react': 2.0.0-beta.199
       '@tiptap/starter-kit': 2.0.0-beta.199
@@ -595,6 +596,7 @@ importers:
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_wrs3r2liyxd6sebc64ic7svwo4
       '@tiptap/extension-heading': 2.0.0-beta.220_4focsuckzeocqotdxlryrtksam
+      '@tiptap/extension-list-item': 2.0.0-beta.220_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
@@ -12146,10 +12148,10 @@ packages:
       '@tiptap/core': 2.0.0-beta.199
     dev: false
 
-  /@tiptap/extension-list-item/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
-    resolution: {integrity: sha512-rzcz5MJgoX1M9M9e1iruyRxcwYyYmdCXsl9gB8hhJYh4R+AW1peRmHJ3vVX5oPZXg/tXOMTv/or2x8v30c9tJw==}
+  /@tiptap/extension-list-item/2.0.0-beta.220_4focsuckzeocqotdxlryrtksam:
+    resolution: {integrity: sha512-+O0ivwxPP2l/m9PAowb2ytDT/cM5kwu0s1W5MUsHPIqf+M6ahnl4ESjhWZfDHUzvjqPq6MTbqoQLHbB1KS/N7w==}
     peerDependencies:
-      '@tiptap/core': ^2.0.0-beta.193
+      '@tiptap/core': ^2.0.0-beta.209
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
     dev: false
@@ -12229,7 +12231,7 @@ packages:
       '@tiptap/extension-history': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-horizontal-rule': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-italic': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
-      '@tiptap/extension-list-item': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
+      '@tiptap/extension-list-item': 2.0.0-beta.220_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-ordered-list': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-paragraph': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-strike': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam

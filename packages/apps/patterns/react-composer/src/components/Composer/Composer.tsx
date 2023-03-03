@@ -5,6 +5,7 @@
 import { mergeAttributes } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
 import Heading from '@tiptap/extension-heading';
+import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -63,7 +64,9 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
           },
           bulletList: {
             HTMLAttributes: {
-              class: 'mlb-2 space-b-1 list-disc pis-5'
+              class:
+                // todo (thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
+                'mlb-2 grid grid-cols-[min-content_1fr] [&>li:before]:content-[attr(marker)] [&>li:before]:mlb-1 [&>li:before]:mie-2'
             }
           },
           codeBlock: {
@@ -77,10 +80,11 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
               class: 'mlb-4 border-neutral-500/50'
             }
           },
-          listItem: {},
+          listItem: false, // (thure): `StarterKit` doesn’t let you configure how list items are rendered, see `ListItem` below.
           orderedList: {
             HTMLAttributes: {
-              class: 'space-b-1 list-decimal pis-5'
+              class:
+                'mlb-2 grid grid-cols-[min-content_1fr]  [&>li:before]:content-[counters(section,_".")_"._"] [counter-reset:section] [&>li:before]:mlb-1'
             }
           },
           paragraph: {
@@ -118,11 +122,21 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
             return [
               `h${level}`,
               mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-                class: `${headingClassNames[level]}`
+                class: headingClassNames[level]
               }),
               0
             ];
           }
+        }),
+        ListItem.extend({
+          renderHTML: ({ HTMLAttributes }) => [
+            'li',
+            mergeAttributes(HTMLAttributes, {
+              marker: '• ',
+              class: 'contents before:[counter-increment:section]'
+            }),
+            ['div', { role: 'none' }, 0]
+          ]
         }),
         // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
         Collaboration.configure({ document: document.doc!, field }),
