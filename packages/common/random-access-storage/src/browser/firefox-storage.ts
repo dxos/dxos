@@ -2,7 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import raw from 'random-access-web/mutable-file-wrapper';
+// NOTE: Removing the .js extension here breaks usage in create-react-app.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import raw from 'random-access-web/mutable-file-wrapper.js';
 
 import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
