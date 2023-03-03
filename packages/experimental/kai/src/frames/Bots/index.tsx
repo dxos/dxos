@@ -12,8 +12,8 @@ import { Client } from '@dxos/client';
 import { clientServiceBundle, ClientServicesProvider } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { useSpace } from '@dxos/react-client';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
+import { useAppRouter } from '../../hooks';
 
 // const DOCKER_URL = 'https://cors-anywhere.herokuapp.com/' + 'http://198.211.114.136:4243';
 
@@ -25,7 +25,7 @@ const DOCKER_URL = 'http://127.0.0.1:2376';
 export const BotsFrame = () => {
   const [resp, setResp] = useState({});
   const [status, setStatus] = useState('');
-  const space = useSpace();
+  const { space } = useAppRouter();
 
   const refresh = () => {
     // https://docs.docker.com/engine/api/v1.42/
@@ -104,6 +104,7 @@ export const BotsFrame = () => {
     });
 
     setStatus('Adding bot to space...');
+    console.log({ space })
 
     {
       const trg = new Trigger();
