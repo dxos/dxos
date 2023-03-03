@@ -57,6 +57,7 @@ const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceK
   );
 };
 
+// TODO(wittjosiah): Increasing count to 2, the second peer does not sync the document content.
 export const Default = {
   render: Story,
   decorators: [ClientSpaceDecorator({ schema, count: 1 })]

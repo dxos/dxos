@@ -8,7 +8,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { EchoSchemaType, useConfig, useQuery, withReactor } from '@dxos/react-client';
+import { EchoSchemaType, useConfig, useQuery, observer } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -20,7 +20,7 @@ import { SortableStackRow, StackRow } from './StackRow';
 // TODO(burdon): Factor out new section data factories.
 // TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
 
-export const StackFrame = withReactor(() => {
+export const StackFrame = observer(() => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
