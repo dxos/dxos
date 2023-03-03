@@ -14,19 +14,20 @@ import {
   Trigger,
   UnsubscribeCallback
 } from '@dxos/async';
-import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
-  ClientServicesProvider,
-  DeviceInvitationsProxy,
-  InvitationsOptions
-} from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+
+import { ClientServicesProvider } from '../client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  DeviceInvitationsProxy,
+  InvitationsOptions
+} from '../invitations';
 
 /**
  * TODO(burdon): Public API (move comments here).

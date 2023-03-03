@@ -7,13 +7,13 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, Trigger } from '@dxos/async';
+import { DeviceInvitationsProxy } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { Invitation, DeviceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers } from '../testing';
-import { DeviceInvitationsProxy } from './device-invitations-proxy';
 import { DeviceInvitationsServiceImpl } from './device-invitations-service';
 
 const closeAfterTest = async (peer: ServiceContext) => {

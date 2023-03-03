@@ -7,12 +7,12 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Space } from '../proxies';
 import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.

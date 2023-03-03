@@ -7,7 +7,7 @@ import type { Browser, ConsoleMessage, Page } from 'playwright';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import type { InvitationsOptions } from '@dxos/client-services';
+import type { InvitationsOptions } from '@dxos/client';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { setupPage } from '@dxos/test/playwright';
 

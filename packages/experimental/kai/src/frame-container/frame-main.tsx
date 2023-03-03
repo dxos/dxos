@@ -5,7 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ClientServicesProxy } from '@dxos/client-services';
+import { ClientServicesProxy } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 

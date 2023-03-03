@@ -4,12 +4,12 @@
 
 import { expect } from 'chai';
 
+import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
 import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {

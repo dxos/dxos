@@ -8,7 +8,7 @@ import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { CancellableInvitationObservable, Client, Invitation } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';

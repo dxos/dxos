@@ -5,10 +5,9 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
+import { InvitationsHandler } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-
-import { InvitationsHandler } from '../invitations';
 
 export const performInvitation = async <T>(host: InvitationsHandler<T>, guest: InvitationsHandler<T>, context: T) => {
   const done1 = new Trigger<Invitation>(); // peer 1 connected.

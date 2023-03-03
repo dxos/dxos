@@ -4,8 +4,8 @@
 
 import { useState } from 'react';
 
-import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
-import { ClientServices } from '@dxos/client-services';
+import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContextProps } from '@dxos/react-client';

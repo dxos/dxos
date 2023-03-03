@@ -5,11 +5,10 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { appServiceBundle, AppServiceBundle, shellServiceBundle } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-
-import { AppServiceBundle, appServiceBundle, shellServiceBundle } from './services';
 
 export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;

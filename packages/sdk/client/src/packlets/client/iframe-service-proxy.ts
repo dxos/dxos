@@ -3,7 +3,6 @@
 //
 
 import { Event } from '@dxos/async';
-import { ClientServicesProvider, ClientServicesProxy, ShellController } from '@dxos/client-services';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -12,7 +11,10 @@ import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { Provider } from '@dxos/util';
 
+import { ShellController } from '../proxies';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_CLIENT_ORIGIN, DEFAULT_SHELL_CHANNEL } from './config';
+import { ClientServicesProvider } from './service-definitions';
+import { ClientServicesProxy } from './service-proxy';
 
 export type IFrameClientServicesProxyOptions = {
   source: string;
@@ -24,7 +26,6 @@ export type IFrameClientServicesProxyOptions = {
 /**
  * Proxy to host client service via iframe.
  */
-// TODO(burdon): Move to client-services.
 export class IFrameClientServicesProxy implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
 
