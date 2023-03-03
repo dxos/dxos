@@ -8,16 +8,10 @@ import path from 'path';
 
 import { describe, test } from '@dxos/test';
 
-// NOTE: Configure bridge settings: SSL; download the cert.
-// TODO(burdon): Error self signed certificate. [2023-03-02 sent support ticket].
-
 // Protonmail bridge as alternative to Gmail, which requires a registered Google workspace.
-// Runs local IMAP server.
 // https://proton.me/blog/bridge-security-model
-
-const ProtonMailCert = fs.readFileSync(
-  path.join(process.cwd(), 'packages/experimental/bots/config/protonmail-cert.pem')
-);
+// Runs local IMAP server.
+// NOTE: Configure bridge settings: SSL; download the cert.
 
 describe('Mail', () => {
   const config = {
@@ -27,17 +21,17 @@ describe('Mail', () => {
     port: 1143,
     tls: true,
     tlsOptions: {
-      ca: ProtonMailCert
+      ca: fs.readFileSync(path.join(process.cwd(), 'packages/experimental/bots/config/protonmail-cert.pem'))
     }
   };
 
-  // TODO(burdon): Poll and parse email.
-  // TODO(burdon): Generate contact list.
-
-  test('IMAP simple', async () => {
+  test('IMAP', async () => {
     // https://www.npmjs.com/package/imap-simple
     const connection = await imaps.connect({ imap: config });
     await connection.openBox('INBOX');
+
+    // TODO(burdon): Poll and parse email.
+    // TODO(burdon): Generate contact list.
 
     const messages = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT'],
