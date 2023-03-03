@@ -2588,6 +2588,41 @@ importers:
       '@types/react-dom': 18.0.6
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
 
+  packages/experimental/bots:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@octokit/rest': ^19.0.5
+      '@types/js-yaml': ^4.0.5
+      assert: ^2.0.0
+      chess.js: ^1.0.0-alpha.0
+      cross-fetch: ^3.1.5
+      js-yaml: ^4.1.0
+      openai: ^3.2.1
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/errors': link:../../sdk/errors
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@octokit/rest': 19.0.5
+      assert: 2.0.0
+      chess.js: 1.0.0-alpha.0
+      cross-fetch: 3.1.5
+      js-yaml: 4.1.0
+      openai: 3.2.1
+    devDependencies:
+      '@types/js-yaml': 4.0.5
+
   packages/experimental/chess-app:
     specifiers:
       '@dxos/echo-schema': workspace:*
@@ -2789,6 +2824,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/assets': workspace:*
       '@dxos/async': workspace:*
+      '@dxos/bots': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -2820,7 +2856,6 @@ importers:
       '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
       '@monaco-editor/react': ^4.4.6
-      '@octokit/rest': ^19.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
@@ -2839,7 +2874,6 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
       base-x: ~3.0.9
-      chess.js: ^1.0.0-alpha.0
       clipboard-copy: ^4.0.1
       d3: ^7.4.4
       date-fns: ^2.29.3
@@ -2849,7 +2883,6 @@ importers:
       mobile-detect: ^1.4.5
       monaco-editor: ^0.25.0
       node-fetch: ^2.6.0
-      openai: ^3.1.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       prosemirror-model: ^1.19.0
@@ -2888,6 +2921,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/assets': link:../../apps/patterns/assets
       '@dxos/async': link:../../common/async
+      '@dxos/bots': link:../bots
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
@@ -2917,11 +2951,9 @@ importers:
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
-      '@octokit/rest': 19.0.5
       '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
-      chess.js: 1.0.0-alpha.0
       clipboard-copy: 4.0.1
       d3: 7.6.1
       date-fns: 2.29.3
@@ -2929,7 +2961,6 @@ importers:
       leaflet: 1.9.3
       mobile-detect: 1.4.5
       node-fetch: 2.6.7
-      openai: 3.1.0
       phosphor-react: 1.4.1_react@18.2.0
       prosemirror-model: 1.19.0
       prosemirror-schema-basic: 1.2.1
@@ -27237,8 +27268,8 @@ packages:
       is-wsl: 2.2.0
     dev: true
 
-  /openai/3.1.0:
-    resolution: {integrity: sha512-v5kKFH5o+8ld+t0arudj833Mgm3GcgBnbyN9946bj6u7bvel4Yg6YFz2A4HLIYDzmMjIo0s6vSG9x73kOwvdCg==}
+  /openai/3.2.1:
+    resolution: {integrity: sha512-762C9BNlJPbjjlWZi4WYK9iM2tAVAv0uUp1UmI34vb0CN5T2mjB/qM6RYBmNKMh/dN9fC+bxqPwWJZUTWW052A==}
     dependencies:
       axios: 0.26.1
       form-data: 4.0.0

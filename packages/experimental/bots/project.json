@@ -1,0 +1,97 @@
+{
+  "sourceRoot": "packages/experimental/bots/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/bots/src/index.ts",
+        "outputPath": "packages/experimental/bots/dist/types",
+        "tsConfig": "packages/experimental/bots/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/bots/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/bots/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/bots/src/testing/index.ts"
+        ],
+        "outputPath": "packages/experimental/bots/dist/testing",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/bots/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/bots",
+        "outputPath": "tmp/mocha/packages/experimental/bots",
+        "resultsPath": "test-results/packages/experimental/bots",
+        "testPatterns": [
+          "packages/experimental/bots/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/bots/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

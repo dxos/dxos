@@ -6,10 +6,10 @@ import assert from 'assert';
 import { Binoculars, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
+import { Bot, ChessBot, KaiBot } from '@dxos/bots';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
-import { ResearchBot, Bot, ChessBot } from '../bots';
 import { useAppState } from './useAppState';
 
 export type BotDef = {
@@ -23,14 +23,14 @@ export type BotDef = {
 export const defs: BotDef[] = [
   {
     module: {
-      id: 'dxos.module.bot.research',
+      id: 'dxos.module.bot.kai',
       type: 'dxos:type/bot',
-      displayName: 'ResearchBot',
-      description: 'Background data analysis and text matching.'
+      displayName: 'KaiBot',
+      description: 'Background research and data analysis.'
     },
     runtime: {
       Icon: Binoculars,
-      constructor: () => new ResearchBot()
+      constructor: () => new KaiBot()
     }
   },
   {

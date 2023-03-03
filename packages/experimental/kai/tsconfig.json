@@ -91,6 +91,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../bots"
+    },
+    {
       "path": "../chess-app"
     },
     {

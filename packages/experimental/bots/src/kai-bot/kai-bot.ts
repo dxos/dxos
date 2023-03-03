@@ -5,8 +5,8 @@
 import { Configuration, OpenAIApi } from 'openai';
 
 import { Subscription } from '@dxos/echo-schema';
+// import { Organization } from '@dxos/kai'; // TODO(burdon): kai-types.
 
-import { Organization } from '../../proto';
 import { Bot } from '../bot';
 
 const config = {
@@ -19,7 +19,7 @@ const config = {
 /**
  * Adds info to records.
  */
-export class ResearchBot extends Bot {
+export class KaiBot extends Bot {
   private readonly _cache = new Map<string, string>();
 
   private _api?: OpenAIApi;

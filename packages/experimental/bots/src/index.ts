@@ -6,5 +6,5 @@ export * from './bot';
 export * from './bot-manager';
 
 export * from './chess';
+export * from './kai-bot';
 export * from './repo';
-export * from './research';

@@ -4,10 +4,10 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
+import { BotConstructor, BotManager } from '@dxos/bots';
 import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { BotConstructor, BotManager } from '../bots';
 import { defs } from './useBots';
 
 export type AppState = {

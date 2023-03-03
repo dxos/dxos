@@ -1,0 +1,13 @@
+version: 1
+
+runtime:
+  services:
+    ipfs:
+      server: 'https://ipfs-pub1.kube.dxos.network'
+
+  keys:
+    # https://platform.openai.com/account/api-keys (2023-03-02)
+    - name: 'openai.org_id'
+      value: 'org-mZTRiNMMnvZWUqWxPlirjw5l'
+    - name: 'openai.api_key'
+      value: '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'
