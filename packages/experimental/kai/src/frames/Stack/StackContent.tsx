@@ -12,7 +12,7 @@ import { Composer } from '@dxos/react-composer';
 
 import { FilePreview } from '../../components';
 import { TaskList as TaskListComponent } from '../../containers';
-import { TextDocument, File, Table, TaskList } from '../../proto';
+import { Document as TypeDocument, File, Table, TaskList } from '../../proto';
 import { getColumnType } from '../Table';
 
 export const StackContent: FC<{ config: Config; space: Space; object: EchoObject; spellCheck: boolean }> = ({
@@ -23,10 +23,10 @@ export const StackContent: FC<{ config: Config; space: Space; object: EchoObject
 }) => {
   // TODO(burdon): Type?
   switch ((object as any).__typename) {
-    case TextDocument.type.name: {
+    case TypeDocument.type.name: {
       return (
         <Composer
-          document={(object as TextDocument).content}
+          document={(object as TypeDocument).content}
           slots={{
             editor: {
               className: 'kai-composer',
