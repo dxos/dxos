@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { mergeAttributes } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
+import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -27,6 +29,17 @@ export interface ComposerProps {
   slots?: ComposerSlots;
 }
 
+type Levels = 1 | 2 | 3 | 4 | 5 | 6;
+
+const headingClassNames: Record<Levels, string> = {
+  1: 'mbs-4 mbe-2 text-4xl font-semibold',
+  2: 'mbs-4 mbe-2 text-3xl font-semibold',
+  3: 'mbs-4 mbe-2 text-2xl font-bold',
+  4: 'mbs-4 mbe-2 text-xl font-bold',
+  5: 'mbs-4 mbe-2 text-lg font-extrabold',
+  6: 'mbs-4 mbe-2 font-extrabold'
+};
+
 export const Composer = ({ document, field = 'content', placeholder, slots = {} }: ComposerProps) => {
   // TODO(wittjosiah): Provide own translations?
   //   Maybe default is not translated and translated placeholder can be provided by the app.
@@ -39,7 +52,78 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
   const editor = useEditor(
     {
       extensions: [
-        StarterKit.configure({ history: false }),
+        StarterKit.configure({
+          // Extensions
+          history: false,
+          // Nodes
+          blockquote: {
+            HTMLAttributes: {
+              class: 'mlb-2 border-is-4 border-neutral-500/50 pis-5'
+            }
+          },
+          bulletList: {
+            HTMLAttributes: {
+              class: 'mlb-2 space-b-1 list-disc pis-5'
+            }
+          },
+          codeBlock: {
+            HTMLAttributes: {
+              class: 'mlb-2 font-mono bg-neutral-500/10 p-3 rounded'
+            }
+          },
+          heading: false, // (thure): `StarterKit` doesn’t let you configure how headings are rendered, see `Heading` below.
+          horizontalRule: {
+            HTMLAttributes: {
+              class: 'mlb-4 border-neutral-500/50'
+            }
+          },
+          listItem: {},
+          orderedList: {
+            HTMLAttributes: {
+              class: 'space-b-1 list-decimal pis-5'
+            }
+          },
+          paragraph: {
+            HTMLAttributes: {
+              class: 'mlb-1'
+            }
+          },
+          // Marks
+          bold: {
+            HTMLAttributes: {
+              class: 'font-bold'
+            }
+          },
+          code: {
+            HTMLAttributes: {
+              class: 'font-mono bg-neutral-500/10 rounded pli-1.5 mli-0.5 plb-0.5 -mlb-0.5'
+            }
+          },
+          italic: {
+            HTMLAttributes: {
+              class: 'italic'
+            }
+          },
+          strike: {
+            HTMLAttributes: {
+              class: 'line-through'
+            }
+          }
+        }),
+        Heading.extend({
+          renderHTML({ node, HTMLAttributes }) {
+            const hasLevel = this.options.levels.includes(node.attrs.level);
+            const level: Levels = hasLevel ? node.attrs.level : this.options.levels[0];
+
+            return [
+              `h${level}`,
+              mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+                class: `${headingClassNames[level]}`
+              }),
+              0
+            ];
+          }
+        }),
         // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
         Collaboration.configure({ document: document.doc!, field }),
         Placeholder.configure({
