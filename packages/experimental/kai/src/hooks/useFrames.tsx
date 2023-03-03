@@ -5,6 +5,7 @@
 import assert from 'assert';
 import {
   Article,
+  BugBeetle,
   Calendar,
   Cards,
   Code,
@@ -24,6 +25,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
+  BotFrame,
   CalendarFrame,
   ChessFrame,
   StackFrame,
@@ -36,8 +38,7 @@ import {
   SketchFrame,
   TableFrame,
   TaskFrame,
-  SandboxFrame,
-  BotsFrame
+  SandboxFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -106,14 +107,14 @@ const defs: FrameDef[] = [
   },
   {
     module: {
-      id: 'dxos.module.frame.bots',
+      id: 'dxos.module.frame.bot',
       type: 'dxos:type/frame',
       displayName: 'Bots',
-      description: 'Bots.'
+      description: 'Bot management.'
     },
     runtime: {
-      Icon: ListChecks,
-      Component: BotsFrame
+      Icon: BugBeetle,
+      Component: BotFrame
     }
   },
   {
@@ -233,7 +234,7 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.mosaic';
+export const defaultFrameId = 'dxos.module.frame.bot';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -241,12 +242,12 @@ export const defaultFrames = [
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
-  // 'dxos.module.frame.bots',
+  'dxos.module.frame.bot'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
-  // 'dxos.module.frame.explorer'
-  'dxos.module.frame.note'
+  // 'dxos.module.frame.explorer',
+  // 'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;
