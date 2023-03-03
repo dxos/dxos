@@ -17,7 +17,7 @@ import { Loading } from '@dxos/react-components';
 import { ClientProvider } from '../client';
 
 const testBuilder = new TestBuilder();
-const services = () => testBuilder.createClientServicesHost();
+const services = () => testBuilder.createLocal();
 
 // TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
 const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {

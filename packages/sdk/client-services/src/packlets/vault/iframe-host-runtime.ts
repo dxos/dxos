@@ -10,7 +10,7 @@ import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-mana
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, Provider } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
+import { clientServiceBundle, ClientServices, LocalClientServices } from '../services';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
@@ -38,7 +38,9 @@ export class IFrameHostRuntime {
   private readonly _appPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private _config!: Config;
-  private _clientServices!: ClientServicesHost;
+
+  // TODO(dmaretskyi):  Replace with host and figure out how to return services provider here.
+  private _clientServices!: LocalClientServices;
   private _clientRpc!: ProtoRpcPeer<ClientServices>;
   private _shellRuntime?: ShellRuntimeImpl;
 
@@ -82,7 +84,7 @@ export class IFrameHostRuntime {
     try {
       this._config = await getAsyncValue(this._configProvider);
       const signalServer = this._config.get('runtime.services.signal.server');
-      this._clientServices = new ClientServicesHost({
+      this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,
         networkManager: new NetworkManager({
