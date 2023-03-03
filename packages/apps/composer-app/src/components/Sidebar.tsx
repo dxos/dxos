@@ -6,7 +6,7 @@ import { ArrowLineLeft, Circle, FileText, Intersect, PaperPlaneTilt, Planet, Plu
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
-import { ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces, withReactor } from '@dxos/react-client';
+import { observer, ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 import {
   Avatar,
   Button,
@@ -31,7 +31,7 @@ import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 import { ComposerDocument } from '../proto';
 import { abbreviateKey, getPath } from '../routes';
 
-const DocumentTreeItem = withReactor(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
+const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
   const { t } = useTranslation('composer');
   const { docKey } = useParams();
   const active = docKey === document.id;
@@ -56,7 +56,7 @@ const DocumentTreeItem = withReactor(({ document, linkTo }: { document: Composer
   );
 });
 
-const SpaceTreeItem = withReactor(({ space }: { space: Space }) => {
+const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const documents = useQuery(space, ComposerDocument.filter());
   const { t } = useTranslation('composer');
   const navigate = useNavigate();
@@ -148,7 +148,6 @@ const SidebarContent = () => {
   const { t } = useTranslation('composer');
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const identity = useIdentity();
-  const spaces = useSpaces();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();

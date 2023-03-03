@@ -9,7 +9,7 @@ import type { ClientServices, ClientServicesProvider } from '@dxos/client-servic
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
+import { getAsyncValue, MaybePromise, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
 
@@ -55,6 +55,8 @@ export interface ClientProviderProps {
    *
    * Most apps won't need this.
    */
+  // TODO(wittjosiah): Remove async and just use to keeping reference to client?
+  //   (Prefering `onInitialized` for custom initialization.)
   client?: Client | Provider<Promise<Client>>;
 
   /**
@@ -63,11 +65,11 @@ export interface ClientProviderProps {
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
-   * Post initialization hook.
+   * Post initialization hook to enable to caller to do custom initialization.
+   *
    * @param Client
-   * @deprecated Previously used to register models.
    */
-  onInitialize?: (client: Client) => Promise<void>;
+  onInitialized?: (client: Client) => MaybePromise<void>;
 }
 
 /**
@@ -80,7 +82,7 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  onInitialize
+  onInitialized
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<SystemStatus>();
@@ -94,13 +96,14 @@ export const ClientProvider = ({
       return;
     }
 
-    return client.subscribeStatus((status) => setStatus(status));
-  }, [client]);
+    return client.subscribeStatus((newStatus) => setStatus(newStatus));
+  }, [client, setStatus]);
 
   useEffect(() => {
     const done = async (client: Client) => {
-      log('client ready', { client });
-      await onInitialize?.(client);
+      log('client ready');
+      await client.initialize().catch(setError);
+      await onInitialized?.(client);
       setClient(client);
       setStatus(client.getStatus() ?? SystemStatus.ACTIVE);
       printBanner(client);
@@ -118,11 +121,8 @@ export const ClientProvider = ({
         const services = createServices?.(config);
         log('created services', { services });
         const client = new Client({ config, services });
-        log('created client', { client });
-        await client
-          .initialize()
-          .then(() => done(client))
-          .catch((err) => setError(err));
+        log('created client');
+        await done(client);
       }
     });
 
