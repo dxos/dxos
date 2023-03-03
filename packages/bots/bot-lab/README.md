@@ -1,21 +1,26 @@
 # @dxos/bot-lab
 
-## Bot demo
+## Set-up
+
+1. Start Docker (e.g., Docker Desktop).
+
+2. Run the proxy:
 
 ```bash
-# 1. Start docker (e.g., via Docker Desktop).
-
-# 2. Proxy docker socket via http port.
-brew install socat
-socat -d TCP-LISTEN:2376,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
-
-# 3. Open chrome without cors.
-open -n -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --user-data-dir="/tmp/chrome_dev_test" --disable-web-security
-
-# 4. Build bot
-# in bot-lab
-pnpm nx -w compile bot-lab && pnpm run build && docker build . -t bot-test
+cd bot-lab
+pnpm run proxy
 ```
+
+## Development
+
+Build image of NodeJS server.
+
+```bash
+pnpm run build:image
+````
+
+NOTE: Delete running containers via the Docker Desktop or cli.
+
 
 ## Installation
 

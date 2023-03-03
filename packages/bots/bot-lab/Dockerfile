@@ -12,6 +12,6 @@ RUN npm install
 # where available (npm@5+)
 COPY dist/bot/* ./
 
-
 EXPOSE 3023
+
 CMD [ "node", "bundle.js" ]
