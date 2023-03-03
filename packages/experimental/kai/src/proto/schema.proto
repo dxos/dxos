@@ -118,18 +118,8 @@ message Document {
 message DocumentStack {
   option (object) = true;
 
-  message Section {
-    option (object) = true;
-
-    // TODO(burdon): Reconcile -- either JUST store object IDs or an array of objects.
-    string object_id = 1;
-    dxos.schema.Document document = 10;
-    File file = 11;
-  }
-
   string title = 1;
-  repeated Document documents = 2;
-  repeated Section sections = 3;
+  repeated dxos.schema.Document sections = 2;
 }
 
 message Message {

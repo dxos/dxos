@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document, EchoObject } from '@dxos/echo-schema';
+import { Document } from '@dxos/echo-schema';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
@@ -15,14 +15,14 @@ import { TaskList as TaskListComponent } from '../../containers';
 import { Document as TypeDocument, File, Table, TaskList } from '../../proto';
 import { getColumnType } from '../Table';
 
-export const StackContent: FC<{ config: Config; space: Space; object: EchoObject; spellCheck: boolean }> = ({
+export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
   config,
   space,
   object,
   spellCheck
 }) => {
   // TODO(burdon): Type?
-  switch ((object as any).__typename) {
+  switch (object.__typename) {
     case TypeDocument.type.name: {
       return (
         <Composer
