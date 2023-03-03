@@ -2,23 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Component, PropsWithChildren } from 'react';
+import { Clipboard } from 'phosphor-react';
+import React, { Component, PropsWithChildren, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-export class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
+import { log } from '@dxos/log';
+import { Alert, Button, Tooltip } from '@dxos/react-components';
+
+const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
+  let insideRouter = false;
+  try {
+    insideRouter = !!useLocation().pathname;
+  } catch (e) {
+    log.info('ErrorBoundary is outside of Router.');
+  }
+  const navigate = insideRouter ? useNavigate() : undefined;
+
+  const message = String(error);
+  const stack = error.stack;
+
+  const onCopyError = useCallback(() => {
+    void navigator.clipboard.writeText(JSON.stringify({ message, stack }));
+  }, [message, stack]);
+
+  return (
+    <div className='m-4'>
+      <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
+        <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
+      </Alert>
+      <div role='none' className='flex'>
+        <Tooltip content={'Copy'} zIndex={'z-[21]'}>
+          <Button onClick={onCopyError}>
+            <Clipboard weight='duotone' size='1em' />
+          </Button>
+        </Tooltip>
+        <div role='none' className='flex-grow' />
+        <Button
+          variant='primary'
+          onClick={async () => {
+            navigate?.('/');
+            onReset?.();
+          }}
+        >
+          <span>Reset</span>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Error boundary.
+ * https://reactjs.org/docs/error-boundaries.html
+ */
+export class ErrorBoundary extends Component<
+  PropsWithChildren<{}>,
+  { error: Error; hasError: true } | { hasError: false }
+> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
   override render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return <div>Runtime Error</div>;
+      return (
+        <ErrorPopup
+          error={this.state.error}
+          onReset={() => {
+            this.setState({ hasError: false });
+          }}
+        />
+      );
     }
 
     return this.props.children;

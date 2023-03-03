@@ -34,6 +34,7 @@
     "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hello-template": "workspace:*",

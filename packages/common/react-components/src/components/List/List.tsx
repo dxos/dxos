@@ -30,7 +30,7 @@ import { Checkbox, CheckboxProps } from '../Checkbox';
 import { DensityProvider } from '../DensityProvider';
 import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';
 
-// TODO (thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
+// TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
 const LIST_NAME = 'List';
 const LIST_ITEM_NAME = 'ListItem';
@@ -83,6 +83,8 @@ interface ListItemSlots {
   openTrigger?: ComponentPropsWithoutRef<typeof ListItemOpenTrigger>;
   openTriggerIcon?: ComponentPropsWithoutRef<typeof CaretDown>;
   mainContent?: ComponentPropsWithoutRef<'div'>;
+  selectableCheckbox?: Omit<CheckboxProps, 'default' | 'checked' | 'onCheckedChange'>;
+  selectableEndcap?: Omit<ListItemEndcapProps, 'children'>;
 }
 
 interface NonCollapsibleListItemProps extends Omit<ListItemData, 'id'> {
@@ -224,7 +226,8 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     const { open } = useListItemContext(LIST_ITEM_NAME, __listScope);
     const iconProps: ListItemOpenTriggerProps['openTriggerIconSlot'] = {
       weight: 'bold',
-      className: mx(getSize(4), openTriggerIconSlot.className)
+      ...openTriggerIconSlot,
+      className: mx(getSize(3.5), openTriggerIconSlot.className)
     };
     const Icon = open ? CaretDown : CaretRight;
     return (
@@ -291,10 +294,11 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
           </div>
         )}
         {selectable && (
-          <ListItemEndcap>
+          <ListItemEndcap {...slots.selectableEndcap}>
             <Checkbox
+              {...slots.selectableCheckbox}
               labelId={headingId}
-              className={density === 'fine' ? 'mbs-1.5' : 'mbs-2.5'}
+              className={mx(density === 'fine' ? 'mbs-1.5' : 'mbs-2.5', slots.selectableCheckbox?.className)}
               {...{ checked: selected, onCheckedChange: setSelected }}
             />
           </ListItemEndcap>

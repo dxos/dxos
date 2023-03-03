@@ -8,7 +8,7 @@ import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { DensityProvider } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
+import { FrameDef } from '../../hooks';
 import { Intent } from '../../util';
 import { SpaceItem } from './SpaceItem';
 
@@ -20,12 +20,12 @@ export type SpaceListAction = {
 export type SpaceListProps = {
   spaces: Space[];
   selected?: PublicKey;
+  frame?: FrameDef;
   onAction?: (intent: Intent<SpaceListAction>) => void;
 };
 
-export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
-  const { frame } = useAppRouter();
-  const Tile = frame?.runtime.Tile;
+export const SpaceList = ({ spaces, selected, frame, onAction }: SpaceListProps) => {
+  const List = frame?.runtime.List;
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden m-2'>
@@ -37,7 +37,7 @@ export const SpaceList = ({ spaces, selected, onAction }: SpaceListProps) => {
           onAction={(intent) => onAction?.(intent)}
         >
           <DensityProvider density='coarse'>
-            <Suspense>{Tile && <Tile />}</Suspense>
+            <Suspense>{List && <List />}</Suspense>
           </DensityProvider>
         </SpaceItem>
       ))}

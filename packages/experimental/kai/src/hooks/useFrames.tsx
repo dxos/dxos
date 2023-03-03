@@ -14,10 +14,10 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
-  Stack,
+  Monitor,
+  Stack as StackIcon,
   Sword,
-  Table,
-  Tray
+  Table
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -38,7 +38,7 @@ import {
   TableFrame,
   TaskFrame,
   SandboxFrame,
-  StackFrame
+  Stack
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -47,7 +47,7 @@ export type FrameDef = {
   runtime: {
     Icon: FC<any>;
     Component: FC<any>;
-    Tile?: FC<any>;
+    List?: FC<any>;
   };
 };
 
@@ -58,13 +58,13 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.masonry',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
-      displayName: 'Inbox',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Tray,
+      Icon: Monitor,
       Component: MasonryFrame
     }
   },
@@ -109,7 +109,7 @@ const defs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.calendar',
       type: 'dxos:type/frame',
-      displayName: 'Events',
+      displayName: 'Calendar',
       description: 'Calendar and time management tools.'
 
     },
@@ -128,7 +128,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Article,
       Component: Document.Frame,
-      Tile: Document.Tile
+      List: Document.List
     }
   },
   {
@@ -139,8 +139,9 @@ const defs: FrameDef[] = [
       description: 'Structured documents.'
     },
     runtime: {
-      Icon: Stack,
-      Component: StackFrame
+      Icon: StackIcon,
+      Component: Stack.Frame,
+      List: Stack.List
     }
   },
   {
@@ -154,7 +155,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Cards,
       Component: Note.Frame,
-      Tile: Note.Tile
+      List: Note.List
     }
   },
   {
@@ -167,7 +168,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Files,
       Component: File.Frame,
-      Tile: File.Tile
+      List: File.List
     }
   },
   {
@@ -211,7 +212,8 @@ const defs: FrameDef[] = [
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
       displayName: 'Chess',
-      description: 'Peer-to-peer and engine powered games.'
+      description: 'Peer-to-peer and engine powered games.',
+      tags: ['community']
     },
     runtime: {
       Icon: Sword,
@@ -234,11 +236,12 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
+// TODO(burdon): Make switchable based on dev/prod mode.
 export const defaultFrameId = 'dxos.module.frame.document';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.masonry',
+  'dxos.module.frame.dashboard',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.note',

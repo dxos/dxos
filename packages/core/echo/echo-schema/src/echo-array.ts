@@ -330,6 +330,14 @@ export class EchoArray<T> implements Array<T> {
     ) {
       return new Reference((value as any)['@id']);
     } else {
+      assert(
+        value === null ||
+          value === undefined ||
+          typeof value === 'boolean' ||
+          typeof value === 'number' ||
+          typeof value === 'string',
+        `Invalid type: ${JSON.stringify(value)}`
+      );
       return value;
     }
   }

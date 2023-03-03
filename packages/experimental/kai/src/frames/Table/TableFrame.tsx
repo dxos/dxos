@@ -16,7 +16,7 @@ import { schema } from '../../proto';
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
 type ColumnType<T extends Document> = {
-  id: string;
+  id: string; // TODO(burdon): Type `name`?
   title: string;
   columns: Column<Document>[];
   filter?: TypeFilter<any>;
@@ -72,7 +72,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
 
 const types: ColumnType<any>[] = generateTypes(schema.types);
 
-const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
+export const getColumnType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
   const { space } = useAppRouter();
@@ -95,7 +95,7 @@ export const TableFrame = () => {
           <div className='w-screen md:w-column mr-4'>
             <Searchbar onSearch={handleSearch} />
           </div>
-          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getType(value))}>
+          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
             {types?.map((type) => (
               <Select.Item key={type.id} value={type.id}>
                 {type.title}

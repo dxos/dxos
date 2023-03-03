@@ -50,7 +50,7 @@ export abstract class EchoObject<T extends Model = any> {
    */
   _modelConstructor: ModelConstructor<T>;
 
-  constructor(modelConstructor: ModelConstructor<T>) {
+  protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
     this._id = PublicKey.random().toHex();
     this._stateMachine = this._modelConstructor.meta.stateMachine();

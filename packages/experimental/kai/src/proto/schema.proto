@@ -45,8 +45,14 @@ message Link {
 // Objects
 //
 
+message Table {
+  option (object) = true;
+
+  string type = 1;
+}
+
 message Organization {
-  option (object) = true; // TODO(burdon): Fix protobuf plugin.
+  option (object) = true;
 
   string name = 1;
   string description = 2;
@@ -73,6 +79,13 @@ message Task {
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
+}
+
+message TaskList {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 2;
 }
 
 message Project {
@@ -105,8 +118,18 @@ message Document {
 message DocumentStack {
   option (object) = true;
 
+  message Section {
+    option (object) = true;
+
+    // TODO(burdon): Reconcile -- either JUST store object IDs or an array of objects.
+    string object_id = 1;
+    dxos.schema.Document document = 10;
+    File file = 11;
+  }
+
   string title = 1;
   repeated Document documents = 2;
+  repeated Section sections = 3;
 }
 
 message Message {
@@ -131,17 +154,21 @@ message Event {
 }
 
 message Sketch {
-  message SketchPoint {
+  message Point {
+    option (object) = true;
+
     int32 x = 1;
     int32 y = 2;
   }
 
   // TODO(burdon): Should be sub-type but is compiled to top level.
   message Path {
+    option (object) = true;
+
     int32 timestamp = 1; // TODO(burdon): Is this required.
     int32 width = 2;
     string color = 3;
-    repeated SketchPoint points = 4;
+    repeated Point points = 4;
   }
 
   option (object) = true;
@@ -154,12 +181,14 @@ message File {
   option (object) = true;
 
   string name = 1;
-  string timestamp = 2;
+  string timestamp = 2;  // TODO(burdon): Common metadata.
   string cid = 3;
 }
 
 message NoteBoard {
   message Location { // TODO(burdon): Name collision.
+    option (object) = true;
+
     string object_id = 1;
     int32 x = 2;
     int32 y = 3;

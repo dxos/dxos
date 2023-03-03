@@ -37,7 +37,7 @@ export class Generator {
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
-      documents: { min: 1, max: 3 }
+      documents: { min: 2, max: 5 }
     }
   ) {}
 
@@ -55,7 +55,7 @@ export class Generator {
             lat: city.coordinates[1],
             lng: city.coordinates[0]
           },
-          // TODO (mykola): Add zip and state.
+          // TODO(mykola): Add zip and state.
           state: 'NY',
           zip: '11205'
         };

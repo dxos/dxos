@@ -7,7 +7,7 @@ import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
-import { useQuery, useSubscriptionEffect } from '@dxos/react-client';
+import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
@@ -17,12 +17,12 @@ import { NoteTile } from './NoteTile';
 const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>
   board.locations.find((location) => location.objectId === id);
 
-const setItemLocation = (board: NoteBoard, id: string, location: NoteBoard.Location) => {
+const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
   const idx = board.locations.findIndex((location) => location.objectId === id);
   if (idx === -1) {
-    board.locations.push({ objectId: id, ...location });
+    board.locations.push(new NoteBoard.Location({ ...location, objectId: id }));
   } else {
-    board.locations.splice(idx, 1, { objectId: id, ...location });
+    board.locations.splice(idx, 1, new NoteBoard.Location({ ...location, objectId: id }));
   }
 };
 
@@ -78,7 +78,7 @@ export const NoteFrame = () => {
 
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
-  useSubscriptionEffect(() => {
+  useSubscription(() => {
     // TODO(burdon): Rename.
     if (board) {
       setItems(doLayout(board, notes, layout));
