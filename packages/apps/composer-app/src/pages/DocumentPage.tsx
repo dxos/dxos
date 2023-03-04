@@ -29,7 +29,7 @@ const turndownService = new TurndownService({
   codeBlockStyle: 'fenced'
 });
 
-const nestedParagraphOutput = / {4}\n/g;
+const nestedParagraphOutput = / +\n/g;
 
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
