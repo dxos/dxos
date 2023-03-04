@@ -23,7 +23,13 @@ import { Composer, useComposer } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
-const turndownService = new TurndownService();
+const turndownService = new TurndownService({
+  headingStyle: 'atx',
+  hr: '---',
+  codeBlockStyle: 'fenced'
+});
+
+const nestedParagraphOutput = / {4}\n/g;
 
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
@@ -38,7 +44,10 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
   const handleExport = useCallback(() => {
     const html = editor?.getHTML();
     if (html) {
-      download(new Blob([turndownService.turndown(html)], { type: 'text/plain' }), `${document.title}.md`);
+      download(
+        new Blob([turndownService.turndown(html).replaceAll(nestedParagraphOutput, '')], { type: 'text/plain' }),
+        `${document.title}.md`
+      );
     }
   }, [document, editor]);
 
