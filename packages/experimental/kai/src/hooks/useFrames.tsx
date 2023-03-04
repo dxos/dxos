@@ -42,8 +42,7 @@ import {
   Stack,
   TableFrame,
   TaskFrame,
-  SandboxFrame,
-  MasonryFrame
+  SandboxFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -60,12 +59,12 @@ export type FrameDef = {
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
 // prettier-ignore
-const defs: FrameDef[] = [
+const frameDefs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.mosaic',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
-      displayName: 'Mosaic',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
@@ -262,10 +261,10 @@ const defs: FrameDef[] = [
   }
 ];
 
-export const frameModules: Module[] = defs.map(({ module }) => module);
+export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.message';
+export const defaultFrameId = 'dxos.module.frame.bot';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -291,7 +290,7 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   const frames = useMemo(
     () =>
       modules.reduce((map, module) => {
-        const def = defs.find((def) => def.module.id === module.id);
+        const def = frameDefs.find((def) => def.module.id === module.id);
         assert(def);
         map.set(module.id!, def);
         return map;

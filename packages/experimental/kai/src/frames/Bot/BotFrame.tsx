@@ -6,9 +6,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
 import { PublicKey } from '@dxos/keys';
-import { Button, Table } from '@dxos/react-components';
+import { Button, Select, Table } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
+import { botDefs, useAppRouter } from '../../hooks';
 import { BotClient } from './bot-client';
 
 const REFRESH_DELAY = 1000;
@@ -54,6 +54,7 @@ export const BotFrame = () => {
   const [status, setStatus] = useState('');
   const [records, setRecords] = useState<BotRecord[]>([]);
   const [botClient, setBotClient] = useState<BotClient>();
+  const [botId, setBotId] = useState<string>(botDefs[0].module.id!);
   const { space } = useAppRouter();
 
   useEffect(() => {
@@ -74,6 +75,8 @@ export const BotFrame = () => {
     void refresh();
   }, [botClient]);
 
+  // TODO(burdon): Error handling.
+  // TODO(burdon): Show status in a pending table row.
   const refreshTimeout = useRef<ReturnType<typeof setTimeout>>();
   const refresh = () => {
     clearTimeout(refreshTimeout.current);
@@ -94,9 +97,6 @@ export const BotFrame = () => {
     }, REFRESH_DELAY);
   };
 
-  // TODO(burdon): Error handling.
-  // TODO(burdon): Show status in a pending table row.
-
   if (!botClient) {
     return null;
   }
@@ -104,11 +104,20 @@ export const BotFrame = () => {
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
       <div className='flex items-center p-2 mb-2'>
-        <Button className='mr-2' onClick={refresh}>
-          Refresh
+        <Button className='mr-2' onClick={() => botId && botClient.startBot(botId)}>
+          Start
         </Button>
-        <Button className='mr-2' onClick={() => botClient.startBot('dxos.bot.test')}>
-          Start Bot
+        {/* TODO(burdon): full width, value, onChange. */}
+        <Select defaultValue={botId} onValueChange={setBotId}>
+          {botDefs.map(({ module: { id, displayName } }) => (
+            <Select.Item key={id} value={id!}>
+              {displayName}
+            </Select.Item>
+          ))}
+        </Select>
+        <div className='grow' />
+        <Button variant='ghost' className='mr-2' onClick={refresh}>
+          Refresh
         </Button>
       </div>
 

@@ -20,19 +20,7 @@ export type BotDef = {
   };
 };
 
-export const defs: BotDef[] = [
-  {
-    module: {
-      id: 'dxos.module.bot.kai',
-      type: 'dxos:type/bot',
-      displayName: 'KaiBot',
-      description: 'Background research and data analysis.'
-    },
-    runtime: {
-      Icon: Binoculars,
-      constructor: () => new KaiBot()
-    }
-  },
+export const botDefs: BotDef[] = [
   {
     module: {
       id: 'dxos.module.bot.chess',
@@ -44,10 +32,22 @@ export const defs: BotDef[] = [
       Icon: Sword,
       constructor: () => new ChessBot()
     }
+  },
+  {
+    module: {
+      id: 'dxos.module.bot.kai',
+      type: 'dxos:type/bot',
+      displayName: 'KaiBot',
+      description: 'Background research and data analysis.'
+    },
+    runtime: {
+      Icon: Binoculars,
+      constructor: () => new KaiBot()
+    }
   }
 ];
 
-export const botModules: Module[] = defs.map(({ module }) => module);
+export const botModules: Module[] = botDefs.map(({ module }) => module);
 
 export type BotMap = Map<string, BotDef>;
 
@@ -57,7 +57,7 @@ export const useBots = (): { bots: BotMap; active: string[] } => {
   const bots = useMemo(
     () =>
       modules.reduce((map, module) => {
-        const def = defs.find((def) => def.module.id === module.id);
+        const def = botDefs.find((def) => def.module.id === module.id);
         assert(def);
         map.set(module.id!, def);
         return map;

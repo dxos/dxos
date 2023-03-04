@@ -22,12 +22,13 @@ export class BotClient {
 
   constructor(private readonly _space: Space) {}
 
+  // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
     return fetch(`${PROXY_ENDPOINT}/containers/json?all=true`).then((r) => r.json());
   }
 
-  async startBot(botName: string) {
+  async startBot(botId: string) {
     this.onStatusUpdate.emit('Creating container...');
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
@@ -51,11 +52,11 @@ export class BotClient {
             ]
           }
         },
-        Env: ['LOG_FILTER=info', `BOT_NAME=${botName}`],
+        Env: ['LOG_FILTER=info', `BOT_NAME=${botId}`],
         Labels: {
           'dxos.bot': `${true}`,
           'dxos.bot.dxrpc-port': `${port}`,
-          'dxos.bot.name': botName
+          'dxos.bot.name': botId
         }
       })
     });

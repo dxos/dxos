@@ -8,7 +8,7 @@ import { BotConstructor, BotManager } from '@dxos/bots';
 import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { defs } from './useBots';
+import { botDefs } from './useBots';
 
 export type AppState = {
   // Debug info.
@@ -46,7 +46,7 @@ type ActionType = SetBotAction | SetFrameAction;
 
 // TODO(burdon): Inject.
 const botManager = new BotManager(
-  defs.reduce((map, def) => {
+  botDefs.reduce((map, def) => {
     map.set(def.module.id!, def.runtime.constructor);
     return map;
   }, new Map<string, BotConstructor>())

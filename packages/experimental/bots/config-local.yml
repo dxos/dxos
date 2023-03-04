@@ -1,0 +1,54 @@
+version: 1
+
+runtime:
+  client:
+    storage:
+      persistent: true
+      path: /tmp/dx/cli
+
+  services:
+    ipfs:
+      server: http://127.0.0.1:5001/
+      gateway: http://127.0.0.1:8888/ipfs
+    signal:
+      server: ws://127.0.0.1:9002/.well-known/dx/signal
+    ice:
+      - urls: turn:127.0.0.1:3478
+        username: dxos
+        credential: dxos
+    publisher:
+      server: ws://127.0.0.1/.well-known/dx/deploy
+
+    # TODO(burdon): Review with Egor.
+    supervisor:
+      server: ws://127.0.0.1/.well-known/dx/supervisor
+    machine:
+      doAccessToken: ''
+
+  keys:
+    # TODO(burdon): Origin.
+    - name: protonmail.ca
+      value: "
+        -----BEGIN CERTIFICATE-----
+        MIIDkjCCAnqgAwIBAgIQND+CBAbpnu7w4bOzBe4Q5jANBgkqhkiG9w0BAQsFADBL
+        MQswCQYDVQQGEwJDSDESMBAGA1UEChMJUHJvdG9uIEFHMRQwEgYDVQQLEwtQcm90
+        b24gTWFpbDESMBAGA1UEAxMJMTI3LjAuMC4xMB4XDTIzMDMwMzAzMTI0NFoXDTQz
+        MDIyNjAzMTI0NFowSzELMAkGA1UEBhMCQ0gxEjAQBgNVBAoTCVByb3RvbiBBRzEU
+        MBIGA1UECxMLUHJvdG9uIE1haWwxEjAQBgNVBAMTCTEyNy4wLjAuMTCCASIwDQYJ
+        KoZIhvcNAQEBBQADggEPADCCAQoCggEBAOjwPdpcdVCIoYcs4D+Fz1qDBBIjTsI0
+        EtaJ5g+PrGHE7sKnUtiqmA5iFs+8Ic7tGNh+2sLXQJGuw6LIsjNNVo3Dpt6fu+dc
+        SUf+835N+gyU+tDvF19+U/Xes3NL5Ic+GiLacpt82/81u4a6xBtS3mLTHsCvmLi2
+        nQTimuEUKtIret0IRKauo2flNhLdhO2vx66KBHJELfZWjOOaDMoX0DUTAnqLW6nZ
+        63OAziZyD02QENilGaUWTkADV5W82PyyzMj7aQTmIuOcQAtDFX2Vw2wBZ1kTsPTz
+        GpCO8Vj16ipY8ECRYeaEBMf3CI0D91mh4UnXLGTKBudp357W9DoIDpUCAwEAAaNy
+        MHAwDgYDVR0PAQH/BAQDAgKkMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcD
+        AjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSwrRUTVqJOp5W5u+Fzgxw5S03z
+        8zAPBgNVHREECDAGhwR/AAABMA0GCSqGSIb3DQEBCwUAA4IBAQCIC0aOSTT6jdQ0
+        ExPjiZt/YCpjTLTb62H1n7OOSW5g2d0kV0M9cb0HavME9s0C61f9ONCoLo4Fp3fT
+        RzSMvVX4QNpx/8wyJqSuYbp+6quGUYrkKSVyRyy8JzEPcyjLZdSMjyN88xMxu4gg
+        702a+jYD+GfhsUUamAarJdr7vKmCk5+Oxymtzsm4aejgesyudhvIDFRZGEH2Tq2x
+        6WsZD2jE3EN5RUnI5MTgZa/bks0+XbGHqlnzfzsmhlrhONV7iMYtJ8wh9kzKFYqd
+        jeCAXoz06Jbmip7vnj1mb1Y/F4Ax6TAbfsnUg6cF4LYuZ5gkd2KGsk+2B/1VCseW
+        CJRPAepN
+        -----END CERTIFICATE-----
+      "

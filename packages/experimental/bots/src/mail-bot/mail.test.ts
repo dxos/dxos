@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import fs from 'fs';
 // import { convert } from 'html-to-text';
 import imaps from 'imap-simple';
-import path from 'path';
 
 import { describe, test } from '@dxos/test';
+
+import { getConfig, getKey } from '../util';
 
 // Protonmail bridge as alternative to Gmail, which requires a registered Google workspace.
 // https://proton.me/blog/bridge-security-model
@@ -21,20 +21,25 @@ export type Message = {
 };
 
 describe('Mail', () => {
-  const config = {
+  const config = getConfig()!;
+  const imapConfig = {
     user: process.env.PROTONMAIL_USERNAME!,
     password: process.env.PROTONMAIL_PASSWORD!,
     host: '127.0.0.1',
     port: 1143,
     tls: true,
+    // https://stackoverflow.com/questions/59633564/cannot-connect-to-gmail-using-imap
     tlsOptions: {
-      ca: fs.readFileSync(path.join(process.cwd(), 'packages/experimental/bots/config/protonmail-cert.pem'))
+      ca: getKey(config, 'protonmail.ca'),
+      rejectUnauthorized: false
     }
   };
 
-  test.skip('IMAP', async () => {
+  console.log(imapConfig);
+
+  test('IMAP', async () => {
     // https://www.npmjs.com/package/imap-simple
-    const connection = await imaps.connect({ imap: config });
+    const connection = await imaps.connect({ imap: imapConfig });
     await connection.openBox('INBOX');
 
     // TODO(burdon): Poll and parse email.
@@ -42,7 +47,7 @@ describe('Mail', () => {
 
     const raw = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT'],
-      markSeen: true
+      markSeen: false
     });
 
     const messages = raw.map(({ parts }) => {
