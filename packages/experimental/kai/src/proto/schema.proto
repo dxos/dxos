@@ -122,15 +122,26 @@ message DocumentStack {
   repeated dxos.schema.Document sections = 2;
 }
 
+message Source {
+  string key = 1;
+}
+
 message Message {
   option (object) = true;
 
+  message Contact {
+    string email = 1;
+    string name = 2;
+    Contact contact = 3;
+  }
+
   // TODO(burdon): Timestamp (across all objects).
-  string date = 1;
-  string from = 2;
-  string to = 3;
-  string subject = 4;
-  string text = 5;
+  Source source = 1;
+  string received = 2;
+  Contact from = 3;
+  repeated Contact to = 4;
+  string subject = 5;
+  string body = 6;
 }
 
 message Event {

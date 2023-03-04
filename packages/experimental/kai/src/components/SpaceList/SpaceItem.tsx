@@ -30,7 +30,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
       // style={{ marginTop: -1 }}
       className={mx(
         'flex flex-col overflow-hidden border first:mt-0 mt-[-1px]',
-        'hover:bg-selection-hover',
+        'hover:bg-hover-bg',
         selected && 'z-10 hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >

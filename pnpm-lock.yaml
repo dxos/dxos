@@ -2920,6 +2920,7 @@ importers:
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@monaco-editor/react': ^4.4.6
+      '@octokit/rest': ^19.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
@@ -3016,6 +3017,7 @@ importers:
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      '@octokit/rest': 19.0.5
       '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9

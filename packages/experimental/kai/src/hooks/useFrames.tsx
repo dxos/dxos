@@ -8,7 +8,6 @@ import {
   Robot,
   Calendar,
   Cards,
-  ChatText,
   Code,
   Compass,
   Files,
@@ -19,7 +18,8 @@ import {
   Monitor,
   Stack as StackIcon,
   Sword,
-  Table
+  Table,
+  Tray
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -111,13 +111,25 @@ const frameDefs: FrameDef[] = [
   },
   {
     module: {
-      id: 'dxos.module.frame.message',
+      id: 'dxos.module.frame.bot',
       type: 'dxos:type/frame',
-      displayName: 'Messages',
-      description: 'Universal messagaging.'
+      displayName: 'Bots',
+      description: 'Bot management.'
     },
     runtime: {
-      Icon: ChatText,
+      Icon: Robot,
+      Component: BotFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.message',
+      type: 'dxos:type/frame',
+      displayName: 'Inbox',
+      description: 'Universal message inbox.'
+    },
+    runtime: {
+      Icon: Tray,
       Component: MessageFrame
     }
   },
@@ -264,7 +276,7 @@ const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.bot';
+export const defaultFrameId = 'dxos.module.frame.message';
 
 // prettier-ignore
 export const defaultFrames = [

@@ -5,7 +5,6 @@
 import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,32 +46,35 @@ export const StackFrame = observer(() => {
     }
   }, [space, frame, stacks, stack]);
 
+  // TODO(burdon): Drag (mosaic).
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
-    assert(stack);
+    if (stack) {
+      let object: Document;
+      if (!objectId) {
+        switch (type) {
+          case DocumentType.type: {
+            object = await space!.db.add(new DocumentType());
+            break;
+          }
 
-    let object: Document;if (!objectId) {
-      switch (type) {
-        case DocumentType.type: {
-           object = await space!.db.add(new DocumentType());
-          break;
-        }
+          case Table.type: {
+             object = await space!.db.add(new Table({ type: Contact.type.name }));
 
-        case Table.type: {
-           object = await space!.db.add(new Table({ type: Contact.type.name }));
+            break;
+          }
 
-          break;
-        }
-
-        case TaskList.type: {
-          const object = await space!.db.add(new TaskList());
-          objectId = object.id;
-          break;
+          case TaskList.type: {
+            object = await space!.db.add(new TaskList());
+            break;
+          }
+          default: {
+            object = await space!.db.add(new DocumentType());
+            break;
+          }
         }
       }
-    }
 
-    if (objectId) {
-      stack.sections.splice(index === -1 ? stack.sections.length : index, 0, new DocumentStack.Section({ objectId }));
+      stack.sections.splice(index === -1 ? stack.sections.length : index, 0, object);
     }
   };
 

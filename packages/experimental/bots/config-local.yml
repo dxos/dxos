@@ -26,7 +26,14 @@ runtime:
       doAccessToken: ''
 
   keys:
-    # TODO(burdon): Origin.
+    # DO NOT CHECK IN (KEY WILL BE CANCELLED).
+    # https://platform.openai.com/account/api-keys (2023-03-02)
+    - name: 'openai.org_id'
+      value: 'org-mZTRiNMMnvZWUqWxPlirjw5l'
+    - name: 'openai.api_key'
+      value: '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'
+
+    # Export from Protonmail Bridge (configure SSL).
     - name: protonmail.ca
       value: "
         -----BEGIN CERTIFICATE-----
