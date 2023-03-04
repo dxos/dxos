@@ -135,12 +135,18 @@ message DocumentStack {
 message Message {
   option (object) = true;
 
+  message Contact {
+    string email = 1;
+    string name = 2;
+    Contact contact = 3;
+  }
+
   // TODO(burdon): Timestamp (across all objects).
-  string date = 1;
-  string from = 2;
-  string to = 3;
+  string received = 1;
+  Contact from = 2;
+  repeated Contact to = 3;
   string subject = 4;
-  string text = 5;
+  string body = 5;
 }
 
 message Event {

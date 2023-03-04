@@ -11,7 +11,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, TextDocument, Event, Organization, Note, Project, Task } from './gen/schema';
+import { Contact, TextDocument, Event, Message, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
@@ -26,6 +26,7 @@ export type GeneratorOptions = {
   contacts: MinMax;
   events: MinMax;
   documents: MinMax;
+  messages: MinMax;
 };
 
 export class Generator {
@@ -37,7 +38,8 @@ export class Generator {
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
-      documents: { min: 2, max: 5 }
+      documents: { min: 2, max: 5 },
+      messages: { min: 15, max: 20 }
     }
   ) {}
 
@@ -110,6 +112,9 @@ export class Generator {
 
     // Documents.
     await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
+
+    // Messages.
+    await Promise.all(range(this._options.messages).map(async () => this.createMessage()));
   }
 
   createOrganization = async () => {
@@ -120,8 +125,7 @@ export class Generator {
   };
 
   createProject = async (tag?: string) => {
-    const project = createProject(tag);
-    return await this._db.add(project);
+    return await this._db.add(createProject(tag));
   };
 
   createTask = async () => {
@@ -129,18 +133,15 @@ export class Generator {
     const contact =
       faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
 
-    const task = createTask(contact);
-    return await this._db.add(task);
+    return await this._db.add(createTask(contact));
   };
 
   createContact = async () => {
-    const contact = createContact();
-    return await this._db.add(contact);
+    return await this._db.add(createContact());
   };
 
   createEvent = async () => {
-    const event = createEvent();
-    return await this._db.add(event);
+    return await this._db.add(createEvent());
   };
 
   createDocument = async () => {
@@ -151,10 +152,13 @@ export class Generator {
   };
 
   createNote = async () => {
-    const document = createNote();
-    await this._db.add(document);
+    const document = await this._db.add(createNote());
     createTextObjectContent(document.content, 1);
     return document;
+  };
+
+  createMessage = async () => {
+    return await this._db.add(createMessage());
   };
 }
 
@@ -246,4 +250,22 @@ export const createNote = () => {
   note.title = faker.lorem.words(2);
   note.content = new Text();
   return note;
+};
+
+export const createMessage = () => {
+  const message = new Message({
+    from: {
+      email: faker.internet.email()
+    }
+  });
+  message.received = roundToNearestMinutes(faker.date.soon(21, add(new Date(), { days: -7 })), {
+    nearestTo: 30
+  }).toISOString();
+  message.subject = faker.lorem.words(2);
+  // message.from = {
+  // TODO(burdon): Instantiate from constructor.
+  // email: faker.internet.email()
+  // };
+  message.body = faker.lorem.sentences(3);
+  return message;
 };
