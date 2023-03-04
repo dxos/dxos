@@ -11,14 +11,14 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
-import { Composer, ComposerProps } from './Composer';
+import { Composer, EditorProps } from './Composer';
 
 export default {
   component: Composer,
   argTypes: {}
 };
 
-const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
+const Story = ({ spaceKey, id, ...args }: Omit<EditorProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
   const [document] = useQuery(space, ComposerDocument.filter());
