@@ -153,7 +153,7 @@ export class DataSpaceManager {
     const presence = new Presence({
       localPeerId: this._signingContext.deviceKey,
       announceInterval: 1_000,
-      offlineTimeout: 30_000,
+      offlineTimeout: 10_000, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore);

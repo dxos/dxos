@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesHost, ClientServicesProvider } from '@dxos/client-services';
+import { ClientServicesProvider, LocalClientServices } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -37,7 +37,7 @@ export const fromIFrame = (
  * Creates stand-alone services without rpc.
  */
 export const fromHost = (config: Config = new Config()): ClientServicesProvider => {
-  return new ClientServicesHost({
+  return new LocalClientServices({
     config,
     networkManager: createNetworkManager(config)
   });

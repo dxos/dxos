@@ -105,13 +105,13 @@ describe('Agent', () => {
     // TODO(burdon): Extend TestBuilder pattern for gravity-agent package.
     const agent1 = new Agent({
       config,
-      services: testBuilder.createClientServicesHost(),
+      services: testBuilder.createLocal(),
       spec: spec1,
       stateMachine: testStateMachineFactory(spec1.stateMachine!)
     });
     const agent2 = new Agent({
       config,
-      services: testBuilder.createClientServicesHost(),
+      services: testBuilder.createLocal(),
       spec: spec2,
       stateMachine: testStateMachineFactory(spec2.stateMachine!)
     });

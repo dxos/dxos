@@ -131,5 +131,5 @@ describe('space/space-protocol', () => {
     await builder.close();
   })
     .skipEnvironments('webkit')
-    .tag('e2e'); // Some storage drivers may break when there are multiple storage instances.
+    .tag('flaky'); // Some storage drivers may break when there are multiple storage instances.
 });

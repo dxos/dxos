@@ -11,7 +11,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, TextDocument, Event, Message, Organization, Note, Project, Task } from './gen/schema';
+import { Contact, Document, Event, Message, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
@@ -239,7 +239,7 @@ export const createEvent = () => {
 };
 
 export const createDocument = () => {
-  const document = new TextDocument();
+  const document = new Document();
   document.title = faker.lorem.sentence(3);
   document.content = new Text();
   return document;

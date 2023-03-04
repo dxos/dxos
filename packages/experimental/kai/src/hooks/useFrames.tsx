@@ -5,6 +5,7 @@
 import assert from 'assert';
 import {
   Article,
+  Robot,
   Calendar,
   Cards,
   ChatText,
@@ -26,6 +27,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
+  BotFrame,
   CalendarFrame,
   ChessFrame,
   Document,
@@ -33,14 +35,14 @@ import {
   File,
   KanbanFrame,
   MapFrame,
-  MasonryFrame,
   MessageFrame,
   Note,
   SketchFrame,
+  Stack,
   TableFrame,
   TaskFrame,
   SandboxFrame,
-  Stack
+  MasonryFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -60,9 +62,9 @@ export type FrameDef = {
 const defs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.dashboard',
+      id: 'dxos.module.frame.mosaic',
       type: 'dxos:type/frame',
-      displayName: 'Dashboard',
+      displayName: 'Mosaic',
       description: 'Configurable tiles.'
     },
     runtime: {
@@ -105,6 +107,18 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: ListChecks,
       Component: TaskFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.bot',
+      type: 'dxos:type/frame',
+      displayName: 'Bots',
+      description: 'Bot management.'
+    },
+    runtime: {
+      Icon: Robot,
+      Component: BotFrame
     }
   },
   {
@@ -164,7 +178,6 @@ const defs: FrameDef[] = [
       type: 'dxos:type/frame',
       displayName: 'Notes',
       description: 'Brainstorming notes.'
-
     },
     runtime: {
       Icon: Cards,
@@ -261,10 +274,12 @@ export const defaultFrames = [
   'dxos.module.frame.task',
   'dxos.module.frame.note',
   'dxos.module.frame.stack'
+  'dxos.module.frame.bot'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
-  // 'dxos.module.frame.explorer'
+  // 'dxos.module.frame.explorer',
+  // 'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;

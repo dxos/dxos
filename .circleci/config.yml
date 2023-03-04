@@ -83,7 +83,7 @@ jobs:
       - *store_test_results
 
   #
-  # Heavier checks which don't block PR merges.
+  # End-to-end playwright UI testing.
   #
   e2e:
     docker:
@@ -102,11 +102,28 @@ jobs:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=6144
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
           path: tmp/playwright
+
+
+  #
+  # Quarantine for flaky tests.
+  #
+  flaky:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpm install-playwright
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=flaky --coverage --xmlReport
+      - *codecov_upload
+      - *store_test_results
 
   #
   # Publish applications.
@@ -137,6 +154,9 @@ workflows:
           context:
             - Github
       - e2e:
+          context:
+            - Github
+      - flaky:
           context:
             - Github
 

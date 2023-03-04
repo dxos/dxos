@@ -5,7 +5,7 @@
 import './main.css';
 import '@dxos/client/shell.css';
 
-import React from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
@@ -24,4 +24,8 @@ const router = createBrowserRouter([
 ]);
 
 const root = createRoot(document.getElementById('root')!);
-root.render(<RouterProvider router={router} />);
+root.render(
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>
+);
