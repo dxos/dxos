@@ -12,7 +12,7 @@ import {
   EditableListProps,
   useEditableListKeyboardInteractions
 } from '@dxos/react-appkit';
-import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
@@ -42,7 +42,7 @@ export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props
 };
 
 // TODO(burdon): Make pure.
-export const TaskList: FC<TaskListProps> = withReactor(
+export const TaskList: FC<TaskListProps> = observer(
   ({ space, id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const listId = propsId ?? space.key.toHex() ?? randomString();
@@ -103,35 +103,33 @@ export const TaskItem: FC<{
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
   slots?: EditableListItemSlots;
-}> = withReactor(
-  ({ task, onDelete, onSave, slots }) => {
-    useReactorContext({
-      onChange: () => {
-        onSave?.(task);
-      }
-    });
+}> = observer(({ task, onDelete, onSave, slots }) => {
+  // TODO(wittjosiah): Remove?
+  // useReactorContext({
+  //   onChange: () => {
+  //     onSave?.(task);
+  //   }
+  // });
 
-    return (
-      <EditableListItem
-        id={task.id}
-        completed={task.completed}
-        title={task.title}
-        slots={{
-          ...slots,
-          listItem: {
-            selectableCheckbox: {
-              className:
-                'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
-            }
+  return (
+    <EditableListItem
+      id={task.id}
+      completed={task.completed}
+      title={task.title}
+      slots={{
+        ...slots,
+        listItem: {
+          selectableCheckbox: {
+            className:
+              'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
           }
-        }}
-        onChangeCompleted={(completed) => (task.completed = completed)}
-        onChangeTitle={({ target: { value } }) => {
-          task.title = value ?? '';
-        }}
-        {...(onDelete && { onClickDelete: () => onDelete(task) })}
-      />
-    );
-  },
-  { componentName: 'TaskItem' }
-);
+        }
+      }}
+      onChangeCompleted={(completed) => (task.completed = completed)}
+      onChangeTitle={({ target: { value } }) => {
+        task.title = value ?? '';
+      }}
+      {...(onDelete && { onClickDelete: () => onDelete(task) })}
+    />
+  );
+});

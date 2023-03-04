@@ -19,7 +19,7 @@ describe('Client', () => {
   test('creates client with embedded services', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
     expect(client.initialized).to.be.true;
@@ -28,7 +28,7 @@ describe('Client', () => {
   test('initialize and destroy multiple times', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     await client.initialize();
     expect(client.initialized).to.be.true;
@@ -41,7 +41,7 @@ describe('Client', () => {
   test('closes and reopens', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     expect(client.initialized).to.be.true;
 
@@ -58,7 +58,7 @@ describe('Client', () => {
   test('create space before identity', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
     await expect(client.echo.createSpace()).to.eventually.be.rejectedWith(
@@ -107,7 +107,7 @@ const getNodeConfig = async (reset = false) => {
 
 // TODO(burdon): Develop test-suite.
 const runTest = async (testBuilder: TestBuilder) => {
-  const client = new Client({ services: testBuilder.createClientServicesHost() });
+  const client = new Client({ services: testBuilder.createLocal() });
   const displayName = 'test-user';
 
   {

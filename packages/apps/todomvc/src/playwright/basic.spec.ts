@@ -133,15 +133,18 @@ test.describe('Basic test', () => {
       await host.createTodo(Groceries.Butter);
       await host.createTodo(Groceries.Flour);
 
-      await host.filterTodos(FILTER.ACTIVE);
       await host.toggleTodo(Groceries.Milk);
       await host.toggleTodo(Groceries.Butter);
+      await host.filterTodos(FILTER.ACTIVE);
 
-      expect(await host.textIsVisible(Groceries.Milk)).to.be.false;
-      expect(await host.textIsVisible(Groceries.Butter)).to.be.false;
-      expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
-      expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
-      expect(await host.todoCount()).to.equal(2);
+      // Wait for render.
+      await waitForExpect(async () => {
+        expect(await host.textIsVisible(Groceries.Milk)).to.be.false;
+        expect(await host.textIsVisible(Groceries.Butter)).to.be.false;
+        expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
+        expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
+        expect(await host.todoCount()).to.equal(2);
+      }, 10);
     });
 
     test('filter completed tasks', async () => {

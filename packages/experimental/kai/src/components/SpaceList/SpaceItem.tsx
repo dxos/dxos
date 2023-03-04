@@ -6,7 +6,7 @@ import { UserPlus } from 'phosphor-react';
 import React, { ReactNode } from 'react';
 
 import { Space } from '@dxos/client';
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { getIcon } from '../../hooks';
@@ -20,7 +20,7 @@ export type SpaceItemProps = {
   onAction: (intent: Intent<SpaceListAction>) => void;
 };
 
-export const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
+export const SpaceItem = observer(({ space, selected, children, onAction }: SpaceItemProps) => {
   const { t } = useTranslation('kai');
   const Icon = getIcon(space.properties.icon);
 

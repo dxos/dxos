@@ -9,11 +9,11 @@ import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { EchoSchemaType, useConfig, useQuery, withReactor } from '@dxos/react-client';
+import { EchoSchemaType, useConfig, useQuery, observer, Document } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Contact, TextDocument, DocumentStack, Table, TaskList } from '../../proto';
+import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '../../proto';
 import { StackContent } from './StackContent';
 import { SortableStackRow, StackRow } from './StackRow';
 
@@ -21,7 +21,7 @@ import { SortableStackRow, StackRow } from './StackRow';
 // TODO(burdon): Factor out new section data factories.
 // TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
 
-export const StackFrame = withReactor(() => {
+export const StackFrame = observer(() => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
@@ -29,7 +29,7 @@ export const StackFrame = withReactor(() => {
 
   // TODO(burdon): Arrow of documents (part of stack).
   const stacks = useQuery(space, DocumentStack.filter());
-  const documents = useQuery(space, TextDocument.filter());
+  const documents = useQuery(space, DocumentType.filter());
 
   const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
   useEffect(() => {
@@ -39,7 +39,7 @@ export const StackFrame = withReactor(() => {
         if (!stacks.length) {
           stack = await space.db.add(new DocumentStack());
           // TODO(burdon): Cannot add documents directly (recursion bug).
-          documents.forEach((document) => stack.sections.push(new DocumentStack.Section({ objectId: document.id })));
+          documents.forEach((document) => stack.sections.push(document));
         }
 
         navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
@@ -50,17 +50,16 @@ export const StackFrame = withReactor(() => {
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
     assert(stack);
 
-    if (!objectId) {
+    let object: Document;if (!objectId) {
       switch (type) {
-        case TextDocument.type: {
-          const object = await space!.db.add(new TextDocument());
-          objectId = object.id;
+        case DocumentType.type: {
+           object = await space!.db.add(new DocumentType());
           break;
         }
 
         case Table.type: {
-          const object = await space!.db.add(new Table({ type: Contact.type.name }));
-          objectId = object.id;
+           object = await space!.db.add(new Table({ type: Contact.type.name }));
+
           break;
         }
 
@@ -86,11 +85,11 @@ export const StackFrame = withReactor(() => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (stack && active && over && active.id !== over.id) {
-      const activeIndex = stack.sections.findIndex((section) => section.objectId === active.id);
+      const activeIndex = stack.sections.findIndex((section) => section.id === active.id);
       const activeSection = stack.sections[activeIndex];
       stack.sections.splice(activeIndex, 1);
 
-      const overIndex = stack.sections.findIndex((section) => section.objectId === over.id);
+      const overIndex = stack.sections.findIndex((section) => section.id === over.id);
       const delta = activeIndex <= overIndex ? 1 : 0;
       stack.sections.splice(overIndex + delta, 0, activeSection);
     }
@@ -130,11 +129,11 @@ export const StackFrame = withReactor(() => {
           <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
             <SortableContext
               strategy={verticalListSortingStrategy}
-              items={stack.sections.map((section) => section.objectId!)}
+              items={stack.sections.map((section) => {
+                return section.id!;
+              })}
             >
-              {stack.sections.map((section, i) => {
-                const object = space!.db.getObjectById(section.objectId!)!;
-
+              {stack.sections.map((object, i) => {
                 return (
                   <SortableStackRow
                     key={object.id}
@@ -151,7 +150,7 @@ export const StackFrame = withReactor(() => {
             </SortableContext>
           </DndContext>
 
-          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(TextDocument.type, undefined, -1)} />
+          <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} />
         </div>
         <div className='pb-4' />
       </div>

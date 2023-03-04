@@ -11,7 +11,7 @@ Learn about the [mission](why).
 
 ::: note In this guide
 
-*   Starting a react project with an [app template](#create-an-app),
+*   Starting a react project with an [app template](#create-an-app).
 *   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`.
 *   Using [HALO](#how-to-use-echo) for decentralized identity.
 *   Starting a [KUBE](#starting-a-kube) to host the app.

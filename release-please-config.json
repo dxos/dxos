@@ -88,6 +88,11 @@
         },
         {
           "type": "json",
+          "path": "packages/bots/bot-lab/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -284,6 +289,11 @@
         {
           "type": "json",
           "path": "packages/core/mesh/teleport-extension-replicator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/websocket-rpc/package.json",
           "jsonpath": "$.version"
         },
         {

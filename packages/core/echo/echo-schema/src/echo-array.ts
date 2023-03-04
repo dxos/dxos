@@ -336,7 +336,7 @@ export class EchoArray<T> implements Array<T> {
           typeof value === 'boolean' ||
           typeof value === 'number' ||
           typeof value === 'string',
-        'Not EchoObject or primitive value'
+        `Invalid type: ${JSON.stringify(value)}`
       );
       return value;
     }
