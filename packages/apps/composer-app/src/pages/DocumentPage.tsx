@@ -25,7 +25,7 @@ import { ComposerDocument } from '../proto';
 
 const turndownService = new TurndownService();
 
-const PureDocumentPage = ({ document }: { document: ComposerDocument }) => {
+const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
 
   const editor = useComposer({
@@ -91,9 +91,9 @@ const PureDocumentPage = ({ document }: { document: ComposerDocument }) => {
       </ThemeContext.Provider>
     </>
   );
-};
+});
 
-export const DocumentPage = observer(() => {
+export const DocumentPage = () => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
@@ -110,4 +110,4 @@ export const DocumentPage = observer(() => {
       )}
     </div>
   );
-});
+};
