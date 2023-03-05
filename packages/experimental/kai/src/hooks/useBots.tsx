@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { Binoculars, Sword } from 'phosphor-react';
+import { Binoculars, Envelope, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
@@ -20,6 +20,18 @@ export type BotDef = {
 };
 
 export const botDefs: BotDef[] = [
+  {
+    module: {
+      id: 'dxos.module.bot.mail',
+      type: 'dxos:type/bot',
+      displayName: 'MailBot',
+      description: 'Email sync.'
+    },
+    runtime: {
+      Icon: Envelope,
+      constructor: () => undefined
+    }
+  },
   {
     module: {
       id: 'dxos.module.bot.chess',

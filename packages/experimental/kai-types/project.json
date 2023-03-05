@@ -32,7 +32,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/kai-types/src/index.ts"
+          "packages/experimental/kai-types/src/index.ts",
+          "packages/experimental/kai-types/src/testing/index.ts"
         ],
         "outputPath": "packages/experimental/kai-types/dist/lib"
       },
@@ -47,6 +48,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/experimental/kai-types/src/index.ts",
           "packages/experimental/kai-types/src/testing/index.ts"
         ],
         "outputPath": "packages/experimental/kai-types/dist/testing",

@@ -3033,7 +3033,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/errors': workspace:*
-      '@dxos/kai': workspace:*
+      '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@octokit/rest': ^19.0.5
@@ -3061,7 +3061,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../../sdk/errors
-      '@dxos/kai': link:../kai
+      '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@octokit/rest': 19.0.5

@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
+import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Button, Select, Table } from '@dxos/react-components';
 
@@ -15,6 +17,7 @@ const REFRESH_DELAY = 1000;
 
 type BotRecord = {
   id: string;
+  image: string;
   name: string;
   created: number;
   state: string;
@@ -29,14 +32,20 @@ const columns: Column<BotRecord>[] = [
     width: 120
   },
   {
+    Header: 'image',
+    Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
+    accessor: (record) => record.image.split(':')[1],
+    width: 120
+  },
+  {
     Header: 'name',
     accessor: (record) => record.name,
     width: 160
   },
   {
     Header: 'created',
-    accessor: (record) => new Date(record.created).toISOString(),
-    width: 200
+    accessor: (record) => formatDistance(new Date(record.created), Date.now(), { addSuffix: true }),
+    width: 160
   },
   {
     Header: 'state',
@@ -86,6 +95,7 @@ export const BotFrame = () => {
       const response = (await botClient?.getBots()) ?? [];
       const records = response.map((record: any) => ({
         id: record.Id,
+        image: record.ImageID,
         name: record.Labels['dxos.bot.name'],
         created: new Date(record.Created * 1000).getTime(),
         state: record.State,

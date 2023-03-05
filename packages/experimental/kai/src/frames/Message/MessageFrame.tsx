@@ -17,9 +17,7 @@ import { useAppRouter } from '../../hooks';
 export const MessageFrame = () => {
   const { space } = useAppRouter();
   // TODO(burdon): Add sort to filter.
-  const messages = useQuery(space, Message.filter()).sort(({ received: a }, { received: b }) =>
-    a < b ? 1 : a > b ? -1 : 0
-  );
+  const messages = useQuery(space, Message.filter()).sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 
   const [selected, setSelected] = useState<Message>(messages[0]);
 
@@ -33,7 +31,8 @@ export const MessageFrame = () => {
       <div className='flex shrink-0 w-full md:w-[400px] overflow-hidden overflow-y-auto bg-white border-r'>
         <div className='flex flex-col overflow-x-hidden'>
           {messages.map((message) => {
-            const { id, received, from, subject, body } = message;
+            const { id, date: received, from, subject, body } = message;
+
             return (
               <div
                 key={id}
@@ -52,7 +51,7 @@ export const MessageFrame = () => {
                     </Button>
                   }
                 >
-                  <div className='flex flex-1 text-sm text-teal-700'>{from.name ?? from.email}</div>
+                  <div className='flex flex-1 text-sm text-teal-700'>{from.name?.length ? from.name : from.email}</div>
                   <div className='flex text-sm whitespace-nowrap text-right text-zinc-500 pl-2'>
                     {date(new Date(received))}
                   </div>
@@ -77,9 +76,9 @@ export const MessageFrame = () => {
         </div>
       </div>
 
-      <div className='hidden md:flex flex-1 flex-col overflow-hidden py-4 pl-6 pr-16 bg-white'>
+      <div className='hidden md:flex flex-1 flex-col overflow-hidden overflow-y-scroll py-4 pl-6 pr-16 bg-white'>
         {selected && (
-          <>
+          <div className='flex flex-col '>
             <Row
               wide
               className='pb-4 items-center'
@@ -106,7 +105,7 @@ export const MessageFrame = () => {
                 ))}
               </div>
             </Row>
-          </>
+          </div>
         )}
       </div>
     </div>

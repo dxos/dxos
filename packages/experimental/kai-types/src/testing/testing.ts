@@ -9,6 +9,7 @@ import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { EchoDatabase, Text } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 
 import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
@@ -39,7 +40,7 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 2, max: 5 },
-      messages: { min: 15, max: 30 }
+      messages: { min: 0, max: 0 }
     }
   ) {}
 
@@ -252,14 +253,25 @@ export const createNote = () => {
   return note;
 };
 
+// TODO(burdon): Error if directly setting value with undefined.
 // TODO(burdon): Use constructors above.
 export const createMessage = () => {
   return new Message({
-    received: faker.date.recent(14, new Date()).toISOString(),
-    from: {
+    source: {
+      guid: PublicKey.random().toHex()
+    },
+    date: faker.date.recent(14, new Date()).toISOString(),
+    // TODO(burdon): This breaks kai.
+    // to: [
+    //   new Message.Contact({
+    //     email: faker.internet.email(),
+    //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
+    //   })
+    // ],
+    from: new Message.Contact({
       email: faker.internet.email(),
       name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
-    },
+    }),
     subject: faker.lorem.sentence(),
     body: faker.lorem.paragraphs(3)
   });

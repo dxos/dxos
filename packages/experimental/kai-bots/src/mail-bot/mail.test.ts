@@ -21,13 +21,16 @@ describe('Mail', () => {
 
     const messages = await bot.requestMessages();
 
-    const show = messages.map((message) => ({
-      date: message.date,
-      from: message.from?.address,
-      subject: message.subject,
-      body: message.body?.length
-    }));
+    const mapped = messages
+      .map((message) => ({
+        date: message.date,
+        to: message.to[0]?.email,
+        from: message.from?.email,
+        subject: message.subject,
+        body: message.body?.length
+      }))
+      .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 
-    console.log('messages', JSON.stringify(show, undefined, 2));
+    console.log('messages', JSON.stringify(mapped, undefined, 2));
   });
 });

@@ -22,7 +22,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/kai": "workspace:*",
+    "@dxos/kai-types": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@octokit/rest": "^19.0.5",

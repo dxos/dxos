@@ -5,7 +5,7 @@
 /**
  * Enable testing imports:
  * ```tsc
- * import { ... } from '@dxos/bots/testing';
+ * import { ... } from '@dxos/kai-types/testing';
  * ```
  */
 export * from './dist/types/src/testing';

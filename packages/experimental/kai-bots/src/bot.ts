@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Space } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -22,6 +24,8 @@ export abstract class Bot {
   }
 
   async init(config: Config, space: Space) {
+    assert(config);
+    assert(space);
     this._config = config;
     this._space = space;
     log('initializing...');

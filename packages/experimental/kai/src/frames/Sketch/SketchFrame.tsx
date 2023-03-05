@@ -16,6 +16,7 @@ import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
+// TODO(burdon): Shouldn't require use of constructor.
 const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Sketch.Path =>
   new Sketch.Path({
     timestamp: startTimestamp,

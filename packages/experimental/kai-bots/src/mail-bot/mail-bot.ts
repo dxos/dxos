@@ -8,7 +8,7 @@ import { Config as ImapConfig } from 'imap';
 import imaps, { Message as ImapMessage } from 'imap-simple';
 import { simpleParser, EmailAddress } from 'mailparser';
 
-import { Message } from '@dxos/kai';
+import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
 import { Bot } from '../bot';
@@ -24,25 +24,17 @@ const toArray = (value: any) => (Array.isArray(value) ? value : [value]);
 // TODO(burdon): Object with spam and blacklist arrays.
 const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
 
-export type Message = {
-  sourceId?: string;
-  from?: EmailAddress;
-  to?: EmailAddress[];
-  date?: string;
-  subject?: string;
-  body?: string;
-};
-
 export class MailBot extends Bot {
   private _imapConfig?: ImapConfig;
 
   // TODO(burdon): Polling.
   async onStart() {
     const messages = await this.requestMessages();
-    log.info('mail bot', { messages: messages.length });
-    messages.forEach((message) => {
-      void this.space.db.add(new Message());
-    });
+    log.info('processed', { messages: messages.length });
+    for (const message of messages) {
+      log.info('adding', { message, space: this.space.key });
+      await this.space.db.add(message);
+    }
   }
 
   async onStop() {}
@@ -73,16 +65,18 @@ export class MailBot extends Bot {
     log.info('connected');
 
     // https://github.com/mscdex/node-imap
-    const rawMessages = await connection.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
+    const messages = await connection.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
       bodies: [''],
       markSeen: false
     });
+
+    log.info('received', { messages: messages.length });
 
     log.info('disconnecting...');
     await connection.end();
     log.info('disconnected');
 
-    return this.parseMessages(rawMessages);
+    return this.parseMessages(messages);
   }
 
   /**
@@ -95,23 +89,31 @@ export class MailBot extends Bot {
         // https://nodemailer.com/extras/mailparser
         const input: string = raw.parts[0].body;
         const { messageId, date, from, to, subject, text, textAsHtml } = await simpleParser(input);
+        if (!messageId || !date || !from || !to || !subject) {
+          return;
+        }
 
-        const message: Message = {
-          sourceId: messageId,
-          date: date?.toISOString(),
-          from: from?.value[0],
-          to: toArray(to).map((to) => to.value),
+        const convertToContact = ({ address: email, name }: EmailAddress): Message.Contact =>
+          new Message.Contact({ email, name: name?.length ? name : undefined });
+
+        const message = new Message({
+          source: {
+            guid: messageId
+          },
+          date: date.toISOString(),
+          from: convertToContact(from.value[0]),
+          to: toArray(to).map((to) => convertToContact(to.value[0])),
           subject
-        };
+        });
 
         // Skip bulk mail.
-        if (!message.from?.address || blacklist.some((regex) => regex.test(message.from!.address!))) {
+        if (!message.from?.email || blacklist.some((regex) => regex.test(message.from!.email!))) {
           return;
         }
 
         // TODO(burdon): Custom parsing (e.g., remove links, images).
         // https://www.npmjs.com/package/html-to-text
-        let body = text;
+        let body = text ?? '';
         if (textAsHtml) {
           let str = convert(textAsHtml, {
             selectors: [
