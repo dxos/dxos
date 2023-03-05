@@ -8,8 +8,9 @@ import { Column } from 'react-table';
 import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { schema } from '@dxos/kai-types';
 import { PublicKey, useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Select, ElevationProvider } from '@dxos/react-components';
+import { Table, Searchbar, Select } from '@dxos/react-components';
 
+import { Toolbar } from '../../components';
 import { useAppRouter } from '../../hooks';
 
 // UX field types.
@@ -90,20 +91,18 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <div className='flex p-2 mb-2'>
-        <ElevationProvider elevation='group'>
-          <div className='w-screen md:w-column mr-4'>
-            <Searchbar onSearch={handleSearch} />
-          </div>
-          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
-            {types?.map((type) => (
-              <Select.Item key={type.id} value={type.id}>
-                {type.title}
-              </Select.Item>
-            ))}
-          </Select>
-        </ElevationProvider>
-      </div>
+      <Toolbar>
+        <div className='w-screen md:w-column mr-4'>
+          <Searchbar onSearch={handleSearch} />
+        </div>
+        <Select defaultValue={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+          {types?.map((type) => (
+            <Select.Item key={type.id} value={type.id}>
+              {type.title}
+            </Select.Item>
+          ))}
+        </Select>
+      </Toolbar>
 
       {/* TODO(burdon): Editable variant. */}
       <Table<Document>

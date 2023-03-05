@@ -28,7 +28,7 @@ export class BotClient {
   // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((r) => r.json());
+    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((response) => response.json());
   }
 
   async startBot(botId: string) {

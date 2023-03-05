@@ -10,6 +10,7 @@ import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Button, Select, Table } from '@dxos/react-components';
 
+import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient } from '../../hooks';
 
 const REFRESH_DELAY = 1000;
@@ -102,7 +103,7 @@ export const BotFrame = () => {
 
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
-      <div className='flex items-center p-2 mb-2'>
+      <Toolbar>
         <Button className='mr-2' onClick={() => botId && botClient.startBot(botId)}>
           Start
         </Button>
@@ -115,10 +116,10 @@ export const BotFrame = () => {
           ))}
         </Select>
         <div className='grow' />
-        <Button variant='ghost' className='mr-2' onClick={refresh}>
+        <Button className='mr-2' onClick={refresh}>
           Refresh
         </Button>
-      </div>
+      </Toolbar>
 
       <Table
         columns={columns}
