@@ -3,7 +3,9 @@
 //
 import { DotsThreeVertical, DownloadSimple, UploadSimple } from 'phosphor-react';
 import React, { useCallback } from 'react';
+import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
+import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
 import { Space } from '@dxos/client';
@@ -29,6 +31,8 @@ const turndownService = new TurndownService({
   codeBlockStyle: 'fenced'
 });
 
+const converter = new Converter();
+
 const nestedParagraphOutput = / +\n/g;
 
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
@@ -51,9 +55,16 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
     }
   }, [document, editor]);
 
-  const handleImport = useCallback(() => {
-    console.log(`Import ${document?.title}`);
-  }, [document]);
+  const handleImport = useCallback(
+    async (file: File) => {
+      if (editor) {
+        const data = new Uint8Array(await file.arrayBuffer());
+        const md = new TextDecoder('utf-8').decode(data);
+        editor.commands.setContent(converter.makeHtml(md));
+      }
+    },
+    [document, editor]
+  );
 
   return (
     <>
@@ -91,9 +102,15 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
               <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
               <span>{t('export to markdown label')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleImport} className='gap-2 font-system-normal'>
-              <UploadSimple className={mx(getSize(6), 'shrink-0')} />
-              <span>{t('import from markdown label')}</span>
+            <DropdownMenuItem>
+              <FileUploader
+                classes='flex items-center gap-2 font-system-normal cursor-pointer'
+                types={['md']}
+                handleChange={handleImport}
+              >
+                <UploadSimple className={mx(getSize(6), 'shrink-0')} />
+                <span>{t('import from markdown label')}</span>
+              </FileUploader>
             </DropdownMenuItem>
           </DropdownMenu>
         </div>
