@@ -6,9 +6,12 @@ import assert from 'assert';
 import { Binoculars, Envelope, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
+import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { useConfig } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
+import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
 
 export type BotDef = {
@@ -61,6 +64,12 @@ export const botDefs: BotDef[] = [
 export const botModules: Module[] = botDefs.map(({ module }) => module);
 
 export type BotMap = Map<string, BotDef>;
+
+// TODO(burdon): Add to context.
+export const useBotClient = (space: Space) => {
+  const config = useConfig();
+  return useMemo(() => new BotClient(config, space), [config, space]);
+};
 
 export const useBots = (): { bots: BotMap; active: string[] } => {
   const { modules } = useModules({ type: 'dxos:type/bot' });

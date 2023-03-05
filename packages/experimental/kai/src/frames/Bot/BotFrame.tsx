@@ -10,8 +10,7 @@ import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Button, Select, Table } from '@dxos/react-components';
 
-import { botDefs, useAppRouter } from '../../hooks';
-import { BotClient } from './bot-client';
+import { botDefs, useAppRouter, useBotClient } from '../../hooks';
 
 const REFRESH_DELAY = 1000;
 
@@ -62,26 +61,16 @@ const columns: Column<BotRecord>[] = [
 export const BotFrame = () => {
   const [status, setStatus] = useState('');
   const [records, setRecords] = useState<BotRecord[]>([]);
-  const [botClient, setBotClient] = useState<BotClient>();
   const [botId, setBotId] = useState<string>(botDefs[0].module.id!);
   const { space } = useAppRouter();
+  const botClient = useBotClient(space!);
 
   useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    const botClient = new BotClient(space);
-    setBotClient(botClient);
-
+    void refresh();
     return botClient.onStatusUpdate.on((status) => {
       setStatus(status);
       void refresh();
     });
-  }, [space]);
-
-  useEffect(() => {
-    void refresh();
   }, [botClient]);
 
   // TODO(burdon): Error handling.

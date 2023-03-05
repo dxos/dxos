@@ -5,14 +5,11 @@
 import { sleep, Event, Trigger } from '@dxos/async';
 import { Client, ClientServicesProvider, Space } from '@dxos/client';
 import { clientServiceBundle } from '@dxos/client-services';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
-
-// TODO(burdon): Import from @dxos/bot-lab. ENV/config.
-const PROXY_PORT = 2376;
-const PROXY_ENDPOINT = `http://127.0.0.1:${PROXY_PORT}/docker`;
 
 /**
  * Bot client connects to Docker proxy server.
@@ -21,12 +18,17 @@ const PROXY_ENDPOINT = `http://127.0.0.1:${PROXY_PORT}/docker`;
 export class BotClient {
   public readonly onStatusUpdate = new Event<string>();
 
-  constructor(private readonly _space: Space) {}
+  private readonly _proxyEndpoint: string;
+
+  constructor(private readonly _config: Config, private readonly _space: Space) {
+    // TODO(burdon): Get from config.
+    this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? 'http://127.0.0.1:2376/docker';
+  }
 
   // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${PROXY_ENDPOINT}/containers/json?all=true`).then((r) => r.json());
+    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((r) => r.json());
   }
 
   async startBot(botId: string) {
@@ -44,7 +46,7 @@ export class BotClient {
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
     const port = Math.floor(Math.random() * 1000) + 3000;
-    const response = await fetch(`${PROXY_ENDPOINT}/containers/create?name=${botInstanceId}`, {
+    const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -74,7 +76,7 @@ export class BotClient {
 
     const data = await response.json();
     this.onStatusUpdate.emit('Starting bot container...');
-    await fetch(`${PROXY_ENDPOINT}/containers/${data.Id}/start`, {
+    await fetch(`${this._proxyEndpoint}/containers/${data.Id}/start`, {
       method: 'POST'
     });
 

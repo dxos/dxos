@@ -7,6 +7,8 @@ import express from 'express';
 import { request, createServer } from 'http';
 import httpProxy from 'http-proxy';
 
+import { log } from '@dxos/log';
+
 /**
  * Web server proxies web socket requests from DXOS Apps to the Docker daemon.
  */
@@ -38,7 +40,7 @@ app.use('/docker', (req, res) => {
     }
   );
 
-  console.log(req.method, req.path);
+  log.info(req.method, req.path);
   req.pipe(proxiedReq, { end: true });
 });
 
@@ -50,8 +52,8 @@ app.use('/proxy/:port', (req, res) => {
       target: `${req.protocol}://localhost:${req.params.port}`,
       ws: true
     },
-    (err) => {
-      console.error(err);
+    (err: any) => {
+      log.error(err);
       res.destroy(err);
     }
   );
@@ -59,7 +61,7 @@ app.use('/proxy/:port', (req, res) => {
 
 server.on('upgrade', (req, socket, head) => {
   const port = parseInt(req.url!.split('/')[2] as any);
-  console.log('upgrade', req.url, port);
+  log.info('upgrade', { url: req.url, port });
 
   proxy.ws(req, socket, head, {
     target: `ws://localhost:${port}`
@@ -67,5 +69,5 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 server.listen(PROXY_PORT, () => {
-  console.log(`Proxy listening on port ${PROXY_PORT}`);
+  log.info(`Proxy listening on port ${PROXY_PORT}`);
 });
