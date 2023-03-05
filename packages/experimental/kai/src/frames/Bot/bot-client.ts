@@ -30,6 +30,7 @@ export class BotClient {
   }
 
   async startBot(botId: string) {
+    log.info('creating container', { bot: botId });
     this.onStatusUpdate.emit('Creating container...');
 
     const env = {
@@ -38,7 +39,7 @@ export class BotClient {
       PROTONMAIL_HOST: 'host.docker.internal',
       // TODO(burdon): From credentials (these are local only).
       PROTONMAIL_USERNAME: 'rich@dxos.org',
-      PROTONMAIL_PASSWORD: 'wbZXjpKUVvYvCNAIQiPjzg'
+      PROTONMAIL_PASSWORD: '2ZdkbJKZVikacL8Ch0vLaA'
     };
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
@@ -77,6 +78,7 @@ export class BotClient {
       method: 'POST'
     });
 
+    // TODO(burdon): Configure port.
     // Poll proxy until container starts.
     // const botEndpoint = `127.0.0.1:${port}`;
     const botEndpoint = `localhost:2376/proxy/${port}`;

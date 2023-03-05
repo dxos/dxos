@@ -4,6 +4,7 @@
 
 import { Game } from '@dxos/chess-app';
 import { Subscription } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { Bot } from '../bot';
 
@@ -42,6 +43,7 @@ export class ChessBot extends Bot {
           const move = moves[Math.floor(Math.random() * moves.length)];
           chess.move(move);
           game.fen = chess.pgn();
+          log.info(`move: ${chess.history().length}\n` + chess.ascii());
         }
       }
     }

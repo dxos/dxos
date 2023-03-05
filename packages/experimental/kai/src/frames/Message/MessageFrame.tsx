@@ -102,9 +102,7 @@ export const MessageFrame = () => {
             <Row wide>
               <div className='flex flex-col'>
                 {selected.body?.split('\n').map((text, i) => (
-                  <div key={i} className='pb-3'>
-                    {text}
-                  </div>
+                  <div key={i}>{text}</div>
                 ))}
               </div>
             </Row>

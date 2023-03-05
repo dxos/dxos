@@ -4,11 +4,12 @@
 
 import { Client, Config, fromHost, PublicKey } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
-import { MailBot } from '@dxos/kai-bots';
+import { ChessBot, MailBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-const rpcPort = parseInt(process.env.DX_RPC_PORT ?? '3023');
+// TODO(burdon): Factor out port number.
+const rpcPort = process.env.DX_RPC_PORT ? parseInt(process.env.DX_RPC_PORT) : 3023;
 
 // TODO(burdon): Load from disk (add to image).
 const config = new Config({
@@ -66,7 +67,7 @@ const init = async () => {
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
-    onConnection: async (info) => {
+    onConnection: async () => {
       const id = PublicKey.random().toHex();
       log.info('connection', { id });
 
@@ -86,24 +87,32 @@ const init = async () => {
   await server.open();
   log.info('listening ', { rpcPort });
 
-  // TODO(burdon): Add bot code here (env var?)
-  log.info('Created bot:', process.env.BOT_NAME);
+  log.info('ENV', process.env);
+
   client.echo.subscribeSpaces(async (spaces) => {
     if (spaces.length) {
       const space = spaces[0];
-
-      // TODO(burdon): Will create a new subscription each time spaces update!
-      // const query = space.db.query();
-      // TODO(burdon): Get single callback.
-      // query.subscribe((query) => {
-      //   log('objects', query.objects.length);
-      // });
-
-      const bot = new MailBot();
-      await bot.init(config, space);
-      await bot.start();
+      const bot = createBot(process.env.BOT_NAME);
+      if (bot) {
+        await bot.init(config, space);
+        await bot.start();
+      }
     }
   });
+};
+
+const createBot = (bot?: string) => {
+  log.info('creating bot', { bot });
+
+  switch (bot) {
+    case 'dxos.module.bot.chess': {
+      return new ChessBot();
+    }
+
+    case 'dxos.module.bot.mail': {
+      return new MailBot();
+    }
+  }
 };
 
 void init();
