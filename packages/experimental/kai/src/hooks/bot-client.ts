@@ -11,6 +11,10 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+export type BotClientOptions = {
+  proxy?: string;
+};
+
 /**
  * Bot client connects to Docker proxy server.
  */
@@ -23,16 +27,20 @@ export class BotClient {
   // prettier-ignore
   constructor(
     private readonly _config: Config,
-    private readonly _space: Space
+    private readonly _space: Space,
+    options: BotClientOptions = {
+      proxy: 'http://127.0.0.1:2376/docker'
+    }
   ) {
-    // TODO(burdon): Get from config (and settings override).
-    this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? 'http://127.0.0.1:2376/docker';
+    this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
   // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((response) => response.json());
+    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((response) => {
+      return response.json();
+    });
   }
 
   /**

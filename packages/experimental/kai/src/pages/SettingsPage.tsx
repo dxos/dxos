@@ -15,10 +15,12 @@ import { getSize, Input, mx } from '@dxos/react-components';
 
 import { botKeys, useAppState, useKeyStore } from '../hooks';
 
+const settingsKeys = ['dxos.services.bot.proxy', ...Object.keys(botKeys)];
+
 const SettingsPage = () => {
   const config = useConfig();
   const state = useAppState();
-  const [keys, setKey] = useKeyStore(Object.keys(botKeys));
+  const [keys, setKey] = useKeyStore(settingsKeys);
   const handleUpdateKey = (key: string, value: string) => {
     setKey(key, value);
   };

@@ -13,6 +13,7 @@ import { useModules } from '@dxos/react-metagraph';
 
 import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
+import { useKeyStore } from './useKeyStore';
 
 export type BotDef = {
   module: Module;
@@ -82,7 +83,9 @@ export const getBotEnvs = (keyMap: Map<string, string>) => {
 // TODO(burdon): Add to context.
 export const useBotClient = (space: Space) => {
   const config = useConfig();
-  return useMemo(() => new BotClient(config, space), [config, space]);
+  const [keys] = useKeyStore(['dxos.services.bot.proxy']);
+  const proxy = keys.get('dxos.services.bot.proxy');
+  return useMemo(() => new BotClient(config, space, { proxy }), [config, space, proxy]);
 };
 
 export const useBots = (): { bots: BotMap; active: string[] } => {
