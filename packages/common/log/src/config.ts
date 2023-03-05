@@ -8,13 +8,15 @@ import { LogProcessor } from './context';
  * Standard levels.
  */
 export enum LogLevel {
+  TELEMETRY = -1,
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
-  ERROR = 3
+  ERROR = 3,
 }
 
 export const levels: { [index: string]: LogLevel } = {
+  telemetry: LogLevel.TELEMETRY,
   debug: LogLevel.DEBUG,
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
@@ -25,7 +27,8 @@ export const shortLevelName = {
   [LogLevel.DEBUG]: 'D',
   [LogLevel.INFO]: 'I',
   [LogLevel.WARN]: 'W',
-  [LogLevel.ERROR]: 'E'
+  [LogLevel.ERROR]: 'E',
+  [LogLevel.TELEMETRY]: 'T'
 };
 
 export enum LogProcessorType {
@@ -62,6 +65,6 @@ export type LogOptions = {
 export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
-  processor: LogProcessor;
+  processor: LogProcessor[];
   prefix?: string;
 }

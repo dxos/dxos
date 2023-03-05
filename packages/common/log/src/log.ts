@@ -21,6 +21,8 @@ interface LogMethods {
   error: LogFunction;
   catch: (error: Error | any, context?: LogContext, meta?: LogMetadata) => void;
   break: () => void;
+
+  telemetry: LogFunction;
 }
 
 /**
@@ -58,11 +60,13 @@ const createLog = (): LogImp => {
   // Show break.
   log.break = () => log.info('——————————————————————————————————————————————————');
 
+  log.telemetry = (...params) => processLog(LogLevel.TELEMETRY, ...params);
+
   /**
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    log._config.processor(log._config, { level, message, context, meta, error });
+    log._config.processor.forEach(p => p(log._config, { level, message, context, meta, error }));
   };
 
   return log;

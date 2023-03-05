@@ -40,7 +40,8 @@ import {
   TableFrame,
   TaskFrame,
   SandboxFrame,
-  MasonryFrame
+  MasonryFrame,
+  NetworkFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -117,6 +118,18 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Robot,
       Component: BotFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.network',
+      type: 'dxos:type/frame',
+      displayName: 'Network',
+      description: 'Network overview.'
+    },
+    runtime: {
+      Icon: Robot, // TODO(dmaretskyi): Pick icon.
+      Component: NetworkFrame
     }
   },
   {
@@ -257,7 +270,8 @@ export const defaultFrames = [
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.document',
-  'dxos.module.frame.bot'
+  'dxos.module.frame.bot',
+  'dxos.module.frame.network'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

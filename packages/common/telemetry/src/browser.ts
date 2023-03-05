@@ -42,3 +42,5 @@ export const flush = async () => {
     captureException(err);
   });
 };
+
+export * from './logs'

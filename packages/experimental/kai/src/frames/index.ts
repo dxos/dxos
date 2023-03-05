@@ -11,6 +11,7 @@ export const ExplorerFrame = React.lazy(() => import('./Explorer'));
 export const KanbanFrame = React.lazy(() => import('./Kanban'));
 export const MapFrame = React.lazy(() => import('./Map'));
 export const MasonryFrame = React.lazy(() => import('./Masonry'));
+export const NetworkFrame = React.lazy(() => import('./Network'));
 export const SandboxFrame = React.lazy(() => import('./Sandbox'));
 export const SketchFrame = React.lazy(() => import('./Sketch'));
 export const TableFrame = React.lazy(() => import('./Table'));

@@ -13,7 +13,8 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
   [LogLevel.INFO]: 'white',
   [LogLevel.WARN]: 'yellow',
-  [LogLevel.ERROR]: 'red'
+  [LogLevel.ERROR]: 'red',
+  [LogLevel.TELEMETRY]: 'blue'
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
