@@ -48,7 +48,7 @@ const reducer =
     switch (action.type) {
       // TODO(burdon): Stop bot.
       case 'set-active-bot': {
-        const { botId, active, space } = action as SetBotAction;
+        const { botId, active } = action as SetBotAction;
         const bots = (state.bots ?? []).filter((bot) => bot !== botId);
         if (active) {
           bots.push(botId);

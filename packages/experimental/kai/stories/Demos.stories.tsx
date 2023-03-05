@@ -5,11 +5,10 @@
 import faker from 'faker';
 import React, { ComponentProps, FC, ReactNode } from 'react';
 
+import { range, MinMax } from '@dxos/kai-types';
 import { mx } from '@dxos/react-components';
 
 import '@dxosTheme';
-
-import { range, MinMax } from '@dxos/kai-types';
 
 const Frame: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8'>{children}</div>;
