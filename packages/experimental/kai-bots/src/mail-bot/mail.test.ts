@@ -2,26 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import assert from 'assert';
+
 import { describe, test } from '@dxos/test';
 
-import { getConfig } from '../util';
-import { MailBot } from './mail-bot';
+import { getConfig, getKey } from '../util';
+import { ImapProcessor } from './imap-processor';
 
+// TODO(burdon): Set-up in-memory test for CI.
 // TODO(burdon): Test Mailbot.
 // TODO(burdon): Factor out Imap processor.
 describe('Mail', () => {
-  test('IMAP', async () => {
-    const config = getConfig()!;
-    const client = new Client({ config });
-    await client.initialize();
+  test.skip('IMAP', async () => {
+    const config = getConfig(process.env.TEST_CONFIG);
+    assert(config);
 
-    const space = await client.echo.createSpace();
+    const processor = new ImapProcessor({
+      user: process.env.PROTONMAIL_USERNAME!,
+      password: process.env.PROTONMAIL_PASSWORD!,
+      host: process.env.PROTONMAIL_HOST ?? '127.0.0.1',
+      port: process.env.PROTONMAIL_PORT ? parseInt(process.env.PROTONMAIL_PORT) : 1143,
+      tls: true,
+      tlsOptions: {
+        ca: process.env.PROTONMAIL_CERT ?? getKey(config, 'protonmail.ca'),
+        rejectUnauthorized: false
+      }
+    });
 
-    const bot = new MailBot();
-    await bot.init(config, space);
-
-    const messages = await bot.requestMessages();
+    const messages = await processor.requestMessages();
 
     const mapped = messages
       .map((message) => ({
