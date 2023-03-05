@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/bots/src",
+  "sourceRoot": "packages/experimental/kai-bots/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/bots/src/index.ts",
-        "outputPath": "packages/experimental/bots/dist/types",
-        "tsConfig": "packages/experimental/bots/tsconfig.json"
+        "main": "packages/experimental/kai-bots/src/index.ts",
+        "outputPath": "packages/experimental/kai-bots/dist/types",
+        "tsConfig": "packages/experimental/kai-bots/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -32,9 +32,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/bots/src/index.ts"
+          "packages/experimental/kai-bots/src/index.ts"
         ],
-        "outputPath": "packages/experimental/bots/dist/lib"
+        "outputPath": "packages/experimental/kai-bots/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -47,9 +47,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/bots/src/testing/index.ts"
+          "packages/experimental/kai-bots/src/testing/index.ts"
         ],
-        "outputPath": "packages/experimental/bots/dist/testing",
+        "outputPath": "packages/experimental/kai-bots/dist/testing",
         "platforms": [
           "node"
         ]
@@ -63,7 +63,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/bots/**/*.{ts,js}"
+          "packages/experimental/kai-bots/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -77,10 +77,10 @@
         "outputPath": "tmp/mocha/packages/experimental/bots",
         "resultsPath": "test-results/packages/experimental/bots",
         "testPatterns": [
-          "packages/experimental/bots/src/**/*.test.{ts,js}"
+          "packages/experimental/kai-bots/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/bots/src/**/*"
+          "packages/experimental/kai-bots/src/**/*"
         ]
       },
       "outputs": [

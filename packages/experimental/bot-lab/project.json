@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/bots/bot-lab/src",
+  "sourceRoot": "packages/experimental/bot-lab/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/bots/bot-lab/src/index.ts",
-        "outputPath": "packages/bots/bot-lab/dist/types",
-        "tsConfig": "packages/bots/bot-lab/tsconfig.json"
+        "main": "packages/experimental/bot-lab/src/index.ts",
+        "outputPath": "packages/experimental/bot-lab/dist/types",
+        "tsConfig": "packages/experimental/bot-lab/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/bots/bot-lab/src/index.ts"
+          "packages/experimental/bot-lab/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/bots/bot-lab/dist/lib"
+        "outputPath": "packages/experimental/bot-lab/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/bots/bot-lab/**/*.{ts,js}"
+          "packages/experimental/bot-lab/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -41,14 +41,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/bots/bot-lab",
-        "outputPath": "tmp/mocha/packages/bots/bot-lab",
-        "resultsPath": "test-results/packages/bots/bot-lab",
+        "coveragePath": "coverage/packages/experimental/bot-lab",
+        "outputPath": "tmp/mocha/packages/experimental/bot-lab",
+        "resultsPath": "test-results/packages/experimental/bot-lab",
         "testPatterns": [
-          "packages/bots/bot-lab/src/**/*.test.{ts,js}"
+          "packages/experimental/bot-lab/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/bots/bot-lab/src/**/*"
+          "packages/experimental/bot-lab/src/**/*"
         ]
       },
       "outputs": [

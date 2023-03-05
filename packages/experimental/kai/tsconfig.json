@@ -94,9 +94,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../bots"
-    },
-    {
       "path": "../chess-app"
     },
     {
@@ -107,6 +104,9 @@
     },
     {
       "path": "../gem-spore"
+    },
+    {
+      "path": "../kai-types"
     },
     {
       "path": "../metagraph"

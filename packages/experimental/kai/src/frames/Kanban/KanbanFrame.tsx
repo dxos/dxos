@@ -5,12 +5,13 @@
 import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
+import { Project } from '@dxos/kai-types';
+import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
 import { ElevationProvider, Searchbar } from '@dxos/react-components';
 
 import { ProjectCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
-import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {

@@ -10,13 +10,14 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-// TODO(burdon): Import from @dxos/bot-lab.
+// TODO(burdon): Import from @dxos/bot-lab. ENV/config.
 const PROXY_PORT = 2376;
 const PROXY_ENDPOINT = `http://127.0.0.1:${PROXY_PORT}/docker`;
 
 /**
  * Bot client connects to Docker proxy server.
  */
+// TODO(burdon): Factor out.
 export class BotClient {
   public readonly onStatusUpdate = new Event<string>();
 
@@ -30,6 +31,15 @@ export class BotClient {
 
   async startBot(botId: string) {
     this.onStatusUpdate.emit('Creating container...');
+
+    const env = {
+      LOG_FILTER: 'info',
+      BOT_NAME: botId,
+      PROTONMAIL_HOST: 'host.docker.internal',
+      // TODO(burdon): From credentials (these are local only).
+      PROTONMAIL_USERNAME: 'rich@dxos.org',
+      PROTONMAIL_PASSWORD: 'wbZXjpKUVvYvCNAIQiPjzg'
+    };
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
     const port = Math.floor(Math.random() * 1000) + 3000;
@@ -52,7 +62,7 @@ export class BotClient {
             ]
           }
         },
-        Env: ['LOG_FILTER=info', `BOT_NAME=${botId}`],
+        Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
         Labels: {
           'dxos.bot': `${true}`,
           'dxos.bot.dxrpc-port': `${port}`,

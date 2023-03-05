@@ -6,11 +6,11 @@ import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
+import { schema } from '@dxos/kai-types';
 import { PublicKey, useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Select, ElevationProvider } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
-import { schema } from '../../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];

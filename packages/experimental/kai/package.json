@@ -13,8 +13,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.5",
@@ -23,7 +22,6 @@
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/assets": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/bots": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -35,6 +33,7 @@
     "@dxos/framebox": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/kai-types": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/metagraph": "workspace:*",
@@ -57,6 +56,7 @@
     "@sentry/react": "^7.17.2",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
+    "chess.js": "^1.0.0-beta.3",
     "clipboard-copy": "^4.0.1",
     "d3": "^7.4.4",
     "date-fns": "^2.29.3",
@@ -65,10 +65,6 @@
     "mobile-detect": "^1.4.5",
     "node-fetch": "^2.6.0",
     "phosphor-react": "^1.4.1",
-    "prosemirror-model": "^1.19.0",
-    "prosemirror-schema-basic": "^1.2.1",
-    "prosemirror-state": "^1.4.2",
-    "prosemirror-view": "^1.30.1",
     "react": "^18.2.0",
     "react-big-calendar": "^1.5.2",
     "react-color": "^2.19.3",
@@ -83,10 +79,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-table": "^7.8.0",
     "string-hash": "~1.1.3",
-    "url-join": "^5.0.0",
-    "y-prosemirror": "^1.2.0",
-    "y-protocols": "^1.0.5",
-    "yjs": "^13.5.44"
+    "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

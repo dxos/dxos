@@ -38,6 +38,9 @@
     },
     {
       "path": "../chess-app"
+    },
+    {
+      "path": "../kai"
     }
   ]
 }

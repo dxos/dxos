@@ -89,7 +89,7 @@ const EXAMPLE = `// Example frame component.
 
 import React, { useState } from 'react'
 import { useQuery, useSpaces } from '@dxos/react-client'
-import { Task } from '@kai/schema'
+import { Task } from '@dxos/kai-types'
 import { id } from '@dxos/echo-schema'
 
 const Frame = () => {

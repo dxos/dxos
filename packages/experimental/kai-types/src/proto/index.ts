@@ -3,4 +3,3 @@
 //
 
 export * from './gen/schema';
-export * from './testing';

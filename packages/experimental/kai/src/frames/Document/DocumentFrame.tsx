@@ -5,12 +5,12 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Document } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Document } from '../../proto';
 
 export const DocumentFrame = observer(() => {
   const navigate = useNavigate();

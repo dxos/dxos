@@ -2,24 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
-
-import { EchoDatabase } from '@dxos/echo-schema';
+import { Space } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
 /**
  * Adds info to records.
  */
 export abstract class Bot {
-  protected _db?: EchoDatabase;
+  protected _config?: Config;
+  protected _space?: Space;
 
-  get db(): EchoDatabase {
-    assert(this._db);
-    return this._db;
+  get config(): Config {
+    return this._config!;
   }
 
-  async init(db: EchoDatabase) {
-    this._db = db;
+  get space(): Space {
+    return this._space!;
+  }
+
+  async init(config: Config, space: Space) {
+    this._config = config;
+    this._space = space;
     log('initializing...');
     await this.onInit();
   }

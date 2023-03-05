@@ -8,11 +8,11 @@ import isToday from 'date-fns/isToday';
 import { Circle, UserCircle } from 'phosphor-react';
 import React, { FC, ReactNode, useState } from 'react';
 
+import { Message } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
-import { Message } from '../../proto';
 
 export const MessageFrame = () => {
   const { space } = useAppRouter();

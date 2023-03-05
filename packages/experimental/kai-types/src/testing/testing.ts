@@ -10,8 +10,8 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 
+import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
-import { Contact, Document, Event, Message, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 

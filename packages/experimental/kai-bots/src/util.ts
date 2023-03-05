@@ -21,7 +21,7 @@ export const getKey = (config: Config, name: string) => {
 };
 
 // TODO(burdon): Use defaults.
-export const getConfig = (defaultFilename = 'packages/experimental/bots/config.yml'): Config | undefined => {
+export const getConfig = (defaultFilename = 'config.yml'): Config | undefined => {
   const filename = path.join(process.cwd(), process.env.TEST_CONFIG ?? defaultFilename);
   if (fs.existsSync(filename)) {
     return new Config(yaml.load(String(fs.readFileSync(filename))) as any);

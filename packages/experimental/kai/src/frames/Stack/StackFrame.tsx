@@ -8,11 +8,11 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '@dxos/kai-types';
 import { EchoSchemaType, useConfig, useQuery, observer, Document } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '../../proto';
 import { StackContent } from './StackContent';
 import { SortableStackRow, StackRow } from './StackRow';
 
@@ -50,7 +50,9 @@ export const StackFrame = observer(() => {
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
     if (stack) {
       let object: Document;
-      if (!objectId) {
+      if (objectId) {
+        object = space!.db.getObjectById(objectId)!;
+      } else {
         switch (type) {
           case DocumentType.type: {
             object = await space!.db.add(new DocumentType());
@@ -58,8 +60,7 @@ export const StackFrame = observer(() => {
           }
 
           case Table.type: {
-             object = await space!.db.add(new Table({ type: Contact.type.name }));
-
+            object = await space!.db.add(new Table({ type: Contact.type.name }));
             break;
           }
 

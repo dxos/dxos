@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Space } from '@dxos/client';
+import { Config, Space } from '@dxos/client';
 
 import { Bot } from './bot';
 
@@ -19,12 +19,12 @@ export class BotManager {
     private readonly _botMap: Map<string, BotConstructor>
   ) {}
 
-  async create(botId: string, space: Space): Promise<Bot> {
+  async create(config: Config, botId: string, space: Space): Promise<Bot> {
     const constructor = this._botMap.get(botId);
     assert(constructor);
 
     const bot = constructor();
-    await bot.init(space.db);
+    await bot.init(config, space);
     return bot;
   }
 }

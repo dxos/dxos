@@ -6,7 +6,6 @@ import assert from 'assert';
 import { Binoculars, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
-import { Bot, ChessBot, KaiBot } from '@dxos/bots';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
@@ -16,7 +15,7 @@ export type BotDef = {
   module: Module;
   runtime: {
     Icon: FC<any>;
-    constructor: () => Bot;
+    constructor: () => void;
   };
 };
 
@@ -30,7 +29,7 @@ export const botDefs: BotDef[] = [
     },
     runtime: {
       Icon: Sword,
-      constructor: () => new ChessBot()
+      constructor: () => undefined
     }
   },
   {
@@ -42,7 +41,7 @@ export const botDefs: BotDef[] = [
     },
     runtime: {
       Icon: Binoculars,
-      constructor: () => new KaiBot()
+      constructor: () => undefined
     }
   }
 ];

@@ -8,13 +8,13 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
+import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { useConfig, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
 
 import { ObjectList } from '../../components';
 import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
-import { File } from '../../proto';
 import { fileTypes } from './defs';
 
 export type FileListProps = {

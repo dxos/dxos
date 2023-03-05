@@ -4,6 +4,7 @@
 
 import { Client, Config, fromHost, PublicKey } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
+import { MailBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -87,14 +88,20 @@ const init = async () => {
 
   // TODO(burdon): Add bot code here (env var?)
   log.info('Created bot:', process.env.BOT_NAME);
-  client.echo.subscribeSpaces((spaces) => {
+  client.echo.subscribeSpaces(async (spaces) => {
     if (spaces.length) {
-      // TODO(burdon): Will create a new subscription each time spaces update!
       const space = spaces[0];
-      const query = space.db.query();
-      query.subscribe((query) => {
-        log.info('objects', query.objects.length);
-      });
+
+      // TODO(burdon): Will create a new subscription each time spaces update!
+      // const query = space.db.query();
+      // TODO(burdon): Get single callback.
+      // query.subscribe((query) => {
+      //   log('objects', query.objects.length);
+      // });
+
+      const bot = new MailBot();
+      await bot.init(config, space);
+      await bot.start();
     }
   });
 };

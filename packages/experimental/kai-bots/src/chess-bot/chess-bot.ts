@@ -15,7 +15,7 @@ export class ChessBot extends Bot {
   private _subscription?: Subscription;
 
   override async onStart() {
-    const query = this.db.query(Game.filter());
+    const query = this.space.db.query(Game.filter());
     this._subscription = query.subscribe(async (query) => {
       await Promise.all(
         query.objects.map(async (object) => {

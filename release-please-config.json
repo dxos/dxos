@@ -88,11 +88,6 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bot-lab/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -333,7 +328,7 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/bots/package.json",
+          "path": "packages/experimental/bot-lab/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -359,6 +354,11 @@
         {
           "type": "json",
           "path": "packages/experimental/kai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-bots/package.json",
           "jsonpath": "$.version"
         },
         {
