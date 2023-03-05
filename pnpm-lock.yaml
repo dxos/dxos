@@ -391,6 +391,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       react-router-dom: ^6.4.0
       showdown: ^2.1.0
       turndown: ^7.1.1
@@ -410,11 +411,10 @@ importers:
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
-      '@types/showdown': 2.0.0
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-drag-drop-files: 2.3.8_biqbaboplfbrettd7655fr4n2y
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       showdown: 2.1.0
       turndown: 7.1.1
@@ -422,8 +422,10 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/showdown': 2.0.0
       '@types/turndown': 5.0.1
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      react-is: 18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       vite-plugin-pwa: 0.14.1_vite@4.0.4
       workbox-window: 6.5.4
@@ -13164,7 +13166,7 @@ packages:
 
   /@types/showdown/2.0.0:
     resolution: {integrity: sha512-70xBJoLv+oXjB5PhtA8vo7erjLDp9/qqI63SRHm4REKrwuPOLs8HhXwlZJBJaB4kC18cCZ1UUZ6Fb/PLFW4TCA==}
-    dev: false
+    dev: true
 
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
@@ -15340,7 +15342,7 @@ packages:
       babel-plugin-syntax-jsx: 6.18.0
       lodash: 4.17.21
       picomatch: 2.3.1
-      styled-components: 5.3.6_biqbaboplfbrettd7655fr4n2y
+      styled-components: 5.3.6_7i5myeigehqah43i5u7wbekgba
 
   /babel-plugin-syntax-jsx/6.18.0:
     resolution: {integrity: sha512-qrPaCSo9c8RHNRHIotaufGbuOBN8rtdC4QrrFFc43vyWCCz7Kl7GL1PGaXtMGQZUXrkCjNEgxDfmAuAabr/rlw==}
@@ -29339,20 +29341,6 @@ packages:
       - react-is
     dev: false
 
-  /react-drag-drop-files/2.3.8_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-/tA1FEGhw6IwG5DlogYu0y3uLkyZ6np8cbzihW7Hy/k3b1T022T7zjn/4elZ6+M69GwnJnUUO0Utisu1xZFATA==}
-    peerDependencies:
-      react: ^18.0.0
-      react-dom: ^18.0.0
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      styled-components: 5.3.6_biqbaboplfbrettd7655fr4n2y
-    transitivePeerDependencies:
-      - react-is
-    dev: false
-
   /react-element-to-jsx-string/15.0.0_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
     peerDependencies:
@@ -32004,28 +31992,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-is: 18.2.0
-      shallowequal: 1.1.0
-      supports-color: 5.5.0
-
-  /styled-components/5.3.6_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-hGTZquGAaTqhGWldX7hhfzjnIYBZ0IXQXkCYdvF1Sq3DsUaLx6+NTHC5Jj1ooM2F68sBiVz3lvhfwQs/S3l6qg==}
-    engines: {node: '>=10'}
-    requiresBuild: true
-    peerDependencies:
-      react: '>= 16.8.0'
-      react-dom: '>= 16.8.0'
-      react-is: '>= 16.8.0'
-    dependencies:
-      '@babel/helper-module-imports': 7.18.6
-      '@babel/traverse': 7.20.12_supports-color@5.5.0
-      '@emotion/is-prop-valid': 1.2.0
-      '@emotion/stylis': 0.8.5
-      '@emotion/unitless': 0.7.5
-      babel-plugin-styled-components: 2.0.7_styled-components@5.3.6
-      css-to-react-native: 3.0.0
-      hoist-non-react-statics: 3.3.2
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       shallowequal: 1.1.0
       supports-color: 5.5.0
 
