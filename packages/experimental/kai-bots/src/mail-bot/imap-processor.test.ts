@@ -11,7 +11,7 @@ import { ImapProcessor } from './imap-processor';
 
 // TODO(burdon): Set-up in-memory test for CI.
 describe('Mail', () => {
-  test.skip('IMAP', async () => {
+  test('IMAP', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
     assert(config);
 

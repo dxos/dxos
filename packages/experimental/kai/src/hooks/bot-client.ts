@@ -14,13 +14,17 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 /**
  * Bot client connects to Docker proxy server.
  */
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out (e.g., @dxos/bot-client or generic kube service?)
 export class BotClient {
   public readonly onStatusUpdate = new Event<string>();
 
   private readonly _proxyEndpoint: string;
 
-  constructor(private readonly _config: Config, private readonly _space: Space) {
+  // prettier-ignore
+  constructor(
+    private readonly _config: Config,
+    private readonly _space: Space
+  ) {
     // TODO(burdon): Get from config.
     this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? 'http://127.0.0.1:2376/docker';
   }
@@ -31,18 +35,20 @@ export class BotClient {
     return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((response) => response.json());
   }
 
-  async startBot(botId: string) {
+  /**
+   * Start bot container.
+   */
+  async startBot(botId: string, envMap?: Map<string, string>) {
     log.info('creating container', { bot: botId });
     this.onStatusUpdate.emit('Creating container...');
 
-    const env = {
-      LOG_FILTER: 'info',
+    const env: { [key: string]: string } = {
       BOT_NAME: botId,
-      PROTONMAIL_HOST: 'host.docker.internal',
-      // TODO(burdon): From credentials (these are local only).
-      PROTONMAIL_USERNAME: 'rich@dxos.org',
-      PROTONMAIL_PASSWORD: '2ZdkbJKZVikacL8Ch0vLaA'
+      LOG_FILTER: 'info',
+      PROTONMAIL_HOST: 'host.docker.internal'
     };
+
+    Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
     const port = Math.floor(Math.random() * 1000) + 3000;

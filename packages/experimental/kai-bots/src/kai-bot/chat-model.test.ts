@@ -16,7 +16,7 @@ const getKey = (config: Config, name: string) => {
 };
 
 describe('openai', () => {
-  const createChatModel = (): ChatModel | undefined => {
+  const createChatModel = (): ChatModel => {
     const config = getConfig()!;
     return new ChatModel({
       organization: getKey(config, 'openai.org_id')!,
@@ -27,11 +27,6 @@ describe('openai', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('basic', async () => {
     const chat = createChatModel();
-    if (!chat) {
-      console.log('invalid');
-      return;
-    }
-
     const { messages } = loadJson('packages/experimental/bots/data/messages.json');
     await chat.request(messages);
   });
