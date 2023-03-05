@@ -10,8 +10,6 @@ import { getConfig, getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
 
 // TODO(burdon): Set-up in-memory test for CI.
-// TODO(burdon): Test Mailbot.
-// TODO(burdon): Factor out Imap processor.
 describe('Mail', () => {
   test.skip('IMAP', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
