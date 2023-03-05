@@ -34,7 +34,10 @@
         "entryPoints": [
           "packages/experimental/kai-bots/src/index.ts"
         ],
-        "outputPath": "packages/experimental/kai-bots/dist/lib"
+        "outputPath": "packages/experimental/kai-bots/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
