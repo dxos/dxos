@@ -2862,7 +2862,6 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/plexus': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2954,7 +2953,6 @@ importers:
       '@dxos/node-std': link:../../common/node-std
       '@dxos/plexus': link:../plexus
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
