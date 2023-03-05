@@ -18,7 +18,7 @@ import ws from 'ws'
   app.use(cors());
   app.use(bodyParser.json());
 
-  const client = await MongoClient.connect('mongodb://docker:mongopw@localhost:55001')
+  const client = await MongoClient.connect('mongodb://docker:mongopw@localhost:55002')
   const db = client.db('telemetry');
   var collection: Collection<Document>
   try {

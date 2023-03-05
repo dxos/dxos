@@ -209,6 +209,10 @@ export class SignalClient implements SignalMethods {
     this._state = newState;
     this._lastStateChange = new Date();
     log('signal state changed', { status: this.getStatus() });
+    log.telemetry('dxos.mesh.signal.client.state-changed', {
+      url: this._host,
+      state: newState
+    })
     this.statusChanged.emit(this.getStatus());
   }
 

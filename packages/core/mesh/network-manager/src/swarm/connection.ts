@@ -183,6 +183,13 @@ export class Connection {
   private _changeState(state: ConnectionState): void {
     assert(state !== this._state, 'Already in this state.');
     this._state = state;
+    log.telemetry('dxos.mesh.connection.state', { 
+      peerId: this.ownId,
+      remoteId: this.remoteId,
+      sessionId: this.sessionId,
+      state: state,
+      transport: this._transport && Object.getPrototypeOf(this._transport).constructor.name
+     });
     this.stateChanged.emit(state);
   }
 }
