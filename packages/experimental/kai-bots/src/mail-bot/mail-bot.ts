@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
 import sub from 'date-fns/sub';
 import { convert } from 'html-to-text';
 import { Config as ImapConfig } from 'imap';
@@ -24,20 +25,26 @@ const toArray = (value: any) => (Array.isArray(value) ? value : [value]);
 // TODO(burdon): Object with spam and blacklist arrays.
 const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
 
+// TODO(burdon): Configure.
+const POLLING_INTERVAL = 5_000;
+
 export class MailBot extends Bot {
   private _imapConfig?: ImapConfig;
+  private _interval?: ReturnType<typeof setTimeout>;
 
-  // TODO(burdon): Polling.
   async onStart() {
-    const messages = await this.requestMessages();
-    log.info('processed', { messages: messages.length });
-    for (const message of messages) {
-      log.info('adding', { message, space: this.space.key });
-      await this.space.db.add(message);
-    }
+    assert(!this._interval);
+    this._interval = setInterval(() => {
+      void this.pollMessages();
+    }, POLLING_INTERVAL);
   }
 
-  async onStop() {}
+  async onStop() {
+    if (this._interval) {
+      clearInterval(this._interval);
+      this._interval = undefined;
+    }
+  }
 
   override async onInit() {
     // TODO(burdon): Configure via file?
@@ -52,6 +59,25 @@ export class MailBot extends Bot {
         rejectUnauthorized: false
       }
     };
+
+    log.info('initialized', { config: this._imapConfig });
+  }
+
+  /**
+   * Poll messages and merge into inbox.
+   */
+  async pollMessages() {
+    const { objects: currentMessages } = this.space.db.query(Message.filter());
+    const findCurrent = (id: string) => currentMessages.find((message) => message.source.guid === id);
+
+    // TODO(burdon): Deleted messages (e.g., if no longer exists in time range); updated properties.
+    const messages = await this.requestMessages();
+    log.info('processed', { current: currentMessages.length, messages: messages.length });
+    for (const message of messages) {
+      if (!message.source?.guid || !findCurrent(message.source?.guid)) {
+        await this.space.db.add(message);
+      }
+    }
   }
 
   /**
@@ -59,7 +85,7 @@ export class MailBot extends Bot {
    */
   async requestMessages({ days }: { days: number } = { days: 28 }): Promise<Message[]> {
     // https://www.npmjs.com/package/imap-simple
-    log.info('connecting...', { config: this._imapConfig });
+    log.info('connecting...');
     const connection = await imaps.connect({ imap: this._imapConfig! });
     await connection.openBox('INBOX');
     log.info('connected');

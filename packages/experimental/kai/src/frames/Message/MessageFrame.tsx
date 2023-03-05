@@ -25,6 +25,9 @@ export const MessageFrame = () => {
   const date = (date: Date) =>
     isToday(date) ? format(date, 'hh:mm aaa') : formatDistance(date, now, { addSuffix: true });
 
+  // TODO(burdon): Contact may not be available since currently a separate object.
+  const getDisplayName = (contact?: Message.Contact) => (contact?.name?.length ? contact?.name : contact?.email);
+
   // TODO(burdon): List/cursor.
   return (
     <div className='flex flex-1 overflow-hidden'>
@@ -51,7 +54,7 @@ export const MessageFrame = () => {
                     </Button>
                   }
                 >
-                  <div className='flex flex-1 text-sm text-teal-700'>{from.name?.length ? from.name : from.email}</div>
+                  <div className='flex flex-1 text-sm text-teal-700'>{getDisplayName(from)}</div>
                   <div className='flex text-sm whitespace-nowrap text-right text-zinc-500 pl-2'>
                     {date(new Date(received))}
                   </div>
@@ -89,7 +92,7 @@ export const MessageFrame = () => {
               }
             >
               {/* TODO(burdon): Contact create/link. */}
-              <div>{selected.from.name ?? selected.from.email}</div>
+              <div>{getDisplayName(selected.from)}</div>
             </Row>
 
             <Row wide className='pb-4'>

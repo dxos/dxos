@@ -8,6 +8,8 @@ import { describe, test } from '@dxos/test';
 import { getConfig } from '../util';
 import { MailBot } from './mail-bot';
 
+// TODO(burdon): Test Mailbot.
+// TODO(burdon): Factor out Imap processor.
 describe('Mail', () => {
   test('IMAP', async () => {
     const config = getConfig()!;
