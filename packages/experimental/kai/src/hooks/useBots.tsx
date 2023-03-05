@@ -65,6 +65,20 @@ export const botModules: Module[] = botDefs.map(({ module }) => module);
 
 export type BotMap = Map<string, BotDef>;
 
+export const botKeys: { [key: string]: string } = {
+  'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
+  'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD'
+};
+
+export const getBotEnvs = (keyMap: Map<string, string>) => {
+  const envMap = new Map<string, string>();
+  Object.entries(botKeys).forEach(([key, env]) => {
+    envMap.set(env, keyMap.get(key) ?? '');
+  });
+
+  return envMap;
+};
+
 // TODO(burdon): Add to context.
 export const useBotClient = (space: Space) => {
   const config = useConfig();

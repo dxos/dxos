@@ -13,12 +13,12 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 import { useConfig } from '@dxos/react-client';
 import { getSize, Input, mx } from '@dxos/react-components';
 
-import { useAppState, useKeyStore } from '../hooks';
+import { botKeys, useAppState, useKeyStore } from '../hooks';
 
 const SettingsPage = () => {
   const config = useConfig();
   const state = useAppState();
-  const [keys, setKey] = useKeyStore();
+  const [keys, setKey] = useKeyStore(Object.keys(botKeys));
   const handleUpdateKey = (key: string, value: string) => {
     setKey(key, value);
   };

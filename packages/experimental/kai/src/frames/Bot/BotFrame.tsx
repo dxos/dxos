@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { Button, Select, Table } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { botDefs, useAppRouter, useBotClient, useKeyStore } from '../../hooks';
+import { botDefs, useAppRouter, useBotClient, useKeyStore, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 1000;
 
@@ -59,27 +59,13 @@ const columns: Column<BotRecord>[] = [
   }
 ];
 
-const keys: { [key: string]: string } = {
-  'com.protonmail.username': 'PROTONMAIL_USERNAME',
-  'com.protonmail.password': 'PROTONMAIL_PASSWORD'
-};
-
-const getEnvMap = (keyMap: Map<string, string>) => {
-  const envMap = new Map<string, string>();
-  Object.entries(keys).forEach(([key, env]) => {
-    envMap.set(env, keyMap.get(key) ?? '');
-  });
-
-  return envMap;
-};
-
 export const BotFrame = () => {
   const [status, setStatus] = useState('');
   const [records, setRecords] = useState<BotRecord[]>([]);
   const [botId, setBotId] = useState<string>(botDefs[0].module.id!);
   const { space } = useAppRouter();
   const botClient = useBotClient(space!);
-  const [keyMap] = useKeyStore();
+  const [keyMap] = useKeyStore(Object.keys(botKeys));
 
   useEffect(() => {
     void refresh();
@@ -119,7 +105,7 @@ export const BotFrame = () => {
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
       <Toolbar>
-        <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getEnvMap(keyMap))}>
+        <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
           Start
         </Button>
         {/* TODO(burdon): full width, value, onChange. */}

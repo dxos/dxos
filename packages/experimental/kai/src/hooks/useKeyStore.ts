@@ -4,19 +4,12 @@
 
 import { useEffect, useMemo, useReducer } from 'react';
 
-// prettier-ignore
-const defaultKeys = [
-  'org.dxos.service.bot.proxy',
-
-  // TODO(burdon): Move to credentials.
-  'com.protonmail.username',
-  'com.protonmail.password'
-];
-
 /**
  * Settings store.
  */
-export const useKeyStore = (): [Map<string, string>, (key: string, value: string) => void] => {
+export const useKeyStore = (
+  defaultKeys: string[] = []
+): [Map<string, string>, (key: string, value: string) => void] => {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const keyMap = useMemo(() => new Map<string, string>(), []);
   useEffect(() => {

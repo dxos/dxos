@@ -25,7 +25,7 @@ export class BotClient {
     private readonly _config: Config,
     private readonly _space: Space
   ) {
-    // TODO(burdon): Get from config.
+    // TODO(burdon): Get from config (and settings override).
     this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? 'http://127.0.0.1:2376/docker';
   }
 
@@ -39,13 +39,13 @@ export class BotClient {
    * Start bot container.
    */
   async startBot(botId: string, envMap?: Map<string, string>) {
-    log.info('creating container', { bot: botId });
+    log('starting bot', { bot: botId });
     this.onStatusUpdate.emit('Creating container...');
 
     const env: { [key: string]: string } = {
       BOT_NAME: botId,
       LOG_FILTER: 'info',
-      PROTONMAIL_HOST: 'host.docker.internal'
+      COM_PROTONMAIL_HOST: 'host.docker.internal'
     };
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));

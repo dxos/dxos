@@ -35,13 +35,13 @@ export class MailBot extends Bot {
   override async onInit() {
     // TODO(burdon): Configure via file?
     this._processor = new ImapProcessor({
-      user: process.env.PROTONMAIL_USERNAME!,
-      password: process.env.PROTONMAIL_PASSWORD!,
-      host: process.env.PROTONMAIL_HOST ?? '127.0.0.1',
-      port: process.env.PROTONMAIL_PORT ? parseInt(process.env.PROTONMAIL_PORT) : 1143,
+      user: process.env.COM_PROTONMAIL_USERNAME!,
+      password: process.env.COM_PROTONMAIL_PASSWORD!,
+      host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
+      port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
       tls: true,
       tlsOptions: {
-        ca: process.env.PROTONMAIL_CERT ?? getKey(this.config, 'protonmail.ca'),
+        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'protonmail.ca'),
         rejectUnauthorized: false
       }
     });

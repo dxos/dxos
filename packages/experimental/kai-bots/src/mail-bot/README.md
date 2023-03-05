@@ -7,5 +7,5 @@
 - Get the local password.
 
 ```bash
-PROTONMAIL_USERNAME=rich@dxos.org PROTONMAIL_PASSWORD=xxx pc test
+COM_PROTONMAIL_USERNAME=rich@dxos.org COM_PROTONMAIL_PASSWORD=xxx pc test
 ```
