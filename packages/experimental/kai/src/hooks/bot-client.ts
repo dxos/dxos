@@ -11,11 +11,11 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-// TODO(burdon): Config.
+// TODO(burdon): Config. Standardize and document ports.
 export const PROXY_PORT = 2376;
-export const BOT_PORT = 3023; // TODO(burdon): Collision?
-export const BOT_RPC_PORT_MIN = 3000;
-export const BOT_RPC_PORT_MAX = 3100;
+export const BOT_PORT = 3023;
+export const BOT_RPC_PORT_MIN = 3100;
+export const BOT_RPC_PORT_MAX = 3200;
 
 export type BotClientOptions = {
   proxy?: string;
@@ -70,32 +70,35 @@ export class BotClient {
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
 
+    const body = {
+      Image: 'bot-test', // TODO(burdon): Factor out name.
+      ExposedPorts: {
+        [`${BOT_PORT}/tcp`]: {}
+      },
+      HostConfig: {
+        PortBindings: {
+          [`${BOT_PORT}/tcp`]: [
+            {
+              HostPort: `${port}`
+            }
+          ]
+        }
+      },
+      Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
+      Labels: {
+        'dxos.bot': `${true}`, // TODO(burdon): ?
+        'dxos.bot.dxrpc-port': `${port}`,
+        'dxos.bot.name': botId
+      }
+    };
+
+    log.info('registering bot', { body });
     const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        Image: 'bot-test', // TODO(burdon): Factor out name.
-        ExposedPorts: {
-          [`${BOT_PORT}/tcp`]: {}
-        },
-        HostConfig: {
-          PortBindings: {
-            [`${BOT_PORT}/tcp`]: [
-              {
-                HostPort: `${port}`
-              }
-            ]
-          }
-        },
-        Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
-        Labels: {
-          'dxos.bot': `${true}`,
-          'dxos.bot.dxrpc-port': `${port}`,
-          'dxos.bot.name': botId
-        }
-      })
+      body: JSON.stringify(body)
     });
 
     const data = await response.json();
@@ -115,6 +118,7 @@ export class BotClient {
       } catch (err: any) {
         log.error(err);
       }
+
       await sleep(500);
     }
 
