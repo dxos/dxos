@@ -290,7 +290,7 @@ const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.dashboard';
+export const defaultFrameId = 'dxos.module.frame.search';
 
 // prettier-ignore
 export const defaultFrames = [
