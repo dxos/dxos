@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import fs from 'node:fs';
 import yaml from 'js-yaml';
+import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
 
