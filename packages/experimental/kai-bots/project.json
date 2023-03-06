@@ -15,18 +15,6 @@
     },
     "compile": {
       "dependsOn": [
-        "compile-lib",
-        "compile-node"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "true"
-        ]
-      }
-    },
-    "compile-lib": {
-      "dependsOn": [
         "^compile"
       ],
       "executor": "@dxos/esbuild:build",
@@ -34,28 +22,7 @@
         "entryPoints": [
           "packages/experimental/kai-bots/src/index.ts"
         ],
-        "outputPath": "packages/experimental/kai-bots/dist/lib",
-        "platforms": [
-          "node"
-        ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/experimental/kai-bots/src/testing/index.ts"
-        ],
-        "outputPath": "packages/experimental/kai-bots/dist/testing",
-        "platforms": [
-          "node"
-        ]
+        "outputPath": "packages/experimental/kai-bots/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

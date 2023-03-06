@@ -15,18 +15,6 @@
     },
     "compile": {
       "dependsOn": [
-        "compile-lib",
-        "compile-node"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "true"
-        ]
-      }
-    },
-    "compile-lib": {
-      "dependsOn": [
         "^compile"
       ],
       "executor": "@dxos/esbuild:build",
@@ -36,25 +24,6 @@
           "packages/experimental/kai-types/src/testing/index.ts"
         ],
         "outputPath": "packages/experimental/kai-types/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/experimental/kai-types/src/index.ts",
-          "packages/experimental/kai-types/src/testing/index.ts"
-        ],
-        "outputPath": "packages/experimental/kai-types/dist/testing",
-        "platforms": [
-          "node"
-        ]
       },
       "outputs": [
         "{options.outputPath}"

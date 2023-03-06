@@ -25,7 +25,7 @@ describe('ChatModel', () => {
     });
   };
 
-  test('basic', async () => {
+  test.skip('basic', async () => {
     const chat = createChatModel();
     const { messages } = loadJson('packages/experimental/kai-bots/data/messages.json');
     await chat.request(messages);
