@@ -5,15 +5,15 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
+import { ClientServices, SpaceInvitationsProxy } from '@dxos/client';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 import { describe, test } from '@dxos/test';
 
-import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
+import { SpaceInvitationsServiceImpl } from '../invitations';
 import { createServiceContext } from '../testing';
-import { ClientServices } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).

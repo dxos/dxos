@@ -5,12 +5,12 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);

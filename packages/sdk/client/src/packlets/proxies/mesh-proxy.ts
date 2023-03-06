@@ -5,11 +5,12 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { ResultSet } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+
+import { ClientServicesProvider } from '../client';
 
 /**
  * Public API for MESH services.

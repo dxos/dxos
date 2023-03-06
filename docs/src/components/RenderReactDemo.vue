@@ -63,7 +63,7 @@
 
   // TODO(wittjosiah): Prevent from importing during ssr.
   const { Client, fromHost, Invitation, PublicKey } = await import('@dxos/client');
-  const { TestBuilder } = await import('@dxos/client/testing');
+  const { TestBuilder } = await import('@dxos/client-services/testing');
   const { ClientProvider, useSpaces } = await import('@dxos/react-client');
 
   // Note rollup dynamic import limitations.
