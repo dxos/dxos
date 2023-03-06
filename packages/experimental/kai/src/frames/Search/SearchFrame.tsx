@@ -13,12 +13,14 @@ import { useAppRouter } from '../../hooks';
 // TODO(burdon): Based on schema.
 const searchFields = ['title', 'name', 'description', 'content'];
 
+// TODO(burdon): Match fields.
+const textFilter = (text: string) => (object: Document) => true;
+
 const getTitle = (object: Document) => (object as any).title ?? (object as any).name;
-const match = (object: Document, text: string) => false;
 
 export const SearchFrame = () => {
   // TODO(burdon): Search across spaces.
-  const [text, setText] = useState<string>();
+  const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
   };
