@@ -48,6 +48,9 @@
         ],
         "watchPatterns": [
           "packages/experimental/kai-bots/src/**/*"
+        ],
+        "ciEnvironments": [
+          "nodejs"
         ]
       },
       "outputs": [
