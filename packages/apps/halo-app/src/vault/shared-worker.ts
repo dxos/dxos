@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { WorkerRuntime } from '@dxos/client';
+import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';

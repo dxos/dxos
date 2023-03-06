@@ -1,162 +1,140 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
+import assert from 'node:assert';
+
+import { asyncTimeout } from '@dxos/async';
+import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import {
-  SnapshotStore,
-  DataPipelineControllerImpl,
-  MetadataStore,
-  SigningContext,
-  SpaceManager,
-  valueEncoding
-} from '@dxos/echo-pipeline';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { DocumentModel } from '@dxos/document-model';
+import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Storage } from '@dxos/random-access-storage';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
+import { ClientServicesHost, LocalClientServices } from '../services';
 
-//
-// TODO(burdon): Replace with test builder.
-//
+export const testConfigWithLocalSignal = new Config({
+  version: 1,
+  runtime: {
+    services: {
+      signal: {
+        // TODO(burdon): Port numbers and global consts?
+        server: 'ws://localhost:4000/.well-known/dx/signal'
+      }
+    }
+  }
+});
 
-export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
-  const networkManager = new NetworkManager({
-    signalManager: new MemorySignalManager(signalManagerContext),
-    transportFactory: MemoryTransportFactory
-  });
-
-  return new ClientServicesHost({
-    config,
-    networkManager
-  });
-};
-
-export const createServiceContext = ({
-  signalContext = new MemorySignalManagerContext(),
-  storage = createStorage({ type: StorageType.RAM })
-}: {
-  signalContext?: MemorySignalManagerContext;
-  storage?: Storage;
-} = {}) => {
-  const networkManager = new NetworkManager({
-    signalManager: new MemorySignalManager(signalContext),
-    transportFactory: MemoryTransportFactory
-  });
-
-  const modelFactory = createDefaultModelFactory();
-  return new ServiceContext(storage, networkManager, modelFactory);
-};
-
-export const createPeers = async (numPeers: number) => {
-  const signalContext = new MemorySignalManagerContext();
-
-  return await Promise.all(
-    Array.from(Array(numPeers)).map(async () => {
-      const peer = createServiceContext({ signalContext });
-      await peer.open();
-      return peer;
-    })
-  );
-};
-
-export const createIdentity = async (peer: ServiceContext) => {
-  await peer.createIdentity();
-  return peer;
-};
-
-// TODO(burdon): Remove @dxos/client-testing.
-// TODO(burdon): Create builder and make configurable.
-export const syncItems = async (db1: DataPipelineControllerImpl, db2: DataPipelineControllerImpl) => {
-  await testLocalDatabase(db1, db2);
-  await testLocalDatabase(db2, db1);
-};
-
+/**
+ * Client builder supports different configurations, incl. signaling, transports, storage.
+ */
 export class TestBuilder {
-  public readonly signalContext = new MemorySignalManagerContext();
+  private readonly _config: Config;
 
-  createPeer(): TestPeer {
-    return new TestPeer(this.signalContext);
+  public storage?: Storage;
+
+  // prettier-ignore
+  constructor (
+    config?: Config,
+    private readonly _modelFactory = createDefaultModelFactory(),
+    private readonly _signalManagerContext = new MemorySignalManagerContext()
+  ) {
+    this._config = config ?? new Config();
+  }
+
+  get config(): Config {
+    return this._config;
+  }
+
+  /**
+   * Get network manager using local shared memory or remote signal manager.
+   */
+  get networkManager() {
+    const signalServer = this._config.get('runtime.services.signal.server');
+    if (signalServer) {
+      return new NetworkManager({
+        log: true,
+        signalManager: new WebsocketSignalManager([signalServer]),
+        transportFactory: createWebRTCTransportFactory({
+          iceServers: this._config.get('runtime.services.ice')
+        })
+      });
+    }
+
+    // Memory transport with shared context.
+    return new NetworkManager({
+      log: true,
+      signalManager: new MemorySignalManager(this._signalManagerContext),
+      transportFactory: MemoryTransportFactory
+    });
+  }
+
+  /**
+   * Create backend service handlers.
+   */
+  createClientServicesHost() {
+    return new ClientServicesHost({
+      config: this._config,
+      modelFactory: this._modelFactory,
+      networkManager: this.networkManager,
+      storage: this.storage
+    });
+  }
+
+  /**
+   * Create local services host.
+   */
+  createLocal() {
+    return new LocalClientServices({
+      config: this._config,
+      modelFactory: this._modelFactory,
+      networkManager: this.networkManager,
+      storage: this.storage
+    });
+  }
+
+  /**
+   * Create client/server.
+   */
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+    const [proxyPort, hostPort] = createLinkedPorts();
+    const server = createProtoRpcPeer({
+      exposed: host.descriptors,
+      handlers: host.services as ClientServices,
+      port: hostPort
+    });
+    // TODO(dmaretskyi): Refactor.
+
+    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
+    return [client, server];
   }
 }
 
-export type TestPeerProps = {
-  storage?: Storage;
-  feedStore?: FeedStore<any>;
-  metadataStore?: MetadataStore;
-  keyring?: Keyring;
-  networkManager?: NetworkManager;
-  spaceManager?: SpaceManager;
-  snapshotStore?: SnapshotStore;
+export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
+  const objectId = PublicKey.random().toHex();
+
+  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+
+  await result.getReceipt();
+  // TODO(dmaretskiy): await result.waitToBeProcessed()
+  assert(create._itemManager.entities.has(result.objectsCreated[0].id));
+
+  await asyncTimeout(
+    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    1000
+  );
+
+  return result;
 };
 
-export class TestPeer {
-  private _props: TestPeerProps = {};
+export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendProxy) => {
+  // Check item replicated from 1 => 2.
+  await testSpace(db1, db2);
 
-  constructor(private readonly signalContext: MemorySignalManagerContext) {}
-
-  get storage() {
-    return (this._props.storage ??= createStorage({ type: StorageType.RAM }));
-  }
-
-  get keyring() {
-    return (this._props.keyring ??= new Keyring(this.storage.createDirectory('keyring')));
-  }
-
-  get feedStore() {
-    return (this._props.feedStore ??= new FeedStore({
-      factory: new FeedFactory({
-        root: this.storage.createDirectory('feeds'),
-        signer: this.keyring,
-        hypercore: {
-          valueEncoding
-        }
-      })
-    }));
-  }
-
-  get metadataStore() {
-    return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
-  }
-
-  get snapshotStore() {
-    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
-  }
-
-  get networkManager() {
-    return (this._props.networkManager ??= new NetworkManager({
-      signalManager: new MemorySignalManager(this.signalContext),
-      transportFactory: MemoryTransportFactory
-    }));
-  }
-
-  get spaceManager() {
-    return (this._props.spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
-      networkManager: this.networkManager
-    }));
-  }
-}
-
-export const createSigningContext = async (keyring: Keyring): Promise<SigningContext> => {
-  const identityKey = await keyring.createKey();
-  const deviceKey = await keyring.createKey();
-
-  return {
-    identityKey,
-    deviceKey,
-    credentialSigner: createCredentialSignerWithChain(
-      keyring,
-      {
-        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey)
-      },
-      deviceKey
-    ),
-    recordCredential: async () => {} // No-op.
-  };
+  // Check item replicated from 2 => 1.
+  await testSpace(db2, db1);
 };

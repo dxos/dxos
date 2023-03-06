@@ -14,7 +14,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { ServiceContext } from '../services';
-import { createIdentity, createPeers, syncItems } from '../testing';
+import { createIdentity, createPeers, syncItemsLocal } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
@@ -53,7 +53,7 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItems(space1.dataPipelineController, space2.dataPipelineController);
+      await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
 
       await space1.close();
       await space2.close();
@@ -116,7 +116,7 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItems(space1.dataPipelineController, space2.dataPipelineController);
+      await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
 
       await space1.close();
       await space2.close();

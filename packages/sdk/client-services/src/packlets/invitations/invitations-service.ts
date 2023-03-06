@@ -5,14 +5,19 @@
 import assert from 'node:assert';
 
 import { TimeoutError } from '@dxos/async';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  InvitationsService,
+  InvitationsHandler,
+  InvitationsOptions
+} from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { AuthenticationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsService } from './invitations';
-import { InvitationsHandler, InvitationsOptions } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.

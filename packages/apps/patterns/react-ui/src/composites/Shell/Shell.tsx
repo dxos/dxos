@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ShellRuntime } from '@dxos/client';
+import { ShellRuntime } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { useClient, useSpace, useSpaces } from '@dxos/react-client';

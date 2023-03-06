@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client';
 import { WebRTCTransportService } from '@dxos/network-manager';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
-import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.

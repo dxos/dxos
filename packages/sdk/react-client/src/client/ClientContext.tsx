@@ -4,8 +4,7 @@
 
 import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
-import { Client, SystemStatus } from '@dxos/client';
-import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
+import { Client, type ClientServices, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';

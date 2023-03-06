@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Client } from '@dxos/client';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
 import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces/invitations', () => {

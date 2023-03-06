@@ -9,13 +9,10 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "shell.css",
     "src"
@@ -25,7 +22,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -47,6 +43,7 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "base-x": "~3.0.9",
     "debug": "^4.3.3",
     "lodash.isequal": "^4.5.0"
   },

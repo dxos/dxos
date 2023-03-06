@@ -7,11 +7,11 @@
 import { expect } from 'chai';
 
 import { waitForCondition } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {

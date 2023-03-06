@@ -7,8 +7,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { ClientServicesProxy } from '@dxos/client-services';
+import { Client, ClientServicesProxy } from '@dxos/client';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
