@@ -12,6 +12,7 @@ import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 // TODO(burdon): Config. Standardize and document ports.
+// TODO(burdon): Notes for port-forwarding.
 export const PROXY_PORT = 2376;
 export const BOT_PORT = 3023;
 export const BOT_RPC_PORT_MIN = 3100;
