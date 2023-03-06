@@ -32,7 +32,7 @@ describe('ChatModel', () => {
   });
 
   test('create contact stack', async () => {
-    const schema: SchemaMap = {
+    const _schema: SchemaMap = {
       person: [
         {
           key: 'name'
@@ -85,7 +85,7 @@ describe('ChatModel', () => {
     // TODO(burdon): Coerce output format (e.g., to JSON).
 
     // TODO(burdon): JSON doc.
-    const base: Entity[] = [
+    const _base: Entity[] = [
       {
         entity: 'person',
         values: {
