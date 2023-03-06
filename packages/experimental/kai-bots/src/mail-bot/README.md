@@ -2,7 +2,7 @@
 
 ## Testing
 
-- Configure Protonmail Bridge to use SSL.
+- Configure Protonmail Bridge to use SSL (this isn't required).
 - Export the Cert (PEM) file from the Bridge.
 - Get the local password.
 

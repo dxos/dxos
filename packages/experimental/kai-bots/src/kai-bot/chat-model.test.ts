@@ -27,7 +27,7 @@ describe('openai', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('basic', async () => {
     const chat = createChatModel();
-    const { messages } = loadJson('packages/experimental/bots/data/messages.json');
+    const { messages } = loadJson('packages/experimental/kai-bots/data/messages.json');
     await chat.request(messages);
   });
 });
