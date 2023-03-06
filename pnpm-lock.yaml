@@ -3132,7 +3132,6 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -3141,6 +3140,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       assert: 2.0.0
     devDependencies:
+      '@dxos/client-services': link:../../sdk/client-services
       '@types/faker': 5.5.9
       date-fns: 2.29.3
       faker: 5.5.3
