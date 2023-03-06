@@ -14,15 +14,13 @@ export type ChatModelOptions = {
  * GPT Chat Completion uses a prior set of messages as context to generate the next completion.
  * The maximum token count for these context messages is 4096.
  *
+ * https://chat.openai.com/chat
+ *
  * NOTE: The current (2023-03-02) cost model is $0.002 per 1000 tokens (roughly 1c per large query).
  * We are being billed for this -- use with caution.
  */
 export class ChatModel {
   private readonly _api: OpenAIApi;
-
-  // TODO(burdon): Extract name and company from email/calendar event and create a Stack for the company.
-  // TODO(burdon): Remove from the context any bad answers or prompts.
-  // TODO(burdon): Coerce output format (e.g., to JSON).
 
   constructor(private readonly _options: ChatModelOptions) {
     // https://beta.openai.com/docs/api-reference/authentication

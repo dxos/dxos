@@ -41,7 +41,7 @@ export class MailBot extends Bot {
       port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
       tls: true,
       tlsOptions: {
-        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'protonmail.ca'),
+        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
         rejectUnauthorized: false
       }
     });
