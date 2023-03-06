@@ -15,7 +15,8 @@ export type PropertyType = {
 export type Property<Subject> = {
   key: string;
   type?: PropertyType;
-  generator?: Generator<Subject>;
+  // TODO(burdon): Multiple; specify service type.
+  resolver?: Generator<Subject>;
 };
 
 export type Schema<Subject> = Property<Subject>[];

@@ -96,7 +96,10 @@ export const MessageFrame = () => {
               }
             >
               {/* TODO(burdon): Contact create/link. */}
-              <div>{getDisplayName(selected.from)}</div>
+              <div>
+                <div>{getDisplayName(selected.from)}</div>
+                {selected.from.name && selected.from.email && <div>{selected.from.email}</div>}
+              </div>
             </Row>
 
             <Row wide className='pb-4'>

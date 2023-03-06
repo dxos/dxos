@@ -35,12 +35,13 @@ describe('ChatModel', () => {
     const _schema: SchemaMap = {
       person: [
         {
-          key: 'name'
+          key: 'name',
+          resolver: (person) => `write a short bio about ${person.name}.`
         },
         {
           key: 'bio',
-          // TODO(burdon): Lookup value or run generator.
-          generator: (person) => `write a short bio about ${person.name}.`
+          // TODO(burdon): Lookup value or run resolver.
+          resolver: (person) => `write a short bio about ${person.name}.`
         },
         {
           key: 'employers',
@@ -48,7 +49,7 @@ describe('ChatModel', () => {
             array: true,
             entity: 'organization'
           },
-          generator: (person) => `list the places where ${person} worked.`
+          resolver: (person) => `list the places where ${person.name} worked.`
         }
       ],
 
@@ -59,7 +60,7 @@ describe('ChatModel', () => {
         },
         {
           key: 'summary',
-          generator: (organization) => `write a short summary about ${organization.name}.`
+          resolver: (organization) => `write a short summary about ${organization.name}.`
         },
         {
           key: 'executives',
@@ -67,7 +68,7 @@ describe('ChatModel', () => {
             array: true,
             entity: 'person'
           },
-          generator: (organization) => `list the names of the executives at ${organization}.`
+          resolver: (organization) => `list the names of the executives at ${organization}.`
         },
         {
           key: 'investments',
@@ -75,7 +76,7 @@ describe('ChatModel', () => {
             array: true,
             entity: 'organization'
           },
-          generator: (organization) => `list 10 major investments of ${organization.name}.`
+          resolver: (organization) => `list 10 major investments of ${organization.name}.`
         }
       ]
     };
