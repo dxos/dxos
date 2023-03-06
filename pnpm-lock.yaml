@@ -2649,7 +2649,7 @@ importers:
       '@types/chess.js': ^0.13.4
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      chess.js: ^1.0.0-beta.3
+      chess.js: ^1.0.0-alpha.0
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-chessboard: ^2.0.7
@@ -2893,7 +2893,7 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
       base-x: ~3.0.9
-      chess.js: ^1.0.0-beta.3
+      chess.js: ^1.0.0-alpha.0
       clipboard-copy: ^4.0.1
       d3: ^7.4.4
       date-fns: ^2.29.3
@@ -3042,7 +3042,7 @@ importers:
       '@types/js-yaml': ^4.0.5
       '@types/mailparser': ^3.4.0
       assert: ^2.0.0
-      chess.js: ^1.0.0-beta.3
+      chess.js: ^1.0.0-alpha.0
       cross-fetch: ^3.1.5
       date-fns: ^2.29.3
       email-addresses: ^5.0.0
