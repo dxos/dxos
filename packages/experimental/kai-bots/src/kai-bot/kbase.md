@@ -2,7 +2,7 @@
 
 ## Summary
 
-- Computable data.
+- Computable knowledge.
 - Knowledge model DSL that describes data ontology AND how to find out that information.
 - KBase is constantly in flux: edited by humans (owners, assistants, and service providers) and bots (service providers).
 - First order DSL describes how to construct ontologies. But the constructed ontology is itself a computable DSL!
@@ -14,3 +14,5 @@
 
 - TODO(burdon): Create demo.
 - TODO(burdon): Create deck.
+- TODO(burdon): Information theory.
+
