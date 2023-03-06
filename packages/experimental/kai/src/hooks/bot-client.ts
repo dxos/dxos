@@ -44,7 +44,7 @@ export class BotClient {
   // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${this._botServiceEndpoint}/containers/json?all=true`).then((response) => {
+    return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
       return response.json();
     });
   }
@@ -87,8 +87,8 @@ export class BotClient {
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot': `${true}`, // TODO(burdon): ?
-        'dxos.bot.rpc.port': `${port}`,
-        'dxos.bot.name': botId
+        'dxos.bot.name': botId,
+        'dxos.bot.rpc.port': `${port}` // TODO(burdon): ?
       }
     };
 
@@ -101,21 +101,22 @@ export class BotClient {
       body: JSON.stringify(request)
     });
 
-    const data = await response.json();
     this.onStatusUpdate.emit('Starting bot container...');
+    const data = await response.json();
     await fetch(`${this._botServiceEndpoint}/docker/containers/${data.Id}/start`, {
       method: 'POST'
     });
 
-    // TODO(burdon): Backoff and stop after max retries.
     // Poll proxy until container starts.
-    const botEndpoint = `${this._botServiceEndpoint}/proxy/${port}`;
+    const { host } = new URL(this._botServiceEndpoint);
+    const botEndpoint = `${host}/proxy/${port}`;
     while (true) {
       try {
         await fetch(`http://${botEndpoint}`);
         break;
       } catch (err: any) {
-        log.error(err);
+        // TODO(burdon): Backoff and stop after max retries.
+        // Ignore.
       }
 
       await sleep(500);

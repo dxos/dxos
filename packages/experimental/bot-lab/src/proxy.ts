@@ -29,6 +29,7 @@ app.use(
  * Proxy Docker requests.
  */
 app.use('/docker', (req, res) => {
+  log.info('docker request', { url: req.url });
   const proxiedReq = request(
     {
       method: req.method,
@@ -43,7 +44,6 @@ app.use('/docker', (req, res) => {
     }
   );
 
-  log.info(req.method, req.path);
   req.pipe(proxiedReq, { end: true });
 });
 
@@ -51,6 +51,7 @@ app.use('/docker', (req, res) => {
  * Proxy DXRPC requests.
  */
 app.use('/proxy/:port', (req, res) => {
+  log.info('proxying', { port: req.params.port });
   proxy.web(
     req,
     res,
