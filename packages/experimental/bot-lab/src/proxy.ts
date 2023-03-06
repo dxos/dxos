@@ -13,7 +13,8 @@ import { log } from '@dxos/log';
  * Web server proxies web socket requests from DXOS Apps to the Docker daemon.
  */
 
-const PROXY_PORT = 2376; // TODO(burdon): Config.
+// TODO(burdon): Config.
+const PROXY_PORT = 2376;
 
 const app = express();
 const server = createServer(app);
