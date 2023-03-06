@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
 import { Config, Defaults } from '@dxos/config';
-import { initializeAppTelemetry } from '@dxos/react-appkit';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
 import { createRouter, namespace } from './router';
 

@@ -5,6 +5,7 @@
 import './main.css';
 import '@dxos/client/shell.css';
 
+import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -23,9 +24,11 @@ const router = createBrowserRouter([
   }
 ]);
 
+const App = withProfiler(() => <RouterProvider router={router} />);
+
 const root = createRoot(document.getElementById('root')!);
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <App />
   </StrictMode>
 );
