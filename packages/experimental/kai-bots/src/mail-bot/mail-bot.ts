@@ -18,8 +18,10 @@ export class MailBot extends Bot {
   private _processor?: ImapProcessor;
   private _interval?: ReturnType<typeof setTimeout>;
 
+  // TODO(burdon): Back off then refresh.
   async onStart() {
     assert(!this._interval);
+    void this.pollMessages();
     this._interval = setInterval(() => {
       void this.pollMessages();
     }, POLLING_INTERVAL);
@@ -33,7 +35,6 @@ export class MailBot extends Bot {
   }
 
   override async onInit() {
-    // TODO(burdon): Configure via file?
     this._processor = new ImapProcessor({
       user: process.env.COM_PROTONMAIL_USERNAME!,
       password: process.env.COM_PROTONMAIL_PASSWORD!,

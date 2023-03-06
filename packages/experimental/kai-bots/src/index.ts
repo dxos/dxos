@@ -9,3 +9,4 @@ export * from './chess-bot';
 export * from './github-bot';
 export * from './kai-bot';
 export * from './mail-bot';
+export * from './store-bot';

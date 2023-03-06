@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
  * Web server proxies web socket requests from DXOS Apps to the Docker daemon.
  */
 
-// TODO(burdon): Config.
+// TODO(burdon): Config/env.
 const PROXY_PORT = 2376;
 
 const app = express();
@@ -26,6 +26,9 @@ app.use(
   })
 );
 
+/**
+ * Proxy Docker requests.
+ */
 app.use('/docker', (req, res) => {
   const proxiedReq = request(
     {
@@ -45,6 +48,9 @@ app.use('/docker', (req, res) => {
   req.pipe(proxiedReq, { end: true });
 });
 
+/**
+ * Proxy DXRPC requests.
+ */
 app.use('/proxy/:port', (req, res) => {
   proxy.web(
     req,
@@ -60,6 +66,9 @@ app.use('/proxy/:port', (req, res) => {
   );
 });
 
+/**
+ * Upgrade DXRPC request to websocket.
+ */
 server.on('upgrade', (req, socket, head) => {
   const port = parseInt(req.url!.split('/')[2] as any);
   log.info('upgrade', { url: req.url, port });

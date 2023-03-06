@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { Binoculars, Envelope, Sword } from 'phosphor-react';
+import { Database, Envelope, Flower, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
@@ -24,6 +24,18 @@ export type BotDef = {
 };
 
 export const botDefs: BotDef[] = [
+  {
+    module: {
+      id: 'dxos.module.bot.store',
+      type: 'dxos:type/bot',
+      displayName: 'StoreBot',
+      description: 'Secure storage.'
+    },
+    runtime: {
+      Icon: Database,
+      constructor: () => undefined
+    }
+  },
   {
     module: {
       id: 'dxos.module.bot.mail',
@@ -53,10 +65,10 @@ export const botDefs: BotDef[] = [
       id: 'dxos.module.bot.kai',
       type: 'dxos:type/bot',
       displayName: 'KaiBot',
-      description: 'Background research and data analysis.'
+      description: 'Research and task assistant.'
     },
     runtime: {
-      Icon: Binoculars,
+      Icon: Flower,
       constructor: () => undefined
     }
   }

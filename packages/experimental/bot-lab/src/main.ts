@@ -4,12 +4,9 @@
 
 import { Client, Config, fromHost, PublicKey } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
-import { ChessBot, MailBot } from '@dxos/kai-bots';
+import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
-
-// TODO(burdon): Factor out port number.
-const rpcPort = process.env.DX_RPC_PORT ? parseInt(process.env.DX_RPC_PORT) : 3023;
 
 // TODO(burdon): Load from disk (add to image).
 const config = new Config({
@@ -48,11 +45,15 @@ const config = new Config({
   }
 });
 
+// TODO(burdon): Why is 3023 the default?
+export const BOT_PORT = 3023;
+const rpcPort = process.env.DX_RPC_PORT ? parseInt(process.env.DX_RPC_PORT) : BOT_PORT;
+
 /**
  * Node process running Bot.
  * Starts a websocket server implementing remote DXOS client services.
  */
-const init = async () => {
+const start = async () => {
   log.info('config', { config: config.values });
   const client = new Client({
     config,
@@ -64,6 +65,8 @@ const init = async () => {
     identity: client.halo.identity?.identityKey,
     spaces: client.echo.getSpaces().map((space) => space.key.toHex())
   });
+
+  log.info('env', process.env);
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
@@ -87,13 +90,12 @@ const init = async () => {
   await server.open();
   log.info('listening ', { rpcPort });
 
-  log.info('ENV', process.env);
-
+  let bot: Bot | undefined;
   client.echo.subscribeSpaces(async (spaces) => {
     if (spaces.length) {
       const space = spaces[0];
-      const bot = createBot(process.env.BOT_NAME);
-      if (bot) {
+      if (!bot) {
+        bot = createBot(process.env.BOT_NAME);
         await bot.init(config, space);
         await bot.start();
       }
@@ -101,7 +103,7 @@ const init = async () => {
   });
 };
 
-const createBot = (bot?: string) => {
+const createBot = (bot?: string): Bot => {
   log.info('creating bot', { bot });
 
   switch (bot) {
@@ -109,10 +111,23 @@ const createBot = (bot?: string) => {
       return new ChessBot();
     }
 
+    case 'dxos.module.bot.kai': {
+      return new KaiBot();
+    }
+
     case 'dxos.module.bot.mail': {
       return new MailBot();
+    }
+
+    case 'dxos.module.bot.store': {
+      return new StoreBot();
+    }
+
+    default: {
+      throw new Error(`Invalid bot type: ${bot}`);
     }
   }
 };
 
-void init();
+// TODO(burdon): Create class.
+void start();

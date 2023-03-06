@@ -67,11 +67,12 @@ export class BotClient {
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
     // TODO(burdon): Maintain map (for collisions).
+    // TODO(burdon): How is this different from BOT_PORT?
     const port = BOT_RPC_PORT_MIN + Math.floor(Math.random() * (BOT_RPC_PORT_MAX - BOT_RPC_PORT_MIN));
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
 
-    const body = {
+    const request = {
       Image: 'bot-test', // TODO(burdon): Factor out name.
       ExposedPorts: {
         [`${BOT_PORT}/tcp`]: {}
@@ -93,13 +94,13 @@ export class BotClient {
       }
     };
 
-    log.info('registering bot', { body });
+    log.info('registering bot', { request });
     const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(request)
     });
 
     const data = await response.json();
@@ -108,9 +109,8 @@ export class BotClient {
       method: 'POST'
     });
 
-    // TODO(burdon): Configure port.
+    // TODO(burdon): Backoff and stop after max retries.
     // Poll proxy until container starts.
-    // const botEndpoint = `127.0.0.1:${port}`;
     const botEndpoint = `localhost:${PROXY_PORT}/proxy/${port}`;
     while (true) {
       try {

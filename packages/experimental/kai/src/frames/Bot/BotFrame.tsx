@@ -8,7 +8,7 @@ import { Column } from 'react-table';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { Button, Select, Table } from '@dxos/react-components';
+import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, useKeyStore, getBotEnvs, botKeys } from '../../hooks';
@@ -110,9 +110,12 @@ export const BotFrame = () => {
         </Button>
         {/* TODO(burdon): full width, value, onChange. */}
         <Select defaultValue={botId} onValueChange={setBotId}>
-          {botDefs.map(({ module: { id, displayName } }) => (
+          {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
             <Select.Item key={id} value={id!}>
-              {displayName}
+              <div className='flex items-center'>
+                <Icon className={mx(getSize(5), 'mr-2')} />
+                {displayName}
+              </div>
             </Select.Item>
           ))}
         </Select>
