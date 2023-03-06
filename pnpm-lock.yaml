@@ -1410,6 +1410,7 @@ importers:
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/node-std': link:../node-std
       '@fontsource/fira-code': 4.5.12
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
@@ -1449,7 +1450,6 @@ importers:
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
-      '@dxos/node-std': link:../node-std
       '@types/lodash.merge': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
