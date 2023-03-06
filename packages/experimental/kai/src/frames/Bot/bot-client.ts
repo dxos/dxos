@@ -3,8 +3,7 @@
 //
 
 import { sleep, Event, Trigger } from '@dxos/async';
-import { Client, ClientServicesProvider, Space } from '@dxos/client';
-import { clientServiceBundle } from '@dxos/client-services';
+import { Client, clientServiceBundle, ClientServicesProvider, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
