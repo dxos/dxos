@@ -26,12 +26,15 @@ const iconMap: { [key: string]: FC<any> } = {
 const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body'];
 
 type SearchResult = {
+  object: Document;
+  rank: number;
   Icon: FC<any>;
   title: string;
   snippet?: string[];
 };
 
 // TODO(burdon): Ranking via Lyra?
+// TODO(burdon):
 const mapResult = (text: string) => {
   const str = text.trim().toLowerCase();
   return (object: Document): SearchResult | undefined => {
@@ -69,6 +72,8 @@ const mapResult = (text: string) => {
 
       if (title) {
         return {
+          object,
+          rank: 1,
           title,
           snippet,
           Icon: iconMap[object.__typename] ?? Circle
@@ -77,10 +82,13 @@ const mapResult = (text: string) => {
     }
   };
 };
-// (object as any).title ?? (object as any).name ?? null;
 
+const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? -1 : a > b ? 1 : 0);
+
+// TODO(burdon): Factor out search panel (with callback).
 export const SearchFrame = () => {
   // TODO(burdon): Search across spaces.
+  // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
@@ -88,39 +96,49 @@ export const SearchFrame = () => {
 
   const { space } = useAppRouter();
   const results = useQuery(space).map(mapResult(text)).filter(Boolean) as SearchResult[];
+  const sorted = results.sort(sort);
+
+  const handleSelect = (object: Document) => {
+    console.log(object.id);
+  };
 
   return (
     // TODO(burdon): Frame container (same as Tasks).
-    <main className='min-bs-full flex-1 justify-center overflow-auto p-0 md:p-4'>
-      <div role='none' className='min-bs-full mli-auto is-full md:is-column bg-paper-bg shadow-1'>
-        <div className='flex flex-col overflow-hidden'>
-          <div className='flex justify-center p-4'>
-            <Searchbar slots={{ input: { autoFocus: true } }} onSearch={handleSearch} />
-          </div>
+    <main className='min-bs-full flex-1 overflow-hidden justify-center p-0 md:p-4'>
+      <div
+        role='none'
+        className='flex flex-col flex-1 overflow-hidden min-bs-full mli-auto is-full md:is-column bg-paper-bg shadow-1'
+      >
+        <div className='flex justify-center p-4'>
+          <Searchbar slots={{ input: { autoFocus: true, className: 'border-b' } }} onSearch={handleSearch} />
+        </div>
 
-          <div className='flex flex-1 overflow-hidden overflow-y-scroll'>
-            <div className='flex flex-col w-full'>
-              {results.map(({ Icon, title, snippet }, i) => (
-                <div key={i} className='flex flex-col w-full px-4 py-2 border-b'>
-                  <div className='flex items-center'>
-                    <div className='flex w-[40px]'>
-                      <Icon className={getSize(5)} />
-                    </div>
-                    <div className='w-full text-zinc-600'>{title}</div>
+        <div className='flex flex-1 overflow-hidden overflow-y-scroll'>
+          <div className='flex flex-col w-full'>
+            {sorted.map(({ object, Icon, title, snippet }, i) => (
+              <div
+                key={i}
+                className='flex flex-col w-full px-4 py-2 hover:bg-hover-bg cursor-pointer border-b'
+                onClick={() => handleSelect(object)}
+              >
+                <div className='flex items-center'>
+                  <div className='flex w-[40px]'>
+                    <Icon weight='thin' className={getSize(6)} />
                   </div>
-                  {snippet && snippet.length > 0 && (
-                    <div className='flex overflow-hidden'>
-                      <div className='flex w-[40px]' />
-                      <div className='w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm text-zinc-400'>
-                        <span>{snippet[0]}</span>
-                        <span className='text-black'>{snippet[1]}</span>
-                        <span>{snippet[2]}</span>
-                      </div>
-                    </div>
-                  )}
+                  <div className='w-full text-zinc-600'>{title}</div>
                 </div>
-              ))}
-            </div>
+                {snippet && snippet.length > 0 && (
+                  <div className='flex overflow-hidden'>
+                    <div className='flex w-[40px]' />
+                    <div className='w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm text-zinc-400'>
+                      <span>{snippet[0]}</span>
+                      <span className='text-black'>{snippet[1]}</span>
+                      <span>{snippet[2]}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

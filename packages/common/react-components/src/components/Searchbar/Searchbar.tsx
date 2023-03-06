@@ -9,6 +9,7 @@ import { Input } from '../Input';
 
 type SearchbarSlots = {
   input?: {
+    className?: string;
     autoFocus?: boolean;
   };
 };
@@ -41,7 +42,6 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }
             },
             input: {
               spellCheck: false,
-              className: 'w-full',
               ...slots.input
             }
           }}
