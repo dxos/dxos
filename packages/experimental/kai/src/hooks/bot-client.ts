@@ -11,12 +11,11 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-// TODO(burdon): Config. Standardize and document ports.
-// TODO(burdon): Notes for port-forwarding.
-export const PROXY_PORT = 2376;
-export const BOT_PORT = 3023;
-export const BOT_RPC_PORT_MIN = 3100;
-export const BOT_RPC_PORT_MAX = 3200;
+// TODO(burdon): Copied from @dxos/bot-lab.
+export const DX_BOT_SERVICE_PORT = 7100;
+export const DX_BOT_RPC_PORT_MIN = 7200;
+export const DX_BOT_RPC_PORT_MAX = 7300;
+export const DX_BOT_CONTAINER_RPC_PORT = 7400;
 
 export type BotClientOptions = {
   proxy?: string;
@@ -29,24 +28,23 @@ export type BotClientOptions = {
 export class BotClient {
   public readonly onStatusUpdate = new Event<string>();
 
-  private readonly _proxyEndpoint: string;
+  private readonly _botServiceEndpoint: string;
 
-  // prettier-ignore
+  // prettier-ignoreå
   constructor(
     private readonly _config: Config,
     private readonly _space: Space,
     options: BotClientOptions = {
-      proxy: 'http://127.0.0.1:2376/docker'
+      proxy: `http://127.0.0.1:${DX_BOT_SERVICE_PORT}`
     }
   ) {
-    this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
-    console.log(this._proxyEndpoint);
+    this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
   // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
     // https://docs.docker.com/engine/api/v1.42/
-    return fetch(`${this._proxyEndpoint}/containers/json?all=true`).then((response) => {
+    return fetch(`${this._botServiceEndpoint}/containers/json?all=true`).then((response) => {
       return response.json();
     });
   }
@@ -68,18 +66,18 @@ export class BotClient {
 
     // TODO(burdon): Maintain map (for collisions).
     // TODO(burdon): How is this different from BOT_PORT?
-    const port = BOT_RPC_PORT_MIN + Math.floor(Math.random() * (BOT_RPC_PORT_MAX - BOT_RPC_PORT_MIN));
+    const port = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
 
     const request = {
-      Image: 'bot-test', // TODO(burdon): Factor out name.
+      Image: 'bot-test', // TODO(burdon): Factor out name?
       ExposedPorts: {
-        [`${BOT_PORT}/tcp`]: {}
+        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
       },
       HostConfig: {
         PortBindings: {
-          [`${BOT_PORT}/tcp`]: [
+          [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
               HostPort: `${port}`
             }
@@ -89,13 +87,13 @@ export class BotClient {
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot': `${true}`, // TODO(burdon): ?
-        'dxos.bot.dxrpc-port': `${port}`,
+        'dxos.bot.rpc.port': `${port}`,
         'dxos.bot.name': botId
       }
     };
 
     log.info('registering bot', { request });
-    const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
+    const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -105,14 +103,13 @@ export class BotClient {
 
     const data = await response.json();
     this.onStatusUpdate.emit('Starting bot container...');
-    await fetch(`${this._proxyEndpoint}/containers/${data.Id}/start`, {
+    await fetch(`${this._botServiceEndpoint}/docker/containers/${data.Id}/start`, {
       method: 'POST'
     });
 
     // TODO(burdon): Backoff and stop after max retries.
     // Poll proxy until container starts.
-    const { host } = new URL(this._proxyEndpoint);
-    const botEndpoint = `${host}/proxy/${port}`;
+    const botEndpoint = `${this._botServiceEndpoint}/proxy/${port}`;
     while (true) {
       try {
         await fetch(`http://${botEndpoint}`);

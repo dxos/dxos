@@ -9,12 +9,11 @@ import httpProxy from 'http-proxy';
 
 import { log } from '@dxos/log';
 
+import { DX_BOT_SERVICE_PORT } from './defs';
+
 /**
  * Web server proxies web socket requests from DXOS Apps to the Docker daemon.
  */
-
-// TODO(burdon): Config/env.
-const PROXY_PORT = 2376;
 
 const app = express();
 const server = createServer(app);
@@ -78,6 +77,6 @@ server.on('upgrade', (req, socket, head) => {
   });
 });
 
-server.listen(PROXY_PORT, () => {
-  log.info(`Proxy listening on port ${PROXY_PORT}`);
+server.listen(DX_BOT_SERVICE_PORT, () => {
+  log.info(`Proxy listening on port ${DX_BOT_SERVICE_PORT}`);
 });

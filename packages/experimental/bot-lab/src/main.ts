@@ -8,6 +8,8 @@ import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { DX_BOT_CONTAINER_RPC_PORT } from './defs';
+
 // TODO(burdon): Load from disk (add to image).
 const config = new Config({
   runtime: {
@@ -45,9 +47,9 @@ const config = new Config({
   }
 });
 
-// TODO(burdon): Why is 3023 the default?
-export const BOT_PORT = 3023;
-const rpcPort = process.env.DX_RPC_PORT ? parseInt(process.env.DX_RPC_PORT) : BOT_PORT;
+const rpcPort = process.env.DX_BOT_CONTAINER_RPC_PORT
+  ? parseInt(process.env.DX_BOT_CONTAINER_RPC_PORT)
+  : DX_BOT_CONTAINER_RPC_PORT;
 
 /**
  * Node process running Bot.
