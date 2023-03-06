@@ -17,8 +17,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/sdk/client/src/index.ts",
-          "packages/sdk/client/src/packlets/testing/index.ts"
+          "packages/sdk/client/src/index.ts"
         ],
         "outputPath": "packages/sdk/client/dist/lib"
       },
@@ -50,7 +49,6 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "checkLeaks": false,
         "coveragePath": "coverage/packages/sdk/client",
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/sdk/client",

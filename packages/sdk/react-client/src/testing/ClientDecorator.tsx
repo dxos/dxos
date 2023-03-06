@@ -6,7 +6,7 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { Loading } from '@dxos/react-components';
 
 import { ClientProvider } from '../client';

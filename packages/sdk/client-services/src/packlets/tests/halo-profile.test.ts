@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {

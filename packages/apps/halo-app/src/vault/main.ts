@@ -5,14 +5,8 @@
 import '@dxosTheme';
 import { StrictMode } from 'react';
 
-import {
-  Client,
-  ClientServicesProvider,
-  ClientServicesProxy,
-  IFrameHostRuntime,
-  IFrameProxyRuntime,
-  ShellRuntime
-} from '@dxos/client';
+import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
+import { IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit';
