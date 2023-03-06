@@ -6,12 +6,12 @@ import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { Note, NoteBoard } from '../../proto';
 import { NoteTile } from './NoteTile';
 
 const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>

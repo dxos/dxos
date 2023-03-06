@@ -5,11 +5,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { DocumentStack, Document } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 
 import { ObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
-import { DocumentStack, Document } from '../../proto';
 
 export const StackList = () => {
   const navigate = useNavigate();

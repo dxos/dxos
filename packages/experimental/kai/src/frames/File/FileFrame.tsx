@@ -5,11 +5,11 @@
 import React from 'react';
 import urlJoin from 'url-join';
 
+import { File } from '@dxos/kai-types';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from '../../components';
 import { useAppRouter } from '../../hooks';
-import { File } from '../../proto';
 import { imageTypes } from './defs';
 
 export const FileFrame = () => {

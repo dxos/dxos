@@ -22,9 +22,9 @@ const reexportModule = (key: string, module: any) => {
 reexportModule('react', await import('react'));
 reexportModule('react-dom/client', await import('react-dom/client'));
 reexportModule('@dxos/client', await import('@dxos/client'));
-reexportModule('@dxos/react-client', await import('@dxos/react-client'));
 reexportModule('@dxos/echo-schema', await import('@dxos/echo-schema'));
-reexportModule('@kai/schema', await import('../proto/gen/schema'));
+reexportModule('@dxos/kai-types', await import('@dxos/kai-types'));
+reexportModule('@dxos/react-client', await import('@dxos/react-client'));
 
 const port = createIFramePort({
   channel: 'frame',

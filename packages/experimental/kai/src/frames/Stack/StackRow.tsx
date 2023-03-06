@@ -16,6 +16,7 @@ import {
 import React, { FC, ForwardedRef, forwardRef, ReactNode, useState } from 'react';
 
 import { EchoSchemaType } from '@dxos/echo-schema';
+import { Document, File, Table, TaskList } from '@dxos/kai-types';
 import {
   Button,
   Dialog,
@@ -26,7 +27,6 @@ import {
   mx
 } from '@dxos/react-components';
 
-import { Document, File, Table, TaskList } from '../../proto';
 import { FileList } from '../File';
 
 type StackRowProps = {

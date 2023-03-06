@@ -5,12 +5,8 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "strict": false
+    "outDir": "dist/types"
   },
-  "exclude": [
-    "**/*.test.ts"
-  ],
   "include": [
     "src"
   ],

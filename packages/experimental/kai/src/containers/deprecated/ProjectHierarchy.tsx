@@ -6,10 +6,9 @@ import { Archive, CheckSquare, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
+import { Project } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
 import { TreeView, TreeViewItem } from '@dxos/react-components';
-
-import { Project } from '../../proto';
 
 export const mapProjectToItem = (project: Project): TreeViewItem => ({
   id: project.id,

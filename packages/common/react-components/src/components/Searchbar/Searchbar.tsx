@@ -7,12 +7,19 @@ import React, { FC, useState } from 'react';
 
 import { Input } from '../Input';
 
+type SearchbarSlots = {
+  input?: {
+    autoFocus?: boolean;
+  };
+};
+
 export type SearchbarProps = {
   disabled?: boolean;
+  slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ disabled, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -34,7 +41,8 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, onSearch }) => {
             },
             input: {
               spellCheck: false,
-              className: 'w-full'
+              className: 'w-full',
+              ...slots.input
             }
           }}
           onChange={(event) => handleChange(event.target.value)}

@@ -18,7 +18,9 @@ import {
   Monitor,
   Stack as StackIcon,
   Sword,
-  Table
+  Table,
+  Tray,
+  MagnifyingGlass
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -34,13 +36,15 @@ import {
   File,
   KanbanFrame,
   MapFrame,
+  MasonryFrame,
+  MessageFrame,
   Note,
+  SandboxFrame,
+  SearchFrame,
   SketchFrame,
   Stack,
   TableFrame,
-  TaskFrame,
-  SandboxFrame,
-  MasonryFrame
+  TaskFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -57,17 +61,29 @@ export type FrameDef = {
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
 // prettier-ignore
-const defs: FrameDef[] = [
+const frameDefs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.mosaic',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
-      displayName: 'Mosaic',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
       Icon: Monitor,
       Component: MasonryFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.search',
+      type: 'dxos:type/frame',
+      displayName: 'Search',
+      description: 'Universal search.'
+    },
+    runtime: {
+      Icon: MagnifyingGlass,
+      Component: SearchFrame
     }
   },
   {
@@ -105,6 +121,30 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: ListChecks,
       Component: TaskFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.bot',
+      type: 'dxos:type/frame',
+      displayName: 'Bots',
+      description: 'Bot management.'
+    },
+    runtime: {
+      Icon: Robot,
+      Component: BotFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.message',
+      type: 'dxos:type/frame',
+      displayName: 'Inbox',
+      description: 'Universal message inbox.'
+    },
+    runtime: {
+      Icon: Tray,
+      Component: MessageFrame
     }
   },
   {
@@ -247,17 +287,21 @@ const defs: FrameDef[] = [
   }
 ];
 
-export const frameModules: Module[] = defs.map(({ module }) => module);
+export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.bot';
+// TODO(burdon): Make switchable based on dev/prod mode.
+export const defaultFrameId = 'dxos.module.frame.search';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
+  'dxos.module.frame.search',
+  'dxos.module.frame.message',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  'dxos.module.frame.document',
-  'dxos.module.frame.bot'
+  'dxos.module.frame.bot',
+  'dxos.module.frame.document'
+  // 'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
@@ -274,7 +318,7 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   const frames = useMemo(
     () =>
       modules.reduce((map, module) => {
-        const def = defs.find((def) => def.module.id === module.id);
+        const def = frameDefs.find((def) => def.module.id === module.id);
         assert(def);
         map.set(module.id!, def);
         return map;
