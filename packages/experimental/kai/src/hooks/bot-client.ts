@@ -14,8 +14,8 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 // TODO(burdon): Config.
 export const PROXY_PORT = 2376;
 export const BOT_PORT = 3023; // TODO(burdon): Collision?
-export const BOT_PORT_MIN = 3000;
-export const BOT_PORT_MAX = 3100;
+export const BOT_RPC_PORT_MIN = 3000;
+export const BOT_RPC_PORT_MAX = 3100;
 
 export type BotClientOptions = {
   proxy?: string;
@@ -64,10 +64,10 @@ export class BotClient {
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
-    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
-
     // TODO(burdon): Maintain map (for collisions).
-    const port = BOT_PORT_MIN + Math.floor(Math.random() * (BOT_PORT_MAX - BOT_PORT_MIN));
+    const port = BOT_RPC_PORT_MIN + Math.floor(Math.random() * (BOT_RPC_PORT_MAX - BOT_RPC_PORT_MIN));
+
+    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
 
     const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
