@@ -54,6 +54,7 @@ const rpcPort = process.env.DX_RPC_PORT ? parseInt(process.env.DX_RPC_PORT) : BO
  * Starts a websocket server implementing remote DXOS client services.
  */
 const start = async () => {
+  log.info('env', process.env);
   log.info('config', { config: config.values });
   const client = new Client({
     config,
@@ -61,12 +62,7 @@ const start = async () => {
   });
 
   await client.initialize();
-  log.info('client initialized', {
-    identity: client.halo.identity?.identityKey,
-    spaces: client.echo.getSpaces().map((space) => space.key.toHex())
-  });
-
-  log.info('env', process.env);
+  log.info('client initialized', { identity: client.halo.identity?.identityKey });
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
@@ -94,6 +90,7 @@ const start = async () => {
   client.echo.subscribeSpaces(async (spaces) => {
     if (spaces.length) {
       const space = spaces[0];
+      log.info('joined', { space: space.key });
       if (!bot) {
         bot = createBot(process.env.BOT_NAME);
         await bot.init(config, space);
