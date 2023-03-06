@@ -13,6 +13,7 @@ export const MapFrame = React.lazy(() => import('./Map'));
 export const MessageFrame = React.lazy(() => import('./Message'));
 export const MasonryFrame = React.lazy(() => import('./Masonry'));
 export const SandboxFrame = React.lazy(() => import('./Sandbox'));
+export const SearchFrame = React.lazy(() => import('./Search'));
 export const SketchFrame = React.lazy(() => import('./Sketch'));
 export const TableFrame = React.lazy(() => import('./Table'));
 export const TaskFrame = React.lazy(() => import('./Task'));

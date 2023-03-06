@@ -19,7 +19,8 @@ import {
   Stack as StackIcon,
   Sword,
   Table,
-  Tray
+  Tray,
+  MagnifyingGlass
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -38,11 +39,12 @@ import {
   MasonryFrame,
   MessageFrame,
   Note,
+  SandboxFrame,
+  SearchFrame,
   SketchFrame,
   Stack,
   TableFrame,
-  TaskFrame,
-  SandboxFrame
+  TaskFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -70,6 +72,18 @@ const frameDefs: FrameDef[] = [
     runtime: {
       Icon: Monitor,
       Component: MasonryFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.search',
+      type: 'dxos:type/frame',
+      displayName: 'Search',
+      description: 'Universal search.'
+    },
+    runtime: {
+      Icon: MagnifyingGlass,
+      Component: SearchFrame
     }
   },
   {
@@ -281,11 +295,13 @@ export const defaultFrameId = 'dxos.module.frame.dashboard';
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
+  'dxos.module.frame.search',
   'dxos.module.frame.message',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
   'dxos.module.frame.bot',
-  'dxos.module.frame.stack'
+  'dxos.module.frame.document'
+  // 'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',

@@ -111,7 +111,8 @@ export class BotClient {
 
     // TODO(burdon): Backoff and stop after max retries.
     // Poll proxy until container starts.
-    const botEndpoint = `localhost:${PROXY_PORT}/proxy/${port}`;
+    const { host } = new URL(this._proxyEndpoint);
+    const botEndpoint = `${host}/proxy/${port}`;
     while (true) {
       try {
         await fetch(`http://${botEndpoint}`);
