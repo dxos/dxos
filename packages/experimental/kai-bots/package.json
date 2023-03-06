@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/kai-bots",
+  "version": "0.1.28",
+  "private": true,
+  "description": "Experimental bots.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/chess-app": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/kai-types": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@octokit/rest": "^19.0.5",
+    "assert": "^2.0.0",
+    "chess.js": "1.0.0-alpha.0",
+    "cross-fetch": "^3.1.5",
+    "date-fns": "^2.29.3",
+    "email-addresses": "^5.0.0",
+    "html-to-text": "^9.0.4",
+    "imap": "^0.8.19",
+    "imap-simple": "^5.1.0",
+    "js-yaml": "^4.1.0",
+    "mailparser": "^3.6.4",
+    "openai": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.0",
+    "@types/imap": "^0.8.35",
+    "@types/imap-simple": "^4.2.5",
+    "@types/js-yaml": "^4.0.5",
+    "@types/mailparser": "^3.4.0"
+  }
+}

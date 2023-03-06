@@ -178,7 +178,7 @@ message Runtime {
       optional string email = 3;
       optional string certfile = 4;
       optional string keyfile = 5;
-      optional string dnsprovider = 6;
+      optional string dnsprovider = 6; // TODO(burdon): dns_provider.
     }
 
     message P2P {
@@ -215,12 +215,13 @@ message Runtime {
       optional string port = 4;
     }
 
+    // TODO(burdon): Needs documentation/
     optional string host = 1;
     optional string port = 2;
     optional Autoupdate autoupdate = 3;
     optional Https https = 4;
     optional P2P p2p = 5;
-    optional string confhost = 6;
+    optional string confhost = 6; // TODO(burdon): ?
     repeated string env = 7;
     repeated string alias = 8;
     optional Monitoring monitoring = 9;
@@ -235,7 +236,6 @@ message Runtime {
   //
   message Services {
     message Kube {
-
       message Endpoints {
         optional string logs = 1;
         optional string services = 2;
@@ -251,7 +251,7 @@ message Runtime {
       optional string server = 2;
     }
 
-    // TODO(burdon): Delete.
+    // TODO(burdon): Delete/Rename DMG.
     message Dxns {
       /// DXNS endpoint.
       optional string server = 1;
@@ -302,18 +302,15 @@ message Runtime {
       optional string npm_access_token = 5;
     }
 
-    message BotFactory {
-      optional string topic = 1;
-      optional bool persistent = 2;
-      optional int32 retry_attempts = 3;
-      optional int32 retry_interval = 4;
+    message BotHost { // TODO(burdon): Add Service suffix to all?
+      optional string proxy = 1;
     }
 
-    message Publisher {
+    message Publisher { // TODO(burdon): Publishing.
       optional string server = 1;
     }
 
-    message Supervisor {
+    message Supervisor { // TODO(burdon): Is this a service?
       optional string server = 1;
     }
 
@@ -324,9 +321,9 @@ message Runtime {
     optional Signal signal = 5;
     repeated Ice ice = 6;
     optional Machine machine = 7;
-    optional BotFactory bot = 8;
+    optional BotHost bot = 8;
     optional Publisher publisher = 9;
-    optional Supervisor supervisor = 10;
+    optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
   }
 
   message Keys {

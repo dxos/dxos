@@ -3,34 +3,49 @@
 //
 
 import assert from 'assert';
-import { Binoculars, Sword } from 'phosphor-react';
+import { Database, Envelope, Flower, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
+import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { useConfig } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
-import { ResearchBot, Bot, ChessBot } from '../bots';
+import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
+import { useKeyStore } from './useKeyStore';
 
 export type BotDef = {
   module: Module;
   runtime: {
     Icon: FC<any>;
-    constructor: () => Bot;
+    constructor: () => void;
   };
 };
 
-export const defs: BotDef[] = [
+export const botDefs: BotDef[] = [
   {
     module: {
-      id: 'dxos.module.bot.research',
+      id: 'dxos.module.bot.store',
       type: 'dxos:type/bot',
-      displayName: 'ResearchBot',
-      description: 'Background data analysis and text matching.'
+      displayName: 'StoreBot',
+      description: 'Secure storage.'
     },
     runtime: {
-      Icon: Binoculars,
-      constructor: () => new ResearchBot()
+      Icon: Database,
+      constructor: () => undefined
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.bot.mail',
+      type: 'dxos:type/bot',
+      displayName: 'MailBot',
+      description: 'Email sync.'
+    },
+    runtime: {
+      Icon: Envelope,
+      constructor: () => undefined
     }
   },
   {
@@ -42,14 +57,48 @@ export const defs: BotDef[] = [
     },
     runtime: {
       Icon: Sword,
-      constructor: () => new ChessBot()
+      constructor: () => undefined
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.bot.kai',
+      type: 'dxos:type/bot',
+      displayName: 'KaiBot',
+      description: 'Research and task assistant.'
+    },
+    runtime: {
+      Icon: Flower,
+      constructor: () => undefined
     }
   }
 ];
 
-export const botModules: Module[] = defs.map(({ module }) => module);
+export const botModules: Module[] = botDefs.map(({ module }) => module);
 
 export type BotMap = Map<string, BotDef>;
+
+export const botKeys: { [key: string]: string } = {
+  'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
+  'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD'
+};
+
+export const getBotEnvs = (keyMap: Map<string, string>) => {
+  const envMap = new Map<string, string>();
+  Object.entries(botKeys).forEach(([key, env]) => {
+    envMap.set(env, keyMap.get(key) ?? '');
+  });
+
+  return envMap;
+};
+
+// TODO(burdon): Add to context.
+export const useBotClient = (space: Space) => {
+  const config = useConfig();
+  const [keys] = useKeyStore(['dxos.services.bot.proxy']);
+  const proxy = keys.get('dxos.services.bot.proxy');
+  return useMemo(() => new BotClient(config, space, { proxy }), [config, space, proxy]);
+};
 
 export const useBots = (): { bots: BotMap; active: string[] } => {
   const { modules } = useModules({ type: 'dxos:type/bot' });
@@ -57,7 +106,7 @@ export const useBots = (): { bots: BotMap; active: string[] } => {
   const bots = useMemo(
     () =>
       modules.reduce((map, module) => {
-        const def = defs.find((def) => def.module.id === module.id);
+        const def = botDefs.find((def) => def.module.id === module.id);
         assert(def);
         map.set(module.id!, def);
         return map;

@@ -10,8 +10,8 @@ import { fromHost } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { schema as frameboxSchema } from '@dxos/framebox';
 import { fromLocal } from '@dxos/halo-app';
-
-import { Generator, schema } from '../proto';
+import { schema } from '@dxos/kai-types';
+import { Generator } from '@dxos/kai-types/testing';
 
 export const useClientProvider = (dev: boolean) => {
   return useCallback(async () => {

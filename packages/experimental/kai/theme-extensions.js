@@ -83,9 +83,13 @@ module.exports = {
       },
 
       selection: {
-        // TODO(burdon): 'selected'
-        hover: secondary[100],
         bg: secondary[200],
+        text: secondary[700],
+        border: secondary[300]
+      },
+
+      hover: {
+        bg: secondary[100],
         text: secondary[700],
         border: secondary[300]
       },
