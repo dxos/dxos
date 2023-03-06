@@ -49,6 +49,9 @@
       "path": "../packages/sdk/client"
     },
     {
+      "path": "../packages/sdk/client-services"
+    },
+    {
       "path": "../packages/sdk/config"
     },
     {

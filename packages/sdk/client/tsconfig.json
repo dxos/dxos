@@ -82,9 +82,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../client-services"
-    },
-    {
       "path": "../config"
     },
     {

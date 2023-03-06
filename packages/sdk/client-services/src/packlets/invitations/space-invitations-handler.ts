@@ -5,6 +5,16 @@
 import assert from 'node:assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import {
+  AuthenticatingInvitationProvider,
+  AUTHENTICATION_CODE_LENGTH,
+  CancellableInvitationObservable,
+  InvitationObservableProvider,
+  INVITATION_TIMEOUT,
+  ON_CLOSE_DELAY,
+  AbstractInvitationsHandler,
+  InvitationsOptions
+} from '@dxos/client';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
 import { SigningContext } from '@dxos/echo-pipeline';
@@ -29,17 +39,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { DataSpace } from '../spaces/data-space';
-import { DataSpaceManager } from '../spaces/data-space-manager';
-import {
-  AuthenticatingInvitationProvider,
-  AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitationObservable,
-  InvitationObservableProvider,
-  INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY
-} from './invitations';
-import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
+import { DataSpace, DataSpaceManager } from '../spaces';
 
 const MAX_OTP_ATTEMPTS = 3;
 

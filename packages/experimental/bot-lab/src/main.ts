@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client, Config, fromHost, PublicKey } from '@dxos/client';
-import { ClientServices } from '@dxos/client-services';
+import { Client, ClientServices, Config, PublicKey } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';

@@ -5,13 +5,17 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
+import {
+  clientServiceBundle,
+  ClientServices,
+  iframeServiceBundle,
+  IframeServiceBundle,
+  workerServiceBundle
+} from '@dxos/client';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
-
-import { clientServiceBundle, ClientServices } from '../services';
-import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
   getService: <Service>(find: (services: Partial<ClientServices>) => Service | undefined) => Promise<Service>;

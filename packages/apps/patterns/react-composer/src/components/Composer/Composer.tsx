@@ -1,7 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
 import { mergeAttributes } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
 import Heading from '@tiptap/extension-heading';
@@ -23,12 +22,16 @@ export interface ComposerSlots {
   };
 }
 
-export interface ComposerProps {
+export interface DocumentComposerProps {
   document: Text;
   field?: string;
   placeholder?: string;
   slots?: ComposerSlots;
 }
+
+export type EditorComposerProps = { editor: ReturnType<typeof useEditor>; slots?: Pick<ComposerSlots, 'root'> };
+
+export type ComposerProps = DocumentComposerProps | EditorComposerProps;
 
 type Levels = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -41,16 +44,11 @@ const headingClassNames: Record<Levels, string> = {
   6: 'mbs-4 mbe-2 font-black'
 };
 
-export const Composer = ({ document, field = 'content', placeholder, slots = {} }: ComposerProps) => {
+export const useComposerEditor = ({ document, field = 'content', placeholder, slots = {} }: DocumentComposerProps) => {
   // TODO(wittjosiah): Provide own translations?
   //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
-
-  // Reference:
-  // https://tiptap.dev/installation/react
-  // https://github.com/ueberdosis/tiptap
-  // https://tiptap.dev/guide/output/#option-3-yjs
-  const editor = useEditor(
+  return useEditor(
     {
       extensions: [
         StarterKit.configure({
@@ -155,6 +153,37 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
     },
     [document, document?.doc]
   );
+};
 
+/**
+ * `EditorComposer` requires the TipTap editor from `useComposerEditor`. If you don’t need the editor instance, please
+ * use `DocumentComposer` instead.
+ * @param editor
+ * @param slots
+ * @constructor
+ */
+const EditorComposer = ({ editor, slots = {} }: EditorComposerProps) => {
+  // Reference:
+  // https://tiptap.dev/installation/react
+  // https://github.com/ueberdosis/tiptap
+  // https://tiptap.dev/guide/output/#option-3-yjs
   return <EditorContent {...slots?.root} editor={editor} />;
+};
+
+/**
+ * `DocumentComposer` derives the TipTap editor from the `document` prop and other optional props.
+ * @param props
+ * @constructor
+ */
+const DocumentComposer = (props: DocumentComposerProps) => {
+  const editor = useComposerEditor(props);
+  return <EditorComposer editor={editor} slots={props.slots} />;
+};
+
+export const Composer = (props: ComposerProps) => {
+  if ('editor' in props) {
+    return <EditorComposer {...(props as EditorComposerProps)} />;
+  } else {
+    return <DocumentComposer {...(props as DocumentComposerProps)} />;
+  }
 };

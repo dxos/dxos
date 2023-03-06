@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -46,8 +47,7 @@
     "@dxos/teleport-extension-presence": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "base-x": "~3.0.9"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",

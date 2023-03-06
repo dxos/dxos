@@ -9,7 +9,7 @@ import React, { PropsWithChildren, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { EchoSchema, Invitation, Space } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-components';

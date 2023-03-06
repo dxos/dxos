@@ -15,13 +15,13 @@ import React, {
 
 import {
   IFrameClientServicesProxy,
-  MemoryShellRuntime,
   type PublicKey,
   type ShellController,
   ShellDisplay,
   ShellLayout,
   type Space
 } from '@dxos/client';
+import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 

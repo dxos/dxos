@@ -6,22 +6,30 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
-import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
-import { fromIFrame, fromHost } from './utils';
+import { ClientServicesProvider } from './service-definitions';
+import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
+
+// TODO(burdon): Factor out to spaces.
+// TODO(burdon): Defaults (with TextModel).
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
+};
 
 /**
  * This options object configures the DXOS Client
@@ -64,7 +72,8 @@ export class Client {
     services
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
-    this._services = services ?? (typeof window !== 'undefined' ? fromIFrame(this._config) : fromHost(this._config));
+    // TODO(wittjosiah): Useful default when not in browser?
+    this._services = services ?? fromIFrame(this._config);
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();

@@ -5,7 +5,7 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { ClientServices } from '@dxos/client-services';
+import { ClientServices } from '@dxos/client';
 import { appkitTranslations, Fallback, useTelemetry } from '@dxos/react-appkit';
 import { Client, ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';

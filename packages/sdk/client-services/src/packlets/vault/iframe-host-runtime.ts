@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { clientServiceBundle, ClientServices } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -10,7 +11,7 @@ import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-mana
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, Provider } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices, LocalClientServices } from '../services';
+import { LocalClientServices } from '../services';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';

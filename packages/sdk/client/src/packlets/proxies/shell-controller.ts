@@ -7,7 +7,7 @@ import { log } from '@dxos/log';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
-import { appServiceBundle, shellServiceBundle, ShellServiceBundle } from './services';
+import { appServiceBundle, shellServiceBundle, ShellServiceBundle } from '../client';
 
 /**
  * Provide access to the shell via RPC connection.

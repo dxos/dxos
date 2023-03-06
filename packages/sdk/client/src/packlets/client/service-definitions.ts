@@ -14,6 +14,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import type { IframeService, AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
+import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 
 //
@@ -66,3 +68,37 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.host.TracingService')
 });
+
+export type IframeServiceBundle = {
+  IframeService: IframeService;
+  BridgeService: BridgeService;
+};
+
+export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
+  IframeService: schema.getService('dxos.iframe.IframeService'),
+  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+};
+
+export type WorkerServiceBundle = {
+  WorkerService: WorkerService;
+};
+
+export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
+  WorkerService: schema.getService('dxos.iframe.WorkerService')
+};
+
+export type AppServiceBundle = {
+  AppService: AppService;
+};
+
+export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
+  AppService: schema.getService('dxos.iframe.AppService')
+};
+
+export type ShellServiceBundle = {
+  ShellService: ShellService;
+};
+
+export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
+  ShellService: schema.getService('dxos.iframe.ShellService')
+};

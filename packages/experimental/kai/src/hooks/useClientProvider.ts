@@ -5,7 +5,8 @@
 import { useCallback } from 'react';
 
 import { schema as chessSchema } from '@dxos/chess-app';
-import { Client, fromHost, fromIFrame } from '@dxos/client';
+import { Client, fromIFrame } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { schema as frameboxSchema } from '@dxos/framebox';
 import { fromLocal } from '@dxos/halo-app';
