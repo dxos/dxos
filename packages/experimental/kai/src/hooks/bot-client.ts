@@ -29,7 +29,6 @@ export class BotClient {
 
   private readonly _botServiceEndpoint: string;
 
-  // prettier-ignoreå
   constructor(
     private readonly _config: Config,
     private readonly _space: Space,
@@ -40,8 +39,8 @@ export class BotClient {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
-  // TODO(burdon): Error handling.
   async getBots(): Promise<any> {
+    // TODO(burdon): Error handling.
     // https://docs.docker.com/engine/api/v1.42/
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
       return response.json();
