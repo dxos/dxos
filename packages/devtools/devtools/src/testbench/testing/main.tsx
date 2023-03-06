@@ -4,15 +4,12 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { sleep } from '@dxos/async';
-import { createRouter } from '@dxos/kai';
 import { log } from '@dxos/log';
 
 import '@dxosTheme';
-
-import '@dxos/kai/style.css';
 
 // TODO(burdon): Document bootstrap sequence.
 // TODO(burdon): Wrap all bootstrap code in a main function.
@@ -57,6 +54,6 @@ waitForDXOS()
     throw err;
   });
 
-const router = createRouter();
+const router = createBrowserRouter([]);
 const root = createRoot(document.getElementById('root')!);
 root.render(<RouterProvider router={router} />);

@@ -10,6 +10,7 @@ import { Article, Clock, GridFour, SquareHalf, Tray, User } from 'phosphor-react
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
+import { Contact, Event as EventType } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
@@ -18,7 +19,6 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { ContactCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
-import { Contact, Event as EventType } from '../../proto';
 
 const mapEvents = (event: EventType) => ({
   title: event.title,

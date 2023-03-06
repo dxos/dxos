@@ -10,4 +10,5 @@ export * from './useFileDownload';
 export * from './useFrames';
 export * from './useGenerator';
 export * from './useIpfsClient';
+export * from './useKeyStore';
 export * from './useTheme';

@@ -106,6 +106,9 @@
       "path": "../gem-spore"
     },
     {
+      "path": "../kai-types"
+    },
+    {
       "path": "../metagraph"
     },
     {
