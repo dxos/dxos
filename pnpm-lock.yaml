@@ -2649,7 +2649,7 @@ importers:
       '@types/chess.js': ^0.13.4
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      chess.js: ^1.0.0-alpha.0
+      chess.js: 1.0.0-alpha.0
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-chessboard: ^2.0.7
@@ -2660,7 +2660,7 @@ importers:
       vite: 4.0.4
     dependencies:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      chess.js: 1.0.0-beta.3
+      chess.js: 1.0.0-alpha.0
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
@@ -2893,7 +2893,7 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
       base-x: ~3.0.9
-      chess.js: ^1.0.0-alpha.0
+      chess.js: 1.0.0-alpha.0
       clipboard-copy: ^4.0.1
       d3: ^7.4.4
       date-fns: ^2.29.3
@@ -2968,7 +2968,7 @@ importers:
       '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
-      chess.js: 1.0.0-beta.3
+      chess.js: 1.0.0-alpha.0
       clipboard-copy: 4.0.1
       d3: 7.6.1
       date-fns: 2.29.3
@@ -3042,7 +3042,7 @@ importers:
       '@types/js-yaml': ^4.0.5
       '@types/mailparser': ^3.4.0
       assert: ^2.0.0
-      chess.js: ^1.0.0-alpha.0
+      chess.js: 1.0.0-alpha.0
       cross-fetch: ^3.1.5
       date-fns: ^2.29.3
       email-addresses: ^5.0.0
@@ -3066,7 +3066,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@octokit/rest': 19.0.5
       assert: 2.0.0
-      chess.js: 1.0.0-beta.3
+      chess.js: 1.0.0-alpha.0
       cross-fetch: 3.1.5
       date-fns: 2.29.3
       email-addresses: 5.0.0
@@ -13673,7 +13673,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -16498,8 +16498,8 @@ packages:
       parse5-htmlparser2-tree-adapter: 7.0.0
     dev: true
 
-  /chess.js/1.0.0-beta.3:
-    resolution: {integrity: sha512-zu8QVvP0BmMzrstlsrXL2LxdHfAkrtyNftVRaJXGI5mn2ZSsgTJujvZx5BVJsPMwBkRZ+omCdZkVyVLBlKn2HA==}
+  /chess.js/1.0.0-alpha.0:
+    resolution: {integrity: sha512-nwEDlNEOZR/FaKW1DZLYtjgJrtAlxBW/6Fp4Hk8QXqpCCLrXweOU6/vKfJ/jNHT2gPqasxi0/ZPslcWAAdzozg==}
     dev: false
 
   /chokidar/2.1.8:
@@ -34134,7 +34134,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
