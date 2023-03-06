@@ -11,6 +11,12 @@ import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+// TODO(burdon): Config.
+export const PROXY_PORT = 2376;
+export const BOT_PORT = 3023; // TODO(burdon): Collision?
+export const BOT_RPC_PORT_MIN = 3000;
+export const BOT_RPC_PORT_MAX = 3100;
+
 export type BotClientOptions = {
   proxy?: string;
 };
@@ -59,21 +65,24 @@ export class BotClient {
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
+    // TODO(burdon): Maintain map (for collisions).
+    const port = BOT_RPC_PORT_MIN + Math.floor(Math.random() * (BOT_RPC_PORT_MAX - BOT_RPC_PORT_MIN));
+
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
-    const port = Math.floor(Math.random() * 1000) + 3000;
+
     const response = await fetch(`${this._proxyEndpoint}/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        Image: 'bot-test',
+        Image: 'bot-test', // TODO(burdon): Factor out name.
         ExposedPorts: {
-          '3023/tcp': {}
+          [`${BOT_PORT}/tcp`]: {}
         },
         HostConfig: {
           PortBindings: {
-            '3023/tcp': [
+            [`${BOT_PORT}/tcp`]: [
               {
                 HostPort: `${port}`
               }
@@ -98,7 +107,7 @@ export class BotClient {
     // TODO(burdon): Configure port.
     // Poll proxy until container starts.
     // const botEndpoint = `127.0.0.1:${port}`;
-    const botEndpoint = `localhost:2376/proxy/${port}`;
+    const botEndpoint = `localhost:${PROXY_PORT}/proxy/${port}`;
     while (true) {
       try {
         await fetch(`http://${botEndpoint}`);
