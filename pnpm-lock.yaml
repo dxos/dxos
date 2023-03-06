@@ -389,11 +389,17 @@ importers:
       '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/showdown': ^2.0.0
+      '@types/turndown': ^5.0.1
       '@vitejs/plugin-react': ^3.0.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       react-router-dom: ^6.4.0
+      showdown: ^2.1.0
+      turndown: ^7.1.1
       vite: 4.0.4
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
@@ -414,12 +420,18 @@ importers:
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      showdown: 2.1.0
+      turndown: 7.1.1
     devDependencies:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/showdown': 2.0.0
+      '@types/turndown': 5.0.1
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      react-is: 18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       vite-plugin-pwa: 0.14.1_aln3rhi4rqbizqxdkcc2hwlswu
       workbox-window: 6.5.4
@@ -13164,6 +13176,10 @@ packages:
     resolution: {integrity: sha512-xVSMSKP6wufPZ0WKLE175iUiTPYSavdF68e+8bfjAOargnrpAkgGFZMNTC2REQ01plUHZouf652RG6FQZGSmbA==}
     dev: true
 
+  /@types/showdown/2.0.0:
+    resolution: {integrity: sha512-70xBJoLv+oXjB5PhtA8vo7erjLDp9/qqI63SRHm4REKrwuPOLs8HhXwlZJBJaB4kC18cCZ1UUZ6Fb/PLFW4TCA==}
+    dev: true
+
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
     dependencies:
@@ -13232,6 +13248,10 @@ packages:
 
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
+    dev: true
+
+  /@types/turndown/5.0.1:
+    resolution: {integrity: sha512-N8Ad4e3oJxh9n9BiZx9cbe/0M3kqDpOTm2wzj13wdDUxDPjfjloWIJaquZzWE1cYTAHpjOH3rcTnXQdpEfS/SQ==}
     dev: true
 
   /@types/uglify-js/3.17.0:
@@ -16892,7 +16912,6 @@ packages:
   /commander/9.3.0:
     resolution: {integrity: sha512-hv95iU5uXPbK83mjrJKuZyFM/LBAoCV/XhVGkS5Je6tl7sxr6A0ITMw5WoRV46/UaJ46Nllm3Xt7IaJhXTIkzw==}
     engines: {node: ^12.20.0 || >=14}
-    dev: true
 
   /comment-json/4.2.3:
     resolution: {integrity: sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==}
@@ -18711,6 +18730,10 @@ packages:
     dependencies:
       domelementtype: 2.3.0
     dev: true
+
+  /domino/2.1.6:
+    resolution: {integrity: sha512-3VdM/SXBZX2omc9JF9nOPCtDaYQ67BGp5CoLpIQlO2KCAPETs8TcDHacF26jXadGbvUteZzRTeos2fhID5+ucQ==}
+    dev: false
 
   /dompurify/2.4.0:
     resolution: {integrity: sha512-Be9tbQMZds4a3C6xTmz68NlMfeONA//4dOavl/1rNw50E+/QO0KVpbcU0PcaW0nsQxurXls9ZocqFxk8R2mWEA==}
@@ -31052,6 +31075,13 @@ packages:
       vscode-textmate: 6.0.0
     dev: true
 
+  /showdown/2.1.0:
+    resolution: {integrity: sha512-/6NVYu4U819R2pUIk79n67SYgJHWCce0a5xTP979WbNp0FL9MN1I1QK662IDU1b6JzKTvmhgI7T7JYIxBi3kMQ==}
+    hasBin: true
+    dependencies:
+      commander: 9.3.0
+    dev: false
+
   /shx/0.3.4:
     resolution: {integrity: sha512-N6A9MLVqjxZYcVn8hLmtneQWIJtp8IKzMP4eMnx+nqkvXoqinUPCbUFLp2UcWTEIUONhlk0ewxr/jaVGlc+J+g==}
     engines: {node: '>=6'}
@@ -32982,6 +33012,12 @@ packages:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
     engines: {node: '>=0.6.11 <=0.7.0 || >=0.7.3'}
     dev: true
+
+  /turndown/7.1.1:
+    resolution: {integrity: sha512-BEkXaWH7Wh7e9bd2QumhfAXk5g34+6QUmmWx+0q6ThaVOLuLUqsnkq35HQ5SBHSaxjSfSM7US5o4lhJNH7B9MA==}
+    dependencies:
+      domino: 2.1.6
+    dev: false
 
   /twikoo/1.6.8:
     resolution: {integrity: sha512-SkwO647kK2Ss+L2myp+7JmzmXAGsLt1e7zwTZdKuifDywgFfnaArPWkfp7ruvVBLb+13KQUsCneBUR5XzkV4Bg==}
