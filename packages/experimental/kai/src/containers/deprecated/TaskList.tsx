@@ -5,6 +5,7 @@
 import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useState } from 'react';
 
 import { Space } from '@dxos/client';
+import { Task } from '@dxos/kai-types';
 import {
   EditableList,
   EditableListItem,
@@ -16,7 +17,6 @@ import { useQuery, observer } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
-import { Task } from '../../proto';
 
 // TODO(burdon): Generic header with create.
 

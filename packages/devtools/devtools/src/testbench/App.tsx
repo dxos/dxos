@@ -12,7 +12,7 @@ import devtoolsURL from './devtools/index.html?url';
 import testAppUrl from './testing/index.html?url';
 
 /**
- * Pass messages between devtools and test app (kai) iFrames.
+ * Pass messages between devtools and test app.
  */
 window.addEventListener('message', (event) => {
   if (event.data.source === 'dxos-client') {

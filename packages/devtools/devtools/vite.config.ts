@@ -11,7 +11,6 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
-import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
 // https://vitejs.dev/config/
@@ -42,10 +41,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
-      ],
-      extensions: [osThemeExtension, kaiThemeExtension]
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+      ]
     }),
     ReactPlugin(),
     VitePWA({

@@ -6,10 +6,9 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
+import { Address, Organization } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
 import { getSize, List, ListItem, Input, ListItemEndcap, mx, ListItemHeading } from '@dxos/react-components';
-
-import { Address, Organization } from '../../proto';
 
 export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());

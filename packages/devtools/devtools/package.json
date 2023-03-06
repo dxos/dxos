@@ -46,7 +46,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/kai": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/plexus": "workspace:*",
     "@dxos/react-composer": "workspace:*",
