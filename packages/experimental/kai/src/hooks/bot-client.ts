@@ -4,6 +4,7 @@
 
 import { sleep, Event, Trigger } from '@dxos/async';
 import { clientServiceBundle, Client, ClientServicesProvider, Space } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
