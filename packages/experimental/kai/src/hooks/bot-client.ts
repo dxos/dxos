@@ -33,6 +33,7 @@ export class BotClient {
     }
   ) {
     this._proxyEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
+    console.log(this._proxyEndpoint);
   }
 
   // TODO(burdon): Error handling.
@@ -48,7 +49,7 @@ export class BotClient {
    */
   async startBot(botId: string, envMap?: Map<string, string>) {
     log('starting bot', { bot: botId });
-    this.onStatusUpdate.emit('Creating container...');
+    this.onStatusUpdate.emit('Connecting...');
 
     const env: { [key: string]: string } = {
       BOT_NAME: botId,
