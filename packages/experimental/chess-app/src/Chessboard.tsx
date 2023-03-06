@@ -72,6 +72,8 @@ export const Chessboard: FC<ChessboardProps> = ({
     if (result) {
       onUpdate?.(move);
       return true;
+    } else {
+      return false;
     }
   };
 
