@@ -14,9 +14,6 @@
       ]
     },
     "compile": {
-      "dependsOn": [
-        "^compile"
-      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
