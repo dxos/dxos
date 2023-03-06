@@ -44,7 +44,7 @@ const headingClassNames: Record<Levels, string> = {
   6: 'mbs-4 mbe-2 font-black'
 };
 
-export const useComposer = ({ document, field = 'content', placeholder, slots = {} }: EditorProps) => {
+export const useComposerEditor = ({ document, field = 'content', placeholder, slots = {} }: EditorProps) => {
   // TODO(wittjosiah): Provide own translations?
   //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
@@ -155,7 +155,7 @@ export const useComposer = ({ document, field = 'content', placeholder, slots = 
   );
 };
 
-const PureComposer = ({ editor, slots = {} }: PureComposerProps) => {
+const EditorComposer = ({ editor, slots = {} }: PureComposerProps) => {
   // Reference:
   // https://tiptap.dev/installation/react
   // https://github.com/ueberdosis/tiptap
@@ -163,15 +163,15 @@ const PureComposer = ({ editor, slots = {} }: PureComposerProps) => {
   return <EditorContent {...slots?.root} editor={editor} />;
 };
 
-const EditorComposer = (props: EditorProps) => {
-  const editor = useComposer(props);
-  return <PureComposer editor={editor} slots={props.slots} />;
+const DocumentComposer = (props: EditorProps) => {
+  const editor = useComposerEditor(props);
+  return <EditorComposer editor={editor} slots={props.slots} />;
 };
 
 export const Composer = (props: ComposerProps) => {
   if ('editor' in props) {
-    return <PureComposer {...(props as PureComposerProps)} />;
+    return <EditorComposer {...(props as PureComposerProps)} />;
   } else {
-    return <EditorComposer {...(props as EditorProps)} />;
+    return <DocumentComposer {...(props as EditorProps)} />;
   }
 };

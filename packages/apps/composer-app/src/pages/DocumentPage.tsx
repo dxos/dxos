@@ -5,6 +5,7 @@ import { DotsThreeVertical, DownloadSimple, UploadSimple } from 'phosphor-react'
 import React, { useCallback } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
+// todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
@@ -21,7 +22,7 @@ import {
   ThemeContext,
   DropdownMenuItem
 } from '@dxos/react-components';
-import { Composer, useComposer } from '@dxos/react-composer';
+import { Composer, useComposerEditor } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -38,7 +39,7 @@ const nestedParagraphOutput = / +\n/g;
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
 
-  const editor = useComposer({
+  const editor = useComposerEditor({
     document: document.content,
     slots: { editor: { className: 'pbe-20' } }
   });
