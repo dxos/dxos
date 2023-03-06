@@ -2,14 +2,16 @@
 
 The `react-components` package is the single source of truth for DXOS’s lower-level design system.
 
-To get started, you’ll need to add the build plugin (Vite or ESBuild), then set up the provider, then set up theming.
+To get started, you’ll need to set up how you’ll build with this package, add peer dependencies, set up the provider, and set up theming.
 
-## How to use with Vite
+## Set up the build…
+
+### …with Vite
 
 Using the design system requires opting-in in a few places, but by design it
 otherwise needs no configuration.
 
-### 1. Add the Vite plugin
+#### 1. Add the Vite plugin
 
 Add `@dxos/react-components` to the project’s dev dependencies, then extend the
 project’s Vite config (`vite.config.ts`) to use it, e.g.:
@@ -39,7 +41,7 @@ design system packages your project uses, e.g.:
 './node_modules/@dxos/react-composer/dist/**/*.mjs',
 ```
 
-### 2. Reference the basic stylesheet
+#### 2. Reference the basic stylesheet
 
 In the file which calls React DOM’s `createRoot` or `render`, add:
 
@@ -47,15 +49,11 @@ In the file which calls React DOM’s `createRoot` or `render`, add:
 import '@dxosTheme';
 ```
 
-### Done
-
-Now you can use Tailwind utility classnames in your project.
-
-## How to use with ESBuild
+### …with ESBuild
 
 The ESBuild plugin is experimental and has several caveats noted below, proceed with caution.
 
-### 1. Add the ESBuild plugin
+#### 1. Add the ESBuild plugin
 
 Add `@dxos/react-components` to the project’s dev dependencies, then extend the
 project’s ESBuild config to use it, e.g.:
@@ -83,7 +81,7 @@ void build({
 Ensure `theme.css` from `react-components` is included as an entrypoint, and `outdir` passed to `ThemePlugins` is the same as
 provided to ESBuild.
 
-### 2. Reference the basic stylesheet
+#### 2. Reference the basic stylesheet
 
 Load the built stylesheet as appropriate for your project, e.g. simply add it to `index.html`:
 
@@ -93,9 +91,33 @@ Load the built stylesheet as appropriate for your project, e.g. simply add it to
 
 Note that _this is not in your project’s node_modules directory_, it’s in your project’s `outdir`.
 
-### Done
+### …with your own build stack
 
-Now you can use Tailwind utility classnames in your project.
+This package exports both CJS and ESM builds of its components, though these are styled with Tailwind as the design token system. Any build stack can use the component builds in this package, you’ll just need to configure your build to handle Tailwind so that styles are applied correctly.
+
+Follow the [Tailwind Framework Guides documentation](https://tailwindcss.com/docs/installation/framework-guides) relevant to your stack to see how that’s done, but make the following modifications:
+
+- Use the Tailwind configuration from this package:
+```ts
+import tailwindcss from 'tailwindcss';
+import { tailwindConfig } from '@dxos/react-components';
+// ...
+tailwindcss(
+  tailwindConfig({
+    content: [/* Wherever else Tailwind utility classes are used */],
+    /* Optional params as neeeded */
+  })
+)
+// ...
+```
+- Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`react-components/dist/plugin/theme.css`) which adds the Tailwind directives itself.
+- This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
+
+If you have any issues integrating this package with your build, please file an issue including details about your build stack and what result you’re getting.
+
+## Add peer dependencies
+
+This package uses icons from `phosphor-icons`, but lists them as a peer dependency to avoid re-exporting that package; use your project’s package manager to add `phosphor-icons` as a dependency.
 
 ## Set up the provider
 
