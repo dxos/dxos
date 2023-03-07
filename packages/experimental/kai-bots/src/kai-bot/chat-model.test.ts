@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { Config } from '@dxos/config';
 import { describe, test } from '@dxos/test';
 
@@ -28,10 +30,11 @@ describe('ChatModel', () => {
   test.skip('basic', async () => {
     const chat = createChatModel();
     const { messages } = loadJson('packages/experimental/kai-bots/data/messages.json');
-    await chat.request(messages);
+    const result = await chat.request(messages);
+    expect(result).to.exist;
   });
 
-  test('create contact stack', async () => {
+  test.skip('create contact stack', async () => {
     const _schema: SchemaMap = {
       person: [
         {

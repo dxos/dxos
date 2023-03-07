@@ -11,10 +11,10 @@ import { getSize, Searchbar } from '@dxos/react-components';
 
 import { FrameDef, frameDefs, useAppRouter } from '../../hooks';
 
-// TODO(burdon): Factor out.
-export const objectMap: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
+// TODO(burdon): Reconcile with type and frame system.
+export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
   'dxos.experimental.kai.Organization': {
-    rank: 1,
+    rank: 3,
     Icon: Buildings
   },
   'dxos.experimental.kai.Project': {
@@ -26,7 +26,7 @@ export const objectMap: { [key: string]: { rank: number; Icon: FC<any>; frame?: 
     Icon: Check
   },
   'dxos.experimental.kai.Contact': {
-    rank: 1,
+    rank: 3,
     Icon: UserCircle
   },
   'dxos.experimental.kai.Event': {
@@ -95,7 +95,12 @@ const mapResult = (text: string) => {
       }
 
       if (title) {
-        const { rank, Icon = Circle } = objectMap[object.__typename];
+        const meta = objectMeta[object.__typename];
+        if (!meta) {
+          return;
+        }
+
+        const { rank, Icon = Circle } = meta;
         return {
           object,
           rank,
@@ -110,11 +115,11 @@ const mapResult = (text: string) => {
 
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
-export type SearchPanelOptions = {
+export type SearchPanelProps = {
   onSelect?: (object: Document) => void;
 };
 
-export const SearchPanel: FC<SearchPanelOptions> = ({ onSelect }) => {
+export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
   // TODO(burdon): Search across spaces.
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');

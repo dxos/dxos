@@ -80,7 +80,9 @@ export type BotMap = Map<string, BotDef>;
 
 export const botKeys: { [key: string]: string } = {
   'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
-  'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD'
+  'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
+  'com.openai.api_key': 'COM_OPENAI_API_KEY',
+  'com.openai.org_id': 'COM_OPENAI_ORG_ID'
 };
 
 export const getBotEnvs = (keyMap: Map<string, string>) => {

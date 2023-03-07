@@ -3051,6 +3051,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -3080,6 +3081,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema

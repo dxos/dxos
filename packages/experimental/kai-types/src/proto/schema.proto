@@ -70,6 +70,7 @@ message Contact {
   string email = 3;
   string phone = 4; // TODO(burdon): Repeated with tag.
   Address address = 5;
+  Organization employer = 6;
 }
 
 message Task {
@@ -120,7 +121,8 @@ message DocumentStack {
   option (object) = true;
 
   string title = 1;
-  repeated dxos.schema.Document sections = 2;
+  string subject_id = 2; // TODO(burdon): Reference.
+  repeated dxos.schema.Document sections = 3;
 }
 
 // TODO(burdon): System type for external GUIDs.
@@ -131,7 +133,7 @@ message Source {
 message Message {
   option (object) = true;
 
-  message MessageContact {
+  message Recipient {
     option (object) = true; // TODO(burdon): REMOVE.
     string email = 1;
     string name = 2;
@@ -141,8 +143,8 @@ message Message {
   // TODO(burdon): Timestamp (across all objects).
   Source source = 1;
   string date = 2;
-  MessageContact from = 3;
-  repeated MessageContact to = 4;
+  Recipient from = 3;
+  repeated Recipient to = 4;
   string subject = 5;
   string body = 6;
 }

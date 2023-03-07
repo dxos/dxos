@@ -4,4 +4,7 @@
 
 import { ContactFrame } from './ContactFrame';
 
+export * from './ContactCard';
+export * from './ContactFrame';
+
 export default ContactFrame;

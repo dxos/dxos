@@ -152,7 +152,7 @@ export const frameDefs: FrameDef[] = [
   },
   {
     module: {
-      id: 'dxos.module.frame.message',
+      id: 'dxos.module.frame.inbox',
       type: 'dxos:type/frame',
       displayName: 'Inbox',
       description: 'Universal message inbox.'
@@ -303,18 +303,19 @@ export const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.dashboard';
+export const defaultFrameId = 'dxos.module.frame.inbox';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
   'dxos.module.frame.contact',
-  'dxos.module.frame.message',
-  'dxos.module.frame.kanban',
-  'dxos.module.frame.table',
-  // 'dxos.module.frame.document',
+  'dxos.module.frame.inbox',
+  'dxos.module.frame.calendar',
   'dxos.module.frame.stack',
   'dxos.module.frame.bot'
+  // 'dxos.module.frame.kanban',
+  // 'dxos.module.frame.table',
+  // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
   // 'dxos.module.frame.note',
   // 'dxos.module.frame.chess',

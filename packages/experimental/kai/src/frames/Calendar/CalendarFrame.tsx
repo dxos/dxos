@@ -17,8 +17,13 @@ import { Button, getSize, mx } from '@dxos/react-components';
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { ContactCard } from '../../containers';
+import { ContactCard } from '../../frames/Contact';
 import { useAppRouter } from '../../hooks';
+
+// TODO(burdon): Custom views:
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8
+//  - https://github.com/jquense/react-big-calendar/blob/master/stories/demos/exampleCode/rendering.js
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-creating-custom-views--page
 
 const mapEvents = (event: EventType) => ({
   title: event.title,
@@ -126,8 +131,8 @@ export const CalendarFrame = () => {
           />
         </div>
         {view === Views.AGENDA && contact && space && (
-          <div className='flex flex-1 border-l hidden md:flex pl-4'>
-            <ContactCard space={space} contact={contact} />
+          <div className='flex flex-col flex-1 border-l hidden md:flex pl-4'>
+            <ContactCard contact={contact} />
           </div>
         )}
       </div>

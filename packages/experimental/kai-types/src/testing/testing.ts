@@ -165,9 +165,9 @@ export class Generator {
 
 // TODO(burdon): Text initial state isn't replicated.
 // TODO(burdon): Factor out into TextModel.
-const createTextObjectContent = (content: Text, sentences = 5) => {
+export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
-    schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
+    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),
     schema.node('paragraph')
   ]);
   paragraphs.pop();
@@ -264,12 +264,12 @@ export const createMessage = () => {
     date: faker.date.recent(14, new Date()).toISOString(),
     // TODO(burdon): This breaks kai.
     // to: [
-    //   new Message.MessageContact({
+    //   new Message.Recipient({
     //     email: faker.internet.email(),
     //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
     //   })
     // ],
-    from: new Message.MessageContact({
+    from: new Message.Recipient({
       email: faker.internet.email(),
       name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
     }),

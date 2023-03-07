@@ -4,6 +4,8 @@
 
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 
+import { log } from '@dxos/log';
+
 export type ChatModelOptions = {
   organization: string;
   apiKey: string;
@@ -36,7 +38,7 @@ export class ChatModel {
     this._api = new OpenAIApi(configuration);
   }
 
-  async request(messages: ChatCompletionRequestMessage[]) {
+  async request(messages: ChatCompletionRequestMessage[]): Promise<ChatCompletionRequestMessage | undefined> {
     // https://platform.openai.com/docs/guides/chat
     const response = await this._api.createChatCompletion({
       model: this._options.model ?? 'gpt-3.5-turbo',
@@ -52,10 +54,9 @@ export class ChatModel {
     const {
       data: { usage, choices }
     } = response;
+    log(JSON.stringify({ usage, choices: choices.length }));
 
-    console.log(JSON.stringify({ usage }));
-    choices.forEach(({ message: { role, content } = {} }) =>
-      console.log(JSON.stringify({ role, content }, undefined, 2))
-    );
+    const [choice] = choices;
+    return choice?.message;
   }
 }

@@ -2,88 +2,92 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UserCircle } from 'phosphor-react';
-import React, { FC, ReactNode } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { Address, Contact } from '@dxos/kai-types';
+import { Contact, DocumentStack } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
+import { Button } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
+import { createPath, useAppRouter } from '../../hooks';
+import { ContactCard } from './ContactCard';
 
-// TODO(burdon): Replace ContactCard (and reuse in Calendar).
-
-const AddressSection: FC<{ address: Address }> = ({ address }) => {
-  return (
-    <div className='mt-2 text-sm text-zinc-600'>
-      <div>{address.city}</div>
-      <div>
-        {address.state} {address.zip}
-      </div>
-    </div>
-  );
-};
-
-const Row: FC<{ children: ReactNode; gutter?: ReactNode }> = ({ children, gutter }) => {
-  return (
-    <div className='flex overflow-hidden items-center'>
-      <div className='flex shrink-0 w-[48px]'>{gutter}</div>
-      <div className='text-lg'>{children}</div>
-    </div>
-  );
-};
-
-const Card: FC<{ contact: Contact }> = ({ contact }) => {
-  return (
-    <div className='flex flex-col w-[320px] overflow-hidden p-1 py-2 pb-3 bg-white border rounded-lg'>
-      <Row
-        gutter={
-          <Button variant='ghost'>
-            <UserCircle weight='thin' className={getSize(6)} />
-          </Button>
-        }
-      >
-        <div className='text-lg'>{contact.name}</div>
-      </Row>
-
-      {contact.email !== undefined ||
-        (contact.username !== undefined && (
-          <Row>
-            <div className='flex flex-col mt-2 text-sm'>
-              {contact.email && <div className='text-sky-700'>{contact.email}</div>}
-              {contact.username && <div className='text-sky-700'>{contact.username}</div>}
-              {contact.phone && <div>{contact.phone}</div>}
-            </div>
-          </Row>
-        ))}
-
-      {contact.address && (
-        <Row>
-          <AddressSection address={contact.address} />
-        </Row>
-      )}
-    </div>
-  );
-};
-
-const sort = ({ name: a }: Contact, { name: b }: Contact) => (a < b ? -1 : a > b ? 1 : 0);
+const stringSort = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+const sort = ({ name: a1, email: a2 }: Contact, { name: b1, email: b2 }: Contact) => stringSort(a1 ?? a2, b1 ?? b2);
 
 // TODO(burdon): Colored tags.
 // TODO(burdon): Recent messages.
 // TODO(burdon): Tasks.
 export const ContactFrame = () => {
-  const { space } = useAppRouter();
+  const navigate = useNavigate();
+  const { space, frame, objectId } = useAppRouter();
   const contacts = useQuery(space, Contact.filter()).sort(sort);
+  const selected = objectId ? space?.db.getObjectById<Contact>(objectId) : undefined;
+  const selectedRef = useRef<HTMLDivElement>(null);
+
+  const [stack, setStack] = useState<DocumentStack>();
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (selected) {
+      setStack(findStack(selected));
+    } else {
+      setStack(undefined);
+    }
+  }, [selected]);
+
+  const findStack = (contact: Contact) => {
+    const { objects: stacks } = space!.db.query(DocumentStack.filter());
+    return stacks.find((stack) => stack.subjectId === contact.id);
+  };
+
+  const handleSelect = (contact: Contact) => {
+    navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: contact.id }));
+  };
+
+  const handleCreateStack = async (contact: Contact) => {
+    const stack = await space!.db.add(new DocumentStack({ title: contact.name, subjectId: contact.id }));
+    // setStack(stack);
+    navigate(createPath({ spaceKey: space?.key, frame: 'dxos.module.frame.stack', objectId: stack.id }));
+  };
+
+  const ContactList: FC<{ className?: string }> = ({ className }) => (
+    <div className={className}>
+      {contacts.map((contact) => (
+        <div key={contact.id} ref={contact.id === selected?.id ? selectedRef : undefined} className='flex md:mr-2'>
+          {/* TODO(burdon): Generalize cards. */}
+          <ContactCard contact={contact} selected={contact.id === selected?.id} onSelect={handleSelect} />
+        </div>
+      ))}
+    </div>
+  );
+
+  if (selected) {
+    return (
+      <div className='flex flex-1 overflow-hidden'>
+        <div className='flex flex-col shrink-0 md:m-2 md:mr-0 overflow-y-scroll'>
+          <ContactList className='space-y-2 md:mr-1' />
+          {/* Allow scrolling to top of last item. */}
+          <div className='flex flex-col mb-[100vh]' />
+        </div>
+        <div className='flex flex-col flex-1 bg-white'>
+          <div className='flex p-4'>
+            {!stack && (
+              <Button variant='primary' onClick={() => handleCreateStack(selected)}>
+                Create Stack
+              </Button>
+            )}
+
+            {stack && <div>{stack.__typename}</div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='flex flex-1 overflow-x-scroll'>
-      <div className='flex flex-col flex-wrap m-4'>
-        {contacts.map((contact) => (
-          <div key={contact.id} className='mb-2 mr-2'>
-            <Card contact={contact} />
-          </div>
-        ))}
-      </div>
+    <div className='flex flex-1 overflow-x-scroll m-2'>
+      {/* TODO(burdon): space-y causes first item of wrapped columns to be indented. */}
+      <ContactList className='flex flex-col flex-wrap space-y-2' />
     </div>
   );
 };

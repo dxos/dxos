@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@dxos/echo-schema';
 
-import { objectMap, SearchPanel } from '../../containers';
+import { objectMeta, SearchPanel } from '../../containers';
 import { createPath, useAppRouter } from '../../hooks';
 
 export const SearchFrame = () => {
@@ -16,7 +16,7 @@ export const SearchFrame = () => {
 
   const handleSelect = (object: Document) => {
     if (space) {
-      const frame = objectMap[object.__typename!]?.frame;
+      const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
         navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId: object.id }));
       }

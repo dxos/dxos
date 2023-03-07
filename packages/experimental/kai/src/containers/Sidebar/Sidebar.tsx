@@ -20,7 +20,7 @@ import { SpaceList, SpaceListAction } from '../../components';
 import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { objectMap, SearchPanel } from '../SearchPanel';
+import { objectMeta, SearchPanel } from '../SearchPanel';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -121,7 +121,7 @@ export const Sidebar = () => {
 
   const handleSelect = (object: Document) => {
     if (space) {
-      const frame = objectMap[object.__typename!]?.frame;
+      const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
         navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId: object.id }));
       }
