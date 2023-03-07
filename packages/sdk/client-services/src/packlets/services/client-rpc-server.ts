@@ -84,7 +84,7 @@ export class ClientRpcServer {
         throw new Error(`Service not available: ${serviceName}`);
       }
 
-      this._handlerCache.set(serviceName, descriptor.createServer(service));
+      this._handlerCache.set(serviceName, descriptor.createServer(service as any));
     }
 
     return this._handlerCache.get(serviceName)!;
