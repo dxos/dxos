@@ -52,7 +52,6 @@ export const NoteFrame = () => {
 
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
-  console.log('NoteFrame', objectId, board?.id)
   const boards = useQuery(space, NoteBoard.filter());
   const notes = useQuery(space, Note.filter());
 
