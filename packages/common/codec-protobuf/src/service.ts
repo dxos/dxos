@@ -36,7 +36,7 @@ export class ServiceDescriptor<S> {
   }
 
   get name(): string {
-    return this._service.name.slice(1);
+    return this._service.fullName.slice(1);
   }
 
   createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service & S {

@@ -34,10 +34,15 @@ export type ClientServicesHostParams = {
    */
   config?: Config;
   modelFactory?: ModelFactory;
-  networkManager: NetworkManager;
+  networkManager?: NetworkManager;
   storage?: Storage;
   lockKey?: string;
 };
+
+export type InitializeOptions = {
+  config?: Config;
+  networkManager?: NetworkManager;
+}
 
 /**
  * Remote service implementation.
@@ -50,7 +55,7 @@ export class ClientServicesHost {
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
-  private readonly _networkManager: NetworkManager;
+  private _networkManager?: NetworkManager;
   private _storage?: Storage;
 
   /**
@@ -67,13 +72,12 @@ export class ClientServicesHost {
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey
-  }: ClientServicesHostParams) {
+  }: ClientServicesHostParams = {}) {
     this._storage = storage;
     this._modelFactory = modelFactory;
-    this._networkManager = networkManager;
 
     if(config) {
-      this.initialize(config);
+      this.initialize({ config, networkManager });
     }
 
     this._resourceLock = lockKey
@@ -132,13 +136,21 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  initialize(config: Config) {
-    assert(!this._config, 'config already set');
+  initialize({ config, networkManager }: InitializeOptions) {
     assert(!this._open, 'service host is open');
 
-    this._config = config;
-    if(!this._storage) {
-      this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
+    if(config) {
+      assert(!this._config, 'config already set');
+      
+      this._config = config;
+      if(!this._storage) {
+        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
+      }
+    }
+
+    if(networkManager) {
+      assert(!this._networkManager, 'network manager already set');
+      this._networkManager = networkManager;
     }
   }
 
@@ -149,6 +161,7 @@ export class ClientServicesHost {
 
     assert(this._config, 'config not set');
     assert(this._storage, 'storage not set');
+    assert(this._networkManager, 'network manager not set');
 
     log('opening...');
     await this._resourceLock?.acquire();
