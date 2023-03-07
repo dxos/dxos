@@ -24,7 +24,7 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
 
   const [handle, setHandle] = useState<SubscriptionHandle>(() =>
     client.echo.dbRouter.createSubscription(() => {
-      cb();
+      callbackRef.current();
     })
   );
 
@@ -32,15 +32,16 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
     // TODO(dmaretskyi): Is this branch ever taken?
     if (!handle.subscribed) {
       const newHandle = client.echo.dbRouter.createSubscription(() => {
-        cb();
+        callbackRef.current();
       });
       setHandle(newHandle);
       newHandle.update(selection);
+    } else {
+      handle.update(selection);
     }
 
     return () => handle.unsubscribe();
-  }, []);
+  }, [selection]);
 
-  handle.update(selection);
   return handle;
 };
