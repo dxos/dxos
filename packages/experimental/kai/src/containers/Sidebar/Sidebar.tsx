@@ -8,7 +8,7 @@ import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-rea
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router-dom';
 
-import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -20,6 +20,7 @@ import { SpaceList, SpaceListAction } from '../../components';
 import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
+import { objectMap, SearchPanel } from '../SearchPanel';
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -118,11 +119,23 @@ export const Sidebar = () => {
     }
   };
 
+  const handleSelect = (object: Document) => {
+    if (space) {
+      const frame = objectMap[object.__typename!]?.frame;
+      if (frame) {
+        navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId: object.id }));
+      }
+    }
+  };
+
   // TODO(burdon): Mobile slider (full width, no blur).
   return (
     <div
       role='none'
-      className={mx('flex flex-col overflow-auto min-bs-full bg-sidebar-bg', theme.panel === 'flat' && 'border-r')}
+      className={mx(
+        'flex flex-col h-full overflow-hidden min-bs-full bg-sidebar-bg',
+        theme.panel === 'flat' && 'border-r'
+      )}
     >
       {/* Match Frame selector. */}
       <div
@@ -161,14 +174,19 @@ export const Sidebar = () => {
 
       <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
-        <div className='flex overflow-y-auto'>
+        <div className='flex shrink-0 overflow-y-auto'>
           <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
+        </div>
+
+        {/* Search */}
+        <div className='flex overflow-hidden'>
+          <SearchPanel onSelect={handleSelect} />
         </div>
 
         <div className='flex-1' />
 
         {/* Members */}
-        <div className='flex flex-col shrink-0 my-4'>
+        <div className='flex shrink-0 flex-col my-4'>
           <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
           <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />
           <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>

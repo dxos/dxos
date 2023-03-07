@@ -104,7 +104,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.kanban',
       type: 'dxos:type/frame',
       displayName: 'Kanban',
-      description: 'Card based process management.'
+      description: 'Card based pipelines.'
     },
     runtime: {
       Icon: KanbanIcon,
@@ -116,7 +116,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.task',
       type: 'dxos:type/frame',
       displayName: 'Tasks',
-      description: 'Project and task management tools.'
+      description: 'Projects and task management.'
     },
     runtime: {
       Icon: ListChecks,
@@ -128,7 +128,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.bot',
       type: 'dxos:type/frame',
       displayName: 'Bots',
-      description: 'Bot management.'
+      description: 'Bot manager.'
     },
     runtime: {
       Icon: Robot,
@@ -228,7 +228,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.sketch',
       type: 'dxos:type/frame',
       displayName: 'Sketch',
-      description: 'Simple sketches.'
+      description: 'Vector drawings.'
     },
     runtime: {
       Icon: HighlighterCircle,
@@ -264,8 +264,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
       displayName: 'Chess',
-      description: 'Peer-to-peer and engine powered games.',
-      tags: ['community']
+      description: 'Peer-to-peer and engine powered games.'
     },
     runtime: {
       Icon: Sword,
@@ -276,8 +275,8 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.sandbox',
       type: 'dxos:type/frame',
-      displayName: 'Sandbox',
-      description: 'Collaborative code sandbox.'
+      displayName: 'Code Notebook',
+      description: 'Collaborative script editor.'
     },
     runtime: {
       Icon: Code,
@@ -289,20 +288,19 @@ export const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.note';
+export const defaultFrameId = 'dxos.module.frame.dashboard';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
-  'dxos.module.frame.note',
-  'dxos.module.frame.search',
   'dxos.module.frame.message',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  'dxos.module.frame.bot',
-  'dxos.module.frame.document'
+  'dxos.module.frame.document',
+  'dxos.module.frame.kanban',
+  'dxos.module.frame.bot'
+  // 'dxos.module.frame.note',
   // 'dxos.module.frame.stack'
-  // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer',

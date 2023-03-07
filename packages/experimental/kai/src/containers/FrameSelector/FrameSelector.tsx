@@ -35,7 +35,7 @@ export const FrameSelector: FC = () => {
   const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useAppRouter();
-  const maxTabs = 8; // TODO(burdon): Media query?
+  const maxTabs = 6; // TODO(burdon): Media query?
   if (!space) {
     return null;
   }

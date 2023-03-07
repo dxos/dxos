@@ -111,7 +111,7 @@ const mapResult = (text: string) => {
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
 export type SearchPanelOptions = {
-  onSelect: (object: Document) => void;
+  onSelect?: (object: Document) => void;
 };
 
 export const SearchPanel: FC<SearchPanelOptions> = ({ onSelect }) => {
@@ -128,7 +128,7 @@ export const SearchPanel: FC<SearchPanelOptions> = ({ onSelect }) => {
       timeoutRef.current = setTimeout(() => {
         clearTimeout(timeoutRef.current);
         setText('');
-      }, 1000);
+      }, 500);
     }
   };
 
@@ -137,7 +137,7 @@ export const SearchPanel: FC<SearchPanelOptions> = ({ onSelect }) => {
   const sorted = results.sort(sort);
 
   return (
-    <div role='none' className='flex flex-col flex-1 min-bs-full mli-auto is-full md:is-column bg-paper-bg shadow-1'>
+    <div className='flex flex-col w-full'>
       <div className='flex justify-center p-4'>
         <Searchbar slots={{ input: { autoFocus: true, className: 'border-b' } }} onSearch={handleSearch} />
       </div>
@@ -148,7 +148,7 @@ export const SearchPanel: FC<SearchPanelOptions> = ({ onSelect }) => {
             <div
               key={i}
               className='flex flex-col w-full px-4 py-2 hover:bg-hover-bg cursor-pointer border-b'
-              onClick={() => onSelect(object)}
+              onClick={() => onSelect?.(object)}
             >
               <div className='flex items-center'>
                 <div className='flex w-[40px]'>
