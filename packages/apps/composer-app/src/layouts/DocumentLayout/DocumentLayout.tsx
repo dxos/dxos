@@ -4,18 +4,22 @@
 import React from 'react';
 import { Outlet, useParams, useSearchParams } from 'react-router-dom';
 
+import { useTelemetry } from '@dxos/react-appkit';
 import { useSpaces } from '@dxos/react-client';
 import { defaultOsButtonColors, mx, useButtonShadow } from '@dxos/react-components';
 import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
 
-import { SidebarContent, SidebarToggle } from '../components/Sidebar';
-import { abbreviateKey } from '../routes';
+import { SidebarContent, SidebarToggle } from '../../components';
+import { namespace, abbreviateKey } from '../../router';
 
 export const DocumentLayout = () => {
+  // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
+  useTelemetry({ namespace });
+  const shadow = useButtonShadow('base');
+
   const { spaceKey } = useParams();
   const spaces = useSpaces();
   const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey);
-  const shadow = useButtonShadow('base');
 
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');

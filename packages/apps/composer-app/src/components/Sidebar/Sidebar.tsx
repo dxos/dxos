@@ -28,8 +28,8 @@ import {
 } from '@dxos/react-components';
 import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 
-import { ComposerDocument } from '../proto';
-import { abbreviateKey, getPath } from '../routes';
+import { ComposerDocument } from '../../proto';
+import { abbreviateKey, getPath } from '../../router';
 
 const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
   const { t } = useTranslation('composer');
