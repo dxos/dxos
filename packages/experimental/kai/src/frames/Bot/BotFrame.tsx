@@ -93,7 +93,7 @@ export const BotFrame = () => {
       const records = response.map((record: any) => ({
         id: record.Id,
         image: record.ImageID,
-        port: record.Ports[0].PublicPort,
+        port: record.Ports[0]?.PublicPort,
         name: record.Labels['dxos.bot.name'],
         created: new Date(record.Created * 1000).getTime(),
         state: record.State,

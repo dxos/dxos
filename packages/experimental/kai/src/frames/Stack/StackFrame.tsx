@@ -9,7 +9,7 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '@dxos/kai-types';
-import { EchoSchemaType, useConfig, useQuery, observer, Document } from '@dxos/react-client';
+import { Document, EchoSchemaType, useConfig, useQuery, observer } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';

@@ -163,8 +163,7 @@ export class Generator {
   };
 }
 
-// TODO(burdon): Text initial state isn't replicated.
-// TODO(burdon): Factor out into TextModel.
+// TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
 export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
     schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),

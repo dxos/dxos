@@ -3065,6 +3065,7 @@ importers:
       '@types/imap': ^0.8.35
       '@types/imap-simple': ^4.2.5
       '@types/js-yaml': ^4.0.5
+      '@types/lodash.startcase': ^4.4.7
       '@types/mailparser': ^3.4.0
       assert: ^2.0.0
       chess.js: 1.0.0-alpha.0
@@ -3075,6 +3076,7 @@ importers:
       imap: ^0.8.19
       imap-simple: ^5.1.0
       js-yaml: ^4.1.0
+      lodash.startcase: ^4.4.0
       mailparser: ^3.6.4
       openai: ^3.2.1
     dependencies:
@@ -3100,6 +3102,7 @@ importers:
       imap: 0.8.19
       imap-simple: 5.1.0
       js-yaml: 4.1.0
+      lodash.startcase: 4.4.0
       mailparser: 3.6.4
       openai: 3.2.1
     devDependencies:
@@ -3107,6 +3110,7 @@ importers:
       '@types/imap': 0.8.35
       '@types/imap-simple': 4.2.5
       '@types/js-yaml': 4.0.5
+      '@types/lodash.startcase': 4.4.7
       '@types/mailparser': 3.4.0
 
   packages/experimental/kai-types:
@@ -12980,6 +12984,12 @@ packages:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
     dependencies:
       '@types/lodash': 4.14.186
+    dev: true
+
+  /@types/lodash.startcase/4.4.7:
+    resolution: {integrity: sha512-6v8FVOcfxdomO1Vammc1Zsah7/4aif/Lx16oQQ0WZmKVGF/Yf5c5m68LqI/ELOhKaKUr8KfnDdKrytdrThoRQw==}
+    dependencies:
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.throttle/4.1.7:
@@ -25048,6 +25058,10 @@ packages:
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
+
+  /lodash.startcase/4.4.0:
+    resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
+    dev: false
 
   /lodash.throttle/4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}

@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { DocumentStack, Contact, Organization } from '@dxos/kai-types';
+import { Contact, Document, DocumentStack, Organization } from '@dxos/kai-types';
 import { describe, test } from '@dxos/test';
 
 import { loadJson } from '../util';
@@ -37,16 +37,20 @@ describe('KaiBot', () => {
       console.log(contact.employer.name); // TODO(burdon): This isn't stringified above.
 
       const query = space.db.query(DocumentStack.filter());
-      const subscription = query.subscribe(({ objects: stacks }) => {
-        // TODO(burdon): Called twice!
+      const unsubscribe = query.subscribe(({ objects: stacks }) => {
+        expect(stacks).to.have.length(1);
+
         const document = stacks[0].sections[0];
+        expect(document.__typename).to.equal('dxos.experimental.kai.Document');
+        expect(document instanceof Document).to.be.true;
+
         const text = document.content.text;
         expect(text.length).to.be.greaterThan(0);
         trigger.wake();
       });
 
       await trigger.wait();
-      subscription();
+      unsubscribe();
 
       await bot.stop();
       console.log('!!!'); // TODO(burdon): Test gets here but doesn't exit!

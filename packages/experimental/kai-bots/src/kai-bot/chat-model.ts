@@ -39,24 +39,28 @@ export class ChatModel {
   }
 
   async request(messages: ChatCompletionRequestMessage[]): Promise<ChatCompletionRequestMessage | undefined> {
-    // https://platform.openai.com/docs/guides/chat
-    const response = await this._api.createChatCompletion({
-      model: this._options.model ?? 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'you are a helpful assistant.'
-        },
-        ...messages
-      ]
-    });
+    try {
+      // https://platform.openai.com/docs/guides/chat
+      const response = await this._api.createChatCompletion({
+        model: this._options.model ?? 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'you are a helpful assistant.'
+          },
+          ...messages
+        ]
+      });
 
-    const {
-      data: { usage, choices }
-    } = response;
-    log(JSON.stringify({ usage, choices: choices.length }));
+      const {
+        data: { usage, choices }
+      } = response;
+      log(JSON.stringify({ usage, choices: choices.length }));
 
-    const [choice] = choices;
-    return choice?.message;
+      const [choice] = choices;
+      return choice?.message;
+    } catch (err: any) {
+      log.error('request failed', err);
+    }
   }
 }
