@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Selection, SubscriptionHandle } from '@dxos/echo-schema';
 
@@ -22,28 +22,16 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
   const callbackRef = useRef(cb);
   callbackRef.current = cb;
 
-  const [handle, setHandle] = useState<SubscriptionHandle>(() =>
-    client.echo.dbRouter.createSubscription(() => {
-      callbackRef.current();
-    })
-  );
+  const subscriptionRef = useRef<SubscriptionHandle>();
 
   useEffect(() => {
-    // TODO(dmaretskyi): Is this branch ever taken?
-    if (!handle.subscribed) {
-      const newHandle = client.echo.dbRouter.createSubscription(() => {
-        callbackRef.current();
-      });
-      setHandle(newHandle);
-      newHandle.update(selection);
-    }
+    subscriptionRef.current = client.echo.dbRouter.createSubscription(() => {
+      callbackRef.current();
+    });
 
-    return () => handle.unsubscribe();
+    return () => subscriptionRef.current?.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    handle.update(selection);
-  }, [selection]);
-
-  return handle;
+  subscriptionRef.current?.update(selection);
+  return subscriptionRef.current;
 };
