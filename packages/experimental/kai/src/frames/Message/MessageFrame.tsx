@@ -90,15 +90,17 @@ export const MessageFrame = () => {
               wide
               className='pb-4 items-center'
               gutter={
-                <Button variant='ghost' className='p-1'>
-                  <UserCircle weight='duotone' className={mx(getSize(8), 'text-sky-300')} />
-                </Button>
+                <div className='flex h-[60px]'>
+                  <Button variant='ghost' className='p-1'>
+                    <UserCircle weight='duotone' className={mx(getSize(8), 'text-sky-300')} />
+                  </Button>
+                </div>
               }
             >
               {/* TODO(burdon): Contact create/link. */}
               <div>
-                <div>{getDisplayName(selected.from)}</div>
-                {selected.from.name && selected.from.email && <div>{selected.from.email}</div>}
+                {selected.from.name && <div className='text-lg'>{selected.from.name}</div>}
+                <div className='text-sm'>{selected.from.email}</div>
               </div>
             </Row>
 
@@ -109,7 +111,9 @@ export const MessageFrame = () => {
             <Row wide>
               <div className='flex flex-col'>
                 {selected.body?.split('\n').map((text, i) => (
-                  <div key={i}>{text}</div>
+                  <div key={i} className='mb-2'>
+                    {text}
+                  </div>
                 ))}
               </div>
             </Row>

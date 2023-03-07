@@ -17,7 +17,7 @@ export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
 
   return (
     <Suspense>
-      <main className='flex flex-1 overflow-hidden'>
+      <main className='flex flex-1 flex-col overflow-hidden'>
         <Component />
       </main>
     </Suspense>

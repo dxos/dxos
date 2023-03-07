@@ -294,13 +294,13 @@ export const defaultFrameId = 'dxos.module.frame.dashboard';
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
   'dxos.module.frame.message',
-  'dxos.module.frame.table',
-  'dxos.module.frame.task',
-  'dxos.module.frame.document',
   'dxos.module.frame.kanban',
+  'dxos.module.frame.table',
+  // 'dxos.module.frame.document',
+  'dxos.module.frame.stack',
   'dxos.module.frame.bot'
+  // 'dxos.module.frame.task',
   // 'dxos.module.frame.note',
-  // 'dxos.module.frame.stack'
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer',

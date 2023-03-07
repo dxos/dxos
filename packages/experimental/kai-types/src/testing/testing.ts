@@ -40,7 +40,7 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 2, max: 5 },
-      messages: { min: 0, max: 0 }
+      messages: { min: 1, max: 5 }
     }
   ) {}
 
