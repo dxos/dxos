@@ -36,11 +36,13 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
       });
       setHandle(newHandle);
       newHandle.update(selection);
-    } else {
-      handle.update(selection);
     }
 
     return () => handle.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    handle.update(selection);
   }, [selection]);
 
   return handle;
