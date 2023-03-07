@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ErrorBoundary } from '@sentry/react';
+import { ErrorBoundary, withProfiler } from '@sentry/react';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -31,7 +31,7 @@ const configProvider = async () => new Config(await Dynamics(), await Envs(), De
 const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
-export const App = () => {
+export const App = withProfiler(() => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
@@ -66,4 +66,4 @@ export const App = () => {
       </ErrorProvider>
     </ThemeProvider>
   );
-};
+});
