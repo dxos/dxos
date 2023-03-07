@@ -216,7 +216,8 @@ export const createContact = () => {
   return new Contact({
     name: faker.name.findName(),
     email: faker.datatype.boolean() ? faker.internet.email() : undefined,
-    username: faker.datatype.boolean() ? '@' + faker.internet.userName() : undefined,
+    username: faker.datatype.number(10) > 2 ? '@' + faker.internet.userName() : undefined,
+    phone: faker.datatype.boolean() ? faker.phone.phoneNumber() : undefined,
     address: faker.datatype.boolean()
       ? {
           city: faker.address.city(),

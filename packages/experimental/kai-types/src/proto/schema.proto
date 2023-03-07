@@ -68,7 +68,8 @@ message Contact {
   string name = 1;
   string username = 2;
   string email = 3;
-  Address address = 4;
+  string phone = 4; // TODO(burdon): Repeated with tag.
+  Address address = 5;
 }
 
 message Task {

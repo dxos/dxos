@@ -7,6 +7,7 @@ import React from 'react';
 export const BotFrame = React.lazy(() => import('./Bot'));
 export const CalendarFrame = React.lazy(() => import('./Calendar'));
 export const ChessFrame = React.lazy(() => import('./Chess'));
+export const ContactFrame = React.lazy(() => import('./Contact'));
 export const ExplorerFrame = React.lazy(() => import('./Explorer'));
 export const KanbanFrame = React.lazy(() => import('./Kanban'));
 export const MapFrame = React.lazy(() => import('./Map'));

@@ -20,7 +20,8 @@ import {
   Sword,
   Table,
   Tray,
-  MagnifyingGlass
+  MagnifyingGlass,
+  IdentificationCard
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -31,6 +32,7 @@ import {
   BotFrame,
   CalendarFrame,
   ChessFrame,
+  ContactFrame,
   Document,
   ExplorerFrame,
   File,
@@ -84,6 +86,19 @@ export const frameDefs: FrameDef[] = [
     runtime: {
       Icon: MagnifyingGlass,
       Component: SearchFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.contact',
+      type: 'dxos:type/frame',
+      displayName: 'Contacts',
+      description: 'Address book.'
+
+    },
+    runtime: {
+      Icon: IdentificationCard,
+      Component: ContactFrame
     }
   },
   {
@@ -293,6 +308,7 @@ export const defaultFrameId = 'dxos.module.frame.dashboard';
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
+  'dxos.module.frame.contact',
   'dxos.module.frame.message',
   'dxos.module.frame.kanban',
   'dxos.module.frame.table',
