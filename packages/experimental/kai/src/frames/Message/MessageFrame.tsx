@@ -26,7 +26,7 @@ export const MessageFrame = () => {
     isToday(date) ? format(date, 'hh:mm aaa') : formatDistance(date, now, { addSuffix: true });
 
   // TODO(burdon): Contact may not be available since currently a separate object.
-  const getDisplayName = (contact?: Message.Contact) => (contact?.name?.length ? contact?.name : contact?.email);
+  const getDisplayName = (contact?: Message.MessageContact) => (contact?.name?.length ? contact?.name : contact?.email);
 
   // TODO(burdon): List/cursor.
   // TODO(burdon): Source selector (email, internal, etc.)

@@ -61,8 +61,8 @@ export class ImapProcessor {
           return;
         }
 
-        const convertToContact = ({ address: email, name }: EmailAddress): Message.Contact =>
-          new Message.Contact({ email, name: name?.length ? name : undefined });
+        const convertToContact = ({ address: email, name }: EmailAddress): Message.MessageContact =>
+          new Message.MessageContact({ email, name: name?.length ? name : undefined });
 
         const message = new Message({
           source: {

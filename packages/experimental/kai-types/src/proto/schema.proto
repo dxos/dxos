@@ -130,7 +130,7 @@ message Source {
 message Message {
   option (object) = true;
 
-  message Contact {
+  message MessageContact {
     option (object) = true; // TODO(burdon): REMOVE.
     string email = 1;
     string name = 2;
@@ -140,8 +140,8 @@ message Message {
   // TODO(burdon): Timestamp (across all objects).
   Source source = 1;
   string date = 2;
-  Contact from = 3;
-  repeated Contact to = 4;
+  MessageContact from = 3;
+  repeated MessageContact to = 4;
   string subject = 5;
   string body = 6;
 }

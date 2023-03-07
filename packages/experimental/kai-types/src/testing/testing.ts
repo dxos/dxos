@@ -263,12 +263,12 @@ export const createMessage = () => {
     date: faker.date.recent(14, new Date()).toISOString(),
     // TODO(burdon): This breaks kai.
     // to: [
-    //   new Message.Contact({
+    //   new Message.MessageContact({
     //     email: faker.internet.email(),
     //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
     //   })
     // ],
-    from: new Message.Contact({
+    from: new Message.MessageContact({
       email: faker.internet.email(),
       name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
     }),
