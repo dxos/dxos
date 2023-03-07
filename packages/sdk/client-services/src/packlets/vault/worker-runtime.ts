@@ -36,7 +36,7 @@ export class WorkerRuntime {
   // prettier-ignore
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>
-  ) { 
+  ) {
     this._clientServices = new ClientServicesHost();
   }
 
@@ -54,7 +54,7 @@ export class WorkerRuntime {
             : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
           transportFactory: this._transportFactory
         })
-      })
+      });
 
       await this._clientServices.open();
       this._ready.wake(undefined);

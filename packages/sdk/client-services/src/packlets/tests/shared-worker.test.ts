@@ -10,10 +10,10 @@ import { Client, ClientServicesProxy, fromIFrame } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
+import { MaybePromise } from '@dxos/util';
 
 import { TestBuilder } from '../testing';
 import { IFrameProxyRuntime, WorkerRuntime } from '../vault';
-import { MaybePromise } from '@dxos/util';
 
 chai.use(chaiAsPromised);
 
@@ -40,7 +40,7 @@ const setup = (getConfig: () => MaybePromise<Config>) => {
   });
 
   return { workerRuntime, clientProxy, client };
-}
+};
 
 describe('Shared worker', () => {
   test('client connects to the worker', async () => {
@@ -58,7 +58,7 @@ describe('Shared worker', () => {
     });
 
     const promise = Promise.all([
-      workerRuntime.start().catch(() => { }), // This error should be propagated to client.initialize() call.
+      workerRuntime.start().catch(() => {}), // This error should be propagated to client.initialize() call.
       clientProxy.open('*')
     ]);
 
@@ -69,14 +69,14 @@ describe('Shared worker', () => {
 
   test('host can be initialized after client', async () => {
     const { workerRuntime, clientProxy, client } = setup(async () => {
-      await sleep(5)
+      await sleep(5);
       return new Config({});
     });
 
     await Promise.all([workerRuntime.start(), clientProxy.open('*'), client.initialize()]);
 
     await client.halo.createIdentity();
-  })
+  });
 
   // TODO(burdon): Browser-only.
   test.skip('creates client with remote iframe', async () => {

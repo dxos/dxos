@@ -42,7 +42,7 @@ export type ClientServicesHostParams = {
 export type InitializeOptions = {
   config?: Config;
   networkManager?: NetworkManager;
-}
+};
 
 /**
  * Remote service implementation.
@@ -76,7 +76,7 @@ export class ClientServicesHost {
     this._storage = storage;
     this._modelFactory = modelFactory;
 
-    if(config) {
+    if (config) {
       this.initialize({ config, networkManager });
     }
 
@@ -139,16 +139,16 @@ export class ClientServicesHost {
   initialize({ config, networkManager }: InitializeOptions) {
     assert(!this._open, 'service host is open');
 
-    if(config) {
+    if (config) {
       assert(!this._config, 'config already set');
-      
+
       this._config = config;
-      if(!this._storage) {
+      if (!this._storage) {
         this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
       }
     }
 
-    if(networkManager) {
+    if (networkManager) {
       assert(!this._networkManager, 'network manager already set');
       this._networkManager = networkManager;
     }

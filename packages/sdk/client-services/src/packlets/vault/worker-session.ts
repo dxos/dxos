@@ -5,15 +5,12 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import {
-  iframeServiceBundle,
-  IframeServiceBundle,
-  workerServiceBundle
-} from '@dxos/client';
+import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@dxos/client';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
+
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 
@@ -79,15 +76,15 @@ export class WorkerSession {
 
         return handler(method, params);
       }
-    }
+    };
 
     this._clientRpc = new ClientRpcServer({
-      serviceRegistry: this._serviceHost.serviceRegistry, 
+      serviceRegistry: this._serviceHost.serviceRegistry,
       port: appPort,
       ...middleware
     });
     this._shellClientRpc = new ClientRpcServer({
-      serviceRegistry: this._serviceHost.serviceRegistry, 
+      serviceRegistry: this._serviceHost.serviceRegistry,
       port: shellPort,
       ...middleware
     });
