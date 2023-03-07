@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ErrorBoundary } from '@sentry/react';
+import { ErrorBoundary, withProfiler } from '@sentry/react';
 import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -86,7 +86,7 @@ const Routes = () => {
   ]);
 };
 
-export const App = () => {
+export const App = withProfiler(() => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
@@ -123,4 +123,4 @@ export const App = () => {
       </ErrorProvider>
     </ThemeProvider>
   );
-};
+});

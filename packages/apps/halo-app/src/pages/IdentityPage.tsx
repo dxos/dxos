@@ -5,7 +5,7 @@
 import { Activity, Eraser } from 'phosphor-react';
 import React, { ChangeEvent, useCallback } from 'react';
 
-import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit/telemetry';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';

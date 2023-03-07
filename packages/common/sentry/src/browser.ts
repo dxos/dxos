@@ -6,8 +6,10 @@ import {
   init as naturalInit,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
+  Replay,
   setTag
 } from '@sentry/browser';
+import { BrowserTracing } from '@sentry/tracing';
 
 import { log } from '@dxos/log';
 
@@ -26,6 +28,12 @@ export const init = (options: InitOptions) => {
     dsn: options.destination,
     release: options.release,
     environment: options.environment,
+    integrations: [
+      ...(options.tracing ? [new BrowserTracing()] : []),
+      ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
+    ],
+    replaysSessionSampleRate: options.replaySampleRate,
+    replaysOnErrorSampleRate: options.replaySampleRateOnError,
     tracesSampleRate: options.sampleRate,
     transport: options.transport,
     beforeSend: (event) => {
