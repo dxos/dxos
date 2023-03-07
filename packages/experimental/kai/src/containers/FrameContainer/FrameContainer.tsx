@@ -15,10 +15,11 @@ export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
     return null;
   }
 
-  // TODO(burdon): Standardize container (bg, padding, centered, size, etc.)
   return (
     <Suspense>
-      <Component />
+      <main className='flex flex-1 overflow-hidden'>
+        <Component />
+      </main>
     </Suspense>
   );
 };

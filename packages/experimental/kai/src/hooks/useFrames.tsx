@@ -61,7 +61,7 @@ export type FrameDef = {
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
 // prettier-ignore
-const frameDefs: FrameDef[] = [
+export const frameDefs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.dashboard',
@@ -165,7 +165,6 @@ const frameDefs: FrameDef[] = [
       type: 'dxos:type/frame',
       displayName: 'Calendar',
       description: 'Calendar and time management tools.'
-
     },
     runtime: {
       Icon: Calendar,
@@ -290,11 +289,12 @@ const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.search';
+export const defaultFrameId = 'dxos.module.frame.note';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.dashboard',
+  'dxos.module.frame.note',
   'dxos.module.frame.search',
   'dxos.module.frame.message',
   'dxos.module.frame.table',

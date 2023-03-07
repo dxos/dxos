@@ -22,6 +22,7 @@ const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
   if (idx === -1) {
     board.locations.push(new NoteBoard.Location({ ...location, objectId: id }));
   } else {
+    // TODO(burdon): If not object, then remove based on ID.
     board.locations.splice(idx, 1, new NoteBoard.Location({ ...location, objectId: id }));
   }
 };
@@ -48,15 +49,12 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 };
 
 export const NoteFrame = () => {
-  const range = { x: 4, y: 3 };
+  const range = { x: 4, y: 3 }; // TODO(burdon): Props.
 
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
   const boards = useQuery(space, NoteBoard.filter());
   const notes = useQuery(space, Note.filter());
-
-  const n: Note[] = notes;
-  console.log(n);
 
   // Rerender when offset, zoom changed.
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -79,11 +77,13 @@ export const NoteFrame = () => {
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
   useSubscription(() => {
-    // TODO(burdon): Rename.
+    // TODO(burdon): Board is stale (undefined -- even though set below).
+    console.log('>> 2', board?.id);
     if (board) {
       setItems(doLayout(board, notes, layout));
     }
   }, [board, notes]);
+  console.log('>> 1', board?.id);
 
   const handleCreateBoard = () => {
     void space?.db.add(new NoteBoard());
