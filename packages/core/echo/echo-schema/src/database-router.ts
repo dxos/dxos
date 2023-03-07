@@ -65,7 +65,6 @@ export class DatabaseRouter {
     let subscribed = true;
 
     const unsubscribe = this._update.on(({ changedEntities }) => {
-      subscribed = false;
       if (changedEntities.some((entity) => handle.selectedIds.has(entity.id))) {
         onUpdate({});
       }
@@ -88,7 +87,10 @@ export class DatabaseRouter {
       },
       subscribed,
       selectedIds: new Set<string>(),
-      unsubscribe
+      unsubscribe: () => {
+        unsubscribe();
+        subscribed = false;
+      }
     };
 
     return handle;
