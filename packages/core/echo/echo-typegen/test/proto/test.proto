@@ -45,12 +45,5 @@ message Task {
 message Container {
   option (object) = true;
 
-  message Section {
-    option (object) = true;
-    
-    string title = 1;
-    dxos.schema.Document document = 2;
-  }
-
-  repeated Section sections = 1;
+  repeated dxos.schema.Document documents = 1;
 }
