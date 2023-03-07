@@ -44,7 +44,7 @@ const headingClassNames: Record<Levels, string> = {
   6: 'mbs-4 mbe-2 font-black'
 };
 
-export const useComposerEditor = ({ document, field = 'content', placeholder, slots = {} }: DocumentComposerProps) => {
+export const useComposerEditor = ({ document, placeholder, slots = {} }: DocumentComposerProps) => {
   // TODO(wittjosiah): Provide own translations?
   //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
@@ -137,7 +137,7 @@ export const useComposerEditor = ({ document, field = 'content', placeholder, sl
           ]
         }),
         // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
-        Collaboration.configure({ document: document.doc!, field }),
+        Collaboration.configure({ document: document.doc }),
         Placeholder.configure({
           placeholder: placeholder ?? t('composer placeholder'),
           emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
@@ -151,7 +151,7 @@ export const useComposerEditor = ({ document, field = 'content', placeholder, sl
         }
       }
     },
-    [document, document?.doc]
+    [document]
   );
 };
 
