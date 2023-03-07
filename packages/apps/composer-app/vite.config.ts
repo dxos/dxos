@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -40,6 +41,7 @@ export default defineConfig({
     }
   },
   build: {
+    sourcemap: true,
     outDir: 'out/composer'
   },
   plugins: [
@@ -81,6 +83,13 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    sentryVitePlugin({
+      org: "dxos",
+      project: "composer-app",
+      include: "./out/composer",
+      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
+    }),
   ]
 });

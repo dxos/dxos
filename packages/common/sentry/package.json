@@ -18,13 +18,15 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@sentry/browser": "^7.17.2",
-    "@sentry/node": "^7.17.2"
+    "@sentry/browser": "^7.41.0",
+    "@sentry/node": "^7.41.0",
+    "@sentry/tracing": "^7.41.0"
   },
   "devDependencies": {
-    "@sentry/types": "^7.16.0",
-    "sentry-testkit": "^4.1.0"
+    "@sentry/types": "^7.41.0",
+    "sentry-testkit": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

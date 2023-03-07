@@ -6,8 +6,18 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./telemetry": "./dist/lib/browser/telemetry/index.mjs"
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "telemetry": [
+        "dist/types/src/telemetry/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
