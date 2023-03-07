@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { EchoArray } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
-import { Task } from './proto';
+import { Container, Task } from './proto';
 import { createDatabase } from '@dxos/echo-schema/testing';
 
 // TODO(burdon): Test with/without saving to database.
@@ -34,7 +34,7 @@ describe('ordered-set', () => {
     root.subTasks = [new Task(), new Task(), new Task()];
     expect(root.subTasks.length).to.eq(3);
 
-    const db = await createDatabase()
+    const db = await createDatabase();
     await db.add(root);
   });
 
@@ -44,7 +44,19 @@ describe('ordered-set', () => {
     root.subTasks.splice(0, 2, new Task());
     expect(root.subTasks).to.have.length(2);
 
-    const db = await createDatabase()
+    const db = await createDatabase();
     await db.add(root);
+  });
+
+  test('array of plain objects', async () => {
+    const root = new Container();
+    const plain: Container.PlainObject = { title: 'test' };
+    root.plainObjects.push(plain);
+    const db = await createDatabase();
+    await db.add(root);
+
+    expect(root.plainObjects).to.have.length(1);
+    const queriedContainer = db.query(Container.filter()).objects[0];
+    expect(queriedContainer.plainObjects[0]).to.deep.equal(plain);
   });
 });

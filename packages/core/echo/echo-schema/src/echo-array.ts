@@ -329,6 +329,8 @@ export class EchoArray<T> implements Array<T> {
       (value as any)['@id']
     ) {
       return new Reference((value as any)['@id']);
+    } else if (typeof value === 'object' && value !== null && isPlainObject(value)) {
+      return value;
     } else {
       assert(
         value === null ||
@@ -388,3 +390,21 @@ export class EchoArray<T> implements Array<T> {
       .commit();
   }
 }
+
+const isPlainObject = (value: any): boolean => {
+  if (value === null) {
+    return true;
+  } else if (typeof value !== 'object') {
+    return true;
+  } else if (Array.isArray(value)) {
+    return false;
+  } else if (typeof value === 'object') {
+    if (value instanceof EchoObject) {
+      return false;
+    }
+    return Object.entries(value).every(([key, value]) => {
+      return typeof key === 'string' && isPlainObject(value);
+    });
+  }
+  return false;
+};

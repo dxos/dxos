@@ -45,5 +45,11 @@ message Task {
 message Container {
   option (object) = true;
 
+  message PlainObject {
+    string title = 1;
+    string description = 2;
+  }
+
   repeated dxos.schema.Document documents = 1;
+  repeated PlainObject plain_objects = 2;
 }
