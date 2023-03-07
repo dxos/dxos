@@ -78,6 +78,7 @@ export const botModules: Module[] = botDefs.map(({ module }) => module);
 
 export type BotMap = Map<string, BotDef>;
 
+// TODO(burdon): Bot KMS in HALO?
 export const botKeys: { [key: string]: string } = {
   'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
   'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
