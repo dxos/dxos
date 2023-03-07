@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ErrorBoundary, withProfiler } from '@sentry/react';
+import { ErrorBoundary } from '@sentry/react';
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -65,4 +65,4 @@ export const Root = () => {
       ) : null}
     </ThemeProvider>
   );
-});
+};
