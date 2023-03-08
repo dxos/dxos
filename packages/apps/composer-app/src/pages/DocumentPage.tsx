@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   Dialog
 } from '@dxos/react-components';
-import { Composer, useComposerEditor } from '@dxos/react-composer';
+import { RichTextComposer, useEditor } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -41,8 +41,8 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
   const { t } = useTranslation('composer');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const editor = useComposerEditor({
-    document: document.content,
+  const editor = useEditor({
+    text: document.content,
     slots: { editor: { className: 'pbe-20' } }
   });
 
@@ -83,7 +83,7 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
           onChange={({ target: { value } }) => (document.title = value)}
           slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
         />
-        <Composer
+        <RichTextComposer
           editor={editor}
           slots={{
             root: {

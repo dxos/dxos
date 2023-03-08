@@ -9,10 +9,10 @@ import { Document } from '@dxos/echo-schema';
 import { Document as TypeDocument, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
 
 import { FilePreview } from '../../components';
 import { TaskList as TaskListComponent } from '../../containers';
+import { KaiComposer } from '../Document/DocumentFrame';
 import { getColumnType } from '../Table';
 
 export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
@@ -27,17 +27,8 @@ export const StackContent: FC<{ config: Config; space: Space; object: Document; 
       if (!(object instanceof TypeDocument)) {
         throw new Error(`Invalid object type: ${object.__typename}`);
       }
-      return (
-        <Composer
-          document={object.content}
-          slots={{
-            editor: {
-              className: 'kai-composer',
-              spellCheck
-            }
-          }}
-        />
-      );
+
+      return <KaiComposer text={object.content} />;
     }
 
     case Table.type.name: {

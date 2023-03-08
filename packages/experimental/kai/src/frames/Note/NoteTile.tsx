@@ -9,7 +9,7 @@ import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { observer } from '@dxos/react-client';
 import { mx, Button, DropdownMenu, DropdownMenuItem, getSize, Input } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer, useEditor } from '@dxos/react-composer';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
@@ -47,6 +47,8 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
     const idx = colors.findIndex(({ id }) => id === note.color);
     note.color = colors[idx === -1 ? 1 : idx < colors.length - 1 ? idx + 1 : 0].id;
   };
+
+  const editor = useEditor({ text: note?.content, slots: { editor: { className: 'h-full' } } });
 
   return (
     <div className={mx('flex flex-1 flex-col overflow-hidden p-3 border', color, border)}>
@@ -90,12 +92,7 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       {/* Content */}
       {/* TODO(burdon): Error when syncing: Cannot read properties of undefined (reading doc). */}
       <div className='flex flex-1 overflow-hidden mt-2 p-1 text-gray-600'>
-        {note.content && (
-          <Composer
-            document={note.content}
-            slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full' } }}
-          />
-        )}
+        {note.content && <RichTextComposer editor={editor} slots={{ root: { className: 'grow h-full' } }} />}
       </div>
     </div>
   );
