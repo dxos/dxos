@@ -20,5 +20,5 @@ message GossipMessage {
 }
 
 service GossipService {
-  rpc Announce(PeerState) returns (google.protobuf.Empty);
+  rpc Announce(GossipMessage) returns (google.protobuf.Empty);
 }

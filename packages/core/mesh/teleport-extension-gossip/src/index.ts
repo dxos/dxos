@@ -3,4 +3,4 @@
 //
 
 export * from './presence';
-export * from './presence-extension';
+export * from './gossip-extension';

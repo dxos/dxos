@@ -11,7 +11,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { SnapshotManager, SnapshotStore } from '../dbhost';

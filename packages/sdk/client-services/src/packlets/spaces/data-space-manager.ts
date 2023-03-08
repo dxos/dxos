@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';

@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/teleport-extension-presence",
-  "version": "0.1.29",
-  "description": "Presence extension for teleport.",
+  "name": "@dxos/teleport-extension-gossip",
+  "version": "0.1.28",
+  "description": "Gossip extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

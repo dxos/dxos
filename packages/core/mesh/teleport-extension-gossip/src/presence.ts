@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { PresenceExtension } from './presence-extension';
+import { GossipExtension } from './gossip-extension';
 
 export type PresenceParams = {
   localPeerId: PublicKey;
@@ -50,7 +50,7 @@ export class Presence {
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
-  private readonly _connections = new ComplexMap<PublicKey, PresenceExtension>(PublicKey.hash);
+  private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
   constructor(private readonly _params: PresenceParams) {
     assert(
@@ -66,8 +66,8 @@ export class Presence {
     );
   }
 
-  createExtension({ remotePeerId }: { remotePeerId: PublicKey }): PresenceExtension {
-    const extension = new PresenceExtension({
+  createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
+    const extension = new GossipExtension({
       onAnnounce: async (peerState) => {
         if (this._receivedMessages.has(peerState.messageId)) {
           return;

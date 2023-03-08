@@ -20,7 +20,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
