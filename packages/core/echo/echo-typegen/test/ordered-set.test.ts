@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 
 import { EchoArray } from '@dxos/echo-schema';
+import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
-import { Container, Task } from './proto';
-import { createDatabase } from '@dxos/echo-schema/testing';
+import { Contact, Container, Task } from './proto';
 
 // TODO(burdon): Test with/without saving to database.
 
@@ -50,13 +50,14 @@ describe('ordered-set', () => {
 
   test('array of plain objects', async () => {
     const root = new Container();
-    const plain: Container.PlainObject = { title: 'test' };
-    root.plainObjects.push(plain);
+    const plain: Container.Record = { title: 'test', person: new Contact({ name: 'Mykola' }) };
+    root.objects.push(plain);
     const db = await createDatabase();
     await db.add(root);
 
-    expect(root.plainObjects).to.have.length(1);
+    expect(root.objects).to.have.length(1);
     const queriedContainer = db.query(Container.filter()).objects[0];
-    expect(queriedContainer.plainObjects[0]).to.deep.equal(plain);
+    expect(queriedContainer.objects.length).to.equal(1);
+    expect(queriedContainer.objects[0].person?.name).to.equal('Mykola');
   });
 });

@@ -313,6 +313,8 @@ export class EchoArray<T> implements Array<T> {
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
       return this._document!._lookupLink(value.itemId) as T | undefined;
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      return decodeRecords(value, this._document!);
     } else {
       return value;
     }
@@ -329,8 +331,9 @@ export class EchoArray<T> implements Array<T> {
       (value as any)['@id']
     ) {
       return new Reference((value as any)['@id']);
-    } else if (typeof value === 'object' && value !== null && isPlainObject(value)) {
-      return value;
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      Object.freeze(value);
+      return encodeRecords(value, this._document!);
     } else {
       assert(
         value === null ||
@@ -391,20 +394,29 @@ export class EchoArray<T> implements Array<T> {
   }
 }
 
-const isPlainObject = (value: any): boolean => {
-  if (value === null) {
-    return true;
-  } else if (typeof value !== 'object') {
-    return true;
+const encodeRecords = (value: any, document: Document) => {
+  if (value instanceof EchoObject) {
+    void document!._linkObject(value);
+    return new Reference(value.id);
   } else if (Array.isArray(value)) {
-    return false;
+    throw new Error('Arrays are not supported');
   } else if (typeof value === 'object') {
-    if (value instanceof EchoObject) {
-      return false;
-    }
-    return Object.entries(value).every(([key, value]) => {
-      return typeof key === 'string' && isPlainObject(value);
-    });
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)])
+    );
   }
-  return false;
+  return value;
+};
+
+const decodeRecords = (value: any, document: Document) => {
+  if (value instanceof Reference) {
+    return document._lookupLink(value.itemId);
+  } else if (Array.isArray(value)) {
+    throw new Error('Arrays are not supported');
+  } else if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)])
+    );
+  }
+  return value;
 };

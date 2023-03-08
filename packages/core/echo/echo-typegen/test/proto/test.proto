@@ -45,11 +45,12 @@ message Task {
 message Container {
   option (object) = true;
 
-  message PlainObject {
+  message Record {
     string title = 1;
     string description = 2;
+    Contact person = 3;
   }
 
   repeated dxos.schema.Document documents = 1;
-  repeated PlainObject plain_objects = 2;
+  repeated Record objects = 2;
 }
