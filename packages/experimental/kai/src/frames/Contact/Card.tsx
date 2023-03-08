@@ -11,9 +11,16 @@ import { mx } from '@dxos/react-components';
 
 // TODO(burdon): Factor out Sections.
 
+export type CardSlots = {
+  root?: {
+    className: string;
+  };
+};
+
 export type CardProps<T extends Document> = {
   space: Space;
   object: T;
+  slots?: CardSlots;
   selected?: boolean;
   temporary?: boolean; // TODO(burdon): Enable Icon override instead.
   onSelect?: (object: T) => void;
@@ -31,11 +38,16 @@ export const AddressSection: FC<{ address: Address }> = ({ address }) => {
   );
 };
 
-export const Card: FC<{ children: ReactNode }> = ({ children }) => {
+export const Card: FC<{ slots?: CardSlots; children: ReactNode }> = ({ slots = {}, children }) => {
   // TODO(burdon): Pass in sections?
   // TODO(burdon): Column constrained externally?
   return (
-    <div className='flex flex-col w-column overflow-hidden p-1 py-2 space-y-2 bg-white border-b md:border md:rounded-lg'>
+    <div
+      className={mx(
+        'flex flex-col overflow-hidden p-1 py-2 space-y-2 bg-white border-b md:border md:rounded',
+        slots.root?.className
+      )}
+    >
       {children}
     </div>
   );

@@ -10,11 +10,11 @@ import { Button, getSize, mx } from '@dxos/react-components';
 
 import { AddressSection, Card, CardProps, CardRow } from './Card';
 
-export const ContactCard = ({ object, selected, temporary, onSelect, onAction }: CardProps<Contact>) => {
+export const ContactCard = ({ slots = {}, object, selected, temporary, onSelect, onAction }: CardProps<Contact>) => {
   const name = object.name ?? object.email;
 
   return (
-    <Card>
+    <Card slots={slots}>
       <CardRow
         gutter={
           <Button variant='ghost' onClick={() => onSelect?.(object)}>

@@ -45,7 +45,13 @@ export const ContactFrame = () => {
       {objects.map((object) => (
         <div key={object.id} ref={object.id === selected?.id ? selectedRef : undefined} className='flex mb-2 md:mr-2'>
           {/* TODO(burdon): Generalize cards. */}
-          <ContactCard space={space} object={object} selected={object.id === selected?.id} onSelect={onSelect} />
+          <ContactCard
+            slots={{ root: { className: 'w-column' } }}
+            space={space}
+            object={object}
+            selected={object.id === selected?.id}
+            onSelect={onSelect}
+          />
         </div>
       ))}
     </div>

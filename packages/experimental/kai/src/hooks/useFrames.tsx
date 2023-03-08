@@ -303,7 +303,7 @@ export const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.contact';
+export const defaultFrameId = 'dxos.module.frame.kanban';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -312,8 +312,8 @@ export const defaultFrames = [
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.stack',
-  'dxos.module.frame.bot'
-  // 'dxos.module.frame.kanban',
+  'dxos.module.frame.bot',
+  'dxos.module.frame.kanban'
   // 'dxos.module.frame.table',
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',

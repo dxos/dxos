@@ -91,7 +91,7 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <Toolbar>
+      <Toolbar className='mb-4'>
         <div className='w-screen md:w-column mr-4'>
           <Searchbar onSearch={handleSearch} />
         </div>

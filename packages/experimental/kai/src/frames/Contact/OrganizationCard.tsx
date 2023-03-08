@@ -10,9 +10,16 @@ import { Button, getSize, mx } from '@dxos/react-components';
 
 import { AddressSection, Card, CardProps, CardRow } from './Card';
 
-export const OrganizationCard = ({ object, selected, temporary, onSelect, onAction }: CardProps<Organization>) => {
+export const OrganizationCard = ({
+  slots = {},
+  object,
+  selected,
+  temporary,
+  onSelect,
+  onAction
+}: CardProps<Organization>) => {
   return (
-    <Card>
+    <Card slots={slots}>
       <CardRow
         gutter={
           <Button variant='ghost' onClick={() => onSelect?.(object)}>

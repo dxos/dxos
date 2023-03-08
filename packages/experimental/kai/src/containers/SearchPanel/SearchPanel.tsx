@@ -48,7 +48,8 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
 };
 
 // TODO(burdon): Based on schema. Convert documents. to text.
-const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body'];
+// TODO(burdon): Access "from.name"
+const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from'];
 
 type SearchResult = {
   object: Document;
@@ -88,6 +89,9 @@ const mapResult = (text: string) => {
             }
             break;
           }
+        } else if (value !== undefined) {
+          // TODO(burdon): Nested properties.
+          // console.log('>>>>>>>>>>>', field, JSON.stringify(value));
         }
       }
 

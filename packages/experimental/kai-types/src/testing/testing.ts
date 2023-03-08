@@ -183,7 +183,7 @@ export const createTextObjectContent = (content: Text, sentences = 5, text?: str
 // Constructors.
 //
 
-export const tags = ['red', 'green', 'blue', 'orange'];
+export const tags = ['inbox', 'active', 'scheduled', 'complete'];
 
 export const createOrganization = () => {
   return new Organization({
@@ -222,7 +222,8 @@ export const createContact = () => {
           zip: faker.address.zipCode(),
           coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) }
         }
-      : undefined
+      : undefined,
+    tag: faker.datatype.number(10) > 7 ? faker.random.arrayElement(tags) : undefined
   });
 };
 

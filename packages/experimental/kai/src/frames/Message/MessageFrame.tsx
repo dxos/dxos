@@ -123,6 +123,7 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
     if (!message.from.contact) {
       setTimeout(async () => {
         contact = await space.db.add(contact);
+        contact.tag = 'inbox';
         message.from.contact = contact; // TODO(burdon): Observer?
       });
     }
