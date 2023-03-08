@@ -3,12 +3,12 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect } from 'react';
+import React, { useEffect, useReducer } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { mx } from '@dxos/react-components';
+import { Button, mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
 import { Composer, DocumentComposerProps } from './Composer';
@@ -23,6 +23,9 @@ const Story = ({
   id,
   ...args
 }: Omit<DocumentComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
+  // TODO(wittjosiah): Text being created isn't firing react updates.
+  const [, forceUpdate] = useReducer((state) => state + 1, 0);
+
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
   const [document] = useQuery(space, ComposerDocument.filter());
@@ -36,8 +39,10 @@ const Story = ({
     }
   }, [space]);
 
+  console.log({ id, spaceKey: space?.key.truncate(), docId: document?.id, content: document?.content });
+
   if (!document?.content) {
-    return null;
+    return <Button onClick={() => forceUpdate()}>Update</Button>;
   }
 
   // TODO(burdon): Show documents for each client?
@@ -64,5 +69,5 @@ const Story = ({
 // TODO(wittjosiah): Increasing count to 2, the second peer does not sync the document content.
 export const Default = {
   render: Story,
-  decorators: [ClientSpaceDecorator({ schema, count: 1 })]
+  decorators: [ClientSpaceDecorator({ schema, count: 2 })]
 };
