@@ -58,6 +58,19 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('error', async (err) => {
       this.errors.raise(err);
+
+      // Try to gather additional information about the connection.
+      try {
+        if(typeof (this._peer as any)?._pc.getStats === 'function') {
+          (this._peer as any)._pc.getStats().then((stats: any) => {
+            log.warn('report after webrtc error', {
+              config: this.params.webrtcConfig,
+              stats,
+            })
+          })
+        }
+      } catch {}
+
       await this.destroy();
     });
   }
