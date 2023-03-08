@@ -17,7 +17,7 @@ import { Generator } from '@dxos/kai-types/testing';
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')
   ? {}
   : {
-      runtime: { client: { remoteSource: `${window.location.hostname.replace('kai', 'halo')}/vault.html` } }
+      runtime: { client: { remoteSource: `https://${window.location.hostname.replace('kai', 'halo')}/vault.html` } }
     };
 
 export const useClientProvider = (dev: boolean) => {

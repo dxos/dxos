@@ -30,7 +30,9 @@ import { DocumentLayout } from '../DocumentLayout';
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')
   ? {}
   : {
-      runtime: { client: { remoteSource: `${window.location.hostname.replace('composer', 'halo')}/vault.html` } }
+      runtime: {
+        client: { remoteSource: `https://${window.location.hostname.replace('composer', 'halo')}/vault.html` }
+      }
     };
 const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>

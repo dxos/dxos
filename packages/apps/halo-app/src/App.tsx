@@ -45,7 +45,7 @@ export const namespace = 'halo-app';
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')
   ? {}
   : {
-      runtime: { client: { remoteSource: `${window.location.hostname}/vault.html` } }
+      runtime: { client: { remoteSource: `https://${window.location.hostname}/vault.html` } }
     };
 const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
