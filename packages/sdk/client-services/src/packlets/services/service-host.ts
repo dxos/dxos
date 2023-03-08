@@ -29,11 +29,19 @@ import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
-  config: Config;
+  /**
+   * Can be omitted if `initialize` is later called.
+   */
+  config?: Config;
   modelFactory?: ModelFactory;
-  networkManager: NetworkManager;
+  networkManager?: NetworkManager;
   storage?: Storage;
   lockKey?: string;
+};
+
+export type InitializeOptions = {
+  config?: Config;
+  networkManager?: NetworkManager;
 };
 
 /**
@@ -44,11 +52,11 @@ export class ClientServicesHost {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
 
-  private readonly _config: Config;
+  private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
-  private readonly _networkManager: NetworkManager;
-  private readonly _storage: Storage;
+  private _networkManager?: NetworkManager;
+  private _storage?: Storage;
 
   /**
    * @internal
@@ -61,14 +69,16 @@ export class ClientServicesHost {
     modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager,
-    storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage,
+    storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey
-  }: ClientServicesHostParams) {
-    this._config = config;
-    this._modelFactory = modelFactory;
-    this._networkManager = networkManager;
+  }: ClientServicesHostParams = {}) {
     this._storage = storage;
+    this._modelFactory = modelFactory;
+
+    if (config) {
+      this.initialize({ config, networkManager });
+    }
 
     this._resourceLock = lockKey
       ? new VaultResourceLock({
@@ -109,6 +119,10 @@ export class ClientServicesHost {
     return this._open;
   }
 
+  get serviceRegistry() {
+    return this._serviceRegistry;
+  }
+
   get descriptors() {
     return this._serviceRegistry.descriptors;
   }
@@ -117,10 +131,37 @@ export class ClientServicesHost {
     return this._serviceRegistry.services;
   }
 
+  /**
+   * Initialize the service host with the config.
+   * Config can also be provided in the constructor.
+   * Can only be called once.
+   */
+  initialize({ config, networkManager }: InitializeOptions) {
+    assert(!this._open, 'service host is open');
+
+    if (config) {
+      assert(!this._config, 'config already set');
+
+      this._config = config;
+      if (!this._storage) {
+        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
+      }
+    }
+
+    if (networkManager) {
+      assert(!this._networkManager, 'network manager already set');
+      this._networkManager = networkManager;
+    }
+  }
+
   async open() {
     if (this._open) {
       return;
     }
+
+    assert(this._config, 'config not set');
+    assert(this._storage, 'storage not set');
+    assert(this._networkManager, 'network manager not set');
 
     log('opening...');
     await this._resourceLock?.acquire();
