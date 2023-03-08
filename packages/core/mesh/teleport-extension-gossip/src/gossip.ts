@@ -28,8 +28,6 @@ export class Gossip {
     }
   });
 
-  constructor(private readonly _params: GossipParams) {}
-
   private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak. Never cleared.
@@ -37,8 +35,10 @@ export class Gossip {
   // remotePeerId -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
-  async destroy() {
-    await this._ctx.dispose();
+  constructor(private readonly _params: GossipParams) {}
+
+  getConnections() {
+    return Array.from(this._connections.keys());
   }
 
   createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
@@ -65,6 +65,10 @@ export class Gossip {
     this._connections.set(remotePeerId, extension);
 
     return extension;
+  }
+
+  async destroy() {
+    await this._ctx.dispose();
   }
 
   sendMessage(channel: string, payload: any) {
