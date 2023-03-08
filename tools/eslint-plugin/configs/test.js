@@ -9,6 +9,6 @@ module.exports = {
     'mocha/no-mocha-arrows': 'off',
     'mocha/no-global-tests': 'off',
     'mocha/no-setup-in-describe': 'off',
-    'mocha/no-sibling-hooks': 'off',
+    'mocha/no-sibling-hooks': 'off'
   }
 };
