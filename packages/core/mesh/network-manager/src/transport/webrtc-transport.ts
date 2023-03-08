@@ -61,13 +61,13 @@ export class WebRTCTransport implements Transport {
 
       // Try to gather additional information about the connection.
       try {
-        if(typeof (this._peer as any)?._pc.getStats === 'function') {
+        if (typeof (this._peer as any)?._pc.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.warn('report after webrtc error', {
               config: this.params.webrtcConfig,
-              stats,
-            })
-          })
+              stats
+            });
+          });
         }
       } catch {}
 
