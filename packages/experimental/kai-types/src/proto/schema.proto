@@ -161,13 +161,11 @@ message Sketch {
   option (object) = true;
 
   message Point {
-    option (object) = true; // TODO(burdon): REMOVE.
     int32 x = 1;
     int32 y = 2;
   }
 
   message Path {
-    option (object) = true; // TODO(burdon): REMOVE.
     int32 timestamp = 1;
     int32 width = 2;
     string color = 3;
@@ -190,7 +188,6 @@ message NoteBoard {
   option (object) = true;
 
   message Location {
-    option (object) = true; // TODO(burdon): REMOVE.
     string object_id = 1;
     int32 x = 2;
     int32 y = 3;

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db, Text, Document } from '@dxos/echo-schema';
+import { base, db, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
@@ -33,13 +33,13 @@ describe('database', () => {
     const container = new Container();
     await database.add(container);
 
-    container.sections.push(new Container.Section({ document: new Task() }));
-    container.sections.push(new Container.Section({ document: new Contact() }));
+    container.documents.push(new Task());
+    container.documents.push(new Contact());
 
     const queriedContainer = database.query(Container.filter()).objects[0];
-    expect(queriedContainer.sections).to.have.length(2);
-    expect(queriedContainer.sections[0].document.__typename).to.equal(Task.type.name);
-    expect(queriedContainer.sections[1].document.__typename).to.equal(Contact.type.name);
+    expect(queriedContainer.documents).to.have.length(2);
+    expect(queriedContainer.documents[0].__typename).to.equal(Task.type.name);
+    expect(queriedContainer.documents[1].__typename).to.equal(Contact.type.name);
   });
 
   describe('text', () => {
