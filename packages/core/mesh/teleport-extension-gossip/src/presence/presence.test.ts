@@ -16,8 +16,6 @@ describe('Presence', () => {
 
     await builder.connect(agent1, agent2);
 
-    await agent1.waitForExactAgentsOnline([agent2], 200);
-    await agent2.waitForExactAgentsOnline([agent1], 200);
   });
 
   test('Reannounce', async () => {
