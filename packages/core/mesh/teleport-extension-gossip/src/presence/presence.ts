@@ -8,10 +8,10 @@ import { Event, scheduleTaskInterval, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
+import { PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { GossipExtension } from './gossip-extension';
+import { GossipExtension } from '../gossip-extension';
 
 export type PresenceParams = {
   localPeerId: PublicKey;
@@ -68,14 +68,14 @@ export class Presence {
 
   createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
     const extension = new GossipExtension({
-      onAnnounce: async (peerState) => {
-        if (this._receivedMessages.has(peerState.messageId)) {
+      onAnnounce: async (message) => {
+        if (this._receivedMessages.has(message.messageId)) {
           return;
         }
-        this._receivedMessages.add(peerState.messageId);
-        this._saveNewState(peerState);
+        this._receivedMessages.add(message.messageId);
+        this._saveNewState(message);
         scheduleTask(this._ctx, async () => {
-          await this._propagateAnnounce(peerState);
+          await this._propagateAnnounce(message);
         });
         scheduleTask(
           this._ctx,
