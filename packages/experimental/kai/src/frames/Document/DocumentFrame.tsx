@@ -5,43 +5,38 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useQuery, withReactor } from '@dxos/react-client';
-import { Input, mx } from '@dxos/react-components';
+import { Document } from '@dxos/kai-types';
+import { useQuery, observer } from '@dxos/react-client';
+import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { TextDocument } from '../../proto';
 
-export const DocumentFrame = withReactor(() => {
+export const DocumentFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
-  const objects = useQuery(space, TextDocument.filter());
+  const documents = useQuery(space, Document.filter());
 
   // Default to first.
-  const object = objectId ? (space!.db.getObjectById(objectId) as TextDocument) : undefined;
+  // TODO(burdon): Factor out pattern.
+  const document = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
-    if (frame && !object && objects.length) {
-      navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: objects[0].id }));
+    if (frame && !document && documents.length) {
+      navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: documents[0].id }));
     }
-  }, [frame, object, objects]);
+  }, [frame, document, documents]);
 
-  // TODO(burdon): Handle error.
-  if (!object || !object.content) {
+  if (!document || !document.content) {
     return null;
   }
-
-  // TODO(burdon): Factor out container with fragment and scrolling.
-  // const fragment = object.content.doc!.getXmlFragment('content');
 
   // TODO(burdon): Spellcheck false in dev mode.
   const spellCheck = false;
 
   return (
-    <div className='flex flex-1 overflow-hidden justify-center'>
-      <div className='flex flex-col w-full md:max-w-[800px]'>
-        <div className='m-0 md:m-4 overflow-y-auto shadow-1'>
-          {/* TODO(burdon): Why is label required? */}
-          {/* TODO(burdon): Throttle input. */}
+    <div className='flex flex-1 justify-center overflow-y-auto'>
+      <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
+        <div className='px-6 md:px-20 py-12 bg-paper-bg shadow-1'>
           <Input
             variant='subdued'
             label='Title'
@@ -49,33 +44,31 @@ export const DocumentFrame = withReactor(() => {
             placeholder='Title'
             slots={{
               root: {
-                className: 'px-6 py-6 bg-paper-bg'
+                className: 'w-full pb-8'
               },
               input: {
-                className: 'p-2 border-0 text-xl',
+                className: 'border-0 text-2xl text-black',
                 spellCheck
               }
             }}
-            value={object.title}
+            value={document.title ?? ''}
             onChange={(event) => {
-              object.title = event.target.value;
+              document.title = event.target.value;
             }}
           />
 
           <Composer
-            document={object.content}
+            document={document.content}
             slots={{
-              root: { className: 'grow' },
               editor: {
-                className: mx(
-                  'z-0 bg-paper-bg text-black h-full w-full min-h-[12em] px-8 pb-16 min-bs-[12em]',
-                  'text-xl md:text-base bg-paper-bg'
-                ),
+                className: 'kai-composer',
                 spellCheck
               }
             }}
           />
         </div>
+
+        <div className='pb-4' />
       </div>
     </div>
   );

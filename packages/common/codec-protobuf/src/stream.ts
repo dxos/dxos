@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Context } from '@dxos/context';
+import { MaybePromise } from '@dxos/util';
 
 const log = debug('dxos:codec-protobuf:stream');
 
@@ -97,7 +98,7 @@ export class Stream<T> {
   /**
    * Converts Promise<Stream<T>> to Stream<T>.
    */
-  static unwrapPromise<T>(streamPromise: Promise<Stream<T>>): Stream<T> {
+  static unwrapPromise<T>(streamPromise: MaybePromise<Stream<T>>): Stream<T> {
     if (streamPromise instanceof Stream) {
       return streamPromise;
     }

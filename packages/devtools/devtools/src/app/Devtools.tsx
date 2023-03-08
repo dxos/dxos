@@ -5,12 +5,12 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { ClientServices } from '@dxos/client-services';
+import { ClientServices } from '@dxos/client';
 import { appkitTranslations, Fallback, useTelemetry } from '@dxos/react-appkit';
 import { Client, ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { ErrorBoundary } from '@dxos/react-toolkit';
 
+import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes } from '../hooks';
 
 const Routes = () => {

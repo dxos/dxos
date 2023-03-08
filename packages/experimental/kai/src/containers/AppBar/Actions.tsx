@@ -41,8 +41,8 @@ export const Actions = () => {
     download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
   };
 
-  const handleImportSpace = async (files: File) => {
-    const data = new Uint8Array(await files.arrayBuffer());
+  const handleImportSpace = async (file: File) => {
+    const data = new Uint8Array(await file.arrayBuffer());
     const json = new TextDecoder('utf-8').decode(data);
     const space = await client.echo.createSpace();
     await serializer.import(space.db, JSON.parse(json));
@@ -75,15 +75,15 @@ export const Actions = () => {
       {space && !isMobile && (
         <>
           <DropdownMenuItem onClick={handleExportSpace}>
-            <DownloadSimple className={getSize(5)} />
+            <UploadSimple className={getSize(5)} />
             <span className='mis-2'>Export data</span>
           </DropdownMenuItem>
-          <FileUploader types={['json']} handleChange={handleImportSpace}>
-            <DropdownMenuItem>
-              <UploadSimple className={getSize(5)} />
+          <DropdownMenuItem>
+            <FileUploader classes='flex flex-row flex-1' types={['json']} handleChange={handleImportSpace}>
+              <DownloadSimple className={getSize(5)} />
               <span className='mis-2'>Import data</span>
-            </DropdownMenuItem>
-          </FileUploader>
+            </FileUploader>
+          </DropdownMenuItem>
         </>
       )}
       <DropdownMenuItem onClick={handleGenerateData}>

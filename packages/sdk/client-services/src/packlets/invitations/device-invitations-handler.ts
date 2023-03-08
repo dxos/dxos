@@ -5,6 +5,16 @@
 import assert from 'node:assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import {
+  AbstractInvitationsHandler,
+  AuthenticatingInvitationProvider,
+  AUTHENTICATION_CODE_LENGTH,
+  CancellableInvitationObservable,
+  InvitationObservableProvider,
+  InvitationsOptions,
+  INVITATION_TIMEOUT,
+  ON_CLOSE_DELAY
+} from '@dxos/client';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
@@ -23,15 +33,6 @@ import {
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { Identity, JoinIdentityParams } from '../identity';
-import {
-  AuthenticatingInvitationProvider,
-  AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitationObservable,
-  InvitationObservableProvider,
-  INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY
-} from './invitations';
-import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
 
 type DeviceInvitationsHandlerParams = {
   networkManager: NetworkManager;

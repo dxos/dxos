@@ -3,6 +3,7 @@
 //
 
 export * from './DetailsTable';
+export * from './ErrorBoundary';
 export * from './FeedGraph';
 export * from './JsonView';
 export * from './MasterTable';

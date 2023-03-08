@@ -4,13 +4,12 @@
 
 import assert from 'node:assert';
 
+import { InvitationsHandler } from '@dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
-import { DataSpace } from '../spaces/data-space';
-import { DataSpaceManager } from '../spaces/data-space-manager';
-import { InvitationsHandler } from './invitations-handler';
+import { DataSpace, DataSpaceManager } from '../spaces';
 import { AbstractInvitationsService } from './invitations-service';
 
 /**

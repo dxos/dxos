@@ -5,8 +5,7 @@
 import { CliUx, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationEncoder } from '@dxos/client';
-import { wrapObservable } from '@dxos/client-services';
+import { Client, InvitationEncoder, wrapObservable } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';

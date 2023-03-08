@@ -24,7 +24,7 @@ import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
-import { DataSpaceManager } from '../spaces/data-space-manager';
+import { DataSpaceManager } from '../spaces';
 
 /**
  * Shared backend for all client services.

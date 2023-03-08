@@ -15,6 +15,8 @@ pnpm i @dxos/react-appkit
 Put the following in the entrypoint of an app:
 
 ```ts
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+
 initializeAppTelemetry(namespace, new Config(Defaults()));
 ```
 

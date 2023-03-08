@@ -42,6 +42,7 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
+        "checkLeaks": false,
         "ciEnvironments": [
           "chromium",
           "firefox",

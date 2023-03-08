@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
 import { Invitation, Space } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -105,13 +105,13 @@ describe('Agent', () => {
     // TODO(burdon): Extend TestBuilder pattern for gravity-agent package.
     const agent1 = new Agent({
       config,
-      services: testBuilder.createClientServicesHost(),
+      services: testBuilder.createLocal(),
       spec: spec1,
       stateMachine: testStateMachineFactory(spec1.stateMachine!)
     });
     const agent2 = new Agent({
       config,
-      services: testBuilder.createClientServicesHost(),
+      services: testBuilder.createLocal(),
       spec: spec2,
       stateMachine: testStateMachineFactory(spec2.stateMachine!)
     });

@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { EmbeddedFrame } from '../../frame-container';
@@ -15,7 +15,7 @@ import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
-export const SandboxFrame = withReactor(() => {
+export const SandboxFrame = observer(() => {
   const { space } = useAppRouter();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
@@ -89,7 +89,7 @@ const EXAMPLE = `// Example frame component.
 
 import React, { useState } from 'react'
 import { useQuery, useSpaces } from '@dxos/react-client'
-import { Task } from '@kai/schema'
+import { Task } from '@dxos/kai-types'
 import { id } from '@dxos/echo-schema'
 
 const Frame = () => {

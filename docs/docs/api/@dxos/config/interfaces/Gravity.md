@@ -3,13 +3,16 @@
 
 Defined in:
    file://./../../dxos/config.proto
+
 ## Properties
 ### [disabled]()
 Type: <code>boolean</code>
+
 ### [logDir]()
 Type: <code>string</code>
 
 Options:
   - proto3_optional = true
+
 ### [name]()
 Type: <code>string</code>

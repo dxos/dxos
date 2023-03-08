@@ -52,8 +52,12 @@ export const initializeAppTelemetry = async (namespace: string, config: Config) 
     destination: SENTRY_DESTINATION,
     environment,
     release,
-    // TODO(wittjosiah): Configure this.
-    sampleRate: 1.0
+    tracing: true,
+    replay: true,
+    // TODO(wittjosiah): Configure these.
+    sampleRate: 1.0,
+    replaySampleRate: 1.0,
+    replaySampleRateOnError: 1.0
   });
 
   const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');

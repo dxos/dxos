@@ -8,7 +8,7 @@ import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from 'phosphor-react'
 import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
@@ -60,7 +60,7 @@ const Play: FC<{
   pieces: number;
   onClose: () => void;
   onSetPieces: (pieces: number) => void;
-}> = withReactor(({ game, pieces, onClose, onSetPieces }) => {
+}> = observer(({ game, pieces, onClose, onSetPieces }) => {
   const [orientation, setOrientation] = useState<Color>('w');
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {

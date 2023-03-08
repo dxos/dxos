@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 import { ProhibitInset } from 'phosphor-react';
-import React, { cloneElement, ForwardedRef } from 'react';
+import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { useSpace, withReactorRef } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client';
 import { Avatar, Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
 
 import { subduedSurface } from '../../styles';
@@ -20,7 +20,8 @@ export interface JoinSpaceHeadingProps {
   preventExit?: boolean;
 }
 
-export const JoinHeading = withReactorRef(
+// TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
+export const JoinHeading = forwardRef(
   (
     { mode, titleId, invitation, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>

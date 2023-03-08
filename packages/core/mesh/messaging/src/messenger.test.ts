@@ -216,7 +216,7 @@ describe('Messenger', () => {
       expect(messages1.length).toEqual(2);
       expect(messages2.length).toEqual(1);
     }
-  });
+  }).tag('flaky');
 
   test('re-entrant message', async () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });

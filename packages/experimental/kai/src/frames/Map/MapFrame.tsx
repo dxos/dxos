@@ -10,11 +10,11 @@ import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
+import { LatLng, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
 
 import { useAppRouter } from '../../hooks';
-import { LatLng, Organization } from '../../proto';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4

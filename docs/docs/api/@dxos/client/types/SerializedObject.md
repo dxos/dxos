@@ -4,9 +4,21 @@
 
 
 
+
 ## Properties
 ### [@id]()
 Type: <code>string</code>
 
+
+### [@model]()
+Type: <code>string</code>
+
+
 ### [@type]()
 Type: <code>string</code>
+
+
+### [text]()
+Type: <code>string</code>
+
+Text content of Text object.

@@ -82,7 +82,13 @@ export const Tooltip = ({
           </span>
         </PortalPrimitive.Root>
       )}
-      {mountAsSibling ? tooltipContent : <TooltipPrimitive.Portal forceMount>{tooltipContent}</TooltipPrimitive.Portal>}
+      {mountAsSibling ? (
+        tooltipContent
+      ) : (
+        <TooltipPrimitive.Portal forceMount {...(zIndex && { className: `!${zIndex}` })}>
+          {tooltipContent}
+        </TooltipPrimitive.Portal>
+      )}
     </TooltipPrimitive.Root>
   );
 };

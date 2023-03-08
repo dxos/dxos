@@ -36,6 +36,10 @@ module.exports = {
       column: '390px'
     },
 
+    listStyleType: {
+      square: 'square'
+    },
+
     // TODO(burdon): Levels.
     // TODO(burdon): Custom or redefine what shadow-md means?
     // https://tailwindcss.com/docs/box-shadow
@@ -79,9 +83,13 @@ module.exports = {
       },
 
       selection: {
-        // TODO(burdon): 'selected'
-        hover: secondary[100],
         bg: secondary[200],
+        text: secondary[700],
+        border: secondary[300]
+      },
+
+      hover: {
+        bg: secondary[100],
         text: secondary[700],
         border: secondary[300]
       },

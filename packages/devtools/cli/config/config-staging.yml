@@ -18,3 +18,5 @@ runtime:
         credential: 'dxos'
     publisher:
       server: 'wss://staging.kube.dxos.org/.well-known/dx/deploy'
+    supervisor:
+      server: wss://staging.kube.dxos.org/.well-known/dx/supervisor

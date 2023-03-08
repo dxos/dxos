@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { clientServiceBundle } from '@dxos/client-services';
+import { clientServiceBundle } from '@dxos/client';
 import { Frame } from '@dxos/framebox';
 import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
