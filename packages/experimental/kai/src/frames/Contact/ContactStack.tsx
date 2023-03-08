@@ -1,0 +1,69 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { useEffect, useState } from 'react';
+
+import { Contact, DocumentStack } from '@dxos/kai-types';
+import { Button } from '@dxos/react-components';
+
+import { Stack, StackRow } from '../Stack';
+import { AddressSection, CardProps } from './Card';
+
+export const ContactStack = ({ space, object }: CardProps<Contact>) => {
+  const name = object.name ?? object.email;
+  const [stack, setStack] = useState<DocumentStack>();
+  useEffect(() => {
+    const { objects: stacks } = space!.db.query(DocumentStack.filter());
+    const stack = stacks.find((stack) => stack.subjectId === object.id);
+    setStack(stack);
+  }, [object]);
+
+  const handleCreateStack = async () => {
+    const stack = await space!.db.add(new DocumentStack({ title: object.name, subjectId: object.id }));
+    setStack(stack);
+  };
+
+  return (
+    <div className='flex flex-col w-full'>
+      <StackRow className='py-4 border-b'>
+        <div className='text-2xl'>{name}</div>
+      </StackRow>
+
+      {(object.email !== name || object.username !== undefined) && (
+        <StackRow className='py-4 border-b'>
+          <div className='flex flex-col text-sm'>
+            {object.email && object.email !== name && <div className='text-sky-700'>{object.email}</div>}
+            {object.username && <div className='text-sky-700'>{object.username}</div>}
+            {object.phone && <div>{object.phone}</div>}
+          </div>
+        </StackRow>
+      )}
+
+      {object.address && (
+        <StackRow className='py-4 border-b'>
+          <AddressSection address={object.address} />
+        </StackRow>
+      )}
+
+      {/* TODO(burdon): Icon and Link. */}
+      {object.employer && <StackRow className='py-4 border-b'>{object.employer.name}</StackRow>}
+
+      {stack && (
+        <div className='py-4'>
+          <Stack space={space} stack={stack} showTitle={false} />
+        </div>
+      )}
+
+      {!stack && (
+        <StackRow className='py-4'>
+          <div>
+            <Button variant='outline' onClick={() => handleCreateStack()}>
+              Create Stack
+            </Button>
+          </div>
+        </StackRow>
+      )}
+    </div>
+  );
+};

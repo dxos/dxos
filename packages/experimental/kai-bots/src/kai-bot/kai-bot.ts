@@ -28,12 +28,9 @@ export class KaiBot extends Bot {
     const stacks = this.space.db.query(DocumentStack.filter());
     this._subscription = stacks.subscribe(async (query) => {
       log.info('updated', { objects: query.objects.length });
-
       query.objects.forEach((stack) => {
         log.info('stack', { stack: JSON.stringify(stack) });
-        if (stack.sections.length === 0) {
-          void generator.update(this._chatModel!, this.space, stack);
-        }
+        void generator.update(this._chatModel!, this.space, stack);
       });
     });
   }

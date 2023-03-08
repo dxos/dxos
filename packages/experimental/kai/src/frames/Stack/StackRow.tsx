@@ -29,7 +29,7 @@ import {
 
 import { FileList } from '../File';
 
-type StackRowProps = {
+export type StackRowProps = {
   style?: any;
   dragging?: boolean;
   dragAttributes?: any;

@@ -40,11 +40,11 @@ describe('KaiBot', () => {
       const unsubscribe = query.subscribe(({ objects: stacks }) => {
         expect(stacks).to.have.length(1);
 
-        const document = stacks[0].sections[0];
-        expect(document.__typename).to.equal('dxos.experimental.kai.Document');
-        expect(document instanceof Document).to.be.true;
+        const { object } = stacks[0].sections[0];
+        expect(object.__typename).to.equal('dxos.experimental.kai.Document');
+        expect(object instanceof Document).to.be.true;
 
-        const text = document.content.text;
+        const text = object.content.text;
         expect(text.length).to.be.greaterThan(0);
         trigger.wake();
       });

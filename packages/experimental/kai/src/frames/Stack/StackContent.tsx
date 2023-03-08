@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@dxos/echo-schema';
-import { Document as DocumentType, File, Table, TaskList } from '@dxos/kai-types';
+import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
@@ -15,13 +15,13 @@ import { FilePreview } from '../../components';
 import { TaskList as TaskListComponent } from '../../containers';
 import { getColumnType } from '../Table';
 
-export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
-  config,
-  space,
-  object,
-  spellCheck
-}) => {
-  console.log(object.__typename, JSON.stringify(object));
+export const StackContent: FC<{
+  config: Config;
+  space: Space;
+  section: DocumentStack.Section;
+  spellCheck: boolean;
+}> = ({ config, space, section, spellCheck }) => {
+  const object = section.object;
 
   // TODO(burdon): Type?
   switch (object.__typename) {

@@ -120,9 +120,15 @@ message Document {
 message DocumentStack {
   option (object) = true;
 
+  message Section {
+    option (object) = true; // TODO(burdon): REMOVE (but requires id property).
+    string type = 1; // TODO(burdon): Metadata.
+    dxos.schema.Document object = 2;
+  }
+
   string title = 1;
   string subject_id = 2; // TODO(burdon): Reference.
-  repeated dxos.schema.Document sections = 3;
+  repeated Section sections = 3;
 }
 
 // TODO(burdon): System type for external GUIDs.

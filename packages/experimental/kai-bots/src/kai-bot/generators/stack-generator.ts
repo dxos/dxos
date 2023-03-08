@@ -15,7 +15,10 @@ import { Generator } from '../generator';
 
 export class ContactStackGenerator implements Generator<DocumentStack> {
   async update(chatModel: ChatModel, space: Space, stack: DocumentStack) {
-    if (stack.sections.length > 0) {
+    // TODO(burdon): Prevent multiple generations.
+    // TODO(burdon): Update existing if meta changes?
+    const generated = stack.sections.find((section) => section.type === 'generated');
+    if (generated) {
       return;
     }
 
@@ -59,7 +62,9 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       // TODO(burdon): Add formatting?
       const text = new Text([title, '', content].join('\n'));
       const document = await space.db.add(new Document({ title, content: text }));
-      stack.sections.push(document);
+      // TODO(burdon): Add metadata.
+      const section = new DocumentStack.Section({ type: 'generated', object: document });
+      stack.sections.push(section);
 
       // Add response.
       messages.push(message);

@@ -135,6 +135,7 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
   return (
     <div className='flex flex-col space-y-4'>
       <ContactCard
+        space={space}
         object={contact}
         temporary={!message.from.contact}
         onSelect={handleSelect}

@@ -4,12 +4,15 @@
 
 import React, { FC, ReactNode } from 'react';
 
+import { Space } from '@dxos/client';
 import { Document } from '@dxos/echo-schema';
 import { Address } from '@dxos/kai-types';
+import { mx } from '@dxos/react-components';
 
 // TODO(burdon): Factor out Sections.
 
 export type CardProps<T extends Document> = {
+  space: Space;
   object: T;
   selected?: boolean;
   temporary?: boolean; // TODO(burdon): Enable Icon override instead.
@@ -19,7 +22,7 @@ export type CardProps<T extends Document> = {
 
 export const AddressSection: FC<{ address: Address }> = ({ address }) => {
   return (
-    <div className='mt-2 text-sm text-zinc-600'>
+    <div className='text-sm text-zinc-600'>
       <div>{address.city}</div>
       <div>
         {address.state} {address.zip}
@@ -38,13 +41,14 @@ export const Card: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-export const CardRow: FC<{ children: ReactNode; gutter?: ReactNode; action?: ReactNode }> = ({
+export const CardRow: FC<{ children: ReactNode; className?: string; gutter?: ReactNode; action?: ReactNode }> = ({
   children,
+  className,
   gutter,
   action
 }) => {
   return (
-    <div className='flex overflow-hidden items-center'>
+    <div className={mx('flex overflow-hidden items-center', className)}>
       <div className='flex shrink-0 w-[48px]'>{gutter}</div>
       <div className='flex w-full'>{children}</div>
       {action && <div className='flex shrink-0 w-[48px]'>{action}</div>}
