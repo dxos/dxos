@@ -14,7 +14,7 @@ import {
 import { MaybePromise } from '@dxos/util';
 
 export type SystemServiceOptions = {
-  config: Config;
+  config?: Config;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
@@ -25,7 +25,7 @@ export type SystemServiceOptions = {
  *
  */
 export class SystemServiceImpl implements SystemService {
-  private readonly _config: SystemServiceOptions['config'];
+  private readonly _config?: SystemServiceOptions['config'];
   private readonly _statusUpdate: SystemServiceOptions['statusUpdate'];
   private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
   private readonly _onUpdateStatus: SystemServiceOptions['onUpdateStatus'];
@@ -40,7 +40,7 @@ export class SystemServiceImpl implements SystemService {
   }
 
   async getConfig() {
-    return this._config.values;
+    return this._config?.values ?? {};
   }
 
   async updateStatus({ status }: UpdateSystemStatusRequest) {
