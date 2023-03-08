@@ -41,8 +41,7 @@ export class ClientRpcServer {
       ...rpcOptions,
       callHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const service = this._getServiceHandler(serviceName);
-        const handler = (method: string, params: Any) => service.call(method, params);
+        const handler = (method: string, params: Any) => this._getServiceHandler(serviceName).call(method, params);
 
         if (this._handleCall) {
           return this._handleCall(methodName, params, handler);
@@ -52,8 +51,7 @@ export class ClientRpcServer {
       },
       streamHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const service = this._getServiceHandler(serviceName);
-        const handler = (method: string, params: Any) => service.callStream(method, params);
+        const handler = (method: string, params: Any) => this._getServiceHandler(serviceName).callStream(method, params);
 
         if (this._handleStream) {
           return Stream.unwrapPromise(this._handleStream(methodName, params, handler));
