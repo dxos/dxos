@@ -625,7 +625,6 @@ importers:
       react-dom: ^18.2.0
       y-codemirror.next: ^0.3.2
       y-protocols: ^1.0.5
-      y-webrtc: ^10.2.4
       yjs: ^13.5.44
     dependencies:
       '@codemirror/lang-markdown': 6.1.0
@@ -650,7 +649,6 @@ importers:
       prosemirror-view: 1.30.1
       y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
       y-protocols: 1.0.5
-      y-webrtc: 10.2.4
       yjs: 13.5.44
     devDependencies:
       '@dxos/client': link:../../../sdk/client
@@ -36252,22 +36250,6 @@ packages:
     resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}
     dependencies:
       lib0: 0.2.52
-
-  /y-webrtc/10.2.4:
-    resolution: {integrity: sha512-yoTl2tXdJsLLYIp2X2GRqNywgGwk4CEs3NcXJmgLLq2Ga8VX86q3Y3QBLy5mi30InRjjKL/ymCasAsydXTta+w==}
-    engines: {node: '>=12'}
-    hasBin: true
-    dependencies:
-      lib0: 0.2.52
-      simple-peer: 9.11.0
-      y-protocols: 1.0.5
-    optionalDependencies:
-      ws: 7.5.9
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: false
 
   /y18n/3.2.2:
     resolution: {integrity: sha512-uGZHXkHnhF0XeeAPgnKfPv1bgKAYyVvmNL1xlKsPYZPaIHxGti2hHqvOCQv71XMsLxu1QjergkqogUnms5D3YQ==}
