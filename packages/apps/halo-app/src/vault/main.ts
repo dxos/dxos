@@ -3,17 +3,13 @@
 //
 
 import '@dxosTheme';
-import {
-  Client,
-  ClientServicesProvider,
-  ClientServicesProxy,
-  IFrameHostRuntime,
-  IFrameProxyRuntime,
-  ShellRuntime
-} from '@dxos/client';
+import { StrictMode } from 'react';
+
+import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
+import { IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations, Shell } from '@dxos/react-ui';
@@ -31,13 +27,16 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const client = new Client({ config, services });
   await client.initialize();
 
-  // TODO(wittjosiah): StrictMode.
   root.render(
     createElement(
-      ThemeProvider,
-      { themeVariant: 'os', resourceExtensions: [osTranslations] },
-      // NOTE: Using context provider directly to avoid duplicate banners being logged.
-      createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
+      StrictMode,
+      {},
+      createElement(
+        ThemeProvider,
+        { themeVariant: 'os', resourceExtensions: [osTranslations] },
+        // NOTE: Using context provider directly to avoid duplicate banners being logged.
+        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
+      )
     )
   );
 };

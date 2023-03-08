@@ -8,12 +8,12 @@ dir:
 
 ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript.
 
-*   Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)
-*   No servers or central authority, all the data is with the clients
-*   Connectivity with peers via [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
-*   Support for multiple concurrent writers
+*   Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
+*   No servers or central authority, all the data is with the clients.
+*   Connectivity with peers via [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
+*   Support for multiple concurrent writers.
 *   Collaboration on key-value objects, bodies of text, and other "custom data models".
-*   Support for offline writes and conflict resolution when peers rejoin the network
+*   Support for offline writes and conflict resolution when peers rejoin the network.
 
 ::: note Tell us what you think
 Join our [Discord](https://discord.gg/KsDBXuUxvD) and talk to us about the kind of database you are looking for.

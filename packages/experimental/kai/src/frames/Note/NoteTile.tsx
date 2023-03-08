@@ -5,12 +5,11 @@
 import { List, Palette, X } from 'phosphor-react';
 import React, { FC } from 'react';
 
+import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
-import { withReactor } from '@dxos/react-client';
+import { observer } from '@dxos/react-client';
 import { mx, Button, DropdownMenu, DropdownMenuItem, getSize, Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
-
-import { Note } from '../../proto';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
@@ -35,7 +34,7 @@ const Menu: FC<{ onDelete: () => void; onColorChange: () => void }> = ({ onDelet
   );
 };
 
-export const NoteTile = withReactor(({ item, onDelete }: TileContentProps) => {
+export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
   const note = item.data as Note;
 
   const { color, border } = colors.find(({ id }) => id === note.color) ?? colors[0];

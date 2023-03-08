@@ -12,12 +12,12 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { test, describe } from '@dxos/test';
 
-import { createSigningContext, syncItems, TestBuilder } from '../testing';
+import { createSigningContext, HostTestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
-    const builder = new TestBuilder();
+    const builder = new HostTestBuilder();
 
     const peer = builder.createPeer();
     const identity = await createSigningContext(peer.keyring);
@@ -43,7 +43,7 @@ describe('DataSpaceManager', () => {
   });
 
   test('sync between peers', async () => {
-    const builder = new TestBuilder();
+    const builder = new HostTestBuilder();
 
     const peer1 = builder.createPeer();
     const identity1 = await createSigningContext(peer1.keyring);
@@ -121,7 +121,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItems(space1.dataPipelineController, space2.dataPipelineController);
+    await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);

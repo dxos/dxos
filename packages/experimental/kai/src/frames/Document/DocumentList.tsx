@@ -5,49 +5,29 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Text, useQuery } from '@dxos/react-client';
+import { Document } from '@dxos/kai-types';
+import { useQuery } from '@dxos/react-client';
 
-import { EditableObjectList } from '../../components';
+import { ObjectList } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
-import { TextDocument } from '../../proto';
 
-// TODO(burdon): Factor out.
 export const DocumentList = () => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
-  const objects = useQuery(space, TextDocument.filter());
+  const objects = useQuery(space, Document.filter());
   if (!space || !frame) {
     return null;
   }
 
-  const handleSelect = (objectId: string) => {
-    navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
-  };
-
-  const handleUpdate = async (objectId: string, text: string) => {
-    const object = objects.find((object) => object.id === objectId);
-    if (object) {
-      object.title = text;
-    }
-  };
-
-  const handleCreate = async () => {
-    const object = await space.db.add(new TextDocument());
-    object.content = new Text(); // TODO(burdon): Make automatic?
-    return object.id;
-  };
-
-  const Icon = frame!.runtime.Icon;
-
   return (
-    <EditableObjectList<TextDocument>
+    <ObjectList<Document>
+      frame={frame}
       objects={objects}
       selected={objectId}
-      Icon={Icon}
       getTitle={(object) => object.title}
-      onSelect={handleSelect}
-      onUpdate={handleUpdate}
-      onCreate={handleCreate}
+      setTitle={(object, title) => (object.title = title)}
+      onSelect={(objectId) => navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))}
+      onCreate={() => space.db.add(new Document())}
     />
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Selection, SubscriptionHandle } from '@dxos/echo-schema';
 
@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Calls the callback when any object from the selection changes.
  * Also calls the callback when the selection changes and during the first render.
  */
-export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
+export const useSubscription = (cb: () => void, selection: Selection) => {
   const client = useClient();
 
   // Make sure that the callback is always the one from the latest render.
@@ -22,37 +22,16 @@ export const useSubscriptionEffect = (cb: () => void, selection: Selection) => {
   const callbackRef = useRef(cb);
   callbackRef.current = cb;
 
-  const [handle, setHandle] = useState<SubscriptionHandle>(() =>
-    client.echo.dbRouter.createSubscription(() => {
-      callbackRef.current();
-    })
-  );
+  const subscriptionRef = useRef<SubscriptionHandle>();
 
   useEffect(() => {
-    // TODO(dmaretskyi): Is this branch ever taken?
-    if (!handle.subscribed) {
-      const newHandle = client.echo.dbRouter.createSubscription(() => {
-        callbackRef.current();
-      });
-      setHandle(newHandle);
-      newHandle.update(selection);
-    }
+    subscriptionRef.current = client.echo.dbRouter.createSubscription(() => {
+      callbackRef.current();
+    });
 
-    return () => handle.unsubscribe();
+    return () => subscriptionRef.current?.unsubscribe();
   }, []);
 
-  handle.update(selection);
-  return handle;
-};
-
-/**
- * Create reactive selection.
- * Re-renders component when any object from the selection changes.
- */
-export const useSubscription = (selection: Selection): SubscriptionHandle => {
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
-
-  return useSubscriptionEffect(() => {
-    forceUpdate();
-  }, selection);
+  subscriptionRef.current?.update(selection);
+  return subscriptionRef.current;
 };

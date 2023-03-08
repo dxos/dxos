@@ -7,8 +7,11 @@ import { TextModel, type Doc } from '@dxos/text-model';
 import { EchoObject } from './object';
 
 export class Text extends EchoObject<TextModel> {
-  constructor() {
+  constructor(text?: string) {
     super(TextModel);
+    if (text) {
+      this.model?.insert(text, 0);
+    }
   }
 
   override toString() {
@@ -33,6 +36,14 @@ export class Text extends EchoObject<TextModel> {
     // this._database?._logObjectAccess(this);
 
     return this._model.textContent;
+  }
+
+  toJSON() {
+    return {
+      '@id': this.id,
+      '@model': TextModel.meta.type,
+      text: this.text
+    };
   }
 
   protected override async _onBind(): Promise<void> {

@@ -28,27 +28,30 @@ const isValidKey = (key: string | symbol) =>
     key === '__typename'
   );
 
+export const isDocument = (object: unknown): object is Document =>
+  typeof object === 'object' && object !== null && !!(object as any)[base];
+
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => {
-    if (obj instanceof Text) {
-      return obj.toString();
-    } else {
-      return { '@id': id };
-    }
-  }
+  onRef: (id, obj) => ({ '@id': id })
 };
+
+/**
+ * Helper type to disable type inference for a generic parameter.
+ * @see https://stackoverflow.com/a/56688073
+ */
+type NoInfer<T> = [T][T extends any ? 0 : never];
 
 /**
  * Base class for generated document types and dynamic objects.
  *
- * NOTE: See exported `Document` declaration below.
+ * We define the exported `Document` type separately to have fine-grained control over the typescript type.
+ * The runtime semantics should be exactly the same since this compiled down to `export const Document = TypedDocument`.
  */
-// TODO(burdon): Support immutable objects?
-class Document_<T> extends EchoObject<DocumentModel> {
+class TypedDocument<T> extends EchoObject<DocumentModel> {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -122,6 +125,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
     return {
       '@id': this.id,
       '@type': this.__typename,
+      '@model': DocumentModel.meta.type,
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
       })
@@ -158,6 +162,7 @@ class Document_<T> extends EchoObject<DocumentModel> {
     return {
       '@id': this.id,
       '@type': this.__typename,
+      '@model': DocumentModel.meta.type,
       ...convert(this._model?.toObject())
     };
   }
@@ -374,23 +379,15 @@ class Document_<T> extends EchoObject<DocumentModel> {
 }
 
 // Fix constructor name.
-Object.defineProperty(Document_, 'name', { value: 'Document' });
-
-/**
- * Helper type to disable type inference for a generic parameter.
- * @see https://stackoverflow.com/a/56688073
- */
-type NoInfer<T> = [T][T extends any ? 0 : never];
-
-// NOTE:
-// We define the exported value separately to have fine-grained control over the typescript type.
-// Runtime semantics should be exactly the same as this compiled down to `export const Document = Document_`.
+Object.defineProperty(TypedDocument, 'name', { value: 'Document' });
 
 /**
  * Base class for generated document types and dynamic objects.
  */
-export type Document<T extends Record<string, any> = { [key: string]: any }> = Document_<T> & T;
+// TODO(burdon): Rename?
+export type Document<T extends Record<string, any> = { [key: string]: any }> = TypedDocument<T> & T;
 
+// TODO(burdon): Support immutable objects?
 export const Document: {
   /**
    * Create a new document.
@@ -401,7 +398,4 @@ export const Document: {
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType
   ): Document<T>;
-} = Document_ as any;
-
-export const isDocument = (object: unknown): object is Document =>
-  typeof object === 'object' && object !== null && !!(object as any)[base];
+} = TypedDocument as any;

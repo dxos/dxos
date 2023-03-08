@@ -2,25 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
+import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { beforeAll, describe, test } from '@dxos/test';
-
 import { AppManager } from './app-manager';
 
-describe('Basic test', () => {
+test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  beforeAll(function () {
-    host = new AppManager(this);
+  // TODO(wittjosiah): Currently not running in Firefox.
+  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+  test.beforeAll(({ browser, browserName }) => {
+    host = new AppManager(browser);
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
     //   https://github.com/microsoft/playwright/issues/2973
-    guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
+    guest = browserName === 'chromium' ? new AppManager(browser) : host;
   });
 
-  describe('Default space', () => {
+  test.describe('Default space', () => {
     test('create identity', async () => {
       await host.init();
 
@@ -32,9 +33,13 @@ describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.kaiIsVisible()).to.be.true;
       }, 1000);
-    }).skipEnvironments('firefox');
+    });
 
-    test('invite guest', async () => {
+    test('invite guest', async ({ browserName }) => {
+      if (browserName !== 'chromium') {
+        return;
+      }
+
       await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
@@ -50,6 +55,6 @@ describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.currentSpace()).to.equal(await guest.currentSpace());
       }, 1000);
-    }).onlyEnvironments('chromium');
+    });
   });
 });

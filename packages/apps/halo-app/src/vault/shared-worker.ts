@@ -2,13 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { WorkerRuntime } from '@dxos/client';
+import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
 // NOTE: Verbose logging enabled in the shared worker for the time being.
 const LOG_FILTER = 'client:debug,info';
+
+void initializeAppTelemetry('halo-worker', new Config(Defaults()));
 
 const workerRuntime = new WorkerRuntime(async () => {
   const config = new Config(await Dynamics(), await Envs(), Defaults());

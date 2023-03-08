@@ -1,6 +1,6 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './SpacePage';
-export * from './SpacesPage';
+export * from './DocumentPage';
+export * from './FirstRunPage';

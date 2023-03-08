@@ -15,10 +15,11 @@ type UseQuery = {
 /**
  * Create subscription.
  */
-export const useQuery: UseQuery = <T extends Document>(space?: Space, filter?: Filter<T>): Document[] => {
+// TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
+export const useQuery: UseQuery = <T extends Document>(space?: Space, filter?: Filter<T>, deps?: any[]): Document[] => {
   const query = useMemo(
     () => space?.db.query(filter ?? {}) as Query<T> | undefined,
-    [space?.db, ...filterToDepsArray(filter)]
+    [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore

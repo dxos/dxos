@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,7 +19,9 @@
     "rollup-plugin.js",
     "rollup-plugin.d.ts",
     "vite-plugin.js",
-    "vite-plugin.d.ts"
+    "vite-plugin.d.ts",
+    "webpack-plugin.js",
+    "webpack-plugin.d.ts"
   ],
   "scripts": {
     "test-build": "node ./src/testing/build.js"
@@ -44,7 +46,8 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
-    "@types/lodash.set": "^4.3.7"
+    "@types/lodash.set": "^4.3.7",
+    "webpack": "^5.75.0"
   },
   "publishConfig": {
     "access": "public"

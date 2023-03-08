@@ -39,7 +39,7 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-selection-hover border',
+        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
         active && '!bg-selection-bg border-selection-border',
         slots.root?.className
       )}
@@ -55,6 +55,14 @@ const Tile: FC<{
     </div>
   );
 };
+
+// Rank last if tags.
+// TODO(burdon): Create sections (e.g., Community).
+const len = (array?: any[]) => array?.length ?? 0;
+const sorter = (
+  { module: { displayName: a, tags: t1 } }: FrameDef | BotDef,
+  { module: { displayName: b, tags: t2 } }: FrameDef | BotDef
+) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
 
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
   const { space } = useAppRouter();
@@ -88,7 +96,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex my-8 justify-center'>
+      <div className='flex py-8 justify-center'>
         <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
           <Searchbar />
           <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
@@ -108,23 +116,25 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
         <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
-            {Array.from(modules.values()).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-              <Tile
-                key={id!}
-                id={id!}
-                label={displayName ?? id!}
-                description={description}
-                slots={slots}
-                Icon={Icon}
-                onSelect={handleSelect}
-                active={
-                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                    (active) => active === id
-                  )
-                }
-              />
-            ))}
+          <div className='flex flex-col grid-cols-1 gap-6 lg:grid lg:grid-cols-3 pb-24'>
+            {Array.from(modules.values())
+              .sort(sorter)
+              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+                <Tile
+                  key={id!}
+                  id={id!}
+                  label={displayName ?? id!}
+                  description={description}
+                  slots={slots}
+                  Icon={Icon}
+                  onSelect={handleSelect}
+                  active={
+                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                      (active) => active === id
+                    )
+                  }
+                />
+              ))}
           </div>
         </div>
       </div>

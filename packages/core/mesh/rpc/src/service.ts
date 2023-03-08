@@ -16,6 +16,10 @@ export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescript
 
 export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
 
+export type ServiceTypesOf<Bundle extends ServiceBundle<any>> = Bundle extends ServiceBundle<infer Services>
+  ? Services
+  : never;
+
 /**
  * Groups multiple services together to be served by a single RPC peer.
  */
@@ -131,7 +135,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   return new ProtoRpcPeer(requestedRpcs, peer);
 };
 
-const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
+export const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
   const separator = method.lastIndexOf('.');
   const serviceName = method.slice(0, separator);
   const methodName = method.slice(separator + 1);

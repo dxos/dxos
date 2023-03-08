@@ -5,12 +5,14 @@
 import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
+import { Project } from '@dxos/kai-types';
+import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
-import { ElevationProvider, Searchbar } from '@dxos/react-components';
+import { Searchbar } from '@dxos/react-components';
 
+import { Toolbar } from '../../components';
 import { ProjectCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
-import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
@@ -54,15 +56,9 @@ export const KanbanFrame: FC = () => {
   // TODO(burdon): Type and column/field selectors.
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2 mb-2'>
-        <div className='w-screen md:w-column px-4 md:px-2'>
-          <ElevationProvider elevation='group'>
-            <div>
-              <Searchbar onSearch={handleSearch} />
-            </div>
-          </ElevationProvider>
-        </div>
-      </div>
+      <Toolbar className='w-screen md:w-column '>
+        <Searchbar onSearch={handleSearch} />
+      </Toolbar>
 
       <div className='flex flex-1 overflow-hidden'>
         <Kanban objects={objects} columns={columns} onCreate={handleCreate} />

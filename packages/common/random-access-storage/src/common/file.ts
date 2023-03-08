@@ -69,6 +69,5 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
  */
 export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
   const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
-
   return Object.assign(file, { type, native });
 };

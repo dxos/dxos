@@ -12,6 +12,8 @@ import { mx } from '../../util';
 // TODO(burdon): Adapter for Project type.
 // TODO(burdon): Object to represent properties (e.g., width, bindings) for table.
 
+// TODO(burdon): Re-export Column.
+
 const getStyles = (props: any, align = 'left') => [
   props,
   {

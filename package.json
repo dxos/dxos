@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -38,6 +38,7 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log-hook": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",

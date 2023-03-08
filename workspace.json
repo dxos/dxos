@@ -7,6 +7,7 @@
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
+    "bot-lab": "packages/experimental/bot-lab",
     "braneframe": "packages/apps/braneframe",
     "chess-app": "packages/experimental/chess-app",
     "cli": "packages/devtools/cli",
@@ -47,8 +48,11 @@
     "hello-template": "packages/apps/templates/hello-template",
     "hypercore": "packages/common/hypercore",
     "kai": "packages/experimental/kai",
+    "kai-bots": "packages/experimental/kai-bots",
+    "kai-types": "packages/experimental/kai-types",
     "keyring": "packages/core/halo/keyring",
     "keys": "packages/common/keys",
+    "kodama": "packages/experimental/kodama",
     "log": "packages/common/log",
     "log-hook": "tools/log-hook",
     "messaging": "packages/core/mesh/messaging",
@@ -70,10 +74,8 @@
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",
     "react-components": "packages/common/react-components",
-    "react-components-deprecated": "packages/deprecated/react-components-deprecated",
     "react-composer": "packages/apps/patterns/react-composer",
     "react-metagraph": "packages/experimental/react-metagraph",
-    "react-toolkit": "packages/deprecated/react-toolkit",
     "react-ui": "packages/apps/patterns/react-ui",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/core/mesh/rpc",
@@ -99,6 +101,7 @@
     "toolbox": "tools/executors/toolbox",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
+    "websocket-rpc": "packages/core/mesh/websocket-rpc",
     "x": "tools/x"
   }
 }

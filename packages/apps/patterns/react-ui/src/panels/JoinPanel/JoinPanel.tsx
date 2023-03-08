@@ -151,7 +151,7 @@ export const JoinPanel = ({
   }, [unredeemedHaloInvitationCode]);
 
   useEffect(() => {
-    // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
+    // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
     const attrValue =
       joinState.activeView === 'identity input'
         ? `${joinState.activeView}; ${joinState.additionMethod}`

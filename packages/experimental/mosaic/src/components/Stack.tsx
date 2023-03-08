@@ -12,7 +12,6 @@ export type StackProps<T extends {}> = {
   Content: FC<TileContentProps<T>>;
 };
 
-// TODO(burdon): External DndContext.
 // TODO(burdon): DndSort.
 export const Stack = <T extends {}>({ items = [], Content }: StackProps<T>) => {
   return (

@@ -43,8 +43,9 @@ describe('schema', () => {
       JSON.stringify({
         '@id': task1.id,
         '@type': task1.__typename,
+        '@model': 'dxos:model/document',
         subTasks: [],
-        description: '',
+        description: { '@id': task1.description.id },
         title: 'Task 1',
         assignee: { '@id': contact.id }
       })
@@ -59,6 +60,7 @@ describe('schema', () => {
     expect(contact.toJSON()).to.deep.eq({
       '@id': contact.id,
       '@type': contact.__typename,
+      '@model': 'dxos:model/document',
       name: 'User 1',
       tasks: [
         {

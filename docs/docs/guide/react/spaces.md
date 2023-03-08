@@ -21,7 +21,7 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 
 Arguments:
 
-`meta`: <code>[PropertiesOptions](/api/@dxos/react-client/types/PropertiesOptions)</code>
+`meta`: <code>[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)</code>
 :::
 
 ```tsx{10} file=./snippets/create-spaces.tsx#L5-
@@ -66,7 +66,7 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L59)
+### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L60)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.

@@ -8,36 +8,23 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
+import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { useConfig, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
 
-import { EditableObjectList } from '../../components';
+import { ObjectList } from '../../components';
 import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
-import { File } from '../../proto';
 import { fileTypes } from './defs';
 
-const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
-  return (
-    <div className='hidden md:flex shrink-0 flex-col w-full h-[200px] p-2'>
-      <FileUploader
-        name='file'
-        types={fileTypes}
-        hoverTitle={' '}
-        classes='flex flex-1 flex-col justify-center w-full h-full border-4 border-dashed rounded-lg'
-        dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-        handleChange={onUpload}
-      >
-        <div className='flex flex-col items-center cursor-pointer'>
-          <FilePlus weight='thin' className={getSize(10)} />
-          <div className='mt-2'>Click or drag files here.</div>
-        </div>
-      </FileUploader>
-    </div>
-  );
+export type FileListProps = {
+  disableDownload?: boolean;
+  onSelect?: (objectId: string) => void;
 };
 
-export const FileList = () => {
+// TODO(burdon): Separate Tile from component.
+// TODO(burdon): Download optional.
+export const FileList: FC<FileListProps> = ({ disableDownload, onSelect }) => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
@@ -50,13 +37,10 @@ export const FileList = () => {
   }
 
   const handleSelect = (objectId: string) => {
-    navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
-  };
-
-  const handleUpdate = async (objectId: string, text: string) => {
-    const object = objects.find((object) => object.id === objectId);
-    if (object) {
-      object.name = text;
+    if (onSelect) {
+      onSelect(objectId);
+    } else {
+      navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
     }
   };
 
@@ -85,19 +69,17 @@ export const FileList = () => {
     }
   };
 
-  const Icon = frame!.runtime.Icon;
-
   return (
     <div className='flex flex-col w-full'>
-      <EditableObjectList<File>
+      <ObjectList<File>
+        frame={frame}
         objects={objects}
         selected={objectId}
-        Icon={Icon}
-        Action={DownloadSimple}
         getTitle={(object) => object.name}
+        setTitle={(object, title) => (object.name = title)}
+        Action={DownloadSimple}
         onSelect={handleSelect}
-        onAction={handleDownload}
-        onUpdate={handleUpdate}
+        onAction={disableDownload ? undefined : handleDownload}
       />
 
       {isMd && (
@@ -105,6 +87,26 @@ export const FileList = () => {
           <FileUpload onUpload={handleUpload} />
         </div>
       )}
+    </div>
+  );
+};
+
+const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
+  return (
+    <div className='hidden md:flex shrink-0 flex-col w-full h-[200px] p-2'>
+      <FileUploader
+        name='file'
+        types={fileTypes}
+        hoverTitle={' '}
+        classes='flex flex-1 flex-col justify-center w-full h-full border-4 border-dashed rounded-lg'
+        dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+        handleChange={onUpload}
+      >
+        <div className='flex flex-col items-center cursor-pointer'>
+          <FilePlus weight='thin' className={getSize(10)} />
+          <div className='mt-2'>Click or drag files here.</div>
+        </div>
+      </FileUploader>
     </div>
   );
 };

@@ -76,6 +76,9 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
+      "path": "../../core/mesh/websocket-rpc"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../gem-spore"
+    },
+    {
+      "path": "../kai-types"
     },
     {
       "path": "../metagraph"

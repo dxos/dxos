@@ -8,7 +8,7 @@ import { StoryContext, StoryFn } from '@storybook/react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
@@ -24,7 +24,7 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
   const n = 2;
   const testBuilder = new TestBuilder();
   const clients = useMemo(() => {
-    return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
+    return [...Array(n)].map(() => new Client({ services: testBuilder.createLocal() }));
   }, []);
 
   const [invitationCode, setInvitationCode] = useState<string>();
