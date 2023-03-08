@@ -51,7 +51,7 @@ describe('Gossip', () => {
       inc();
     });
 
-    await agent1.gossip.sendMessage('test_channel', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('test_channel', { '@type': 'google.protobuf.Any' });
     await messageReceived();
   });
 
@@ -75,7 +75,7 @@ describe('Gossip', () => {
       inc();
     });
 
-    await agent1.gossip.sendMessage('test_channel', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('test_channel', { '@type': 'google.protobuf.Any' });
     await messageReceived();
   });
 
@@ -105,8 +105,8 @@ describe('Gossip', () => {
       inc();
     });
 
-    await agent1.gossip.sendMessage('first', { '@type': 'google.protobuf.Any' });
-    await agent1.gossip.sendMessage('second', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('first', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('second', { '@type': 'google.protobuf.Any' });
     await messageReceived();
   });
 });

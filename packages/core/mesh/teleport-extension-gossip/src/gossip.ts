@@ -71,7 +71,7 @@ export class Gossip {
     await this._ctx.dispose();
   }
 
-  sendMessage(channel: string, payload: any) {
+  postMessage(channel: string, payload: any) {
     return Promise.all(
       [...this._connections.values()].map((extension) =>
         extension

@@ -72,7 +72,7 @@ export class Presence {
           identityKey: this._params.identityKey,
           connections: this._params.gossip.getConnections()
         };
-        await this._params.gossip.sendMessage(PRESENCE_CHANNEL_ID, peerState);
+        await this._params.gossip.postMessage(PRESENCE_CHANNEL_ID, peerState);
       },
       _params.announceInterval
     );
