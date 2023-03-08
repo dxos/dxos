@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.30](https://github.com/dxos/dxos/compare/v0.1.29...v0.1.30) (2023-03-08)
+
+
+### Bug Fixes
+
+* use conventional commits for release merge commits ([#2694](https://github.com/dxos/dxos/issues/2694)) ([257ff77](https://github.com/dxos/dxos/commit/257ff77bc9d40f9c1f69d761230eaa44056362e7))
+
 ## [0.1.29](https://github.com/dxos/dxos/compare/v0.1.28...v0.1.29) (2023-03-08)
 
 
