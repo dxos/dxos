@@ -55,9 +55,6 @@ export const NoteFrame = () => {
   const boards = useQuery(space, NoteBoard.filter());
   const notes = useQuery(space, Note.filter());
 
-  const n: Note[] = notes;
-  console.log(n);
-
   // Rerender when offset, zoom changed.
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const lensModel = useMemo(() => new GridLensModel(), []);

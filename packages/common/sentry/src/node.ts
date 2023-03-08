@@ -21,6 +21,10 @@ import { InitOptions } from './types';
  * @param options {InitOptions}
  */
 export const init = (options: InitOptions) => {
+  if (options.tracing) {
+    void import('@sentry/tracing');
+  }
+
   naturalInit({
     enabled: options.enable ?? true,
     dsn: options.destination,

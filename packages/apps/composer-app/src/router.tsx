@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Router } from '@remix-run/router';
 import React from 'react';
-import { useRoutes } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 
 import { PublicKey, Space } from '@dxos/client';
-import { useTelemetry } from '@dxos/react-appkit';
 
-import { DocumentLayout } from '../layouts';
-import { DocumentPage, FirstRunPage } from '../pages';
-import { ComposerDocument } from '../proto';
+import { Root } from './layouts';
+import { DocumentPage, FirstRunPage } from './pages';
+import { ComposerDocument } from './proto';
 
 export const namespace = 'composer-app';
 
@@ -23,14 +23,11 @@ export const getPath = (space?: Space, doc?: ComposerDocument) => {
   return `/${[...(space ? [abbreviateKey(space.key)] : []), ...(doc ? [doc.id] : [])].join('/')}`;
 };
 
-export const Routes = () => {
-  // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
-  useTelemetry({ namespace });
-
-  return useRoutes([
+export const createRouter = (): Router =>
+  createBrowserRouter([
     {
       path: '/',
-      element: <DocumentLayout />,
+      element: <Root />,
       children: [
         {
           path: '/',
@@ -43,4 +40,3 @@ export const Routes = () => {
       ]
     }
   ]);
-};

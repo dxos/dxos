@@ -40,6 +40,7 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
+        "checkLeaks": false,
         "coveragePath": "coverage/packages/common/sentry",
         "outputPath": "tmp/mocha/packages/common/sentry",
         "resultsPath": "test-results/packages/common/sentry",

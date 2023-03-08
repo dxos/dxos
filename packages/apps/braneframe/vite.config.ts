@@ -1,3 +1,8 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from 'vite';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
@@ -49,6 +54,7 @@ export default defineConfig({
     }
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -89,6 +95,13 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    // sentryVitePlugin({
+    //   org: "dxos",
+    //   project: "braneframe",
+    //   include: "./out/braneframe",
+    //   authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
+    // })
   ]
 });

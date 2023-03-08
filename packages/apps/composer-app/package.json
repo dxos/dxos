@@ -24,7 +24,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "@sentry/react": "^7.17.2",
+    "@sentry/react": "^7.41.0",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -35,6 +35,8 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
+    "@remix-run/router": "^1.0.2",
+    "@sentry/vite-plugin": "^0.4.0",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/showdown": "^2.0.0",

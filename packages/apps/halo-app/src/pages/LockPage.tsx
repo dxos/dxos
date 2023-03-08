@@ -43,7 +43,15 @@ const LockPage = () => {
             fallbackValue={identity.identityKey.toHex()}
             label={identity.profile?.displayName ?? humanize(identity.identityKey)}
             slots={{
-              root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) }
+              root: {
+                className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }),
+                // NOTE: This is for testing Sentry hookup.
+                onClick: (event) => {
+                  if (event.detail === 3) {
+                    throw new Error('test error');
+                  }
+                }
+              }
             }}
           />
           <Heading>{t('current app name')}</Heading>

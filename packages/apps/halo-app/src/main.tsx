@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import '@dxosTheme';
 import { Config, Defaults } from '@dxos/config';
-import { initializeAppTelemetry } from '@dxos/react-appkit';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
 import { App, namespace } from './App';
 
