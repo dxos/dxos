@@ -9,7 +9,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
 import {
   appkitTranslations,
   ClientFallback,
@@ -41,7 +41,13 @@ const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 export const namespace = 'halo-app';
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
+const configOverride: ConfigProto = window.location.hostname.includes('localhost')
+  ? {}
+  : {
+      runtime: { client: { remoteSource: `${window.location.hostname}/vault.html` } }
+    };
+const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
