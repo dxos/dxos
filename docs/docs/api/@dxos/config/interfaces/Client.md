@@ -3,12 +3,14 @@
 
 Defined in:
    file://./../../dxos/config.proto
+
 ## Properties
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 
 Options:
   - proto3_optional = true
+
 ### [invitationExpiration]()
 Type: <code>number</code>
 
@@ -16,11 +18,13 @@ Milliseconds
 
 Options:
   - proto3_optional = true
+
 ### [log]()
 Type: <code>[Log](/api/@dxos/config/interfaces/Log)</code>
 
 Options:
   - proto3_optional = true
+
 ### [remoteSource]()
 Type: <code>string</code>
 
@@ -28,6 +32,7 @@ Location of the remote client host.
 
 Options:
   - proto3_optional = true
+
 ### [snapshotInterval]()
 Type: <code>number</code>
 
@@ -35,6 +40,7 @@ Milliseconds
 
 Options:
   - proto3_optional = true
+
 ### [storage]()
 Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
 
