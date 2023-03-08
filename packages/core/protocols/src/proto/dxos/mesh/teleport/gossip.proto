@@ -12,9 +12,11 @@ package dxos.mesh.teleport.gossip;
 
 message GossipMessage {
   dxos.keys.PublicKey peer_id = 1;
+  /// Used to route differnt payload types to correct listeners.
+  string channel_id = 2;
   /// Peer tracks what had been sent by message id.
-  dxos.keys.PublicKey message_id = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  dxos.keys.PublicKey message_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
 
   google.protobuf.Any payload = 10;
 }
