@@ -96,6 +96,7 @@ export class Generator {
         if (faker.datatype.number(10) > 7) {
           const organization = faker.random.arrayElement(organizations);
           organization.people.push(contact);
+          contact.employer = organization;
         }
 
         return contact;

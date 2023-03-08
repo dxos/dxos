@@ -70,7 +70,7 @@ message Contact {
   string email = 3;
   string phone = 4; // TODO(burdon): Repeated with tag.
   Address address = 5;
-  Organization employer = 6;
+  Organization employer = 6; // TODO(burdon): Multiple (change "employer").
 }
 
 message Task {

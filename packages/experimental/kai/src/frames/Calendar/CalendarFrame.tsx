@@ -132,7 +132,7 @@ export const CalendarFrame = () => {
         </div>
         {view === Views.AGENDA && contact && space && (
           <div className='flex flex-col flex-1 border-l hidden md:flex pl-4'>
-            <ContactCard contact={contact} />
+            <ContactCard object={contact} />
           </div>
         )}
       </div>

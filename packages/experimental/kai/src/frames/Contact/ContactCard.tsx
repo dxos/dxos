@@ -2,49 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowCircleRight, UserCircle, UserCirclePlus } from 'phosphor-react';
-import React, { FC, ReactNode } from 'react';
+import { ArrowCircleRight, Buildings, UserCircle, UserCirclePlus } from 'phosphor-react';
+import React from 'react';
 
-import { Address, Contact } from '@dxos/kai-types';
+import { Contact } from '@dxos/kai-types';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-// TODO(burdon): Replace ContactCard (and reuse in Calendar).
+import { AddressSection, Card, CardProps, CardRow } from './Card';
 
-const AddressSection: FC<{ address: Address }> = ({ address }) => {
-  return (
-    <div className='mt-2 text-sm text-zinc-600'>
-      <div>{address.city}</div>
-      <div>
-        {address.state} {address.zip}
-      </div>
-    </div>
-  );
-};
-
-const Row: FC<{ children: ReactNode; gutter?: ReactNode; action?: ReactNode }> = ({ children, gutter, action }) => {
-  return (
-    <div className='flex overflow-hidden items-center'>
-      <div className='flex shrink-0 w-[48px]'>{gutter}</div>
-      <div className='flex w-full'>{children}</div>
-      {action && <div className='flex shrink-0 w-[48px]'>{action}</div>}
-    </div>
-  );
-};
-
-export const ContactCard: FC<{
-  contact: Contact;
-  selected?: boolean;
-  temporary?: boolean; // TODO(burdon): Enable Icon override instead.
-  onSelect?: (contact: Contact) => void;
-  onAction?: (contact: Contact) => void;
-}> = ({ contact, selected, temporary, onSelect, onAction }) => {
-  const name = contact.name ?? contact.email;
+export const ContactCard = ({ object, selected, temporary, onSelect, onAction }: CardProps<Contact>) => {
+  const name = object.name ?? object.email;
 
   return (
-    <div className='flex flex-col w-column overflow-hidden p-1 py-2 space-y-2 bg-white border-b md:border md:rounded-lg'>
-      <Row
+    <Card>
+      <CardRow
         gutter={
-          <Button variant='ghost' onClick={() => onSelect?.(contact)}>
+          <Button variant='ghost' onClick={() => onSelect?.(object)}>
             {(temporary && <UserCirclePlus weight='thin' className={getSize(6)} />) || (
               <UserCircle className={mx(getSize(6), 'text-sky-600')} />
             )}
@@ -52,30 +25,43 @@ export const ContactCard: FC<{
         }
         action={
           onAction && (
-            <Button variant='ghost' onClick={() => onAction?.(contact)}>
+            <Button variant='ghost' onClick={() => onAction?.(object)}>
               <ArrowCircleRight className={getSize(6)} />
             </Button>
           )
         }
       >
         <div className='text-lg'>{name}</div>
-      </Row>
+      </CardRow>
 
-      {(contact.email !== name || contact.username !== undefined) && (
-        <Row>
+      {(object.email !== name || object.username !== undefined) && (
+        <CardRow>
           <div className='flex flex-col text-sm'>
-            {contact.email && contact.email !== name && <div className='text-sky-700'>{contact.email}</div>}
-            {contact.username && <div className='text-sky-700'>{contact.username}</div>}
-            {contact.phone && <div>{contact.phone}</div>}
+            {object.email && object.email !== name && <div className='text-sky-700'>{object.email}</div>}
+            {object.username && <div className='text-sky-700'>{object.username}</div>}
+            {object.phone && <div>{object.phone}</div>}
           </div>
-        </Row>
+        </CardRow>
       )}
 
-      {contact.address && (
-        <Row>
-          <AddressSection address={contact.address} />
-        </Row>
+      {object.address && (
+        <CardRow>
+          <AddressSection address={object.address} />
+        </CardRow>
       )}
-    </div>
+
+      {/* TODO(burdon): Link. */}
+      {object.employer && (
+        <CardRow
+          gutter={
+            <Button variant='ghost'>
+              <Buildings className={getSize(6)} />
+            </Button>
+          }
+        >
+          {object.employer.name}
+        </CardRow>
+      )}
+    </Card>
   );
 };

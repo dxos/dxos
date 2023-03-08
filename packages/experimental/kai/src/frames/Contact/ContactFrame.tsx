@@ -50,12 +50,13 @@ export const ContactFrame = () => {
     navigate(createPath({ spaceKey: space?.key, frame: 'dxos.module.frame.stack', objectId: stack.id }));
   };
 
+  // TODO(burdon): Factor out CardList.
   const ContactList: FC<{ className?: string }> = ({ className }) => (
     <div className={className}>
       {contacts.map((contact) => (
         <div key={contact.id} ref={contact.id === selected?.id ? selectedRef : undefined} className='flex md:mr-2'>
           {/* TODO(burdon): Generalize cards. */}
-          <ContactCard contact={contact} selected={contact.id === selected?.id} onSelect={handleSelect} />
+          <ContactCard object={contact} selected={contact.id === selected?.id} onSelect={handleSelect} />
         </div>
       ))}
     </div>
