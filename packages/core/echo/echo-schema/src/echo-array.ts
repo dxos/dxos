@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { log } from '@dxos/log';
 
 import { base } from './defs';
 import { Document } from './document';
@@ -332,6 +333,7 @@ export class EchoArray<T> implements Array<T> {
     ) {
       return new Reference((value as any)['@id']);
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      log('Freezing object before encoding', value);
       Object.freeze(value);
       return encodeRecords(value, this._document!);
     } else {
@@ -394,12 +396,12 @@ export class EchoArray<T> implements Array<T> {
   }
 }
 
-const encodeRecords = (value: any, document: Document) => {
+const encodeRecords = (value: any, document: Document): any => {
   if (value instanceof EchoObject) {
     void document!._linkObject(value);
     return new Reference(value.id);
   } else if (Array.isArray(value)) {
-    throw new Error('Arrays are not supported');
+    return value.map((value) => encodeRecords(value, document));
   } else if (typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)])
@@ -408,11 +410,11 @@ const encodeRecords = (value: any, document: Document) => {
   return value;
 };
 
-const decodeRecords = (value: any, document: Document) => {
+const decodeRecords = (value: any, document: Document): any => {
   if (value instanceof Reference) {
     return document._lookupLink(value.itemId);
   } else if (Array.isArray(value)) {
-    throw new Error('Arrays are not supported');
+    return value.map((value) => decodeRecords(value, document));
   } else if (typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)])
