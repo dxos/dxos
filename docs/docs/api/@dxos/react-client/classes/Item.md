@@ -20,11 +20,14 @@ The state of the model is formed from the following components (in order):
 - The mutatation queue.
 - Optimistic mutations.
 
+
 ## Constructors
 ### [constructor(_itemManager, _id)]()
 
 
+
 Items are constructed by the  `Database`  object.
+
 
 Returns: <code>[Item](/api/@dxos/react-client/classes/Item)&lt;M&gt;</code>
 
@@ -34,90 +37,120 @@ Arguments:
 
 `_id`: <code>string</code>
 
+
 ## Properties
 ### [_debugLabel]()
 Type: <code>undefined | string</code>
+
 ### [_itemManager]()
 Type: <code>ItemManager</code>
+
 ### [_modelMeta]()
 Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
+
 ### [_onUpdate]()
 Type: <code>Event&lt;[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;&gt;</code>
+
 ### [deleted]()
 Type: <code>boolean</code>
+
 ### [id]()
 Type: <code>string</code>
+
 ### [initialized]()
 Type: <code>boolean</code>
+
 ### [modelMeta]()
 Type: <code>undefined | ModelMeta&lt;any, any, any&gt;</code>
+
 ### [modelType]()
 Type: <code>string</code>
+
 ### [parent]()
 Type: <code>"null" | string</code>
+
 ### [state]()
 Type: <code>StateOf&lt;M&gt;</code>
+
 
 ## Methods
 ### [createSnapshot()]()
 
 
+
 Create a snapshot of the current state.
+
 
 Returns: <code>EchoObject</code>
 
 Arguments: none
+
 ### [initialize(modelConstructor)]()
+
 
 
 Perform late intitalization.
 
 Only possible if the modelContructor wasn't passed during StateManager's creation.
 
+
 Returns: <code>void</code>
 
 Arguments: 
 
 `modelConstructor`: <code>ModelConstructor&lt;M&gt;</code>
+
 ### [processMessage(mutation)]()
+
 
 
 Processes mutations from the inbound stream.
 
+
 Returns: <code>void</code>
 
 Arguments: 
 
 `mutation`: <code>Mutation</code>
+
 ### [processOptimisticMutation(mutation)]()
 
 
+
 Returns: <code>void</code>
 
 Arguments: 
 
 `mutation`: <code>Mutation</code>
+
 ### [resetToSnapshot(snapshot)]()
 
 
+
 Reset the state to existing snapshot.
+
 
 Returns: <code>void</code>
 
 Arguments: 
 
 `snapshot`: <code>EchoObject</code>
+
 ### [subscribe(listener)]()
 
 
+
 Subscribe for updates.
+
 
 Returns: <code>UnsubscribeCallback</code>
 
 Arguments: 
 
 `listener`: <code>function</code>
+
 ### [toString()]()
+
 
 
 Returns: <code>string</code>

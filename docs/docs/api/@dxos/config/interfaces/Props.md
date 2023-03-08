@@ -3,6 +3,7 @@
 
 Defined in:
    file://./../../dxos/config.proto
+
 ## Properties
 ### [title]()
 Type: <code>string</code>
