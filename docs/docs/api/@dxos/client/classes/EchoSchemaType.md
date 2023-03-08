@@ -4,8 +4,10 @@
 
 Wraps protocol generated type.
 
+
 ## Constructors
 ### [constructor(_type)]()
+
 
 
 Returns: <code>[EchoSchemaType](/api/@dxos/client/classes/EchoSchemaType)</code>
@@ -14,16 +16,21 @@ Arguments:
 
 `_type`: <code>Type</code>
 
+
 ## Properties
 ### [fields]()
 Type: <code>[EchoSchemaField](/api/@dxos/client/types/EchoSchemaField)[]</code>
+
 ### [name]()
 Type: <code>string</code>
+
 ### [shortName]()
 Type: <code>string</code>
 
+
 ## Methods
 ### [createFilter(\[opts\])]()
+
 
 
 Returns: <code>[TypeFilter](/api/@dxos/client/types/TypeFilter)&lt;any&gt;</code>
