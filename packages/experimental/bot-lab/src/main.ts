@@ -89,7 +89,7 @@ const start = async () => {
   log.info('listening ', { rpcPort });
 
   let bot: Bot | undefined;
-  // TODO(burdon): Reconcile this subscription with the ECHO query.
+  // TODO(burdon): Reconcile this subscription with the ECHO db.query.
   client.echo.subscribeSpaces(async (spaces) => {
     if (spaces.length) {
       const space = spaces[0];
