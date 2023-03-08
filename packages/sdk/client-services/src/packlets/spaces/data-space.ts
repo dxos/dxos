@@ -20,6 +20,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
@@ -130,6 +131,14 @@ export class DataSpace {
     await this.notarizationPlugin.close();
 
     await this._presence.destroy();
+  }
+
+  async postMessage(channel: string, message: any) {
+    return this._gossip.postMessage(channel, message);
+  }
+
+  listen(channel: string, callback: (message: GossipMessage) => void) {
+    return this._gossip.listen(channel, callback);
   }
 
   async initializeDataPipeline() {
