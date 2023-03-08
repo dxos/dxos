@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.1.29](https://github.com/dxos/dxos/compare/v0.1.28...v0.1.29) (2023-03-08)
+
+
+### Features
+
+* Add ability to merge ECHO schemas ([#2620](https://github.com/dxos/dxos/issues/2620)) ([6c68cdc](https://github.com/dxos/dxos/commit/6c68cdc257a31257f39256e60d8493c79e50039e))
+* Add Devtools reset button ([#2611](https://github.com/dxos/dxos/issues/2611)) ([a15a790](https://github.com/dxos/dxos/commit/a15a790ccd0489539353192ff60800d7e4aff835))
+* Add injected type Document to protobufs ([#2632](https://github.com/dxos/dxos/issues/2632)) ([831b405](https://github.com/dxos/dxos/commit/831b40577bc8aa3966d4d4e790fc5ee2ab84ac97))
+* Add plain Records support in EchoArray ([#2672](https://github.com/dxos/dxos/issues/2672)) ([694c1c6](https://github.com/dxos/dxos/commit/694c1c62680f6e4a7d9c347731bbe820329aadec))
+* Add report after webrtc errors ([#2682](https://github.com/dxos/dxos/issues/2682)) ([d4e538a](https://github.com/dxos/dxos/commit/d4e538af663624b6bf770d315ebe10e6efc3e89c))
+* Add specialized RPC implementation for client-services ([#2670](https://github.com/dxos/dxos/issues/2670)) ([3433056](https://github.com/dxos/dxos/commit/34330562c9f74e659c382ae4197cfb45d01f2d7e))
+* Bots prototyping ([#2506](https://github.com/dxos/dxos/issues/2506)) ([8e5f521](https://github.com/dxos/dxos/commit/8e5f521b470f15260de4a92be81449077889cf1b))
+* Clean-up registry ([#2617](https://github.com/dxos/dxos/issues/2617)) ([39fc65e](https://github.com/dxos/dxos/commit/39fc65e1fd6fc83d24fd9c86aee5cb181a3af3bd))
+* **composer-app:** Markdown export & import ([#2650](https://github.com/dxos/dxos/issues/2650)) ([e8d9856](https://github.com/dxos/dxos/commit/e8d98564677ee77fda59407266cfe84ba5e8814a))
+* **composer-app:** Shell & Tree integration ([#2614](https://github.com/dxos/dxos/issues/2614)) ([67579cd](https://github.com/dxos/dxos/commit/67579cd731e0cd3f4c19f1ea2afc86ce6505b75c))
+* **config:** align webpack plugin with other plugins ([#2643](https://github.com/dxos/dxos/issues/2643)) ([d413bca](https://github.com/dxos/dxos/commit/d413bca87384683e1eca32917a3ba88dfbf02d77))
+* Document stacks. ([#2616](https://github.com/dxos/dxos/issues/2616)) ([8b1ce9b](https://github.com/dxos/dxos/commit/8b1ce9ba4634745b0c89eb5b647e5330fe65a3b1))
+* Fix flickering. ([#2585](https://github.com/dxos/dxos/issues/2585)) ([9700acb](https://github.com/dxos/dxos/commit/9700acb7c4800df0a07c555c983c79e81bf853c1))
+* GH bot. ([#2587](https://github.com/dxos/dxos/issues/2587)) ([624c811](https://github.com/dxos/dxos/commit/624c81115f682221af943145e710ac1bc5d17e9b))
+* kai stack sections ([#2635](https://github.com/dxos/dxos/issues/2635)) ([03a7823](https://github.com/dxos/dxos/commit/03a7823d5993578678643abe13f68ade7294d59a))
+* Remove useSubscription and rename useSubscriptionEffect ([#2629](https://github.com/dxos/dxos/issues/2629)) ([7811814](https://github.com/dxos/dxos/commit/781181424757be34df7ec19e60242b8bef2d78f5))
+* Separate host from provider ([#2647](https://github.com/dxos/dxos/issues/2647)) ([4139fab](https://github.com/dxos/dxos/commit/4139fab6a7c9aa5bd73f3b55272861f15a0be12a))
+* Stack sections ([#2623](https://github.com/dxos/dxos/issues/2623)) ([9ecb559](https://github.com/dxos/dxos/commit/9ecb5591fe31dbd70672f344339566d7aa6b8fe1))
+* Tree ([#2610](https://github.com/dxos/dxos/issues/2610)) ([a45a1b8](https://github.com/dxos/dxos/commit/a45a1b8b20217442765763fc2075821fa5180394))
+
+
+### Bug Fixes
+
+* config overrides ([#2684](https://github.com/dxos/dxos/issues/2684)) ([5ee7a86](https://github.com/dxos/dxos/commit/5ee7a8628c2f249a286443faa68c047b27066a84))
+* credentials POC. ([#2522](https://github.com/dxos/dxos/issues/2522)) ([eaeea92](https://github.com/dxos/dxos/commit/eaeea92da8da49b5fcdfbf397fc4bce032241724))
+* Fix Kai notes frame ([#2671](https://github.com/dxos/dxos/issues/2671)) ([336012d](https://github.com/dxos/dxos/commit/336012d3e6722bb718e15fa9a8288ad5e468b438))
+* Import/Export Space in Kai ([#2597](https://github.com/dxos/dxos/issues/2597)) ([f60100a](https://github.com/dxos/dxos/commit/f60100a639337433e2ef186f194059acce1d3967))
+* **random-access-storage:** works in create-react-app ([#2645](https://github.com/dxos/dxos/issues/2645)) ([fed7ed0](https://github.com/dxos/dxos/commit/fed7ed0e6f7bbdcc3f307fc0450696b9d6824429))
+* re-enable react strict mode ([#2621](https://github.com/dxos/dxos/issues/2621)) ([e39a872](https://github.com/dxos/dxos/commit/e39a872b732008685bc7c1df62dbcf5072d21dcc))
+* **react-composer:** a-priori attempt to fix remounting ([#2664](https://github.com/dxos/dxos/issues/2664)) ([b5b06f6](https://github.com/dxos/dxos/commit/b5b06f64f35e6c9be0ffb77e41b9f1a91103d777))
+* **react-composer:** Adjust `useEditor` dependencies & add logging ([#2669](https://github.com/dxos/dxos/issues/2669)) ([75a899e](https://github.com/dxos/dxos/commit/75a899e56a2588a498784a2d6592df85b0a2cb40))
+* **react-composer:** Adjust `useEditor` dependency ([#2665](https://github.com/dxos/dxos/issues/2665)) ([a6ae7b5](https://github.com/dxos/dxos/commit/a6ae7b563016f139497afb69e708195fed7eb39e))
+* **react-composer:** Styles ([#2637](https://github.com/dxos/dxos/issues/2637)) ([36c5f5a](https://github.com/dxos/dxos/commit/36c5f5adff74001425ea8af95cb04ba0078b7ab2))
+* Rewrite useSelection hook ([#2674](https://github.com/dxos/dxos/issues/2674)) ([9de4abc](https://github.com/dxos/dxos/commit/9de4abcb9aa784683b433bc8b53d8fe1b630a784))
+* typos in docs ([#2648](https://github.com/dxos/dxos/issues/2648)) ([896d6a9](https://github.com/dxos/dxos/commit/896d6a9b1a862ff5ab5a0fca6bc4fae8c5fa1238))
+
 ## [0.1.28](https://github.com/dxos/dxos/compare/v0.1.27...v0.1.28) (2023-02-27)
 
 
