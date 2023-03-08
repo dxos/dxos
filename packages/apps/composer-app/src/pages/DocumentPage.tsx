@@ -3,7 +3,7 @@
 //
 
 import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from 'phosphor-react';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -45,7 +45,7 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
 
   const download = useFileDownload();
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const editor = editorRef.current?.editor;
     const html = editor?.getHTML();
     if (html) {
@@ -54,17 +54,20 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
         `${document.title}.md`
       );
     }
-  };
+  }, [document]);
 
-  const handleImport = async (file: File) => {
-    const editor = editorRef.current?.editor;
-    if (editor) {
-      const data = new Uint8Array(await file.arrayBuffer());
-      const md = new TextDecoder('utf-8').decode(data);
-      editor.commands.setContent(converter.makeHtml(md));
-      setDialogOpen(false);
-    }
-  };
+  const handleImport = useCallback(
+    async (file: File) => {
+      const editor = editorRef.current?.editor;
+      if (editor) {
+        const data = new Uint8Array(await file.arrayBuffer());
+        const md = new TextDecoder('utf-8').decode(data);
+        editor.commands.setContent(converter.makeHtml(md));
+        setDialogOpen(false);
+      }
+    },
+    [document]
+  );
 
   return (
     <>
