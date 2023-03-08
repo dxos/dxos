@@ -30,12 +30,16 @@ export class Gossip {
 
   constructor(private readonly _params: GossipParams) {}
 
-  private readonly _listeners = new Map<string, Set<(message: GossipMessage) => null>>();
+  private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak. Never cleared.
 
   // remotePeerId -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
+
+  async destroy() {
+    await this._ctx.dispose();
+  }
 
   createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
     const extension = new GossipExtension({
@@ -44,6 +48,7 @@ export class Gossip {
           return;
         }
         this._receivedMessages.add(message.messageId);
+        this._callListeners(message);
         scheduleTask(this._ctx, async () => {
           await this._propagateAnnounce(message);
         });
@@ -70,6 +75,7 @@ export class Gossip {
             peerId: this._params.localPeerId,
             messageId: PublicKey.random(),
             channelId: channel,
+            timestamp: new Date(),
             payload
           })
           .catch((err) => log.warn(err))
@@ -77,7 +83,7 @@ export class Gossip {
     );
   }
 
-  listen(channel: string, callback: (payload: any) => null) {
+  listen(channel: string, callback: (message: GossipMessage) => void) {
     if (!this._listeners.has(channel)) {
       this._listeners.set(channel, new Set());
     }
@@ -88,6 +94,14 @@ export class Gossip {
         this._listeners.get(channel)!.delete(callback);
       }
     };
+  }
+
+  private _callListeners(message: GossipMessage) {
+    if (this._listeners.has(message.channelId)) {
+      this._listeners.get(message.channelId)!.forEach((callback) => {
+        callback(message);
+      });
+    }
   }
 
   private _propagateAnnounce(message: GossipMessage) {
