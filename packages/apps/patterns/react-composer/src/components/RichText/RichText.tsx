@@ -6,9 +6,9 @@ import Collaboration from '@tiptap/extension-collaboration';
 import Heading from '@tiptap/extension-heading';
 import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { EditorContent, EditorContentProps, useEditor as useNaturalEditor } from '@tiptap/react';
+import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { ComponentProps, useEffect, useMemo } from 'react';
+import React, { ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import type { Text } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -16,32 +16,18 @@ import { mx } from '@dxos/react-components';
 
 export type RichTextComposerSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
+  editor?: {
+    className?: string;
+    spellCheck?: boolean;
+    tabIndex?: number;
+  };
 };
 
-export type RichTextComposerProps = {
-  editor: EditorContentProps['editor'];
-  slots?: RichTextComposerSlots;
-};
-
-export const RichTextComposer = ({ editor, slots = {} }: RichTextComposerProps) => {
-  // Reference:
-  // https://tiptap.dev/installation/react
-  // https://github.com/ueberdosis/tiptap
-  // https://tiptap.dev/guide/output/#option-3-yjs
-  return <EditorContent {...slots?.root} editor={editor} />;
-};
-
-export type UseEditorOptions = {
+type UseEditorOptions = {
   text?: Text;
   field?: string;
   placeholder?: string;
-  slots?: {
-    editor?: {
-      className?: string;
-      spellCheck?: boolean;
-      tabIndex?: number;
-    };
-  };
+  slots?: Pick<RichTextComposerSlots, 'editor'>;
 };
 
 type Levels = 1 | 2 | 3 | 4 | 5 | 6;
@@ -59,7 +45,7 @@ const onDocUpdate = (update: Uint8Array) => {
   log.debug('[doc update]', update);
 };
 
-export const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
+const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
   useEffect(() => {
     log.debug('[text.doc]', 'referential change');
     text?.doc?.on('update', onDocUpdate);
@@ -177,3 +163,27 @@ export const useEditor = ({ text, field = 'content', placeholder = 'Enter text�
     [text?.doc?.guid]
   );
 };
+
+export type RichTextComposerHandle = {
+  editor: Editor | null;
+};
+
+export type RichTextComposerProps = {
+  text?: UseEditorOptions['text'];
+  field?: UseEditorOptions['field'];
+  placeholder?: UseEditorOptions['placeholder'];
+  slots?: RichTextComposerSlots;
+};
+
+export const RichTextComposer = forwardRef<RichTextComposerHandle, RichTextComposerProps>(
+  ({ text, field, placeholder, slots = {} }, ref) => {
+    const editor = useEditor({ text, field, placeholder, slots });
+    useImperativeHandle(ref, () => ({ editor }), [editor]);
+
+    // Reference:
+    // https://tiptap.dev/installation/react
+    // https://github.com/ueberdosis/tiptap
+    // https://tiptap.dev/guide/output/#option-3-yjs
+    return <EditorContent {...slots?.root} editor={editor} />;
+  }
+);

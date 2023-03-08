@@ -1,8 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from 'phosphor-react';
-import React, { useCallback, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -23,7 +24,7 @@ import {
   DropdownMenuItem,
   Dialog
 } from '@dxos/react-components';
-import { RichTextComposer, useEditor } from '@dxos/react-composer';
+import { RichTextComposer, RichTextComposerHandle } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -40,15 +41,12 @@ const nestedParagraphOutput = / +\n/g;
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const editor = useEditor({
-    text: document.content,
-    slots: { editor: { className: 'pbe-20' } }
-  });
+  const editorRef = useRef<RichTextComposerHandle>(null);
 
   const download = useFileDownload();
 
-  const handleExport = useCallback(() => {
+  const handleExport = () => {
+    const editor = editorRef.current?.editor;
     const html = editor?.getHTML();
     if (html) {
       download(
@@ -56,19 +54,17 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
         `${document.title}.md`
       );
     }
-  }, [document, editor]);
+  };
 
-  const handleImport = useCallback(
-    async (file: File) => {
-      if (editor) {
-        const data = new Uint8Array(await file.arrayBuffer());
-        const md = new TextDecoder('utf-8').decode(data);
-        editor.commands.setContent(converter.makeHtml(md));
-        setDialogOpen(false);
-      }
-    },
-    [document, editor]
-  );
+  const handleImport = async (file: File) => {
+    const editor = editorRef.current?.editor;
+    if (editor) {
+      const data = new Uint8Array(await file.arrayBuffer());
+      const md = new TextDecoder('utf-8').decode(data);
+      editor.commands.setContent(converter.makeHtml(md));
+      setDialogOpen(false);
+    }
+  };
 
   return (
     <>
@@ -84,12 +80,14 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
           slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
         />
         <RichTextComposer
-          editor={editor}
+          ref={editorRef}
+          text={document.content}
           slots={{
             root: {
               role: 'none',
               className: 'pli-6 mbs-4'
-            }
+            },
+            editor: { className: 'pbe-20' }
           }}
         />
       </div>

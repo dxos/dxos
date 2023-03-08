@@ -11,7 +11,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { Button, mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
-import { RichTextComposer, RichTextComposerProps, useEditor, UseEditorOptions } from './RichText';
+import { RichTextComposer, RichTextComposerProps } from './RichText';
 
 export default {
   component: RichTextComposer
@@ -21,7 +21,7 @@ const Story = ({
   spaceKey,
   id,
   ...args
-}: Omit<RichTextComposerProps, 'editor'> & Omit<UseEditorOptions, 'text'> & { spaceKey?: PublicKey; id?: number }) => {
+}: Omit<RichTextComposerProps, 'text'> & { spaceKey?: PublicKey; id?: number }) => {
   // TODO(wittjosiah): Text being created isn't firing react updates.
   const [, forceUpdate] = useReducer((state) => state + 1, 0);
 
@@ -38,23 +38,26 @@ const Story = ({
     }
   }, [space]);
 
-  const editor = useEditor({
-    text: document?.content,
-    slots: {
-      editor: {
-        className: mx(
-          'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]',
-          args.slots?.editor?.className
-        )
-      }
-    }
-  });
-
   if (!document?.content) {
     return <Button onClick={() => forceUpdate()}>Update</Button>;
   }
 
-  return <main className='grow p-4'>{<RichTextComposer {...args} editor={editor} />}</main>;
+  return (
+    <main className='grow p-4'>
+      <RichTextComposer
+        {...args}
+        text={document.content}
+        slots={{
+          editor: {
+            className: mx(
+              'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]',
+              args.slots?.editor?.className
+            )
+          }
+        }}
+      />
+    </main>
+  );
 };
 
 export const Default = {

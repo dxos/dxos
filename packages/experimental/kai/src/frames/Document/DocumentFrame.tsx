@@ -6,20 +6,11 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@dxos/kai-types';
-import { useQuery, observer, Text } from '@dxos/react-client';
+import { useQuery, observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
-import { RichTextComposer, useEditor } from '@dxos/react-composer';
+import { RichTextComposer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
-
-export const KaiComposer = ({ text, spellCheck = false }: { text: Text; spellCheck?: boolean }) => {
-  const editor = useEditor({
-    text,
-    slots: { editor: { className: 'kai-composer', spellCheck } }
-  });
-
-  return <RichTextComposer editor={editor} />;
-};
 
 export const DocumentFrame = observer(() => {
   const navigate = useNavigate();
@@ -66,7 +57,15 @@ export const DocumentFrame = observer(() => {
             }}
           />
 
-          <KaiComposer text={document.content} spellCheck={spellCheck} />
+          <RichTextComposer
+            text={document.content}
+            slots={{
+              editor: {
+                className: 'kai-composer',
+                spellCheck
+              }
+            }}
+          />
         </div>
 
         <div className='pb-4' />
