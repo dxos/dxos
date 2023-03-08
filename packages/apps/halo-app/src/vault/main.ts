@@ -7,7 +7,7 @@ import { StrictMode } from 'react';
 
 import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
 import { IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, ConfigProto, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { ClientContext } from '@dxos/react-client';
@@ -41,10 +41,17 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   );
 };
 
+// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
+const configOverride: ConfigProto = window.location.hostname.includes('localhost')
+  ? {}
+  : {
+      runtime: { client: { remoteSource: `https://${window.location.hostname}/vault.html` } }
+    };
+
 const main = async () => {
   const params = new URLSearchParams(window.location.search);
   const shellDisabled = params.get('shell') === 'false';
-  const config = new Config(await Dynamics(), Defaults());
+  const config = new Config(configOverride, await Dynamics(), Defaults());
 
   // TODO(wittjosiah): Remove mobile check once we can inspect shared workers in iOS Safari.
   if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
