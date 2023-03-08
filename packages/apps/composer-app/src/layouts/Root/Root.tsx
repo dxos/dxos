@@ -8,7 +8,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   appkitTranslations,
@@ -26,7 +26,13 @@ import { captureException } from '@dxos/sentry';
 import composerTranslations from '../../translations';
 import { DocumentLayout } from '../DocumentLayout';
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
+const configOverride: ConfigProto = window.location.hostname.includes('localhost')
+  ? {}
+  : {
+      runtime: { client: { remoteSource: `${window.location.hostname.replace('composer', 'halo')}/vault.html` } }
+    };
+const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 

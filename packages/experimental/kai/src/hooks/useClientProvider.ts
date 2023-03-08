@@ -7,15 +7,22 @@ import { useCallback } from 'react';
 import { schema as chessSchema } from '@dxos/chess-app';
 import { Client, fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
 import { schema as frameboxSchema } from '@dxos/framebox';
 import { fromLocal } from '@dxos/halo-app';
 import { schema } from '@dxos/kai-types';
 import { Generator } from '@dxos/kai-types/testing';
 
+// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
+const configOverride: ConfigProto = window.location.hostname.includes('localhost')
+  ? {}
+  : {
+      runtime: { client: { remoteSource: `${window.location.hostname.replace('kai', 'halo')}/vault.html` } }
+    };
+
 export const useClientProvider = (dev: boolean) => {
   return useCallback(async () => {
-    const config = new Config(await Dynamics(), await Envs(), Defaults());
+    const config = new Config(configOverride, await Dynamics(), await Envs(), Defaults());
     const client = new Client({
       config,
       services:
