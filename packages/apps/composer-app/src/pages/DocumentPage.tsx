@@ -24,7 +24,7 @@ import {
   DropdownMenuItem,
   Dialog
 } from '@dxos/react-components';
-import { RichTextComposer, RichTextComposerHandle } from '@dxos/react-composer';
+import { RichTextComposer, TipTapEditor } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -41,12 +41,12 @@ const nestedParagraphOutput = / +\n/g;
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const editorRef = useRef<RichTextComposerHandle>(null);
+  const editorRef = useRef<TipTapEditor>(null);
 
   const download = useFileDownload();
 
   const handleExport = useCallback(() => {
-    const editor = editorRef.current?.editor;
+    const editor = editorRef.current;
     const html = editor?.getHTML();
     if (html) {
       download(
@@ -58,7 +58,7 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
 
   const handleImport = useCallback(
     async (file: File) => {
-      const editor = editorRef.current?.editor;
+      const editor = editorRef.current;
       if (editor) {
         const data = new Uint8Array(await file.arrayBuffer());
         const md = new TextDecoder('utf-8').decode(data);

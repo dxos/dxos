@@ -14,6 +14,8 @@ import type { Text } from '@dxos/client';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-components';
 
+export type TipTapEditor = Editor;
+
 export type RichTextComposerSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
@@ -164,10 +166,6 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
   );
 };
 
-export type RichTextComposerHandle = {
-  editor: Editor | null;
-};
-
 export type RichTextComposerProps = {
   text?: UseEditorOptions['text'];
   field?: UseEditorOptions['field'];
@@ -175,10 +173,10 @@ export type RichTextComposerProps = {
   slots?: RichTextComposerSlots;
 };
 
-export const RichTextComposer = forwardRef<RichTextComposerHandle, RichTextComposerProps>(
+export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>(
   ({ text, field, placeholder, slots = {} }, ref) => {
     const editor = useEditor({ text, field, placeholder, slots });
-    useImperativeHandle(ref, () => ({ editor }), [editor]);
+    useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
 
     // Reference:
     // https://tiptap.dev/installation/react
