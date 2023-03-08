@@ -4,9 +4,11 @@
 
 
 
+
 ## Properties
 ### [name]()
 Type: <code>string</code>
+
 
 ### [type]()
 Type: <code>[EchoType](/api/@dxos/react-client/types/EchoType)</code>

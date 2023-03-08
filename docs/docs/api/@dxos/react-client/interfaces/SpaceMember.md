@@ -3,8 +3,10 @@
 
 Defined in:
    file://./../../../dxos/client/services.proto
+
 ## Properties
 ### [identity]()
 Type: <code>[Identity](/api/@dxos/react-client/interfaces/Identity)</code>
+
 ### [presence]()
 Type: <code>[PresenceState](/api/@dxos/react-client/enums#PresenceState)</code>
