@@ -16,8 +16,6 @@ import { ComplexMap } from '@dxos/util';
 import { Gossip } from './gossip';
 
 export type PresenceParams = {
-  localPeerId: PublicKey;
-
   /**
    * Interval between presence announces.
    */

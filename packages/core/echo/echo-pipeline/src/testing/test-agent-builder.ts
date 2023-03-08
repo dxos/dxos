@@ -11,7 +11,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
-import { Presence } from '@dxos/teleport-extension-gossip';
+import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { SnapshotManager, SnapshotStore } from '../dbhost';
@@ -164,7 +164,7 @@ export class TestAgent {
     return [space, dataPipelineController];
   }
 
-  createSpaceProtocol(topic: PublicKey, presence?: Presence) {
+  createSpaceProtocol(topic: PublicKey, gossip?: Gossip) {
     return new SpaceProtocol({
       topic,
       swarmIdentity: {
@@ -175,19 +175,25 @@ export class TestAgent {
       networkManager: this._networkManagerProvider(),
       onSessionAuth: (session) => {
         session.addExtension(
-          'dxos.mesh.teleport.presence',
-          (presence ?? this.createPresence()).createExtension({ remotePeerId: session.remotePeerId })
+          'dxos.mesh.teleport.gossip',
+          (gossip ?? this.createGossip()).createExtension({ remotePeerId: session.remotePeerId })
         );
       }
     });
   }
 
-  createPresence() {
+  createGossip() {
+    return new Gossip({
+      localPeerId: this.deviceKey
+    });
+  }
+
+  createPresence(gossip?: Gossip) {
     return new Presence({
-      localPeerId: this.deviceKey,
       announceInterval: 30,
       offlineTimeout: 200,
-      identityKey: this.identityKey
+      identityKey: this.identityKey,
+      gossip: gossip ?? this.createGossip()
     });
   }
 }

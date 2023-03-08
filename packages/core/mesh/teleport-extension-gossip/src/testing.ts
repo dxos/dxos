@@ -27,7 +27,6 @@ export class TestAgent extends TestPeerBase {
       localPeerId: peerId
     });
     this.presence = new Presence({
-      localPeerId: peerId,
       announceInterval,
       offlineTimeout,
       identityKey: peerId,
@@ -37,7 +36,7 @@ export class TestAgent extends TestPeerBase {
 
   override async onOpen(connection: TestConnection) {
     const extension = this.gossip.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
-    connection.teleport.addExtension('dxos.mesh.teleport.presence', extension);
+    connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
   }
 
   waitForExactAgentsOnline(agents: TestAgent[], timeout = 1000) {

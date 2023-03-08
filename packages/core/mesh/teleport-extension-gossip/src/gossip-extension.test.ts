@@ -25,7 +25,7 @@ describe('GossipExtension', () => {
         trigger1.wake(message);
       }
     });
-    connection1.teleport.addExtension('dxos.mesh.teleport.presence', extension1);
+    connection1.teleport.addExtension('dxos.mesh.teleport.gossip', extension1);
 
     const trigger2 = new Trigger<GossipMessage>();
     const extension2 = new GossipExtension({
@@ -33,11 +33,11 @@ describe('GossipExtension', () => {
         trigger2.wake(message);
       }
     });
-    connection2.teleport.addExtension('dxos.mesh.teleport.presence', extension2);
+    connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
     await extension1.sendAnnounce({
       peerId: peer1.peerId,
-
+      channelId: 'dxos.mesh.teleport.gossip',
       timestamp: new Date(),
       messageId: PublicKey.random(),
       payload: {
@@ -49,6 +49,7 @@ describe('GossipExtension', () => {
 
     await extension2.sendAnnounce({
       peerId: peer2.peerId,
+      channelId: 'dxos.mesh.teleport.gossip',
       timestamp: new Date(),
       messageId: PublicKey.random(),
       payload: {
