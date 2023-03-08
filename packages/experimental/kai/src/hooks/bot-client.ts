@@ -66,7 +66,7 @@ export class BotClient {
     // TODO(burdon): How is this different from BOT_PORT?
     const port = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
 
-    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
+    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
 
     const request = {
       Image: 'bot-test', // TODO(burdon): Factor out name?
