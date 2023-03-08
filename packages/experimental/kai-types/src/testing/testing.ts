@@ -147,15 +147,14 @@ export class Generator {
   };
 
   createDocument = async () => {
-    const document = createDocument();
+    const document = await this._db.add(createDocument());
     createTextObjectContent(document.content, 5);
-    await this._db.add(document);
     return document;
   };
 
   createNote = async () => {
     const document = await this._db.add(createNote());
-    createTextObjectContent(document.content, 1);
+    document.content = new Text(faker.lorem.sentence());
     return document;
   };
 
@@ -167,10 +166,8 @@ export class Generator {
 // TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
 export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
-    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),
-    schema.node('paragraph')
+    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))])
   ]);
-  paragraphs.pop();
 
   // https://prosemirror.net/docs/guide/#doc
   const doc = schema.node('doc', null, paragraphs);

@@ -44,6 +44,7 @@ export const useClientProvider = (dev: boolean) => {
 
     if (dev && client.halo.identity && client.echo.getSpaces().length === 0) {
       const space = await client.echo.createSpace();
+      space.properties.name = 'My Space';
 
       // TODO(burdon): Create context.
       const generator = new Generator(space.db);

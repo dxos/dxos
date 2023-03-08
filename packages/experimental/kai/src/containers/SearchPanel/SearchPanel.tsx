@@ -27,7 +27,8 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
   },
   'dxos.experimental.kai.Contact': {
     rank: 3,
-    Icon: UserCircle
+    Icon: UserCircle,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.contact')
   },
   'dxos.experimental.kai.Event': {
     rank: 1,

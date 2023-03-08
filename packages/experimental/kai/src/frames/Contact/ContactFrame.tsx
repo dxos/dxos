@@ -25,6 +25,11 @@ export const ContactFrame = () => {
   const selected = objectId ? space?.db.getObjectById<Contact>(objectId) : undefined;
   const selectedRef = useRef<HTMLDivElement>(null);
 
+  const findStack = (contact: Contact) => {
+    const { objects: stacks } = space!.db.query(DocumentStack.filter());
+    return stacks.find((stack) => stack.subjectId === contact.id);
+  };
+
   const [stack, setStack] = useState<DocumentStack>();
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,11 +39,6 @@ export const ContactFrame = () => {
       setStack(undefined);
     }
   }, [selected]);
-
-  const findStack = (contact: Contact) => {
-    const { objects: stacks } = space!.db.query(DocumentStack.filter());
-    return stacks.find((stack) => stack.subjectId === contact.id);
-  };
 
   const handleSelect = (contact: Contact) => {
     navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: contact.id }));
@@ -50,23 +50,29 @@ export const ContactFrame = () => {
     navigate(createPath({ spaceKey: space?.key, frame: 'dxos.module.frame.stack', objectId: stack.id }));
   };
 
-  // TODO(burdon): Factor out CardList.
-  const ContactList: FC<{ className?: string }> = ({ className }) => (
+  // TODO(burdon): Factor out.
+  const CardList: FC<{
+    className?: string;
+    objects: Contact[];
+    selected?: Contact;
+    onSelect: (selected: Contact) => void;
+  }> = ({ className, objects, selected, onSelect }) => (
     <div className={className}>
-      {contacts.map((contact) => (
-        <div key={contact.id} ref={contact.id === selected?.id ? selectedRef : undefined} className='flex md:mr-2'>
+      {objects.map((object) => (
+        <div key={object.id} ref={object.id === selected?.id ? selectedRef : undefined} className='flex mb-2 md:mr-2'>
           {/* TODO(burdon): Generalize cards. */}
-          <ContactCard object={contact} selected={contact.id === selected?.id} onSelect={handleSelect} />
+          <ContactCard object={object} selected={object.id === selected?.id} onSelect={onSelect} />
         </div>
       ))}
     </div>
   );
 
+  // Column.
   if (selected) {
     return (
-      <div className='flex flex-1 overflow-hidden'>
-        <div className='flex flex-col shrink-0 md:m-2 md:mr-0 overflow-y-scroll'>
-          <ContactList className='space-y-2 md:mr-1' />
+      <div className='flex flex-1 overflow-hidden mt-2 md:mx-2'>
+        <div className='flex flex-col shrink-0 overflow-y-scroll'>
+          <CardList objects={contacts} selected={selected} onSelect={handleSelect} />
           {/* Allow scrolling to top of last item. */}
           <div className='flex flex-col mb-[100vh]' />
         </div>
@@ -86,9 +92,8 @@ export const ContactFrame = () => {
   }
 
   return (
-    <div className='flex flex-1 overflow-x-scroll m-2'>
-      {/* TODO(burdon): space-y causes first item of wrapped columns to be indented. */}
-      <ContactList className='flex flex-col flex-wrap space-y-2' />
+    <div className='flex flex-1 overflow-x-scroll mt-2 md:mx-2'>
+      <CardList className='flex flex-col flex-wrap' objects={contacts} selected={selected} onSelect={handleSelect} />
     </div>
   );
 };
