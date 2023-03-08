@@ -25,6 +25,10 @@ export class LocalClientServices implements ClientServicesProvider {
     return this._host.services;
   }
 
+  get host(): ClientServicesHost {
+    return this._host;
+  }
+
   async open(): Promise<void> {
     await this._host.open();
   }
