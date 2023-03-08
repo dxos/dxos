@@ -48,7 +48,7 @@ message Container {
   message Record {
     string title = 1;
     string description = 2;
-    Contact person = 3;
+    repeated Contact persons = 3;
   }
 
   repeated dxos.schema.Document documents = 1;
