@@ -24,23 +24,6 @@ export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
-
-export {
-  type InvitationEvents,
-  InvitationEncoder,
-  type CancellableInvitationObservable,
-  type AuthenticatingInvitationObservable,
-  // TODO(wittjosiah): Remove.
-  ClientServicesHost,
-  ClientServicesProxy,
-  type ClientServicesProvider,
-  IFrameHostRuntime,
-  IFrameProxyRuntime,
-  WorkerRuntime,
-  WorkerSession,
-  type ShellRuntime
-} from '@dxos/client-services';
-
 export { ApiError } from '@dxos/errors';
 
 export {
@@ -57,6 +40,8 @@ export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 export * from './packlets/client';
 
 export { Properties, PropertiesProps } from './packlets/proto';
+
+export * from './packlets/invitations';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';

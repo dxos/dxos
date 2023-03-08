@@ -5,16 +5,15 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
-import { TextModel } from '@dxos/text-model';
 
 import { TracingServiceImpl } from '../deprecated';
 import { DevicesServiceImpl } from '../devices';
@@ -27,36 +26,37 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
-import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
-// TODO(burdon): Factor out to spaces.
-// TODO(burdon): Defaults (with TextModel).
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
-
-type ClientServicesHostParams = {
-  config: Config;
+export type ClientServicesHostParams = {
+  /**
+   * Can be omitted if `initialize` is later called.
+   */
+  config?: Config;
   modelFactory?: ModelFactory;
-  networkManager: NetworkManager;
+  networkManager?: NetworkManager;
   storage?: Storage;
   lockKey?: string;
+};
+
+export type InitializeOptions = {
+  config?: Config;
+  networkManager?: NetworkManager;
 };
 
 /**
  * Remote service implementation.
  */
-export class ClientServicesHost implements ClientServicesProvider {
+export class ClientServicesHost {
   private readonly _resourceLock?: VaultResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
 
-  private readonly _config: Config;
+  private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
-  private readonly _networkManager: NetworkManager;
-  private readonly _storage: Storage;
+  private _networkManager?: NetworkManager;
+  private _storage?: Storage;
 
   /**
    * @internal
@@ -69,14 +69,16 @@ export class ClientServicesHost implements ClientServicesProvider {
     modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager,
-    storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage,
+    storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey
-  }: ClientServicesHostParams) {
-    this._config = config;
-    this._modelFactory = modelFactory;
-    this._networkManager = networkManager;
+  }: ClientServicesHostParams = {}) {
     this._storage = storage;
+    this._modelFactory = modelFactory;
+
+    if (config) {
+      this.initialize({ config, networkManager });
+    }
 
     this._resourceLock = lockKey
       ? new VaultResourceLock({
@@ -117,6 +119,10 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._open;
   }
 
+  get serviceRegistry() {
+    return this._serviceRegistry;
+  }
+
   get descriptors() {
     return this._serviceRegistry.descriptors;
   }
@@ -125,10 +131,37 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
+  /**
+   * Initialize the service host with the config.
+   * Config can also be provided in the constructor.
+   * Can only be called once.
+   */
+  initialize({ config, networkManager }: InitializeOptions) {
+    assert(!this._open, 'service host is open');
+
+    if (config) {
+      assert(!this._config, 'config already set');
+
+      this._config = config;
+      if (!this._storage) {
+        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
+      }
+    }
+
+    if (networkManager) {
+      assert(!this._networkManager, 'network manager already set');
+      this._networkManager = networkManager;
+    }
+  }
+
   async open() {
     if (this._open) {
       return;
     }
+
+    assert(this._config, 'config not set');
+    assert(this._storage, 'storage not set');
+    assert(this._networkManager, 'network manager not set');
 
     log('opening...');
     await this._resourceLock?.acquire();

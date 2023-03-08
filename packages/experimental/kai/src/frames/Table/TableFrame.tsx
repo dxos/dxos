@@ -6,17 +6,18 @@ import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { Document, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
+import { schema } from '@dxos/kai-types';
 import { PublicKey, useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Select, ElevationProvider } from '@dxos/react-components';
+import { Table, Searchbar, Select } from '@dxos/react-components';
 
+import { Toolbar } from '../../components';
 import { useAppRouter } from '../../hooks';
-import { schema } from '../../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
 type ColumnType<T extends Document> = {
-  id: string;
+  id: string; // TODO(burdon): Type `name`?
   title: string;
   columns: Column<Document>[];
   filter?: TypeFilter<any>;
@@ -72,7 +73,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
 
 const types: ColumnType<any>[] = generateTypes(schema.types);
 
-const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
+export const getColumnType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
   const { space } = useAppRouter();
@@ -90,20 +91,18 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <div className='flex p-2 mb-2'>
-        <ElevationProvider elevation='group'>
-          <div className='w-screen md:w-column mr-4'>
-            <Searchbar onSearch={handleSearch} />
-          </div>
-          <Select defaultValue={type.id} onValueChange={(value) => value && setType(getType(value))}>
-            {types?.map((type) => (
-              <Select.Item key={type.id} value={type.id}>
-                {type.title}
-              </Select.Item>
-            ))}
-          </Select>
-        </ElevationProvider>
-      </div>
+      <Toolbar>
+        <div className='w-screen md:w-column mr-4'>
+          <Searchbar onSearch={handleSearch} />
+        </div>
+        <Select defaultValue={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+          {types?.map((type) => (
+            <Select.Item key={type.id} value={type.id}>
+              {type.title}
+            </Select.Item>
+          ))}
+        </Select>
+      </Toolbar>
 
       {/* TODO(burdon): Editable variant. */}
       <Table<Document>
@@ -111,7 +110,7 @@ export const TableFrame = () => {
         data={objects}
         slots={{
           header: { className: 'bg-paper-1-bg' },
-          row: { className: 'hover:bg-selection-hover odd:bg-table-rowOdd even:bg-table-rowEven' }
+          row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
         }}
       />
       {/* </div> */}

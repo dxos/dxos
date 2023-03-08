@@ -9,6 +9,4 @@ import { App } from './App';
 
 import '@dxosTheme';
 
-import '@dxos/kai/style.css';
-
 createRoot(document.getElementById('root')!).render(<App />);

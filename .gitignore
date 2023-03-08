@@ -115,3 +115,6 @@ packages/devtools/cli/src/util/telemetryrc.json
 
 # Custom certificates
 *.pem
+
+# Bot temp files
+dxos-tmp

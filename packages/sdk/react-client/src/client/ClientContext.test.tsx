@@ -7,18 +7,25 @@ import expect from 'expect';
 import React, { Component, PropsWithChildren } from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config, fromHost, SystemStatus } from '@dxos/client';
+import { Client, Config, SystemStatus } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
+import { useIdentity } from '../halo';
 import { ClientProvider, useClient } from './ClientContext';
+
+log.config({ filter: 'ClientContext:debug,warn' });
 
 const TestComponent = () => {
   const client = useClient();
+  const identity = useIdentity();
+
   return (
     <>
       <div>Hello World</div>
       <div>{`Client is ${client ? 'defined' : 'NOT there'}`}</div>
+      <div>{`Identity is ${identity ? 'defined' : 'NOT there'}`}</div>
     </>
   );
 };
@@ -82,13 +89,10 @@ describe('ClientProvider', () => {
   let client: Client;
 
   beforeEach(async () => {
+    // TODO(wittjosiah): Use test builder to avoid warnings.
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
-  });
-
-  afterEach(async () => {
-    await client.destroy();
   });
 
   test('Renders with children', async () => {
@@ -98,7 +102,6 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    // TODO(wittjosiah): This no longer works. Because the client status becomes active during initialization?
     await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
 
     expect(() => screen.getByText('Hello World')).not.toThrow();
@@ -111,10 +114,32 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    // TODO(wittjosiah): This no longer works. Because the client status becomes active during initialization?
     await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();
     expect(() => screen.getByText('Client is NOT there')).toThrow();
+  });
+
+  test('Provides new client when value changes', async () => {
+    const { rerender } = render(
+      <ClientProvider client={client}>
+        <TestComponent />
+      </ClientProvider>
+    );
+
+    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    expect(() => screen.getByText('Identity is defined')).not.toThrow();
+
+    const newClient = new Client({ services: fromHost() });
+    await newClient.initialize();
+    rerender(
+      <ClientProvider client={newClient}>
+        <TestComponent />
+      </ClientProvider>
+    );
+
+    await act(() => waitForCondition(() => newClient.getStatus() === SystemStatus.ACTIVE && !client.initialized));
+    expect(client.initialized).toBe(false);
+    expect(() => screen.getByText('Identity is NOT there')).not.toThrow();
   });
 });

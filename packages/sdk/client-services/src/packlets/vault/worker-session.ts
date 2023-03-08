@@ -5,16 +5,17 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
+import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@dxos/client';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices } from '../services';
-import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
+import { ClientServicesHost } from '../services';
+import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 
 export type WorkerSessionParams = {
-  getService: <Service>(find: (services: Partial<ClientServices>) => Service | undefined) => Promise<Service>;
+  serviceHost: ClientServicesHost;
   systemPort: RpcPort;
   appPort: RpcPort;
   shellPort: RpcPort;
@@ -28,11 +29,11 @@ export type WorkerSessionParams = {
  * Represents a tab connection within the worker.
  */
 export class WorkerSession {
-  private readonly _clientRpc: ProtoRpcPeer<ClientServices>;
-  private readonly _shellClientRpc: ProtoRpcPeer<ClientServices>;
+  private readonly _clientRpc: ClientRpcServer;
+  private readonly _shellClientRpc: ClientRpcServer;
   private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
-  private readonly _getService: WorkerSessionParams['getService'];
+  private readonly _serviceHost: ClientServicesHost;
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
 
@@ -44,34 +45,49 @@ export class WorkerSession {
   public bridgeService?: BridgeService;
 
   constructor({
-    getService,
+    serviceHost,
     systemPort,
     appPort,
     shellPort,
+    readySignal,
     options = {
       heartbeatInterval: 1_000
     }
   }: WorkerSessionParams) {
     assert(options);
-    assert(getService);
+    assert(serviceHost);
     this._options = options;
-    this._getService = getService;
+    this._serviceHost = serviceHost;
 
-    const handlers = {
-      DataService: () => this._getService((services) => services.DataService),
-      DeviceInvitationsService: () => this._getService((services) => services.DeviceInvitationsService),
-      DevicesService: () => this._getService((services) => services.DevicesService),
-      DevtoolsHost: () => this._getService((services) => services.DevtoolsHost),
-      NetworkService: () => this._getService((services) => services.NetworkService),
-      IdentityService: () => this._getService((services) => services.IdentityService),
-      SpaceInvitationsService: () => this._getService((services) => services.SpaceInvitationsService),
-      SpacesService: () => this._getService((services) => services.SpacesService),
-      SystemService: () => this._getService((services) => services.SystemService),
-      TracingService: () => this._getService((services) => services.TracingService)
+    const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
+      handleCall: async (method, params, handler) => {
+        const error = await readySignal.wait({ timeout: 3_000 });
+        if (error) {
+          throw error;
+        }
+
+        return handler(method, params);
+      },
+      handleStream: async (method, params, handler) => {
+        const error = await readySignal.wait({ timeout: 3_000 });
+        if (error) {
+          throw error;
+        }
+
+        return handler(method, params);
+      }
     };
 
-    this._clientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: appPort });
-    this._shellClientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: shellPort });
+    this._clientRpc = new ClientRpcServer({
+      serviceRegistry: this._serviceHost.serviceRegistry,
+      port: appPort,
+      ...middleware
+    });
+    this._shellClientRpc = new ClientRpcServer({
+      serviceRegistry: this._serviceHost.serviceRegistry,
+      port: shellPort,
+      ...middleware
+    });
 
     this._iframeRpc = createProtoRpcPeer({
       requested: iframeServiceBundle,

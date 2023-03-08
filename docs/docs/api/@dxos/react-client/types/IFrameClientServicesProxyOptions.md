@@ -4,15 +4,19 @@
 
 
 
+
 ## Properties
 ### [channel]()
 Type: <code>string</code>
 
+
 ### [shell]()
 Type: <code>boolean | string</code>
 
+
 ### [source]()
 Type: <code>string</code>
+
 
 ### [timeout]()
 Type: <code>number</code>

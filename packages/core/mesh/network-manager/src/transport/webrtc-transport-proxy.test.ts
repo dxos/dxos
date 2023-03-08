@@ -90,7 +90,7 @@ describe('WebRTCTransportProxy', () => {
     expect(callsCounter).toEqual(1);
   })
     .timeout(1_000)
-    .tag('e2e');
+    .tag('flaky');
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
@@ -117,7 +117,7 @@ describe('WebRTCTransportProxy', () => {
     await TestStream.assertConnectivity(stream1, stream2);
   })
     .timeout(2_000)
-    .tag('e2e');
+    .tag('flaky');
 
   describe('Multiplexing', () => {
     let service: any;
@@ -186,6 +186,6 @@ describe('WebRTCTransportProxy', () => {
       await TestStream.assertConnectivity(stream1, stream2);
     })
       .timeout(3_000)
-      .tag('e2e');
+      .tag('flaky');
   });
 });

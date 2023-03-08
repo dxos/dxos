@@ -10,6 +10,7 @@ import { describe, test } from '@dxos/test';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
+import { Text } from './text-object';
 
 describe('Serializer', () => {
   test('Basic', async () => {
@@ -28,6 +29,7 @@ describe('Serializer', () => {
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
+        '@model': 'dxos:model/document',
         title: 'Test'
       });
     }
@@ -83,6 +85,38 @@ describe('Serializer', () => {
       expect(main.subtasks[0].title).to.eq('Subtask 1');
       expect(main.subtasks[1]).to.be.instanceOf(Document);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
+    }
+  });
+
+  test('Text', async () => {
+    const serializer = new Serializer();
+
+    let data: SerializedSpace;
+    const content = 'Hello world!';
+    {
+      const db = await createDatabase();
+      const text = new Text(content);
+      await db.add(text);
+      expect(text.text).to.deep.eq(content);
+      expect(db.objects).to.have.length(1);
+
+      data = await serializer.export(db);
+      expect(data.objects).to.have.length(1);
+      expect(data.objects[0]).to.deep.eq({
+        '@id': text.id,
+        '@model': 'dxos:model/text',
+        text: content
+      });
+    }
+
+    {
+      const db = await createDatabase();
+      await serializer.import(db, data);
+
+      const { objects } = db.query();
+      expect(objects[0] instanceof Text).to.be.true;
+      expect(objects).to.have.length(1);
+      expect(objects[0].text).to.deep.eq(content);
     }
   });
 

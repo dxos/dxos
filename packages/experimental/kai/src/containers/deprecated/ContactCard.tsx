@@ -5,10 +5,9 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
 import { Space } from '@dxos/client';
+import { Contact, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, Input } from '@dxos/react-components';
-
-import { Contact, Organization } from '../../proto';
 
 // TODO(burdon): Custom views:
 //  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8

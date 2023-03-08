@@ -4,10 +4,9 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
-import { Space } from '@dxos/client';
+import { Config, Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
-
-import { BotManager } from './useBots';
+import { useConfig } from '@dxos/react-client';
 
 export type AppState = {
   // Debug info.
@@ -43,38 +42,39 @@ type SetFrameAction = Action & {
 
 type ActionType = SetBotAction | SetFrameAction;
 
-// TODO(burdon): Inject.
-const botManager = new BotManager();
+const reducer =
+  (config: Config) =>
+  (state: AppState, action: ActionType): AppState => {
+    switch (action.type) {
+      // TODO(burdon): Stop bot.
+      case 'set-active-bot': {
+        const { botId, active } = action as SetBotAction;
+        const bots = (state.bots ?? []).filter((bot) => bot !== botId);
+        if (active) {
+          bots.push(botId);
+          setTimeout(async () => {
+            // TODO(burdon): Call bot client.
+          });
+        }
 
-const reducer = (state: AppState, action: ActionType): AppState => {
-  switch (action.type) {
-    // TODO(burdon): Activate bot.
-    case 'set-active-bot': {
-      const { botId, active, space } = action as SetBotAction;
-      const bots = (state.bots ?? []).filter((bot) => bot !== botId);
-      if (active) {
-        bots.push(botId);
-        botManager.start(botId, space!);
+        return { ...state, bots };
       }
 
-      return { ...state, bots };
-    }
+      case 'set-active-frame': {
+        const { frameId, active } = action as SetFrameAction;
+        const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
+        if (active) {
+          frames.push(frameId);
+        }
 
-    case 'set-active-frame': {
-      const { frameId, active } = action as SetFrameAction;
-      const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
-      if (active) {
-        frames.push(frameId);
+        return { ...state, frames };
       }
 
-      return { ...state, frames };
+      default: {
+        throw new Error(`Invalid action: ${JSON.stringify(action)}`);
+      }
     }
-
-    default: {
-      throw new Error(`Invalid action: ${JSON.stringify(action)}`);
-    }
-  }
-};
+  };
 
 export type AppReducer = {
   state: AppState;
@@ -87,7 +87,8 @@ export const AppStateContext: Context<AppReducer | undefined> = createContext<Ap
 // TODO(burdon): Implement reducer.
 // https://beta.reactjs.org/learn/scaling-up-with-reducer-and-context
 export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState }> = ({ children, initialState }) => {
-  const [state, dispatch] = useReducer(reducer, initialState ?? {});
+  const config = useConfig();
+  const [state, dispatch] = useReducer(reducer(config), initialState ?? {});
 
   const value: AppReducer = {
     state,

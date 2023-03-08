@@ -8,7 +8,7 @@ import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { TestBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client-services/testing';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -69,7 +69,7 @@ const main = () => {
             log.info('spec', { spec });
           }
           const testBuilder = new TestBuilder(new Config(config));
-          const services = testBuilder.createClientServicesHost();
+          const services = testBuilder.createLocal();
           const stateMachine = testStateMachineFactory(spec.stateMachine!);
           const agent = new Agent({ config, services, spec, stateMachine });
           await agent.initialize();

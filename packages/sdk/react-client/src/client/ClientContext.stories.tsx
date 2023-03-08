@@ -4,7 +4,7 @@
 
 import React, { Component, PropsWithChildren } from 'react';
 
-import { fromHost } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 
 import { ClientProvider, useClient } from './ClientContext';
@@ -47,12 +47,12 @@ const TestApp = () => {
 
 const servicesProvider = (config?: Config) => fromHost(config);
 
-export const Primary = () => {
-  return (
+export const Primary = {
+  render: () => (
     <ClientProvider services={servicesProvider}>
       <TestApp />
     </ClientProvider>
-  );
+  )
 };
 
 class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
@@ -76,14 +76,13 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
   }
 }
 
-export const Failure = () => {
-  const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
-
-  return (
+const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
+export const Failure = {
+  render: () => (
     <ErrorBoundary>
       <ClientProvider config={config}>
         <TestApp />
       </ClientProvider>
     </ErrorBoundary>
-  );
+  )
 };

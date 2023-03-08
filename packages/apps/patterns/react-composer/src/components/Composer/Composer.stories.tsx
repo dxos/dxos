@@ -7,18 +7,22 @@ import React, { useEffect } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
+import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
-import { ClientSpaceDecorator } from './ClientSpaceDecorator';
-import { Composer, ComposerProps } from './Composer';
+import { Composer, DocumentComposerProps } from './Composer';
 
 export default {
   component: Composer,
   argTypes: {}
 };
 
-const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
+const Story = ({
+  spaceKey,
+  id,
+  ...args
+}: Omit<DocumentComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
   const [document] = useQuery(space, ComposerDocument.filter());
@@ -57,6 +61,7 @@ const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceK
   );
 };
 
+// TODO(wittjosiah): Increasing count to 2, the second peer does not sync the document content.
 export const Default = {
   render: Story,
   decorators: [ClientSpaceDecorator({ schema, count: 1 })]

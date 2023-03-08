@@ -48,6 +48,14 @@ const loadProtobufBuiltins = () => {
                     id: 1
                   }
                 }
+              },
+              Document: {
+                fields: {
+                  test: {
+                    type: 'string',
+                    id: 1
+                  }
+                }
               }
             }
           }

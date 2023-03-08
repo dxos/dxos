@@ -5,6 +5,7 @@
 import assert from 'assert';
 import {
   Article,
+  Robot,
   Calendar,
   Cards,
   Code,
@@ -14,9 +15,12 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
+  Monitor,
+  Stack as StackIcon,
   Sword,
   Table,
-  Wall
+  Tray,
+  MagnifyingGlass
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
@@ -24,19 +28,23 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
+  BotFrame,
   CalendarFrame,
   ChessFrame,
-  StackFrame,
   Document,
   ExplorerFrame,
   File,
   KanbanFrame,
   MapFrame,
+  MasonryFrame,
+  MessageFrame,
   Note,
+  SandboxFrame,
+  SearchFrame,
   SketchFrame,
+  Stack,
   TableFrame,
-  TaskFrame,
-  SandboxFrame
+  TaskFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -45,7 +53,7 @@ export type FrameDef = {
   runtime: {
     Icon: FC<any>;
     Component: FC<any>;
-    Tile?: FC<any>;
+    List?: FC<any>;
   };
 };
 
@@ -53,17 +61,29 @@ export type FrameDef = {
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
 // prettier-ignore
-const defs: FrameDef[] = [
+const frameDefs: FrameDef[] = [
   {
     module: {
-      id: 'dxos.module.frame.mosaic',
+      id: 'dxos.module.frame.dashboard',
       type: 'dxos:type/frame',
-      displayName: 'Mosaic',
+      displayName: 'Dashboard',
       description: 'Configurable tiles.'
     },
     runtime: {
-      Icon: Wall,
-      Component: StackFrame
+      Icon: Monitor,
+      Component: MasonryFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.search',
+      type: 'dxos:type/frame',
+      displayName: 'Search',
+      description: 'Universal search.'
+    },
+    runtime: {
+      Icon: MagnifyingGlass,
+      Component: SearchFrame
     }
   },
   {
@@ -105,9 +125,45 @@ const defs: FrameDef[] = [
   },
   {
     module: {
+      id: 'dxos.module.frame.bot',
+      type: 'dxos:type/frame',
+      displayName: 'Bots',
+      description: 'Bot management.'
+    },
+    runtime: {
+      Icon: Robot,
+      Component: BotFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.message',
+      type: 'dxos:type/frame',
+      displayName: 'Inbox',
+      description: 'Universal message inbox.'
+    },
+    runtime: {
+      Icon: Tray,
+      Component: MessageFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.bot',
+      type: 'dxos:type/frame',
+      displayName: 'Bots',
+      description: 'Bot management.'
+    },
+    runtime: {
+      Icon: Robot,
+      Component: BotFrame
+    }
+  },
+  {
+    module: {
       id: 'dxos.module.frame.calendar',
       type: 'dxos:type/frame',
-      displayName: 'Events',
+      displayName: 'Calendar',
       description: 'Calendar and time management tools.'
 
     },
@@ -126,7 +182,20 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Article,
       Component: Document.Frame,
-      Tile: Document.Tile
+      List: Document.List
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.stack',
+      type: 'dxos:type/frame',
+      displayName: 'Stacks',
+      description: 'Structured documents.'
+    },
+    runtime: {
+      Icon: StackIcon,
+      Component: Stack.Frame,
+      List: Stack.List
     }
   },
   {
@@ -135,12 +204,11 @@ const defs: FrameDef[] = [
       type: 'dxos:type/frame',
       displayName: 'Notes',
       description: 'Brainstorming notes.'
-
     },
     runtime: {
       Icon: Cards,
       Component: Note.Frame,
-      Tile: Note.Tile
+      List: Note.List
     }
   },
   {
@@ -153,7 +221,7 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: Files,
       Component: File.Frame,
-      Tile: File.Tile
+      List: File.List
     }
   },
   {
@@ -197,7 +265,8 @@ const defs: FrameDef[] = [
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
       displayName: 'Chess',
-      description: 'Peer-to-peer and engine powered games.'
+      description: 'Peer-to-peer and engine powered games.',
+      tags: ['community']
     },
     runtime: {
       Icon: Sword,
@@ -218,21 +287,26 @@ const defs: FrameDef[] = [
   }
 ];
 
-export const frameModules: Module[] = defs.map(({ module }) => module);
+export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.mosaic';
+// TODO(burdon): Make switchable based on dev/prod mode.
+export const defaultFrameId = 'dxos.module.frame.search';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.mosaic',
+  'dxos.module.frame.dashboard',
+  'dxos.module.frame.search',
+  'dxos.module.frame.message',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  'dxos.module.frame.document',
+  'dxos.module.frame.bot',
+  'dxos.module.frame.document'
+  // 'dxos.module.frame.stack'
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
-  // 'dxos.module.frame.explorer'
-  'dxos.module.frame.note'
+  // 'dxos.module.frame.explorer',
+  // 'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;
@@ -244,7 +318,7 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   const frames = useMemo(
     () =>
       modules.reduce((map, module) => {
-        const def = defs.find((def) => def.module.id === module.id);
+        const def = frameDefs.find((def) => def.module.id === module.id);
         assert(def);
         map.set(module.id!, def);
         return map;

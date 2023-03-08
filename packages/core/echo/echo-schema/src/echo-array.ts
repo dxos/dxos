@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { log } from '@dxos/log';
 
 import { base } from './defs';
 import { Document } from './document';
@@ -313,6 +314,8 @@ export class EchoArray<T> implements Array<T> {
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
       return this._document!._lookupLink(value.itemId) as T | undefined;
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      return decodeRecords(value, this._document!);
     } else {
       return value;
     }
@@ -329,7 +332,19 @@ export class EchoArray<T> implements Array<T> {
       (value as any)['@id']
     ) {
       return new Reference((value as any)['@id']);
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      log('Freezing object before encoding', value);
+      Object.freeze(value);
+      return encodeRecords(value, this._document!);
     } else {
+      assert(
+        value === null ||
+          value === undefined ||
+          typeof value === 'boolean' ||
+          typeof value === 'number' ||
+          typeof value === 'string',
+        `Invalid type: ${JSON.stringify(value)}`
+      );
       return value;
     }
   }
@@ -380,3 +395,30 @@ export class EchoArray<T> implements Array<T> {
       .commit();
   }
 }
+
+const encodeRecords = (value: any, document: Document): any => {
+  if (value instanceof EchoObject) {
+    void document!._linkObject(value);
+    return new Reference(value.id);
+  } else if (Array.isArray(value)) {
+    return value.map((value) => encodeRecords(value, document));
+  } else if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)])
+    );
+  }
+  return value;
+};
+
+const decodeRecords = (value: any, document: Document): any => {
+  if (value instanceof Reference) {
+    return document._lookupLink(value.itemId);
+  } else if (Array.isArray(value)) {
+    return value.map((value) => decodeRecords(value, document));
+  } else if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)])
+    );
+  }
+  return value;
+};

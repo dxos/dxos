@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ShellRuntime } from '@dxos/client';
+import { ShellRuntime } from '@dxos/client-services';
+import { log } from '@dxos/log';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { useClient, useSpace, useSpaces } from '@dxos/react-client';
 
@@ -26,6 +27,19 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   useEffect(() => {
     return runtime.layoutUpdate.on((request) => setLayout(request));
   }, [runtime]);
+
+  useEffect(() => {
+    if (layout === ShellLayout.SPACE_INVITATIONS && !space) {
+      log.warn('No space found for shell space invitations.');
+
+      const timeout = setTimeout(async () => {
+        await runtime.setAppContext({ display: ShellDisplay.NONE });
+        runtime.setLayout(ShellLayout.DEFAULT);
+      });
+
+      return () => clearTimeout(timeout);
+    }
+  }, [runtime, layout, space]);
 
   switch (layout) {
     case ShellLayout.INITIALIZE_IDENTITY:
@@ -54,7 +68,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       );
 
     case ShellLayout.SPACE_INVITATIONS:
-      return (
+      return space ? (
         <SpaceDialog
           space={space}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
@@ -63,7 +77,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />
-      );
+      ) : null;
 
     case ShellLayout.JOIN_SPACE:
       return (

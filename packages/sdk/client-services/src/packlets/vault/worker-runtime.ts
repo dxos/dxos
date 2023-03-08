@@ -36,14 +36,16 @@ export class WorkerRuntime {
   // prettier-ignore
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>
-  ) { }
+  ) {
+    this._clientServices = new ClientServicesHost();
+  }
 
   async start() {
     log('starting...');
     try {
       this._config = await this._configProvider();
       const signalServer = this._config.get('runtime.services.signal.server');
-      this._clientServices = new ClientServicesHost({
+      this._clientServices.initialize({
         config: this._config,
         networkManager: new NetworkManager({
           log: true,
@@ -73,19 +75,7 @@ export class WorkerRuntime {
    */
   async createSession({ appPort, systemPort, shellPort }: CreateSessionParams) {
     const session = new WorkerSession({
-      getService: async (find) => {
-        const error = await this._ready.wait();
-        if (error) {
-          throw error;
-        }
-
-        const service = find(this._clientServices.services);
-        if (!service) {
-          throw new Error('Service not found');
-        }
-
-        return service;
-      },
+      serviceHost: this._clientServices,
       appPort,
       systemPort,
       shellPort,

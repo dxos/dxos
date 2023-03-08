@@ -6,13 +6,13 @@ import { expect } from 'chai';
 import assert from 'node:assert';
 
 import { asyncChain, Trigger } from '@dxos/async';
+import { SpaceInvitationsProxy } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
-import { SpaceInvitationsProxy } from './space-invitations-proxy';
 import { SpaceInvitationsServiceImpl } from './space-invitations-service';
 
 const closeAfterTest = async (peer: ServiceContext) => {

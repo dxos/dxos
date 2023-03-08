@@ -6,12 +6,6 @@ import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
 import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
-import {
-  ClientServicesProvider,
-  CancellableInvitationObservable,
-  SpaceInvitationsProxy,
-  InvitationsOptions
-} from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
@@ -22,6 +16,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { Space as SpaceType, SpaceMember, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { ClientServicesProvider } from '../client';
+import { CancellableInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
 
 interface Internal {

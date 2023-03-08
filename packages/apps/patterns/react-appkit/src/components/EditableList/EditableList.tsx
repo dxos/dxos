@@ -230,29 +230,27 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           slots: slots.listItem
         }}
       >
-        <ListItemHeading>
-          <Input
-            {...{
-              variant: 'subdued',
-              label: t('list item input label'),
-              labelVisuallyHidden: true,
-              placeholder: t('list item input placeholder'),
-              slots: {
-                ...slots.input,
-                root: {
-                  ...slots.input?.root,
-                  className: mx('grow mlb-0', slots.input?.root?.className)
-                }
-              },
-              value: title,
-              defaultValue: defaultTitle,
-              onChange: onChangeTitle
-            }}
-          >
-            {title ?? defaultTitle}
-          </Input>
-          <span className='sr-only'>{title}</span>
-        </ListItemHeading>
+        <ListItemHeading className='sr-only'>{title}</ListItemHeading>
+        <Input
+          {...{
+            variant: 'subdued',
+            label: t('list item input label'),
+            labelVisuallyHidden: true,
+            placeholder: t('list item input placeholder'),
+            slots: {
+              ...slots.input,
+              root: {
+                ...slots.input?.root,
+                className: mx('grow', slots.input?.root?.className)
+              }
+            },
+            value: title,
+            defaultValue: defaultTitle,
+            onChange: onChangeTitle
+          }}
+        >
+          {title ?? defaultTitle}
+        </Input>
         {onClickDelete && (
           <ListItemEndcap>
             <Tooltip content={t('delete list item label')} side='left' tooltipLabelsTrigger>

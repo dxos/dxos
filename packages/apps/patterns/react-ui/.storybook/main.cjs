@@ -16,11 +16,16 @@ module.exports = {
   ],
   framework: {
     name: '@storybook/react-vite',
-    options: {}
+    options: {
+      strictMode: true
+    }
   },
   viteFinal: async (config) => mergeConfig(config, {
-    plugins: [ConfigPlugin(), ThemePlugin({
-      content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
-    })]
+    plugins: [
+      ConfigPlugin(),
+      ThemePlugin({
+        content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
+      })
+    ]
   })
 };

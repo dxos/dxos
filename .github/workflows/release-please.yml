@@ -84,25 +84,18 @@ jobs:
           git add .
           git commit -m "chore: apidoc update for ${{ steps.release.outputs.tag_name }}"
 
-      - name: Fast-forward production
+      - name: Merge production
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch production
-          git merge --ff-only ${{ github.ref_name }}
-          git push
-
-      - name: Fast-forward main
-        if: ${{ !steps.release.outputs.release_created }}
-        run: |
-          git switch main
-          git merge --ff-only ${{ github.ref_name }}
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
           git push
 
       - name: Merge main
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch main
-          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into main"
+          git merge --no-ff production -m "Merge ${{ github.ref_name }} into main from production"
           git push
 
       - name: Delete release branch

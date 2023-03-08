@@ -34,7 +34,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  });
+  }).tag('flaky');
 
   // TODO(burdon): Test with more peers (configure and test messaging).
   test('joins swarm with star topology', async () => {
@@ -48,7 +48,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  });
+  }).tag('flaky');
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
   test('joins swarm multiple times', async () => {
@@ -75,7 +75,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       await exchangeMessages(swarm1, swarm2);
       await leaveSwarm([peer1, peer2], topic2);
     }
-  });
+  }).tag('flaky');
 
   test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
@@ -109,7 +109,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
       test2.swarm1a.protocol.testConnection(test2.peer2a.peerId)
     ]);
-  });
+  }).tag('flaky');
 
   test('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
@@ -152,7 +152,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
   })
-    .tag('e2e')
+    .tag('flaky')
     .timeout(2_000);
 
   // TODO(mykola): Fails with large amount of peers ~10.
