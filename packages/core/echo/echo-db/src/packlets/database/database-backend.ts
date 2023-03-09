@@ -20,9 +20,7 @@ import { Batch } from './batch';
 
 export type MutateResult = {
   objectsCreated: Item<any>[];
-  getReceipt(): Promise<MutationWriteReceipt>;
-
-  // TODO(dmaretskyi): .
+  batch: Batch;
 };
 
 const FLUSH_TIMEOUT = 5_000;
@@ -39,7 +37,11 @@ export class DatabaseBackendProxy {
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
 
-  private _mutationRoundTripTriggers = new Map<string, Trigger>();
+  /**
+   * Batches that are being committed or processed.
+   * ClientTag -> Batch
+   */
+  private _pendingBatches = new Map<string, Batch>();
 
   private _currentBatch?: Batch;
 
@@ -82,8 +84,19 @@ export class DatabaseBackendProxy {
         this._processMessage(msg.batch);
 
         if (msg.clientTag) {
-          this._mutationRoundTripTriggers.get(msg.clientTag)?.wake();
-          this._mutationRoundTripTriggers.delete(msg.clientTag);
+          const batch = this._pendingBatches.get(msg.clientTag);
+          if (batch) {
+            assert(msg.feedKey !== undefined)
+            assert(msg.seq !== undefined)
+            batch.receipt = {
+              feedKey: msg.feedKey,
+              seq: msg.seq
+            };
+            batch.receiptTrigger!.wake(batch.receipt)
+            batch.processTrigger!.wake()
+          } else {
+            log('Missing pending batch', { clientTag: msg.clientTag }); 
+          }
         }
 
         // Notify that initial set of items has been loaded.
@@ -165,6 +178,31 @@ export class DatabaseBackendProxy {
     return entity;
   }
 
+  private _commitBatch(batch: Batch) {
+    assert(!batch.committing);
+    assert(!batch.processTrigger);
+    assert(batch.clientTag);
+    assert(!this._pendingBatches.has(batch.clientTag));
+
+    batch.processTrigger = new Trigger();
+    batch.receiptTrigger = new Trigger();
+    this._pendingBatches.set(batch.clientTag, batch);
+
+    this._service.write({
+      batch: batch.data,
+      spaceKey: this._spaceKey,
+      clientTag: batch.clientTag!,
+    }).then(
+      receipt => {
+        log('commit', { clientTag: batch.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
+        // No-op because the pipeline message will set the receipt.
+      },
+      err => {
+        batch.receiptTrigger!.throw(err);
+      }
+    )
+  }
+
   mutate(batchInput: EchoObjectBatch): MutateResult {
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
@@ -178,7 +216,6 @@ export class DatabaseBackendProxy {
     const objectsCreated: Item<any>[] = [];
 
     tagMutationsInBatch(batchInput, this._currentBatch.clientTag);
-    this._mutationRoundTripTriggers.set(this._currentBatch.clientTag, new Trigger());
     log('mutate', { clientTag: this._currentBatch.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
     // Optimistic apply.
@@ -190,28 +227,14 @@ export class DatabaseBackendProxy {
         }
       }
     }
-
-    const writePromise = this._service.write({
-      batch: batchInput,
-      spaceKey: this._spaceKey,
-      clientTag: this._currentBatch.clientTag
-    });
-
+    
     const batch = this._currentBatch;
+    this._commitBatch(batch);
     this._currentBatch = undefined;
 
     return {
       objectsCreated,
-      getReceipt: async () => {
-        const feedReceipt = await writePromise;
-
-        return {
-          ...feedReceipt,
-          waitToBeProcessed: async () => {
-            await this._mutationRoundTripTriggers.get(batch.clientTag!)?.wait();
-          }
-        };
-      }
+      batch,
     };
   }
 
@@ -222,12 +245,12 @@ export class DatabaseBackendProxy {
     // TODO(dmaretskyi): Extract as db.flush()?.
     try {
       await Promise.all(
-        Array.from(this._mutationRoundTripTriggers.values()).map((trigger) => trigger.wait({ timeout: FLUSH_TIMEOUT }))
+        Array.from(this._pendingBatches.values()).map((batch) => batch.processTrigger?.wait({ timeout: FLUSH_TIMEOUT }))
       );
     } catch (err) {
       log.error('timeout waiting for mutations to flush', {
         timeout: FLUSH_TIMEOUT,
-        mutationTags: Array.from(this._mutationRoundTripTriggers.keys())
+        mutationTags: Array.from(this._pendingBatches.keys())
       });
     }
 

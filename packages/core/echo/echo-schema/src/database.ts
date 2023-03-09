@@ -118,7 +118,7 @@ export class EchoDatabase {
     assert(result.objectsCreated.length === 1);
 
     await obj[base]._bind(result.objectsCreated[0]);
-    await result.getReceipt(); // wait to be saved to feed.
+    await result.batch.getReceipt(); // wait to be saved to feed.
     return obj;
   }
 
