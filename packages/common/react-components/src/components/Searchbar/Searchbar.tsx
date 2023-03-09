@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx } from 'packages/common/react-components/src/util';
 import { MagnifyingGlass } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
+import { mx } from '../../util';
 import { Input } from '../Input';
 
 type SearchbarSlots = {
