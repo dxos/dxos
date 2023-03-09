@@ -13,6 +13,15 @@ import { log } from '@dxos/log';
 import { ChatModel } from '../chat-model';
 import { Generator } from '../generator';
 
+// eslint-disable-next-line unused-imports/no-unused-vars
+const parseJson = (content: string) => {
+  const clean = content.replace(/\n/g, '');
+  const [, json] = clean.match(/```(.+)```/) ?? [];
+  if (json) {
+    return JSON.parse(json);
+  }
+};
+
 export class ContactStackGenerator implements Generator<DocumentStack> {
   async update(chatModel: ChatModel, space: Space, stack: DocumentStack) {
     // TODO(burdon): Prevent multiple generations.
@@ -42,14 +51,6 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
         content: `${name} works for ${organization}`
       }
     ];
-
-    const parseJson = (content: string) => {
-      const clean = content.replace(/\n/g, '');
-      const [, json] = clean.match(/```(.+)```/) ?? [];
-      if (json) {
-        return JSON.parse(json);
-      }
-    };
 
     // TODO(burdon): Factor out method.
     const addTextSection = async (prompt: string, title: string) => {

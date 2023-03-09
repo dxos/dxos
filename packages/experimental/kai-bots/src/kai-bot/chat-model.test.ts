@@ -27,6 +27,7 @@ describe('ChatModel', () => {
     });
   };
 
+  // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('basic', async () => {
     const chat = createChatModel();
     const { messages } = loadJson('packages/experimental/kai-bots/data/messages.json');
@@ -34,6 +35,7 @@ describe('ChatModel', () => {
     expect(result).to.exist;
   });
 
+  // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('create contact stack', async () => {
     const _schema: SchemaMap = {
       person: [

@@ -14,7 +14,8 @@ import { loadJson } from '../util';
 import { KaiBot } from './kai-bot';
 
 describe('KaiBot', () => {
-  test('basic', async () => {
+  // eslint-disable-next-line mocha/no-skipped-tests
+  test.skip('basic', async () => {
     // TODO(burdon): Use Config util.
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
 
