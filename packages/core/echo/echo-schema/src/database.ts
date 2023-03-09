@@ -97,6 +97,7 @@ export class EchoDatabase {
     assert(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
+    obj[base]._beforeBind();
 
     const snapshot = obj[base]._createSnapshot();
 

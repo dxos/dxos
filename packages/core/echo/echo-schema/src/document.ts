@@ -239,8 +239,8 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
     this._database?._logObjectAccess(this);
 
     if (value instanceof EchoObject) {
-      this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
       this._linkObject(value);
+      this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
     } else if (value instanceof EchoArray) {
       const values = value.map((item) => {
         if (item instanceof EchoObject) {
@@ -334,21 +334,13 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
     });
   }
 
-  /**
-   * Called after object is bound to a database.
-   * `this._item` will now be set to an item tracked by ECHO.
-   * @internal
-   */
-  protected override async _onBind() {
+  override _beforeBind() {
     assert(this._linkCache);
-
-    const promises = [];
     for (const obj of this._linkCache.values()) {
-      promises.push(this._database!.add(obj));
+      // TODO(dmaretskyi): Promises should be handled though batches.
+      void this._database!.add(obj);
     }
     this._linkCache = undefined;
-
-    await Promise.all(promises);
   }
 
   /**
