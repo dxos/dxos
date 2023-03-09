@@ -101,7 +101,7 @@ export const Dialog = ({
             <DialogPrimitive.Title
               {...slots.title}
               className={mx(
-                'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+                'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
                 titleVisuallyHidden && 'sr-only',
                 defaultFocus,
                 slots.content?.className
