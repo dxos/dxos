@@ -20,13 +20,14 @@ import {
   Button,
   getSize,
   useTranslation,
-  Tooltip,
   defaultDescription,
   ButtonProps,
   Density,
   useListDensity,
   DensityProvider
 } from '@dxos/react-components';
+
+import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
   listItem?: ListItemProps['slots'];

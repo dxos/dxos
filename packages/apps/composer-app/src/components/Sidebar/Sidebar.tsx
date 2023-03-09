@@ -16,6 +16,7 @@ import {
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
+import { Tooltip } from '@dxos/react-appkit';
 import { observer, ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 import {
   Avatar,
@@ -30,7 +31,6 @@ import {
   ListItemEndcap,
   mx,
   ThemeContext,
-  Tooltip,
   TreeBranch,
   TreeItem,
   TreeItemBody,
