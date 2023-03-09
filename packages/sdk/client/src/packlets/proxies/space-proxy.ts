@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { Space as SpaceType, SpaceMember, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { ClientServicesProvider } from '../client';
 import { CancellableInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
@@ -38,6 +39,10 @@ export interface Space {
 
   getMembers(): SpaceMember[];
   subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
+
+  postMessage: (channel: string, message: any) => Promise<void>;
+
+  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
   removeInvitation(id: string): void;
@@ -182,6 +187,24 @@ export class SpaceProxy implements Space {
 
   async close() {
     await this._setOpen(false);
+  }
+
+  /**
+   * Post a message to the space.
+   */
+  async postMessage(channel: string, message: any) {
+    assert(this._clientServices.services.SpacesService, 'SpacesService not available');
+    await this._clientServices.services.SpacesService.postMessage({ spaceKey: this.key, channel, message });
+  }
+
+  /**
+   * Listen for messages posted to the space.
+   */
+  listen(channel: string, callback: (message: GossipMessage) => void) {
+    assert(this._clientServices.services.SpacesService, 'SpacesService not available');
+    const stream = this._clientServices.services.SpacesService.subscribeMessages({ spaceKey: this.key, channel });
+    stream.subscribe(callback);
+    return () => stream.close();
   }
 
   /**
