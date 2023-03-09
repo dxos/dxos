@@ -24,6 +24,7 @@ type Type = {
   Card: FC<any>;
 };
 
+// TODO(burdon): From metadata.
 const types: Type[] = [
   {
     name: 'dxos.experimental.kai.Project',

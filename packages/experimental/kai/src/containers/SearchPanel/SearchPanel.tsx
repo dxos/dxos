@@ -48,8 +48,7 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
 };
 
 // TODO(burdon): Based on schema. Convert documents. to text.
-// TODO(burdon): Access "from.name"
-const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from'];
+const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from.name'];
 
 type SearchResult = {
   object: Document;
@@ -59,9 +58,18 @@ type SearchResult = {
   snippet?: string[];
 };
 
+// TODO(burdon): Implement in echo schema.
+const getProperty = (object: Object, path: string[]): string | undefined => {
+  const value = (object as { [key: string]: any })[path[0]];
+  if (typeof value === 'string') {
+    return value;
+  } else if (typeof value === 'object') {
+    return getProperty(value, path.slice(1));
+  }
+};
+
 // TODO(burdon): Ranking via Lyra?
-// TODO(burdon):
-const mapResult = (text: string) => {
+const matchFilter = (text: string) => {
   const str = text.trim().toLowerCase();
   return (object: Document): SearchResult | undefined => {
     if (!str.length) {
@@ -72,10 +80,11 @@ const mapResult = (text: string) => {
       // TODO(burdon): Title fields.
       const title = (object as any).title ?? (object as any).name ?? (object as any).subject;
 
+      // TODO(burdon): Factor out search filter.
       let match = false;
       let snippet: string[] = [];
       for (const field of searchFields) {
-        const value = (object as { [key: string]: string | undefined })[field];
+        const value = getProperty(object, field.split('.'));
         if (typeof value === 'string') {
           const idx = value?.toLowerCase().indexOf(str) ?? -1;
           if (idx !== -1) {
@@ -89,9 +98,6 @@ const mapResult = (text: string) => {
             }
             break;
           }
-        } else if (value !== undefined) {
-          // TODO(burdon): Nested properties.
-          // console.log('>>>>>>>>>>>', field, JSON.stringify(value));
         }
       }
 
@@ -143,7 +149,7 @@ export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
   };
 
   const { space } = useAppRouter();
-  const results = useQuery(space).map(mapResult(text)).filter(Boolean) as SearchResult[];
+  const results = useQuery(space).map(matchFilter(text)).filter(Boolean) as SearchResult[];
   const sorted = results.sort(sort);
 
   return (

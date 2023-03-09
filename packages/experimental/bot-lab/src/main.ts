@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client, ClientServices, Config, PublicKey } from '@dxos/client';
+import { Client, ClientServices, Config, PublicKey, Space } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
@@ -82,7 +82,7 @@ const start = async () => {
 
   let bot: Bot | undefined;
   // TODO(burdon): Reconcile this subscription with the ECHO db.query.
-  client.echo.subscribeSpaces(async (spaces) => {
+  const onUpdate = async (spaces: Space[]) => {
     if (spaces.length) {
       const space = spaces[0];
       log.info('joined', { space: space.key });
@@ -92,7 +92,11 @@ const start = async () => {
         await bot.start();
       }
     }
-  });
+  };
+
+  // TODO(burdon): Fix race condition? Trigger callback on subscription.
+  void onUpdate(client.echo.getSpaces());
+  client.echo.subscribeSpaces(onUpdate);
 };
 
 const createBot = (bot?: string): Bot => {

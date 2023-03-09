@@ -20,11 +20,12 @@ const sort = ({ name: a1, email: a2 }: Contact, { name: b1, email: b2 }: Contact
 // TODO(burdon): Tasks.
 export const ContactFrame = () => {
   const navigate = useNavigate();
-  const { space, frame, objectId } = useAppRouter();
-  const contacts = useQuery(space, Contact.filter()).sort(sort);
-  const selected = objectId ? space?.db.getObjectById<Contact>(objectId) : undefined;
   const selectedRef = useRef<HTMLDivElement>(null);
+  const { space, frame, objectId } = useAppRouter();
 
+  const contacts = useQuery(space, Contact.filter()).sort(sort);
+
+  const selected = objectId ? space?.db.getObjectById<Contact>(objectId) : undefined;
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selected]);

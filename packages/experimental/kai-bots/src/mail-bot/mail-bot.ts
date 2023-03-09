@@ -51,18 +51,21 @@ export class MailBot extends Bot {
   /**
    * Poll messages and merge into inbox.
    */
-  async pollMessages() {
+  async pollMessages(): Promise<number> {
     const { objects: currentMessages } = this.space.db.query(Message.filter());
     const findCurrent = (id: string) => currentMessages.find((message) => message.source.guid === id);
 
     // TODO(burdon): Deleted messages (e.g., if no longer exists in time range); updated properties.
     assert(this._processor);
     const messages = await this._processor.requestMessages();
+    // TODO(burdon): Annotate source of message (in GUID?)
     log.info('processed', { current: currentMessages.length, messages: messages.length });
     for (const message of messages) {
       if (!message.source?.guid || !findCurrent(message.source?.guid)) {
         await this.space.db.add(message);
       }
     }
+
+    return messages.length;
   }
 }

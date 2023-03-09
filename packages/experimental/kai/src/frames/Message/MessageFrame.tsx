@@ -3,7 +3,7 @@
 //
 
 import { Circle } from 'phosphor-react';
-import React, { FC, ReactNode, useMemo, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Contact, Message, Organization } from '@dxos/kai-types';
@@ -14,12 +14,23 @@ import { ContactCard } from '../../frames/Contact';
 import { createPath, useAppRouter } from '../../hooks';
 import { formatDate, getCompanyName, sortMessage } from './util';
 
+// TODO(burdon): Common container patter (see ContactFrame).
 export const MessageFrame = () => {
-  const { space } = useAppRouter();
+  const navigate = useNavigate();
+  const selectedRef = useRef<HTMLDivElement>(null);
+  const { space, frame, objectId } = useAppRouter();
+
   // TODO(burdon): Add sort to filter.
   const messages = useQuery(space, Message.filter()).sort(sortMessage);
 
-  const [selected, setSelected] = useState<Message>(messages[0]);
+  const selected = objectId ? space?.db.getObjectById<Message>(objectId) : undefined;
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selected]);
+
+  const handleSelect = (message: Message) => {
+    navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: message.id }));
+  };
 
   const now = new Date();
 
@@ -45,8 +56,9 @@ export const MessageFrame = () => {
             return (
               <div
                 key={id}
+                ref={message.id === selected?.id ? selectedRef : undefined}
                 className='flex flex-col hover:bg-hover-bg cursor-pointer border-b py-2 pr-5'
-                onClick={() => setSelected(message)}
+                onClick={() => handleSelect(message)}
               >
                 {/* From */}
                 <Row
