@@ -11,8 +11,7 @@ import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { FilePreview } from '../../components';
-import { TaskList as TaskListComponent } from '../../containers';
+import { FilePreview, TaskList as TaskListComponent } from '../../components';
 import { getColumnType } from '../Table';
 
 export const StackContent: FC<{

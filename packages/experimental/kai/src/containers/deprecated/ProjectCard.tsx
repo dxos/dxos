@@ -10,7 +10,7 @@ import { Project, Task } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, mx, Input } from '@dxos/react-components';
 
-import { TaskList } from './TaskList';
+import { TaskList } from '../../components';
 
 // TODO(burdon): Reconcile with other cards.
 export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ space, object }) => {

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { UnorderedTaskList } from '../../containers';
+import { UnorderedTaskList } from '../../components';
 import { useAppRouter } from '../../hooks';
 
 export const TaskFrame = () => {

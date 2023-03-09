@@ -106,7 +106,13 @@ message Project {
 message Kanban {
   option (object) = true;
 
+  message OrderedColumn {
+    string column_id = 1;
+    repeated string objects = 2;
+  }
+
   string title = 1;
+  string column_type = 2;
 }
 
 message Document {
