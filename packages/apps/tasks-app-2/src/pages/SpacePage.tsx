@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Menubar, SpacesLink } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client';
 
-import { TaskList } from '../components/TaskList';
+import { TaskList } from '../containers/TaskList';
 
 export const SpacePage = () => {
   const { spaceId } = useParams();
