@@ -9,7 +9,7 @@ import { Document } from '@dxos/echo-schema';
 import { Document as TypeDocument, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer } from '@dxos/react-composer';
 
 import { FilePreview } from '../../components';
 import { TaskList as TaskListComponent } from '../../containers';
@@ -28,8 +28,8 @@ export const StackContent: FC<{ config: Config; space: Space; object: Document; 
         throw new Error(`Invalid object type: ${object.__typename}`);
       }
       return (
-        <Composer
-          document={object.content}
+        <RichTextComposer
+          text={object.content}
           slots={{
             editor: {
               className: 'kai-composer',
