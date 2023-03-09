@@ -32,6 +32,9 @@ import {
   ListItemEndcap,
   mx,
   ThemeContext,
+  TooltipContent,
+  TooltipRoot,
+  TooltipTrigger,
   TreeBranch,
   TreeItem,
   TreeItemBody,
@@ -115,32 +118,38 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
           {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : space.key.truncate()}
         </TreeItemHeading>
-        <DropdownMenu
-          trigger={
-            // todo (thure): This needs a tooltip, but Tooltip from `react-components` needs to be refactored to export Radix-style subcomponents.
-            <Button variant='ghost' className='shrink-0 pli-1'>
-              <DotsThreeVertical className={getSize(4)} />
-            </Button>
-          }
-          slots={{ content: { className: 'z-40' } }}
-        >
-          <Input
-            label={t('space name label')}
-            labelVisuallyHidden
-            value={space.properties.name ?? ''}
-            placeholder={space.key.truncate()}
-            onChange={({ target: { value } }) => (space.properties.name = value)}
-          />
-          <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
-            <PaperPlaneTilt className={getSize(4)} />
-            <span>{t('view space invitations label', { ns: 'os' })}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
-            <EyeSlash className={getSize(4)} />
-            <span>{t('hide space label')}</span>
-          </DropdownMenuItem>
-        </DropdownMenu>
-        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
+        <TooltipRoot>
+          <TooltipContent className='z-[31]' side='bottom'>
+            {t('space options label')}
+          </TooltipContent>
+          <DropdownMenu
+            trigger={
+              <TooltipTrigger asChild>
+                <Button variant='ghost' className='shrink-0 pli-1'>
+                  <DotsThreeVertical className={getSize(4)} />
+                </Button>
+              </TooltipTrigger>
+            }
+            slots={{ content: { className: 'z-[31]' } }}
+          >
+            <Input
+              label={t('space name label')}
+              labelVisuallyHidden
+              value={space.properties.name ?? ''}
+              placeholder={space.key.truncate()}
+              onChange={({ target: { value } }) => (space.properties.name = value)}
+            />
+            <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
+              <PaperPlaneTilt className={getSize(4)} />
+              <span>{t('view space invitations label', { ns: 'os' })}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
+              <EyeSlash className={getSize(4)} />
+              <span>{t('hide space label')}</span>
+            </DropdownMenuItem>
+          </DropdownMenu>
+        </TooltipRoot>
+        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
           <Button variant='ghost' className='shrink-0 pli-1' onClick={handleCreate}>
             <span className='sr-only'>{t('create document label')}</span>
             <Plus className={getSize(4)} />
@@ -208,7 +217,7 @@ const SidebarContent = () => {
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
               <Tooltip
                 content={t('create space label', { ns: 'appkit' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >
@@ -218,7 +227,7 @@ const SidebarContent = () => {
               </Tooltip>
               <Tooltip
                 content={t('join space label', { ns: 'appkit' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >
@@ -228,7 +237,7 @@ const SidebarContent = () => {
               </Tooltip>
               <Tooltip
                 content={t('close sidebar label', { ns: 'os' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >
