@@ -194,7 +194,15 @@ export class SpaceProxy implements Space {
    */
   async postMessage(channel: string, message: any) {
     assert(this._clientServices.services.SpacesService, 'SpacesService not available');
-    await this._clientServices.services.SpacesService.postMessage({ spaceKey: this.key, channel, message });
+    const messageToSend = { ...message };
+    if (!messageToSend['@type']) {
+      messageToSend['@type'] = 'google.protobuf.Struct';
+    }
+    await this._clientServices.services.SpacesService.postMessage({
+      spaceKey: this.key,
+      channel,
+      message: messageToSend
+    });
   }
 
   /**

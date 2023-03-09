@@ -118,7 +118,7 @@ describe('Spaces', () => {
         expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
         hello.wake();
       });
-      await space1.postMessage('hello', { '@type': 'example.testing.data.TestPayload', data: 'Hello, world!' });
+      await space1.postMessage('hello', { data: 'Hello, world!' });
     }
 
     const goodbye = new Trigger();
@@ -128,7 +128,7 @@ describe('Spaces', () => {
         expect(message.payload).to.deep.contain({ data: 'Goodbye' });
         goodbye.wake();
       });
-      await space1.postMessage('goodbye', { '@type': 'example.testing.data.TestPayload', data: 'Goodbye' });
+      await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
