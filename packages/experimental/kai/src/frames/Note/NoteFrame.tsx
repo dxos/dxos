@@ -20,10 +20,10 @@ const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | und
 const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
   const idx = board.locations.findIndex((location) => location.objectId === id);
   if (idx === -1) {
-    board.locations.push(new NoteBoard.Location({ ...location, objectId: id }));
+    board.locations.push({ ...location, objectId: id });
   } else {
     // TODO(burdon): If not object, then remove based on ID.
-    board.locations.splice(idx, 1, new NoteBoard.Location({ ...location, objectId: id }));
+    board.locations.splice(idx, 1, { ...location, objectId: id });
   }
 };
 

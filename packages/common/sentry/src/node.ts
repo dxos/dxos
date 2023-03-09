@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CaptureConsole } from '@sentry/integrations';
 import {
   init as naturalInit,
   addBreadcrumb as naturalAddBreadcrumb,
@@ -21,12 +22,17 @@ import { InitOptions } from './types';
  * @param options {InitOptions}
  */
 export const init = (options: InitOptions) => {
+  if (options.tracing) {
+    void import('@sentry/tracing');
+  }
+
   naturalInit({
     enabled: options.enable ?? true,
     dsn: options.destination,
     serverName: options.installationId,
     release: options.release,
     environment: options.environment ?? process.env.DX_ENVIRONMENT,
+    integrations: [new CaptureConsole({ levels: ['error', 'warn'] })],
     tracesSampleRate: options.sampleRate,
     transport: options.transport,
     beforeSend: (event) => {

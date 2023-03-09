@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "private": true,
   "description": "Kai Demo.",
   "homepage": "https://dxos.org",
@@ -53,7 +53,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@sentry/react": "^7.17.2",
+    "@sentry/react": "^7.41.0",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "chess.js": "1.0.0-alpha.0",

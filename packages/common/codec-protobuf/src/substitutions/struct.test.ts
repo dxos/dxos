@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { decodeStruct, encodeStruct } from './struct';
+import { structSubstitutions } from './struct';
 
 describe('structSubstitutions', () => {
   const dummyStruct = {
@@ -57,18 +57,18 @@ describe('structSubstitutions', () => {
   };
 
   test('can encode and decode a struct', async () => {
-    const encoded = encodeStruct(dummyStruct);
-    const decoded = decodeStruct(encoded);
+    const encoded = structSubstitutions['google.protobuf.Struct'].encode(dummyStruct);
+    const decoded = structSubstitutions['google.protobuf.Struct'].decode(encoded);
     expect(decoded).to.deep.equal(dummyStruct);
   });
 
   test('can encode a struct', async () => {
-    const encoded = encodeStruct(dummyStruct);
+    const encoded = structSubstitutions['google.protobuf.Struct'].encode(dummyStruct);
     expect(encoded).to.deep.equal(encodedStruct);
   });
 
   test('can decode a struct', async () => {
-    const decoded = decodeStruct(encodedStruct);
+    const decoded = structSubstitutions['google.protobuf.Struct'].decode(encodedStruct);
     expect(decoded).to.deep.equal(dummyStruct);
   });
 });

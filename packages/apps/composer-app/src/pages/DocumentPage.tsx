@@ -1,8 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { DotsThreeVertical, DownloadSimple, UploadSimple } from 'phosphor-react';
-import React, { useCallback } from 'react';
+
+import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from 'phosphor-react';
+import React, { useCallback, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -20,9 +21,10 @@ import {
   mx,
   useTranslation,
   ThemeContext,
-  DropdownMenuItem
+  DropdownMenuItem,
+  Dialog
 } from '@dxos/react-components';
-import { Composer, useComposerEditor } from '@dxos/react-composer';
+import { RichTextComposer, TipTapEditor } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -38,15 +40,13 @@ const nestedParagraphOutput = / +\n/g;
 
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
-
-  const editor = useComposerEditor({
-    document: document.content,
-    slots: { editor: { className: 'pbe-20' } }
-  });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const editorRef = useRef<TipTapEditor>(null);
 
   const download = useFileDownload();
 
   const handleExport = useCallback(() => {
+    const editor = editorRef.current;
     const html = editor?.getHTML();
     if (html) {
       download(
@@ -54,17 +54,19 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
         `${document.title}.md`
       );
     }
-  }, [document, editor]);
+  }, [document]);
 
   const handleImport = useCallback(
     async (file: File) => {
+      const editor = editorRef.current;
       if (editor) {
         const data = new Uint8Array(await file.arrayBuffer());
         const md = new TextDecoder('utf-8').decode(data);
         editor.commands.setContent(converter.makeHtml(md));
+        setDialogOpen(false);
       }
     },
-    [document, editor]
+    [document]
   );
 
   return (
@@ -80,13 +82,15 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
           onChange={({ target: { value } }) => (document.title = value)}
           slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
         />
-        <Composer
-          editor={editor}
+        <RichTextComposer
+          ref={editorRef}
+          text={document.content}
           slots={{
             root: {
               role: 'none',
               className: 'pli-6 mbs-4'
-            }
+            },
+            editor: { className: 'pbe-20' }
           }}
         />
       </div>
@@ -103,18 +107,32 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
               <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
               <span>{t('export to markdown label')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <FileUploader
-                classes='flex items-center gap-2 font-system-normal cursor-pointer'
-                types={['md']}
-                handleChange={handleImport}
-              >
-                <UploadSimple className={mx(getSize(6), 'shrink-0')} />
-                <span>{t('import from markdown label')}</span>
-              </FileUploader>
+            <DropdownMenuItem className='gap-2 font-system-normal' onClick={() => setDialogOpen(true)}>
+              <UploadSimple className={mx(getSize(6), 'shrink-0')} />
+              <span>{t('import from markdown label')}</span>
             </DropdownMenuItem>
           </DropdownMenu>
         </div>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title={t('confirm import title')}
+          slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+        >
+          <p className='mlb-4'>{t('confirm import body')}</p>
+          <FileUploader
+            types={['md']}
+            classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
+            dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+            handleChange={handleImport}
+          >
+            <FilePlus weight='duotone' className={getSize(8)} />
+            <span>{t('upload file message')}</span>
+          </FileUploader>
+          <Button className='block is-full' onClick={() => setDialogOpen(false)}>
+            {t('cancel label', { ns: 'appkit' })}
+          </Button>
+        </Dialog>
       </ThemeContext.Provider>
     </>
   );

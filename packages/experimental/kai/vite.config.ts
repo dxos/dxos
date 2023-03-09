@@ -52,7 +52,15 @@ export default defineConfig({
 
   plugins: [
     // TODO(burdon): Document.
-    ConfigPlugin({ env: ['DX_VAULT'] }),
+    ConfigPlugin({
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY',
+        'DX_VAULT'
+      ]
+    }),
 
     // Directories to scan for Tailwind classes.
     ThemePlugin({
@@ -75,6 +83,7 @@ export default defineConfig({
 
     // To reset, unregister service worker using devtools.
     VitePWA({
+      // TODO(wittjosiah): Remove.
       selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000

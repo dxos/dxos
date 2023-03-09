@@ -9,7 +9,7 @@ import { Document } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer } from '@dxos/react-composer';
 
 import { FilePreview, TaskList as TaskListComponent } from '../../components';
 import { getColumnType } from '../Table';
@@ -31,8 +31,8 @@ export const StackContent: FC<{
       // }
 
       return (
-        <Composer
-          document={object.content}
+        <RichTextComposer
+          text={object.content}
           slots={{
             editor: {
               className: 'kai-composer',
