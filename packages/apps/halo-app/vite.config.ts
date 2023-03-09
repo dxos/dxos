@@ -61,6 +61,8 @@ export default defineConfig({
     }),
     ReactPlugin(),
     VitePWA({
+      // TODO(wittjosiah): Remove.
+      selfDestroying: true,
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
