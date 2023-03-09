@@ -7,15 +7,15 @@ import assert from 'node:assert';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { PeerState, PresenceService } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
+import { GossipMessage, GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 
-export type PresenceCallbacks = {
+export type GossipCallbacks = {
   /**
    * Callback to be called when a new announce is received.
    */
-  onAnnounce?: (peerState: PeerState) => Promise<void>;
+  onAnnounce?: (message: GossipMessage) => Promise<void>;
 
   /**
    * Callback to be called when the extension is closed.
@@ -24,9 +24,9 @@ export type PresenceCallbacks = {
 };
 
 /**
- * Sends presence announces between two peers for a single teleport session.
+ * Sends announces between two peers for a single teleport session.
  */
-export class PresenceExtension implements TeleportExtension {
+export class GossipExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _closed = false;
 
@@ -34,21 +34,21 @@ export class PresenceExtension implements TeleportExtension {
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
-  constructor(private readonly _callbacks: PresenceCallbacks = {}) {}
+  constructor(private readonly _callbacks: GossipCallbacks = {}) {}
 
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        PresenceService: schema.getService('dxos.mesh.teleport.presence.PresenceService')
+        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService')
       },
       exposed: {
-        PresenceService: schema.getService('dxos.mesh.teleport.presence.PresenceService')
+        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService')
       },
       handlers: {
-        PresenceService: {
-          announce: async (peerState: PeerState) => await this._callbacks.onAnnounce?.(peerState)
+        GossipService: {
+          announce: async (message: GossipMessage) => await this._callbacks.onAnnounce?.(message)
         }
       },
       port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
@@ -65,16 +65,16 @@ export class PresenceExtension implements TeleportExtension {
     this._closed = true;
   }
 
-  async sendAnnounce(peerState: PeerState) {
+  async sendAnnounce(message: GossipMessage) {
     if (this._closed) {
       return;
     }
     await this._opened.wait();
     assert(this._rpc, 'RPC not initialized');
-    await this._rpc.rpc.PresenceService.announce(peerState);
+    await this._rpc.rpc.GossipService.announce(message);
   }
 }
 
 type ServiceBundle = {
-  PresenceService: PresenceService;
+  GossipService: GossipService;
 };

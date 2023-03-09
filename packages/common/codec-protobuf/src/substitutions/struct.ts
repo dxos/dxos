@@ -4,7 +4,7 @@
 
 export type Struct = Record<string, any>;
 
-export const encodeStructValue = (structValue: any): any => {
+const encodeStructValue = (structValue: any): any => {
   const valueType = typeof structValue;
   switch (valueType) {
     case 'undefined': {
@@ -35,11 +35,11 @@ export const encodeStructValue = (structValue: any): any => {
   }
 };
 
-export const encodeStruct = (struct: Struct): any => ({
+const encodeStruct = (struct: Struct): any => ({
   fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value)]))
 });
 
-export const decodeStructValue = (structValue: any): any => {
+const decodeStructValue = (structValue: any): any => {
   const [key, v]: [string, any] = Object.entries(structValue)[0];
   switch (key) {
     case 'nullValue': {
@@ -65,7 +65,7 @@ export const decodeStructValue = (structValue: any): any => {
   }
 };
 
-export const decodeStruct = (struct: any): Struct =>
+const decodeStruct = (struct: any): Struct =>
   Object.fromEntries(Object.entries(struct.fields || {}).map(([key, value]) => [key, decodeStructValue(value)]));
 
 export const structSubstitutions = {
