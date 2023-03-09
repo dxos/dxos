@@ -59,7 +59,7 @@ export const ThemeProvider = ({
         }}
       >
         <ToastProvider {...toastProviderProps}>
-          <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
+          <TooltipProvider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
             <ElevationProvider elevation={rootElevation}>
               <DensityProvider density={rootDensity}>{children}</DensityProvider>
             </ElevationProvider>

@@ -21,3 +21,4 @@ export * from './SpaceList';
 export * from './SpacesPage';
 export * from './StatusIndicator';
 export * from './Tile';
+export * from './Tooltip';

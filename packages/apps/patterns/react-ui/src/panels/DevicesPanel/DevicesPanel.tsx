@@ -6,7 +6,16 @@ import { UserPlus, X } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
+import {
+  Button,
+  DensityProvider,
+  getSize,
+  mx,
+  TooltipContent,
+  TooltipRoot,
+  TooltipTrigger,
+  useTranslation
+} from '@dxos/react-components';
 
 import { DeviceList, InvitationList, PanelSeparator } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
@@ -45,9 +54,12 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
         <h2 id={titleId} className={mx('grow font-system-medium', !displayName && 'font-mono')}>
           {displayName ?? identity.identityKey.truncate()}
         </h2>
-        <Tooltip content={t('close label')} zIndex='z-50'>
-          {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-        </Tooltip>
+        <TooltipRoot>
+          <TooltipContent className='z-50'>{t('close label')}</TooltipContent>
+          <TooltipTrigger asChild>
+            {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+          </TooltipTrigger>
+        </TooltipRoot>
       </div>
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
         <InvitationList

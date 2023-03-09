@@ -12,15 +12,14 @@ import { getSize } from '../../styles';
 import { mx } from '../../util';
 import { Button, ButtonGroup, ButtonProps } from '../Button';
 import { Popover } from '../Popover';
-import { Tooltip, TooltipSlots } from '../Tooltip';
+import { TooltipContent, TooltipContentProps, TooltipRoot, TooltipTrigger } from '../Tooltip';
 
 interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
   value: string;
 }
 
 interface FullQrCodeSlots {
-  tooltipContent?: TooltipSlots['content'];
-  tooltipArrow?: TooltipSlots['arrow'];
+  tooltipContent?: Omit<TooltipContentProps, 'children'>;
   button?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
@@ -34,11 +33,9 @@ export interface FullQrCodeProps extends SharedQrCodeProps {
 export type QrCodeProps = FullQrCodeProps;
 
 interface CompactQrCodeSlots {
-  qrTooltipContent?: TooltipSlots['content'];
-  qrTooltipArrow?: TooltipSlots['arrow'];
+  qrTooltipContent?: Omit<TooltipContentProps, 'children'>;
   qrButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
-  copyTooltipContent?: TooltipSlots['content'];
-  copyTooltipArrow?: TooltipSlots['arrow'];
+  copyTooltipContent?: Omit<TooltipContentProps, 'children'>;
   copyButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
@@ -55,25 +52,28 @@ export const FullQrCode = ({ value, label, size, density, elevation, slots = {} 
     void navigator.clipboard.writeText(value);
   }, [value]);
   return (
-    <Tooltip content={label} {...slots.tooltipContent}>
-      <Button
-        {...{ density, elevation }}
-        {...slots.button}
-        className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
-        onClick={copyValue}
-      >
-        <QRCodeSVG
-          includeMargin
-          role='none'
-          {...slots.qrSvg}
-          value={value}
-          className={mx('w-full h-auto', slots.qrSvg?.className)}
-        />
-        <div id={labelId} className='sr-only'>
-          {label}
-        </div>
-      </Button>
-    </Tooltip>
+    <TooltipRoot>
+      <TooltipContent {...slots.tooltipContent}>{label}</TooltipContent>
+      <TooltipTrigger asChild>
+        <Button
+          {...{ density, elevation }}
+          {...slots.button}
+          className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
+          onClick={copyValue}
+        >
+          <QRCodeSVG
+            includeMargin
+            role='none'
+            {...slots.qrSvg}
+            value={value}
+            className={mx('w-full h-auto', slots.qrSvg?.className)}
+          />
+          <div id={labelId} className='sr-only'>
+            {label}
+          </div>
+        </Button>
+      </TooltipTrigger>
+    </TooltipRoot>
   );
 };
 
@@ -121,16 +121,19 @@ export const CompactQrCode = ({
             />
           </div>
         </Popover>
-        <Tooltip content={copyLabel} tooltipLabelsTrigger slots={{ content: slots.qrTooltipContent }}>
-          <Button
-            {...{ density, elevation }}
-            {...slots.copyButton}
-            className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
-            onClick={copyValue}
-          >
-            <CopySimple className={getSize(5)} />
-          </Button>
-        </Tooltip>
+        <TooltipRoot>
+          <TooltipContent {...slots.qrTooltipContent}>{copyLabel}</TooltipContent>
+          <TooltipTrigger asChild>
+            <Button
+              {...{ density, elevation }}
+              {...slots.copyButton}
+              className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
+              onClick={copyValue}
+            >
+              <CopySimple className={getSize(5)} />
+            </Button>
+          </TooltipTrigger>
+        </TooltipRoot>
       </ButtonGroup>
       <ButtonGroup className='hidden md:inline-flex'>
         <Popover
