@@ -110,10 +110,10 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const unsubscribe = space.listen(channel, (message) => {
+        const handle = space.listen(channel, (message) => {
           next(message);
         });
-        ctx.onDispose(() => unsubscribe());
+        ctx.onDispose(() => handle.unsubscribe());
       });
     });
   }

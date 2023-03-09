@@ -93,8 +93,10 @@ export class Gossip {
     }
     this._listeners.get(channel)!.add(callback);
 
-    return () => {
-      this._listeners.get(channel)!.delete(callback);
+    return {
+      unsubscribe: () => {
+        this._listeners.get(channel)!.delete(callback);
+      }
     };
   }
 
