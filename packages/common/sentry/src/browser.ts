@@ -9,6 +9,7 @@ import {
   Replay,
   setTag
 } from '@sentry/browser';
+import { CaptureConsole } from '@sentry/integrations';
 import { BrowserTracing } from '@sentry/tracing';
 
 import { log } from '@dxos/log';
@@ -29,6 +30,7 @@ export const init = (options: InitOptions) => {
     release: options.release,
     environment: options.environment,
     integrations: [
+      new CaptureConsole({ levels: ['error', 'warn'] }),
       ...(options.tracing ? [new BrowserTracing()] : []),
       ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
     ],
