@@ -79,6 +79,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const navigate = useNavigate();
   const shell = useShell();
   const { spaceKey, docKey } = useParams();
+  const identity = useIdentity();
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
 
   const handleCreate = useCallback(async () => {
@@ -90,10 +91,18 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
 
   const handleHideSpace = () => {
-    // todo (thure): Won’t this hide the space for everyone? Is there a way to set user-specific flags?
-    space.properties.hidden = true;
-    if (spaceKey === abbreviateKey(space.key)) {
-      navigate('/');
+    if (identity) {
+      const identityHex = identity.identityKey.toHex();
+      space.properties.members = {
+        ...space.properties.members,
+        [identityHex]: {
+          ...space.properties.members?.[identityHex],
+          hidden: true
+        }
+      };
+      if (spaceKey === abbreviateKey(space.key)) {
+        navigate('/');
+      }
     }
   };
 
@@ -173,6 +182,7 @@ const DocumentTree = observer(() => {
   const spaces = useSpaces();
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
+  const identity = useIdentity();
   return (
     <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
@@ -180,7 +190,7 @@ const DocumentTree = observer(() => {
       </span>
       <TreeRoot labelId={treeLabel}>
         {spaces
-          .filter((space) => space.properties.hidden !== true)
+          .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
             return <SpaceTreeItem key={space.key.toHex()} space={space} />;
           })}
