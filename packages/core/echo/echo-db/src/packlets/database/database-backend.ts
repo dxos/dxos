@@ -55,6 +55,10 @@ export class DatabaseBackendProxy {
     return false;
   }
 
+  get currentBatch(): Batch | undefined {
+    return this._currentBatch;
+  }
+
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
     this._itemManager._debugLabel = 'proxy';
@@ -95,7 +99,7 @@ export class DatabaseBackendProxy {
             batch.receiptTrigger!.wake(batch.receipt)
             batch.processTrigger!.wake()
           } else {
-            log('Missing pending batch', { clientTag: msg.clientTag }); 
+            log('Missing pending batch', { clientTag: msg.clientTag });
           }
         }
 
@@ -178,7 +182,25 @@ export class DatabaseBackendProxy {
     return entity;
   }
 
-  private _commitBatch(batch: Batch) {
+  /**
+   * Begins a batch of mutations. If a batch is already in progress, this method does nothing.
+   * Batches apply mutations to the database atomically. U
+   * @returns true if a batch was started, false if there was already a batch in progress.
+   */
+  beginBatch(): boolean {
+    if (this._currentBatch) {
+      return false;
+    }
+    this._currentBatch = new Batch();
+    this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    return true;
+  }
+
+  commitBatch() {
+    const batch = this._currentBatch;
+    assert(batch);
+    this._currentBatch = undefined;
+
     assert(!batch.committing);
     assert(!batch.processTrigger);
     assert(batch.clientTag);
@@ -203,39 +225,42 @@ export class DatabaseBackendProxy {
     )
   }
 
+  // TODO(dmaretskyi): Revert batch.
+
   mutate(batchInput: EchoObjectBatch): MutateResult {
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }
 
-    assert(!this._currentBatch); // TODO(dmaretskyi): Change.
-    this._currentBatch = new Batch();
-    this._currentBatch.data.objects!.push(...(batchInput.objects ?? []));
-    this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    const batchCreated = this.beginBatch();
+    try {
+      this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
 
-    const objectsCreated: Item<any>[] = [];
+      const objectsCreated: Item<any>[] = [];
 
-    tagMutationsInBatch(batchInput, this._currentBatch.clientTag);
-    log('mutate', { clientTag: this._currentBatch.clientTag, objectCount: batchInput.objects?.length ?? 0 });
+      tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!);
+      log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
-    // Optimistic apply.
-    for (const objectMutation of batchInput.objects ?? []) {
-      if (objectsCreated) {
-        const item = this._processOptimistic(objectMutation);
-        if (item) {
-          objectsCreated.push(item);
+      // Optimistic apply.
+      for (const objectMutation of batchInput.objects ?? []) {
+        if (objectsCreated) {
+          const item = this._processOptimistic(objectMutation);
+          if (item) {
+            objectsCreated.push(item);
+          }
         }
       }
-    }
-    
-    const batch = this._currentBatch;
-    this._commitBatch(batch);
-    this._currentBatch = undefined;
 
-    return {
-      objectsCreated,
-      batch,
-    };
+      const batch = this._currentBatch!;
+      return {
+        objectsCreated,
+        batch,
+      };
+    } finally {
+      if (batchCreated) {
+        this.commitBatch();
+      }
+    }
   }
 
   async close(): Promise<void> {
