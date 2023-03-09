@@ -1480,19 +1480,21 @@ importers:
     specifiers:
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
-      '@sentry/browser': ^7.41.0
-      '@sentry/node': ^7.41.0
-      '@sentry/tracing': ^7.41.0
-      '@sentry/types': ^7.41.0
+      '@sentry/browser': ^7.42.0
+      '@sentry/integrations': 7.42.0
+      '@sentry/node': ^7.42.0
+      '@sentry/tracing': ^7.42.0
+      '@sentry/types': ^7.42.0
       sentry-testkit: ^5.0.5
     dependencies:
       '@dxos/debug': link:../debug
       '@dxos/log': link:../log
-      '@sentry/browser': 7.41.0
-      '@sentry/node': 7.41.0
-      '@sentry/tracing': 7.41.0
+      '@sentry/browser': 7.42.0
+      '@sentry/integrations': 7.42.0
+      '@sentry/node': 7.42.0
+      '@sentry/tracing': 7.42.0
     devDependencies:
-      '@sentry/types': 7.41.0
+      '@sentry/types': 7.42.0
       sentry-testkit: 5.0.5
 
   packages/common/telemetry:
@@ -10433,13 +10435,24 @@ packages:
       tslib: 1.14.1
     dev: false
 
+  /@sentry/browser/7.42.0:
+    resolution: {integrity: sha512-xTwfvrQPmYTkAvGivoJFadPLKLDS2N57D/18NA1gcrnF8NwR+I28x3I9ziVUiMCYX+6nJuqBNlMALAEPbb2G5A==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/core': 7.42.0
+      '@sentry/replay': 7.42.0
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
+      tslib: 1.14.1
+    dev: false
+
   /@sentry/bundler-plugin-core/0.4.0:
     resolution: {integrity: sha512-Xi+dqaSOoxbdmxegX7f66FVOxm2dVJLmrMXUpoNyuV6ASoccRWzouGaFekP059SUTTD05ytk1mHqwgVuBCA0Dw==}
     engines: {node: '>= 10'}
     dependencies:
       '@sentry/cli': 2.14.4
-      '@sentry/node': 7.41.0
-      '@sentry/tracing': 7.41.0
+      '@sentry/node': 7.42.0
+      '@sentry/tracing': 7.42.0
       magic-string: 0.27.0
       unplugin: 1.0.1
     transitivePeerDependencies:
@@ -10470,14 +10483,33 @@ packages:
       '@sentry/types': 7.41.0
       '@sentry/utils': 7.41.0
       tslib: 1.14.1
+    dev: false
 
-  /@sentry/node/7.41.0:
-    resolution: {integrity: sha512-JAz0TAVvq4z7dNrDBECLB5Fd4bGDGXSOR1f63iV/8fUNsZPqqdh8LXnctPXTpcTjsdlfmjUL1CC2RQ6yKYMtTQ==}
+  /@sentry/core/7.42.0:
+    resolution: {integrity: sha512-vNcTyoQz5kUXo5vMGDyc5BJMO0UugPvMfYMQVxqt/BuDNR30LVhY+DL2tW1DFZDvRvyn5At+H7kSTj6GFrANXQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.41.0
-      '@sentry/types': 7.41.0
-      '@sentry/utils': 7.41.0
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
+      tslib: 1.14.1
+
+  /@sentry/integrations/7.42.0:
+    resolution: {integrity: sha512-5P3LsU+HRmdh458mav3dNh8RCn0TROIxwa/b7jk1TLWcXHrNp5REjo1oI4PTC+fFbNE4b7ydwHNEzI65rz7gyA==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
+      localforage: 1.10.0
+      tslib: 1.14.1
+    dev: false
+
+  /@sentry/node/7.42.0:
+    resolution: {integrity: sha512-mmpVSDeoM5aEbKOMq3Wt54wAvH53bkivhRh3Ip+R7Uj3aOKkcVJST2XlbghHgoYQXTWz+pl475EVyODWgY9QYg==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/core': 7.42.0
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
       cookie: 0.4.2
       https-proxy-agent: 5.0.1
       lru_map: 0.3.3
@@ -10508,17 +10540,31 @@ packages:
       '@sentry/utils': 7.41.0
     dev: false
 
-  /@sentry/tracing/7.41.0:
-    resolution: {integrity: sha512-zh1ceuwQ8NzE5n8r4y78QrYD/alJl4qlkiEX9lAL6PnLMWJkVWM02BBu+x75yPFWSSDfDA/kZ9WqKkHNdjGpDw==}
+  /@sentry/replay/7.42.0:
+    resolution: {integrity: sha512-81HQm20hrW0+0eZ5sZf8KsSekkAlI0/u/M+9ZmOn2bHpGihqAM/O/lrXhTzaRXdpX/9NSwSCGY9k7LIRNMKaEQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@sentry/core': 7.42.0
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
+    dev: false
+
+  /@sentry/tracing/7.42.0:
+    resolution: {integrity: sha512-0veGu3Ntweuj1pwWrJIFHmVdow4yufCreGIhsNDyrclwOjaTY3uI8iA6N62+hhtxOvqv+xueB98K1DvT5liPCQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.41.0
-      '@sentry/types': 7.41.0
-      '@sentry/utils': 7.41.0
+      '@sentry/core': 7.42.0
+      '@sentry/types': 7.42.0
+      '@sentry/utils': 7.42.0
       tslib: 1.14.1
 
   /@sentry/types/7.41.0:
     resolution: {integrity: sha512-4z9VdObynwd64i0VHCqkeIAHmsFzapL21qN41Brzb7jY/eGxjn/0rxInDGH+vkoE9qacGqiYfWj4vRNPLsC/bw==}
+    engines: {node: '>=8'}
+    dev: false
+
+  /@sentry/types/7.42.0:
+    resolution: {integrity: sha512-Ga0xaBIR/peuXQ88hI9a5TNY3GLNoH8jpsgPaAjAtRHkLsTx0y3AR+PrD7pUysza9QjvG+Qux01DRvLgaNKOHA==}
     engines: {node: '>=8'}
 
   /@sentry/utils/7.41.0:
@@ -10526,6 +10572,14 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       '@sentry/types': 7.41.0
+      tslib: 1.14.1
+    dev: false
+
+  /@sentry/utils/7.42.0:
+    resolution: {integrity: sha512-cBiDZVipC+is+IVgsTQLJyZWUZQxlLZ9GarNT+XZOZ5BFh0acFtz88hO6+S7vGmhcx2aCvsdC9yb2Yf+BphK6Q==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/types': 7.42.0
       tslib: 1.14.1
 
   /@sentry/vite-plugin/0.4.0:
@@ -22463,6 +22517,10 @@ packages:
       utf7: 1.0.2
     dev: false
 
+  /immediate/3.0.6:
+    resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
+    dev: false
+
   /immediate/3.2.3:
     resolution: {integrity: sha512-RrGCXRm/fRVqMIhqXrGEX9rRADavPiDFSoMb/k64i9XMk8uH4r/Omi5Ctierj6XzNecwDbO4WuFbDD1zmpl3Tg==}
     dev: false
@@ -24838,6 +24896,12 @@ packages:
       webpack-sources: 3.2.3
     dev: true
 
+  /lie/3.1.1:
+    resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==}
+    dependencies:
+      immediate: 3.0.6
+    dev: false
+
   /lilconfig/2.0.6:
     resolution: {integrity: sha512-9JROoBW7pobfsx+Sq2JsASvCo6Pfo6WWoUW79HuB1BCoBXD4PLWJPqDF6fNj67pqBYTbAHkE57M1kS/+L1neOg==}
     engines: {node: '>=10'}
@@ -24964,6 +25028,12 @@ packages:
   /loadjs/4.2.0:
     resolution: {integrity: sha512-AgQGZisAlTPbTEzrHPb6q+NYBMD+DP9uvGSIjSUM5uG+0jG15cb8axWpxuOIqrmQjn6scaaH8JwloiP27b2KXA==}
     dev: true
+
+  /localforage/1.10.0:
+    resolution: {integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==}
+    dependencies:
+      lie: 3.1.1
+    dev: false
 
   /locate-path/3.0.0:
     resolution: {integrity: sha512-7AO748wWnIhNqAuaty2ZWHkQHRSNfPVIsPIfwEOWO22AmaoVrWavlOcMR5nzTLNYvp36X220/maaRsrec1G65A==}
