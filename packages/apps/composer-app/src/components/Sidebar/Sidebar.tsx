@@ -6,6 +6,7 @@ import {
   ArrowLineLeft,
   Circle,
   DotsThreeVertical,
+  EyeSlash,
   FileText,
   Intersect,
   PaperPlaneTilt,
@@ -85,6 +86,14 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 
   const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
 
+  const handleHideSpace = () => {
+    // todo (thure): Won’t this hide the space for everyone? Is there a way to set user-specific flags?
+    space.properties.hidden = true;
+    if (spaceKey === abbreviateKey(space.key)) {
+      navigate('/');
+    }
+  };
+
   const [open, setOpen] = useState(spaceKey === abbreviateKey(space.key));
 
   useEffect(() => {
@@ -104,7 +113,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     >
       <div role='none' className='flex mis-1 items-start'>
         <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
-          {space.properties.name ?? space.key.truncate()}
+          {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : space.key.truncate()}
         </TreeItemHeading>
         <DropdownMenu
           trigger={
@@ -125,6 +134,10 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
             <PaperPlaneTilt className={getSize(4)} />
             <span>{t('view space invitations label', { ns: 'os' })}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
+            <EyeSlash className={getSize(4)} />
+            <span>{t('hide space label')}</span>
           </DropdownMenuItem>
         </DropdownMenu>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
@@ -147,7 +160,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   );
 });
 
-const DocumentTree = () => {
+const DocumentTree = observer(() => {
   const spaces = useSpaces();
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
@@ -157,13 +170,15 @@ const DocumentTree = () => {
         {t('sidebar tree label')}
       </span>
       <TreeRoot labelId={treeLabel}>
-        {spaces.map((space) => {
-          return <SpaceTreeItem key={space.key.toHex()} space={space} />;
-        })}
+        {spaces
+          .filter((space) => space.properties.hidden !== true)
+          .map((space) => {
+            return <SpaceTreeItem key={space.key.toHex()} space={space} />;
+          })}
       </TreeRoot>
     </div>
   );
-};
+});
 
 const SidebarContent = () => {
   const client = useClient();

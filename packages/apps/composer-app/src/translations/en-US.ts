@@ -18,5 +18,6 @@ export const composer = {
     'Importing a Markdown file will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
   'upload file message': 'Drag file here or click to browse',
   'space settings label': 'Settings',
-  'space name label': 'Space name'
+  'space name label': 'Space name',
+  'hide space label': 'Hide this space'
 };
