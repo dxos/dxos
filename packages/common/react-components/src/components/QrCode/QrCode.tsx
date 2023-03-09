@@ -19,7 +19,7 @@ interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
 }
 
 interface FullQrCodeSlots {
-  tooltipContent?: Omit<TooltipContentProps, 'children'>;
+  tooltipContent?: Omit<TooltipContentProps, 'ref' | 'children'>;
   button?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
