@@ -14,13 +14,13 @@ import {
   defaultGroup,
   getSize,
   Loading,
-  Tooltip,
   useTranslation,
   mx
 } from '@dxos/react-components';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 import { InvitationStatus } from '../InvitationStatus';
+import { Tooltip } from '../Tooltip';
 
 export interface PendingInvitationProps {
   wrapper: CancellableInvitationObservable;
