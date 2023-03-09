@@ -55,7 +55,7 @@ export const Root = () => {
       resourceExtensions={[osTranslations, appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
-      tooltipProviderProps={{ delayDuration: 100, skipDelayDuration: 400, disableHoverableContent: true }}
+      tooltipProviderProps={{ delayDuration: 1200, skipDelayDuration: 600, disableHoverableContent: true }}
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
