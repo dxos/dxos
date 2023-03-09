@@ -2,7 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft, Circle, FileText, Intersect, PaperPlaneTilt, Planet, Plus, Sidebar } from 'phosphor-react';
+import {
+  ArrowLineLeft,
+  Circle,
+  DotsThreeVertical,
+  FileText,
+  Intersect,
+  PaperPlaneTilt,
+  Planet,
+  Plus,
+  Sidebar
+} from 'phosphor-react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
@@ -12,8 +22,11 @@ import {
   Button,
   buttonStyles,
   DensityProvider,
+  DropdownMenu,
+  DropdownMenuItem,
   ElevationProvider,
   getSize,
+  Input,
   ListItemEndcap,
   mx,
   ThemeContext,
@@ -93,16 +106,27 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
           {space.properties.name ?? space.key.truncate()}
         </TreeItemHeading>
-        <Tooltip
-          content={t('view space invitations label', { ns: 'os' })}
-          tooltipLabelsTrigger
-          side='bottom'
-          zIndex='z-40'
+        <DropdownMenu
+          trigger={
+            // todo (thure): This needs a tooltip, but Tooltip from `react-components` needs to be refactored to export Radix-style subcomponents.
+            <Button variant='ghost' className='shrink-0 pli-1'>
+              <DotsThreeVertical className={getSize(4)} />
+            </Button>
+          }
+          slots={{ content: { className: 'z-40' } }}
         >
-          <Button variant='ghost' className='shrink-0 pli-1' onClick={handleViewInvitations}>
+          <Input
+            label={t('space name label')}
+            labelVisuallyHidden
+            value={space.properties.name ?? ''}
+            placeholder={space.key.truncate()}
+            onChange={({ target: { value } }) => (space.properties.name = value)}
+          />
+          <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
             <PaperPlaneTilt className={getSize(4)} />
-          </Button>
-        </Tooltip>
+            <span>{t('view space invitations label', { ns: 'os' })}</span>
+          </DropdownMenuItem>
+        </DropdownMenu>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
           <Button variant='ghost' className='shrink-0 pli-1' onClick={handleCreate}>
             <span className='sr-only'>{t('create document label')}</span>

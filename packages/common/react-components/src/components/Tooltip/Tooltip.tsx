@@ -5,7 +5,7 @@
 import * as PortalPrimitive from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import React, { ComponentProps, ReactNode, useState } from 'react';
+import React, { ComponentProps, forwardRef, ReactNode, useState } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
@@ -28,67 +28,78 @@ export interface TooltipProps {
   slots?: TooltipSlots;
 }
 
-export const Tooltip = ({
-  content,
-  children,
-  side,
-  compact,
-  tooltipLabelsTrigger,
-  mountAsSibling,
-  triggerIsInToolbar,
-  zIndex = 'z-[2]',
-  slots = {}
-}: TooltipProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const labelId = useId('tooltipLabel');
+export const Tooltip = forwardRef<HTMLButtonElement, TooltipProps>(
+  (
+    {
+      content,
+      children,
+      side,
+      compact,
+      tooltipLabelsTrigger,
+      mountAsSibling,
+      triggerIsInToolbar,
+      zIndex = 'z-[2]',
+      slots = {}
+    },
+    forwardedRef
+  ) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const labelId = useId('tooltipLabel');
 
-  const tooltipContent = (
-    <TooltipPrimitive.Content
-      forceMount
-      {...slots.content}
-      side={side ?? slots.content?.side ?? 'top'}
-      className={mx(
-        'radix-side-top:animate-slide-down-fade',
-        'radix-side-right:animate-slide-left-fade',
-        'radix-side-bottom:animate-slide-up-fade',
-        'radix-side-left:animate-slide-right-fade',
-        'inline-flex items-center rounded-md',
-        zIndex,
-        !compact && 'px-4 py-2.5',
-        'shadow-lg bg-white dark:bg-neutral-800',
-        !isOpen && 'sr-only',
-        defaultTooltip,
-        slots.content?.className
-      )}
-    >
-      <TooltipPrimitive.Arrow className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)} />
-      {content}
-    </TooltipPrimitive.Content>
-  );
+    const tooltipContent = (
+      <TooltipPrimitive.Content
+        forceMount
+        {...slots.content}
+        side={side ?? slots.content?.side ?? 'top'}
+        className={mx(
+          'radix-side-top:animate-slide-down-fade',
+          'radix-side-right:animate-slide-left-fade',
+          'radix-side-bottom:animate-slide-up-fade',
+          'radix-side-left:animate-slide-right-fade',
+          'inline-flex items-center rounded-md',
+          zIndex,
+          !compact && 'px-4 py-2.5',
+          'shadow-lg bg-white dark:bg-neutral-800',
+          !isOpen && 'sr-only',
+          defaultTooltip,
+          slots.content?.className
+        )}
+      >
+        <TooltipPrimitive.Arrow
+          className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)}
+        />
+        {content}
+      </TooltipPrimitive.Content>
+    );
 
-  const triggerContent = (
-    <TooltipPrimitive.Trigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
-      {children}
-    </TooltipPrimitive.Trigger>
-  );
+    const triggerContent = (
+      <TooltipPrimitive.Trigger
+        asChild
+        {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}
+        ref={forwardedRef}
+      >
+        {children}
+      </TooltipPrimitive.Trigger>
+    );
 
-  return (
-    <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
-      {tooltipLabelsTrigger && (
-        <PortalPrimitive.Root asChild>
-          <span id={labelId} className='sr-only'>
-            {content}
-          </span>
-        </PortalPrimitive.Root>
-      )}
-      {mountAsSibling ? (
-        tooltipContent
-      ) : (
-        <TooltipPrimitive.Portal forceMount {...(zIndex && { className: `!${zIndex}` })}>
-          {tooltipContent}
-        </TooltipPrimitive.Portal>
-      )}
-    </TooltipPrimitive.Root>
-  );
-};
+    return (
+      <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
+        {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
+        {tooltipLabelsTrigger && (
+          <PortalPrimitive.Root asChild>
+            <span id={labelId} className='sr-only'>
+              {content}
+            </span>
+          </PortalPrimitive.Root>
+        )}
+        {mountAsSibling ? (
+          tooltipContent
+        ) : (
+          <TooltipPrimitive.Portal forceMount {...(zIndex && { className: `!${zIndex}` })}>
+            {tooltipContent}
+          </TooltipPrimitive.Portal>
+        )}
+      </TooltipPrimitive.Root>
+    );
+  }
+);
