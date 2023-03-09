@@ -102,7 +102,7 @@ export class SpacesServiceImpl implements SpacesService {
   async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.postMessage(`user-channel/${channel}`, message);
+    await space.postMessage(getChannelId(channel), message);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
@@ -110,7 +110,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const handle = space.listen(`user-channel/${channel}`, (message) => {
+        const handle = space.listen(getChannelId(channel), (message) => {
           next(message);
         });
         ctx.onDispose(() => handle.unsubscribe());
@@ -159,3 +159,6 @@ export class SpacesServiceImpl implements SpacesService {
     };
   }
 }
+
+// Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
+const getChannelId = (channel: string): string => `user-channel/${channel}`;
