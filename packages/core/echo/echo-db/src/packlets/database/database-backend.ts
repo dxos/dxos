@@ -16,6 +16,7 @@ import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service'
 import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
+import { Batch } from './batch';
 
 export type MutateResult = {
   objectsCreated: Item<any>[];
@@ -34,10 +35,13 @@ export class DatabaseBackendProxy {
 
   private readonly _ctx = new Context();
   public _itemManager!: ItemManager;
+
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
 
   private _mutationRoundTripTriggers = new Map<string, Trigger>();
+
+  private _currentBatch?: Batch;
 
   // prettier-ignore
   constructor(
@@ -136,26 +140,33 @@ export class DatabaseBackendProxy {
     }
   }
 
-  mutate(batch: EchoObjectBatch): MutateResult {
+  mutate(batchInput: EchoObjectBatch): MutateResult {
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }
 
+    assert(!this._currentBatch); // TODO(dmaretskyi): Change.
+    this._currentBatch = new Batch();
+    this._currentBatch.data.objects!.push(...(batchInput.objects ?? []));
+    this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+
     const objectsCreated: Item<any>[] = [];
 
-    const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
-    tagMutationsInBatch(batch, clientTag);
-    this._mutationRoundTripTriggers.set(clientTag, new Trigger());
-    log('mutate', { clientTag, objectCount: batch.objects?.length ?? 0 });
+    tagMutationsInBatch(batchInput, this._currentBatch.clientTag);
+    this._mutationRoundTripTriggers.set(this._currentBatch.clientTag, new Trigger());
+    log('mutate', { clientTag: this._currentBatch.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
     // Optimistic apply.
-    this._process(batch, true, objectsCreated);
+    this._process(batchInput, true, objectsCreated);
 
     const writePromise = this._service.write({
-      batch,
+      batch: batchInput,
       spaceKey: this._spaceKey,
-      clientTag
+      clientTag: this._currentBatch.clientTag
     });
+
+    const batch = this._currentBatch;
+    this._currentBatch = undefined;
 
     return {
       objectsCreated,
@@ -165,7 +176,7 @@ export class DatabaseBackendProxy {
         return {
           ...feedReceipt,
           waitToBeProcessed: async () => {
-            await this._mutationRoundTripTriggers.get(clientTag)?.wait();
+            await this._mutationRoundTripTriggers.get(batch.clientTag!)?.wait();
           }
         };
       }
