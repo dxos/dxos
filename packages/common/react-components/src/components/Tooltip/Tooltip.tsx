@@ -16,24 +16,22 @@ const TooltipRoot = TooltipPrimitive.Root;
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
   ({ children, className, ...props }, forwardedRef) => {
     return (
-      <TooltipPrimitive.Content
-        forceMount
-        {...props}
-        className={mx(
-          'radix-side-top:animate-slide-down-fade',
-          'radix-side-right:animate-slide-left-fade',
-          'radix-side-bottom:animate-slide-up-fade',
-          'radix-side-left:animate-slide-right-fade',
-          'inline-flex items-center rounded-md',
-          'shadow-lg bg-white dark:bg-neutral-800',
-          defaultTooltip,
-          className
-        )}
-        ref={forwardedRef}
-      >
-        <TooltipPrimitive.Arrow className='fill-current' />
-        {children}
-      </TooltipPrimitive.Content>
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Content
+          forceMount
+          {...props}
+          className={mx(
+            'inline-flex items-center rounded-md plb-2 pli-3',
+            'shadow-lg bg-white dark:bg-neutral-800',
+            defaultTooltip,
+            className
+          )}
+          ref={forwardedRef}
+        >
+          <TooltipPrimitive.Arrow className='fill-white dark:fill-neutral-800' />
+          {children}
+        </TooltipPrimitive.Content>
+      </TooltipPrimitive.Portal>
     );
   }
 );
