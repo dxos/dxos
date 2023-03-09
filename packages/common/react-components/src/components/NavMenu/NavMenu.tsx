@@ -9,7 +9,7 @@ import { useButtonShadow } from '../../hooks';
 import { defaultFocus, hover, defaultInlineSeparator } from '../../styles';
 import { mx } from '../../util';
 import { defaultAppButtonColors, primaryAppButtonColors } from '../Button';
-import { Tooltip, TooltipProps } from '../Tooltip';
+import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 
 interface NavMenuItemSharedProps {
   children: ReactNode;
@@ -23,7 +23,7 @@ export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
 }
 
 export interface NavMenuTooltipLinkItemProps extends NavMenuLinkItemProps {
-  tooltip: Omit<TooltipProps, 'children'>;
+  tooltip: Omit<TooltipContentProps, 'children'>;
 }
 
 export interface NavMenuInvokerItemProps extends NavMenuItemSharedProps {
@@ -108,25 +108,28 @@ const NavMenuLinkItem = forwardRef(
 
 const NavMenuTooltipLinkItem = forwardRef(
   ({ tooltip, triggerLinkProps, active, children }: NavMenuTooltipLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
-    <Tooltip {...tooltip}>
-      {/* todo: why does the Tooltip not show if you use <NavMenuLinkItem {…}/> here? */}
-      <NavigationMenuPrimitive.Item asChild ref={ref}>
-        <NavigationMenuPrimitive.Link
-          {...triggerLinkProps}
-          active={active}
-          className={mx(
-            'px-3 py-2 text-sm rounded-md transition-color',
-            active ? primaryAppButtonColors : defaultAppButtonColors,
-            active ? 'font-medium' : 'font-normal',
-            defaultFocus,
-            hover(),
-            triggerLinkProps.className
-          )}
-        >
-          {children}
-        </NavigationMenuPrimitive.Link>
-      </NavigationMenuPrimitive.Item>
-    </Tooltip>
+    <TooltipRoot>
+      <TooltipContent {...tooltip} />
+      <TooltipTrigger asChild>
+        {/* todo: why does the Tooltip not show if you use <NavMenuLinkItem {…}/> here? */}
+        <NavigationMenuPrimitive.Item asChild ref={ref}>
+          <NavigationMenuPrimitive.Link
+            {...triggerLinkProps}
+            active={active}
+            className={mx(
+              'px-3 py-2 text-sm rounded-md transition-color',
+              active ? primaryAppButtonColors : defaultAppButtonColors,
+              active ? 'font-medium' : 'font-normal',
+              defaultFocus,
+              hover(),
+              triggerLinkProps.className
+            )}
+          >
+            {children}
+          </NavigationMenuPrimitive.Link>
+        </NavigationMenuPrimitive.Item>
+      </TooltipTrigger>
+    </TooltipRoot>
   )
 );
 
