@@ -9,6 +9,7 @@ import "google/protobuf/empty.proto";
 import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/halo/invitations.proto";
+import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
 
 // TODO(burdon): Restructure all services.
@@ -159,6 +160,17 @@ message QuerySpacesResponse {
   repeated Space spaces = 1;
 }
 
+message PostMessageRequest {
+  dxos.keys.PublicKey space_key = 1;
+  string channel = 2;
+  google.protobuf.Any message = 3;
+}
+
+message SubscribeMessagesRequest {
+  dxos.keys.PublicKey space_key = 1;
+  string channel = 2;
+}
+
 message WriteCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
   repeated dxos.halo.credentials.Credential credentials = 2;
@@ -172,6 +184,9 @@ service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
+
+  rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
+  rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
 
   /// Write credentials to the space control feed.
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
