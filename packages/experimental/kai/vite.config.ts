@@ -75,6 +75,7 @@ export default defineConfig({
 
     // To reset, unregister service worker using devtools.
     VitePWA({
+      // TODO(wittjosiah): Remove.
       selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
