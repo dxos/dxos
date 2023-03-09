@@ -6,7 +6,6 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
-import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
 
@@ -32,12 +31,12 @@ const columns: Column<BotRecord>[] = [
     accessor: (record) => PublicKey.from(record.id).truncate(),
     width: 120
   },
-  {
-    Header: 'image',
-    Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
-    accessor: (record) => record.image.split(':')[1],
-    width: 120
-  },
+  // {
+  //   Header: 'image',
+  //   Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
+  //   accessor: (record) => record.image.split(':')[1],
+  //   width: 120
+  // },
   {
     Header: 'port',
     accessor: (record) => record.port,
@@ -46,7 +45,7 @@ const columns: Column<BotRecord>[] = [
   {
     Header: 'name',
     accessor: (record) => record.name,
-    width: 160
+    width: 200
   },
   {
     Header: 'created',
@@ -89,7 +88,7 @@ export const BotFrame = () => {
     refreshTimeout.current = setTimeout(async () => {
       refreshTimeout.current = undefined;
 
-      const response = (await botClient?.getBots()) ?? [];
+      const response = await botClient?.getBots();
       const records = response.map((record: any) => ({
         id: record.Id,
         image: record.ImageID,
@@ -103,6 +102,11 @@ export const BotFrame = () => {
       setRecords(records);
       setStatus('');
     }, REFRESH_DELAY);
+  };
+
+  const handleDelete = async () => {
+    await botClient?.removeBots();
+    refresh();
   };
 
   if (!botClient) {
@@ -127,9 +131,14 @@ export const BotFrame = () => {
           ))}
         </Select>
         <div className='grow' />
-        <Button className='mr-2' onClick={refresh}>
-          Refresh
-        </Button>
+        <div>
+          <Button className='mr-2' onClick={handleDelete}>
+            Reset
+          </Button>
+          <Button className='mr-2' onClick={refresh}>
+            Refresh
+          </Button>
+        </div>
       </Toolbar>
 
       <Table

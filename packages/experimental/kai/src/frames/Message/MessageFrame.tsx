@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import format from 'date-fns/format';
-import formatDistance from 'date-fns/formatDistance';
-import isToday from 'date-fns/isToday';
 import { Circle } from 'phosphor-react';
 import React, { FC, ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,17 +12,16 @@ import { Button, getSize, mx } from '@dxos/react-components';
 
 import { ContactCard } from '../../frames/Contact';
 import { createPath, useAppRouter } from '../../hooks';
+import { formatDate, getCompanyName, sortMessage } from './util';
 
 export const MessageFrame = () => {
   const { space } = useAppRouter();
   // TODO(burdon): Add sort to filter.
-  const messages = useQuery(space, Message.filter()).sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
+  const messages = useQuery(space, Message.filter()).sort(sortMessage);
 
   const [selected, setSelected] = useState<Message>(messages[0]);
 
-  const now = Date.now();
-  const date = (date: Date) =>
-    isToday(date) ? format(date, 'hh:mm aaa') : formatDistance(date, now, { addSuffix: true });
+  const now = new Date();
 
   // TODO(burdon): Contact may not be available since currently a separate object.
   const getDisplayName = (contact?: Message.Recipient) => (contact?.name?.length ? contact?.name : contact?.email);
@@ -66,7 +62,7 @@ export const MessageFrame = () => {
                 >
                   <div className='flex flex-1 text-sm text-teal-700'>{getDisplayName(from)}</div>
                   <div className='flex text-sm whitespace-nowrap text-right text-zinc-500 pl-2'>
-                    {date(new Date(received))}
+                    {formatDate(now, new Date(received))}
                   </div>
                 </Row>
 
@@ -108,10 +104,14 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
       const query = space.db.query(Contact.filter());
       contact = query.objects.find((contact) => contact.email === message.from.email);
 
-      // NOTE: Create provisional non-persistent until selected.
+      // NOTE: Create provisional contact (non-persistent) until selected.
       if (!contact) {
-        const parts = message.from.email.split(/[@.]/);
-        const employer = new Organization({ name: parts[1] }); // TODO(burdon): Ugly.
+        let employer;
+        const name = getCompanyName(message.from.email);
+        if (name) {
+          employer = new Organization({ name });
+        }
+
         contact = new Contact({ name: message.from.name, email: message.from.email, employer });
       }
     }
@@ -143,9 +143,9 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
         onAction={message.from.contact && handleNavigate}
       />
 
-      <div className='flex px-2 text-2xl'>{message.subject}</div>
+      <div className='flex px-2 ml-[46px] text-2xl'>{message.subject}</div>
 
-      <div className='flex flex-col px-2'>
+      <div className='flex flex-col px-2 ml-[46px]'>
         {message.body?.split('\n').map((text, i) => (
           <div key={i} className='mb-2'>
             {text}

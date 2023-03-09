@@ -43,14 +43,22 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       }
     ];
 
+    const parseJson = (content: string) => {
+      const clean = content.replace(/\n/g, '');
+      const [, json] = clean.match(/```(.+)```/) ?? [];
+      if (json) {
+        return JSON.parse(json);
+      }
+    };
+
     // TODO(burdon): Factor out method.
-    const addSection = async (prompt: string, title: string) => {
+    const addTextSection = async (prompt: string, title: string) => {
       messages.push({
         role: 'user',
         content: prompt
       });
 
-      log.info('request', { messages });
+      log('request', { messages });
       const message = await chatModel?.request(messages);
       if (!message) {
         return;
@@ -58,10 +66,14 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
 
       const { content } = message;
       log.info('response', { content });
-      // TODO(burdon): Update @dxos/kai-types/testing functions to use this.
+
+      // TODO(burdon): Add structured document section.
+      // const data = parseJson(content);
+
       // TODO(burdon): Add formatting?
       const text = new Text([title, '', content].join('\n'));
       const document = await space.db.add(new Document({ title, content: text }));
+
       // TODO(burdon): Add metadata.
       const section = new DocumentStack.Section({ type: 'generated', object: document });
       stack.sections.push(section);
@@ -70,7 +82,11 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       messages.push(message);
     };
 
-    await addSection(`write a short bio about ${name}`, 'Biography');
-    await addSection(`write a short summary about ${organization}`, `About ${startCase(organization)}`);
+    await addTextSection(`write a short bio about ${name}`, 'Biography');
+    await addTextSection(`write a short summary about ${organization}`, `About ${startCase(organization)}`);
+    // await addTextSection(
+    //   `output a list of ${organization} executives' name and title in json format`,
+    //   `${startCase(organization)} Team`
+    // );
   }
 }

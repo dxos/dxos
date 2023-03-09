@@ -78,12 +78,10 @@ export const NoteFrame = () => {
   const [items, setItems] = useState<Item<Note>[]>([]);
   useSubscription(() => {
     // TODO(burdon): Board is stale (undefined -- even though set below).
-    console.log('>> 2', board?.id);
     if (board) {
       setItems(doLayout(board, notes, layout));
     }
   }, [board, notes]);
-  console.log('>> 1', board?.id);
 
   const handleCreateBoard = () => {
     void space?.db.add(new NoteBoard());

@@ -116,7 +116,12 @@ export class Generator {
     await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
 
     // Messages.
-    await Promise.all(range(this._options.messages).map(async () => this.createMessage()));
+    await Promise.all(
+      range(this._options.messages).map(async () => {
+        const contact = faker.random.arrayElement(contacts);
+        return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
+      })
+    );
   }
 
   createOrganization = async () => {
@@ -158,8 +163,8 @@ export class Generator {
     return document;
   };
 
-  createMessage = async () => {
-    return await this._db.add(createMessage());
+  createMessage = async (from?: Contact) => {
+    return await this._db.add(createMessage(from));
   };
 }
 
@@ -254,7 +259,7 @@ export const createNote = () => {
 
 // TODO(burdon): Error if directly setting value with undefined.
 // TODO(burdon): Use constructors above.
-export const createMessage = () => {
+export const createMessage = (from?: Contact) => {
   return new Message({
     source: {
       guid: PublicKey.random().toHex()
@@ -268,8 +273,9 @@ export const createMessage = () => {
     //   })
     // ],
     from: new Message.Recipient({
-      email: faker.internet.email(),
-      name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
+      email: from?.email ?? faker.internet.email(),
+      name: from?.name ?? faker.name.findName(),
+      contact: from
     }),
     subject: faker.lorem.sentence(),
     body: faker.lorem.paragraphs(3)

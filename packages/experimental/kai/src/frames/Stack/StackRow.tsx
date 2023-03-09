@@ -77,9 +77,9 @@ export const StackRow = forwardRef(
       <div
         ref={ref}
         style={style}
-        className={mx('group flex mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
+        className={mx('group flex overflow-hidden mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
       >
-        <div className='hidden md:flex w-24 text-gray-400'>
+        <div className='hidden md:flex shink-0 w-24 text-gray-400'>
           {showMenu && (
             <div className='flex invisible group-hover:visible ml-6 -mt-0.5'>
               <div className='w-8'>
@@ -154,7 +154,7 @@ export const StackRow = forwardRef(
           )}
         </div>
 
-        <div className='flex flex-col flex-1 mr-2 md:mr-16'>{children}</div>
+        <div className='flex flex-col flex-1 overflow-hidden mr-2 md:mr-16'>{children}</div>
       </div>
     );
   }

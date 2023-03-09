@@ -29,8 +29,8 @@ describe('KaiBot', () => {
       const trigger = new Trigger();
       await bot.start();
 
-      const organization = await space.db.add(new Organization({ name: 'Blue Yard' }));
-      const contact = await space.db.add(new Contact({ name: 'Chad Fowler', employer: organization }));
+      const organization = await space.db.add(new Organization({ name: 'backed.vc' }));
+      const contact = await space.db.add(new Contact({ name: 'alex brunicki', employer: organization }));
       const stack = await space.db.add(new DocumentStack({ title: contact.name, subjectId: contact.id }));
 
       console.log(JSON.stringify(stack, undefined, 2));

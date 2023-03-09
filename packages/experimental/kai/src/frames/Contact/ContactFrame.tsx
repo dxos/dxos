@@ -70,7 +70,7 @@ export const ContactFrame = () => {
           {/* Allow scrolling to top of last item. */}
           <div className='flex flex-col mb-[100vh]' />
         </div>
-        <div className='flex flex-col flex-1 bg-white'>
+        <div className='flex flex-col flex-1 overflow-hidden bg-white'>
           <ContactStack space={space} object={selected} />
         </div>
       </div>
