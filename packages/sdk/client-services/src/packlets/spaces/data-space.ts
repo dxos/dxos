@@ -20,7 +20,8 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
@@ -33,6 +34,7 @@ export type DataSpaceParams = {
   modelFactory: ModelFactory;
   metadataStore: MetadataStore;
   snapshotManager: SnapshotManager;
+  gossip: Gossip;
   presence: Presence;
   keyring: Keyring;
   feedStore: FeedStore<FeedMessage>;
@@ -47,6 +49,7 @@ export class DataSpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
   private readonly _inner: Space;
+  private readonly _gossip: Gossip;
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
   private readonly _feedStore: FeedStore<FeedMessage>;
@@ -58,6 +61,7 @@ export class DataSpace {
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
+    this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
@@ -127,6 +131,14 @@ export class DataSpace {
     await this.notarizationPlugin.close();
 
     await this._presence.destroy();
+  }
+
+  async postMessage(channel: string, message: any) {
+    return this._gossip.postMessage(channel, message);
+  }
+
+  listen(channel: string, callback: (message: GossipMessage) => void) {
+    return this._gossip.listen(channel, callback);
   }
 
   async initializeDataPipeline() {
