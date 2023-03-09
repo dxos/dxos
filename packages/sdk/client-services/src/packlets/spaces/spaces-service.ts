@@ -102,7 +102,7 @@ export class SpacesServiceImpl implements SpacesService {
   async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.postMessage(channel, message);
+    await space.postMessage(`user-channel/${channel}`, message);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
@@ -110,7 +110,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const handle = space.listen(channel, (message) => {
+        const handle = space.listen(`user-channel/${channel}`, (message) => {
           next(message);
         });
         ctx.onDispose(() => handle.unsubscribe());

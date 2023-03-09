@@ -114,7 +114,7 @@ describe('Spaces', () => {
     const hello = new Trigger();
     {
       space2.listen('hello', (message) => {
-        expect(message.channelId).to.equal('hello');
+        expect(message.channelId).to.include('hello');
         expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
         hello.wake();
       });
@@ -124,7 +124,7 @@ describe('Spaces', () => {
     const goodbye = new Trigger();
     {
       space2.listen('goodbye', (message) => {
-        expect(message.channelId).to.equal('goodbye');
+        expect(message.channelId).to.include('goodbye');
         expect(message.payload).to.deep.contain({ data: 'Goodbye' });
         goodbye.wake();
       });
