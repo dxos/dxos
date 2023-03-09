@@ -111,26 +111,26 @@ describe('Spaces', () => {
 
     const space2 = client2.echo.getSpace(invitation2.spaceKey!)!;
 
-    const testChannel = new Trigger();
-    {
-      space2.listen('test', (message) => {
-        expect(message.channelId).to.equal('test');
-        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
-        testChannel.wake();
-      });
-      await space1.postMessage('test', { '@type': 'example.testing.data.TestPayload', data: 'Hello, world!' });
-    }
-
-    const helloChannel = new Trigger();
+    const hello = new Trigger();
     {
       space2.listen('hello', (message) => {
         expect(message.channelId).to.equal('hello');
-        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
-        helloChannel.wake();
+        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
+        hello.wake();
       });
-      await space1.postMessage('hello', { '@type': 'example.testing.data.TestPayload', data: 'Goodbye' });
+      await space1.postMessage('hello', { '@type': 'example.testing.data.TestPayload', data: 'Hello, world!' });
     }
 
-    await asyncTimeout(Promise.all([testChannel.wait(), helloChannel.wait()]), 200);
+    const goodbye = new Trigger();
+    {
+      space2.listen('goodbye', (message) => {
+        expect(message.channelId).to.equal('goodbye');
+        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
+        goodbye.wake();
+      });
+      await space1.postMessage('goodbye', { '@type': 'example.testing.data.TestPayload', data: 'Goodbye' });
+    }
+
+    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
   });
 });
