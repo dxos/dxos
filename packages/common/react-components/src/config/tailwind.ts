@@ -4,7 +4,6 @@
 
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
-import { resolve } from 'node:path';
 import type { Config } from 'tailwindcss';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
@@ -255,7 +254,7 @@ export const tailwindConfig = ({
   },
   plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
-  content: [resolve(root, 'node_modules/@dxos/react-components/dist/**/*.mjs'), ...content],
+  content,
   future: {
     hoverOnlyWhenSupported: true
   }

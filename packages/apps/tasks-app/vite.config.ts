@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -30,18 +30,13 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_SENTRY_DESTINATION',
-        'DX_TELEMETRY_API_KEY',
-        'DX_VAULT'
-      ]
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),
@@ -71,10 +66,10 @@ export default defineConfig({
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     sentryVitePlugin({
-      org: "dxos",
-      project: "tasks-app",
-      include: "./out/tasks",
+      org: 'dxos',
+      project: 'tasks-app',
+      include: './out/tasks',
       authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    }),
+    })
   ]
 });

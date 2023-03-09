@@ -19,7 +19,6 @@
     "@dnd-kit/modifiers": "^6.0.0",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
-    "@dxos/node-std": "workspace:*",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
     "@fontsource/space-grotesk": "^4.5.10",

@@ -39,7 +39,9 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-portal": "^1.0.1",
     "@radix-ui/react-toolbar": "^1.0.1",
+    "@radix-ui/react-tooltip": "^1.0.2",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "lodash.throttle": "^4.1.1",
     "url-join": "^5.0.0"

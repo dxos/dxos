@@ -10,7 +10,15 @@ import React, { useState } from 'react';
 import { PublicKey, ShellLayout } from '@dxos/client';
 import { useClient, useSpace, useSpaces } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, getSize, Group, Tooltip } from '@dxos/react-components';
+import {
+  Button,
+  ButtonGroup,
+  getSize,
+  Group,
+  TooltipRoot,
+  TooltipContent,
+  TooltipTrigger
+} from '@dxos/react-components';
 
 import { SpaceListItem } from '../../components';
 import { ShellProvider, useShell } from './ShellContext';
@@ -26,21 +34,30 @@ const ShellControls = () => {
 
   const controls = (
     <ButtonGroup className='mbe-4'>
-      <Tooltip content='Devices'>
-        <Button onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
-          <Laptop weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
-      <Tooltip content='Create Space'>
-        <Button onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}>
-          <PlusCircle weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
-      <Tooltip content='Join Space'>
-        <Button onClick={() => shell.setLayout(ShellLayout.JOIN_SPACE)}>
-          <Intersect weight='fill' className={getSize(6)} />
-        </Button>
-      </Tooltip>
+      <TooltipRoot>
+        <TooltipContent>Devices</TooltipContent>
+        <TooltipTrigger asChild>
+          <Button onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
+            <Laptop weight='fill' className={getSize(6)} />
+          </Button>
+        </TooltipTrigger>
+      </TooltipRoot>
+      <TooltipRoot>
+        <TooltipContent>Create Space</TooltipContent>
+        <TooltipTrigger asChild>
+          <Button onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}>
+            <PlusCircle weight='fill' className={getSize(6)} />
+          </Button>
+        </TooltipTrigger>
+      </TooltipRoot>
+      <TooltipRoot>
+        <TooltipContent>Join Space</TooltipContent>
+        <TooltipTrigger asChild>
+          <Button onClick={() => shell.setLayout(ShellLayout.JOIN_SPACE)}>
+            <Intersect weight='fill' className={getSize(6)} />
+          </Button>
+        </TooltipTrigger>
+      </TooltipRoot>
     </ButtonGroup>
   );
 
