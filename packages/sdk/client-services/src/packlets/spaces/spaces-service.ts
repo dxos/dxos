@@ -8,16 +8,19 @@ import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import {
+  PostMessageRequest,
   QueryCredentialsRequest,
   QuerySpacesResponse,
   Space,
   SpaceMember,
   SpacesService,
   SpaceStatus,
+  SubscribeMessagesRequest,
   UpdateSpaceRequest,
   WriteCredentialsRequest
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { humanize, Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
@@ -93,6 +96,25 @@ export class SpacesServiceImpl implements SpacesService {
       if (!this._identityManager.identity) {
         next({ spaces: [] });
       }
+    });
+  }
+
+  async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    await space.postMessage(channel, message);
+  }
+
+  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
+    return new Stream<GossipMessage>(({ ctx, next }) => {
+      scheduleTask(ctx, async () => {
+        const dataSpaceManager = await this._getDataSpaceManager();
+        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+        const unsubscribe = space.listen(channel, (message) => {
+          next(message);
+        });
+        ctx.onDispose(() => unsubscribe());
+      });
     });
   }
 
