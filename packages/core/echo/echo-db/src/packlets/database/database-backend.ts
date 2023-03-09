@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
-import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { tagMutationsInBatch } from './builder';
@@ -79,8 +79,7 @@ export class DatabaseBackendProxy {
           objectCount: msg.batch.objects?.length ?? 0
         });
 
-        // console.log(inspect(msg, false, null, true))
-        this._process(msg.batch, false);
+        this._processMessage(msg.batch);
 
         if (msg.clientTag) {
           this._mutationRoundTripTriggers.get(msg.clientTag)?.wake();
@@ -101,8 +100,7 @@ export class DatabaseBackendProxy {
     await loaded.wait();
   }
 
-  // TODO(dmaretskyi): Remove optimistic flag.
-  private _process(batch: EchoObjectBatch, optimistic: boolean, objectsCreated: Item<any>[] = []) {
+  private _processMessage(batch: EchoObjectBatch, objectsCreated: Item<any>[] = []) {
     for (const object of batch.objects ?? []) {
       assert(object.objectId);
 
@@ -129,15 +127,42 @@ export class DatabaseBackendProxy {
       } else if (object.mutations) {
         for (const mutation of object.mutations) {
           log('mutate', { id: object.objectId, mutation });
-
-          if (optimistic) {
-            entity.processOptimisticMutation(mutation);
-          } else {
-            entity.processMessage(mutation);
-          }
+          entity.processMessage(mutation);
         }
       }
     }
+  }
+
+  private _processOptimistic(objectMutation: EchoObject): Item<any> | undefined {
+    assert(objectMutation.objectId);
+
+    let entity: Item<any> | undefined;
+    if (objectMutation.genesis && !this._itemManager.entities.has(objectMutation.objectId)) {
+      log('Construct', { object: objectMutation });
+      assert(objectMutation.genesis.modelType);
+      entity = this._itemManager.constructItem({
+        itemId: objectMutation.objectId,
+        modelType: objectMutation.genesis.modelType
+      });
+    } else {
+      entity = this._itemManager.entities.get(objectMutation.objectId);
+    }
+    if (!entity) {
+      log.warn('Item not found', { objectId: objectMutation.objectId });
+      return;
+    }
+
+    if (objectMutation.snapshot) {
+      log('reset to snapshot', { object: objectMutation });
+      entity.resetToSnapshot(objectMutation);
+    } else if (objectMutation.mutations) {
+      for (const mutation of objectMutation.mutations) {
+        log('mutate', { id: objectMutation.objectId, mutation });
+        entity.processOptimisticMutation(mutation);
+      }
+    }
+
+    return entity;
   }
 
   mutate(batchInput: EchoObjectBatch): MutateResult {
@@ -157,7 +182,14 @@ export class DatabaseBackendProxy {
     log('mutate', { clientTag: this._currentBatch.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
     // Optimistic apply.
-    this._process(batchInput, true, objectsCreated);
+    for (const objectMutation of batchInput.objects ?? []) {
+      if (objectsCreated) {
+        const item = this._processOptimistic(objectMutation);
+        if (item) {
+          objectsCreated.push(item);
+        }
+      }
+    }
 
     const writePromise = this._service.write({
       batch: batchInput,
