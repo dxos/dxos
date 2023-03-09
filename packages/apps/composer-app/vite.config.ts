@@ -61,6 +61,8 @@ export default defineConfig({
     }),
     ReactPlugin(),
     VitePWA({
+      // TODO(wittjosiah): Remove.
+      selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
