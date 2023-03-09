@@ -4,15 +4,15 @@
 
 import { expect } from 'chai';
 
-import { Client, Invitation, Space } from '@dxos/client';
+import { asyncTimeout, Trigger } from '@dxos/async';
+import { Client, Invitation } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { TestBuilder, testSpace } from '../testing';
-import { asyncTimeout, Trigger } from '@dxos/async';
-import { raise } from '@dxos/debug';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -68,7 +68,7 @@ describe('Spaces', () => {
     await client.destroy();
   });
 
-  test.only('post and listen to messages', async () => {
+  test('post and listen to messages', async () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocal() });
