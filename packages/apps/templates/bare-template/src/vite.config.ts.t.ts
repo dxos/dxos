@@ -72,8 +72,12 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
         content: [
           ${resolve()}(__dirname, './index.html'),
           ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-          ${dxosUi && text`
-          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`}
+          ${
+            dxosUi &&
+            text`
+          ${resolve()}(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs'),
+          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
+          }
         ]
       }),`
           : ''
