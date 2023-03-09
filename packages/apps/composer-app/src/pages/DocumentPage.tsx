@@ -1,8 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from 'phosphor-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -23,7 +24,7 @@ import {
   DropdownMenuItem,
   Dialog
 } from '@dxos/react-components';
-import { Composer, useComposerEditor } from '@dxos/react-composer';
+import { RichTextComposer, TipTapEditor } from '@dxos/react-composer';
 
 import { ComposerDocument } from '../proto';
 
@@ -40,15 +41,12 @@ const nestedParagraphOutput = / +\n/g;
 const PureDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const { t } = useTranslation('composer');
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const editor = useComposerEditor({
-    document: document.content,
-    slots: { editor: { className: 'pbe-20' } }
-  });
+  const editorRef = useRef<TipTapEditor>(null);
 
   const download = useFileDownload();
 
   const handleExport = useCallback(() => {
+    const editor = editorRef.current;
     const html = editor?.getHTML();
     if (html) {
       download(
@@ -56,10 +54,11 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
         `${document.title}.md`
       );
     }
-  }, [document, editor]);
+  }, [document]);
 
   const handleImport = useCallback(
     async (file: File) => {
+      const editor = editorRef.current;
       if (editor) {
         const data = new Uint8Array(await file.arrayBuffer());
         const md = new TextDecoder('utf-8').decode(data);
@@ -67,7 +66,7 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
         setDialogOpen(false);
       }
     },
-    [document, editor]
+    [document]
   );
 
   return (
@@ -83,13 +82,15 @@ const PureDocumentPage = observer(({ document }: { document: ComposerDocument })
           onChange={({ target: { value } }) => (document.title = value)}
           slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
         />
-        <Composer
-          editor={editor}
+        <RichTextComposer
+          ref={editorRef}
+          text={document.content}
           slots={{
             root: {
               role: 'none',
               className: 'pli-6 mbs-4'
-            }
+            },
+            editor: { className: 'pbe-20' }
           }}
         />
       </div>
