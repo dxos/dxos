@@ -140,8 +140,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   private async _getIFramePort(channel: string): Promise<RpcPort> {
+    // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
+    //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
     const source = new URL(
-      typeof this._options.shell === 'string' ? this._options.source : `${this._options.source}?shell=false`,
+      typeof this._options.shell === 'string' ? this._options.source : `${this._options.source}#disableshell`,
       window.location.origin
     );
 
