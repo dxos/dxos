@@ -14,7 +14,6 @@ const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
   server: {
     host: true,
     https:
@@ -25,24 +24,8 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      // TODO(wittjosiah): Remove.
-      plugins: [
-        {
-          name: 'yjs',
-          setup: ({ onResolve }) => {
-            onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-            });
-          }
-        }
-      ]
-    }
-  },
   build: {
-    sourcemap: true,
-    outDir: 'out/composer'
+    sourcemap: true
   },
   plugins: [
     ConfigPlugin({
