@@ -17,12 +17,7 @@ import { Space, Text } from '@dxos/client';
 
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 import { cursorColor, SpaceProvider } from '../../yjs';
-import {
-  theme as darkThemeBase,
-  highlighting as darkHighlightingBase,
-  cursor as darkCursor,
-  cyan as darkLink
-} from './codeMirrorDark';
+import { theme as darkThemeBase, highlighting as darkHighlightingBase, cursor as darkCursor } from './codeMirrorDark';
 
 export type MarkdownComposerSlots = {};
 
@@ -121,10 +116,6 @@ const generalHighlightStyle = HighlightStyle.define(
         tags.meta
       ],
       class: mark
-    },
-    {
-      tag: [markdownTags.linkLabel, markdownTags.linkReference, markdownTags.url],
-      color: darkLink
     },
     { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
     { tag: tags.heading1, class: heading[1] },
