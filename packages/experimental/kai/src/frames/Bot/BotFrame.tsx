@@ -119,8 +119,7 @@ export const BotFrame = () => {
         <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
           Start
         </Button>
-        {/* TODO(burdon): full width, value, onChange. */}
-        <Select defaultValue={botId} onValueChange={setBotId}>
+        <Select value={botId} onValueChange={setBotId}>
           {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
             <Select.Item key={id} value={id!}>
               <div className='flex items-center'>
