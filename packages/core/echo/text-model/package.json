@@ -31,7 +31,8 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/faker": "^5.5.9",
-    "faker": "^5.5.3"
+    "faker": "^5.5.3",
+    "fast-check": "~3.3.0"
   },
   "publishConfig": {
     "access": "public"

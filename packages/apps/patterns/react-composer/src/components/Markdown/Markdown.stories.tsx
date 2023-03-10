@@ -3,12 +3,12 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { Button } from '@dxos/react-components';
+import { ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { Button, useId } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
 import { MarkdownComposer } from './Markdown';
@@ -21,6 +21,7 @@ export const Default = {
   render: ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
     // TODO(wittjosiah): Text being created isn't firing react updates.
     const [, forceUpdate] = useReducer((state) => state + 1, 0);
+    const [generate, setGenerate] = useState(false);
 
     const space = useSpace(spaceKey);
     const [document] = useQuery(space, ComposerDocument.filter());
@@ -35,12 +36,24 @@ export const Default = {
       }
     }, [space]);
 
+    useDataGenerator({
+      generator: generate ? loremGenerator : undefined,
+      space,
+      options: { plainText: true }
+    });
+
+    const generateId = useId('generate');
+
     if (!document?.content) {
       return <Button onClick={() => forceUpdate()}>Update</Button>;
     }
 
     return (
       <main className='flex-1 min-w-0 p-4'>
+        <div id={generateId} className='flex'>
+          <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
+          Generate Data
+        </div>
         <MarkdownComposer text={document.content} space={space} />
       </main>
     );
