@@ -39,7 +39,11 @@ export const Default = {
       return <Button onClick={() => forceUpdate()}>Update</Button>;
     }
 
-    return <MarkdownComposer text={document.content} />;
+    return (
+      <main className='flex-1 min-w-0 p-4'>
+        <MarkdownComposer text={document.content} space={space} />
+      </main>
+    );
   },
   decorators: [ClientSpaceDecorator({ schema, count: 2 })]
 };
