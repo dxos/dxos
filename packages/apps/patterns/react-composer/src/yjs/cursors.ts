@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// Copied from https://github.com/yjs/y-codemirror.next#example.
+
 import * as random from 'lib0/random';
 
 const cursorColors = [
@@ -15,5 +17,5 @@ const cursorColors = [
   { color: '#1be7ff', light: '#1be7ff33' }
 ];
 
-// select a random color for this user
+// Select a random color for this user.
 export const cursorColor = cursorColors[random.uint32() % cursorColors.length];
