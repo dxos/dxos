@@ -19,5 +19,5 @@ export type CardActionsProps = {
 };
 
 export const CardActions = ({ slots = {}, gutter, children }: CardActionsProps) => {
-  return <div className={mx('flex h-[40px]', gutter && 'ml-[40px]', slots.root?.className)}>{children}</div>;
+  return <div className={mx('flex h-[40px] space-x-4', gutter && 'pl-[40px]', slots.root?.className)}>{children}</div>;
 };

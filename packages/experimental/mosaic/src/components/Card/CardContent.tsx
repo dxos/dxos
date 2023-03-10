@@ -8,8 +8,13 @@ import { mx } from '@dxos/react-components';
 
 import { Icon } from './util';
 
+// TODO(burdon): Vertical scroll.
+
 export type CardContentSlots = {
   root?: {
+    className?: string;
+  };
+  body?: {
     className?: string;
   };
 };
@@ -25,7 +30,7 @@ export const CardContent = ({ slots = {}, gutter, icon, children }: CardContentP
   return (
     <div className={mx('flex', gutter && 'ml-[40px]', slots.root?.className)}>
       {icon && <Icon>{icon}</Icon>}
-      <div className='flex w-full py-2 pr-2 font-sm'>{children}</div>
+      <div className={mx('flex w-full py-2 pr-2 font-sm', slots?.body?.className)}>{children}</div>
     </div>
   );
 };
