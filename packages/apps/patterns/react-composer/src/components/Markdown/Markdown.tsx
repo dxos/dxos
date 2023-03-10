@@ -16,7 +16,7 @@ import { yCollab } from 'y-codemirror.next';
 import { Text } from '@dxos/client';
 import { tailwindConfig } from '@dxos/react-components';
 
-import { blockquote, bold, code, heading, horizontalRule, italic, mark, strikethrough } from '../../styles';
+import { bold, heading, italic, mark, strikethrough } from '../../styles';
 
 export type MarkdownComposerSlots = {};
 
@@ -58,10 +58,10 @@ const theme = EditorView.theme({
     fontFamily: get(tokens, 'fontFamily.body', []).join(',')
   },
   '& .cm-activeLine': {
-    backgroundColor: get(tokens, 'extend.colors.neutral.100', '#ffffff') + '44'
+    backgroundColor: 'transparent'
   },
   '.dark & .cm-activeLine': {
-    background: get(tokens, 'extend.colors.neutral.750', '#000000') + '44'
+    backgroundColor: 'transparent'
   }
 });
 
@@ -71,7 +71,12 @@ const markdownTags = {
   listMark: Tag.define(),
   linkMark: Tag.define(),
   emphasisMark: Tag.define(),
-  codeMark: Tag.define()
+  codeMark: Tag.define(),
+  codeText: Tag.define(),
+  inlineCode: Tag.define(),
+  url: Tag.define(),
+  linkReference: Tag.define(),
+  linkLabel: Tag.define()
 };
 
 const markdownTagsExtension: MarkdownConfig = {
@@ -82,7 +87,12 @@ const markdownTagsExtension: MarkdownConfig = {
       ListMark: markdownTags.listMark,
       LinkMark: markdownTags.linkMark,
       EmphasisMark: markdownTags.emphasisMark,
-      CodeMark: markdownTags.codeMark
+      CodeMark: markdownTags.codeMark,
+      CodeText: markdownTags.codeText,
+      InlineCode: markdownTags.inlineCode,
+      URL: markdownTags.url,
+      LinkReference: markdownTags.linkReference,
+      LinkLabel: markdownTags.linkLabel
     })
   ]
 };
@@ -94,16 +104,18 @@ const generalHighlightStyle = HighlightStyle.define([
   { tag: markdownTags.linkMark, class: mark },
   { tag: markdownTags.emphasisMark, class: mark },
   { tag: markdownTags.codeMark, class: mark },
+  { tag: markdownTags.url, class: mark },
+  { tag: markdownTags.linkLabel, class: mark },
+  { tag: markdownTags.linkReference, class: mark },
+  { tag: markdownTags.codeText, class: 'font-mono' },
+  { tag: markdownTags.inlineCode, class: 'font-mono' },
   { tag: tags.heading1, class: heading[1] },
   { tag: tags.heading2, class: heading[2] },
   { tag: tags.heading3, class: heading[3] },
   { tag: tags.heading4, class: heading[4] },
   { tag: tags.heading5, class: heading[5] },
   { tag: tags.heading6, class: heading[6] },
-  { tag: tags.monospace, class: code },
   { tag: tags.strikethrough, class: strikethrough },
-  { tag: tags.quote, class: blockquote },
-  { tag: tags.contentSeparator, class: horizontalRule },
   { tag: tags.emphasis, class: italic },
   { tag: tags.strong, class: bold }
 ]);
