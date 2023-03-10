@@ -3,6 +3,7 @@
 //
 import { mergeAttributes } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import Heading from '@tiptap/extension-heading';
 import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -10,9 +11,11 @@ import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/re
 import StarterKit from '@tiptap/starter-kit';
 import React, { ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import type { Text } from '@dxos/client';
+import type { Space, Text } from '@dxos/client';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-components';
+
+import { cursorColor, SpaceProvider } from '../../yjs';
 
 import {
   blockquote,
@@ -43,6 +46,7 @@ export type RichTextComposerSlots = {
 
 type UseEditorOptions = {
   text?: Text;
+  space?: Space;
   field?: string;
   placeholder?: string;
   slots?: Pick<RichTextComposerSlots, 'editor'>;
@@ -52,12 +56,17 @@ const onDocUpdate = (update: Uint8Array) => {
   log.debug('[doc update]', update);
 };
 
-const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
+const useEditor = ({ text, space, field = 'content', placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
   useEffect(() => {
     log.debug('[text.doc]', 'referential change');
     text?.doc?.on('update', onDocUpdate);
     return () => text?.doc?.off('update', onDocUpdate);
   }, [text?.doc]);
+
+  const provider = useMemo(
+    () => (space && text?.doc ? new SpaceProvider({ space, doc: text.doc }) : null),
+    [space, text?.doc]
+  );
 
   const extensions = useMemo(
     () => [
@@ -145,6 +154,17 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
       }),
       // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
       ...(text ? [Collaboration.configure({ document: text.doc, field })] : []),
+      ...(provider
+        ? [
+            CollaborationCursor.configure({
+              provider,
+              user: {
+                name: 'Anonymous ' + Math.floor(Math.random() * 100),
+                color: cursorColor.color
+              }
+            })
+          ]
+        : []),
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
@@ -160,7 +180,7 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
         attributes: {
           class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
           spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
-          tabindex: slots?.editor?.tabIndex ? String(slots?.editor?.tabIndex) : '0'
+          tabindex: slots.editor?.tabIndex ? String(slots.editor?.tabIndex) : '0'
         }
       }
     },
@@ -168,22 +188,17 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
   );
 };
 
-export type RichTextComposerProps = {
-  text?: UseEditorOptions['text'];
-  field?: UseEditorOptions['field'];
-  placeholder?: UseEditorOptions['placeholder'];
+export type RichTextComposerProps = UseEditorOptions & {
   slots?: RichTextComposerSlots;
 };
 
-export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>(
-  ({ text, field, placeholder, slots = {} }, ref) => {
-    const editor = useEditor({ text, field, placeholder, slots });
-    useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
+export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>((props, ref) => {
+  const editor = useEditor(props);
+  useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
 
-    // Reference:
-    // https://tiptap.dev/installation/react
-    // https://github.com/ueberdosis/tiptap
-    // https://tiptap.dev/guide/output/#option-3-yjs
-    return <EditorContent {...slots?.root} editor={editor} />;
-  }
-);
+  // Reference:
+  // https://tiptap.dev/installation/react
+  // https://github.com/ueberdosis/tiptap
+  // https://tiptap.dev/guide/output/#option-3-yjs
+  return <EditorContent {...props.slots?.root} editor={editor} />;
+});

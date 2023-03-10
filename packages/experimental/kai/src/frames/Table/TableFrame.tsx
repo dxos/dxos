@@ -91,11 +91,11 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <Toolbar>
+      <Toolbar className='mb-4'>
         <div className='w-screen md:w-column mr-4'>
           <Searchbar onSearch={handleSearch} />
         </div>
-        <Select defaultValue={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+        <Select value={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
           {types?.map((type) => (
             <Select.Item key={type.id} value={type.id}>
               {type.title}

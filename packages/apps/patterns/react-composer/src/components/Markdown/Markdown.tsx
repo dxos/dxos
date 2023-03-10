@@ -10,18 +10,20 @@ import { styleTags, tags, Tag } from '@lezer/highlight';
 import { MarkdownConfig } from '@lezer/markdown';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import get from 'lodash.get';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
-import { Text } from '@dxos/client';
+import { Space, Text } from '@dxos/client';
 import { tailwindConfig } from '@dxos/react-components';
 
+import { cursorColor, SpaceProvider } from '../../yjs';
 import { bold, heading, italic, mark, strikethrough } from '../../styles';
 
 export type MarkdownComposerSlots = {};
 
 export type MarkdownComposerProps = {
   text?: Text;
+  space?: Space;
   slots?: MarkdownComposerSlots;
 };
 
@@ -120,8 +122,23 @@ const generalHighlightStyle = HighlightStyle.define([
   { tag: tags.strong, class: bold }
 ]);
 
-export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ text }, forwardedRef) => {
+export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ text, space }, forwardedRef) => {
   const ytext = text?.doc?.getText('md');
+
+  const { awareness } = useMemo(() => {
+    if (!space || !text?.doc) {
+      return { awareness: null };
+    }
+
+    const provider = new SpaceProvider({ space, doc: text.doc });
+    provider.awareness.setLocalStateField('user', {
+      name: 'Anonymous ' + Math.floor(Math.random() * 100),
+      color: cursorColor.color,
+      colorLight: cursorColor.light
+    });
+
+    return provider;
+  }, [space, text?.doc]);
 
   if (!ytext) {
     return null;
@@ -133,13 +150,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
       theme={[theme, syntaxHighlighting(generalHighlightStyle)]}
       ref={forwardedRef}
       value={ytext.toString()}
-      extensions={[
-        markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-        // TODO(wittjosiah): Create yjs awareness plugin using mesh.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        yCollab(ytext)
-      ]}
+      extensions={[markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }), yCollab(ytext, awareness)]}
     />
   );
 });

@@ -47,6 +47,7 @@ const Story = ({
       <RichTextComposer
         {...args}
         text={document.content}
+        space={space}
         slots={{
           editor: {
             className: mx(

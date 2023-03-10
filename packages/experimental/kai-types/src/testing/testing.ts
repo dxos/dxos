@@ -40,7 +40,7 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 2, max: 5 },
-      messages: { min: 0, max: 0 }
+      messages: { min: 5, max: 10 }
     }
   ) {}
 
@@ -96,6 +96,7 @@ export class Generator {
         if (faker.datatype.number(10) > 7) {
           const organization = faker.random.arrayElement(organizations);
           organization.people.push(contact);
+          contact.employer = organization;
         }
 
         return contact;
@@ -115,7 +116,12 @@ export class Generator {
     await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
 
     // Messages.
-    await Promise.all(range(this._options.messages).map(async () => this.createMessage()));
+    await Promise.all(
+      range(this._options.messages).map(async () => {
+        const contact = faker.random.arrayElement(contacts);
+        return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
+      })
+    );
   }
 
   createOrganization = async () => {
@@ -146,31 +152,27 @@ export class Generator {
   };
 
   createDocument = async () => {
-    const document = createDocument();
+    const document = await this._db.add(createDocument());
     createTextObjectContent(document.content, 5);
-    await this._db.add(document);
     return document;
   };
 
   createNote = async () => {
     const document = await this._db.add(createNote());
-    createTextObjectContent(document.content, 1);
+    document.content = new Text(faker.lorem.sentence());
     return document;
   };
 
-  createMessage = async () => {
-    return await this._db.add(createMessage());
+  createMessage = async (from?: Contact) => {
+    return await this._db.add(createMessage(from));
   };
 }
 
-// TODO(burdon): Text initial state isn't replicated.
-// TODO(burdon): Factor out into TextModel.
-const createTextObjectContent = (content: Text, sentences = 5) => {
+// TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
+export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
-    schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
-    schema.node('paragraph')
+    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))])
   ]);
-  paragraphs.pop();
 
   // https://prosemirror.net/docs/guide/#doc
   const doc = schema.node('doc', null, paragraphs);
@@ -186,7 +188,7 @@ const createTextObjectContent = (content: Text, sentences = 5) => {
 // Constructors.
 //
 
-export const tags = ['red', 'green', 'blue', 'orange'];
+export const tags = ['inbox', 'active', 'scheduled', 'complete'];
 
 export const createOrganization = () => {
   return new Organization({
@@ -216,7 +218,8 @@ export const createContact = () => {
   return new Contact({
     name: faker.name.findName(),
     email: faker.datatype.boolean() ? faker.internet.email() : undefined,
-    username: faker.datatype.boolean() ? '@' + faker.internet.userName() : undefined,
+    username: faker.datatype.number(10) > 2 ? '@' + faker.internet.userName() : undefined,
+    phone: faker.datatype.boolean() ? faker.phone.phoneNumber() : undefined,
     address: faker.datatype.boolean()
       ? {
           city: faker.address.city(),
@@ -224,7 +227,8 @@ export const createContact = () => {
           zip: faker.address.zipCode(),
           coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) }
         }
-      : undefined
+      : undefined,
+    tag: faker.datatype.number(10) > 7 ? faker.random.arrayElement(tags) : undefined
   });
 };
 
@@ -255,7 +259,7 @@ export const createNote = () => {
 
 // TODO(burdon): Error if directly setting value with undefined.
 // TODO(burdon): Use constructors above.
-export const createMessage = () => {
+export const createMessage = (from?: Contact) => {
   return new Message({
     source: {
       guid: PublicKey.random().toHex()
@@ -263,14 +267,15 @@ export const createMessage = () => {
     date: faker.date.recent(14, new Date()).toISOString(),
     // TODO(burdon): This breaks kai.
     // to: [
-    //   new Message.Contact({
+    //   new Message.Recipient({
     //     email: faker.internet.email(),
     //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
     //   })
     // ],
-    from: new Message.Contact({
-      email: faker.internet.email(),
-      name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
+    from: new Message.Recipient({
+      email: from?.email ?? faker.internet.email(),
+      name: from?.name ?? faker.name.findName(),
+      contact: from
     }),
     subject: faker.lorem.sentence(),
     body: faker.lorem.paragraphs(3)

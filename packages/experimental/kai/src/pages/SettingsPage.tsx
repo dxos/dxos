@@ -15,7 +15,11 @@ import { getSize, Input, mx } from '@dxos/react-components';
 
 import { botKeys, useAppState, useKeyStore } from '../hooks';
 
-const settingsKeys = ['dxos.services.bot.proxy', ...Object.keys(botKeys)];
+// prettier-ignore
+const settingsKeys = [
+  'dxos.services.bot.proxy',
+  ...Object.keys(botKeys)
+];
 
 const SettingsPage = () => {
   const config = useConfig();
