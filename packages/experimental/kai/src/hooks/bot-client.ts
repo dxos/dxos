@@ -2,19 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sleep, Event, Trigger } from '@dxos/async';
-import { clientServiceBundle, Client, ClientServicesProvider, Space } from '@dxos/client';
+import { Event, Trigger } from '@dxos/async';
+import { Client, clientServiceBundle, ClientServicesProvider, Space } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 // TODO(burdon): Copied from @dxos/bot-lab.
 export const DX_BOT_SERVICE_PORT = 7100;
-export const DX_BOT_RPC_PORT_MIN = 7200;
-export const DX_BOT_RPC_PORT_MAX = 7300;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
+
+export const BOT_STARTUP_CHECK_INTERVAL = 250;
+export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
 export type BotClientOptions = {
   proxy?: string;
@@ -72,10 +74,6 @@ export class BotClient {
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
-    // TODO(burdon): Maintain map (for collisions).
-    // TODO(burdon): How is this different from BOT_PORT?
-    const port = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
-
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
 
     const request = {
@@ -83,20 +81,10 @@ export class BotClient {
       ExposedPorts: {
         [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
       },
-      HostConfig: {
-        PortBindings: {
-          [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
-            {
-              HostPort: `${port}`
-            }
-          ]
-        }
-      },
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot.name': botId,
-        'dxos.bot.port': `${port}`,
-        'dxos.kube.proxy': `/:${port}`
+        'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
       }
     };
 
@@ -115,42 +103,34 @@ export class BotClient {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStart
     await fetch(`${this._botServiceEndpoint}/docker/containers/${containerId}/start`, {
       method: 'POST',
-      body: JSON.stringify({})
+      body: JSON.stringify({}) // Empty body required.
     });
 
     // Poll proxy until container starts.
-    const { host, protocol } = new URL(this._botServiceEndpoint);
-
-    const fetchUrl = new URL(`${containerId}/`, `${this._botServiceEndpoint}/`);
-    console.log({ fetchUrl })
-
-    const wsUrl = new URL(`${containerId}/`, `${this._botServiceEndpoint}/`);
+    const { protocol } = new URL(this._botServiceEndpoint);
+    const fetchUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
+    const wsUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     wsUrl.protocol = protocol === 'https:' ? 'wss:' : 'ws:';
+    console.log({ fetchUrl, wsUrl })
 
-    await sleep(1_000)
-
-    await fetch('https://bots.kube.dxos.org/.well-known/dx/bots/', {
-      method: 'POST',
-    })
-    
-    await sleep(1_000)
-
-    const botEndpoint = `${host}/proxy/${port}`;
-    while (true) {
+    const done = new Trigger();
+    const clear = exponentialBackoffInterval(async () => {
       try {
         const res = await fetch(fetchUrl);
         console.log(res.status)
-        if(res.status >= 400) {
-          continue;
+        if(res.status >= 400 && res.status !== 426) { // 426 Upgrade Required
+          return;
         }
         console.log('connected', { fetchUrl });
-        break;
+        done.wake();
       } catch (err: any) {
-        // TODO(burdon): Backoff and stop after max retries.
-        // Ignore.
+        console.log(err);
       }
-
-      await sleep(500);
+    }, BOT_STARTUP_CHECK_INTERVAL);
+    try {
+      await done.wait({ timeout: BOT_STARTUP_CHECK_TIMEOUT })
+    } finally {
+      clear();
     }
 
     this.onStatusUpdate.emit('Connecting to bot...');
