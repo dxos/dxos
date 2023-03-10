@@ -1,0 +1,29 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { ReactNode } from 'react';
+
+import { mx } from '@dxos/react-components';
+
+const styles = {
+  bg: 'bg-white'
+};
+
+// TODO(burdon): Density.
+// https://mui.com/material-ui/react-card
+
+export type CardSlots = {
+  root?: {
+    className?: string;
+  };
+};
+
+export type CardProps = {
+  slots?: CardSlots;
+  children?: ReactNode;
+};
+
+export const Card = ({ slots = {}, children }: CardProps) => {
+  return <div className={mx('flex flex-col w-full rounded border', styles.bg, slots.root?.className)}>{children}</div>;
+};

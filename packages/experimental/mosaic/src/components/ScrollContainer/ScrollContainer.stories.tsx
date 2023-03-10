@@ -5,8 +5,6 @@
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import React from 'react';
 
-import { Stack } from './Stack';
-
 const TAGS = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length - i}`);
 
 // border, bg, text
@@ -26,6 +24,8 @@ const TAGS = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length
 // icon
 // selected, hover
 // panels, borders
+
+const ScrollContainer = () => null;
 
 const Test = () => {
   return (
@@ -58,7 +58,7 @@ const Test = () => {
 };
 
 export default {
-  component: Stack,
+  component: ScrollContainer,
   decorators: [
     (Story: any) => (
       <div className='flex flex-col w-full h-screen items-center bg-white'>
