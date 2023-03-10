@@ -14,10 +14,15 @@ import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { Space, Text } from '@dxos/client';
-import { tailwindConfig } from '@dxos/react-components';
 
-import { bold, heading, italic, mark, strikethrough } from '../../styles';
+import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 import { cursorColor, SpaceProvider } from '../../yjs';
+import {
+  theme as darkThemeBase,
+  highlighting as darkHighlightingBase,
+  cursor as darkCursor,
+  cyan as darkLink
+} from './codeMirrorDark';
 
 export type MarkdownComposerSlots = {};
 
@@ -29,9 +34,8 @@ export type MarkdownComposerProps = {
 
 export type MarkdownComposerRef = ReactCodeMirrorRef;
 
-const tokens = tailwindConfig({}).theme;
-
 const theme = EditorView.theme({
+  ...darkThemeBase,
   '&.cm-focused': {
     outline: 'none'
   },
@@ -54,7 +58,7 @@ const theme = EditorView.theme({
     borderLeftColor: 'black'
   },
   '.dark & .cm-cursor': {
-    borderLeftColor: 'white'
+    borderLeftColor: darkCursor
   },
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(',')
@@ -99,28 +103,43 @@ const markdownTagsExtension: MarkdownConfig = {
   ]
 };
 
-const generalHighlightStyle = HighlightStyle.define([
-  { tag: markdownTags.headingMark, class: mark },
-  { tag: markdownTags.quoteMark, class: mark },
-  { tag: markdownTags.listMark, class: mark },
-  { tag: markdownTags.linkMark, class: mark },
-  { tag: markdownTags.emphasisMark, class: mark },
-  { tag: markdownTags.codeMark, class: mark },
-  { tag: markdownTags.url, class: mark },
-  { tag: markdownTags.linkLabel, class: mark },
-  { tag: markdownTags.linkReference, class: mark },
-  { tag: markdownTags.codeText, class: 'font-mono' },
-  { tag: markdownTags.inlineCode, class: 'font-mono' },
-  { tag: tags.heading1, class: heading[1] },
-  { tag: tags.heading2, class: heading[2] },
-  { tag: tags.heading3, class: heading[3] },
-  { tag: tags.heading4, class: heading[4] },
-  { tag: tags.heading5, class: heading[5] },
-  { tag: tags.heading6, class: heading[6] },
-  { tag: tags.strikethrough, class: strikethrough },
-  { tag: tags.emphasis, class: italic },
-  { tag: tags.strong, class: bold }
-]);
+const generalHighlightStyle = HighlightStyle.define(
+  [
+    ...darkHighlightingBase,
+    {
+      tag: [
+        markdownTags.headingMark,
+        markdownTags.quoteMark,
+        markdownTags.listMark,
+        markdownTags.linkMark,
+        markdownTags.emphasisMark,
+        markdownTags.codeMark,
+        markdownTags.url,
+        markdownTags.linkLabel,
+        markdownTags.linkReference,
+        tags.processingInstruction,
+        tags.meta
+      ],
+      class: mark
+    },
+    {
+      tag: [markdownTags.linkLabel, markdownTags.linkReference, markdownTags.url],
+      color: darkLink
+    },
+    { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
+    { tag: tags.heading1, class: heading[1] },
+    { tag: tags.heading2, class: heading[2] },
+    { tag: tags.heading3, class: heading[3] },
+    { tag: tags.heading4, class: heading[4] },
+    { tag: tags.heading5, class: heading[5] },
+    { tag: tags.heading6, class: heading[6] },
+    { tag: tags.strikethrough, class: strikethrough },
+    { tag: tags.emphasis, class: italic },
+    { tag: tags.strong, class: bold }
+  ]
+  // todo (thure): Figure out how to give everything except Markdown the mono font family.
+  // { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } }
+);
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(
   ({ text, space }, forwardedRef) => {

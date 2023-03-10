@@ -41,4 +41,4 @@ export const italic = 'italic';
 
 export const strikethrough = 'line-through';
 
-export const mark = '!font-normal opacity-50';
+export const mark = '!font-normal !no-underline opacity-50';

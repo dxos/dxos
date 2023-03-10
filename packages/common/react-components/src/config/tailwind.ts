@@ -10,6 +10,9 @@ import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
 
+export type TailwindConfig = Config;
+export type TailwindThemeConfig = ThemeConfig;
+
 export const tailwindConfig = ({
   env = 'production',
   root = './',
@@ -19,8 +22,8 @@ export const tailwindConfig = ({
   env?: string;
   root?: string;
   content?: string[];
-  extensions?: Partial<ThemeConfig>[];
-}): Config => ({
+  extensions?: Partial<TailwindThemeConfig>[];
+}): TailwindConfig => ({
   darkMode: 'class',
   theme: {
     fontFamily: {
