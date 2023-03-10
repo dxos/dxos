@@ -11,6 +11,9 @@ export type ScrollContainerSlots = {
   root?: {
     className?: string;
   };
+  viewport?: {
+    className?: string;
+  };
   scrollbar?: {
     className?: string;
   };
@@ -19,11 +22,9 @@ export type ScrollContainerSlots = {
   };
 };
 
+// TODO(burdon): System colors.
 // TODO(burdon): Is this right? Merge?
-const defaultSlots: ScrollContainerSlots = {
-  root: {
-    className: 'bg-white shadow shadow-[0_2px_10px] shadow-gray-200'
-  },
+export const defaultSlots: ScrollContainerSlots = {
   scrollbar: {
     className: 'bg-neutral-100 hover:bg-neutral-200'
   },
@@ -32,31 +33,34 @@ const defaultSlots: ScrollContainerSlots = {
   }
 };
 
+export const defaultRoundedSlots: ScrollContainerSlots = {
+  scrollbar: {
+    className: 'w-3 p-[2px] bg-neutral-100 hover:bg-neutral-200'
+  },
+  thumb: {
+    className:
+      'rounded-[10px] bg-neutral-500 before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]'
+  }
+};
+
 export type ScrollContainerProps = {
   slots?: ScrollContainerSlots;
   children?: ReactNode;
 };
 
+// TODO(burdon): Currently vertical only (NOTE: Require TW 3.2 for data-attribute variants per radix demo).
 export const ScrollContainer = ({ slots = defaultSlots, children }: ScrollContainerProps) => {
   return (
-    <ScrollArea.Root className={mx('flex w-[200px] h-[300px] rounded overflow-hidden', slots.root?.className)}>
-      <ScrollArea.Viewport className={mx('w-full h-full rounded')}>{children}</ScrollArea.Viewport>
+    <ScrollArea.Root className={mx('flex w-full overflow-hidden', slots.root?.className)}>
+      <ScrollArea.Viewport className={mx('w-full h-full', slots.viewport?.className)}>{children}</ScrollArea.Viewport>
       {/* TODO(burdon): Handle horizontal scrolling. */}
       <ScrollArea.Scrollbar
         className={mx(
-          'flex select-none touch-none p-0.5',
-          slots.scrollbar?.className,
-          'transition-colors duration-[160ms] ease-out',
-          'w-2.5' // TODO(burdon): Upgrade to 3.2 for data-attribute variants.
+          'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
+          slots.scrollbar?.className
         )}
       >
-        <ScrollArea.Thumb
-          className={mx(
-            "flex-1 rounded-[10px] relative before:block before:content-[''] before:absolute before:top-1/2 before:left-1/2" +
-              'before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]',
-            slots.thumb?.className
-          )}
-        />
+        <ScrollArea.Thumb className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)} />
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>
   );

@@ -6,6 +6,7 @@ import React, { ReactNode } from 'react';
 
 import { mx } from '@dxos/react-components';
 
+import { ScrollContainer } from '../ScrollContainer';
 import { Icon } from './util';
 
 // TODO(burdon): Vertical scroll.
@@ -23,14 +24,21 @@ export type CardContentProps = {
   slots?: CardContentSlots;
   gutter?: boolean;
   icon?: ReactNode;
+  scrollbar?: boolean;
   children?: ReactNode;
 };
 
-export const CardContent = ({ slots = {}, gutter, icon, children }: CardContentProps) => {
+export const CardContent = ({ slots = {}, gutter, icon, scrollbar, children }: CardContentProps) => {
   return (
     <div className={mx('flex', gutter && 'ml-[40px]', slots.root?.className)}>
       {icon && <Icon>{icon}</Icon>}
-      <div className={mx('flex w-full py-2 pr-2 font-sm', slots?.body?.className)}>{children}</div>
+      {(scrollbar && (
+        <div className={mx('flex w-full overflow-hidden', slots.body?.className)}>
+          <ScrollContainer>
+            <div className={mx('flex w-full my-2 pr-2')}>{children}</div>
+          </ScrollContainer>
+        </div>
+      )) || <div className={mx('flex w-full py-2 pr-2', slots?.body?.className)}>{children}</div>}
     </div>
   );
 };

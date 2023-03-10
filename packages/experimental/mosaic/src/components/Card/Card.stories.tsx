@@ -30,7 +30,7 @@ const styles = {
   header: 'bg-zinc-200 dark:bg-zinc-800'
 };
 
-// TODO(burdon): Multiple sections with single scroll?
+// TODO(burdon): Test embedded table/lists (e.g., checkbox in side gutter).
 
 const Test = () => {
   return (
@@ -45,9 +45,18 @@ const Test = () => {
           >
             {faker.lorem.sentence()}
           </CardHeader>
-          <CardContent icon={<Buildings className={getSize(6)} />}>{faker.lorem.sentences(3)}</CardContent>
+          {/* TODO(burdon): Fade bottom. */}
+          <CardContent
+            icon={<Buildings className={getSize(6)} />}
+            scrollbar
+            slots={{
+              root: { className: 'h-[160px] text-sm border-b' }
+            }}
+          >
+            {faker.lorem.sentences(32)}
+          </CardContent>
           <CardContent gutter>{faker.internet.email()}</CardContent>
-          <CardContent gutter>{faker.lorem.sentences(3)}</CardContent>
+          {/* <CardContent gutter>{faker.lorem.sentences(3)}</CardContent> */}
           <CardActions gutter slots={{ root: { className: 'bg-zinc-100' } }}>
             <Button variant='ghost'>OK</Button>
             <Button variant='ghost'>Cancel</Button>
