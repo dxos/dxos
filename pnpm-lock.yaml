@@ -619,6 +619,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@uiw/react-codemirror': ^4.19.9
       codemirror: ^6.0.1
+      lib0: ^0.2.65
       prosemirror-model: ^1.19.0
       prosemirror-view: ^1.30.1
       react: ^18.2.0
@@ -645,6 +646,7 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@uiw/react-codemirror': 4.19.9_hasiadfrpqtfs6aaochyfcsoru
       codemirror: 6.0.1_@lezer+common@1.0.2
+      lib0: 0.2.65
       prosemirror-model: 1.19.0
       prosemirror-view: 1.30.1
       y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
@@ -25256,9 +25258,10 @@ packages:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  /lib0/0.2.52:
-    resolution: {integrity: sha512-CjxlM7UgICfN6b2OPALBXchIBiNk6jE+1g7JP8ha+dh1xKRDSYpH0WQl1+rMqCju49xUnwPG34v4CR5/rPOZhg==}
+  /lib0/0.2.65:
+    resolution: {integrity: sha512-avDor/VGaIMqNTZ40NIsH+/O1jFUYJGB+Z30KQnNlx0NlcElQKVAg+wv2lfbnYjY6HjXW/cKvwrrZfLBoFIObA==}
     engines: {node: '>=14'}
+    hasBin: true
     dependencies:
       isomorphic.js: 0.2.5
 
@@ -36210,7 +36213,7 @@ packages:
     dependencies:
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
-      lib0: 0.2.52
+      lib0: 0.2.65
       yjs: 13.5.44
     dev: false
 
@@ -36220,7 +36223,7 @@ packages:
       monaco-editor: '>=0.20.0'
       yjs: ^13.3.1
     dependencies:
-      lib0: 0.2.52
+      lib0: 0.2.65
       monaco-editor: 0.25.2
       yjs: 13.5.44
     dev: false
@@ -36234,7 +36237,7 @@ packages:
       y-protocols: ^1.0.1
       yjs: ^13.3.2
     dependencies:
-      lib0: 0.2.52
+      lib0: 0.2.65
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
@@ -36251,7 +36254,7 @@ packages:
       y-protocols: ^1.0.1
       yjs: ^13.5.38
     dependencies:
-      lib0: 0.2.52
+      lib0: 0.2.65
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
@@ -36263,7 +36266,7 @@ packages:
   /y-protocols/1.0.5:
     resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}
     dependencies:
-      lib0: 0.2.52
+      lib0: 0.2.65
 
   /y18n/3.2.2:
     resolution: {integrity: sha512-uGZHXkHnhF0XeeAPgnKfPv1bgKAYyVvmNL1xlKsPYZPaIHxGti2hHqvOCQv71XMsLxu1QjergkqogUnms5D3YQ==}
@@ -36479,7 +36482,7 @@ packages:
   /yjs/13.5.44:
     resolution: {integrity: sha512-UL+abIh2lQonqXfaJ+en7z9eGshpY11j1zNLc2kDYs0vrTjee4gZJUXC3ZsuhP6geQt0IRU04epCGRaVPQAVCA==}
     dependencies:
-      lib0: 0.2.52
+      lib0: 0.2.65
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
