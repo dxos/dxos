@@ -22,7 +22,7 @@ module.exports = {
         ThemePlugin({
           content: [
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs')
+            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
           ]
         })
       ]
