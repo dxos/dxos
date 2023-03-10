@@ -5,21 +5,28 @@
 import { MagnifyingGlass } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
+import { mx } from '../../util';
 import { Input } from '../Input';
 
 type SearchbarSlots = {
+  root?: {
+    className?: string;
+  };
   input?: {
+    className?: string;
     autoFocus?: boolean;
+  };
+  button?: {
+    className?: string;
   };
 };
 
 export type SearchbarProps = {
-  disabled?: boolean;
   slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -27,32 +34,29 @@ export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }
   };
 
   return (
-    <div className='flex flex-1 flex-col'>
-      <div className='flex flex-1 items-center'>
-        <Input
-          variant='subdued'
-          label='Search'
-          labelVisuallyHidden
-          placeholder='Search...'
-          disabled={disabled}
-          slots={{
-            root: {
-              className: 'flex flex-1'
-            },
-            input: {
-              spellCheck: false,
-              className: 'w-full',
-              ...slots.input
-            }
-          }}
-          onChange={(event) => handleChange(event.target.value)}
-        />
+    <div className={mx('flex w-full items-center', slots.root?.className)}>
+      <Input
+        variant='subdued'
+        label='Search'
+        labelVisuallyHidden
+        placeholder='Search...'
+        slots={{
+          root: {
+            className: 'w-full'
+          },
+          input: {
+            onKeyDown: ({ key }) => key === 'Escape' && handleChange(''),
+            spellCheck: false,
+            ...slots.input
+          }
+        }}
+        value={text}
+        onChange={({ target }) => handleChange(target.value)}
+      />
 
-        {/* TODO(burdon): Move decorator inside input. */}
-        <button className='p-1' onClick={() => onSearch?.(text)}>
-          <MagnifyingGlass />
-        </button>
-      </div>
+      <button className={mx('p-1', slots.button?.className)} onClick={() => onSearch?.(text)}>
+        <MagnifyingGlass />
+      </button>
     </div>
   );
 };

@@ -384,7 +384,7 @@ Object.defineProperty(TypedDocument, 'name', { value: 'Document' });
 /**
  * Base class for generated document types and dynamic objects.
  */
-// TODO(burdon): Rename?
+// TODO(burdon): Must rename this (too many collisions).
 export type Document<T extends Record<string, any> = { [key: string]: any }> = TypedDocument<T> & T;
 
 // TODO(burdon): Support immutable objects?

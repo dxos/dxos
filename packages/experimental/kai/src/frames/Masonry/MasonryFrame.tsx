@@ -7,7 +7,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { ContactList, OrganizationList, ProjectHierarchy, UnorderedTaskList } from '../../containers';
+import { UnorderedTaskList } from '../../components';
+import { ContactList, OrganizationList, ProjectHierarchy } from '../../containers';
 import { useAppRouter } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
