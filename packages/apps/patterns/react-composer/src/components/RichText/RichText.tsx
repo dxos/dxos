@@ -15,8 +15,6 @@ import type { Space, Text } from '@dxos/client';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-components';
 
-import { cursorColor, SpaceProvider } from '../../yjs';
-
 import {
   blockquote,
   bold,
@@ -32,6 +30,7 @@ import {
   unorderedList,
   codeWithoutMarks
 } from '../../styles';
+import { cursorColor, SpaceProvider } from '../../yjs';
 
 export type TipTapEditor = Editor;
 
