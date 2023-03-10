@@ -4,8 +4,8 @@
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
-import CodeMirror from '@uiw/react-codemirror';
-import React from 'react';
+import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import React, { forwardRef } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { Text } from '@dxos/client';
@@ -17,7 +17,9 @@ export type MarkdownComposerProps = {
   slots?: MarkdownComposerSlots;
 };
 
-export const MarkdownComposer = ({ text }: MarkdownComposerProps) => {
+export type MarkdownComposerRef = ReactCodeMirrorRef;
+
+export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ text }, forwardedRef) => {
   const ytext = text?.doc?.getText('md');
 
   if (!ytext) {
@@ -26,6 +28,9 @@ export const MarkdownComposer = ({ text }: MarkdownComposerProps) => {
 
   return (
     <CodeMirror
+      basicSetup={{ lineNumbers: false, foldGutter: false }}
+      theme='none'
+      ref={forwardedRef}
       value={ytext.toString()}
       extensions={[
         markdown({ base: markdownLanguage, codeLanguages: languages }),
@@ -36,4 +41,4 @@ export const MarkdownComposer = ({ text }: MarkdownComposerProps) => {
       ]}
     />
   );
-};
+});

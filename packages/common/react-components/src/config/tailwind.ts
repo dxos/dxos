@@ -4,12 +4,11 @@
 
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
-import type { Config } from 'tailwindcss';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
-import { ThemeConfig } from 'tailwindcss/types/config';
+import { Config, ThemeConfig } from 'tailwindcss/types/config';
 
 export const tailwindConfig = ({
   env = 'production',
