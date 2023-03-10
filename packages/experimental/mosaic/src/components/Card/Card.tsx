@@ -6,9 +6,7 @@ import React, { ReactNode } from 'react';
 
 import { mx } from '@dxos/react-components';
 
-const styles = {
-  bg: 'bg-white'
-};
+import { styles } from './util';
 
 // TODO(burdon): Density.
 // https://mui.com/material-ui/react-card
@@ -25,5 +23,17 @@ export type CardProps = {
 };
 
 export const Card = ({ slots = {}, children }: CardProps) => {
-  return <div className={mx('flex flex-col w-full rounded border', styles.bg, slots.root?.className)}>{children}</div>;
+  return (
+    <div
+      className={mx(
+        'flex flex-col w-full max-w-[400px] overflow-hidden rounded border',
+        styles.bg,
+        styles.border,
+        styles.body,
+        slots.root?.className
+      )}
+    >
+      {children}
+    </div>
+  );
 };

@@ -25,7 +25,7 @@ export const MemberList: FC<{ identityKey: PublicKey; members: SpaceMember[] }> 
               <SmileyBlank className={mx(getSize(6), 'text-slate-500')} />
             )}
           </div>
-          <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+          <div className='truncate'>
             {member.identity?.profile?.displayName ?? member.identity.identityKey.truncate()}
           </div>
         </div>
