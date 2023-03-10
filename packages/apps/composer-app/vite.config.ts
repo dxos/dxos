@@ -87,11 +87,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'composer-app',
-      include: './out/composer',
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    })
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'composer-app',
+            include: './out/composer',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
   ]
 });

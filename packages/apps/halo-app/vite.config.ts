@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -88,12 +88,16 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: "dxos",
-      project: "halo-app",
-      include: "./out/halo",
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    }),
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'halo-app',
+            include: './out/halo',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : []),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
