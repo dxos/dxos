@@ -3702,6 +3702,7 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/readable-stream': ^2.3.9
+      fast-check: ~3.3.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
@@ -3734,6 +3735,7 @@ importers:
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
       '@types/readable-stream': 2.3.14
+      fast-check: 3.3.0
 
   packages/sdk/config:
     specifiers:

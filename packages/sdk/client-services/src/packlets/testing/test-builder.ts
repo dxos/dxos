@@ -4,12 +4,14 @@
 
 import assert from 'node:assert';
 
-import { asyncTimeout } from '@dxos/async';
-import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client';
+import { asyncTimeout, Trigger } from '@dxos/async';
+import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory, Invitation } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
@@ -137,4 +139,42 @@ export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendP
 
   // Check item replicated from 2 => 1.
   await testSpace(db2, db1);
+};
+
+export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
+  const rootSpace = spaceKey ? initialPeer.echo.getSpace(spaceKey) : await initialPeer.echo.createSpace();
+  assert(rootSpace, 'Space not found.');
+
+  await Promise.all(
+    peers.map(async (peer) => {
+      const success1 = new Trigger<Invitation>();
+      const success2 = new Trigger<Invitation>();
+
+      const observable1 = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      log('invitation created');
+      observable1.subscribe({
+        onConnecting: (invitation) => {
+          const observable2 = peer.echo.acceptInvitation(invitation);
+          log('invitation accepted');
+
+          observable2.subscribe({
+            onSuccess: (invitation: Invitation) => {
+              success2.wake(invitation);
+              log('invitation success2');
+            },
+            onError: (err: Error) => raise(err)
+          });
+        },
+        onSuccess: (invitation) => {
+          success1.wake(invitation);
+          log('invitation success1');
+        },
+        onError: (err) => raise(err)
+      });
+
+      await Promise.all([success1.wait(), success2.wait()]);
+    })
+  );
+
+  return rootSpace.key;
 };
