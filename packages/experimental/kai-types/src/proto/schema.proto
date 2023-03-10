@@ -68,7 +68,10 @@ message Contact {
   string name = 1;
   string username = 2;
   string email = 3;
-  Address address = 4;
+  string phone = 4; // TODO(burdon): Repeated with tag.
+  Address address = 5;
+  Organization employer = 6; // TODO(burdon): Multiple (change "employer").
+  string tag = 7;
 }
 
 message Task {
@@ -103,7 +106,13 @@ message Project {
 message Kanban {
   option (object) = true;
 
+  message OrderedColumn {
+    string column_id = 1;
+    repeated string objects = 2;
+  }
+
   string title = 1;
+  string column_type = 2;
 }
 
 message Document {
@@ -118,8 +127,15 @@ message Document {
 message DocumentStack {
   option (object) = true;
 
+  message Section {
+    option (object) = true; // TODO(burdon): REMOVE (but requires id property).
+    string type = 1; // TODO(burdon): Metadata.
+    dxos.schema.Document object = 2;
+  }
+
   string title = 1;
-  repeated dxos.schema.Document sections = 2;
+  string subject_id = 2; // TODO(burdon): Reference.
+  repeated Section sections = 3;
 }
 
 // TODO(burdon): System type for external GUIDs.
@@ -130,7 +146,7 @@ message Source {
 message Message {
   option (object) = true;
 
-  message Contact {
+  message Recipient {
     option (object) = true; // TODO(burdon): REMOVE.
     string email = 1;
     string name = 2;
@@ -140,8 +156,8 @@ message Message {
   // TODO(burdon): Timestamp (across all objects).
   Source source = 1;
   string date = 2;
-  Contact from = 3;
-  repeated Contact to = 4;
+  Recipient from = 3;
+  repeated Recipient to = 4;
   string subject = 5;
   string body = 6;
 }

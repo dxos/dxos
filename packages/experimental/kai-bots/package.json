@@ -18,6 +18,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -36,6 +37,7 @@
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
     "js-yaml": "^4.1.0",
+    "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
     "openai": "^3.2.1"
   },
@@ -44,6 +46,7 @@
     "@types/imap": "^0.8.35",
     "@types/imap-simple": "^4.2.5",
     "@types/js-yaml": "^4.0.5",
+    "@types/lodash.startcase": "^4.4.7",
     "@types/mailparser": "^3.4.0"
   }
 }

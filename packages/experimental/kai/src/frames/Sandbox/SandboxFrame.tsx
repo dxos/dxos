@@ -10,6 +10,7 @@ import { compile, Editor, Frame } from '@dxos/framebox';
 import { useQuery, observer } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
+import { Toolbar } from '../../components';
 import { EmbeddedFrame } from '../../frame-container';
 import { useAppRouter } from '../../hooks';
 
@@ -56,23 +57,19 @@ export const SandboxFrame = observer(() => {
     return null;
   }
 
-  const Toolbar = () => {
-    return (
-      <div className='flex shrink-0 w-full justify-between p-2 bg-gray-200'>
-        <h2>{selected.name}</h2>
-        <Button variant='ghost' onClick={handleCompile}>
-          <PlayCircle className={getSize(6)} />
-        </Button>
-      </div>
-    );
-  };
-
   // TODO(burdon): onChange not working.
   return (
-    <div className='flex h-full overflow-hidden'>
+    <div className='flex flex-1 overflow-hidden'>
       <div className='flex flex-1 flex-col overflow-hidden border-r'>
-        <Toolbar />
-        <div className='flex flex-1 overflow-hidden mt-2'>
+        <Toolbar>
+          <h2>{selected.name}</h2>
+          <div className='flex-1' />
+          <Button variant='ghost' onClick={handleCompile}>
+            <PlayCircle className={getSize(6)} />
+          </Button>
+        </Toolbar>
+
+        <div className='flex flex-1 overflow-hidden'>
           <Editor document={selected?.content} onChange={handleUpdate} />
         </div>
       </div>
