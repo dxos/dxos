@@ -79,7 +79,7 @@ export class BotClient {
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
 
     const request = {
-      Image: 'bot-test', // TODO(burdon): Factor out name?
+      Image: 'ghcr.io/dxos/bot', // TODO(burdon): Factor out name?
       ExposedPorts: {
         [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
       },
@@ -95,7 +95,8 @@ export class BotClient {
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot.name': botId,
-        'dxos.bot.port': `${port}`
+        'dxos.bot.port': `${port}`,
+        'dxos.kube.proxy': `/:${port}`
       }
     };
 
@@ -113,15 +114,36 @@ export class BotClient {
     this.onStatusUpdate.emit('starting container...');
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStart
     await fetch(`${this._botServiceEndpoint}/docker/containers/${containerId}/start`, {
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({})
     });
 
     // Poll proxy until container starts.
-    const { host } = new URL(this._botServiceEndpoint);
+    const { host, protocol } = new URL(this._botServiceEndpoint);
+
+    const fetchUrl = new URL(`${containerId}/`, `${this._botServiceEndpoint}/`);
+    console.log({ fetchUrl })
+
+    const wsUrl = new URL(`${containerId}/`, `${this._botServiceEndpoint}/`);
+    wsUrl.protocol = protocol === 'https:' ? 'wss:' : 'ws:';
+
+    await sleep(1_000)
+
+    await fetch('https://bots.kube.dxos.org/.well-known/dx/bots/', {
+      method: 'POST',
+    })
+    
+    await sleep(1_000)
+
     const botEndpoint = `${host}/proxy/${port}`;
     while (true) {
       try {
-        await fetch(`http://${botEndpoint}`);
+        const res = await fetch(fetchUrl);
+        console.log(res.status)
+        if(res.status >= 400) {
+          continue;
+        }
+        console.log('connected', { fetchUrl });
         break;
       } catch (err: any) {
         // TODO(burdon): Backoff and stop after max retries.
@@ -132,7 +154,7 @@ export class BotClient {
     }
 
     this.onStatusUpdate.emit('Connecting to bot...');
-    const botClient = new Client({ services: fromRemote(`ws://${botEndpoint}`) });
+    const botClient = new Client({ services: fromRemote(wsUrl.href) });
     await botClient.initialize();
     log('status', await botClient.getStatus());
 
