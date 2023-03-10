@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { mx } from '@dxos/react-components';
+
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const heading: Record<HeadingLevel, string> = {
@@ -31,7 +33,9 @@ export const paragraph = 'mlb-1';
 
 export const bold = 'font-bold';
 
-export const code = 'font-mono bg-neutral-500/10 rounded pli-1.5 mli-0.5 plb-0.5 -mlb-0.5';
+export const code = 'font-mono bg-neutral-500/10 rounded pli-0.5 plb-0.5 -mlb-0.5';
+
+export const codeWithoutMarks = mx(code, 'pli-1.5 mli-0.5');
 
 export const italic = 'italic';
 

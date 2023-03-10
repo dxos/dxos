@@ -17,7 +17,6 @@ import { mx } from '@dxos/react-components';
 import {
   blockquote,
   bold,
-  code,
   codeBlock,
   heading,
   HeadingLevel,
@@ -27,7 +26,8 @@ import {
   orderedList,
   paragraph,
   strikethrough,
-  unorderedList
+  unorderedList,
+  codeWithoutMarks
 } from '../../styles';
 
 export type TipTapEditor = Editor;
@@ -105,7 +105,7 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
         },
         code: {
           HTMLAttributes: {
-            class: code
+            class: codeWithoutMarks
           }
         },
         italic: {
