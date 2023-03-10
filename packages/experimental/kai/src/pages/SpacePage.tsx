@@ -69,7 +69,7 @@ const SpacePage = () => {
 
       {/* Main content. */}
       {space && (
-        <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
+        <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.REGISTRY && <FrameRegistry />}
           {frame && <FrameContainer frame={frame} />}
         </div>

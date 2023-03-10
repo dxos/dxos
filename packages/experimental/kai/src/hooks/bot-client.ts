@@ -29,7 +29,6 @@ export class BotClient {
 
   private readonly _botServiceEndpoint: string;
 
-  // prettier-ignoreå
   constructor(
     private readonly _config: Config,
     private readonly _space: Space,
@@ -41,11 +40,21 @@ export class BotClient {
   }
 
   // TODO(burdon): Error handling.
-  async getBots(): Promise<any> {
-    // https://docs.docker.com/engine/api/v1.42/
+
+  async getBots(): Promise<any[]> {
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerList
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
       return response.json();
     });
+  }
+
+  async removeBots(): Promise<void> {
+    const containers = await this.getBots();
+    for (const { Id } of containers) {
+      // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerDelete
+      await fetch(`${this._botServiceEndpoint}/docker/containers/${Id}/stop`, { method: 'POST' });
+      await fetch(`${this._botServiceEndpoint}/docker/containers/${Id}`, { method: 'DELETE' });
+    }
   }
 
   /**
@@ -67,7 +76,7 @@ export class BotClient {
     // TODO(burdon): How is this different from BOT_PORT?
     const port = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
 
-    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8);
+    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
 
     const request = {
       Image: 'bot-test', // TODO(burdon): Factor out name?
@@ -85,13 +94,13 @@ export class BotClient {
       },
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
-        'dxos.bot': `${true}`, // TODO(burdon): ?
         'dxos.bot.name': botId,
-        'dxos.bot.rpc.port': `${port}` // TODO(burdon): ?
+        'dxos.bot.port': `${port}`
       }
     };
 
-    log.info('registering bot', { request });
+    log.info('createing bot', { request });
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
@@ -99,10 +108,11 @@ export class BotClient {
       },
       body: JSON.stringify(request)
     });
+    const { Id: containerId } = await response.json();
 
-    this.onStatusUpdate.emit('Starting bot container...');
-    const data = await response.json();
-    await fetch(`${this._botServiceEndpoint}/docker/containers/${data.Id}/start`, {
+    this.onStatusUpdate.emit('starting container...');
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStart
+    await fetch(`${this._botServiceEndpoint}/docker/containers/${containerId}/start`, {
       method: 'POST'
     });
 

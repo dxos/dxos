@@ -39,18 +39,18 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
+        'flex flex-col w-[200px] h-[120px] border-0 rounded-lg px-3 py-2 cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
         active && '!bg-selection-bg border-selection-border',
         slots.root?.className
       )}
       onClick={() => onSelect(id)}
     >
-      <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-display font-medium mb-1'>{label}</h2>
-        <div className='text-black'>{description}</div>
-      </div>
-      <div className='flex flex-col justify-center ml-2'>
-        <Icon weight='duotone' className={mx(getSize(16), '[&>*]:stroke-[8]')} />
+      <h2 className='flex mb-1 text-lg font-display font-medium'>{label}</h2>
+      <div className='flex w-full'>
+        <div className='flex w-full text-black text-sm pr-2'>{description}</div>
+        <div>
+          <Icon weight='duotone' className={mx(getSize(12), '[&>*]:stroke-[8]')} />
+        </div>
       </div>
     </div>
   );
@@ -116,7 +116,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
       <div className='flex flex-1 justify-center overflow-y-scroll'>
         <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-6 lg:grid lg:grid-cols-3 pb-24'>
+          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3 pb-24'>
             {Array.from(modules.values())
               .sort(sorter)
               .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (

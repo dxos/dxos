@@ -104,13 +104,6 @@ export const TaskItem: FC<{
   onSave?: (task: Task) => void;
   slots?: EditableListItemSlots;
 }> = observer(({ task, onDelete, onSave, slots }) => {
-  // TODO(wittjosiah): Remove?
-  // useReactorContext({
-  //   onChange: () => {
-  //     onSave?.(task);
-  //   }
-  // });
-
   return (
     <EditableListItem
       id={task.id}

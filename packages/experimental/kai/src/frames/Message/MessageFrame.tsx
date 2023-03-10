@@ -2,35 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import format from 'date-fns/format';
-import formatDistance from 'date-fns/formatDistance';
-import isToday from 'date-fns/isToday';
-import { Circle, UserCircle } from 'phosphor-react';
-import React, { FC, ReactNode, useState } from 'react';
+import { Circle } from 'phosphor-react';
+import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { Message } from '@dxos/kai-types';
-import { useQuery } from '@dxos/react-client';
+import { Contact, Message, Organization } from '@dxos/kai-types';
+import { observer, Space, useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
+import { ContactCard } from '../../frames/Contact';
+import { createPath, useAppRouter } from '../../hooks';
+import { formatDate, getCompanyName, sortMessage } from './util';
 
+// TODO(burdon): Common container patter (see ContactFrame).
 export const MessageFrame = () => {
-  const { space } = useAppRouter();
+  const navigate = useNavigate();
+  const selectedRef = useRef<HTMLDivElement>(null);
+  const { space, frame, objectId } = useAppRouter();
+
   // TODO(burdon): Add sort to filter.
-  const messages = useQuery(space, Message.filter()).sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
+  const messages = useQuery(space, Message.filter()).sort(sortMessage);
 
-  const [selected, setSelected] = useState<Message>(messages[0]);
+  const selected = objectId ? space?.db.getObjectById<Message>(objectId) : undefined;
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selected]);
 
-  const now = Date.now();
-  const date = (date: Date) =>
-    isToday(date) ? format(date, 'hh:mm aaa') : formatDistance(date, now, { addSuffix: true });
+  const handleSelect = (message: Message) => {
+    navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: message.id }));
+  };
+
+  const now = new Date();
 
   // TODO(burdon): Contact may not be available since currently a separate object.
-  const getDisplayName = (contact?: Message.Contact) => (contact?.name?.length ? contact?.name : contact?.email);
+  const getDisplayName = (contact?: Message.Recipient) => (contact?.name?.length ? contact?.name : contact?.email);
 
   // TODO(burdon): List/cursor.
   // TODO(burdon): Source selector (email, internal, etc.)
   // TODO(burdon): Internal messages in other frames.
+
+  if (!space) {
+    return null;
+  }
 
   return (
     <div className='flex flex-1 overflow-hidden'>
@@ -43,8 +56,9 @@ export const MessageFrame = () => {
             return (
               <div
                 key={id}
+                ref={message.id === selected?.id ? selectedRef : undefined}
                 className='flex flex-col hover:bg-hover-bg cursor-pointer border-b py-2 pr-5'
-                onClick={() => setSelected(message)}
+                onClick={() => handleSelect(message)}
               >
                 {/* From */}
                 <Row
@@ -60,7 +74,7 @@ export const MessageFrame = () => {
                 >
                   <div className='flex flex-1 text-sm text-teal-700'>{getDisplayName(from)}</div>
                   <div className='flex text-sm whitespace-nowrap text-right text-zinc-500 pl-2'>
-                    {date(new Date(received))}
+                    {formatDate(now, new Date(received))}
                   </div>
                 </Row>
 
@@ -84,42 +98,77 @@ export const MessageFrame = () => {
       </div>
 
       <div className='hidden md:flex flex-1 flex-col overflow-hidden overflow-y-scroll py-4 pl-6 pr-16 bg-white'>
-        {selected && (
-          <div className='flex flex-col '>
-            <Row
-              wide
-              className='pb-4 items-center'
-              gutter={
-                <Button variant='ghost' className='p-1'>
-                  <UserCircle weight='duotone' className={mx(getSize(8), 'text-sky-300')} />
-                </Button>
-              }
-            >
-              {/* TODO(burdon): Contact create/link. */}
-              <div>
-                <div>{getDisplayName(selected.from)}</div>
-                {selected.from.name && selected.from.email && <div>{selected.from.email}</div>}
-              </div>
-            </Row>
-
-            <Row wide className='pb-4'>
-              <div className='text-2xl'>{selected.subject}</div>
-            </Row>
-
-            <Row wide>
-              <div className='flex flex-col'>
-                {selected.body?.split('\n').map((text, i) => (
-                  <div key={i}>{text}</div>
-                ))}
-              </div>
-            </Row>
-          </div>
-        )}
+        {selected && <MessagePanel space={space} message={selected} />}
       </div>
     </div>
   );
 };
 
+const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, message }) => {
+  const navigate = useNavigate();
+
+  // TODO(burdon): Reuse in Calendar.
+  const contact = useMemo(() => {
+    let contact: Contact | undefined = message.from.contact;
+    if (!contact) {
+      // Look-up contact.
+      // TODO(burdon): Extend query API.
+      const query = space.db.query(Contact.filter());
+      contact = query.objects.find((contact) => contact.email === message.from.email);
+
+      // NOTE: Create provisional contact (non-persistent) until selected.
+      if (!contact) {
+        let employer;
+        const name = getCompanyName(message.from.email);
+        if (name) {
+          employer = new Organization({ name });
+        }
+
+        contact = new Contact({ name: message.from.name, email: message.from.email, employer });
+      }
+    }
+
+    return contact;
+  }, [message]);
+
+  const handleSelect = (contact: Contact) => {
+    if (!message.from.contact) {
+      setTimeout(async () => {
+        contact = await space.db.add(contact);
+        contact.tag = 'inbox';
+        message.from.contact = contact; // TODO(burdon): Observer?
+      });
+    }
+  };
+
+  const handleNavigate = (contact: Contact) => {
+    navigate(createPath({ spaceKey: space?.key, frame: 'dxos.module.frame.contact', objectId: contact.id }));
+  };
+
+  return (
+    <div className='flex flex-col space-y-4'>
+      <ContactCard
+        space={space}
+        object={contact}
+        temporary={!message.from.contact}
+        onSelect={handleSelect}
+        onAction={message.from.contact && handleNavigate}
+      />
+
+      <div className='flex px-2 ml-[46px] text-2xl'>{message.subject}</div>
+
+      <div className='flex flex-col px-2 ml-[46px]'>
+        {message.body?.split('\n').map((text, i) => (
+          <div key={i} className='mb-2'>
+            {text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+// TODO(burdon): Factor out.
 const Row: FC<{ children?: ReactNode; gutter?: ReactNode; className?: string; wide?: boolean }> = ({
   gutter,
   children,

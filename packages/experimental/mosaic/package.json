@@ -20,6 +20,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-scroll-area": "^1.0.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isequal": "^4.5.0",
     "phosphor-react": "^1.4.1",
