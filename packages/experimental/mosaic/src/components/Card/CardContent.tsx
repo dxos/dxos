@@ -30,12 +30,12 @@ export type CardContentProps = {
 
 export const CardContent = ({ slots = {}, gutter, icon, scrollbar, children }: CardContentProps) => {
   return (
-    <div className={mx('flex', gutter && 'ml-[40px]', slots.root?.className)}>
+    <div className={mx('flex', gutter && 'pl-[40px]', slots.root?.className)}>
       {icon && <Icon>{icon}</Icon>}
       {(scrollbar && (
-        <div className={mx('flex w-full overflow-hidden', slots.body?.className)}>
+        <div className={mx('flex w-full overflow-hidden')}>
           <ScrollContainer>
-            <div className={mx('flex w-full my-2 pr-2')}>{children}</div>
+            <div className={mx('flex w-full py-2 pr-2', slots.body?.className)}>{children}</div>
           </ScrollContainer>
         </div>
       )) || <div className={mx('flex w-full py-2 pr-2', slots?.body?.className)}>{children}</div>}

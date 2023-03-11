@@ -8,6 +8,7 @@ import React, { FC, ReactNode } from 'react';
 export const styles = {
   bg: 'bg-white dark:bg-neutral-800',
   border: 'border-zinc-500',
+  divide: 'divide-zinc-500',
   heading: 'text-black dark:text-white',
   body: 'text-neutral-600'
 };

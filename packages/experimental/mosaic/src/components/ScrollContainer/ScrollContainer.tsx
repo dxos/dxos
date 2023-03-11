@@ -26,10 +26,10 @@ export type ScrollContainerSlots = {
 // TODO(burdon): Is this right? Merge?
 export const defaultSlots: ScrollContainerSlots = {
   scrollbar: {
-    className: 'bg-neutral-100 hover:bg-neutral-200'
+    className: 'bg-neutral-50 hover:bg-neutral-100'
   },
   thumb: {
-    className: 'bg-neutral-500'
+    className: 'bg-neutral-400'
   }
 };
 
