@@ -7,12 +7,12 @@ import { mx } from '@dxos/react-components';
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const heading: Record<HeadingLevel, string> = {
-  1: 'mbs-4 mbe-2 text-4xl font-semibold',
-  2: 'mbs-4 mbe-2 text-3xl font-bold',
-  3: 'mbs-4 mbe-2 text-2xl font-bold',
-  4: 'mbs-4 mbe-2 text-xl font-extrabold',
-  5: 'mbs-4 mbe-2 text-lg font-extrabold',
-  6: 'mbs-4 mbe-2 font-black'
+  1: 'mbs-4 mbe-2 text-4xl font-semibold text-inherit',
+  2: 'mbs-4 mbe-2 text-3xl font-bold text-inherit',
+  3: 'mbs-4 mbe-2 text-2xl font-bold text-inherit',
+  4: 'mbs-4 mbe-2 text-xl font-extrabold text-inherit',
+  5: 'mbs-4 mbe-2 text-lg font-extrabold text-inherit',
+  6: 'mbs-4 mbe-2 font-black text-inherit'
 };
 
 export const blockquote = 'mlb-2 border-is-4 border-neutral-500/50 pis-5';
@@ -41,4 +41,4 @@ export const italic = 'italic';
 
 export const strikethrough = 'line-through';
 
-export const mark = '!font-normal !no-underline opacity-50';
+export const mark = '!font-normal !no-underline !text-inherit opacity-50';

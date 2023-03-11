@@ -597,6 +597,7 @@ importers:
       '@codemirror/language': ^6.6.0
       '@codemirror/language-data': ^6.1.0
       '@codemirror/state': ^6.2.0
+      '@codemirror/theme-one-dark': ^6.1.1
       '@codemirror/view': ^6.9.2
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -641,6 +642,7 @@ importers:
       '@codemirror/language': 6.6.0
       '@codemirror/language-data': 6.1.0
       '@codemirror/state': 6.2.0
+      '@codemirror/theme-one-dark': 6.1.1
       '@codemirror/view': 6.9.2
       '@dxos/debug': link:../../../common/debug
       '@dxos/log': link:../../../common/log

@@ -97,7 +97,8 @@ export const highlighting = [
   },
   {
     tag: [tags.function(tags.variableName), tags.labelName],
-    color: malibu
+    color: malibu,
+    fontFamily: monospace
   },
   {
     tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)],
@@ -121,16 +122,13 @@ export const highlighting = [
     color: chalky
   },
   {
-    tag: [
-      // tags.link,
-      // tags.url,
-      tags.operator,
-      tags.operatorKeyword,
-      tags.escape,
-      tags.regexp,
-      tags.special(tags.string)
-    ],
+    tag: [tags.operator, tags.operatorKeyword, tags.escape, tags.regexp, tags.special(tags.string)],
     color: cyan
+  },
+  {
+    tag: [tags.link, tags.url],
+    color: 'inherit !important',
+    textDecoration: 'none !important'
   },
   {
     tag: [

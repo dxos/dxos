@@ -5,6 +5,7 @@
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
 import { styleTags, tags, Tag } from '@lezer/highlight';
 import { MarkdownConfig } from '@lezer/markdown';
@@ -17,7 +18,7 @@ import { Space, Text } from '@dxos/client';
 
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 import { cursorColor, SpaceProvider } from '../../yjs';
-import { theme as darkThemeBase, highlighting as darkHighlightingBase, cursor as darkCursor } from './codeMirrorDark';
+import { highlighting as darkHighlightingBase, theme as darkThemeBase, cursor as darkCursor } from './codeMirrorDark';
 
 export type MarkdownComposerSlots = {};
 
@@ -56,7 +57,7 @@ const theme = EditorView.theme({
     borderLeftColor: darkCursor
   },
   '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(',')
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(',')
   },
   '& .cm-activeLine': {
     backgroundColor: 'transparent'
@@ -98,7 +99,7 @@ const markdownTagsExtension: MarkdownConfig = {
   ]
 };
 
-const generalHighlightStyle = HighlightStyle.define(
+const markdownHighlightStyle = HighlightStyle.define(
   [
     ...darkHighlightingBase,
     {
@@ -127,9 +128,8 @@ const generalHighlightStyle = HighlightStyle.define(
     { tag: tags.strikethrough, class: strikethrough },
     { tag: tags.emphasis, class: italic },
     { tag: tags.strong, class: bold }
-  ]
-  // todo (thure): Figure out how to give everything except Markdown the mono font family.
-  // { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } }
+  ],
+  { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } }
 );
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(
@@ -158,7 +158,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
     return (
       <CodeMirror
         basicSetup={{ lineNumbers: false, foldGutter: false }}
-        theme={[theme, syntaxHighlighting(generalHighlightStyle)]}
+        theme={[theme, syntaxHighlighting(oneDarkHighlightStyle), syntaxHighlighting(markdownHighlightStyle)]}
         ref={forwardedRef}
         value={ytext.toString()}
         extensions={[
