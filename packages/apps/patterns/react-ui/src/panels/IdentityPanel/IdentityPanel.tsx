@@ -5,7 +5,7 @@ import React from 'react';
 
 import type { Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Avatar, Button, ThemeContext, useTranslation } from '@dxos/react-components';
+import { Avatar, Button, DensityProvider, ThemeContext, useTranslation } from '@dxos/react-components';
 
 export const IdentityPanel = ({
   identity,
@@ -22,18 +22,20 @@ export const IdentityPanel = ({
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os', rootDensity: 'fine' }}>
-      <div className='flex flex-col gap-2 justify-center items-center'>
-        <Avatar
-          size={16}
-          variant='circle'
-          fallbackValue={identity.identityKey.toHex()}
-          label={identity.profile?.displayName ?? ''}
-        />
-        <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
-          {t('manage profile label')}
-        </Button>
-      </div>
+    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+      <DensityProvider density='fine'>
+        <div className='flex flex-col gap-2 justify-center items-center'>
+          <Avatar
+            size={16}
+            variant='circle'
+            fallbackValue={identity.identityKey.toHex()}
+            label={identity.profile?.displayName ?? ''}
+          />
+          <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
+            {t('manage profile label')}
+          </Button>
+        </div>
+      </DensityProvider>
     </ThemeContext.Provider>
   );
 };

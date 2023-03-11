@@ -3,14 +3,20 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
-import CodeMirror from '@uiw/react-codemirror';
-import React, { useMemo } from 'react';
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
+import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { Space, Text } from '@dxos/client';
+import { useThemeContext } from '@dxos/react-components';
 
 import { cursorColor, SpaceProvider } from '../../yjs';
+import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
+import { markdownTagsExtension } from './markdownTags';
 
 export type MarkdownComposerSlots = {};
 
@@ -20,32 +26,52 @@ export type MarkdownComposerProps = {
   slots?: MarkdownComposerSlots;
 };
 
-export const MarkdownComposer = ({ text, space }: MarkdownComposerProps) => {
-  const ytext = text?.doc?.getText('md');
+export type MarkdownComposerRef = ReactCodeMirrorRef;
 
-  const { awareness } = useMemo(() => {
-    if (!space || !text?.doc) {
-      return { awareness: null };
+const theme = EditorView.theme(markdownDarktheme);
+
+export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(
+  ({ text, space }, forwardedRef) => {
+    const ytext = text?.doc?.getText('md');
+    const { themeMode } = useThemeContext();
+
+    const { awareness } = useMemo(() => {
+      if (!space || !text?.doc) {
+        return { awareness: null };
+      }
+
+      const provider = new SpaceProvider({ space, doc: text.doc });
+      provider.awareness.setLocalStateField('user', {
+        name: 'Anonymous ' + Math.floor(Math.random() * 100),
+        color: cursorColor.color,
+        colorLight: cursorColor.light
+      });
+
+      return provider;
+    }, [space, text?.doc]);
+
+    if (!ytext) {
+      return null;
     }
 
-    const provider = new SpaceProvider({ space, doc: text.doc });
-    provider.awareness.setLocalStateField('user', {
-      name: 'Anonymous ' + Math.floor(Math.random() * 100),
-      color: cursorColor.color,
-      colorLight: cursorColor.light
-    });
-
-    return provider;
-  }, [space, text?.doc]);
-
-  if (!ytext) {
-    return null;
+    return (
+      <CodeMirror
+        basicSetup={{ lineNumbers: false, foldGutter: false }}
+        theme={[
+          theme,
+          ...(themeMode === 'dark'
+            ? [syntaxHighlighting(oneDarkHighlightStyle)]
+            : [syntaxHighlighting(defaultHighlightStyle)]),
+          // todo(thure): All but one rule here apply to both themes; rename or refactor.
+          syntaxHighlighting(markdownDarkHighlighting)
+        ]}
+        ref={forwardedRef}
+        value={ytext.toString()}
+        extensions={[
+          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
+          yCollab(ytext, awareness)
+        ]}
+      />
+    );
   }
-
-  return (
-    <CodeMirror
-      value={ytext.toString()}
-      extensions={[markdown({ base: markdownLanguage, codeLanguages: languages }), yCollab(ytext, awareness)]}
-    />
-  );
-};
+);
