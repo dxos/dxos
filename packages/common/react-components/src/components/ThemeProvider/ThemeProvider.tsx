@@ -20,22 +20,30 @@ import { TranslationsProvider, TranslationsProviderProps } from './TranslationsP
 
 export type ThemeVariant = 'app' | 'os';
 
+export type ThemeMode = 'light' | 'dark';
+
 export interface ThemeContextValue {
   themeVariant: ThemeVariant;
-  rootElevation?: Elevation;
-  rootDensity?: Density;
-  hasIosKeyboard?: boolean;
+  // todo(thure): currently `themeMode` doesn’t do anything it’s just a place to persist the mode; determine how best to handle this given our Tailwind setup which selects tokens using the `dark` classname.
+  themeMode: ThemeMode;
+  hasIosKeyboard: boolean;
 }
 
 export type ThemeProviderProps = PropsWithChildren<{
   tooltipProviderProps?: Omit<TooltipProviderProps, 'children'>;
   toastProviderProps?: Omit<ToastProviderProps, 'children'>;
   toastViewportProps?: Omit<ToastViewportProps, 'children'>;
+  rootElevation?: Elevation;
+  rootDensity?: Density;
 }> &
   Omit<TranslationsProviderProps, 'children'> &
   Partial<ThemeContextValue>;
 
-export const ThemeContext = createContext<ThemeContextValue>({ themeVariant: 'app' });
+export const ThemeContext = createContext<ThemeContextValue>({
+  themeVariant: 'app',
+  themeMode: 'dark',
+  hasIosKeyboard: false
+});
 
 export const ThemeProvider = ({
   children,
@@ -46,11 +54,12 @@ export const ThemeProvider = ({
   resourceExtensions,
   appNs,
   themeVariant = 'app',
+  themeMode = 'dark',
   rootElevation = 'base',
   rootDensity = 'coarse'
 }: ThemeProviderProps) => {
   return (
-    <ThemeContext.Provider value={{ themeVariant, hasIosKeyboard: hasIosKeyboard() }}>
+    <ThemeContext.Provider value={{ themeVariant, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider
         {...{
           fallback,

@@ -3,7 +3,7 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { syntaxHighlighting } from '@codemirror/language';
+import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
@@ -12,6 +12,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { Space, Text } from '@dxos/client';
+import { useThemeContext } from '@dxos/react-components';
 
 import { cursorColor, SpaceProvider } from '../../yjs';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
@@ -32,6 +33,7 @@ const theme = EditorView.theme(markdownDarktheme);
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(
   ({ text, space }, forwardedRef) => {
     const ytext = text?.doc?.getText('md');
+    const { themeMode } = useThemeContext();
 
     const { awareness } = useMemo(() => {
       if (!space || !text?.doc) {
@@ -55,7 +57,14 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
     return (
       <CodeMirror
         basicSetup={{ lineNumbers: false, foldGutter: false }}
-        theme={[theme, syntaxHighlighting(oneDarkHighlightStyle), syntaxHighlighting(markdownDarkHighlighting)]}
+        theme={[
+          theme,
+          ...(themeMode === 'dark'
+            ? [syntaxHighlighting(oneDarkHighlightStyle)]
+            : [syntaxHighlighting(defaultHighlightStyle)]),
+          // todo(thure): All but one rule here apply to both themes; rename or refactor.
+          syntaxHighlighting(markdownDarkHighlighting)
+        ]}
         ref={forwardedRef}
         value={ytext.toString()}
         extensions={[
