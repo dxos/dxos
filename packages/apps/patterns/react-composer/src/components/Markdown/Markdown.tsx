@@ -3,22 +3,19 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
-import { styleTags, tags, Tag } from '@lezer/highlight';
-import { MarkdownConfig } from '@lezer/markdown';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import get from 'lodash.get';
 import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { Space, Text } from '@dxos/client';
 
-import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 import { cursorColor, SpaceProvider } from '../../yjs';
-import { highlighting as darkHighlightingBase, theme as darkThemeBase, cursor as darkCursor } from './codeMirrorDark';
+import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
+import { markdownTagsExtension } from './markdownTags';
 
 export type MarkdownComposerSlots = {};
 
@@ -30,107 +27,7 @@ export type MarkdownComposerProps = {
 
 export type MarkdownComposerRef = ReactCodeMirrorRef;
 
-const theme = EditorView.theme({
-  ...darkThemeBase,
-  '&.cm-focused': {
-    outline: 'none'
-  },
-  '& .cm-line': {
-    paddingInline: '1.5rem'
-  },
-  '& .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa'
-  },
-  '.dark & .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.500', '#00ffff') + 'aa'
-  },
-  '& .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.100', '#00ffff') + '44'
-  },
-  '.dark & .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44'
-  },
-  '& .cm-cursor': {
-    borderLeftColor: 'black'
-  },
-  '.dark & .cm-cursor': {
-    borderLeftColor: darkCursor
-  },
-  '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(',')
-  },
-  '& .cm-activeLine': {
-    backgroundColor: 'transparent'
-  },
-  '.dark & .cm-activeLine': {
-    backgroundColor: 'transparent'
-  }
-});
-
-const markdownTags = {
-  headingMark: Tag.define(),
-  quoteMark: Tag.define(),
-  listMark: Tag.define(),
-  linkMark: Tag.define(),
-  emphasisMark: Tag.define(),
-  codeMark: Tag.define(),
-  codeText: Tag.define(),
-  inlineCode: Tag.define(),
-  url: Tag.define(),
-  linkReference: Tag.define(),
-  linkLabel: Tag.define()
-};
-
-const markdownTagsExtension: MarkdownConfig = {
-  props: [
-    styleTags({
-      HeaderMark: markdownTags.headingMark,
-      QuoteMark: markdownTags.quoteMark,
-      ListMark: markdownTags.listMark,
-      LinkMark: markdownTags.linkMark,
-      EmphasisMark: markdownTags.emphasisMark,
-      CodeMark: markdownTags.codeMark,
-      CodeText: markdownTags.codeText,
-      InlineCode: markdownTags.inlineCode,
-      URL: markdownTags.url,
-      LinkReference: markdownTags.linkReference,
-      LinkLabel: markdownTags.linkLabel
-    })
-  ]
-};
-
-const markdownHighlightStyle = HighlightStyle.define(
-  [
-    ...darkHighlightingBase,
-    {
-      tag: [
-        markdownTags.headingMark,
-        markdownTags.quoteMark,
-        markdownTags.listMark,
-        markdownTags.linkMark,
-        markdownTags.emphasisMark,
-        markdownTags.codeMark,
-        markdownTags.url,
-        markdownTags.linkLabel,
-        markdownTags.linkReference,
-        tags.processingInstruction,
-        tags.meta
-      ],
-      class: mark
-    },
-    { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
-    { tag: tags.heading1, class: heading[1] },
-    { tag: tags.heading2, class: heading[2] },
-    { tag: tags.heading3, class: heading[3] },
-    { tag: tags.heading4, class: heading[4] },
-    { tag: tags.heading5, class: heading[5] },
-    { tag: tags.heading6, class: heading[6] },
-    { tag: tags.strikethrough, class: strikethrough },
-    { tag: tags.emphasis, class: italic },
-    { tag: tags.strong, class: bold }
-  ],
-  { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } }
-);
+const theme = EditorView.theme(markdownDarktheme);
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(
   ({ text, space }, forwardedRef) => {
@@ -158,7 +55,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
     return (
       <CodeMirror
         basicSetup={{ lineNumbers: false, foldGutter: false }}
-        theme={[theme, syntaxHighlighting(oneDarkHighlightStyle), syntaxHighlighting(markdownHighlightStyle)]}
+        theme={[theme, syntaxHighlighting(oneDarkHighlightStyle), syntaxHighlighting(markdownDarkHighlighting)]}
         ref={forwardedRef}
         value={ytext.toString()}
         extensions={[
