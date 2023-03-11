@@ -13,9 +13,5 @@ message ComposerDocument {
 
   string title = 1;
   dxos.schema.Text content = 2;
-  enum TEXT_INTENTION {
-    markdown = 0;
-    richtext = 2;
-  };
-  TEXT_INTENTION textintention = 3;
+  string textintention = 3;
 }

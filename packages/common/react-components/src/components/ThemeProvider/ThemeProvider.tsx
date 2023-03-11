@@ -25,8 +25,8 @@ export type ThemeMode = 'light' | 'dark';
 export interface ThemeContextValue {
   themeVariant: ThemeVariant;
   // todo(thure): currently `themeMode` doesn’t do anything it’s just a place to persist the mode; determine how best to handle this given our Tailwind setup which selects tokens using the `dark` classname.
-  themeMode: ThemeMode;
-  hasIosKeyboard: boolean;
+  themeMode?: ThemeMode;
+  hasIosKeyboard?: boolean;
 }
 
 export type ThemeProviderProps = PropsWithChildren<{
