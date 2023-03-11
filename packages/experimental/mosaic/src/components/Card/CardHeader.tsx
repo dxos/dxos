@@ -12,6 +12,9 @@ export type CardHeaderSlots = {
   root?: {
     className?: string;
   };
+  header?: {
+    className?: string;
+  };
 };
 
 export type CardHeaderProps = {
@@ -25,10 +28,14 @@ export type CardHeaderProps = {
 export const CardHeader = ({ slots = {}, gutter, icon, action, children }: CardHeaderProps) => {
   return (
     <div
-      className={mx('flex w-full h-[40px] overflow-hidden items-center text-lg', styles.heading, slots.root?.className)}
+      className={mx(
+        'flex w-full h-[40px] overflow-hidden items-center text-lg px-2',
+        styles.heading,
+        slots.root?.className
+      )}
     >
-      {icon && <Icon>{icon}</Icon>}
-      <div className={mx('w-full truncate', gutter && !icon && 'ml-[40px]')}>{children}</div>
+      {(gutter || icon) && <Icon>{icon}</Icon>}
+      <div className={mx('px-2 w-full truncate', slots.header?.className)}>{children}</div>
       {action && <Icon>{action}</Icon>}
     </div>
   );

@@ -36,8 +36,7 @@ const styles = {
 
 const Test = () => {
   return (
-    <div className='flex flex-col w-full md:w-[390px] m-4 space-y-4'>
-      <div />
+    <div className='flex flex-col w-full md:w-[390px] m-4 space-y-8'>
       <DensityProvider density='fine'>
         <Card slots={{ root: { className: 'text-sm' } }}>
           <CardHeader
@@ -74,23 +73,20 @@ const Test = () => {
         </Card>
 
         <Card>
-          <CardHeader
-            slots={{ root: { className: styles.header } }}
-            icon={<User className={getSize(6)} />}
-            action={<DotsThree className={getSize(6)} />}
-          >
+          <CardHeader icon={<User className={getSize(6)} />} action={<DotsThree className={getSize(6)} />}>
             {faker.lorem.sentence()}
           </CardHeader>
+          <CardContent gutter>{faker.lorem.sentences(2)}</CardContent>
           <CardContent gutter>{faker.internet.email()}</CardContent>
           <CardContent gutter>{faker.phone.phoneNumber()}</CardContent>
-          <CardActions gutter>
-            <Button variant='ghost'>OK</Button>
-          </CardActions>
         </Card>
 
         <Card>
-          <CardHeader gutter>{faker.name.findName()}</CardHeader>
-          <CardContent gutter>{faker.internet.email()}</CardContent>
+          <CardHeader action={<DotsThree className={getSize(6)} />}>{faker.lorem.sentence()}</CardHeader>
+          <CardContent>{faker.lorem.sentences(5)}</CardContent>
+          <CardActions>
+            <Button variant='ghost'>OK</Button>
+          </CardActions>
         </Card>
       </DensityProvider>
     </div>

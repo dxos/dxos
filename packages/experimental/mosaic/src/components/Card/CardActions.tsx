@@ -6,6 +6,8 @@ import React, { ReactNode } from 'react';
 
 import { mx } from '@dxos/react-components';
 
+import { Icon } from './util';
+
 export type CardActionsSlots = {
   root?: {
     className?: string;
@@ -19,5 +21,10 @@ export type CardActionsProps = {
 };
 
 export const CardActions = ({ slots = {}, gutter, children }: CardActionsProps) => {
-  return <div className={mx('flex h-[40px] space-x-4', gutter && 'pl-[40px]', slots.root?.className)}>{children}</div>;
+  return (
+    <div className={mx('flex h-[40px] px-2', slots.root?.className)}>
+      {gutter && <Icon />}
+      <div className={mx('flex h-[40px] space-x-4', slots.root?.className)}>{children}</div>
+    </div>
+  );
 };

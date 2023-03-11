@@ -45,23 +45,52 @@ export const defaultRoundedSlots: ScrollContainerSlots = {
 
 export type ScrollContainerProps = {
   slots?: ScrollContainerSlots;
+  vertical?: boolean;
+  horizontal?: boolean;
   children?: ReactNode;
 };
 
 // TODO(burdon): Currently vertical only (NOTE: Require TW 3.2 for data-attribute variants per radix demo).
-export const ScrollContainer = ({ slots = defaultSlots, children }: ScrollContainerProps) => {
+
+/**
+ * https://www.radix-ui.com/docs/primitives/components/scroll-area
+ */
+export const ScrollContainer = ({
+  slots = defaultSlots,
+  vertical = false,
+  horizontal = false,
+  children
+}: ScrollContainerProps) => {
   return (
     <ScrollArea.Root className={mx('flex w-full overflow-hidden', slots.root?.className)}>
       <ScrollArea.Viewport className={mx('w-full h-full', slots.viewport?.className)}>{children}</ScrollArea.Viewport>
-      {/* TODO(burdon): Handle horizontal scrolling. */}
-      <ScrollArea.Scrollbar
-        className={mx(
-          'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
-          slots.scrollbar?.className
-        )}
-      >
-        <ScrollArea.Thumb className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)} />
-      </ScrollArea.Scrollbar>
+      {vertical && (
+        <ScrollArea.Scrollbar
+          orientation='vertical'
+          className={mx(
+            'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
+            slots.scrollbar?.className
+          )}
+        >
+          <ScrollArea.Thumb
+            className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
+          />
+        </ScrollArea.Scrollbar>
+      )}
+      {/* TODO(burdon): Incorrect range. */}
+      {horizontal && (
+        <ScrollArea.Scrollbar
+          orientation='horizontal'
+          className={mx(
+            'flex h-1 select-none touch-none transition-colors duration-[160ms] ease-out',
+            slots.scrollbar?.className
+          )}
+        >
+          <ScrollArea.Thumb
+            className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
+          />
+        </ScrollArea.Scrollbar>
+      )}
     </ScrollArea.Root>
   );
 };

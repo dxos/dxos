@@ -23,13 +23,16 @@ export type CardProps = {
   children?: ReactNode;
 };
 
+/**
+ * No padding since Headers, Action and Content sections should span entire width.
+ */
 export const Card = ({ slots = {}, children }: CardProps) => {
   return (
     <div
       className={mx(
-        'flex flex-col w-full max-w-[400px] overflow-hidden divide-y rounded border',
+        'flex flex-col w-full max-w-[400px] overflow-hidden',
         styles.bg,
-        styles.border,
+        styles.frame,
         styles.body,
         styles.divide,
         slots.root?.className
