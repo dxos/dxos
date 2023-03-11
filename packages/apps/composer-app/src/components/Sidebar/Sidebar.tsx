@@ -4,10 +4,11 @@
 
 import {
   ArrowLineLeft,
+  Article,
+  ArticleMedium,
   Circle,
   DotsThreeVertical,
   EyeSlash,
-  FileText,
   Intersect,
   PaperPlaneTilt,
   Planet,
@@ -52,6 +53,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
   const { t } = useTranslation('composer');
   const { docKey } = useParams();
   const active = docKey === document.id;
+  const Icon = document.textintention === 'markdown' ? ArticleMedium : Article;
   return (
     <TreeItem>
       <TreeItemHeading asChild>
@@ -59,7 +61,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
           to={linkTo}
           className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
         >
-          <FileText weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
+          <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           <ListItemEndcap className='is-6 flex items-center'>
             <Circle
@@ -85,6 +87,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
     document.content = new Text(); // TODO(burdon): Make automatic?
+    document.textintention = 'markdown';
     return navigate(getPath(space, document));
   }, [space, navigate]);
 
