@@ -262,6 +262,8 @@ message Trip {
   // Updated by bot.
   // TODO(burdon): Ephemeral query?
   repeated Booking bookings = 11;
+
+  TravelProfile profile = 20;
 }
 
 //
@@ -274,6 +276,12 @@ message Trip {
 message Booking {
   repeated Ticket tickets = 1;
   Transaction transaction = 2;
+}
+
+message TravelProfile {
+  Contact contact = 1;
+  repeated string carriers = 2;
+  string cabin = 3;
 }
 
 message Ticket {

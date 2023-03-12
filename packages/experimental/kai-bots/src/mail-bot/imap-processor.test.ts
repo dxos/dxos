@@ -10,8 +10,8 @@ import { getConfig, getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
 
 // TODO(burdon): Set-up in-memory test for CI.
-describe('Mail', () => {
-  test.skip('IMAP', async () => {
+describe('IMAP processor', () => {
+  test.skip('basic', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
     assert(config);
 

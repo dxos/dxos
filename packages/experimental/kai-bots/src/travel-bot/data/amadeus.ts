@@ -46,7 +46,7 @@ export class Amadeus {
   }
 
   async flights(query: FlightQuery): Promise<FlightOffer[]> {
-    log('flights', { query });
+    log.info('flights', { query });
     const { data } = await this._api.shopping.flightOffersSearch.post(JSON.stringify(query));
     log('result', { data: data.length });
     return data;

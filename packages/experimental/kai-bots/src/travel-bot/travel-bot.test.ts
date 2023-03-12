@@ -10,16 +10,19 @@ import { debounce, Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { Trip } from '@dxos/kai-types';
+import { TravelProfile, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { loadJson } from '../util';
 import { TravelBot } from './travel-bot';
 
+// TODO(burdon): Logging config?
+
 describe('TravelBot', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
+    // TODO(burdon): Config sets up network!
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
@@ -53,31 +56,37 @@ describe('TravelBot', () => {
         }, 100)
       );
 
+      const profile: TravelProfile = {
+        cabin: 'BUSINESS',
+        carriers: ['AA', 'AF', 'LH', 'SQ']
+      };
+
       await space.db.add(
         new Trip({
           name: '2023-Q2 Europe',
+          profile,
           destinations: [
             {
               address: {
-                cityCode: 'JFK' // TODO(burdon): NYC; Home from options.
+                cityCode: 'NYC' // TODO(burdon): From user profile.
               }
             },
             {
               dateStart: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' }),
               address: {
-                cityCode: 'BER'
+                cityCode: 'MUC'
               }
             },
             {
               dateStart: formatISO9075(add(Date.now(), { days: 10 }), { representation: 'date' }),
               address: {
-                cityCode: 'CDG'
+                cityCode: 'BER'
               }
             },
             {
               dateStart: formatISO9075(add(Date.now(), { days: 18 }), { representation: 'date' }),
               address: {
-                cityCode: 'JFK'
+                cityCode: 'NYC'
               }
             }
           ]
@@ -95,5 +104,6 @@ describe('TravelBot', () => {
     }
 
     await bot.stop();
+    await client.destroy();
   });
 });

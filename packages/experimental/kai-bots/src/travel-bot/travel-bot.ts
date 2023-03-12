@@ -47,81 +47,7 @@ export class TravelBot extends Bot {
             return;
           }
 
-          // TODO(burdon): Validation checks.
-          const offers = await this._amadeus!.flights(
-            createFlightQuery({
-              currencyCode: 'USD',
-              originDestinations: trip.destinations.slice(1).map((destination, i) => {
-                const previous = trip.destinations[i];
-                assert(previous.address?.cityCode);
-                assert(destination.address?.cityCode);
-
-                return {
-                  id: String(i + 1),
-                  originLocationCode: previous.address.cityCode,
-                  destinationLocationCode: destination.address.cityCode,
-                  departureDateTimeRange: {
-                    // TODO(burdon): Range?
-                    date: formatISO9075(new Date(destination.dateStart!), { representation: 'date' })
-                  }
-                };
-              }),
-
-              searchCriteria: {
-                // TODO(burdon): Lower limit with direct/carrier constraints.
-                maxFlightOffers: 5,
-                // TODO(burdon): From user travel preferences.
-                flightFilters: {
-                  cabinRestrictions: [
-                    {
-                      cabin: 'BUSINESS',
-                      coverage: 'MOST_SEGMENTS',
-                      originDestinationIds: trip.destinations.slice(1).map((_, i) => String(i + 1))
-                    }
-                  ],
-                  carrierRestrictions: {
-                    includedCarrierCodes: ['AA', 'AF']
-                  }
-                }
-              }
-            })
-          );
-
-          // Each offer represents a potential booking.
-          offers.forEach((offer) => {
-            // TODO(burdon): Filter offers (e.g., all itineraries are direct). By duration.
-            // TODO(burdon): Upgrade JSON to object.
-            const ticket: Ticket = {
-              source: {
-                vendor: offer.source,
-                guid: offer.id
-              },
-
-              itineraries: offer.itineraries.map((itinerary) => ({
-                segments: itinerary.segments.map((segment) => ({
-                  departure: {
-                    iataCode: segment.departure.iataCode,
-                    at: segment.departure.at
-                  },
-                  arrival: {
-                    iataCode: segment.arrival.iataCode,
-                    at: segment.arrival.at
-                  },
-                  duration: segment.duration,
-                  carrier: segment.carrierCode,
-                  number: segment.number
-                }))
-              }))
-            };
-
-            trip.bookings.push({
-              tickets: [ticket],
-              transaction: {
-                currency: offer.price.currency,
-                total: offer.price.total
-              }
-            });
-          });
+          await this.updateTrip(trip);
         }
       })
     );
@@ -129,5 +55,86 @@ export class TravelBot extends Bot {
 
   override async onStop() {
     this._subscription?.();
+  }
+
+  // TODO(burdon): Factor out.
+  async updateTrip(trip: Trip) {
+    const destinations = trip.destinations.slice(1);
+    const offers = await this._amadeus!.flights(
+      createFlightQuery({
+        currencyCode: 'USD',
+        originDestinations: destinations.map((destination, i) => {
+          const previous = trip.destinations[i];
+          assert(previous.address?.cityCode);
+          assert(destination.address?.cityCode);
+
+          return {
+            id: String(i + 1),
+            originLocationCode: previous.address.cityCode,
+            destinationLocationCode: destination.address.cityCode,
+            departureDateTimeRange: {
+              // TODO(burdon): Range?
+              date: formatISO9075(new Date(destination.dateStart!), { representation: 'date' })
+            }
+          };
+        }),
+
+        searchCriteria: {
+          // TODO(burdon): Lower limit with direct/carrier constraints.
+          maxFlightOffers: 8,
+          flightFilters: {
+            cabinRestrictions: trip.profile?.cabin
+              ? [
+                  {
+                    cabin: trip.profile.cabin,
+                    originDestinationIds: destinations.map((_, i) => String(i + 1))
+                  }
+                ]
+              : [],
+            carrierRestrictions: {
+              // TODO(burdon): Echo array coerced to array of objects.
+              // https://www.iata.org/en/about/members/airline-list
+              includedCarrierCodes: trip.profile?.carriers?.map((carrier) => String(carrier))
+            }
+          }
+        }
+      })
+    );
+
+    // Each offer represents a potential booking.
+    offers.forEach((offer) => {
+      // TODO(burdon): Filter offers (e.g., all itineraries are direct). By duration.
+      // TODO(burdon): Upgrade JSON to object.
+      const ticket: Ticket = {
+        source: {
+          vendor: offer.source,
+          guid: offer.id
+        },
+
+        itineraries: offer.itineraries.map((itinerary) => ({
+          segments: itinerary.segments.map((segment) => ({
+            departure: {
+              iataCode: segment.departure.iataCode,
+              at: segment.departure.at
+            },
+            arrival: {
+              iataCode: segment.arrival.iataCode,
+              at: segment.arrival.at
+            },
+            duration: segment.duration,
+            carrier: segment.carrierCode,
+            number: segment.number
+          }))
+        }))
+      };
+
+      trip.bookings.push({
+        tickets: [ticket],
+        transaction: {
+          currency: offer.price.currency,
+          total: offer.price.total
+        }
+      });
+    });
   }
 }

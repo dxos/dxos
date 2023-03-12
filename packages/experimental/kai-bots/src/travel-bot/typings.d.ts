@@ -70,7 +70,7 @@ declare module 'amadeus' {
       maxFlightOffers?: number;
       flightFilters?: {
         cabinRestrictions?: {
-          cabin?: 'ECONOMY' | 'BUSINESS' | 'FIRST';
+          cabin?: string; // 'ECONOMY' | 'BUSINESS' | 'FIRST';
           coverage?: 'MOST_SEGMENTS';
           originDestinationIds: string[];
         }[];
@@ -93,6 +93,7 @@ declare module 'amadeus' {
 
     itineraries: {
       duration: string; // PT9H40M
+
       // Multiple segments if not-direct.
       segments: {
         id: string; // TODO(burdon): Reference originDestinations?
