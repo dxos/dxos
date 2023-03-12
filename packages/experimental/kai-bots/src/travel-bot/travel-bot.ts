@@ -35,27 +35,21 @@ export class TravelBot extends Bot {
     const stacks = this.space.db.query(Trip.filter());
     this._subscription = stacks.subscribe(
       // TODO(burdon): Remove debounce once fixed.
-      debounce(async ({ objects: itineraries }) => {
-        log.info('updated', { objects: itineraries.length });
+      debounce(async ({ objects: trips }) => {
+        log.info('updated', { objects: trips.length });
         if (this._count++ > 0) {
           log.info('skipped', this._count);
           return;
         }
 
-        for (const itinerary of itineraries) {
-          // Skip if already updated.
-          // if (itinerary.bookings.length) {
-          //   return;
-          // }
-
-          // TODO(burdon): Called multiple times.
+        for (const trip of trips) {
           // TODO(burdon): Factor out mapping.
           // TODO(burdon): Validation checks.
           const offers = await this._amadeus!.flights(
             createFlightQuery({
               currencyCode: 'USD',
-              originDestinations: itinerary.segments.slice(1).map((segment, i) => {
-                const previous = itinerary.segments[i];
+              originDestinations: trip.segments.slice(1).map((segment, i) => {
+                const previous = trip.segments[i];
                 assert(previous.destination?.code);
                 assert(segment.destination?.code);
 
@@ -64,6 +58,7 @@ export class TravelBot extends Bot {
                   originLocationCode: previous.destination.code,
                   destinationLocationCode: segment.destination.code,
                   departureDateTimeRange: {
+                    // TODO(burdon): Range?
                     date: formatISO9075(new Date(segment.dateStart!), { representation: 'date' })
                   }
                 };
@@ -84,19 +79,18 @@ export class TravelBot extends Bot {
 
           // TODO(burdon): Able to promote POJOs to objects?
           //  E.g., POJOs returned as results from Amadeus; convert into ticket when accepted.
-          const tickets: Trip.Booking['tickets'] = [];
           offers.forEach((offer) => {
-            console.log('>>>>>>>>>>>>', JSON.stringify(offer, undefined, 2));
-
             // TODO(burdon): Check all itineraries are direct only.
 
             // TODO(burdon): THINK THROUGH SCHEMA: SIMPLIFIED VERSION OF AMADEUS.
             //  - E.g., Booking may have multiple legs, people, etc.
             //  - Trip has different types of bookings.
 
-            for (const { segments } of offer.itineraries) {
+            for (const itinerary of offer.itineraries) {
+              const { segments } = itinerary;
               if (segments.length === 1) {
                 const segment = segments[0];
+                const tickets: Trip.Booking['tickets'] = [];
                 tickets.push({
                   source: {
                     vendor: offer.source,
@@ -107,18 +101,14 @@ export class TravelBot extends Bot {
                   depart: segment.departure.at,
                   arrive: segment.arrival.at,
                   carrier: segment.carrierCode,
-                  number: segment.number,
-                  transaction: {
-                    total: offer.price.total
-                  }
+                  number: segment.number
+                  // transaction: {
+                  //   total: offer.price.total
+                  // }
                 });
               }
             }
           });
-
-          if (tickets.length) {
-            itinerary.bookings.push({ tickets });
-          }
         }
       })
     );

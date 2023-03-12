@@ -275,13 +275,13 @@ message Trip {
 
     // TODO(burdon): Keys vs. references (e.g., if object not created yet).
     Contact passenger = 30;
-    Transaction transaction = 31;
   }
 
   // TODO(burdon): Plane, Hotel, Car, etc.
   // TODO(burdon): Multiple people.
   message Booking {
     repeated Ticket tickets = 1;
+    Transaction transaction = 2;
   }
 
   message Segment {
