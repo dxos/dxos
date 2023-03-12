@@ -4,7 +4,7 @@
 
 import { Client, ClientServices, Config, PublicKey, Space } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
+import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -117,6 +117,10 @@ const createBot = (bot?: string): Bot => {
 
     case 'dxos.module.bot.store': {
       return new StoreBot();
+    }
+
+    case 'dxos.module.bot.travel': {
+      return new TravelBot();
     }
 
     default: {

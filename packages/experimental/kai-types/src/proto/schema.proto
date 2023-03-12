@@ -4,6 +4,10 @@
 
 syntax = "proto3";
 
+// TODO(burdon): GraphQL?
+// TODO(burdon): Handle multiple schema files.
+// TODO(burdon): Move directory to dxos/experimental/kai
+
 import "dxos/schema.proto";
 
 package dxos.experimental.kai;
@@ -12,9 +16,10 @@ package dxos.experimental.kai;
 // Types
 //
 
-message LatLng {
-  fixed32 lat = 1;
-  fixed32 lng = 2;
+message Geolocation {
+  int32 radius = 1;
+  fixed32 lat = 2;
+  fixed32 lng = 3;
 }
 
 message Address {
@@ -22,7 +27,7 @@ message Address {
   string city = 2;
   string state = 3;
   string zip = 4;
-  LatLng coordinates = 5;
+  Geolocation coordinates = 5;
 }
 
 //
@@ -219,4 +224,104 @@ message Note {
   string title = 1;
   dxos.schema.Text content = 2;
   string color = 3;
+}
+
+// TODO(burdon): Different namespace.
+
+//
+// Travel Itinerary
+//
+message Itinerary {
+  option (object) = true;
+
+  // TODO(burdon): Counter party, etc.
+  message Transaction {
+    option (object) = true;
+
+    // TODO(burdon): Enum.
+//    enum Type {
+//      PENDING = 0;
+//      RESERVED = 1;
+//      COMPLETE = 2;
+//    }
+
+//    Type type = 1;
+    string date = 2;
+    string currency = 3;
+    string price = 4;
+  }
+
+  message Location {
+    option (object) = true;
+
+//    enum Type {
+//      NULL = 0;
+//      AIRPORT = 1; // IATA code.
+//      SEAPORT = 2;
+//      SPACEPORT = 3;
+//      TRAIN_STATION = 4;
+//    }
+
+//    Type type = 1;
+    string code = 2;
+    string city = 3;
+    Geolocation latlng = 4;
+    string timezone = 5;
+  }
+
+  // TODO(burdon): Generalize to Trains, Ferries, etc.
+  message Carrier {
+    option (object) = true;
+
+//    enum Type {
+//      NULL = 0;
+//      AIRLINE = 1;
+//    }
+
+//    Type type = 1;
+    string name = 2;
+    string code = 3; // IATA 2-letter code.
+  }
+
+  // TODO(burdon): Tickets and Segments are semi-independent.
+  //  Segments above are the request; Tickets are "results".
+  message Ticket {
+    option (object) = true;
+
+//    enum Type {
+//      NULL = 0;
+//      AIRLINE = 1;
+//    }
+
+//    Type type = 1;
+    Location origin = 2;
+    Location destination = 3;
+    // TODO(burdon): With ISO TZ.
+    string depart = 4;
+    string arrive = 5;
+
+    Carrier carrier = 10;
+    Contact passenger = 11;
+    Transaction transaction = 12;
+  }
+
+  // TODO(burdon): Plane, Hotel, Car, etc.
+  // TODO(burdon): Multiple people.
+  message Booking {
+    repeated Ticket tickets = 1;
+  }
+
+  message Segment {
+    option (object) = true; // TODO(burdon): Remove.
+
+    Location location = 1;
+    string date_start = 2;
+    string date_end = 3;
+  }
+
+  string title = 1;
+  string date_start = 2;
+  string date_end = 3;
+  repeated Segment segments = 4;
+  repeated Booking bookings = 5;
 }
