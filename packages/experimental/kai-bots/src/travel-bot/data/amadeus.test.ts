@@ -4,26 +4,19 @@
 
 import { FlightOffer, FlightQuery } from 'amadeus';
 import { add, formatISO9075 } from 'date-fns';
-import faker from 'faker';
 
 import { Config } from '@dxos/config';
-import { beforeAll, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { getKey, loadJson } from '../../util';
-import { Airports, fetchAirports } from './airports';
 import { Amadeus } from './amadeus';
 
 describe('amadeus', () => {
   const config = new Config(loadJson(process.env.TEST_CONFIG!));
+
   const amadeus = new Amadeus({
     clientId: getKey(config, 'com.amadeus.client_id')!,
     clientSecret: getKey(config, 'com.amadeus.client_secret')!
-  });
-
-  let airports: Airports;
-
-  beforeAll(async () => {
-    airports = new Airports(await fetchAirports());
   });
 
   // TODO(burdon): Create CLI to output JSON (jq).
@@ -43,8 +36,8 @@ describe('amadeus', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('flights', async () => {
     // TODO(burdon): IATA code for NY airports (e.g., incl. EWR) is NYC?
-    const origin = faker.random.arrayElement(await airports.search(undefined, { code: 'JFK' }));
-    const destination = faker.random.arrayElement(await airports.search(undefined, { code: 'CDG' }));
+    const origin = 'JFK';
+    const destination = 'CDG';
 
     const query: FlightQuery = {
       sources: ['GDS'], // TODO(burdon): ???
@@ -52,16 +45,16 @@ describe('amadeus', () => {
       originDestinations: [
         {
           id: '1',
-          originLocationCode: origin.code,
-          destinationLocationCode: destination.code,
+          originLocationCode: origin,
+          destinationLocationCode: destination,
           departureDateTimeRange: {
             date: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' })
           }
         },
         {
           id: '2',
-          originLocationCode: destination.code,
-          destinationLocationCode: origin.code,
+          originLocationCode: destination,
+          destinationLocationCode: origin,
           departureDateTimeRange: {
             date: formatISO9075(add(Date.now(), { days: 14 }), { representation: 'date' })
           }

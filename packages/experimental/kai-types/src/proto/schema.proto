@@ -16,7 +16,7 @@ package dxos.experimental.kai;
 // Types
 //
 
-message Geolocation {
+message GeoLocation {
   int32 radius = 1;
   fixed32 lat = 2;
   fixed32 lng = 3;
@@ -27,7 +27,7 @@ message Address {
   string city = 2;
   string state = 3;
   string zip = 4;
-  Geolocation coordinates = 5;
+  GeoLocation coordinates = 5;
 }
 
 //
@@ -143,9 +143,11 @@ message DocumentStack {
   repeated Section sections = 3;
 }
 
+// TODO(burdon): Rename;
 // TODO(burdon): System type for external GUIDs.
 message Source {
-  string guid = 1; // TODO(burdon): `id` should be allowed on non-objects.
+  string vendor = 1;
+  string guid = 2; // TODO(burdon): `id` should be allowed on non-objects.
 }
 
 message Message {
@@ -158,6 +160,7 @@ message Message {
     Contact contact = 3;
   }
 
+  // TODO(burdon): Type.
   // TODO(burdon): Timestamp (across all objects).
   Source source = 1;
   string date = 2;
@@ -231,13 +234,11 @@ message Note {
 //
 // Travel Itinerary
 //
-message Itinerary {
+message Trip {
   option (object) = true;
 
   // TODO(burdon): Counter party, etc.
   message Transaction {
-    option (object) = true;
-
     // TODO(burdon): Enum.
 //    enum Type {
 //      PENDING = 0;
@@ -248,61 +249,33 @@ message Itinerary {
 //    Type type = 1;
     string date = 2;
     string currency = 3;
-    string price = 4;
-  }
-
-  message Location {
-    option (object) = true;
-
-//    enum Type {
-//      NULL = 0;
-//      AIRPORT = 1; // IATA code.
-//      SEAPORT = 2;
-//      SPACEPORT = 3;
-//      TRAIN_STATION = 4;
-//    }
-
-//    Type type = 1;
-    string code = 2;
-    string city = 3;
-    Geolocation latlng = 4;
-    string timezone = 5;
-  }
-
-  // TODO(burdon): Generalize to Trains, Ferries, etc.
-  message Carrier {
-    option (object) = true;
-
-//    enum Type {
-//      NULL = 0;
-//      AIRLINE = 1;
-//    }
-
-//    Type type = 1;
-    string name = 2;
-    string code = 3; // IATA 2-letter code.
+    string total = 4;
   }
 
   // TODO(burdon): Tickets and Segments are semi-independent.
   //  Segments above are the request; Tickets are "results".
   message Ticket {
-    option (object) = true;
-
 //    enum Type {
 //      NULL = 0;
 //      AIRLINE = 1;
 //    }
 
 //    Type type = 1;
-    Location origin = 2;
-    Location destination = 3;
-    // TODO(burdon): With ISO TZ.
-    string depart = 4;
-    string arrive = 5;
+    // TODO(burdon): Generalize external API IDs (e.g., for Mail).
+    Source source = 2;
 
-    Carrier carrier = 10;
-    Contact passenger = 11;
-    Transaction transaction = 12;
+    string origin = 10;
+    string destination = 11;
+    // TODO(burdon): With ISO TZ.
+    string depart = 12;
+    string arrive = 13;
+
+    string carrier = 20;
+    string number = 21;
+
+    // TODO(burdon): Keys vs. references (e.g., if object not created yet).
+    Contact passenger = 30;
+    Transaction transaction = 31;
   }
 
   // TODO(burdon): Plane, Hotel, Car, etc.
@@ -312,9 +285,12 @@ message Itinerary {
   }
 
   message Segment {
-    option (object) = true; // TODO(burdon): Remove.
+    message Destination {
+      string city = 1;
+      string code = 2;
+    }
 
-    Location location = 1;
+    Destination destination = 1;
     string date_start = 2;
     string date_end = 3;
   }
@@ -323,5 +299,8 @@ message Itinerary {
   string date_start = 2;
   string date_end = 3;
   repeated Segment segments = 4;
-  repeated Booking bookings = 5;
+
+  // Updated by bot.
+  // TODO(burdon): Ephemeral query?
+  repeated Booking bookings = 10;
 }

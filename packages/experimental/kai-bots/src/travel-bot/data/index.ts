@@ -3,3 +3,4 @@
 //
 
 export * from './airports';
+export * from './amadeus';

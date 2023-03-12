@@ -48,6 +48,8 @@ declare module 'amadeus' {
     sources: string[]; // GDS
     currencyCode?: string; // USD
 
+    // Legs: [originDestinations] => [itineraries[segments]]
+    // Maps onto array of itineraries, each of which may contain multiple segments (for non-direct flights).
     originDestinations: {
       id: string;
       originLocationCode: string;
@@ -67,7 +69,7 @@ declare module 'amadeus' {
     searchCriteria: {
       maxFlightOffers?: number;
       flightFilters?: {
-        cabinRestrictions: {
+        cabinRestrictions?: {
           cabin?: 'ECONOMY' | 'BUSINESS' | 'FIRST';
           coverage?: 'MOST_SEGMENTS';
           originDestinationIds: string[];
@@ -91,8 +93,9 @@ declare module 'amadeus' {
 
     itineraries: {
       duration: string; // PT9H40M
+      // Multiple segments if not-direct.
       segments: {
-        id: string;
+        id: string; // TODO(burdon): Reference originDestinations?
         numberOfStops: number;
         duration: string; // PT9H40M
         blacklistedInEU: boolean; // TODO(burdon): ???
@@ -115,22 +118,29 @@ declare module 'amadeus' {
           carrierCode: string;
         };
       }[];
+    }[];
 
-      price: {
-        currency: string;
-        total: string;
-        base: string;
-        fees: {
-          amount: string;
-          type: string;
-        }[];
-      };
+    price: {
+      currency: string;
+      total: string;
+      base: string;
+      fees: {
+        amount: string;
+        type: string;
+      }[];
+    };
 
-      pricingOptions: {
-        fareType: string[]; // PUBLISHED
-      };
+    pricingOptions: {
+      fareType: string[]; // PUBLISHED
+    };
 
-      validatingAirlineCodes: string[];
+    validatingAirlineCodes: string[];
+
+    travelerPricings: {
+      travelerId: string;
+      fareOption: string; // STANDARD
+      travelerType: string; // ADULT
+      // TODO(burdon): price (factor out type above).
     }[];
   };
 

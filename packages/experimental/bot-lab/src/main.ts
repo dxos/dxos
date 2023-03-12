@@ -55,6 +55,7 @@ const start = async () => {
     services: fromHost(config)
   });
 
+  // TODO(burdon): When is the identity created?
   await client.initialize();
   log.info('client initialized', { identity: client.halo.identity?.identityKey });
 

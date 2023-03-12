@@ -16,27 +16,18 @@ import { KaiBot } from './kai-bot';
 describe('KaiBot', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('basic', async () => {
-    // TODO(burdon): Use Config util.
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
-
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
+    await client.halo.createIdentity();
     const space = await client.echo.createSpace();
 
     const bot = new KaiBot();
     await bot.init(client.config, space);
+    await bot.start();
 
     {
       const trigger = new Trigger();
-      await bot.start();
-
-      const organization = await space.db.add(new Organization({ name: 'backed.vc' }));
-      const contact = await space.db.add(new Contact({ name: 'alex brunicki', employer: organization }));
-      const stack = await space.db.add(new DocumentStack({ title: contact.name, subjectId: contact.id }));
-
-      console.log(JSON.stringify(stack, undefined, 2));
-      console.log(contact.employer.name); // TODO(burdon): This isn't stringified above.
-
       const query = space.db.query(DocumentStack.filter());
       const unsubscribe = query.subscribe(({ objects: stacks }) => {
         expect(stacks).to.have.length(1);
@@ -50,11 +41,16 @@ describe('KaiBot', () => {
         trigger.wake();
       });
 
+      {
+        const organization = await space.db.add(new Organization({ name: 'backed.vc' }));
+        const contact = await space.db.add(new Contact({ name: 'alex brunicki', employer: organization }));
+        await space.db.add(new DocumentStack({ title: contact.name, subjectId: contact.id }));
+      }
+
       await trigger.wait();
       unsubscribe();
-
-      await bot.stop();
-      console.log('!!!'); // TODO(burdon): Test gets here but doesn't exit!
     }
+
+    await bot.stop();
   });
 });
