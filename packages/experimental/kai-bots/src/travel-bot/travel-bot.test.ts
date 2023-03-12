@@ -3,6 +3,8 @@
 //
 
 import { add, formatISO9075 } from 'date-fns';
+import fs from 'fs';
+import { dirname } from 'path';
 
 import { debounce, Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -28,7 +30,7 @@ describe('TravelBot', () => {
     await bot.start();
 
     {
-      const trigger = new Trigger();
+      const trigger = new Trigger<Trip>();
 
       //
       // TODO(burdon): Called recursively since self-modified.
@@ -36,46 +38,57 @@ describe('TravelBot', () => {
       //  - But in general need async call-and-response pattern. Different objects?
       //
 
+      // TODO(burdon): Output input/output to tmp file to view.
+      // TODO(burdon): Auto-join bots.
+
       const query = space.db.query(Trip.filter());
       const unsubscribe = query.subscribe(
         // TODO(burdon): Remove debounce once fixed.
-        debounce(({ objects: itineraries }) => {
-          // TODO(burdon): Wait for bot to update.
-          if (itineraries[0].bookings.length) {
-            console.log('result', JSON.stringify(itineraries, undefined, 2));
-            trigger.wake();
+        debounce(({ objects: trips }) => {
+          const trip = trips[0];
+          if (trip && trip.bookings.length) {
+            trigger.wake(trip);
           }
         }, 100)
       );
 
-      {
-        await space.db.add(
-          new Trip({
-            segments: [
-              {
-                dateStart: formatISO9075(Date.now(), { representation: 'date' }),
-                destination: {
-                  code: 'JFK'
-                }
-              },
-              {
-                dateStart: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' }),
-                destination: {
-                  code: 'CDG'
-                }
-              },
-              {
-                dateStart: formatISO9075(add(Date.now(), { days: 14 }), { representation: 'date' }),
-                destination: {
-                  code: 'JFK'
-                }
+      await space.db.add(
+        new Trip({
+          name: '2023-Q2 Europe',
+          destinations: [
+            {
+              address: {
+                cityCode: 'JFK' // TODO(burdon): NYC; Home from options.
               }
-            ]
-          })
-        );
-      }
+            },
+            {
+              dateStart: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' }),
+              address: {
+                cityCode: 'BER'
+              }
+            },
+            {
+              dateStart: formatISO9075(add(Date.now(), { days: 10 }), { representation: 'date' }),
+              address: {
+                cityCode: 'CDG'
+              }
+            },
+            {
+              dateStart: formatISO9075(add(Date.now(), { days: 18 }), { representation: 'date' }),
+              address: {
+                cityCode: 'JFK'
+              }
+            }
+          ]
+        })
+      );
 
-      await trigger.wait();
+      const trip = await trigger.wait();
+
+      const outFile = '/tmp/dxos/kai-bots/travel-bot/text.json';
+      fs.mkdirSync(dirname(outFile), { recursive: true });
+      fs.writeFileSync(outFile, JSON.stringify({ trip }, undefined, 2));
+
       unsubscribe();
     }
 

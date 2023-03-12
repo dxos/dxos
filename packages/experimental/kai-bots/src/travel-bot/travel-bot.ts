@@ -7,7 +7,7 @@ import { formatISO9075 } from 'date-fns';
 
 import { debounce } from '@dxos/async';
 import { Subscription } from '@dxos/echo-schema';
-import { Trip } from '@dxos/kai-types';
+import { Ticket, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
 import { Bot } from '../bot';
@@ -48,24 +48,33 @@ export class TravelBot extends Bot {
           const offers = await this._amadeus!.flights(
             createFlightQuery({
               currencyCode: 'USD',
-              originDestinations: trip.segments.slice(1).map((segment, i) => {
-                const previous = trip.segments[i];
-                assert(previous.destination?.code);
-                assert(segment.destination?.code);
+              originDestinations: trip.destinations.slice(1).map((destination, i) => {
+                const previous = trip.destinations[i];
+                assert(previous.address?.cityCode);
+                assert(destination.address?.cityCode);
 
                 return {
                   id: String(i + 1),
-                  originLocationCode: previous.destination.code,
-                  destinationLocationCode: segment.destination.code,
+                  originLocationCode: previous.address.cityCode,
+                  destinationLocationCode: destination.address.cityCode,
                   departureDateTimeRange: {
                     // TODO(burdon): Range?
-                    date: formatISO9075(new Date(segment.dateStart!), { representation: 'date' })
+                    date: formatISO9075(new Date(destination.dateStart!), { representation: 'date' })
                   }
                 };
               }),
               searchCriteria: {
-                maxFlightOffers: 5, // TODO(burdon): Lower limit with direct/carrier constraints.
+                // TODO(burdon): Lower limit with direct/carrier constraints.
+                maxFlightOffers: 5,
+                // TODO(burdon): From user travel preferences.
                 flightFilters: {
+                  cabinRestrictions: [
+                    {
+                      cabin: 'BUSINESS',
+                      coverage: 'MOST_SEGMENTS',
+                      originDestinationIds: trip.destinations.slice(1).map((_, i) => String(i + 1))
+                    }
+                  ],
                   carrierRestrictions: {
                     includedCarrierCodes: ['AA', 'AF']
                   }
@@ -74,40 +83,40 @@ export class TravelBot extends Bot {
             })
           );
 
-          // TODO(burdon): Need tool to view JSON result as updated document.
-          // TODO(burdon): Auto-join bots.
-
-          // TODO(burdon): Able to promote POJOs to objects?
-          //  E.g., POJOs returned as results from Amadeus; convert into ticket when accepted.
+          // Each offer represents a potential booking.
           offers.forEach((offer) => {
-            // TODO(burdon): Check all itineraries are direct only.
+            // TODO(burdon): Filter offers (e.g., all itineraries are direct). By duration.
+            // TODO(burdon): Upgrade JSON to object.
+            const ticket: Ticket = {
+              source: {
+                vendor: offer.source,
+                guid: offer.id
+              },
 
-            // TODO(burdon): THINK THROUGH SCHEMA: SIMPLIFIED VERSION OF AMADEUS.
-            //  - E.g., Booking may have multiple legs, people, etc.
-            //  - Trip has different types of bookings.
-
-            for (const itinerary of offer.itineraries) {
-              const { segments } = itinerary;
-              if (segments.length === 1) {
-                const segment = segments[0];
-                const tickets: Trip.Booking['tickets'] = [];
-                tickets.push({
-                  source: {
-                    vendor: offer.source,
-                    guid: offer.id
+              itineraries: offer.itineraries.map((itinerary) => ({
+                segments: itinerary.segments.map((segment) => ({
+                  departure: {
+                    iataCode: segment.departure.iataCode,
+                    at: segment.departure.at
                   },
-                  origin: segment.departure.iataCode,
-                  destination: segment.arrival.iataCode,
-                  depart: segment.departure.at,
-                  arrive: segment.arrival.at,
+                  arrival: {
+                    iataCode: segment.arrival.iataCode,
+                    at: segment.arrival.at
+                  },
+                  duration: segment.duration,
                   carrier: segment.carrierCode,
                   number: segment.number
-                  // transaction: {
-                  //   total: offer.price.total
-                  // }
-                });
+                }))
+              }))
+            };
+
+            trip.bookings.push({
+              tickets: [ticket],
+              transaction: {
+                currency: offer.price.currency,
+                total: offer.price.total
               }
-            }
+            });
           });
         }
       })

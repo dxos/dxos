@@ -229,7 +229,9 @@ message Note {
   string color = 3;
 }
 
-// TODO(burdon): Different namespace.
+//
+// TODO(burdon): Different namespace/files.
+//
 
 //
 // Travel Itinerary
@@ -237,9 +239,80 @@ message Note {
 message Trip {
   option (object) = true;
 
-  // TODO(burdon): Counter party, etc.
-  message Transaction {
-    // TODO(burdon): Enum.
+  message Destination {
+    // TODO(burdon): Standardize with codes.
+    message Address {
+      string city = 1;
+      // https://en.wikipedia.org/wiki/IATA_airport_code
+      string city_code = 2;
+    }
+
+    string date_start = 1;
+    string date_end = 2;
+    Address address = 3;
+  }
+
+  string name = 1;
+  string date_start = 2;
+  string date_end = 3;
+
+  // TODO(burdon): Rename Leg? (Leg is slightly longer: e.g., Rome to Rio leg of round-the-world)
+  repeated Destination destinations = 10;
+
+  // Updated by bot.
+  // TODO(burdon): Ephemeral query?
+  repeated Booking bookings = 11;
+}
+
+//
+// TODO(burdon): Reuse low-level structs in ephemeral payloads (e.g., booking offers).
+//  - Then promote to objects once accepted?
+//
+
+// TODO(burdon): Plane, Hotel, Car, etc.
+// TODO(burdon): Multiple people.
+message Booking {
+  repeated Ticket tickets = 1;
+  Transaction transaction = 2;
+}
+
+message Ticket {
+//  enum Type {
+//    NULL = 0;
+//    AIRLINE = 1;
+//  }
+
+  // Leg of ticket.
+  message Itinerary {
+    // Individual flight, etc.
+    message Segment {
+      message Point {
+        string iata_code = 1;
+        string at = 2;
+      }
+
+      Point departure = 2;
+      Point arrival = 3;
+
+      string carrier = 10;
+      string number = 11;
+    }
+
+    repeated Segment segments = 10;
+  }
+
+//  Type type = 1;
+  Source source = 2;
+
+  repeated Itinerary itineraries = 10;
+
+  // TODO(burdon): Keys vs. references (e.g., if object not created yet).
+  Contact passenger = 20;
+}
+
+// TODO(burdon): Counter party, etc.
+message Transaction {
+  // TODO(burdon): Enum.
 //    enum Type {
 //      PENDING = 0;
 //      RESERVED = 1;
@@ -247,60 +320,7 @@ message Trip {
 //    }
 
 //    Type type = 1;
-    string date = 2;
-    string currency = 3;
-    string total = 4;
-  }
-
-  // TODO(burdon): Tickets and Segments are semi-independent.
-  //  Segments above are the request; Tickets are "results".
-  message Ticket {
-//    enum Type {
-//      NULL = 0;
-//      AIRLINE = 1;
-//    }
-
-//    Type type = 1;
-    // TODO(burdon): Generalize external API IDs (e.g., for Mail).
-    Source source = 2;
-
-    string origin = 10;
-    string destination = 11;
-    // TODO(burdon): With ISO TZ.
-    string depart = 12;
-    string arrive = 13;
-
-    string carrier = 20;
-    string number = 21;
-
-    // TODO(burdon): Keys vs. references (e.g., if object not created yet).
-    Contact passenger = 30;
-  }
-
-  // TODO(burdon): Plane, Hotel, Car, etc.
-  // TODO(burdon): Multiple people.
-  message Booking {
-    repeated Ticket tickets = 1;
-    Transaction transaction = 2;
-  }
-
-  message Segment {
-    message Destination {
-      string city = 1;
-      string code = 2;
-    }
-
-    Destination destination = 1;
-    string date_start = 2;
-    string date_end = 3;
-  }
-
-  string title = 1;
-  string date_start = 2;
-  string date_end = 3;
-  repeated Segment segments = 4;
-
-  // Updated by bot.
-  // TODO(burdon): Ephemeral query?
-  repeated Booking bookings = 10;
+  string date = 2;
+  string currency = 3;
+  string total = 4;
 }

@@ -85,7 +85,7 @@ declare module 'amadeus' {
   // https://github.com/amadeus4dev/amadeus-code-examples/blob/master/flight_offers_search/v2/post/response.json
   export type FlightOffer = {
     type: 'flight-offer';
-    id: string;
+    id: string; // TODO(burdon): Only session ID?
     source: string;
     oneWay: boolean;
     lastTicketingDate: string;

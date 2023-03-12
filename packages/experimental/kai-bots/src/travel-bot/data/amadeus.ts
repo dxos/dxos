@@ -32,23 +32,23 @@ export class Amadeus {
   // TODO(burdon): Airline routes.
 
   async airports(location: Geolocation): Promise<Location[]> {
-    log.info('airports', { location });
+    log('airports', { location });
     const { data } = await this._api.referenceData.locations.airports.get(location);
-    log.info('result', { data: data.length });
+    log('result', { data: data.length });
     return data;
   }
 
   async cities({ keyword }: { keyword: string }): Promise<Location[]> {
-    log.info('cities', { keyword });
+    log('cities', { keyword });
     const { data } = await this._api.referenceData.locations.cities.get({ keyword });
-    log.info('result', { data: data.length });
+    log('result', { data: data.length });
     return data;
   }
 
   async flights(query: FlightQuery): Promise<FlightOffer[]> {
-    log.info('flights', { query });
+    log('flights', { query });
     const { data } = await this._api.shopping.flightOffersSearch.post(JSON.stringify(query));
-    log.info('result', { data: data.length });
+    log('result', { data: data.length });
     return data;
   }
 }
