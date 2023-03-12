@@ -29,8 +29,12 @@ export class TravelBot extends Bot {
     });
   }
 
+  // TODO(burdon): Tune search:
+  //  - Direct only.
+  //  - Cheapest dates.
+  //  - Split trip into different bookings.
+
   async onStart() {
-    const count = 0;
     const stacks = this.space.db.query(Trip.filter());
     this._subscription = stacks.subscribe(
       // TODO(burdon): Remove debounce once fixed.
