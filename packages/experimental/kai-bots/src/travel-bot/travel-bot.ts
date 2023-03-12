@@ -22,8 +22,6 @@ export class TravelBot extends Bot {
   private _amadeus?: Amadeus;
   private _subscription?: Subscription;
 
-  private _count = 0;
-
   override async onInit() {
     this._amadeus = new Amadeus({
       clientId: process.env[COM_AMADEUS_CLIENT_ID] ?? getKey(this.config, 'com.amadeus.client_id')!,
@@ -32,18 +30,19 @@ export class TravelBot extends Bot {
   }
 
   async onStart() {
+    const count = 0;
     const stacks = this.space.db.query(Trip.filter());
     this._subscription = stacks.subscribe(
       // TODO(burdon): Remove debounce once fixed.
       debounce(async ({ objects: trips }) => {
-        log.info('updated', { objects: trips.length });
-        if (this._count++ > 0) {
-          log.info('skipped', this._count);
-          return;
-        }
-
+        log.info('updated', { trips: trips.length });
         for (const trip of trips) {
-          // TODO(burdon): Factor out mapping.
+          // TODO(burdon): Don't reprocess.
+          if (trip.bookings.length) {
+            log.info('skipped');
+            return;
+          }
+
           // TODO(burdon): Validation checks.
           const offers = await this._amadeus!.flights(
             createFlightQuery({
@@ -63,6 +62,7 @@ export class TravelBot extends Bot {
                   }
                 };
               }),
+
               searchCriteria: {
                 // TODO(burdon): Lower limit with direct/carrier constraints.
                 maxFlightOffers: 5,

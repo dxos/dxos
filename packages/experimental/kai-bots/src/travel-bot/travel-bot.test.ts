@@ -11,6 +11,7 @@ import { Client } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Trip } from '@dxos/kai-types';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { loadJson } from '../util';
@@ -85,9 +86,10 @@ describe('TravelBot', () => {
 
       const trip = await trigger.wait();
 
-      const outFile = '/tmp/dxos/kai-bots/travel-bot/text.json';
-      fs.mkdirSync(dirname(outFile), { recursive: true });
-      fs.writeFileSync(outFile, JSON.stringify({ trip }, undefined, 2));
+      const tmpFile = '/tmp/dxos/kai-bots/travel-bot/text.json';
+      fs.mkdirSync(dirname(tmpFile), { recursive: true });
+      fs.writeFileSync(tmpFile, JSON.stringify({ trip }, undefined, 2));
+      log.info('output', { tmpFile });
 
       unsubscribe();
     }
