@@ -8,6 +8,7 @@ declare module 'amadeus' {
 
   // NOTE: GET and POST options are provided but the latter has more options.
   // https://github.com/amadeus4dev/amadeus-code-examples
+  // https://amadeus4dev.github.io/amadeus-node/#flightofferssearch
 
   export type Geolocation = {
     latitude: number;
@@ -160,6 +161,9 @@ declare module 'amadeus' {
         };
       };
     };
+
+    // TODO(burdon): flights.
+    // TODO(burdon): hotels.
 
     shopping: {
       // /v1/shopping/flight-offers

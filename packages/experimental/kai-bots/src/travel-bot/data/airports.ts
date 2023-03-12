@@ -9,19 +9,16 @@ import { Trigger } from '@dxos/async';
 
 import { stringMatch } from '../../util';
 
-// Data sources:
-// https://github.com/datasets
-// https://ourairports.com/data
-// https://github.com/mwgg/Airports
-// https://www.icao.int/Aviation-API-Data-Service/Pages/default.aspx
+// TODO(burdon): Kai types.
+export type Geolocation = {
+  latitude: number;
+  longitude: number;
+};
 
 export type Airport = {
   code: string;
   name: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
+  location: Geolocation;
   continent: string;
   country: string;
   region: string;
@@ -31,6 +28,7 @@ export type Airport = {
 
 /**
  * Airport database.
+ * A faster "canned" airport look-up vs. Amadeus.
  */
 export class Airports {
   constructor(private readonly _airports: Airport[] = []) {}
@@ -84,8 +82,8 @@ export const fetchAirports = async (): Promise<Airport[]> => {
           code: record.iata_code,
           name: record.name,
           location: {
-            lat: Number(record.latitude_deg),
-            lng: Number(record.longitude_deg)
+            latitude: Number(record.latitude_deg),
+            longitude: Number(record.longitude_deg)
           },
           continent: record.continent,
           country: record.iso_country,

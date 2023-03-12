@@ -1,9 +1,11 @@
+# Data Sources
 
-// TODO(burdon): Make trivial to connect bot to Rapid API endpoint (bot lambda).
-//  E.g., Airport code lookup.
+## Goals 
+- Make trivial to connect bots to API endpoints (e.g., Rapid API).
+- Simple lambdas.
 
-// Data sources:
-// https://github.com/datasets
-// https://ourairports.com/data
-// https://github.com/mwgg/Airports
-// https://www.icao.int/Aviation-API-Data-Service/Pages/default.aspx
+## Data sources:
+- https://github.com/datasets
+- https://ourairports.com/data
+- https://github.com/mwgg/Airports
+- https://www.icao.int/Aviation-API-Data-Service/Pages/default.aspx
