@@ -10,6 +10,9 @@
         <ImportPathEntry>
           <option name="location" value="file://$PROJECT_DIR$/node_modules/.pnpm/protobufjs@6.11.3/node_modules/protobufjs" />
         </ImportPathEntry>
+        <ImportPathEntry>
+          <option name="location" value="file://$USER_HOME$/Library/Caches/JetBrains/IntelliJIdea2022.3/protoeditor" />
+        </ImportPathEntry>
       </list>
     </option>
     <option name="descriptorPath" value="google/protobuf/descriptor.proto" />

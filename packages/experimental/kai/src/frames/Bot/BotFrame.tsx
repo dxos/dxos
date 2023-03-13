@@ -7,10 +7,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
 import { PublicKey } from '@dxos/keys';
+import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { botDefs, useAppRouter, useBotClient, useKeyStore, getBotEnvs, botKeys } from '../../hooks';
+import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 1000;
 
