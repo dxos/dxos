@@ -8,7 +8,7 @@ import React, { ReactNode } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { Bounds, Location, Point, serializeLocation } from '../layout';
+import { Bounds, Location, Point, serializeLocation } from '../../layout';
 
 export type CellSlots = {
   showLocation?: boolean;

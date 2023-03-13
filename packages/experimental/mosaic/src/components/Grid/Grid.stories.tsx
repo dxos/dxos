@@ -9,8 +9,8 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { GridLayout, Item, Location } from '../layout';
-import { createItem, TestData, TestTileContent } from '../testing';
+import { GridLayout, Item, Location } from '../../layout';
+import { createItem, TestData, TestTileContent } from '../../testing';
 import { Grid } from './Grid';
 
 faker.seed(100);

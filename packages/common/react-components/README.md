@@ -25,7 +25,7 @@ export default defineConfig({
   plugins: [
     // ...
     ThemePlugin({content: [
-        resolve(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs'),
         './index.html', './src/**/*.{js,ts,jsx,tsx}'
       ]}),
     // ...

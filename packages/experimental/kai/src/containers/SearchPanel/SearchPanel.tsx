@@ -175,7 +175,7 @@ export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
               {snippet && snippet.length > 0 && (
                 <div className='flex overflow-hidden'>
                   <div className='flex w-[40px]' />
-                  <div className='w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm text-zinc-400'>
+                  <div className='w-full truncate text-sm text-zinc-400'>
                     <span>{snippet[0]}</span>
                     <span className='text-black'>{snippet[1]}</span>
                     <span>{snippet[2]}</span>
