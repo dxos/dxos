@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/keys.proto";
 
+// TODO(burdon): Rename dxos.xxx.iframe?
 package dxos.iframe;
 
 message StartRequest {

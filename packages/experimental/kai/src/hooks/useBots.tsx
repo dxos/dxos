@@ -80,6 +80,8 @@ export type BotMap = Map<string, BotDef>;
 
 // TODO(burdon): Bot KMS in HALO?
 export const botKeys: { [key: string]: string } = {
+  'com.amadeus.client_id': 'COM_AMADEUS_CLIENT_ID',
+  'com.amadeus.client_secret': 'COM_AMADEUS_CLIENT_SECRET',
   'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
   'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
   'com.protonmail.tls': 'COM_PROTONMAIL_TLS',

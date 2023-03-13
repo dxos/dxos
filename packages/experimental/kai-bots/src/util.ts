@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,6 +11,7 @@ import * as process from 'node:process';
 import { Config } from '@dxos/config';
 
 export const loadJson = (filename: string) => {
+  assert(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
 };
 
@@ -26,4 +28,12 @@ export const getConfig = (defaultFilename = 'config.yml'): Config | undefined =>
   if (fs.existsSync(filename)) {
     return new Config(yaml.load(String(fs.readFileSync(filename))) as any);
   }
+};
+
+// TODO(burdon): Full text search utils?
+export const stringMatch = (text: string, prefix = false) => {
+  const match = text.toLowerCase();
+  return prefix
+    ? (value: string) => value.toLowerCase().indexOf(match) !== -1
+    : (value: string) => value.toLowerCase() === match;
 };
