@@ -14,6 +14,8 @@ import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { joinCommonSpace, TestBuilder } from '../testing';
 
+const testBuilder = new TestBuilder();
+
 type Model = {
   text: string;
   peers: ComplexSet<PublicKey>;
@@ -25,50 +27,62 @@ type Real = {
 };
 
 const assertState = async (model: Model, real: Real) => {
+  // Wait for replication.
   await waitForExpect(() => {
-    for (const peer of real.peers.values()) {
+    for (const [peerId, peer] of real.peers.entries()) {
       const space = peer.echo.getSpace(real.spaceKey);
       if (space) {
-        if (!model.peers.has(peer.halo.identity!.identityKey)) {
-          throw new Error(`Expected peer to not be in space: ${peer.halo.identity!.identityKey.truncate()}`);
+        if (!model.peers.has(peerId)) {
+          throw new Error(`Expected peer to not be in space: ${peerId.truncate()}`);
         }
 
         const [document] = space.db.query((obj) => !!obj.content).objects;
         const text = (document.content.doc as Doc).getText('utf8');
         if (text.toString() !== model.text) {
-          throw new Error(`Expected text to be "${model.text}" but was "${text}."`);
+          throw new Error(`Text mismatch: ${JSON.stringify({ expected: model.text, actual: text })}`);
         }
-      } else if (model.peers.has(peer.halo.identity!.identityKey)) {
-        throw new Error(`Expected peer to be in space: ${peer.halo.identity!.identityKey.truncate()}`);
+      } else if (model.peers.has(peerId)) {
+        throw new Error(`Expected peer to be in space: ${peerId.truncate()}`);
       }
     }
-  }, 1000);
+  }, 10);
 };
 
 class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly host: Client, readonly guest: Client) {}
+  constructor(readonly peerId: PublicKey) {}
 
   check(model: Model) {
-    return (
-      !this.host.halo.identity!.identityKey.equals(this.guest.halo.identity!.identityKey) &&
-      model.peers.has(this.host.halo.identity!.identityKey) &&
-      !model.peers.has(this.guest.halo.identity!.identityKey)
-    );
+    return model.peers.size === 0 || model.peers.has(this.peerId);
   }
 
   async run(model: Model, real: Real) {
-    console.log('create peer', { host: this.host, guest: this.guest, model, real });
-    model.peers.add(this.guest.halo.identity!.identityKey);
+    model.peers.add(this.peerId);
 
-    await joinCommonSpace([this.host, this.guest], real.spaceKey);
+    // TODO(wittjosiah): Too many steps to creat client.
+    const services = testBuilder.createClientServicesHost();
+    await services.open();
+    afterTest(() => services.close());
+    const [client, server] = testBuilder.createClientServer(services);
+    void server.open();
+    afterTest(() => server.close());
+    await client.initialize();
+    afterTest(() => client.destroy());
+    await client.halo.createIdentity();
+    if (real.peers.size === 0) {
+      const space = await client.echo.createSpace();
+      await space.db.add(new Document({ content: new Text() }));
+      real.spaceKey = space.key;
+    } else {
+      const host = real.peers.get(this.peerId);
+      await joinCommonSpace([host!, client], real.spaceKey);
+    }
+    real.peers.set(this.peerId, client);
 
     await assertState(model, real);
   }
 
   toString() {
-    const host = this.host.halo.identity!.identityKey.truncate();
-    const guest = this.guest.halo.identity!.identityKey.truncate();
-    return `CreateMember(host=${host}, guest=${guest})`;
+    return `CreatePeer(peer=${this.peerId.truncate()})`;
   }
 }
 
@@ -83,16 +97,17 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 // }
 
 class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peer: Client, readonly index: number, readonly text: string) {}
+  constructor(readonly peerId: PublicKey, readonly index: number, readonly text: string) {}
 
   check(model: Model) {
-    return model.peers.has(this.peer.halo.identity!.identityKey) && model.text.length <= this.index;
+    return model.peers.has(this.peerId) && model.text.length <= this.index;
   }
 
   async run(model: Model, real: Real) {
     model.text = model.text.slice(0, this.index) + this.text + model.text.slice(this.index);
 
-    const space = this.peer.echo.getSpace(real.spaceKey)!;
+    const peer = real.peers.get(this.peerId);
+    const space = peer!.echo.getSpace(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.insert(this.index, this.text);
@@ -101,27 +116,23 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
   }
 
   toString() {
-    const peer = this.peer.halo.identity!.identityKey.truncate();
     const text = this.text.length > 10 ? `${this.text.slice(0, 10)}...` : this.text;
-    return `InsertText(peer=${peer}, index=${this.index}, text=${text})`;
+    return `InsertText(peer=${this.peerId.truncate()}, index=${this.index}, text=${text})`;
   }
 }
 
 class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peer: Client, readonly index: number, readonly length: number) {}
+  constructor(readonly peerId: PublicKey, readonly index: number, readonly length: number) {}
 
   check(model: Model) {
-    return (
-      model.peers.has(this.peer.halo.identity!.identityKey) &&
-      model.text.length <= this.index &&
-      this.index >= this.length
-    );
+    return model.peers.has(this.peerId) && model.text.length > this.index && this.index >= this.length;
   }
 
   async run(model: Model, real: Real) {
-    model.text = model.text.slice(0, this.index - length) + model.text.slice(this.index);
+    model.text = model.text.slice(0, this.index - this.length) + model.text.slice(this.index);
 
-    const space = this.peer.echo.getSpace(real.spaceKey)!;
+    const peer = real.peers.get(this.peerId);
+    const space = peer!.echo.getSpace(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.delete(this.index, this.length);
@@ -130,67 +141,37 @@ class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
   }
 
   toString() {
-    const peer = this.peer.halo.identity?.identityKey.truncate();
-    return `RemoveText(peer=${peer}, index=${this.index}, length=${this.length})`;
+    return `RemoveText(peer=${this.peerId.truncate()}, index=${this.index}, length=${this.length})`;
   }
 }
 
-describe.only('Client text replication', () => {
+describe('Client text replication', () => {
   test('property-based tests', async () => {
-    const testBuilder = new TestBuilder();
-    const host = testBuilder.createClientServicesHost();
-    await host.open();
-    afterTest(() => host.close());
-    const [client, server] = testBuilder.createClientServer(host);
-    void server.open();
-    afterTest(() => server.close());
-    await client.initialize();
-    afterTest(() => client.destroy());
-    await client.halo.createIdentity();
-    const space = await client.echo.createSpace();
-    await space.db.add(new Document({ content: new Text() }));
-
-    const peers = await Promise.all(
-      range(10).map(async () => {
-        const host = testBuilder.createClientServicesHost();
-        await host.open();
-        afterTest(() => host.close());
-        const [client, server] = testBuilder.createClientServer(host);
-        void server.open();
-        afterTest(() => server.close());
-        await client.initialize();
-        afterTest(() => client.destroy());
-        await client.halo.createIdentity();
-        return client;
-      })
-    );
-    const peer = fc.constantFrom(...peers);
+    const peerIds = range(10).map(() => PublicKey.random());
+    const peerId = fc.constantFrom(...peerIds);
 
     const allCommands = [
-      peer.map((peer) => new CreatePeerCommand(client, peer)),
-      fc.tuple(peer, fc.integer(), fc.unicode()).map(([peer, index, text]) => new InsertTextCommand(peer, index, text)),
+      peerId.map((peerId) => new CreatePeerCommand(peerId)),
       fc
-        .tuple(peer, fc.integer(), fc.integer())
-        .map(([peer, index, length]) => new RemoveTextCommand(peer, index, length))
+        .tuple(peerId, fc.integer({ min: 0 }), fc.unicode())
+        .map(([peerId, index, text]) => new InsertTextCommand(peerId, index, text)),
+      fc
+        .tuple(peerId, fc.integer({ min: 0 }), fc.integer({ min: 1 }))
+        .map(([peerId, index, length]) => new RemoveTextCommand(peerId, index, length))
     ];
 
     await fc.assert(
       fc.asyncProperty(fc.commands(allCommands), async (commands) => {
-        const setup: ModelRunSetup<Model, Real> = () => {
-          const model = {
+        const setup: ModelRunSetup<Model, Real> = () => ({
+          model: {
             text: '',
             peers: new ComplexSet<PublicKey>(PublicKey.hash)
-          };
-          const real = {
-            spaceKey: space.key,
+          },
+          real: {
+            spaceKey: PublicKey.random(),
             peers: new ComplexMap<PublicKey, Client>(PublicKey.hash)
-          };
-
-          model.peers.add(client.halo.identity!.identityKey);
-          real.peers.set(client.halo.identity!.identityKey, client);
-
-          return { model, real };
-        };
+          }
+        });
 
         await fc.asyncModelRun(setup, commands);
       }),
@@ -198,9 +179,10 @@ describe.only('Client text replication', () => {
         examples: [
           [
             [
-              new CreatePeerCommand(client, peers[0]),
-              new InsertTextCommand(peers[0], 0, 'hello'),
-              new InsertTextCommand(peers[0], 5, 'world')
+              new CreatePeerCommand(peerIds[0]),
+              new CreatePeerCommand(peerIds[1]),
+              new InsertTextCommand(peerIds[0], 0, 'hello'),
+              new InsertTextCommand(peerIds[1], 5, 'world')
             ]
           ]
         ]

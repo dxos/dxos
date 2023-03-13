@@ -147,32 +147,32 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
 
   await Promise.all(
     peers.map(async (peer) => {
-      const success1 = new Trigger<Invitation>();
-      const success2 = new Trigger<Invitation>();
+      const hostDone = new Trigger<Invitation>();
+      const guestDone = new Trigger<Invitation>();
 
-      const observable1 = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      const hostObservabli = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
       log('invitation created');
-      observable1.subscribe({
+      hostObservabli.subscribe({
         onConnecting: (invitation) => {
-          const observable2 = peer.echo.acceptInvitation(invitation);
+          const guestObservable = peer.echo.acceptInvitation(invitation);
           log('invitation accepted');
 
-          observable2.subscribe({
+          guestObservable.subscribe({
             onSuccess: (invitation: Invitation) => {
-              success2.wake(invitation);
-              log('invitation success2');
+              guestDone.wake(invitation);
+              log('invitation guestDone');
             },
             onError: (err: Error) => raise(err)
           });
         },
         onSuccess: (invitation) => {
-          success1.wake(invitation);
-          log('invitation success1');
+          hostDone.wake(invitation);
+          log('invitation hostDone');
         },
         onError: (err) => raise(err)
       });
 
-      await Promise.all([success1.wait(), success2.wait()]);
+      await Promise.all([hostDone.wait(), guestDone.wait()]);
     })
   );
 
