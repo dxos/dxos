@@ -14,7 +14,7 @@ import {
   Plus,
   User,
   Users
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';

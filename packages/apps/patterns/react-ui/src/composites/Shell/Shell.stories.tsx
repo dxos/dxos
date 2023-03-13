@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 import { faker } from '@faker-js/faker';
-import { Intersect, Laptop, PlusCircle } from 'phosphor-react';
+import { Intersect, Laptop, PlusCircle } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { PublicKey, ShellLayout } from '@dxos/client';

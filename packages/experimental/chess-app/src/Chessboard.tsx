@@ -3,7 +3,7 @@
 //
 
 import { Chess, Color } from 'chess.js';
-import { ArrowURightDown, Circle } from 'phosphor-react';
+import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 

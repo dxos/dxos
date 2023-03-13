@@ -14,7 +14,7 @@ import {
   Queue,
   Users,
   UsersThree
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import { FC } from 'react';
 
 export type SectionItem = {

@@ -3,7 +3,7 @@
 //
 
 import * as RadioGroup from '@radix-ui/react-radio-group';
-import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
+import { CaretLeft, CaretRight, UserPlus } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import type { Identity } from '@dxos/client';

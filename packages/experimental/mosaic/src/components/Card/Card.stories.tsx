@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import { Buildings, DotsThree, Envelope, User } from 'phosphor-react';
+import { Buildings, DotsThree, Envelope, User } from '@phosphor-icons/react';
 import React from 'react';
 
 // TODO(burdon): Add note to @dxos/react-components/plugin

@@ -3,7 +3,7 @@
 //
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import { Check } from 'phosphor-react';
+import { Check } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef } from 'react';
 
 import { useThemeContext } from '../../hooks';

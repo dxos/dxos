@@ -5,7 +5,7 @@
 import { Transition } from '@headlessui/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { X } from 'phosphor-react';
+import { X } from '@phosphor-icons/react';
 import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';

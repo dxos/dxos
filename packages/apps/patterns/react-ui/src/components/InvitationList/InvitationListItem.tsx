@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { Copy, ProhibitInset, QrCode, X } from 'phosphor-react';
+import { Copy, ProhibitInset, QrCode, X } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
 

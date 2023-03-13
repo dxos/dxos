@@ -12,7 +12,7 @@ import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { CaretDown, CaretRight, DotsSixVertical } from 'phosphor-react';
+import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
 import React, {
   ComponentProps,
   ComponentPropsWithoutRef,

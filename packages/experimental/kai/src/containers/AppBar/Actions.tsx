@@ -3,7 +3,7 @@
 //
 
 import MobileDetect from 'mobile-detect';
-import { DownloadSimple, UploadSimple, Gear, Robot, Trash } from 'phosphor-react';
+import { DownloadSimple, UploadSimple, Gear, Robot, Trash } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';

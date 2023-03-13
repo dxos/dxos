@@ -6,7 +6,7 @@ import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
-import { Article, Clock, GridFour, SquareHalf, Tray, User } from 'phosphor-react';
+import { Article, Clock, GridFour, SquareHalf, Tray, User } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 

@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
-import { Aperture } from 'phosphor-react';
+import { Aperture } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';

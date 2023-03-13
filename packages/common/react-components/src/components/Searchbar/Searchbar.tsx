@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from 'phosphor-react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { mx } from '../../util';

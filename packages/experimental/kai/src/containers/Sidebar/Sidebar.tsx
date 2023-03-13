@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-react';
+import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router-dom';
 

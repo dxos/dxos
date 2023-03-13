@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Info, User } from 'phosphor-react';
+import { Command, Info, User } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 

@@ -3,7 +3,7 @@
 //
 
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { CaretDown, CaretUp, Check } from 'phosphor-react';
+import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 import { mx } from '../../util';

@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { Database, Envelope, Flower, Sword } from 'phosphor-react';
+import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';

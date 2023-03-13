@@ -22,7 +22,7 @@ import {
   Tray,
   MagnifyingGlass,
   IdentificationCard
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import { FC, useMemo } from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';

@@ -6,7 +6,7 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
-import { Check } from 'phosphor-react';
+import { Check } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 

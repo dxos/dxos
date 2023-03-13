@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X, Plus } from 'phosphor-react';
+import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {

@@ -16,7 +16,7 @@ import {
   LinkSimple,
   CaretRight,
   Person
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 import { Button } from '../Button';
