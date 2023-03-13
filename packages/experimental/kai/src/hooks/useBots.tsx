@@ -8,12 +8,11 @@ import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { useConfig, useKeyStore } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
-import { useKeyStore } from './useKeyStore';
 
 export type BotDef = {
   module: Module;
