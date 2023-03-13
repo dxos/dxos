@@ -10,9 +10,9 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Event } from '@dxos/async';
 import { mx } from '@dxos/react-components';
 
-import { Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
-import { Cell, CellSlots } from './Cell';
-import { Tile, TileContentProps, TileSlots } from './Tile';
+import { Layout, Item, Point, Location, serializeLocation, parseLocation } from '../../layout';
+import { Cell, CellSlots } from '../Cell';
+import { Tile, TileContentProps, TileSlots } from '../Tile';
 
 const options = {
   transitionDelay: 500

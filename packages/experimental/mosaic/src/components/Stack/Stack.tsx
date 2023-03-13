@@ -4,8 +4,8 @@
 
 import React, { FC } from 'react';
 
-import { Item } from '../layout';
-import { Tile, TileContentProps } from './Tile';
+import { Item } from '../../layout';
+import { Tile, TileContentProps } from '../Tile';
 
 export type StackProps<T extends {}> = {
   items?: Item<T>[];

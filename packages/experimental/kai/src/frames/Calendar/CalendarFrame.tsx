@@ -75,9 +75,7 @@ export const CalendarFrame = () => {
                       <User />
                     </Button>
                   </div>
-                  <div className='overflow-hidden text-ellipsis whitespace-nowrap w-[100px] text-blue-500'>
-                    {member.name}
-                  </div>
+                  <div className='truncate w-[100px] text-blue-500'>{member.name}</div>
                 </div>
               ))}
             </div>
