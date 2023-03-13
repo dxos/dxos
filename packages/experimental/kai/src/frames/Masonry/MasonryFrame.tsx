@@ -7,8 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { UnorderedTaskList } from '../../components';
-import { ContactList, OrganizationList, ProjectHierarchy } from '../../containers';
+import { ContactList, OrganizationList } from '../../cards';
 import { useAppRouter } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
@@ -64,18 +63,6 @@ export const MasonryFrame: FC = () => {
       <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Contacts' />}>
           <ContactList space={space} />
-        </Tile>
-      </div>
-
-      <div className={mx(cardStyles, 'row-span-2')}>
-        <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <UnorderedTaskList space={space} />
-        </Tile>
-      </div>
-
-      <div className={mx(cardStyles)}>
-        <Tile scrollbar header={<TileMenu title='Projects' />}>
-          <ProjectHierarchy space={space} />
         </Tile>
       </div>
     </div>

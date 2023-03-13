@@ -28,7 +28,7 @@ const defaults = {
 export const MapFrame = () => {
   return (
     <div className='flex flex-1 overflow-hidden'>
-      <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>
+      <MapContainer className='flex flex-1'>
         <MapControl />
       </MapContainer>
     </div>
@@ -54,11 +54,11 @@ export const MapControl = () => {
   };
 
   const [selected, setSelected] = useState<string>();
-  const [center, setCenter] = useState<LatLngExpression>();
+  const [center, setCenter] = useState<LatLngExpression>(defaults.center);
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.setView(center, map.getZoom() ?? 10);
+      map.setView(center, map.getZoom() ?? defaults.zoom);
     }
   }, [center]);
 

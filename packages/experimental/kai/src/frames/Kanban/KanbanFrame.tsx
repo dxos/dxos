@@ -10,10 +10,9 @@ import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
 import { Searchbar, Select } from '@dxos/react-components';
 
+import { ProjectCard, ContactCard } from '../../cards';
 import { Toolbar } from '../../components';
-import { ProjectCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
-import { ContactCard } from '../Contact';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 type Type = {

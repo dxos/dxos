@@ -7,6 +7,8 @@ import { useEffect, useMemo, useReducer } from 'react';
 /**
  * Settings store.
  */
+// TODO(burdon): Move to react-client.
+// NOTE: Will be replaced by HALO.
 export const useKeyStore = (
   defaultKeys: string[] = []
 ): [Map<string, string>, (key: string, value: string) => void] => {

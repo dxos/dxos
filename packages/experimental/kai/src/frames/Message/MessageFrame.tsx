@@ -10,7 +10,7 @@ import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { ContactCard } from '../../frames/Contact';
+import { ContactCard } from '../../cards';
 import { createPath, useAppRouter } from '../../hooks';
 import { formatDate, getCompanyName, sortMessage } from './util';
 
