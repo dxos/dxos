@@ -3339,7 +3339,9 @@ importers:
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@radix-ui/react-scroll-area': ^1.0.3
       '@swc-node/register': ^1.5.4
@@ -3373,6 +3375,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
       lodash.defaultsdeep: 4.6.1
@@ -3384,6 +3387,7 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
+      '@dxos/config': link:../../sdk/config
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/faker': 5.5.9
