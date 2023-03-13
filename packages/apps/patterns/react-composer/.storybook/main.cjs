@@ -17,20 +17,6 @@ module.exports = {
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
-      optimizeDeps: {
-        esbuildOptions: {
-          plugins: [
-            {
-              name: 'yjs',
-              setup: ({ onResolve }) => {
-                onResolve({ filter: /yjs/ }, () => {
-                  return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-                });
-              }
-            }
-          ]
-        }
-      },
       plugins: [
         ConfigPlugin(),
         ThemePlugin({

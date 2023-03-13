@@ -86,7 +86,7 @@ export const KanbanFrame: FC = () => {
         <div className='w-screen md:w-column mr-4'>
           <Searchbar onSearch={handleSearch} />
         </div>
-        <Select defaultValue={typeName} onValueChange={setTypeName}>
+        <Select value={typeName} onValueChange={setTypeName}>
           {types.map(({ name, label }) => (
             <Select.Item key={name} value={name}>
               {label}

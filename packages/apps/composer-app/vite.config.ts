@@ -14,7 +14,6 @@ const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
   server: {
     host: true,
     https:
@@ -25,24 +24,8 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      // TODO(wittjosiah): Remove.
-      plugins: [
-        {
-          name: 'yjs',
-          setup: ({ onResolve }) => {
-            onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-            });
-          }
-        }
-      ]
-    }
-  },
   build: {
-    sourcemap: true,
-    outDir: 'out/composer'
+    sourcemap: true
   },
   plugins: [
     ConfigPlugin({
@@ -61,8 +44,6 @@ export default defineConfig({
     }),
     ReactPlugin(),
     VitePWA({
-      // TODO(wittjosiah): Remove.
-      selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
@@ -87,11 +68,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'composer-app',
-      include: './out/composer',
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    })
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'composer-app',
+            include: './out/composer',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
   ]
 });

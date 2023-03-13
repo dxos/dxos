@@ -10,7 +10,12 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
+import { Config, Defaults } from '@dxos/config';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+
 import { Root, Todos } from './components';
+
+void initializeAppTelemetry('todomvc', new Config(Defaults()));
 
 const router = createBrowserRouter([
   {

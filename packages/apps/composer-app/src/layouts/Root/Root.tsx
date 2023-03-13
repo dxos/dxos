@@ -3,7 +3,7 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromIFrame } from '@dxos/client';
@@ -19,7 +19,7 @@ import {
   ServiceWorkerToast
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
+import { ThemeProvider, useMediaQuery } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
@@ -50,8 +50,15 @@ export const Root = () => {
     }
   });
 
+  const [prefersDark] = useMediaQuery('(prefers-color-scheme: dark)', { ssr: false, fallback: true });
+
+  useEffect(() => {
+    document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+  }, [prefersDark]);
+
   return (
     <ThemeProvider
+      themeMode={prefersDark ? 'dark' : 'light'}
       resourceExtensions={[osTranslations, appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'

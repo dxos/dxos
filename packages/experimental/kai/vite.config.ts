@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -12,7 +12,10 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
+// @ts-ignore
+// NOTE: Vite requires uncompiled JS.
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 /**
  * https://vitejs.dev/config
@@ -27,6 +30,11 @@ export default defineConfig({
             cert: './cert.pem'
           }
         : false
+
+    // TODO(burdon): Disable HMR due to code size issues.
+    // TODO(burdon): If disabled then tailwind doesn't update.
+    // https://vitejs.dev/config/server-options.html#server-hmr
+    // hmr: false
   },
 
   build: {
@@ -44,8 +52,15 @@ export default defineConfig({
   },
 
   plugins: [
+    // TODO(burdon): Document.
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY',
+        'DX_VAULT'
+      ]
     }),
 
     // Directories to scan for Tailwind classes.
@@ -124,6 +139,18 @@ export default defineConfig({
         ]
       }
     }),
+
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'kai',
+            include: './out/kai',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : []),
 
     // https://www.bundle-buddy.com/rollup
     {

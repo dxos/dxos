@@ -36,7 +36,7 @@ export type SelectProps = {
   label?: string;
   placeholder?: string;
   children?: ReactNode;
-} & Pick<SelectPrimitive.SelectProps, 'onValueChange' | 'defaultValue'>;
+} & Pick<SelectPrimitive.SelectProps, 'defaultValue' | 'value' | 'onValueChange'>;
 
 export const Select = (props: SelectProps) => {
   const { label, className, placeholder, children, ...rest } = { ...props };

@@ -18,6 +18,20 @@ export class MailBot extends Bot {
   private _processor?: ImapProcessor;
   private _interval?: ReturnType<typeof setTimeout>;
 
+  override async onInit() {
+    this._processor = new ImapProcessor({
+      user: process.env.COM_PROTONMAIL_USERNAME!,
+      password: process.env.COM_PROTONMAIL_PASSWORD!,
+      host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
+      port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
+      tls: process.env.COM_PROTONMAIL_TLS ? process.env.COM_PROTONMAIL_TLS === 'true' : true,
+      tlsOptions: {
+        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
+        rejectUnauthorized: false
+      }
+    });
+  }
+
   // TODO(burdon): Back off then refresh.
   async onStart() {
     assert(!this._interval);
@@ -32,20 +46,6 @@ export class MailBot extends Bot {
       clearInterval(this._interval);
       this._interval = undefined;
     }
-  }
-
-  override async onInit() {
-    this._processor = new ImapProcessor({
-      user: process.env.COM_PROTONMAIL_USERNAME!,
-      password: process.env.COM_PROTONMAIL_PASSWORD!,
-      host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
-      port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
-      tls: process.env.COM_PROTONMAIL_TLS ? process.env.COM_PROTONMAIL_TLS === 'true' : true,
-      tlsOptions: {
-        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
-        rejectUnauthorized: false
-      }
-    });
   }
 
   /**
