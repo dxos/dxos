@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FrameCorners, Robot } from 'phosphor-react';
+import { FrameCorners, Robot } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

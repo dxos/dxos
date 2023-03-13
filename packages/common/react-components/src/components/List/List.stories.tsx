@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { Play, PushPin } from 'phosphor-react';
+import { Play, PushPin } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { getSize } from '../../styles';

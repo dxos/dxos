@@ -6,13 +6,13 @@ import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { CaretDown, CaretRight, DotsSixVertical } from 'phosphor-react';
 import React, {
   ComponentProps,
   ComponentPropsWithoutRef,

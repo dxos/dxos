@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretRight } from 'phosphor-react';
+import { CaretRight } from '@phosphor-icons/react';
 import React, { useContext } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 

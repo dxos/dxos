@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { List, Palette, X } from 'phosphor-react';
+import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Note } from '@dxos/kai-types';

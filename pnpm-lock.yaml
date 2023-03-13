@@ -329,13 +329,13 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.4.0
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -355,8 +355,8 @@ importers:
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -386,6 +386,7 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.4.0
@@ -394,7 +395,6 @@ importers:
       '@types/showdown': ^2.0.0
       '@types/turndown': ^5.0.1
       '@vitejs/plugin-react': ^3.0.1
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
@@ -418,8 +418,8 @@ importers:
       '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
@@ -463,6 +463,7 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@headlessui/react': ^1.7.3
+      '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-alert-dialog': ^1.0.2
       '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.41.0
@@ -473,7 +474,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       debug: ^4.3.3
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -504,11 +504,11 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.42.0_react@18.2.0
       debug: 4.3.4
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -544,6 +544,7 @@ importers:
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-portal': ^1.0.1
       '@radix-ui/react-toolbar': ^1.0.1
       '@radix-ui/react-tooltip': ^1.0.2
@@ -553,7 +554,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       lodash.throttle: ^4.1.1
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -581,11 +581,11 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -699,6 +699,7 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.6.0
+      '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-accordion': ^1.0.1
       '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-dialog': ^1.0.0
@@ -709,7 +710,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       debug: ^4.3.3
-      phosphor-react: ^1.4.1
       qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -738,11 +738,11 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@faker-js/faker': 7.6.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
@@ -755,6 +755,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@storybook/addon-essentials': 7.0.0-beta.48
       '@storybook/addon-interactions': 7.0.0-beta.48
       '@storybook/addon-links': 7.0.0-beta.48
@@ -768,7 +769,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       autoprefixer: ^10.4.12
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -783,7 +783,7 @@ importers:
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
-      phosphor-react: 1.4.1_react@18.2.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
@@ -821,12 +821,12 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.4.0
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -844,8 +844,8 @@ importers:
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -868,6 +868,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@storybook/addon-essentials': 7.0.0-beta.48
       '@storybook/addon-interactions': 7.0.0-beta.48
       '@storybook/addon-links': 7.0.0-beta.48
@@ -881,7 +882,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       autoprefixer: ^10.4.12
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -896,7 +896,7 @@ importers:
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
-      phosphor-react: 1.4.1_react@18.2.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -1415,6 +1415,7 @@ importers:
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
       '@headlessui/react': ^1.7.3
+      '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-avatar': ^1.0.1
       '@radix-ui/react-checkbox': ^1.0.1
@@ -1447,7 +1448,6 @@ importers:
       i18next: ^21.10.0
       jdenticon: ^3.2.0
       lodash.merge: ^4.6.2
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       qrcode.react: ^3.1.0
       rci: ^0.0.3
@@ -1504,6 +1504,7 @@ importers:
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/lodash.merge': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -1511,7 +1512,6 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
       esbuild: 0.16.14
       esbuild-style-plugin: 1.6.1
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
@@ -2450,6 +2450,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -2457,7 +2458,6 @@ importers:
       '@types/react-table': ^7.7.14
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -2494,7 +2494,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      phosphor-react: 1.4.1_react@18.2.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -2732,11 +2732,11 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/react-components': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/chess.js': ^0.13.4
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: 1.0.0-alpha.0
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-chessboard: ^2.0.7
       react-dom: ^18.2.0
@@ -2746,8 +2746,8 @@ importers:
       vite: 4.0.4
     dependencies:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       chess.js: 1.0.0-alpha.0
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
       react-dom: 18.2.0_react@18.2.0
@@ -2961,6 +2961,7 @@ importers:
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@monaco-editor/react': ^4.4.6
+      '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@swc-node/register': ^1.5.4
@@ -2989,7 +2990,6 @@ importers:
       mobile-detect: ^1.4.5
       monaco-editor: ^0.25.0
       node-fetch: ^2.6.0
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-big-calendar: ^1.5.2
@@ -3051,6 +3051,7 @@ importers:
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
@@ -3062,7 +3063,6 @@ importers:
       leaflet: 1.9.3
       mobile-detect: 1.4.5
       node-fetch: 2.6.7
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
       react-color: 2.19.3_react@18.2.0
@@ -3343,6 +3343,7 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-scroll-area': ^1.0.3
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
@@ -3355,7 +3356,6 @@ importers:
       faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
       lodash.isequal: ^4.5.0
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
@@ -3377,10 +3377,10 @@ importers:
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
       lodash.defaultsdeep: 4.6.1
       lodash.isequal: 4.5.0
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -3414,6 +3414,7 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/d3': ^7.1.0
@@ -3428,7 +3429,6 @@ importers:
       d3: ^7.4.4
       faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
-      phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3446,10 +3446,10 @@ importers:
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/node-std': link:../../common/node-std
       '@dxos/util': link:../../common/util
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       assert: 2.0.0
       d3: 7.6.1
       lodash.defaultsdeep: 4.6.1
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
@@ -9596,6 +9596,16 @@ packages:
       esquery: 1.4.0
       typescript: 4.8.4
     dev: true
+
+  /@phosphor-icons/react/2.0.5_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Ghohi+Dk+Y0RoI1vra3jH2QC3sO6C16a/Km0gfy05ONIsC62Vwn1SK2Qaim77VPyn1FS7qjMxocdi9kx6btvXg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   /@playwright/test/1.27.1:
     resolution: {integrity: sha512-mrL2q0an/7tVqniQQF6RBL2saskjljXzqNcCOVMUjRIgE6Y38nCNaP+Dc2FBW06bcpD3tqIws/HT9qiMHbNU0A==}
@@ -28746,14 +28756,6 @@ packages:
       estree-walker: 3.0.1
       is-reference: 3.0.0
     dev: true
-
-  /phosphor-react/1.4.1_react@18.2.0:
-    resolution: {integrity: sha512-gO5j7U0xZrdglTAYDYPACU4xDOFBTJmptrrB/GeR+tHhCZF3nUMyGmV/0hnloKjuTrOmpSFlbfOY78H39rgjUQ==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '>=16'
-    dependencies:
-      react: 18.2.0
 
   /photoswipe/5.3.4:
     resolution: {integrity: sha512-SN+RWHqxJvdwzXJsh8KrG+ajjPpdTX5HpKglEd0k9o6o5fW+QHPkW8//Bo11MB+NQwTa/hFw8BDv2EdxiDXjNw==}

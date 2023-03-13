@@ -3,7 +3,7 @@
 //
 
 import { useDroppable } from '@dnd-kit/core';
-import { PlusCircle } from 'phosphor-react';
+import { PlusCircle } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';

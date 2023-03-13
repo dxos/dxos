@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus, XCircle } from 'phosphor-react';
+import { Plus, XCircle } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 

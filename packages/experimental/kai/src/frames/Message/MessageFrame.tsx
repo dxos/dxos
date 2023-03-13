@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle } from 'phosphor-react';
+import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 

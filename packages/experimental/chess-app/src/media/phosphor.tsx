@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Flame, Crown, ShieldStar, Plus, Asterisk, User } from 'phosphor-react';
+import { Flame, Crown, ShieldStar, Plus, Asterisk, User } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 const style = {
