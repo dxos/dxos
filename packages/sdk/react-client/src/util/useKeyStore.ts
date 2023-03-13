@@ -6,6 +6,7 @@ import { useEffect, useMemo, useReducer } from 'react';
 
 /**
  * Settings store.
+ * @deprecated Replace with HALO key store when available.
  */
 export const useKeyStore = (
   defaultKeys: string[] = []
