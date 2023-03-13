@@ -14,7 +14,7 @@ import {
   Planet,
   Plus,
   Sidebar
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 

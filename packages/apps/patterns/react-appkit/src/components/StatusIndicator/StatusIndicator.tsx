@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { WifiHigh, WifiSlash } from 'phosphor-react';
+import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';

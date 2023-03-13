@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { QrCode as QrCodeIcon, CopySimple } from 'phosphor-react';
+import { QrCode as QrCodeIcon, CopySimple } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
 

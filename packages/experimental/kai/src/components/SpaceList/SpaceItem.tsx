@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UserPlus } from 'phosphor-react';
+import { UserPlus } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 import { Space } from '@dxos/client';

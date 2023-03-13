@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ProhibitInset, XCircle } from 'phosphor-react';
+import { ProhibitInset, XCircle } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, Check } from 'phosphor-react';
+import { CaretLeft, Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';

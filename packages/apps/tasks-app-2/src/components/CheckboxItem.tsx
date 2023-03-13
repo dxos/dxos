@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { X } from 'phosphor-react';
+import { X } from '@phosphor-icons/react';
 import React, { KeyboardEvent, forwardRef } from 'react';
 
 import { mx, getSize, defaultFocus, Button, hover } from '@dxos/react-components';

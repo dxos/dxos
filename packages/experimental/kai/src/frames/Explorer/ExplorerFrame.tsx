@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsteriskSimple, Graph, Leaf, Tree } from 'phosphor-react';
+import { AsteriskSimple, Graph, Leaf, Tree } from '@phosphor-icons/react';
 import React, { FC, useMemo, useState } from 'react';
 
 import { GraphModel } from '@dxos/gem-spore';

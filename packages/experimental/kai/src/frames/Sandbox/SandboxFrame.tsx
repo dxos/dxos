@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PlayCircle } from 'phosphor-react';
+import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';

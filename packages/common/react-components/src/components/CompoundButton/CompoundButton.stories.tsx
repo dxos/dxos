@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import { ArrowRight, ClockCounterClockwise } from 'phosphor-react';
+import { ArrowRight, ClockCounterClockwise } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
 
 import { CompoundButton, CompoundButtonProps } from './CompoundButton';

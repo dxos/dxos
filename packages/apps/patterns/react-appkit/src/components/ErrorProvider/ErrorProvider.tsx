@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Warning } from 'phosphor-react';
+import { Warning } from '@phosphor-icons/react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
 import { valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-components';

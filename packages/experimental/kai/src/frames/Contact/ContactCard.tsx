@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowCircleRight, Buildings, UserCircle, UserCirclePlus } from 'phosphor-react';
+import { ArrowCircleRight, Buildings, UserCircle, UserCirclePlus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Contact } from '@dxos/kai-types';
