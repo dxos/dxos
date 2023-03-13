@@ -19,5 +19,7 @@ export const composer = {
   'upload file message': 'Drag file here or click to browse',
   'space settings label': 'Settings',
   'space name label': 'Space name',
-  'hide space label': 'Hide this space'
+  'hide space label': 'Hide this space',
+  'profile settings label': 'Profile settings',
+  'github pat label': 'Github personal access token'
 };
