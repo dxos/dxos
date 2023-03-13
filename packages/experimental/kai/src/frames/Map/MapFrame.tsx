@@ -10,7 +10,7 @@ import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { LatLng, Organization } from '@dxos/kai-types';
+import { GeoLocation, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
 
@@ -38,7 +38,7 @@ export const MapFrame = () => {
 type MapPropsGetter<T> = {
   id: (object: T) => string;
   label: (object: T) => string;
-  coordinates: (object: T) => LatLng | undefined;
+  coordinates: (object: T) => GeoLocation | undefined;
 };
 
 /**

@@ -26,12 +26,12 @@ export class KaiBot extends Bot {
     // TODO(burdon): Generalize generators and triggers.
     const generator = new ContactStackGenerator();
     const stacks = this.space.db.query(DocumentStack.filter());
-    this._subscription = stacks.subscribe(async (query) => {
-      log.info('updated', { objects: query.objects.length });
-      query.objects.forEach((stack) => {
+    this._subscription = stacks.subscribe(async ({ objects: stacks }) => {
+      log.info('updated', { objects: stacks.length });
+      for (const stack of stacks) {
         log.info('stack', { stack: JSON.stringify(stack) });
-        void generator.update(this._chatModel!, this.space, stack);
-      });
+        await generator.update(this._chatModel!, this.space, stack);
+      }
     });
   }
 

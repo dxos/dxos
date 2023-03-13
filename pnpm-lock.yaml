@@ -3123,24 +3123,32 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@octokit/rest': ^19.0.5
+      '@types/faker': ^5.5.9
       '@types/html-to-text': ^9.0.0
       '@types/imap': ^0.8.35
       '@types/imap-simple': ^4.2.5
       '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.startcase': ^4.4.7
       '@types/mailparser': ^3.4.0
+      '@types/split2': ^3.2.1
+      amadeus: ^8.0.0
       assert: ^2.0.0
       chess.js: 1.0.0-alpha.0
       cross-fetch: ^3.1.5
+      csv-parse: ^5.3.6
       date-fns: ^2.29.3
       email-addresses: ^5.0.0
+      faker: ^5.5.3
       html-to-text: ^9.0.4
       imap: ^0.8.19
       imap-simple: ^5.1.0
       js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       lodash.startcase: ^4.4.0
       mailparser: ^3.6.4
       openai: ^3.2.1
+      split2: ^4.1.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
@@ -3155,25 +3163,33 @@ importers:
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@octokit/rest': 19.0.5
+      amadeus: 8.0.0
       assert: 2.0.0
       chess.js: 1.0.0-alpha.0
       cross-fetch: 3.1.5
+      csv-parse: 5.3.6
       date-fns: 2.29.3
       email-addresses: 5.0.0
+      faker: 5.5.3
       html-to-text: 9.0.4
       imap: 0.8.19
       imap-simple: 5.1.0
       js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       lodash.startcase: 4.4.0
       mailparser: 3.6.4
       openai: 3.2.1
+      split2: 4.1.0
     devDependencies:
+      '@types/faker': 5.5.9
       '@types/html-to-text': 9.0.0
       '@types/imap': 0.8.35
       '@types/imap-simple': 4.2.5
       '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.startcase': 4.4.7
       '@types/mailparser': 3.4.0
+      '@types/split2': 3.2.1
 
   packages/experimental/kai-types:
     specifiers:
@@ -13458,7 +13474,7 @@ packages:
   /@types/lodash.defaultsdeep/4.6.7:
     resolution: {integrity: sha512-D+AUxs64qehDMkbfFoskG0XsIOh2CHBGqYfcQcubLbZSFCGKJKS885su3a97huqBNHj+p9of9UZ/uUIP46wUGQ==}
     dependencies:
-      '@types/lodash': 4.14.186
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.flatten/4.4.7:
@@ -13880,6 +13896,12 @@ packages:
 
   /@types/source-list-map/0.1.2:
     resolution: {integrity: sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==}
+    dev: true
+
+  /@types/split2/3.2.1:
+    resolution: {integrity: sha512-7uz3yU+LooBq4yNOzlZD9PU9/1Eu0rTD1MjQ6apOVEoHsPrMUrFw7W8XrvWtesm2vK67SBK9AyJcOXtMpl9bgQ==}
+    dependencies:
+      '@types/node': 18.11.9
     dev: true
 
   /@types/stack-utils/2.0.1:
@@ -15312,6 +15334,13 @@ packages:
     resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
     dev: false
 
+  /amadeus/8.0.0:
+    resolution: {integrity: sha512-k80V09SEitO8dJlUaKSDWqwnCetbWUxAiZo2t6vWTzbZV5LQoqSK8G+B31+ZqMbA7zFZdP/7LYSrqIuB1SlL0w==}
+    dependencies:
+      bluebird: 3.7.2
+      qs: 6.11.0
+    dev: false
+
   /analytics-node/6.2.0:
     resolution: {integrity: sha512-NLU4tCHlWt0tzEaFQL7NIoWhq2KmQSmz0JvyS2lYn6fc4fEjTMSabhJUx8H1r5995FX8fE3rZ15uIHU6u+ovlQ==}
     engines: {node: '>=4'}
@@ -16312,7 +16341,6 @@ packages:
 
   /bluebird/3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
-    dev: true
 
   /bn.js/4.12.0:
     resolution: {integrity: sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==}
@@ -18309,6 +18337,10 @@ packages:
 
   /csstype/3.1.1:
     resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+
+  /csv-parse/5.3.6:
+    resolution: {integrity: sha512-WI330GjCuEioK/ii8HM2YE/eV+ynpeLvU+RXw4R8bRU8R0laK5zO3fDsc4gH8s472e3Ga38rbIjCAiQh+tEHkw==}
+    dev: false
 
   /ctype/0.5.3:
     resolution: {integrity: sha512-T6CEkoSV4q50zW3TlTHMbzy1E5+zlnNcY+yb7tWVYlTwPhx9LpnfAkd4wecpWknDyptp4k97LUZeInlf6jdzBg==}
@@ -29879,7 +29911,6 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.4
-    dev: true
 
   /qs/6.7.0:
     resolution: {integrity: sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==}
@@ -32530,6 +32561,11 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       extend-shallow: 3.0.2
+
+  /split2/4.1.0:
+    resolution: {integrity: sha512-VBiJxFkxiXRlUIeyMQi8s4hgvKCSjtknJv/LVYbrgALPwf5zSKmEwV9Lst25AkvMDnvxODugjdl6KZgwKM1WYQ==}
+    engines: {node: '>= 10.x'}
+    dev: false
 
   /sprintf-js/1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
