@@ -22,7 +22,7 @@ export type ObjectSyncExtensionParams = {
  * Manages replication between a set of feeds for a single teleport session.
  */
 export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle> {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({ onError: (err) => log.catch(err) });
 
   /**
    * Set of id's remote peer wants.
@@ -87,7 +87,11 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
     }
 
     log('want', { wantList });
-    await this.rpc.ObjectSyncService.want({ ids: [...wantList] });
+    try {
+      await this.rpc.ObjectSyncService.want({ ids: [...wantList] });
+    } catch (err) {
+      log.warn('want error', err);
+    }
   }
 
   pushInASeparateTask(data: DataObject) {
