@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import faker from 'faker';
 import {
   AirplaneTakeoff,
   ArrowLeft,
@@ -15,6 +14,7 @@ import {
   User,
   Users
 } from '@phosphor-icons/react';
+import faker from 'faker';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';

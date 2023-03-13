@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import { Check } from '@phosphor-icons/react';
+import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import React from 'react';
 
 import { Button, getSize, useTranslation } from '@dxos/react-components';

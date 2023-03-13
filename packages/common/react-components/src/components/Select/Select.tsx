@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as SelectPrimitive from '@radix-ui/react-select';
 import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
+import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { ReactNode } from 'react';
 
 import { mx } from '../../util';

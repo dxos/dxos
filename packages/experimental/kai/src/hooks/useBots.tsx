@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
+import assert from 'assert';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';

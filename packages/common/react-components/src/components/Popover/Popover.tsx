@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { X } from '@phosphor-icons/react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import { X } from '@phosphor-icons/react';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
 import { defaultActive, defaultFocus, hover, getSize } from '../../styles';

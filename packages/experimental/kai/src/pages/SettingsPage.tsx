@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import formatDistance from 'date-fns/formatDistance';
 import { Bug } from '@phosphor-icons/react';
+import formatDistance from 'date-fns/formatDistance';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SyntaxHighlighter from 'react-syntax-highlighter';

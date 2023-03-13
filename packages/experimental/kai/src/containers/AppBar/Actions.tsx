@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import MobileDetect from 'mobile-detect';
 import { DownloadSimple, UploadSimple, Gear, Robot, Trash } from '@phosphor-icons/react';
+import MobileDetect from 'mobile-detect';
 import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from '@phosphor-icons/react';
 import assert from 'assert';
 import { Chess, Color } from 'chess.js';
-import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from '@phosphor-icons/react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';

@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 
-import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import {
   Gear,
   File,
@@ -17,6 +16,7 @@ import {
   CaretRight,
   Person
 } from '@phosphor-icons/react';
+import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import React, { ReactNode } from 'react';
 
 import { Button } from '../Button';
