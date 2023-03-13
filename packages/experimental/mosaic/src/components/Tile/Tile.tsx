@@ -8,8 +8,8 @@ import React, { FC } from 'react';
 
 import { mx } from '@dxos/react-components';
 
-import { Bounds, Item } from '../layout';
-import { GridLensModel } from './Grid';
+import { Bounds, Item } from '../../layout';
+import { GridLensModel } from '../Grid';
 
 export type TileContentProps<T extends {} = {}> = {
   item: Item<T>;
