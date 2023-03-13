@@ -8,9 +8,10 @@ import { describe, test } from '@dxos/test';
 
 import { Airports, fetchAirports } from './airports';
 
-describe('airports', () => {
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('airports', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('parse airports', async () => {
+  test('parse airports', async () => {
     const airports = new Airports(await fetchAirports());
     expect(airports.airports).to.have.length.greaterThan(1);
 

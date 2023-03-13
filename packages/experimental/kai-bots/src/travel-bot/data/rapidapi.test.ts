@@ -3,12 +3,17 @@
 //
 
 import { Config } from '@dxos/config';
-import { describe, test } from '@dxos/test';
+import { beforeAll, describe, test } from '@dxos/test';
 
 import { getKey, loadJson } from '../../util';
 
-describe('rapid API', () => {
-  const config = new Config(loadJson(process.env.TEST_CONFIG!));
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('rapid API', () => {
+  let config: Config;
+
+  beforeAll(() => {
+    config = new Config(loadJson(process.env.TEST_CONFIG!));
+  });
 
   // TODO(burdon): Generalize Rapid API.
   // eslint-disable-next-line mocha/no-skipped-tests

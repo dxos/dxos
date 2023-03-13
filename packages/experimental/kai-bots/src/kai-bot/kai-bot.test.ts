@@ -13,9 +13,10 @@ import { describe, test } from '@dxos/test';
 import { loadJson } from '../util';
 import { KaiBot } from './kai-bot';
 
-describe('KaiBot', () => {
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('KaiBot', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('basic', async () => {
+  test('basic', async () => {
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();

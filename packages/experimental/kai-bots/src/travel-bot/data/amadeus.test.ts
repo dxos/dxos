@@ -6,35 +6,39 @@ import { FlightOffer, FlightQuery } from 'amadeus';
 import { add, formatISO9075 } from 'date-fns';
 
 import { Config } from '@dxos/config';
-import { describe, test } from '@dxos/test';
+import { beforeAll, describe, test } from '@dxos/test';
 
 import { getKey, loadJson } from '../../util';
 import { Amadeus } from './amadeus';
 
-describe('amadeus', () => {
-  const config = new Config(loadJson(process.env.TEST_CONFIG!));
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('amadeus', () => {
+  let amadeus: Amadeus;
 
-  const amadeus = new Amadeus({
-    clientId: getKey(config, 'com.amadeus.client_id')!,
-    clientSecret: getKey(config, 'com.amadeus.client_secret')!
+  beforeAll(() => {
+    const config = new Config(loadJson(process.env.TEST_CONFIG!));
+    amadeus = new Amadeus({
+      clientId: getKey(config, 'com.amadeus.client_id')!,
+      clientSecret: getKey(config, 'com.amadeus.client_secret')!
+    });
   });
 
-  // TODO(burdon): Create CLI to output JSON (jq).
+  // TODO(burdon): Create CLI tool (JSON output).
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('cities', async () => {
+  test('cities', async () => {
     const cities = await amadeus.cities({ keyword: 'lon' });
     console.log(cities);
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('airports', async () => {
+  test('airports', async () => {
     const airports = await amadeus.airports({ latitude: 51, longitude: 0 });
     console.log(airports);
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('flights', async () => {
+  test('flights', async () => {
     // TODO(burdon): IATA code for NY airports (e.g., incl. EWR) is NYC?
     const origin = 'JFK';
     const destination = 'CDG';

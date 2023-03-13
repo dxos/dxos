@@ -17,9 +17,9 @@ import { describe, test } from '@dxos/test';
 import { loadJson } from '../util';
 import { TravelBot } from './travel-bot';
 
-// TODO(burdon): Logging config?
+// TODO(burdon): Configure logging.
 
-describe('TravelBot', () => {
+describe.skip('TravelBot', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     // TODO(burdon): Config sets up network!
@@ -35,15 +35,6 @@ describe('TravelBot', () => {
 
     {
       const trigger = new Trigger<Trip>();
-
-      //
-      // TODO(burdon): Called recursively since self-modified.
-      //  - Ephemeral query if user is present?
-      //  - But in general need async call-and-response pattern. Different objects?
-      //
-
-      // TODO(burdon): Output input/output to tmp file to view.
-      // TODO(burdon): Auto-join bots.
 
       const query = space.db.query(Trip.filter());
       const unsubscribe = query.subscribe(

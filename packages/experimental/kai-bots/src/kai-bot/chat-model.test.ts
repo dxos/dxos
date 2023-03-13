@@ -18,7 +18,8 @@ const getKey = (config: Config, name: string) => {
   return key?.value;
 };
 
-describe('ChatModel', () => {
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('ChatModel', () => {
   const createChatModel = (): ChatModel => {
     const config = getConfig()!;
     return new ChatModel({
@@ -28,7 +29,7 @@ describe('ChatModel', () => {
   };
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('basic', async () => {
+  test('basic', async () => {
     const chat = createChatModel();
     const { messages } = loadJson('packages/experimental/kai-bots/testing/messages.json');
     const result = await chat.request(messages);
@@ -36,7 +37,7 @@ describe('ChatModel', () => {
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  test.skip('create contact stack', async () => {
+  test('create contact stack', async () => {
     const _schema: SchemaMap = {
       person: [
         {
