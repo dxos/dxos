@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from '@phosphor-icons/react';
 import assert from 'assert';
-import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';

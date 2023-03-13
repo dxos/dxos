@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Globe } from 'phosphor-react';
+import { Globe } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { Link } from 'react-router-dom';
 

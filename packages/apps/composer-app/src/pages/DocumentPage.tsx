@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from 'phosphor-react';
+import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from '@phosphor-icons/react';
 import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';

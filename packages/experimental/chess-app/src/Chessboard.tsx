@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { Chess, Color } from 'chess.js';
-import { ArrowURightDown, Circle } from 'phosphor-react';
 import React, { FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Archive, CheckSquare, User } from 'phosphor-react';
+import { Archive, CheckSquare, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';

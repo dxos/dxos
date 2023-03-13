@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle } from 'phosphor-react';
+import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle } from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
