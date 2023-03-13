@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -138,6 +139,19 @@ export default defineConfig({
         ]
       }
     }),
+
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'kai',
+            include: './out/kai',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : []),
+
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

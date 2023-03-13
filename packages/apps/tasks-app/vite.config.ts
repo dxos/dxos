@@ -36,7 +36,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),
@@ -67,11 +67,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'tasks-app',
-      include: './out/tasks',
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    })
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'tasks-app',
+            include: './out/tasks',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
   ]
 });

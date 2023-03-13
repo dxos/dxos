@@ -34,6 +34,7 @@ export {
   SpaceStatus,
   SystemStatus
 } from '@dxos/protocols/proto/dxos/client/services';
+export type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
