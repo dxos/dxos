@@ -252,9 +252,10 @@ message Trip {
     Address address = 3;
   }
 
-  string name = 1;
-  string date_start = 2;
-  string date_end = 3;
+  string updated = 1; // TODO(burdon): System.
+  string name = 2;
+  string date_start = 3;
+  string date_end = 4;
 
   // TODO(burdon): Rename Leg? (Leg is slightly longer: e.g., Rome to Rio leg of round-the-world)
   repeated Destination destinations = 10;
@@ -266,16 +267,24 @@ message Trip {
   TravelProfile profile = 20;
 }
 
-//
-// TODO(burdon): Reuse low-level structs in ephemeral payloads (e.g., booking offers).
-//  - Then promote to objects once accepted?
-//
+// TODO(burdon): No unique way to refer back to a Booking/Offer
+
+// TODO(burdon): Use timestamp to diff Ticket.
 
 // TODO(burdon): Plane, Hotel, Car, etc.
 // TODO(burdon): Multiple people.
 message Booking {
-  repeated Ticket tickets = 1;
-  Transaction transaction = 2;
+  option (object) = true;
+
+  string updated = 1; // TODO(burdon): System.
+  repeated Ticket tickets = 2;
+  Transaction transaction = 3;
+
+  string trip_updated = 10;
+}
+
+message Offer { // TODO(burdon): Response?
+
 }
 
 message TravelProfile {

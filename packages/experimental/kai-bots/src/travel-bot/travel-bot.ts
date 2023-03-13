@@ -7,7 +7,7 @@ import { formatISO9075 } from 'date-fns';
 
 import { debounce } from '@dxos/async';
 import { Subscription } from '@dxos/echo-schema';
-import { Ticket, Trip } from '@dxos/kai-types';
+import { Booking, Ticket, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
 import { Bot } from '../bot';
@@ -128,13 +128,16 @@ export class TravelBot extends Bot {
         }))
       };
 
-      trip.bookings.push({
-        tickets: [ticket],
-        transaction: {
-          currency: offer.price.currency,
-          total: offer.price.total
-        }
-      });
+      // TODO(burdon): Create single QueryResponse object?
+      trip.bookings.push(
+        new Booking({
+          tickets: [ticket],
+          transaction: {
+            currency: offer.price.currency,
+            total: offer.price.total
+          }
+        })
+      );
     });
   }
 }

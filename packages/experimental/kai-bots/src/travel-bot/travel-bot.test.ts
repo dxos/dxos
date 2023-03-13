@@ -61,8 +61,11 @@ describe('TravelBot', () => {
         carriers: ['AA', 'AF', 'LH', 'SQ']
       };
 
+      const now = new Date();
+
       await space.db.add(
         new Trip({
+          updated: now.toISOString(), // TODO(burdon): System property.
           name: '2023-Q2 Europe',
           profile,
           destinations: [
@@ -72,19 +75,19 @@ describe('TravelBot', () => {
               }
             },
             {
-              dateStart: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' }),
+              dateStart: formatISO9075(add(now, { days: 7 }), { representation: 'date' }),
               address: {
                 cityCode: 'MUC'
               }
             },
             {
-              dateStart: formatISO9075(add(Date.now(), { days: 10 }), { representation: 'date' }),
+              dateStart: formatISO9075(add(now, { days: 10 }), { representation: 'date' }),
               address: {
                 cityCode: 'BER'
               }
             },
             {
-              dateStart: formatISO9075(add(Date.now(), { days: 18 }), { representation: 'date' }),
+              dateStart: formatISO9075(add(now, { days: 18 }), { representation: 'date' }),
               address: {
                 cityCode: 'NYC'
               }

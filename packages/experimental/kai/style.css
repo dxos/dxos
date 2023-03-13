@@ -80,8 +80,14 @@ body {
 .rbc-agenda-table {
   border: none !important;
 }
+.rbc-agenda-date-cell {
+  @apply text-sm pl-0 pt-2 !important;
+}
 .rbc-agenda-time-cell {
+  @apply text-sm pt-2 !important;
   padding: 5px 0 5px 0 !important;
+}
+.rbc-agenda-event-cell {
 }
 .rbc-agenda-table td {
   border: none !important;
