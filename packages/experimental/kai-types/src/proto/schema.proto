@@ -47,6 +47,17 @@ message Link {
 }
 
 //
+// Views
+//
+
+message View {
+  option (object) = true;
+
+  string type = 1;
+  string title = 2;
+}
+
+//
 // Objects
 //
 

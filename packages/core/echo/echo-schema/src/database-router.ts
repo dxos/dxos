@@ -61,6 +61,7 @@ export class DatabaseRouter {
    * Always calls the callback on the first `selection.update` call.
    */
   // TODO(burdon): Add filter?
+  // TODO(burdon): Immediately trigger callback.
   createSubscription(onUpdate: (info: UpdateInfo) => void): SubscriptionHandle {
     let subscribed = true;
 
