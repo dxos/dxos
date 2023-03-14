@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Contact, Task } from './proto';
+import { Contact, Container, Task } from './proto';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
@@ -94,5 +94,10 @@ describe('schema', () => {
       },
       { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } }
     ]);
+  });
+
+  test('enums', () => {
+    const container = new Container({ objects: [{ type: Container.Record.Type.BRAINFRAME }] });
+    expect(container.objects[0].type).to.eq(Container.Record.Type.BRAINFRAME);
   });
 });
