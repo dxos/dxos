@@ -6,19 +6,18 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
-import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { botDefs, useAppRouter, useBotClient, useKeyStore, getBotEnvs, botKeys } from '../../hooks';
+import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 1000;
 
 type BotRecord = {
   id: string;
   image: string;
-  port: number;
   name: string;
   created: number;
   state: string;
@@ -32,21 +31,16 @@ const columns: Column<BotRecord>[] = [
     accessor: (record) => PublicKey.from(record.id).truncate(),
     width: 120
   },
-  {
-    Header: 'image',
-    Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
-    accessor: (record) => record.image.split(':')[1],
-    width: 120
-  },
-  {
-    Header: 'port',
-    accessor: (record) => record.port,
-    width: 80
-  },
+  // {
+  //   Header: 'image',
+  //   Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
+  //   accessor: (record) => record.image.split(':')[1],
+  //   width: 120
+  // },
   {
     Header: 'name',
     accessor: (record) => record.name,
-    width: 160
+    width: 200
   },
   {
     Header: 'created',
@@ -89,11 +83,10 @@ export const BotFrame = () => {
     refreshTimeout.current = setTimeout(async () => {
       refreshTimeout.current = undefined;
 
-      const response = (await botClient?.getBots()) ?? [];
+      const response = await botClient?.getBots();
       const records = response.map((record: any) => ({
         id: record.Id,
         image: record.ImageID,
-        port: record.Ports[0].PublicPort,
         name: record.Labels['dxos.bot.name'],
         created: new Date(record.Created * 1000).getTime(),
         state: record.State,
@@ -103,6 +96,11 @@ export const BotFrame = () => {
       setRecords(records);
       setStatus('');
     }, REFRESH_DELAY);
+  };
+
+  const handleDelete = async () => {
+    await botClient?.removeBots();
+    refresh();
   };
 
   if (!botClient) {
@@ -115,8 +113,7 @@ export const BotFrame = () => {
         <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
           Start
         </Button>
-        {/* TODO(burdon): full width, value, onChange. */}
-        <Select defaultValue={botId} onValueChange={setBotId}>
+        <Select value={botId} onValueChange={setBotId}>
           {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
             <Select.Item key={id} value={id!}>
               <div className='flex items-center'>
@@ -127,9 +124,14 @@ export const BotFrame = () => {
           ))}
         </Select>
         <div className='grow' />
-        <Button className='mr-2' onClick={refresh}>
-          Refresh
-        </Button>
+        <div>
+          <Button className='mr-2' onClick={handleDelete}>
+            Reset
+          </Button>
+          <Button className='mr-2' onClick={refresh}>
+            Refresh
+          </Button>
+        </div>
       </Toolbar>
 
       <Table

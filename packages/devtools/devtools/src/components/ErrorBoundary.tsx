@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Clipboard } from 'phosphor-react';
+import { Clipboard } from '@phosphor-icons/react';
 import React, { Component, PropsWithChildren, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 

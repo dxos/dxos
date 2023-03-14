@@ -58,4 +58,14 @@ describe('database', () => {
       expect(task.description.model!.textContent).to.eq('test');
     });
   });
+
+  test('enums', async () => {
+    const database = await createDatabase();
+
+    const container = new Container({ objects: [{ type: Container.Record.Type.BRAINFRAME }] });
+    await database.add(container);
+    const queriedContainer = database.query(Container.filter()).objects[0];
+    expect(queriedContainer.objects).to.have.length(1);
+    expect(queriedContainer.objects[0].type).to.eq(Container.Record.Type.BRAINFRAME);
+  });
 });

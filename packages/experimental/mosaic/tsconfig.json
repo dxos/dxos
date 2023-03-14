@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/config"
     }
   ],
   "ts-node": {

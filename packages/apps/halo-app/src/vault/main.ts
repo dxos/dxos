@@ -42,8 +42,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
 };
 
 const main = async () => {
-  const params = new URLSearchParams(window.location.search);
-  const shellDisabled = params.get('shell') === 'false';
+  const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
   // TODO(wittjosiah): Remove mobile check once we can inspect shared workers in iOS Safari.

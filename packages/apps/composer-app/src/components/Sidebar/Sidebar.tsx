@@ -2,7 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft, Circle, FileText, Intersect, PaperPlaneTilt, Planet, Plus, Sidebar } from 'phosphor-react';
+import {
+  ArrowLineLeft,
+  Article,
+  ArticleMedium,
+  Circle,
+  DotsThreeVertical,
+  EyeSlash,
+  Intersect,
+  PaperPlaneTilt,
+  Planet,
+  Plus,
+  Sidebar
+} from '@phosphor-icons/react';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
@@ -13,11 +25,17 @@ import {
   Button,
   buttonStyles,
   DensityProvider,
+  DropdownMenu,
+  DropdownMenuItem,
   ElevationProvider,
   getSize,
+  Input,
   ListItemEndcap,
   mx,
   ThemeContext,
+  TooltipContent,
+  TooltipRoot,
+  TooltipTrigger,
   TreeBranch,
   TreeItem,
   TreeItemBody,
@@ -35,6 +53,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
   const { t } = useTranslation('composer');
   const { docKey } = useParams();
   const active = docKey === document.id;
+  const Icon = document.textintention === 'markdown' ? ArticleMedium : Article;
   return (
     <TreeItem>
       <TreeItemHeading asChild>
@@ -42,7 +61,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
           to={linkTo}
           className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
         >
-          <FileText weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
+          <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           <ListItemEndcap className='is-6 flex items-center'>
             <Circle
@@ -62,15 +81,33 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const navigate = useNavigate();
   const shell = useShell();
   const { spaceKey, docKey } = useParams();
+  const identity = useIdentity();
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
     document.content = new Text(); // TODO(burdon): Make automatic?
+    document.textintention = 'markdown';
     return navigate(getPath(space, document));
   }, [space, navigate]);
 
   const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+
+  const handleHideSpace = () => {
+    if (identity) {
+      const identityHex = identity.identityKey.toHex();
+      space.properties.members = {
+        ...space.properties.members,
+        [identityHex]: {
+          ...space.properties.members?.[identityHex],
+          hidden: true
+        }
+      };
+      if (spaceKey === abbreviateKey(space.key)) {
+        navigate('/');
+      }
+    }
+  };
 
   const [open, setOpen] = useState(spaceKey === abbreviateKey(space.key));
 
@@ -91,19 +128,40 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     >
       <div role='none' className='flex mis-1 items-start'>
         <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
-          {space.properties.name ?? space.key.truncate()}
+          {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : space.key.truncate()}
         </TreeItemHeading>
-        <Tooltip
-          content={t('view space invitations label', { ns: 'os' })}
-          tooltipLabelsTrigger
-          side='bottom'
-          zIndex='z-40'
-        >
-          <Button variant='ghost' className='shrink-0 pli-1' onClick={handleViewInvitations}>
-            <PaperPlaneTilt className={getSize(4)} />
-          </Button>
-        </Tooltip>
-        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-40'>
+        <TooltipRoot>
+          <TooltipContent className='z-[31]' side='bottom'>
+            {t('space options label')}
+          </TooltipContent>
+          <DropdownMenu
+            trigger={
+              <TooltipTrigger asChild>
+                <Button variant='ghost' className='shrink-0 pli-1'>
+                  <DotsThreeVertical className={getSize(4)} />
+                </Button>
+              </TooltipTrigger>
+            }
+            slots={{ content: { className: 'z-[31]' } }}
+          >
+            <Input
+              label={t('space name label')}
+              labelVisuallyHidden
+              value={space.properties.name ?? ''}
+              placeholder={space.key.truncate()}
+              onChange={({ target: { value } }) => (space.properties.name = value)}
+            />
+            <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
+              <PaperPlaneTilt className={getSize(4)} />
+              <span>{t('view space invitations label', { ns: 'os' })}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
+              <EyeSlash className={getSize(4)} />
+              <span>{t('hide space label')}</span>
+            </DropdownMenuItem>
+          </DropdownMenu>
+        </TooltipRoot>
+        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
           <Button variant='ghost' className='shrink-0 pli-1' onClick={handleCreate}>
             <span className='sr-only'>{t('create document label')}</span>
             <Plus className={getSize(4)} />
@@ -123,23 +181,26 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   );
 });
 
-const DocumentTree = () => {
+const DocumentTree = observer(() => {
   const spaces = useSpaces();
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
+  const identity = useIdentity();
   return (
     <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
       <TreeRoot labelId={treeLabel}>
-        {spaces.map((space) => {
-          return <SpaceTreeItem key={space.key.toHex()} space={space} />;
-        })}
+        {spaces
+          .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
+          .map((space) => {
+            return <SpaceTreeItem key={space.key.toHex()} space={space} />;
+          })}
       </TreeRoot>
     </div>
   );
-};
+});
 
 const SidebarContent = () => {
   const client = useClient();
@@ -169,7 +230,7 @@ const SidebarContent = () => {
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
               <Tooltip
                 content={t('create space label', { ns: 'appkit' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >
@@ -179,7 +240,7 @@ const SidebarContent = () => {
               </Tooltip>
               <Tooltip
                 content={t('join space label', { ns: 'appkit' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >
@@ -189,7 +250,7 @@ const SidebarContent = () => {
               </Tooltip>
               <Tooltip
                 content={t('close sidebar label', { ns: 'os' })}
-                zIndex='z-40'
+                zIndex='z-[31]'
                 side='bottom'
                 tooltipLabelsTrigger
               >

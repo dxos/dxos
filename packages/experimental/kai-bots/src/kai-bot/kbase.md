@@ -12,6 +12,8 @@
 - Data becomes its own context for computation. More accurately it's the bridge between human and the machine (since the ontology is human readable/comprehensible).
 - Stacks represent reified schema that has been computed. They maintain a "memory" of the computation.
 
+- TODO(burdon): Explore analogy with GraphQL resolvers.
+
 - TODO(burdon): Create demo.
 - TODO(burdon): Create deck.
 - TODO(burdon): Information theory.

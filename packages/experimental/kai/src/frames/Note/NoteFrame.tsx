@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
+import { ArrowsIn, ArrowsOut, PlusCircle } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,6 +22,7 @@ const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
   if (idx === -1) {
     board.locations.push({ ...location, objectId: id });
   } else {
+    // TODO(burdon): If not object, then remove based on ID.
     board.locations.splice(idx, 1, { ...location, objectId: id });
   }
 };
@@ -48,7 +49,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 };
 
 export const NoteFrame = () => {
-  const range = { x: 4, y: 3 };
+  const range = { x: 4, y: 3 }; // TODO(burdon): Props.
 
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
@@ -76,7 +77,7 @@ export const NoteFrame = () => {
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
   useSubscription(() => {
-    // TODO(burdon): Rename.
+    // TODO(burdon): Board is stale (undefined -- even though set below).
     if (board) {
       setItems(doLayout(board, notes, layout));
     }

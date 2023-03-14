@@ -244,25 +244,11 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
         this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
-          if (item instanceof EchoObject) {
-            this._linkObject(item);
-            return new Reference(item.id);
-          } else if (isReferenceLike(item)) {
-            return new Reference(item['@id']);
-          } else {
-            return item;
-          }
-        });
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
-        value._attach(this[base], key);
-      } else if (Array.isArray(value)) {
-        // TODO(dmaretskyi): Make a single mutation.
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
-        this._get(key).push(...value);
-      } else if (typeof value === 'object' && value !== null) {
-        if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
-          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
+        if (item instanceof EchoObject) {
+          this._linkObject(item);
+          return new Reference(item.id);
+        } else if (isReferenceLike(item)) {
+          return new Reference(item['@id']);
         } else {
           const sub = this._createProxy({}, key);
           for (const [subKey, subValue] of Object.entries(value)) {
@@ -394,7 +380,7 @@ Object.defineProperty(TypedDocument, 'name', { value: 'Document' });
 /**
  * Base class for generated document types and dynamic objects.
  */
-// TODO(burdon): Rename?
+// TODO(burdon): Must rename this (too many collisions).
 export type Document<T extends Record<string, any> = { [key: string]: any }> = TypedDocument<T> & T;
 
 // TODO(burdon): Support immutable objects?

@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 import { faker } from '@faker-js/faker';
-import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode } from 'phosphor-react';
+import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { Space, SpaceProxy, useClient, useIdentity, useSpaces } from '@dxos/react-client';

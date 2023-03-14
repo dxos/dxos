@@ -55,6 +55,7 @@ export class PublicKey {
     if (!source) {
       return undefined;
     }
+
     try {
       return PublicKey.from(source);
     } catch (error: any) {

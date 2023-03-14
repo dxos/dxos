@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UserPlus } from 'phosphor-react';
+import { UserPlus } from '@phosphor-icons/react';
 import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';

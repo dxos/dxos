@@ -46,9 +46,16 @@ message Container {
   option (object) = true;
 
   message Record {
+    enum Type {
+      UNSPECIFIED = 0;
+      BRAINFRAME = 1;
+      SCHOOL_FRIEND = 2;
+    }
+
     string title = 1;
     string description = 2;
     repeated Contact persons = 3;
+    Type type = 4;
   }
 
   repeated dxos.schema.Document documents = 1;
