@@ -28,7 +28,7 @@ export type EditableObjectListProps<T extends Document> = {
   onSelect?: (id: string) => void;
   onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
-  onCreate?: () => Promise<string>;
+  onCreate?: () => string;
 };
 
 // TODO(burdon): Replace with react-components list.
@@ -49,7 +49,7 @@ export const EditableObjectList = <T extends Document>({
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
-      const objectId = await onCreate();
+      const objectId = onCreate();
       if (objectId) {
         onSelect?.(objectId);
       }

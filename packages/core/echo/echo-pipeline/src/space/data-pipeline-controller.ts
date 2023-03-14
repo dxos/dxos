@@ -202,7 +202,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
           }
 
           await this.databaseBackend!.echoProcessor({
-            data: data.payload.data.object,
+            batch: data.payload.data.batch,
             meta: {
               feedKey,
               seq,

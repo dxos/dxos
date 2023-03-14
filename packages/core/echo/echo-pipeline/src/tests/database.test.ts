@@ -32,7 +32,7 @@ describe('database', () => {
       expect(result.objectsCreated.length).toEqual(1);
       expect(database.itemManager.entities.has(result.objectsCreated[0].id));
 
-      await (await result.getReceipt()).waitToBeProcessed();
+      await result.batch.waitToBeProcessed();
       expect(database.itemManager.entities.has(result.objectsCreated[0].id));
     });
 
@@ -46,7 +46,7 @@ describe('database', () => {
       );
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
 
-      await (await result.getReceipt()).waitToBeProcessed();
+      await result.batch.waitToBeProcessed();
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
     });
   });
