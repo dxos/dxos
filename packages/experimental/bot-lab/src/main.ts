@@ -103,16 +103,16 @@ const start = async () => {
     log.info('status', {
       bot: bot?.constructor.name,
       identity: client.halo.identity,
-      spaces: client.echo.getSpaces().map(space => ({
+      spaces: client.echo.getSpaces().map((space) => ({
         key: space.key,
         title: space.properties.title,
         members: space.getMembers()
       }))
     });
-  }
+  };
 
   printStatus();
-  setInterval(printStatus, 60_000)
+  setInterval(printStatus, 60_000);
 };
 
 const createBot = (bot?: string): Bot => {

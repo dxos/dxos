@@ -90,7 +90,7 @@ export class BotClient {
 
     /**
      * {@see DX_BOT_RPC_PORT_MIN}
-     */ 
+     */
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
     const request = {
       Image: BOT_IMAGE_URL,
@@ -137,14 +137,15 @@ export class BotClient {
     const fetchUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     const wsUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     wsUrl.protocol = protocol === 'https:' ? 'wss:' : 'ws:';
-    console.log({ fetchUrl, wsUrl })
+    console.log({ fetchUrl, wsUrl });
 
     const done = new Trigger();
     const clear = exponentialBackoffInterval(async () => {
       try {
         const res = await fetch(fetchUrl);
-        console.log(res.status)
-        if(res.status >= 400 && res.status !== 426) { // 426 Upgrade Required
+        console.log(res.status);
+        if (res.status >= 400 && res.status !== 426) {
+          // 426 Upgrade Required
           return;
         }
         console.log('connected', { fetchUrl });
@@ -154,7 +155,7 @@ export class BotClient {
       }
     }, BOT_STARTUP_CHECK_INTERVAL);
     try {
-      await done.wait({ timeout: BOT_STARTUP_CHECK_TIMEOUT })
+      await done.wait({ timeout: BOT_STARTUP_CHECK_TIMEOUT });
     } finally {
       clear();
     }
