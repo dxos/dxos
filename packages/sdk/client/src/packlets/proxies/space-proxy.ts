@@ -135,7 +135,7 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async initialize() {
-    if (this._initializing) {
+    if (this._initializing || this._initialized) {
       return;
     }
     log('initializing...');
@@ -173,6 +173,7 @@ export class SpaceProxy implements Space {
     }
 
     this._initialized = true;
+    this._initializing = false;
     this.stateUpdate.emit();
     log('initialized');
   }
