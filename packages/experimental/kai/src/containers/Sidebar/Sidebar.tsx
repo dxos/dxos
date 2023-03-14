@@ -94,10 +94,6 @@ export const Sidebar = () => {
     }
   }, [observable]);
 
-  useEffect(() => {
-    setShowSpaceList(false);
-  }, [space]);
-
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
     setPrevSpace(space);
@@ -191,27 +187,29 @@ export const Sidebar = () => {
       )}
     >
       {/* Space Selector */}
-      <div className={mx('flex shrink-0 items-center pl-4 h-[40px]', theme.classes.header)}>
-        <div className='flex items-center'>
-          <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
-            <Icon className={getSize(6)} />
+      <div className='flex flex-col shrink-0'>
+        <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
+          <div className='flex items-center'>
+            <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
+              <Icon className={getSize(6)} />
+            </Button>
+            <div className='pl-2 text-lg'>{space.properties?.name}</div>
+          </div>
+
+          <div className='flex grow' />
+
+          <Button variant='ghost' className='p-0' onClick={toggleSidebar}>
+            {isOpen && <CaretLeft className={getSize(6)} />}
           </Button>
-          <div className='pl-2 text-lg'>{space.properties?.name}</div>
         </div>
 
-        <div className='flex grow' />
-
-        <Button variant='ghost' className='p-0' onClick={toggleSidebar}>
-          {isOpen && <CaretLeft className={getSize(6)} />}
-        </Button>
+        <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
       </div>
 
-      <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
-
       {/* Spaces */}
-      {/* TODO(burdon): Radix Popover */}
+      {/* TODO(burdon): Radix Popover. */}
       {showSpaceList && (
-        <div className='flex flex-col overflow-y-auto bg-white pb-2 border-b'>
+        <div className='flex flex-col overflow-y-auto bg-white border-b'>
           <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
 
           {/* TODO(burdon): Observable. */}
@@ -220,7 +218,7 @@ export const Sidebar = () => {
           </div>
 
           {/* Menu */}
-          <div className='flex flex-col w-full px-4'>
+          <div className='flex flex-col w-full px-4 py-2 border-t'>
             <Button
               variant='ghost'
               className='flex p-0 justify-start'

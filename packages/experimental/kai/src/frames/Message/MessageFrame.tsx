@@ -22,6 +22,11 @@ export const MessageFrame = () => {
 
   // TODO(burdon): Add sort to filter.
   const messages = useQuery(space, Message.filter()).sort(sortMessage);
+  useEffect(() => {
+    if (frame && messages.length && !objectId) {
+      navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: messages[0].id }));
+    }
+  }, [frame]);
 
   const selected = objectId ? space?.db.getObjectById<Message>(objectId) : undefined;
   useEffect(() => {
