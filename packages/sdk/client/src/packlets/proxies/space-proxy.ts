@@ -70,7 +70,12 @@ export class SpaceProxy implements Space {
 
   private _invitations: CancellableInvitationObservable[] = [];
   private _properties?: Document;
-  private _initialized = false;
+  private _initializing = false;
+
+  /**
+   * @internal
+   */
+  _initialized = false;
 
   // prettier-ignore
   constructor(
@@ -112,7 +117,8 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
-    return this._properties!;
+    assert(this._properties, 'Properties not initialized.')
+    return this._properties;
   }
 
   get invitations() {
@@ -129,13 +135,13 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async initialize() {
-    if (this._initialized) {
+    if (this._initializing) {
       return;
     }
     log('initializing...');
 
     // TODO(burdon): Does this need to be set before method completes?
-    this._initialized = true;
+    this._initializing = true;
 
     await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('ready');
@@ -166,6 +172,7 @@ export class SpaceProxy implements Space {
       }
     }
 
+    this._initialized = true;
     this.stateUpdate.emit();
     log('initialized');
   }

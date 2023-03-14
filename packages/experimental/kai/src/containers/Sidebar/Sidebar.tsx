@@ -191,7 +191,7 @@ export const Sidebar = () => {
             <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
               <Icon className={getSize(6)} />
             </Button>
-            <div className='pl-2 text-lg'>{space.properties?.name}</div>
+            <div className='pl-2 text-lg'>{space.properties.name}</div>
           </div>
 
           <div className='flex grow' />
