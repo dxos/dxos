@@ -52,10 +52,10 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   };
 
   useEffect(() => {
-    if (pat) {
+    if (pat && !octokit) {
       void setPat(pat);
     }
-  }, []);
+  }, [pat, octokit]);
 
   return <OctokitContext.Provider value={{ pat, setPat, octokit }}>{children}</OctokitContext.Provider>;
 };

@@ -13,6 +13,8 @@ export const composer = {
   'no spaces message': 'Create or join a space to start creating documents',
   'export to markdown label': 'Export to Markdown',
   'import from markdown label': 'Import from Markdown',
+  'export to github label': 'Export to Github',
+  'import from github label': 'Import from Github',
   'confirm import title': 'Overwrite this document’s content?',
   'confirm import body':
     'Importing a Markdown file will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',

@@ -218,6 +218,10 @@ const SidebarContent = () => {
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
 
+  useEffect(() => {
+    setPatValue(pat);
+  }, [pat]);
+
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     const document = await space.db.add(new ComposerDocument());
@@ -237,13 +241,16 @@ const SidebarContent = () => {
             title={t('profile settings label')}
             open={settingsDialogOpen}
             onOpenChange={(nextOpen) => {
+              console.log('[dialog open change]', nextOpen);
               setSettingsDialogOpen(nextOpen);
               if (!nextOpen) {
+                console.log('[setting PAT]', patValue);
                 // update PAT on close
                 void setPat(patValue);
               }
             }}
             slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
+            closeTriggers={[<Button variant='primary'>{t('done label', { ns: 'os' })}</Button>]}
           >
             <Input
               label={t('github pat label')}
@@ -251,11 +258,6 @@ const SidebarContent = () => {
               onChange={({ target: { value } }) => setPatValue(value)}
               slots={{ root: { className: 'mlb-2' }, input: { autoFocus: true } }}
             />
-            <div role='none' className='flex justify-end'>
-              <Button variant='primary' onClick={() => setSettingsDialogOpen(false)}>
-                {t('done label', { ns: 'os' })}
-              </Button>
-            </div>
           </Dialog>
           <div role='none' className='flex flex-col bs-full'>
             <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>
