@@ -87,9 +87,16 @@ export abstract class EchoObject<T extends Model = any> {
 
   /**
    * @internal
+   * Called before object is bound to database.
+   * `_database` is guaranteed to be set.
+   */
+  _beforeBind(): void {}
+
+  /**
+   * @internal
    * Called after object is bound to database.
    */
-  protected async _onBind(): Promise<void> {}
+  protected async _afterBind(): Promise<void> {}
 
   /**
    * @internal
@@ -100,7 +107,7 @@ export abstract class EchoObject<T extends Model = any> {
     this._stateMachine = undefined;
     this._item = item;
 
-    await this._onBind();
+    await this._afterBind();
   }
 
   /**

@@ -46,7 +46,7 @@ export class Text extends EchoObject<TextModel> {
     };
   }
 
-  protected override async _onBind(): Promise<void> {
+  protected override async _afterBind(): Promise<void> {
     this._model.initialize();
     // TODO(dmaretskyi): Unsubscribe.
     this._item!.subscribe(() => {
