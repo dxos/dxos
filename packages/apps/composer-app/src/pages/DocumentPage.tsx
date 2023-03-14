@@ -26,6 +26,7 @@ import {
 } from '@dxos/react-components';
 import { MarkdownComposer, RichTextComposer, TipTapEditor, MarkdownComposerRef } from '@dxos/react-composer';
 
+import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
 
 const turndownService = new TurndownService({
@@ -43,12 +44,16 @@ const DocumentPageContent = ({
   document,
   handleExport,
   handleImport,
+  handleExportToGithub,
+  handleImportFromGithub,
   dialogOpen,
   setDialogOpen
 }: PropsWithChildren<{
   document: ComposerDocument;
-  handleExport: () => void;
-  handleImport: (file: File) => Promise<void>;
+  handleExport?: () => void;
+  handleImport?: (file: File) => Promise<void>;
+  handleExportToGithub?: () => Promise<void>;
+  handleImportFromGithub?: () => Promise<void>;
   dialogOpen: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
 }>) => {
@@ -77,13 +82,33 @@ const DocumentPageContent = ({
               </Button>
             }
           >
-            <DropdownMenuItem onClick={handleExport} className='gap-2 font-system-normal'>
+            {handleExport && (
+              <DropdownMenuItem onClick={handleExport} className='gap-2 font-system-normal'>
+                <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
+                <span>{t('export to markdown label')}</span>
+              </DropdownMenuItem>
+            )}
+            {handleImport && (
+              <DropdownMenuItem className='gap-2 font-system-normal' onClick={() => setDialogOpen(true)}>
+                <UploadSimple className={mx(getSize(6), 'shrink-0')} />
+                <span>{t('import from markdown label')}</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem
+              className='gap-2 font-system-normal'
+              onClick={handleExportToGithub}
+              disabled={!handleExportToGithub}
+            >
               <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
-              <span>{t('export to markdown label')}</span>
+              <span>{t('export to github label')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className='gap-2 font-system-normal' onClick={() => setDialogOpen(true)}>
+            <DropdownMenuItem
+              className='gap-2 font-system-normal'
+              onClick={handleImportFromGithub}
+              disabled={!handleImportFromGithub}
+            >
               <UploadSimple className={mx(getSize(6), 'shrink-0')} />
-              <span>{t('import from markdown label')}</span>
+              <span>{t('import from github label')}</span>
             </DropdownMenuItem>
           </DropdownMenu>
         </div>
@@ -162,22 +187,22 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
 const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<MarkdownComposerRef>(null);
+  const { octokit } = useOctokitContext();
 
   const _download = useFileDownload();
 
-  const handleExport = useCallback(() => {
+  const handleExportToGithub = useCallback(async () => {
     // todo
-  }, [document]);
+  }, [document, octokit]);
 
-  const handleImport = useCallback(
-    async (file: File) => {
-      // todo
-    },
-    [document]
-  );
+  const handleImportFromGithub = useCallback(async () => {
+    // todo
+  }, [document, octokit]);
 
   return (
-    <DocumentPageContent {...{ document, handleExport, handleImport, dialogOpen, setDialogOpen }}>
+    <DocumentPageContent
+      {...{ document, dialogOpen, setDialogOpen, ...(octokit && { handleExportToGithub, handleImportFromGithub }) }}
+    >
       <MarkdownComposer
         ref={editorRef}
         text={document.content}

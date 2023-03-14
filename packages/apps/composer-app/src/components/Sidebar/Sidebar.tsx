@@ -20,17 +20,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
 import { Tooltip } from '@dxos/react-appkit';
-import {
-  observer,
-  ShellLayout,
-  Space,
-  Text,
-  useClient,
-  useIdentity,
-  useKeyStore,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { observer, ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 import {
   Avatar,
   Button,
@@ -60,8 +50,7 @@ import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
-
-const GhPatKey = 'com.github.pat';
+import { useOctokitContext } from '../OctokitProvider';
 
 const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
   const { t } = useTranslation('composer');
@@ -225,8 +214,9 @@ const SidebarContent = () => {
   const { t } = useTranslation('composer');
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const identity = useIdentity();
-  const [ghDialogOpen, setGhDialogOpen] = useState(false);
-  const [keyMap, setKey] = useKeyStore([GhPatKey]);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const { pat, setPat } = useOctokitContext();
+  const [patValue, setPatValue] = useState(pat);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -245,18 +235,24 @@ const SidebarContent = () => {
         <DensityProvider density='fine'>
           <Dialog
             title={t('profile settings label')}
-            open={ghDialogOpen}
-            onOpenChange={setGhDialogOpen}
+            open={settingsDialogOpen}
+            onOpenChange={(nextOpen) => {
+              setSettingsDialogOpen(nextOpen);
+              if (!nextOpen) {
+                // update PAT on close
+                void setPat(patValue);
+              }
+            }}
             slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
           >
             <Input
               label={t('github pat label')}
-              value={keyMap.get(GhPatKey)}
-              onChange={({ target: { value } }) => setKey(GhPatKey, value)}
+              value={patValue}
+              onChange={({ target: { value } }) => setPatValue(value)}
               slots={{ root: { className: 'mlb-2' }, input: { autoFocus: true } }}
             />
             <div role='none' className='flex justify-end'>
-              <Button variant='primary' onClick={() => setGhDialogOpen(false)}>
+              <Button variant='primary' onClick={() => setSettingsDialogOpen(false)}>
                 {t('done label', { ns: 'os' })}
               </Button>
             </div>
@@ -314,7 +310,7 @@ const SidebarContent = () => {
                   }
                 />
                 <Tooltip content={t('profile settings label')} zIndex='z-[31]' side='bottom' tooltipLabelsTrigger>
-                  <Button variant='ghost' onClick={() => setGhDialogOpen(true)} className='pli-1'>
+                  <Button variant='ghost' onClick={() => setSettingsDialogOpen(true)} className='pli-1'>
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
                   </Button>
                 </Tooltip>

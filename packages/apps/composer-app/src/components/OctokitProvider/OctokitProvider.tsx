@@ -1,0 +1,61 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Octokit } from 'octokit';
+import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+
+import { log } from '@dxos/log';
+import { useKeyStore } from '@dxos/react-client';
+
+export type OctokitContextValue = {
+  pat: string;
+  setPat: (nextPat: string) => Promise<void>;
+  octokit: Octokit | null;
+};
+
+export const OctokitContext: Context<OctokitContextValue> = createContext<OctokitContextValue>({
+  pat: '',
+  setPat: async () => {},
+  octokit: null
+});
+
+const GhPatKey = 'com.github.pat';
+
+export const useOctokitContext = () => useContext(OctokitContext);
+
+export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
+  const [keyMap, setKey] = useKeyStore([GhPatKey]);
+  const pat = keyMap.get(GhPatKey) ?? '';
+
+  const [octokit, setOctokit] = useState<Octokit | null>(null);
+
+  const setPat = async (nextPat: string) => {
+    setKey(GhPatKey, nextPat);
+    if (nextPat) {
+      console.log('Setting PAT', nextPat);
+      const nextOctokit = new Octokit({ auth: pat });
+      return nextOctokit.rest.users.getAuthenticated().then(
+        () => {
+          console.info('Setting Octokit');
+          setOctokit(nextOctokit);
+        },
+        (err) => {
+          log.warn('Failed to authenticate Octokit from PAT', err);
+          console.info('Failed to authenticate Octokit from PAT');
+          setOctokit(null);
+        }
+      );
+    } else {
+      setOctokit(null);
+    }
+  };
+
+  useEffect(() => {
+    if (pat) {
+      void setPat(pat);
+    }
+  }, []);
+
+  return <OctokitContext.Provider value={{ pat, setPat, octokit }}>{children}</OctokitContext.Provider>;
+};
