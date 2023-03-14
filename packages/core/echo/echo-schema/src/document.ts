@@ -64,7 +64,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
     private readonly _schemaType?: EchoSchemaType
   ) {
     super(DocumentModel);
-
+    
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
       // Set type.
@@ -238,38 +238,56 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   private _set(key: string, value: any) {
     this._database?._logObjectAccess(this);
 
-    if (value instanceof EchoObject) {
-      this._linkObject(value);
-      this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
-    } else if (value instanceof EchoArray) {
-      const values = value.map((item) => {
-        if (item instanceof EchoObject) {
-          this._linkObject(item);
-          return new Reference(item.id);
-        } else if (isReferenceLike(item)) {
-          return new Reference(item['@id']);
+    this._inBatch(() => {
+      if (value instanceof EchoObject) {
+        this._linkObject(value);
+        this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
+      } else if (value instanceof EchoArray) {
+        const values = value.map((item) => {
+          if (item instanceof EchoObject) {
+            this._linkObject(item);
+            return new Reference(item.id);
+          } else if (isReferenceLike(item)) {
+            return new Reference(item['@id']);
+          } else {
+            return item;
+          }
+        });
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
+        value._attach(this[base], key);
+      } else if (Array.isArray(value)) {
+        // TODO(dmaretskyi): Make a single mutation.
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
+        this._get(key).push(...value);
+      } else if (typeof value === 'object' && value !== null) {
+        if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
         } else {
-          return item;
+          const sub = this._createProxy({}, key);
+          for (const [subKey, subValue] of Object.entries(value)) {
+            sub[subKey] = subValue;
+          }
         }
-      });
-      this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
-      value._attach(this[base], key);
-    } else if (Array.isArray(value)) {
-      // TODO(dmaretskyi): Make a single mutation.
-      this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
-      this._get(key).push(...value);
-    } else if (typeof value === 'object' && value !== null) {
-      if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
-        // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-        this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
       } else {
-        const sub = this._createProxy({}, key);
-        for (const [subKey, subValue] of Object.entries(value)) {
-          sub[subKey] = subValue;
+        this._mutate(this._model.builder().set(key, value).build());
+      }
+    });
+  }
+
+  private _inBatch(cb: () => void) {
+    if(!this._database?._backend) {
+      cb();
+    } else {
+      const batchCreated = this._database._backend.beginBatch();
+
+      try {
+        cb();
+      } finally {
+        if (batchCreated) {
+          this._database._backend.commitBatch();
         }
       }
-    } else {
-      this._mutate(this._model.builder().set(key, value).build());
     }
   }
 

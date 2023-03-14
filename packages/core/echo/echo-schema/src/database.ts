@@ -96,27 +96,36 @@ export class EchoDatabase {
     assert(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
-    obj[base]._beforeBind();
 
-    const snapshot = obj[base]._createSnapshot();
+    const batchCreated = this._backend.beginBatch();
+    try {
+      obj[base]._beforeBind();
 
-    const result = this._backend.mutate({
-      objects: [
-        {
-          objectId: obj[base]._id,
-          genesis: {
-            modelType: obj[base]._modelConstructor.meta.type
-          },
-          snapshot: {
-            // TODO(dmaretskyi): Parent id, deleted flag.
-            model: snapshot
+      const snapshot = obj[base]._createSnapshot();
+
+      const result = this._backend.mutate({
+        objects: [
+          {
+            objectId: obj[base]._id,
+            genesis: {
+              modelType: obj[base]._modelConstructor.meta.type
+            },
+            snapshot: {
+              // TODO(dmaretskyi): Parent id, deleted flag.
+              model: snapshot
+            }
           }
-        }
-      ]
-    });
-    assert(result.objectsCreated.length === 1);
+        ]
+      });
+      assert(result.objectsCreated.length === 1);
 
-    obj[base]._bind(result.objectsCreated[0]);
+      obj[base]._bind(result.objectsCreated[0]);
+    } finally {
+      if (batchCreated) {
+        this._backend.commitBatch();
+      }
+    }
+
     return obj;
   }
 
@@ -213,7 +222,7 @@ export class Query<T extends Document = Document> {
     private readonly _dbObjects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
     private readonly _filter: Filter<any>
-  ) {}
+  ) { }
 
   private _cache: T[] | undefined;
 
