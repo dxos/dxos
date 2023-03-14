@@ -154,8 +154,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey
     });
     const presence = new Presence({
-      announceInterval: 1_000,
-      offlineTimeout: 10_000, // TODO(burdon): Config.
+      announceInterval: 5_00,
+      offlineTimeout: 5_000, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey,
       gossip
     });
