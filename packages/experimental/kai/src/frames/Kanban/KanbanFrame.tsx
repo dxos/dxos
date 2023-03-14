@@ -26,18 +26,18 @@ type Type = {
 // TODO(burdon): From metadata.
 const types: Type[] = [
   {
-    name: 'dxos.experimental.kai.Project',
-    label: 'Projects',
-    filter: Project.filter(),
-    getTitle: (object) => object.title,
-    Card: ProjectCard
-  },
-  {
     name: 'dxos.experimental.kai.Contact',
     label: 'Contacts',
     filter: Contact.filter(),
     getTitle: (object) => object.name,
     Card: ContactCard
+  },
+  {
+    name: 'dxos.experimental.kai.Project',
+    label: 'Projects',
+    filter: Project.filter(),
+    getTitle: (object) => object.title,
+    Card: ProjectCard
   }
 ];
 
