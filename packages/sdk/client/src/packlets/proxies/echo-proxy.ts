@@ -113,7 +113,6 @@ export class EchoProxy implements Echo {
           const spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
-          // TODO(dmaretskyi): Filter out uninitialized spaces.
           this._spaces.set(spaceProxy.key, spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
 
@@ -126,7 +125,7 @@ export class EchoProxy implements Echo {
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._cachedSpaces = Array.from(this._spaces.values());
+        this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
         this._spacesChanged.emit(this._cachedSpaces);
       }
     });
@@ -167,7 +166,8 @@ export class EchoProxy implements Echo {
     const spaceProxy = this._spaces.get(space.spaceKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
-    await spaceProxy.db.add(new Properties(meta));
+    spaceProxy.db.add(new Properties(meta));
+    await spaceProxy.db.flush();
     await spaceProxy.initialize(); // Idempotent.
 
     return spaceProxy;
