@@ -11,19 +11,25 @@ import { Client, ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../components';
-import { DevtoolsContextProvider, useRoutes } from '../hooks';
+import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
 
 const Routes = () => {
   return useRoutes();
 };
 
-const Telemetry = () => {
-  useTelemetry({ namespace: 'devtools', router: false });
+const Telemetry = ({ namespace }: { namespace: string }) => {
+  useTelemetry({ namespace, router: false });
   return null;
 };
 
 // Entry point that does not have opinion on Client, so it can be reused in extension.
-export const Devtools = ({ context }: { context?: { client: Client; services?: ClientServices } }) => {
+export const Devtools = ({
+  context,
+  namespace = telemetryNamespace
+}: {
+  context?: { client: Client; services?: ClientServices };
+  namespace?: string;
+}) => {
   const fallback = <Fallback message='Loading...' />;
 
   if (!context) {
@@ -36,7 +42,7 @@ export const Devtools = ({ context }: { context?: { client: Client; services?: C
         <ClientContext.Provider value={context}>
           <DevtoolsContextProvider>
             <HashRouter>
-              <Telemetry />
+              <Telemetry namespace={namespace} />
               <Routes />
             </HashRouter>
           </DevtoolsContextProvider>
