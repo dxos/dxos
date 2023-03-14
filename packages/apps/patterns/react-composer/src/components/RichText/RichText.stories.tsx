@@ -3,12 +3,12 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
-import { ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
-import { Button, Checkbox, CheckboxProps, mx, useId } from '@dxos/react-components';
+import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
 import { RichTextComposer, RichTextComposerProps } from './RichText';
@@ -22,10 +22,6 @@ const Story = ({
   id,
   ...args
 }: Omit<RichTextComposerProps, 'text'> & { spaceKey?: PublicKey; id: number }) => {
-  // TODO(wittjosiah): Text being created isn't firing react updates.
-  const [, forceUpdate] = useReducer((state) => state + 1, 0);
-  const [generate, setGenerate] = useState<CheckboxProps['defaultChecked']>(false);
-
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
   const [document] = useQuery(space, ComposerDocument.filter());
@@ -39,27 +35,8 @@ const Story = ({
     }
   }, [space]);
 
-  useDataGenerator({
-    generator: loremGenerator,
-    space: generate ? space : undefined,
-    options: {
-      mode: 'random',
-      characterInterval: 500
-    }
-  });
-
-  const generateId = useId('generate');
-
-  if (!document?.content) {
-    return <Button onClick={() => forceUpdate()}>Update</Button>;
-  }
-
   return (
     <main className='flex-1 min-w-0 p-4'>
-      <div id={generateId} className='flex'>
-        <Checkbox labelId={generateId} onCheckedChange={setGenerate} />
-        Generate Data
-      </div>
       <RichTextComposer
         {...args}
         text={document.content}

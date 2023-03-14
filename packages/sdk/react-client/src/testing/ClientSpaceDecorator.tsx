@@ -13,6 +13,7 @@ import { TestBuilder } from '@dxos/client-services/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-components';
+import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
 
@@ -65,6 +66,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
 export type PeersInSpaceProps = {
   count?: number;
   schema?: EchoSchema;
+  onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
 };
 
@@ -73,7 +75,7 @@ export type PeersInSpaceProps = {
  * Child is function which recieves an id and a space key.
  * The child is rendered n times, once for each peer.
  */
-export const PeersInSpace = ({ count = 1, schema, children }: PeersInSpaceProps) => {
+export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: PeersInSpaceProps) => {
   const [space, setSpace] = useState<Space>();
 
   return (
@@ -85,6 +87,7 @@ export const PeersInSpace = ({ count = 1, schema, children }: PeersInSpaceProps)
           await client.halo.createIdentity({ displayName: faker.name.firstName() });
           schema && client.echo.addSchema(schema);
           const space = await client.echo.createSpace({ name: faker.animal.bird() });
+          await onCreateSpace?.(space);
           setSpace(space);
         }}
       >
