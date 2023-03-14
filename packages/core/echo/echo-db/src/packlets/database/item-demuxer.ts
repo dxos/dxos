@@ -12,6 +12,7 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ItemManager } from './item-manager';
+import { setMetadataOnObject } from './builder';
 
 export type EchoProcessor = (message: IEchoStream) => void;
 
@@ -37,51 +38,44 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { objectId, genesis, mutations },
+        batch,
         meta
       } = message;
-      if (mutations) {
-        assert(mutations.length <= 1); // TODO(dmaretskyi): Only 1 mutation per message is supported.
+
+      for(const object of batch.objects ?? []) {
+        const { objectId, genesis, mutations } = object;
+        assert(objectId);
+
+        //
+        // New item.
+        //
+        if (genesis) {
+          const { modelType } = genesis;
+          assert(modelType);
+
+          const entity = this._itemManager.constructItem({
+            itemId: objectId,
+            modelType
+          });
+          
+          setMetadataOnObject(object, meta);
+          entity.resetToSnapshot(object);
+
+          assert(entity.id === objectId);
+        } else {
+          if (mutations && mutations.length > 0) {
+            for(const mutation of mutations) {
+              // Forward mutations to the item's stream.
+              this._itemManager.processMutation(objectId, {
+                ...mutation,
+                meta
+              });
+            }
+          }
+        }
+        
+        this.mutation.emit(message);
       }
-      const mutation = mutations?.length === 1 ? mutations?.[0] : undefined;
-      assert(objectId);
-
-      //
-      // New item.
-      //
-      if (genesis) {
-        const { modelType } = genesis;
-        assert(modelType);
-
-        const entity = this._itemManager.constructItem({
-          itemId: objectId,
-          modelType
-        });
-        entity.resetToSnapshot({
-          ...message.data,
-          mutations:
-            mutations?.map((mutation) => ({
-              ...mutation,
-              meta
-            })) ?? [],
-          meta
-        });
-
-        assert(entity.id === objectId);
-      }
-
-      //
-      // Model mutations.
-      //
-      if (mutation && !genesis) {
-        // Forward mutations to the item's stream.
-        this._itemManager.processMutation(objectId, {
-          ...mutation,
-          meta
-        });
-      }
-
-      this.mutation.emit(message);
     };
   }
 

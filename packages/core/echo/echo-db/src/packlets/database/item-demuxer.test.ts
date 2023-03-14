@@ -32,7 +32,7 @@ describe('Item demuxer', () => {
     const inboundStream = itemDemuxer.open();
     feedWriter.written.on(([msg, meta]) =>
       inboundStream({
-        data: msg.object,
+        batch: msg.batch,
         meta: { ...meta, memberKey }
       } as any)
     );
@@ -50,12 +50,12 @@ describe('Item demuxer', () => {
 
     const objectId = PublicKey.random().toHex();
     const message: DataMessage = {
-      object: {
+      batch: { objects: [{
         objectId,
         genesis: {
           modelType: TestModel.meta.type
         }
-      }
+      }] }
     };
 
     await feedWriter.write(message);
@@ -110,28 +110,29 @@ describe('Item demuxer', () => {
           seq: 0,
           timeframe: new Timeframe()
         },
-        data: message.object
+        batch: message.batch,
       });
 
     void processEchoMessage(
       checkType<DataMessage>({
-        object: {
+        batch: {
+        objects: [{
           objectId: 'foo',
           genesis: {
             modelType: TestModel.meta.type
           }
-        }
+        }]}
       })
     );
 
     void processEchoMessage(
       checkType<DataMessage>({
-        object: {
+        batch: { objects: [{
           objectId: 'bar',
           genesis: {
             modelType: DocumentModel.meta.type
           }
-        }
+        }] }
       })
     );
 

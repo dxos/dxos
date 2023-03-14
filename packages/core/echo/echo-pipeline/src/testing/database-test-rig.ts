@@ -181,7 +181,7 @@ export class DatabaseTestPeer {
 
         run = true;
         this.host.echoProcessor({
-          data: candidate.data.payload.data!.object,
+          batch: candidate.data.payload.data!.batch,
           meta: {
             feedKey: candidate.feedKey,
             seq: candidate.seq,

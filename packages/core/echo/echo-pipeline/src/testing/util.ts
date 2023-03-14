@@ -20,7 +20,7 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({
-      data: data.object,
+      batch: data.batch,
       meta: {
         ...meta,
         memberKey: PublicKey.random(),
@@ -62,12 +62,12 @@ export const testLocalDatabase = async (
 ) => {
   const objectId = PublicKey.random().toHex();
   await create.databaseBackend!.getWriteStream()?.write({
-    object: {
+    batch: { objects: [{
       objectId,
       genesis: {
         modelType: DocumentModel.meta.type
       }
-    }
+    }]}
   });
 
   await asyncTimeout(
