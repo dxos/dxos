@@ -11,7 +11,8 @@ import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { RichTextComposer } from '@dxos/react-composer';
 
-import { FilePreview, TaskList as TaskListComponent } from '../../components';
+import { TaskList as TaskListComponent } from '../../cards';
+import { FilePreview } from '../../components';
 import { getColumnType } from '../Table';
 
 export const StackContent: FC<{
@@ -64,9 +65,9 @@ export const StackContent: FC<{
 
       return (
         <TaskListComponent
-          space={space!}
+          id='tasks'
           tasks={(object as TaskList).tasks}
-          onCreate={(task) => object.tasks.push(task)}
+          onCreateItem={(task) => object.tasks.push(task)}
         />
       );
     }

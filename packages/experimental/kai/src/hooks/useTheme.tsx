@@ -87,84 +87,84 @@ export const themes: Theme[] = [
   {
     id: 'slate',
     classes: {
-      header: 'bg-slate-500',
+      header: 'bg-slate-400',
       toolbar: 'bg-slate-300'
     }
   },
   {
     id: 'zinc',
     classes: {
-      header: 'bg-zinc-500',
+      header: 'bg-zinc-400',
       toolbar: 'bg-zinc-300'
     }
   },
   {
     id: 'red',
     classes: {
-      header: 'bg-red-500',
+      header: 'bg-red-400',
       toolbar: 'bg-red-300'
     }
   },
   {
     id: 'orange',
     classes: {
-      header: 'bg-orange-500',
+      header: 'bg-orange-400',
       toolbar: 'bg-orange-300'
     }
   },
   {
     id: 'emerald',
     classes: {
-      header: 'bg-emerald-500',
+      header: 'bg-emerald-400',
       toolbar: 'bg-emerald-300'
     }
   },
   {
     id: 'cyan',
     classes: {
-      header: 'bg-cyan-500',
+      header: 'bg-cyan-400',
       toolbar: 'bg-cyan-300'
     }
   },
   {
     id: 'sky',
     classes: {
-      header: 'bg-sky-500',
+      header: 'bg-sky-400',
       toolbar: 'bg-sky-300'
     }
   },
   {
     id: 'blue',
     classes: {
-      header: 'bg-blue-500',
+      header: 'bg-blue-400',
       toolbar: 'bg-blue-300'
     }
   },
   {
     id: 'indigo',
     classes: {
-      header: 'bg-indigo-500',
+      header: 'bg-indigo-400',
       toolbar: 'bg-indigo-300'
     }
   },
   {
     id: 'fuchsia',
     classes: {
-      header: 'bg-fuchsia-500',
+      header: 'bg-fuchsia-400',
       toolbar: 'bg-fuchsia-300'
     }
   },
   {
     id: 'violet',
     classes: {
-      header: 'bg-violet-500',
+      header: 'bg-violet-400',
       toolbar: 'bg-violet-300'
     }
   },
   {
     id: 'pink',
     classes: {
-      header: 'bg-pink-500',
+      header: 'bg-pink-400',
       toolbar: 'bg-pink-300'
     }
   }

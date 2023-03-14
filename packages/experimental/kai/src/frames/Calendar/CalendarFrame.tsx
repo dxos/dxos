@@ -17,7 +17,7 @@ import { Button, getSize, mx } from '@dxos/react-components';
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { ContactCard } from '../../frames/Contact';
+import { ContactCard } from '../../cards';
 import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Custom views:
