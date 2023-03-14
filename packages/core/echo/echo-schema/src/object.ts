@@ -96,18 +96,18 @@ export abstract class EchoObject<T extends Model = any> {
    * @internal
    * Called after object is bound to database.
    */
-  protected async _afterBind(): Promise<void> {}
+  protected _afterBind(): void {}
 
   /**
    * @internal
+   * Called when the object is imported to the database. Assigns the backing item.
    */
-  // TODO(burdon): Document.
-  async _bind(item: Item<T>) {
+  _bind(item: Item<T>) {
     // TODO(dmaretskyi): Snapshot and unbind local state machine.
     this._stateMachine = undefined;
     this._item = item;
 
-    await this._afterBind();
+    this._afterBind();
   }
 
   /**
