@@ -33,16 +33,13 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   const setPat = async (nextPat: string) => {
     setKey(GhPatKey, nextPat);
     if (nextPat) {
-      console.log('Setting PAT', nextPat);
       const nextOctokit = new Octokit({ auth: pat });
       return nextOctokit.rest.users.getAuthenticated().then(
         () => {
-          console.info('Setting Octokit');
           setOctokit(nextOctokit);
         },
         (err) => {
           log.warn('Failed to authenticate Octokit from PAT', err);
-          console.info('Failed to authenticate Octokit from PAT');
           setOctokit(null);
         }
       );

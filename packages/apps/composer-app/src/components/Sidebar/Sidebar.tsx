@@ -241,22 +241,26 @@ const SidebarContent = () => {
             title={t('profile settings label')}
             open={settingsDialogOpen}
             onOpenChange={(nextOpen) => {
-              console.log('[dialog open change]', nextOpen);
               setSettingsDialogOpen(nextOpen);
               if (!nextOpen) {
-                console.log('[setting PAT]', patValue);
-                // update PAT on close
                 void setPat(patValue);
               }
             }}
             slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
-            closeTriggers={[<Button variant='primary'>{t('done label', { ns: 'os' })}</Button>]}
+            closeTriggers={[
+              <Button key='a1' variant='primary'>
+                {t('done label', { ns: 'os' })}
+              </Button>
+            ]}
           >
             <Input
               label={t('github pat label')}
               value={patValue}
               onChange={({ target: { value } }) => setPatValue(value)}
-              slots={{ root: { className: 'mlb-2' }, input: { autoFocus: true } }}
+              slots={{
+                root: { className: 'mlb-2' },
+                input: { autoFocus: true, spellCheck: false, className: 'font-mono' }
+              }}
             />
           </Dialog>
           <div role='none' className='flex flex-col bs-full'>
