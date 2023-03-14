@@ -8,6 +8,7 @@ export * from './defs';
 export * from './object';
 export * from './echo-array';
 export * from './document';
+export * from './query';
 export * from './schema';
 export * from './serializer';
 export * from './text-object';

@@ -53,7 +53,6 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
 
     // Inspired by https://github.com/mobxjs/mobx/blob/4ef8ff3/packages/mobx-react-lite/src/useObserver.ts.
     const stateRef = useRef<ObserverState | null>(null);
-
     if (!stateRef.current) {
       // First render.
       stateRef.current = {
@@ -65,7 +64,6 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
     }
 
     const state = stateRef.current!;
-
     if (!state.handle) {
       // First render or component was not committed.
       state.handle = client.echo.dbRouter.createSubscription(() => {
@@ -105,16 +103,15 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
         }
       } else {
         // The reaction we set up in our render has been disposed.
-        // This can be due to bad timings of renderings, e.g. our
-        // component was paused for a _very_ long time, and our
-        // reaction got cleaned up.
+        // This can be due to bad timings of renderings, e.g. our component was paused for a _very_ long time,
+        // and our reaction got cleaned up.
 
         // Re-create the reaction.
         state.handle = client.echo.dbRouter.createSubscription(() => {
           // We've definitely already been mounted at this point.
           forceUpdate();
         });
-        forceUpdate();
+        forceUpdate(); // TODO(burdon): Trigger by default.
       }
 
       if (!state.handle!.subscribed) {

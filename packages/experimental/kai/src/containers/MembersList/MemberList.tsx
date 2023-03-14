@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Smiley, SmileyBlank, UserCircle } from 'phosphor-react';
+import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { SpaceMember } from '@dxos/client';
@@ -25,7 +25,7 @@ export const MemberList: FC<{ identityKey: PublicKey; members: SpaceMember[] }> 
               <SmileyBlank className={mx(getSize(6), 'text-slate-500')} />
             )}
           </div>
-          <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+          <div className='truncate'>
             {member.identity?.profile?.displayName ?? member.identity.identityKey.truncate()}
           </div>
         </div>

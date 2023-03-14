@@ -5,12 +5,12 @@
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
+import { Check } from '@phosphor-icons/react';
 import { LatLngExpression } from 'leaflet';
-import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { LatLng, Organization } from '@dxos/kai-types';
+import { GeoLocation, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
 
@@ -28,7 +28,7 @@ const defaults = {
 export const MapFrame = () => {
   return (
     <div className='flex flex-1 overflow-hidden'>
-      <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>
+      <MapContainer className='flex flex-1'>
         <MapControl />
       </MapContainer>
     </div>
@@ -38,7 +38,7 @@ export const MapFrame = () => {
 type MapPropsGetter<T> = {
   id: (object: T) => string;
   label: (object: T) => string;
-  coordinates: (object: T) => LatLng | undefined;
+  coordinates: (object: T) => GeoLocation | undefined;
 };
 
 /**
@@ -54,11 +54,11 @@ export const MapControl = () => {
   };
 
   const [selected, setSelected] = useState<string>();
-  const [center, setCenter] = useState<LatLngExpression>();
+  const [center, setCenter] = useState<LatLngExpression>(defaults.center);
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.setView(center, map.getZoom() ?? 10);
+      map.setView(center, map.getZoom() ?? defaults.zoom);
     }
   }, [center]);
 

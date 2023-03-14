@@ -3,9 +3,9 @@
 //
 
 import { Transition } from '@headlessui/react';
+import { X } from '@phosphor-icons/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { X } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
@@ -101,7 +101,7 @@ export const Dialog = ({
             <DialogPrimitive.Title
               {...slots.title}
               className={mx(
-                'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+                'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
                 titleVisuallyHidden && 'sr-only',
                 defaultFocus,
                 slots.content?.className

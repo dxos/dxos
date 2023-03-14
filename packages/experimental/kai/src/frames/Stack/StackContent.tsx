@@ -6,30 +6,34 @@ import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@dxos/echo-schema';
-import { Document as TypeDocument, File, Table, TaskList } from '@dxos/kai-types';
+import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer } from '@dxos/react-composer';
 
+import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
-import { TaskList as TaskListComponent } from '../../containers';
 import { getColumnType } from '../Table';
 
-export const StackContent: FC<{ config: Config; space: Space; object: Document; spellCheck: boolean }> = ({
-  config,
-  space,
-  object,
-  spellCheck
-}) => {
+export const StackContent: FC<{
+  config: Config;
+  space: Space;
+  section: DocumentStack.Section;
+  spellCheck: boolean;
+}> = ({ config, space, section, spellCheck }) => {
+  const object = section.object;
+
   // TODO(burdon): Type?
   switch (object.__typename) {
-    case TypeDocument.type.name: {
-      if (!(object instanceof TypeDocument)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
+    case DocumentType.type.name: {
+      // TODO(burdon): This fails if the document is created by the KaiBot!
+      // if (!(object instanceof DocumentType)) {
+      //   throw new Error(`Invalid object type: ${object.__typename}`);
+      // }
+
       return (
-        <Composer
-          document={object.content}
+        <RichTextComposer
+          text={object.content}
           slots={{
             editor: {
               className: 'kai-composer',
@@ -44,6 +48,7 @@ export const StackContent: FC<{ config: Config; space: Space; object: Document; 
       if (!(object instanceof Table)) {
         throw new Error(`Invalid object type: ${object.__typename}`);
       }
+
       return (
         <div className='flex w-full h-[400px]'>
           <TableContainer space={space!} table={object} />
@@ -57,11 +62,12 @@ export const StackContent: FC<{ config: Config; space: Space; object: Document; 
       if (!(object instanceof TaskList)) {
         throw new Error(`Invalid object type: ${object.__typename}`);
       }
+
       return (
         <TaskListComponent
-          space={space!}
+          id='tasks'
           tasks={(object as TaskList).tasks}
-          onCreate={(task) => object.tasks.push(task)}
+          onCreateItem={(task) => object.tasks.push(task)}
         />
       );
     }
@@ -70,6 +76,7 @@ export const StackContent: FC<{ config: Config; space: Space; object: Document; 
       if (!(object instanceof File)) {
         throw new Error(`Invalid object type: ${object.__typename}`);
       }
+
       return (
         <div className='flex w-full h-[400px]'>
           <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid)} image />

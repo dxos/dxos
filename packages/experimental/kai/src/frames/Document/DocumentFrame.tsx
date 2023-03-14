@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Document } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
 
@@ -57,8 +57,8 @@ export const DocumentFrame = observer(() => {
             }}
           />
 
-          <Composer
-            document={document.content}
+          <RichTextComposer
+            text={document.content}
             slots={{
               editor: {
                 className: 'kai-composer',

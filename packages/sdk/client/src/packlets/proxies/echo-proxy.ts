@@ -203,16 +203,17 @@ export class EchoProxy implements Echo {
   }
 
   /**
-   * Get list of all spaces.
+   * Gets a list of all spaces.
    */
   getSpaces(): Space[] {
+    // TODO(burdon): Why is this different from getSpace?
     return this._cachedSpaces;
   }
 
   /**
-   * Subscribe to spaces changes.
+   * Subscribes to spaces changes.
    */
-  // TODO(burdon): Subscriptions?
+  // TODO(burdon): Reconcile with `space.db.query` API.
   subscribeSpaces(callback: (spaces: Space[]) => void) {
     return this._spacesChanged.on(callback);
   }

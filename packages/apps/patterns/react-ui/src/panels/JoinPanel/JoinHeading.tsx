@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { ProhibitInset } from 'phosphor-react';
+import { ProhibitInset } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';

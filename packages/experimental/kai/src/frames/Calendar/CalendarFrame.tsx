@@ -1,12 +1,12 @@
 //
 // Copyright 2023 DXOS.org
 
+import { Article, Clock, GridFour, SquareHalf, Tray, User } from '@phosphor-icons/react';
 import format from 'date-fns/format';
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
-import { Article, Clock, GridFour, SquareHalf, Tray, User } from 'phosphor-react';
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
@@ -17,8 +17,13 @@ import { Button, getSize, mx } from '@dxos/react-components';
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { ContactCard } from '../../containers';
+import { ContactCard } from '../../cards';
 import { useAppRouter } from '../../hooks';
+
+// TODO(burdon): Custom views:
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8
+//  - https://github.com/jquense/react-big-calendar/blob/master/stories/demos/exampleCode/rendering.js
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-creating-custom-views--page
 
 const mapEvents = (event: EventType) => ({
   title: event.title,
@@ -70,9 +75,7 @@ export const CalendarFrame = () => {
                       <User />
                     </Button>
                   </div>
-                  <div className='overflow-hidden text-ellipsis whitespace-nowrap w-[100px] text-blue-500'>
-                    {member.name}
-                  </div>
+                  <div className='truncate w-[100px] text-blue-500'>{member.name}</div>
                 </div>
               ))}
             </div>
@@ -125,9 +128,9 @@ export const CalendarFrame = () => {
             components={components}
           />
         </div>
-        {view === Views.AGENDA && contact && space && (
-          <div className='flex flex-1 border-l hidden md:flex pl-4'>
-            <ContactCard space={space} contact={contact} />
+        {view === Views.AGENDA && space && (
+          <div className='flex flex-col flex-1 border-l hidden md:flex pl-4'>
+            {contact && <ContactCard space={space} object={contact} />}
           </div>
         )}
       </div>
