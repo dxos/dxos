@@ -23,18 +23,20 @@ export const createTestItemMutation = (
   payload: {
     data: {
       batch: {
-        objects: [{
-          objectId,
-          mutations: [
-            {
-              model: {
-                '@type': 'google.protobuf.Any',
-                typeUrl: 'todo',
-                value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+        objects: [
+          {
+            objectId,
+            mutations: [
+              {
+                model: {
+                  '@type': 'google.protobuf.Any',
+                  typeUrl: 'todo',
+                  value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+                }
               }
-            }
-          ]
-        }]
+            ]
+          }
+        ]
       }
     }
   }

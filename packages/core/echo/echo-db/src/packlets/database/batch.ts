@@ -1,7 +1,12 @@
-import { Trigger } from "@dxos/async";
-import { EchoObjectBatch } from "@dxos/protocols/proto/dxos/echo/object";
-import { MutationReceipt } from "@dxos/protocols/src/proto/gen/dxos/echo/service";
-import assert from "node:assert";
+//
+// Copyright 2023 DXOS.org
+//
+
+import assert from 'node:assert';
+
+import { Trigger } from '@dxos/async';
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 
 export class Batch {
   public readonly data: EchoObjectBatch = { objects: [] };
@@ -12,8 +17,6 @@ export class Batch {
 
   public receipt: MutationReceipt | null = null;
   public processed = false;
-  
-  constructor() {}
 
   get committing(): boolean {
     return !!this.receiptTrigger;

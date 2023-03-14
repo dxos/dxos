@@ -11,8 +11,8 @@ import { IEchoStream, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { ItemManager } from './item-manager';
 import { setMetadataOnObject } from './builder';
+import { ItemManager } from './item-manager';
 
 export type EchoProcessor = (message: IEchoStream) => void;
 
@@ -37,12 +37,9 @@ export class ItemDemuxer {
     // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
-      const {
-        batch,
-        meta
-      } = message;
+      const { batch, meta } = message;
 
-      for(const object of batch.objects ?? []) {
+      for (const object of batch.objects ?? []) {
         const { objectId, genesis, mutations } = object;
         assert(objectId);
 
@@ -57,14 +54,14 @@ export class ItemDemuxer {
             itemId: objectId,
             modelType
           });
-          
+
           setMetadataOnObject(object, meta);
           entity.resetToSnapshot(object);
 
           assert(entity.id === objectId);
         } else {
           if (mutations && mutations.length > 0) {
-            for(const mutation of mutations) {
+            for (const mutation of mutations) {
               // Forward mutations to the item's stream.
               this._itemManager.processMutation(objectId, {
                 ...mutation,
@@ -73,7 +70,7 @@ export class ItemDemuxer {
             }
           }
         }
-        
+
         this.mutation.emit(message);
       }
     };

@@ -9,14 +9,14 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
+import { Batch } from './batch';
 import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { Batch } from './batch';
 
 export type MutateResult = {
   objectsCreated: Item<any>[];
@@ -90,14 +90,14 @@ export class DatabaseBackendProxy {
         if (msg.clientTag) {
           const batch = this._pendingBatches.get(msg.clientTag);
           if (batch) {
-            assert(msg.feedKey !== undefined)
-            assert(msg.seq !== undefined)
+            assert(msg.feedKey !== undefined);
+            assert(msg.seq !== undefined);
             batch.receipt = {
               feedKey: msg.feedKey,
               seq: msg.seq
             };
-            batch.receiptTrigger!.wake(batch.receipt)
-            batch.processTrigger!.wake()
+            batch.receiptTrigger!.wake(batch.receipt);
+            batch.processTrigger!.wake();
           } else {
             log('Missing pending batch', { clientTag: msg.clientTag });
           }
@@ -210,19 +210,21 @@ export class DatabaseBackendProxy {
     batch.receiptTrigger = new Trigger();
     this._pendingBatches.set(batch.clientTag, batch);
 
-    this._service.write({
-      batch: batch.data,
-      spaceKey: this._spaceKey,
-      clientTag: batch.clientTag!,
-    }).then(
-      receipt => {
-        log('commit', { clientTag: batch.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
-        // No-op because the pipeline message will set the receipt.
-      },
-      err => {
-        batch.receiptTrigger!.throw(err);
-      }
-    )
+    this._service
+      .write({
+        batch: batch.data,
+        spaceKey: this._spaceKey,
+        clientTag: batch.clientTag!
+      })
+      .then(
+        (receipt) => {
+          log('commit', { clientTag: batch.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
+          // No-op because the pipeline message will set the receipt.
+        },
+        (err) => {
+          batch.receiptTrigger!.throw(err);
+        }
+      );
   }
 
   // TODO(dmaretskyi): Revert batch.
@@ -254,7 +256,7 @@ export class DatabaseBackendProxy {
       const batch = this._currentBatch!;
       return {
         objectsCreated,
-        batch,
+        batch
       };
     } finally {
       if (batchCreated) {
@@ -264,9 +266,7 @@ export class DatabaseBackendProxy {
   }
 
   async flush({ timeout }: { timeout?: number } = {}) {
-    const promise = Promise.all(
-      Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed())
-    );
+    const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {
       await asyncTimeout(promise, timeout);
     } else {

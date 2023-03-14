@@ -64,7 +64,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
     private readonly _schemaType?: EchoSchemaType
   ) {
     super(DocumentModel);
-    
+
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
       // Set type.
@@ -276,7 +276,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   }
 
   private _inBatch(cb: () => void) {
-    if(!this._database?._backend) {
+    if (!this._database?._backend) {
       cb();
     } else {
       const batchCreated = this._database._backend.beginBatch();

@@ -222,7 +222,7 @@ export class Query<T extends Document = Document> {
     private readonly _dbObjects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
     private readonly _filter: Filter<any>
-  ) { }
+  ) {}
 
   private _cache: T[] | undefined;
 

@@ -50,12 +50,16 @@ describe('Item demuxer', () => {
 
     const objectId = PublicKey.random().toHex();
     const message: DataMessage = {
-      batch: { objects: [{
-        objectId,
-        genesis: {
-          modelType: TestModel.meta.type
-        }
-      }] }
+      batch: {
+        objects: [
+          {
+            objectId,
+            genesis: {
+              modelType: TestModel.meta.type
+            }
+          }
+        ]
+      }
     };
 
     await feedWriter.write(message);
@@ -110,29 +114,36 @@ describe('Item demuxer', () => {
           seq: 0,
           timeframe: new Timeframe()
         },
-        batch: message.batch,
+        batch: message.batch
       });
 
     void processEchoMessage(
       checkType<DataMessage>({
         batch: {
-        objects: [{
-          objectId: 'foo',
-          genesis: {
-            modelType: TestModel.meta.type
-          }
-        }]}
+          objects: [
+            {
+              objectId: 'foo',
+              genesis: {
+                modelType: TestModel.meta.type
+              }
+            }
+          ]
+        }
       })
     );
 
     void processEchoMessage(
       checkType<DataMessage>({
-        batch: { objects: [{
-          objectId: 'bar',
-          genesis: {
-            modelType: DocumentModel.meta.type
-          }
-        }] }
+        batch: {
+          objects: [
+            {
+              objectId: 'bar',
+              genesis: {
+                modelType: DocumentModel.meta.type
+              }
+            }
+          ]
+        }
       })
     );
 

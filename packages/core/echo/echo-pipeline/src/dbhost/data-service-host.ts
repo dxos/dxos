@@ -27,7 +27,7 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) { }
+  ) {}
 
   /**
    * Real-time subscription to data objects in a space.
@@ -51,7 +51,6 @@ export class DataServiceHost {
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
         // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
-
 
         // Assign feed metadata
         batch.objects?.forEach((object) => {
@@ -86,7 +85,7 @@ export class DataServiceHost {
             meta: undefined
           })),
           meta: undefined
-        })),
+        }))
       }
     });
     if (request.clientTag) {
