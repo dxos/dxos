@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -263,15 +263,23 @@ export class DatabaseBackendProxy {
     }
   }
 
+  async flush({ timeout }: { timeout?: number } = {}) {
+    const promise = Promise.all(
+      Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed())
+    );
+    if (timeout) {
+      await asyncTimeout(promise, timeout);
+    } else {
+      await promise;
+    }
+  }
+
   async close(): Promise<void> {
     await this._ctx.dispose();
 
     // NOTE: Must be before entities stream is closed so that confirmations can come in.
-    // TODO(dmaretskyi): Extract as db.flush()?.
     try {
-      await Promise.all(
-        Array.from(this._pendingBatches.values()).map((batch) => batch.processTrigger?.wait({ timeout: FLUSH_TIMEOUT }))
-      );
+      await this.flush({ timeout: FLUSH_TIMEOUT });
     } catch (err) {
       log.error('timeout waiting for mutations to flush', {
         timeout: FLUSH_TIMEOUT,
