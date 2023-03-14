@@ -7,9 +7,11 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client, ClientServicesProxy } from '@dxos/client';
+import { Client, ClientServicesProxy, Config } from '@dxos/client';
+import { Defaults } from '@dxos/config';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContextProps } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
@@ -58,6 +60,9 @@ const waitForRpc = async () =>
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
 
+const namespace = 'devtools-extension';
+void initializeAppTelemetry(namespace, new Config(Defaults()));
+
 const App = () => {
   log('initializing...');
 
@@ -77,7 +82,7 @@ const App = () => {
     log('client initialized');
   }, []);
 
-  return <Devtools context={context} />;
+  return <Devtools context={context} namespace={namespace} />;
 };
 
 const init = async () => {
