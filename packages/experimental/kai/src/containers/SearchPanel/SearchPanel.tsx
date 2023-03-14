@@ -13,7 +13,7 @@ import {
   MagnifyingGlass,
   UserCircle
 } from '@phosphor-icons/react';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
@@ -21,6 +21,7 @@ import { getSize, Searchbar } from '@dxos/react-components';
 
 import { FrameDef, frameDefs, useAppRouter } from '../../hooks';
 
+// TODO(burdon): Factor out search hook.
 // TODO(burdon): Reconcile with type and frame system.
 export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
   'dxos.experimental.kai.Organization': {
@@ -49,6 +50,11 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
     rank: 2,
     Icon: FileText,
     frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.document')
+  },
+  'dxos.experimental.kai.DocumentStack': {
+    rank: 2,
+    Icon: FileText,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.stack')
   },
   'dxos.experimental.kai.Message': {
     rank: 1,
@@ -136,8 +142,13 @@ const matchFilter = (text: string) => {
 
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
+export type SearchResults = {
+  text: string;
+  results: SearchResult[];
+};
+
 export type SearchPanelProps = {
-  onResults?: (object: SearchResult[]) => void;
+  onResults?: (object: SearchResults) => void;
   onSelect?: (object: Document) => void;
 };
 
@@ -160,12 +171,14 @@ export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   };
 
   const { space } = useAppRouter();
-  const results = useQuery(space).map(matchFilter(text));
-  const sorted = (results.filter(Boolean) as SearchResult[]).sort(sort);
+  const results = useQuery(space);
+  const sorted = useMemo(
+    () => (results.map(matchFilter(text)).filter(Boolean) as SearchResult[]).sort(sort),
+    [results, text]
+  );
   useEffect(() => {
-    // TODO(burdon): Causes recursion.
-    // onResults?.(sorted);
-  }, [results]); // TODO(burdon): The `sorted` array would always be updated.
+    onResults?.({ text, results: sorted });
+  }, [sorted]);
 
   return (
     <div className='flex flex-col overflow-hidden w-full'>

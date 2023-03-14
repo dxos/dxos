@@ -79,4 +79,29 @@ describe('database (unit)', () => {
     // TODO(dmaretskyi): Helper functions to compare state.
     expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
   });
+
+  test('batches', async () => {
+    const builder = new DatabaseTestBuilder();
+    const peer1 = await builder.createPeer();
+    const peer2 = await builder.createPeer();
+
+    const id = PublicKey.random().toHex();
+    peer1.proxy.beginBatch();
+    peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer1.proxy.mutate(
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+    );
+
+    peer1.confirm();
+    peer2.replicate(peer1.timeframe);
+
+    expect(peer2.items.getItem(id)).toBeUndefined();
+
+    peer1.proxy.commitBatch();
+    peer1.confirm();
+    peer2.replicate(peer1.timeframe);
+
+    // TODO(dmaretskyi): Helper functions to compare state.
+    expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
+  });
 });

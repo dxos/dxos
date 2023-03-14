@@ -4,7 +4,6 @@
 
 import {
   Article,
-  Robot,
   Calendar,
   Cards,
   Code,
@@ -28,7 +27,6 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
-  BotFrame,
   CalendarFrame,
   ChessFrame,
   ContactFrame,
@@ -124,19 +122,6 @@ export const frameDefs: FrameDef[] = [
       Component: TaskFrame
     }
   },
-  // TODO(burdon): Not a frame
-  {
-    module: {
-      id: 'dxos.module.frame.bot',
-      type: 'dxos:type/frame',
-      displayName: 'Bots',
-      description: 'Bot manager.'
-    },
-    runtime: {
-      Icon: Robot,
-      Component: BotFrame
-    }
-  },
   {
     module: {
       id: 'dxos.module.frame.inbox',
@@ -147,18 +132,6 @@ export const frameDefs: FrameDef[] = [
     runtime: {
       Icon: Tray,
       Component: MessageFrame
-    }
-  },
-  {
-    module: {
-      id: 'dxos.module.frame.bot',
-      type: 'dxos:type/frame',
-      displayName: 'Bots',
-      description: 'Bot management.'
-    },
-    runtime: {
-      Icon: Robot,
-      Component: BotFrame
     }
   },
   {

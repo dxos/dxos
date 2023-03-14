@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { mx } from '../../util';
@@ -24,14 +24,17 @@ type SearchbarSlots = {
 export type SearchbarProps = {
   slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
-  icon?: boolean;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch, icon }) => {
+export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
     onSearch?.(text);
+  };
+
+  const handleReset = () => {
+    handleChange('');
   };
 
   return (
@@ -46,7 +49,7 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch, icon }) =>
             className: 'w-full'
           },
           input: {
-            onKeyDown: ({ key }) => key === 'Escape' && handleChange(''),
+            onKeyDown: ({ key }) => key === 'Escape' && handleReset(),
             spellCheck: false,
             ...slots.input
           }
@@ -55,11 +58,9 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch, icon }) =>
         onChange={({ target }) => handleChange(target.value)}
       />
 
-      {icon && (
-        <button className={mx('p-1', slots.button?.className)} onClick={() => onSearch?.(text)}>
-          <MagnifyingGlass />
-        </button>
-      )}
+      <button className={mx('p-1', slots.button?.className)} onClick={handleReset}>
+        <X />
+      </button>
     </div>
   );
 };

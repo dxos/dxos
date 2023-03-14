@@ -7,63 +7,9 @@ import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
 import { observer } from '@dxos/react-client';
-import { Button, Dialog, DialogProps, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 
 import { icons, themes } from '../../hooks';
-
-// TODO(burdon): Move props here, with ids.
-
-export type SpaceSettingsDialog = {
-  space: Space;
-} & Pick<DialogProps, 'open' | 'onOpenChange' | 'defaultOpen'>;
-
-export const SpaceSettingsDialog: FC<SpaceSettingsDialog> = observer(({ space, open, onOpenChange, defaultOpen }) => {
-  const { t } = useTranslation('kai');
-
-  return (
-    <Dialog
-      title='Space Settings'
-      {...{ open, onOpenChange, defaultOpen }}
-      closeTriggers={[
-        <Button key='ok' variant='primary'>
-          OK
-        </Button>
-      ]}
-    >
-      <div className='mt-2 mt-4 mb-6'>
-        <Input
-          variant='subdued'
-          label='Title'
-          labelVisuallyHidden
-          placeholder={t('space title placeholder')}
-          slots={{ input: { autoFocus: true, className: 'text-xl' } }}
-          value={space.properties.name}
-          onChange={(event) => {
-            space.properties.name = event.target.value;
-          }}
-        />
-      </div>
-
-      <div className='mb-6'>
-        <SpaceThemes
-          selected={space.properties.theme}
-          onSelect={(theme) => {
-            space.properties.theme = theme;
-          }}
-        />
-      </div>
-
-      <div className='mb-8'>
-        <SpaceIcons
-          selected={space.properties.icon}
-          onSelect={(icon) => {
-            space.properties.icon = icon;
-          }}
-        />
-      </div>
-    </Dialog>
-  );
-});
 
 export const SpaceSettings: FC<{ space: Space }> = observer(({ space }) => {
   return (

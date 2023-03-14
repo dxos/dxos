@@ -10,8 +10,7 @@ import { useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { BotFrame } from '..//frames';
-import { FrameContainer, FrameRegistry, Sidebar, AppMenu } from '../containers';
+import { AppMenu, BotManager, FrameContainer, FrameRegistry, Sidebar } from '../containers';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId } from '../hooks';
 
 /**
@@ -66,7 +65,7 @@ const Content = () => {
       {space && (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.REGISTRY && <FrameRegistry />}
-          {section === Section.BOTS && <BotFrame />}
+          {section === Section.BOTS && <BotManager />}
           {frame && <FrameContainer frame={frame} />}
         </div>
       )}
