@@ -15,6 +15,10 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 export const DX_BOT_SERVICE_PORT = 7100;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
 
+// Proxying ports is only required on non-Linux docker platforms.
+export const DX_BOT_RPC_PORT_MIN = 7200;
+export const DX_BOT_RPC_PORT_MAX = 7300;
+
 export const BOT_STARTUP_CHECK_INTERVAL = 250;
 export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
@@ -76,10 +80,24 @@ export class BotClient {
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
 
+    /**
+     * {@see DX_BOT_RPC_PORT_MIN}
+     */ 
+    const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
     const request = {
       Image: 'ghcr.io/dxos/bot', // TODO(burdon): Factor out name?
       ExposedPorts: {
         [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
+      },
+      HostConfig: {
+        PortBindings: {
+          [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
+            {
+              HostAddr: '127.0.0.1', // only expose on loopback interface.
+              HostPort: `${proxyPort}`
+            }
+          ]
+        }
       },
       Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
