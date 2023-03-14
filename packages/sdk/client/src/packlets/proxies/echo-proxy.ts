@@ -126,7 +126,7 @@ export class EchoProxy implements Echo {
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._cachedSpaces = Array.from(this._spaces.values()).filter(space => space._initialized);
+        this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
         this._spacesChanged.emit(this._cachedSpaces);
       }
     });

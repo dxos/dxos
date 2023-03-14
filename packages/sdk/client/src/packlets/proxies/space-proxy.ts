@@ -117,7 +117,7 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
-    assert(this._properties, 'Properties not initialized.')
+    assert(this._properties, 'Properties not initialized.');
     return this._properties;
   }
 

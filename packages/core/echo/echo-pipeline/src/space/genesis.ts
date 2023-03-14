@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredential, CredentialGenerator } from '@dxos/credentials';
+import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -57,7 +57,7 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         designation: AdmittedFeed.Designation.DATA
       }
     })
-  ]
+  ];
 
   for (const credential of credentials) {
     await space.controlPipeline.writer.write({
