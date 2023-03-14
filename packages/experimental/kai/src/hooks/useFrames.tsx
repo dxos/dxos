@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import {
   Article,
   Robot,
@@ -21,7 +20,8 @@ import {
   Tray,
   MagnifyingGlass,
   IdentificationCard
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
+import assert from 'assert';
 import { FC, useMemo } from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, Plus } from 'phosphor-react';
+import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Document } from '@dxos/echo-schema';

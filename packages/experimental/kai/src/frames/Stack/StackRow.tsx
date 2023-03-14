@@ -12,7 +12,7 @@ import {
   Table as TableIcon,
   TextAlignLeft,
   Trash
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import React, { FC, ForwardedRef, forwardRef, ReactNode, useState } from 'react';
 
 import { EchoSchemaType } from '@dxos/echo-schema';

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useReducer } from 'react';
 
 /**
  * Settings store.
+ * @deprecated Replace with HALO key store when available.
  */
 // TODO(burdon): Move to react-client.
 // NOTE: Will be replaced by HALO.

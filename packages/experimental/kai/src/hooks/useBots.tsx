@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
 import assert from 'assert';
-import { Database, Envelope, Flower, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { useConfig, useKeyStore } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
-import { useKeyStore } from './useKeyStore';
 
 export type BotDef = {
   module: Module;

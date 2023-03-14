@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Smiley, SmileyBlank, UserCircle } from 'phosphor-react';
+import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { SpaceMember } from '@dxos/client';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
+import { ArrowsIn, ArrowsOut, PlusCircle } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

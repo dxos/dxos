@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { CaretLeft, FrameCorners, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from 'phosphor-react';
-import React, { Suspense, useContext, useEffect, useState } from 'react';
-import { Link, useHref, useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect, useState, Suspense } from 'react';
+import { useHref, useNavigate, Link } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';

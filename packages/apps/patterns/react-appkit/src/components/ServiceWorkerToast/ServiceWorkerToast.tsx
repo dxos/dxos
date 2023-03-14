@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Gift } from 'phosphor-react';
+import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-components';

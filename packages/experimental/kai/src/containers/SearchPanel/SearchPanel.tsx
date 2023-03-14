@@ -12,7 +12,7 @@ import {
   FileText,
   MagnifyingGlass,
   UserCircle
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';

@@ -15,7 +15,7 @@ import {
   Factory,
   Rocket,
   Users
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import { FC, useEffect, useState } from 'react';
 
 import { Properties } from '@dxos/client';

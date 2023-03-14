@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AddressBook, DeviceMobileCamera, DiamondsFour, Planet, SignOut } from 'phosphor-react';
+import { AddressBook, DeviceMobileCamera, DiamondsFour, Planet, SignOut } from '@phosphor-icons/react';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 

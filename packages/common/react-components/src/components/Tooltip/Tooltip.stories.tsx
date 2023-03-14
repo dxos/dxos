@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import { ChatTeardropText } from 'phosphor-react';
+import { ChatTeardropText } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 import { Button } from '../Button';

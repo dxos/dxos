@@ -21,10 +21,10 @@
     "@dxos/react-components": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
     "@radix-ui/react-scroll-area": "^1.0.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isequal": "^4.5.0",
-    "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
@@ -43,7 +43,7 @@
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "postcss": "^8.4.17",
-    "tailwindcss": "^3.1.8",
+    "tailwindcss": "^3.2.7",
     "typescript": "^4.8.4",
     "vite": "4.0.4",
     "vite-plugin-fonts": "^0.7.0",
@@ -52,6 +52,6 @@
     "workbox-window": "^6.5.4"
   },
   "peerDependencies": {
-    "phosphor-react": "^1.4.1"
+    "@phosphor-icons/react": "^2.0.5"
   }
 }
