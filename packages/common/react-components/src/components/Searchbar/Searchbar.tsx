@@ -24,9 +24,10 @@ type SearchbarSlots = {
 export type SearchbarProps = {
   slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
+  icon?: boolean;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch, icon }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -54,9 +55,11 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         onChange={({ target }) => handleChange(target.value)}
       />
 
-      <button className={mx('p-1', slots.button?.className)} onClick={() => onSearch?.(text)}>
-        <MagnifyingGlass />
-      </button>
+      {icon && (
+        <button className={mx('p-1', slots.button?.className)} onClick={() => onSearch?.(text)}>
+          <MagnifyingGlass />
+        </button>
+      )}
     </div>
   );
 };

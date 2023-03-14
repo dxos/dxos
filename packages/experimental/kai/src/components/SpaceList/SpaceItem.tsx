@@ -27,11 +27,9 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
   // TODO(burdon): Use List.
   return (
     <div
-      // style={{ marginTop: -1 }}
       className={mx(
-        'flex flex-col overflow-hidden border first:mt-0 mt-[-1px]',
-        'hover:bg-hover-bg',
-        selected && 'z-10 hover:bg-selection-bg bg-selection-bg border-selection-border'
+        'flex flex-col overflow-hidden first:mt-0 px-2 hover:bg-hover-bg',
+        selected && 'z-10 hover:bg-selection-bg __bg-selection-bg'
       )}
     >
       <div className={mx('flex w-full overflow-hidden px-0 items-center')}>

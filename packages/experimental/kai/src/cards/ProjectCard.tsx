@@ -10,7 +10,7 @@ import { Project, Task } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, mx, Input } from '@dxos/react-components';
 
-import { TaskList } from '../../components';
+import { TaskList } from './TaskList';
 
 // TODO(burdon): Reconcile with other cards.
 export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ space, object }) => {
@@ -19,6 +19,14 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
     const task = object.tasks[active];
     object.tasks.splice(active, 1);
     object.tasks.splice(over, 0, task);
+  };
+
+  const handleCreateTask = async (task: Task) => {
+    object.tasks.push(await space.db.add(task));
+  };
+
+  const handleDeleteTask = async (task: Task) => {
+    await space.db.remove(task);
   };
 
   return (
@@ -42,12 +50,10 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
       {/* Tasks */}
       <div className='p-1.5'>
         <TaskList
-          space={space}
           id={object.id}
           tasks={object.tasks}
-          onCreate={(task: Task) => {
-            object.tasks.push(task);
-          }}
+          onCreateItem={handleCreateTask}
+          onDeleteItem={handleDeleteTask}
           onMoveItem={handleDrag}
         />
       </div>
