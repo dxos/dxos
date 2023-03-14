@@ -77,12 +77,14 @@ export const getColumnType = (id: string): ColumnType<any> => types.find((type) 
 
 export const TableFrame = () => {
   const { space } = useAppRouter();
-  const [type, setType] = useState<ColumnType<any>>(types[0]);
+  const [type, setType] = useState<ColumnType<any> | undefined>(types[0]);
   const [text, setText] = useState<string>();
-  const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
+  // TODO(burdon): Bug if changes.
+  const objects = useQuery(space, type?.filter).filter(type?.subFilter?.(text) ?? Boolean);
 
   useEffect(() => {
-    setType(types[0]);
+    const initialType = types.find((type) => type.id === 'dxos.experimental.kai.Contact');
+    setType(initialType);
   }, []);
 
   const handleSearch = (text: string) => {
@@ -93,7 +95,7 @@ export const TableFrame = () => {
     <div className='flex flex-col flex-1 overflow-hidden'>
       <Toolbar className='mb-2'>
         <div className='w-screen md:w-column'>
-          <Select value={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+          <Select value={type?.id} onValueChange={(value) => value && setType(getColumnType(value))}>
             {types?.map((type) => (
               <Select.Item key={type.id} value={type.id}>
                 {type.title}
@@ -108,17 +110,18 @@ export const TableFrame = () => {
         </div>
       </Toolbar>
 
-      {/* TODO(burdon): Editable variant. */}
-      <div className='flex flex-1 overflow-hidden px-2'>
-        <Table<Document>
-          columns={type.columns}
-          data={objects}
-          slots={{
-            header: { className: 'bg-paper-1-bg' },
-            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
-          }}
-        />
-      </div>
+      {type && (
+        <div className='flex flex-1 overflow-hidden px-2'>
+          <Table<Document>
+            columns={type.columns}
+            data={objects}
+            slots={{
+              header: { className: 'bg-paper-1-bg' },
+              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

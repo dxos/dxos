@@ -13,7 +13,7 @@ import {
   MagnifyingGlass,
   UserCircle
 } from '@phosphor-icons/react';
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
@@ -60,7 +60,7 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
 // TODO(burdon): Based on schema. Convert documents. to text.
 const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from.name'];
 
-type SearchResult = {
+export type SearchResult = {
   object: Document;
   rank: number;
   Icon: FC<any>;
@@ -137,10 +137,11 @@ const matchFilter = (text: string) => {
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
 export type SearchPanelProps = {
+  onResults?: (object: SearchResult[]) => void;
   onSelect?: (object: Document) => void;
 };
 
-export const SearchPanel = ({ onSelect }: SearchPanelProps) => {
+export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   // TODO(burdon): Search across spaces.
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
@@ -159,8 +160,13 @@ export const SearchPanel = ({ onSelect }: SearchPanelProps) => {
   };
 
   const { space } = useAppRouter();
-  const results = useQuery(space).map(matchFilter(text)).filter(Boolean) as SearchResult[];
-  const sorted = results.sort(sort);
+  const results = useQuery(space).map(matchFilter(text));
+  const sorted = (results.filter(Boolean) as SearchResult[]).sort(sort);
+  // TODO(burdon): Causes recursion.
+  useEffect(() => {
+    console.log('!!!!!!!!!!!!!!!!!');
+    onResults?.(sorted);
+  }, [results]);
 
   return (
     <div className='flex flex-col w-full'>

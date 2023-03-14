@@ -17,7 +17,7 @@ import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction } from '../../components';
-import { SpaceSettings } from '../../containers';
+import { SearchResult, SpaceSettings } from '../../containers';
 import {
   createInvitationPath,
   createPath,
@@ -32,7 +32,7 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { objectMeta, SearchPanel } from '../SearchPanel';
 
-const FrameSelector = () => {
+const FrameList = () => {
   const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
   const { frame: currentFrame } = useAppRouter();
@@ -159,7 +159,9 @@ export const Sidebar = () => {
     }
   };
 
-  const handleSelect = (object: Document) => {
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  const handleSearchSelect = (object: Document) => {
     if (space) {
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
@@ -244,39 +246,42 @@ export const Sidebar = () => {
       {/* Search */}
       {!showSpaceList && (
         <div className='flex flex-col overflow-hidden space-y-4'>
-          <SearchPanel onSelect={handleSelect} />
+          <SearchPanel __onResults={setSearchResults} onSelect={handleSearchSelect} />
 
-          {/* TODO(burdon): Items if not actively searching. */}
-          <FrameSelector />
-
-          {List && (
+          {searchResults.length === 0 && (
             <>
-              <Divider />
-              <div className='flex px-3'>
-                <DensityProvider density='fine'>
-                  <Suspense>{<List />}</Suspense>
-                </DensityProvider>
+              <FrameList />
+
+              {List && (
+                <>
+                  <Divider />
+                  <div className='flex px-3'>
+                    <DensityProvider density='fine'>
+                      <Suspense>{<List />}</Suspense>
+                    </DensityProvider>
+                  </div>
+                  <Divider />
+                </>
+              )}
+
+              <div className='flex flex-col'>
+                <Link
+                  className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
+                  to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
+                >
+                  <FrameCorners className={getSize(6)} />
+                  <div className='flex pl-2'>Frames</div>
+                </Link>
+                <Link
+                  className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
+                  to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+                >
+                  <Robot className={getSize(6)} />
+                  <div className='flex pl-2'>Bots</div>
+                </Link>
               </div>
-              <Divider />
             </>
           )}
-
-          <div className='flex flex-col'>
-            <Link
-              className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
-              to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
-            >
-              <FrameCorners className={getSize(6)} />
-              <div className='flex pl-2'>Frames</div>
-            </Link>
-            <Link
-              className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
-              to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-            >
-              <Robot className={getSize(6)} />
-              <div className='flex pl-2'>Bots</div>
-            </Link>
-          </div>
         </div>
       )}
 
