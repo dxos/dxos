@@ -21,10 +21,17 @@
 - Stack
 - Card/Slot
 
+
+Flat accordion with list of items/views.
+
 ```
-- Space 1
-- Space 2
-  - View 2.1
-  - View 2.2
-  - View 2.3
+===============
+[X] Space 1 (+) => Picker with potential dialog (e.g., to drag files); Picker similar to stack.
+---------------
+[-] Doc
+[-] Doc
+[-] Tasks
+[-] Cards
+[-] Folder
+===============
 ```

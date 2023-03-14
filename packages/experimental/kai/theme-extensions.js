@@ -15,7 +15,7 @@ module.exports = {
   osThemeExtension: {
     ...osThemeExtension,
     spacing: {
-      sidebar: '390px'
+      sidebar: '300px'
     }
   },
 
@@ -28,10 +28,12 @@ module.exports = {
   // https://tailwindcss.com/docs/theme#extending-the-default-theme
   kaiThemeExtension: {
     spacing: {
-      appbar: '48px',
-      toolbar: '40px', // 32px line height + padding
-      header: '88px', // Combined height of appbar and toolbar (pbs-header).
+      // appbar: '48px',
+      // header: '88px', // Combined height of appbar and toolbar (pbs-header).
+      appbar: '0px',
+      header: '0px',
 
+      // TODO(burdon): Hack.
       // Standardize column width for tiles (based on iPhone Pro 12).
       column: '390px'
     },

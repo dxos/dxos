@@ -10,8 +10,9 @@ import { useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useTheme, useGenerator, Section, createPath, defaultFrameId } from '../hooks';
+import { BotFrame } from '..//frames';
+import { FrameContainer, FrameSelector, FrameRegistry, Sidebar, AppMenu } from '../containers';
+import { useAppRouter, useTheme, Section, createPath, defaultFrameId } from '../hooks';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -46,8 +47,6 @@ const Toolbar = () => {
  * Home page with current space.
  */
 const SpacePage = () => {
-  useGenerator();
-  const { section } = useParams();
   const { space, frame } = useAppRouter();
   const spaces = useSpaces();
 
@@ -64,17 +63,43 @@ const SpacePage = () => {
         main: { className: 'pbs-header bs-full overflow-hidden' }
       }}
     >
-      <AppBar />
-      <Toolbar />
+      <Content />
+    </PanelSidebarProvider>
+  );
+};
+
+const Content = () => {
+  const theme = useTheme();
+  const { space, frame } = useAppRouter();
+  const { section } = useParams();
+  const toggleSidebar = useTogglePanelSidebar();
+  const { displayState } = useContext(PanelSidebarContext);
+
+  return (
+    <div className='flex flex-col bs-full overflow-hidden'>
+      {/* TODO(burdon): Frame toolbar. */}
+      <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
+        {displayState !== 'show' && (
+          <Button variant='ghost' onClick={toggleSidebar}>
+            {<CaretRight className={getSize(6)} />}
+          </Button>
+        )}
+
+        <div className='grow' />
+        <AppMenu />
+      </div>
+
+      <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
 
       {/* Main content. */}
       {space && (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.REGISTRY && <FrameRegistry />}
+          {section === Section.BOTS && <BotFrame />}
           {frame && <FrameContainer frame={frame} />}
         </div>
       )}
-    </PanelSidebarProvider>
+    </div>
   );
 };
 

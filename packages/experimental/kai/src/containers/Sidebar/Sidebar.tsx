@@ -4,9 +4,9 @@
 
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from 'phosphor-react';
+import { CaretLeft, Globe, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
-import { useHref, useNavigate } from 'react-router-dom';
+import { Link, useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -17,10 +17,57 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction } from '../../components';
-import { createInvitationPath, createPath, defaultFrameId, useAppRouter, useTheme } from '../../hooks';
+import { SpaceSettings } from '../../containers';
+import {
+  createInvitationPath,
+  createPath,
+  defaultFrameId,
+  getIcon,
+  useAppRouter,
+  useFrames,
+  useTheme,
+  Section
+} from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { objectMeta, SearchPanel } from '../SearchPanel';
+
+const FrameSelector = () => {
+  const { space } = useAppRouter();
+  const { frames, active: activeFrames } = useFrames();
+  const { section, frame: currentFrame } = useAppRouter();
+  const maxTabs = 7; // TODO(burdon): Media query?
+  if (!space) {
+    return null;
+  }
+
+  return (
+    <div className='flex flex-col'>
+      <div className='flex flex-col p-4 space-y-2'>
+        {Array.from(activeFrames)
+          .map((frameId) => frames.get(frameId)!)
+          .filter(Boolean)
+          .map(({ module: { id, displayName }, runtime: { Icon } }) => (
+            <Link key={id} className='flex w-full' to={createPath({ spaceKey: space.key, frame: id })}>
+              <Icon className={getSize(6)} />
+              <div className='flex pl-2'>{displayName}</div>
+            </Link>
+          ))}
+      </div>
+
+      <div className='flex flex-col p-4 space-y-2'>
+        <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}>
+          <Globe className={getSize(6)} />
+          <div className='flex pl-2'>Frames</div>
+        </Link>
+        <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.BOTS })}>
+          <Robot className={getSize(6)} />
+          <div className='flex pl-2'>Bots</div>
+        </Link>
+      </div>
+    </div>
+  );
+};
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -35,6 +82,8 @@ export const Sidebar = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const { state: connectionState } = useNetworkStatus();
+  const [searchMode, setSearchMode] = useState(true);
+  const [showSpaceList, setShowSpaceList] = useState(false);
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
@@ -51,6 +100,10 @@ export const Sidebar = () => {
       void clipboardCopy(url.toString());
     }
   }, [observable]);
+
+  useEffect(() => {
+    setShowSpaceList(false);
+  }, [space]);
 
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
@@ -128,7 +181,14 @@ export const Sidebar = () => {
     }
   };
 
-  // TODO(burdon): Mobile slider (full width, no blur).
+  // TODO(burdon): Popup over space name (like Notion: option to rename/create/join, etc.)
+
+  if (!space) {
+    return null;
+  }
+
+  const Icon = getIcon(space.properties.icon);
+
   return (
     <div
       role='none'
@@ -137,67 +197,87 @@ export const Sidebar = () => {
         theme.panel === 'flat' && 'border-r'
       )}
     >
-      {/* Match Frame selector. */}
-      <div
-        className={mx('flex flex-col-reverse h-toolbar', theme.classes?.toolbar, theme.panel === 'flat' && 'border-b')}
-      >
-        <div className='flex justify-between px-2'>
-          <div className='flex items-center'>
+      {/* Space Selector */}
+      <div className={mx('flex shrink-0 items-center pl-4 h-[40px]', theme.classes.header)}>
+        <div className='flex items-center'>
+          <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
+            <Icon className={getSize(6)} />
+          </Button>
+          <div className='pl-2 text-lg'>{space.properties?.name}</div>
+        </div>
+
+        <div className='flex grow' />
+
+        <Button variant='ghost' className='p-0' onClick={toggleSidebar}>
+          {isOpen && <CaretLeft className={getSize(6)} />}
+        </Button>
+      </div>
+
+      <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
+
+      {/* Spaces */}
+      {/* TODO(burdon): Radix Popover */}
+      {showSpaceList && (
+        <div className='flex flex-col overflow-y-auto bg-white pb-2 border-b'>
+          <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
+
+          {/* TODO(burdon): Observable. */}
+          <div className='flex flex-col m-2 my-4'>
+            <SpaceSettings space={space} />
+          </div>
+
+          {/* Menu */}
+          <div className='flex flex-col w-full px-4'>
             <Button
               variant='ghost'
-              className='flex'
+              className='flex p-0 justify-start'
               title='Create new space'
               data-testid='sidebar.createSpace'
               onClick={handleCreateSpace}
             >
-              <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
+              <span className='pl-2'>Create space</span>
             </Button>
             <Button
               variant='ghost'
-              className='flex'
+              className='flex p-0 justify-start'
               title='Join a space'
               data-testid='sidebar.joinSpace'
               onClick={handleJoinSpace}
             >
-              <span className='sr-only'>Join a space</span>
               <Target className={getSize(6)} />
-            </Button>
-          </div>
-          <div className='flex items-center'>
-            <Button variant='ghost' onClick={toggleSidebar}>
-              {isOpen && <CaretLeft className={getSize(6)} />}
+              <span className='pl-2'>Join space</span>
             </Button>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className='flex flex-col flex-1 overflow-hidden'>
-        {/* Spaces */}
-        <div className='flex shrink-0 overflow-y-auto'>
-          <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
-        </div>
-
-        {/* Search */}
-        <div className='flex overflow-hidden'>
+      {/* Search */}
+      {!showSpaceList && (
+        <div className='flex flex-col overflow-hidden'>
           <SearchPanel onSelect={handleSelect} />
-        </div>
 
-        <div className='flex-1' />
-
-        {/* Members */}
-        <div className='flex shrink-0 flex-col my-4'>
-          <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
-          <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />
-          <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>
-            {connectionState === ConnectionState.ONLINE ? (
-              <WifiHigh className={getSize(5)} />
-            ) : (
-              <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
-            )}
-            <span className='mis-2'>Toggle connection</span>
-          </Button>
+          {/* TODO(burdon): Items if not actively searching. */}
+          <FrameSelector />
         </div>
+      )}
+
+      <div className='flex-1' />
+
+      {/* Members */}
+      <div className='flex shrink-0 flex-col my-4'>
+        <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
+
+        <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />
+
+        <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>
+          {connectionState === ConnectionState.ONLINE ? (
+            <WifiHigh className={getSize(5)} />
+          ) : (
+            <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
+          )}
+          <span className='mis-2'>Toggle connection</span>
+        </Button>
       </div>
     </div>
   );

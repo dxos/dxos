@@ -85,12 +85,12 @@ export const StackRow = forwardRef(
               <div className='w-8'>
                 {!dragging && (
                   <DropdownMenu
+                    slots={{ content: { className: 'z-50' } }}
                     trigger={
                       <Button variant='ghost' className='p-1'>
                         <CaretCircleDown className={getSize(6)} />
                       </Button>
                     }
-                    slots={{ content: { className: 'z-50' } }}
                   >
                     {onCreate && (
                       <>

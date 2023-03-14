@@ -31,7 +31,7 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
 /**
  * Frame tabs.
  */
-export const FrameSelector: FC = () => {
+export const FrameSelector = () => {
   const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useAppRouter();

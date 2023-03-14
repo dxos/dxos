@@ -18,7 +18,6 @@ import { Actions } from './Actions';
 export const AppBar = observer(() => {
   const theme = useTheme();
   const { space } = useAppRouter();
-  const shell = useShell();
   const [showSettings, setShowSettings] = useState(false);
   const Icon = getIcon(space?.properties.icon);
 
@@ -51,17 +50,29 @@ export const AppBar = observer(() => {
 
       <div className='flex-1' />
 
+      <AppMenu />
+    </div>
+  );
+});
+
+export const AppMenu = () => {
+  const { space } = useAppRouter();
+  const shell = useShell();
+  const [showSettings, setShowSettings] = useState(false);
+
+  return (
+    <>
       {/* TODO(burdon): Help button. */}
       {/* TODO(burdon): Share button. */}
       <div className='flex items-center'>
         <DensityProvider density='coarse'>
           <DropdownMenu
+            slots={{ content: { className: 'z-50' } }}
             trigger={
               <Button variant='ghost' className='p-2'>
                 <Command className={getSize(6)} />
               </Button>
             }
-            slots={{ content: { className: 'z-50' } }}
           >
             <Actions />
           </DropdownMenu>
@@ -72,6 +83,6 @@ export const AppBar = observer(() => {
       </div>
 
       {space && <SpaceSettingsDialog space={space} open={showSettings} onOpenChange={setShowSettings} />}
-    </div>
+    </>
   );
-});
+};

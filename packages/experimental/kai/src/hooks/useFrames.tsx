@@ -15,7 +15,6 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
-  Monitor,
   Stack as StackIcon,
   Sword,
   Table,
@@ -38,7 +37,6 @@ import {
   File,
   KanbanFrame,
   MapFrame,
-  MasonryFrame,
   MessageFrame,
   Note,
   SandboxFrame,
@@ -64,18 +62,6 @@ export type FrameDef = {
  */
 // prettier-ignore
 export const frameDefs: FrameDef[] = [
-  {
-    module: {
-      id: 'dxos.module.frame.dashboard',
-      type: 'dxos:type/frame',
-      displayName: 'Dashboard',
-      description: 'Configurable tiles.'
-    },
-    runtime: {
-      Icon: Monitor,
-      Component: MasonryFrame
-    }
-  },
   {
     module: {
       id: 'dxos.module.frame.search',
@@ -138,6 +124,7 @@ export const frameDefs: FrameDef[] = [
       Component: TaskFrame
     }
   },
+  // TODO(burdon): Not a frame
   {
     module: {
       id: 'dxos.module.frame.bot',
@@ -303,17 +290,16 @@ export const frameDefs: FrameDef[] = [
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.dashboard';
+export const defaultFrameId = 'dxos.module.frame.kanban';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.dashboard',
-  'dxos.module.frame.inbox',
-  'dxos.module.frame.contact',
-  'dxos.module.frame.calendar',
   'dxos.module.frame.stack',
-  'dxos.module.frame.bot'
-  // 'dxos.module.frame.kanban'
+  'dxos.module.frame.inbox',
+  'dxos.module.frame.calendar',
+  'dxos.module.frame.contact',
+  'dxos.module.frame.kanban'
+  // 'dxos.module.frame.bot'
   // 'dxos.module.frame.table',
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
