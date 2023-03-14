@@ -47,16 +47,14 @@ const FrameSelector = () => {
           .map((frameId) => frames.get(frameId)!)
           .filter(Boolean)
           .map(({ module: { id, displayName }, runtime: { Icon } }) => (
-            <div
+            <Link
               key={id}
               className={mx('flex w-full px-4 py-1 items-center', id === currentFrame?.module.id && 'bg-zinc-200')}
+              to={createPath({ spaceKey: space.key, frame: id })}
             >
-              <Link className='flex w-full' to={createPath({ spaceKey: space.key, frame: id })}>
-                <Icon className={mx(getSize(6), id === currentFrame?.module.id && 'text-selection-text')} />
-                <div className='flex pl-2'>{displayName}</div>
-              </Link>
-              {/* {id === currentFrame?.module.id && <Circle className='text-selection-text' weight='fill' />} */}
-            </div>
+              <Icon className={getSize(6)} />
+              <div className='flex w-full pl-2'>{displayName}</div>
+            </Link>
           ))}
       </div>
     </div>
@@ -67,7 +65,7 @@ export const Sidebar = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const client = useClient();
-  const { space, frame } = useAppRouter();
+  const { space, section, frame } = useAppRouter();
   const spaces = useSpaces();
   const members = useMembers(space?.key);
   const shell = useShell();
@@ -249,7 +247,7 @@ export const Sidebar = () => {
 
       {/* Search */}
       {!showSpaceList && (
-        <div className='flex flex-col overflow-hidden'>
+        <div className='flex flex-col overflow-hidden space-y-4'>
           <SearchPanel onSelect={handleSelect} />
 
           {/* TODO(burdon): Items if not actively searching. */}
@@ -263,16 +261,22 @@ export const Sidebar = () => {
                   <Suspense>{<List />}</Suspense>
                 </DensityProvider>
               </div>
+              <Divider />
             </>
           )}
 
-          <Divider />
-          <div className='flex flex-col p-4 space-y-2'>
-            <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}>
+          <div className='flex flex-col'>
+            <Link
+              className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
+              to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
+            >
               <FrameCorners className={getSize(6)} />
               <div className='flex pl-2'>Frames</div>
             </Link>
-            <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.BOTS })}>
+            <Link
+              className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
+              to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+            >
               <Robot className={getSize(6)} />
               <div className='flex pl-2'>Bots</div>
             </Link>
