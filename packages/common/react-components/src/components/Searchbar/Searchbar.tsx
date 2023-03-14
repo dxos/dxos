@@ -6,11 +6,14 @@ import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { mx } from '../../util';
-import { Input } from '../Input';
+import { Input, InputProps } from '../Input';
 
+// TODO(burdon): Differentiate slots applied to Input vs slots spread into Input slots?
 type SearchbarSlots = {
   root?: {
     className?: string;
+    placeholder?: string;
+    variant?: InputProps['variant'];
   };
   input?: {
     className?: string;
@@ -40,10 +43,10 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
   return (
     <div className={mx('flex w-full items-center', slots.root?.className)}>
       <Input
-        variant='subdued'
         label='Search'
         labelVisuallyHidden
-        placeholder='Search...'
+        placeholder={slots.root?.placeholder ?? 'Search...'}
+        variant={slots.root?.variant ?? 'default'}
         slots={{
           root: {
             className: 'w-full'

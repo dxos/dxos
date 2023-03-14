@@ -66,7 +66,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
       subFilter:
         (match = '') =>
         (object: Document) =>
-          JSON.stringify(object.toJSON()).includes(match)
+          JSON.stringify(object.toJSON()).toLowerCase().includes(match)
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 };
@@ -80,7 +80,7 @@ export const TableFrame = () => {
   const [type, setType] = useState<ColumnType<any> | undefined>(types[0]);
   const [text, setText] = useState<string>();
   // TODO(burdon): Bug if changes.
-  const objects = useQuery(space, type?.filter).filter(type?.subFilter?.(text) ?? Boolean);
+  const objects = useQuery(space, type?.filter).filter(type?.subFilter?.(text?.toLowerCase()) ?? Boolean);
 
   useEffect(() => {
     const initialType = types.find((type) => type.id === 'dxos.experimental.kai.Contact');
@@ -106,7 +106,7 @@ export const TableFrame = () => {
 
         <div className='grow' />
         <div className='w-screen md:w-column'>
-          <Searchbar onSearch={handleSearch} />
+          <Searchbar slots={{ root: { placeholder: 'Filter...' } }} onSearch={handleSearch} />
         </div>
       </Toolbar>
 
