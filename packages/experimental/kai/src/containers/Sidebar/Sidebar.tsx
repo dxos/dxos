@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, Target, PlusCircle, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { CaretLeft, FrameCorners, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense } from 'react';
