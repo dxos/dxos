@@ -11,12 +11,14 @@ import { useKeyStore } from '@dxos/react-client';
 export type OctokitContextValue = {
   pat: string;
   setPat: (nextPat: string) => Promise<void>;
+  patError: 'failed' | null;
   octokit: Octokit | null;
 };
 
 export const OctokitContext: Context<OctokitContextValue> = createContext<OctokitContextValue>({
   pat: '',
   setPat: async () => {},
+  patError: null,
   octokit: null
 });
 
@@ -29,6 +31,7 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   const pat = keyMap.get(GhPatKey) ?? '';
 
   const [octokit, setOctokit] = useState<Octokit | null>(null);
+  const [patError, setPatError] = useState<OctokitContextValue['patError']>(null);
 
   const setPat = async (nextPat: string) => {
     setKey(GhPatKey, nextPat);
@@ -36,10 +39,12 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
       const nextOctokit = new Octokit({ auth: pat });
       return nextOctokit.rest.users.getAuthenticated().then(
         () => {
+          setPatError(null);
           setOctokit(nextOctokit);
         },
         (err) => {
           log.warn('Failed to authenticate Octokit from PAT', err);
+          setPatError('failed');
           setOctokit(null);
         }
       );
@@ -54,5 +59,5 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
     }
   }, [pat, octokit]);
 
-  return <OctokitContext.Provider value={{ pat, setPat, octokit }}>{children}</OctokitContext.Provider>;
+  return <OctokitContext.Provider value={{ pat, setPat, patError, octokit }}>{children}</OctokitContext.Provider>;
 };

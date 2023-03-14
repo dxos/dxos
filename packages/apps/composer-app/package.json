@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
+    "@octokit/openapi-types": "^16.0.0",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/react": "^18.0.21",

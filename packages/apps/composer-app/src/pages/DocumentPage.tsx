@@ -26,6 +26,7 @@ import {
 } from '@dxos/react-components';
 import { MarkdownComposer, RichTextComposer, TipTapEditor, MarkdownComposerRef } from '@dxos/react-composer';
 
+import { OctokitExplorer } from '../components/OctokitExplorer/OctokitExplorer';
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
 
@@ -191,30 +192,35 @@ const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDoc
 
   const _download = useFileDownload();
 
+  const [ghExplorerOpen, setGhExplorerOpen] = useState(false);
+
   const handleExportToGithub = useCallback(async () => {
-    // todo
+    setGhExplorerOpen(true);
   }, [document, octokit]);
 
   const handleImportFromGithub = useCallback(async () => {
-    // todo
+    setGhExplorerOpen(true);
   }, [document, octokit]);
 
   return (
-    <DocumentPageContent
-      {...{ document, dialogOpen, setDialogOpen, ...(octokit && { handleExportToGithub, handleImportFromGithub }) }}
-    >
-      <MarkdownComposer
-        ref={editorRef}
-        text={document.content}
-        slots={{
-          root: {
-            role: 'none',
-            className: 'pli-6 mbs-4'
-          },
-          editor: { className: 'pbe-20' }
-        }}
-      />
-    </DocumentPageContent>
+    <>
+      <OctokitExplorer open={ghExplorerOpen} onOpenChange={setGhExplorerOpen} />
+      <DocumentPageContent
+        {...{ document, dialogOpen, setDialogOpen, ...(octokit && { handleExportToGithub, handleImportFromGithub }) }}
+      >
+        <MarkdownComposer
+          ref={editorRef}
+          text={document.content}
+          slots={{
+            root: {
+              role: 'none',
+              className: 'pli-6 mbs-4'
+            },
+            editor: { className: 'pbe-20' }
+          }}
+        />
+      </DocumentPageContent>
+    </>
   );
 });
 

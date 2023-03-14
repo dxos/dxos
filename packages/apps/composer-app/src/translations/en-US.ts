@@ -23,5 +23,8 @@ export const composer = {
   'space name label': 'Space name',
   'hide space label': 'Hide this space',
   'profile settings label': 'Profile settings',
-  'github pat label': 'Github personal access token'
+  'github pat label': 'Github personal access token',
+  'empty github pat message': 'Set a Github personal access token to continue',
+  'error github pat message': 'There was a problem authenticating with Github using the personal access token provided',
+  'github explorer title': 'Choose a Markdown file'
 };
