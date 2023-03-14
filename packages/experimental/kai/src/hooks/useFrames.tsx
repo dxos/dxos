@@ -215,7 +215,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.explorer',
       type: 'dxos:type/frame',
       displayName: 'Explorer',
-      description: 'Graphical User Interface and Data Explorer (GUIDE).'
+      description: 'Graphical User Interface and Data Explorer.'
     },
     runtime: {
       Icon: Graph,
@@ -250,7 +250,7 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.sandbox',
       type: 'dxos:type/frame',
-      displayName: 'Code Notebook',
+      displayName: 'Notebook',
       description: 'Collaborative script editor.'
     },
     runtime: {
@@ -262,7 +262,7 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.table';
+export const defaultFrameId = 'dxos.module.frame.maps';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -275,8 +275,9 @@ export const defaultFrames = [
   'dxos.module.frame.note',
   'dxos.module.frame.sketch',
   'dxos.module.frame.file',
-  'dxos.module.frame.chess'
+  'dxos.module.frame.chess',
 
+  'dxos.module.frame.maps'
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
   // 'dxos.module.frame.explorer',

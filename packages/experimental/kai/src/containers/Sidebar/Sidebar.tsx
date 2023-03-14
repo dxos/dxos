@@ -27,6 +27,7 @@ import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
+import { FrameRegistryDialog } from '../../containers';
 import {
   createInvitationPath,
   createPath,
@@ -60,6 +61,7 @@ export const Sidebar = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const { state: connectionState } = useNetworkStatus();
   const [showSpaceList, setShowSpaceList] = useState(false);
+  const [showFrames, setShowFrames] = useState(false);
   const List = frame?.runtime.List;
 
   //
@@ -240,11 +242,13 @@ export const Sidebar = () => {
       {/* Search */}
       {!showSpaceList && (
         <div className='flex flex-col overflow-hidden space-y-4'>
-          <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+          <div className='shrink-0'>
+            <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+          </div>
 
           {/* TODO(burdon): Items if not actively searching. */}
           {!showSearchResults && (
-            <>
+            <div className='overflow-y-scroll space-y-8'>
               <FrameList />
 
               {List && (
@@ -260,13 +264,12 @@ export const Sidebar = () => {
               )}
 
               <div className='flex flex-col'>
-                <Link
-                  className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
-                >
-                  <FrameCorners className={getSize(6)} />
-                  <div className='flex pl-2'>Frames</div>
-                </Link>
+                <div className='ml-4'>
+                  <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
+                    <FrameCorners className={getSize(6)} />
+                    <div className='flex pl-2'>Frames</div>
+                  </Button>
+                </div>
                 <Link
                   className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
                   to={createPath({ spaceKey: space.key, section: Section.BOTS })}
@@ -275,7 +278,7 @@ export const Sidebar = () => {
                   <div className='flex pl-2'>Bots</div>
                 </Link>
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
@@ -313,6 +316,8 @@ export const Sidebar = () => {
           <span className='mis-2'>Toggle connection</span>
         </Button>
       </div>
+
+      <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
     </div>
   );
 };

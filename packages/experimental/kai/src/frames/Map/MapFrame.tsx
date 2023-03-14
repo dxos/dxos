@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Circle } from '@phosphor-icons/react';
+
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
-import { Check } from '@phosphor-icons/react';
 import { LatLngExpression } from 'leaflet';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
@@ -27,7 +28,7 @@ const defaults = {
 
 export const MapFrame = () => {
   return (
-    <div className='flex flex-1 overflow-hidden'>
+    <div className='flex flex-1 overflow-hidden z-10'>
       <MapContainer className='flex flex-1'>
         <MapControl />
       </MapContainer>
@@ -80,6 +81,7 @@ export const MapControl = () => {
 
   return (
     <div className='flex flex-1 overflow-hidden'>
+      {/* Map tiles. */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
       {/* Markers. */}
@@ -89,13 +91,13 @@ export const MapControl = () => {
           return null;
         }
 
-        // TODO(burdon): Marker icon doesn't load on mobile?
+        // TODO(burdon): Marker icon doesn't load on mobile.
         return <Marker key={getter.id(object)} position={{ lat, lng }} />;
       })}
 
       {/* List panel. */}
       {objects.length > 0 && (
-        <div className='absolute block-start-4 block-end-4 inline-end-4 overflow-hidden z-[400] bs-sm'>
+        <div className='absolute block-start-4 block-end-4 inline-end-4 overflow-hidden bs-sm z-[9999]'>
           {/* TODO(burdon): Clicking on list starts map drag. */}
           <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
         </div>
@@ -132,12 +134,13 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
   return (
     <NavMenu
       variant='vertical'
+      slots={{ root: { className: 'cursor-default pointer-events-none' } }}
       items={items.map((item) => {
         const active = getter.id(item) === selected;
         return {
           children: (
             <>
-              <Check weight='bold' className={mx(getSize(4), !active && 'invisible')} />
+              <Circle weight='fill' className={mx(getSize(4), 'text-selection-marker', !active && 'invisible')} />
               <span>{getter.label(item)}</span>
             </>
           ),
@@ -147,7 +150,6 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
           }
         };
       })}
-      slots={{ root: { className: 'cursor-default pointer-events-none' } }}
     />
   );
 };

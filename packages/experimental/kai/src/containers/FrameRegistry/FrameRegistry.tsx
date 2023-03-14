@@ -6,7 +6,7 @@ import { FrameCorners, Robot } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize, mx, Searchbar, Button, ButtonGroup } from '@dxos/react-components';
+import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
 
 import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
 
@@ -39,19 +39,20 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col w-[200px] h-[120px] border-0 rounded-lg px-3 py-2 cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
-        active && '!bg-selection-bg border-selection-border',
+        'flex flex-col w-[180px] h-[100px] border-0 rounded-lg px-3 py-2',
+        'cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
+        active && 'border-selection-border !bg-selection-bg',
         slots.root?.className
       )}
       onClick={() => onSelect(id)}
     >
-      <h2 className='flex mb-1 text-lg font-display font-medium'>{label}</h2>
       <div className='flex w-full'>
-        <div className='flex w-full text-black text-sm pr-2'>{description}</div>
+        <h2 className='flex w-full mb-1 text-lg font-display font-medium'>{label}</h2>
         <div>
-          <Icon weight='duotone' className={mx(getSize(12), '[&>*]:stroke-[8]')} />
+          <Icon weight='duotone' className={mx(getSize(8), '[&>*]:stroke-[8]')} />
         </div>
       </div>
+      <div className='flex w-full pt-1 text-black text-sm'>{description}</div>
     </div>
   );
 };
@@ -96,27 +97,29 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex py-8 justify-center'>
-        <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
-          <Searchbar />
-          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
-            <FrameCorners
-              weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
-              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
-            />
-          </Button>
-          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
-            <Robot
-              weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
-              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
-            />
-          </Button>
-        </ButtonGroup>
-      </div>
+      {false && (
+        <div className='flex py-8 justify-center'>
+          <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
+            <Searchbar />
+            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+              <FrameCorners
+                weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
+              />
+            </Button>
+            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+              <Robot
+                weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
+              />
+            </Button>
+          </ButtonGroup>
+        </div>
+      )}
 
-      <div className='flex flex-1 justify-center overflow-y-scroll'>
+      <div className='flex flex-1 justify-center overflow-y-scroll mt-8'>
         <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3 pb-24'>
+          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
             {Array.from(modules.values())
               .sort(sorter)
               .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
@@ -139,5 +142,24 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
         </div>
       </div>
     </div>
+  );
+};
+
+export type FrameRegistryDialogProps = {
+  open?: boolean;
+  onClose: () => void;
+};
+
+export const FrameRegistryDialog = ({ open, onClose }: FrameRegistryDialogProps) => {
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={() => onClose()}
+      title='Frame Plugins'
+      closeLabel='Close'
+      slots={{ content: { className: 'overflow-hidden max-h-[50vh] max-w-full md:max-h-[80vh] md:max-w-[640px]' } }}
+    >
+      <FrameRegistry />
+    </Dialog>
   );
 };
