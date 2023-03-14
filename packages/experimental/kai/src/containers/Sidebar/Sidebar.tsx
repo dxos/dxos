@@ -2,7 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, FrameCorners, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import {
+  CaretLeft,
+  CaretUpDown,
+  CaretUp,
+  FrameCorners,
+  PlusCircle,
+  Robot,
+  Target,
+  WifiHigh,
+  WifiSlash
+} from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense } from 'react';
@@ -60,6 +70,8 @@ const FrameList = () => {
     </div>
   );
 };
+
+const Divider = () => <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
 
 export const Sidebar = () => {
   const theme = useTheme();
@@ -216,6 +228,7 @@ export const Sidebar = () => {
     );
   };
 
+  // TODO(burdon): Factor out.
   const FrameListPanel = () => {
     return (
       <div className='flex flex-col space-y-4'>
@@ -265,10 +278,11 @@ export const Sidebar = () => {
       <div className='flex flex-col shrink-0'>
         <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
           <div className='flex items-center'>
-            <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
-              <Icon className={getSize(6)} />
-            </Button>
+            <Icon className={getSize(6)} />
             <div className='pl-2 text-lg'>{space.properties?.name}</div>
+            <Button variant='ghost' className='ml-2 p-0' onClick={() => setShowSpaceList((show) => !show)}>
+              {(showSpaceList && <CaretUp className={getSize(4)} />) || <CaretUpDown className={getSize(4)} />}
+            </Button>
           </div>
 
           <div className='flex grow' />
@@ -293,6 +307,7 @@ export const Sidebar = () => {
             <SearchPanel onResults={setSearchResults} onSelect={handleSearchSelect} />
           </div>
 
+          {/* TODO(burdon): Collapse if > 8 */}
           {searchResults.length === 0 && <FrameListPanel />}
         </div>
       )}
@@ -300,6 +315,7 @@ export const Sidebar = () => {
       <div className='flex-1' />
 
       {/* Members */}
+      {/* TODO(burdon): Collapse if > 4 */}
       <div className='flex shrink-0 flex-col my-4'>
         <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
 
@@ -317,5 +333,3 @@ export const Sidebar = () => {
     </div>
   );
 };
-
-const Divider = () => <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
