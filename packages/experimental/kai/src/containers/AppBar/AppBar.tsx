@@ -2,58 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Info, User } from 'phosphor-react';
+import { Command, User } from 'phosphor-react';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 
-import { ShellLayout, observer } from '@dxos/react-client';
-import { Button, DensityProvider, DropdownMenu, getSize, mx } from '@dxos/react-components';
+import { ShellLayout } from '@dxos/react-client';
+import { Button, DensityProvider, DropdownMenu, getSize } from '@dxos/react-components';
 import { useShell } from '@dxos/react-ui';
 
 import { SpaceSettingsDialog } from '../../containers';
-import { getIcon, useAppRouter, useTheme } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { Actions } from './Actions';
-
-// TODO(burdon): Show search box or Space name in title.
-export const AppBar = observer(() => {
-  const theme = useTheme();
-  const { space } = useAppRouter();
-  const [showSettings, setShowSettings] = useState(false);
-  const Icon = getIcon(space?.properties.icon);
-
-  // 'transition-[rotate] duration-500 transition -rotate-45 hover:rotate-180'
-
-  return (
-    <div
-      className={mx(
-        'flex justify-between items-center px-4',
-        'fixed inline-start-0 inline-end-0 block-start-0 z-[1]',
-        'bs-appbar',
-        theme.classes?.header,
-        theme.panel === 'flat' && 'border-b'
-      )}
-    >
-      <div className='flex items-center'>
-        <Link to='/'>
-          <Icon className={getSize(8)} data-testid='space-icon' />
-        </Link>
-      </div>
-
-      {space && (
-        <div className='flex overflow-hidden mx-6 items-center'>
-          <h2 className='truncate text-xl'>{space.properties?.name ?? 'Space'}</h2>
-          <Button variant='ghost' onClick={() => setShowSettings(true)}>
-            <Info weight='bold' className={getSize(4)} />
-          </Button>
-        </div>
-      )}
-
-      <div className='flex-1' />
-
-      <AppMenu />
-    </div>
-  );
-});
 
 export const AppMenu = () => {
   const { space } = useAppRouter();

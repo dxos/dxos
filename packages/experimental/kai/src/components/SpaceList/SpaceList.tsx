@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { Suspense } from 'react';
+import React from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { DensityProvider } from '@dxos/react-components';
 
 import { FrameDef } from '../../hooks';
 import { Intent } from '../../util';
@@ -25,8 +24,6 @@ export type SpaceListProps = {
 };
 
 export const SpaceList = ({ spaces, selected, frame, onAction }: SpaceListProps) => {
-  const List = frame?.runtime.List;
-
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       {spaces.map((space) => (
@@ -35,13 +32,7 @@ export const SpaceList = ({ spaces, selected, frame, onAction }: SpaceListProps)
           space={space}
           selected={selected && space.key.equals(selected)}
           onAction={(intent) => onAction?.(intent)}
-        >
-          {false && (
-            <DensityProvider density='coarse'>
-              <Suspense>{List && <List />}</Suspense>
-            </DensityProvider>
-          )}
-        </SpaceItem>
+        />
       ))}
     </div>
   );

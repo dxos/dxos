@@ -11,37 +11,8 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { BotFrame } from '..//frames';
-import { FrameContainer, FrameSelector, FrameRegistry, Sidebar, AppMenu } from '../containers';
+import { FrameContainer, FrameRegistry, Sidebar, AppMenu } from '../containers';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId } from '../hooks';
-
-const Toolbar = () => {
-  const theme = useTheme();
-  const { displayState } = useContext(PanelSidebarContext);
-  const isOpen = displayState === 'show';
-  const toggleSidebar = useTogglePanelSidebar();
-
-  return (
-    <div
-      className={mx(
-        'flex flex-col-reverse bg-appbar-toolbar',
-        theme.classes?.toolbar,
-        theme.panel === 'flat' && 'border-b',
-        'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
-        isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
-      )}
-    >
-      <div className='flex'>
-        {!isOpen && (
-          <Button variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
-            {<CaretRight className={getSize(6)} />}
-          </Button>
-        )}
-
-        <FrameSelector />
-      </div>
-    </div>
-  );
-};
 
 /**
  * Home page with current space.

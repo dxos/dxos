@@ -72,9 +72,7 @@ export const Sidebar = () => {
   const [prevSpace, setPrevSpace] = useState(space);
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
-  const isOpen = displayState === 'show';
   const { state: connectionState } = useNetworkStatus();
-  const [searchMode, setSearchMode] = useState(true);
   const [showSpaceList, setShowSpaceList] = useState(false);
   const List = frame?.runtime.List;
 
@@ -199,7 +197,7 @@ export const Sidebar = () => {
           <div className='flex grow' />
 
           <Button variant='ghost' className='p-0' onClick={toggleSidebar}>
-            {isOpen && <CaretLeft className={getSize(6)} />}
+            {displayState === 'show' && <CaretLeft className={getSize(6)} />}
           </Button>
         </div>
 
