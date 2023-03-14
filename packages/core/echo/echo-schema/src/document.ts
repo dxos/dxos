@@ -355,8 +355,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   override _beforeBind() {
     assert(this._linkCache);
     for (const obj of this._linkCache.values()) {
-      // TODO(dmaretskyi): Promises should be handled though batches.
-      void this._database!.add(obj);
+      this._database!.add(obj);
     }
     this._linkCache = undefined;
   }
@@ -367,7 +366,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
    */
   _linkObject(obj: EchoObject) {
     if (this._database) {
-      void this._database.add(obj);
+      this._database.add(obj);
     } else {
       assert(this._linkCache);
       this._linkCache.set(obj.id, obj);

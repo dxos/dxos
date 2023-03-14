@@ -90,7 +90,6 @@ export class EchoDatabase {
     assert(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
-    obj[base]._beforeBind();
 
     const batchCreated = this._backend.beginBatch();
     try {
