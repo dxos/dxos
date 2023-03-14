@@ -6,6 +6,7 @@ import { FrameCorners, Robot } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { ScrollContainer } from '@dxos/mosaic';
 import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
 
 import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
@@ -96,7 +97,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col flex-1 overflow-hidden py-4'>
       {false && (
         <div className='flex py-8 justify-center'>
           <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
@@ -117,30 +118,28 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
         </div>
       )}
 
-      <div className='flex flex-1 justify-center overflow-y-scroll mt-8'>
-        <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
-            {Array.from(modules.values())
-              .sort(sorter)
-              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-                <Tile
-                  key={id!}
-                  id={id!}
-                  label={displayName ?? id!}
-                  description={description}
-                  slots={slots}
-                  Icon={Icon}
-                  onSelect={handleSelect}
-                  active={
-                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                      (active) => active === id
-                    )
-                  }
-                />
-              ))}
-          </div>
+      <ScrollContainer vertical>
+        <div className='flex flex-wrap gap-3'>
+          {Array.from(modules.values())
+            .sort(sorter)
+            .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+              <Tile
+                key={id!}
+                id={id!}
+                label={displayName ?? id!}
+                description={description}
+                slots={slots}
+                Icon={Icon}
+                onSelect={handleSelect}
+                active={
+                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                    (active) => active === id
+                  )
+                }
+              />
+            ))}
         </div>
-      </div>
+      </ScrollContainer>
     </div>
   );
 };
@@ -157,7 +156,7 @@ export const FrameRegistryDialog = ({ open, onClose }: FrameRegistryDialogProps)
       onOpenChange={() => onClose()}
       title='Frame Plugins'
       closeLabel='Close'
-      slots={{ content: { className: 'overflow-hidden max-h-[50vh] max-w-full md:max-h-[80vh] md:max-w-[640px]' } }}
+      slots={{ content: { className: 'overflow-hidden max-h-[50vh] max-w-full md:max-h-[50vh] md:max-w-[620px]' } }}
     >
       <FrameRegistry />
     </Dialog>

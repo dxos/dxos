@@ -241,14 +241,14 @@ export const Sidebar = () => {
 
       {/* Search */}
       {!showSpaceList && (
-        <div className='flex flex-col overflow-hidden space-y-4'>
+        <div className='flex flex-col overflow-hidden space-y-2'>
           <div className='shrink-0'>
             <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
           </div>
 
           {/* TODO(burdon): Items if not actively searching. */}
           {!showSearchResults && (
-            <div className='overflow-y-scroll space-y-8'>
+            <div className='overflow-y-scroll space-y-4'>
               <FrameList />
 
               {List && (
@@ -270,13 +270,6 @@ export const Sidebar = () => {
                     <div className='flex pl-2'>Frames</div>
                   </Button>
                 </div>
-                <Link
-                  className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-                >
-                  <Robot className={getSize(6)} />
-                  <div className='flex pl-2'>Bots</div>
-                </Link>
               </div>
             </div>
           )}
@@ -304,6 +297,14 @@ export const Sidebar = () => {
         </div>
 
         <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
+
+        <Link
+          className={mx('flex w-full px-4 py-1 mt-2 items-center', section === Section.BOTS && 'bg-zinc-200')}
+          to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+        >
+          <Robot className={getSize(6)} />
+          <div className='flex pl-2'>Bots</div>
+        </Link>
 
         <Separator />
 

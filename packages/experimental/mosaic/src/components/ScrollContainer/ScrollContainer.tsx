@@ -61,36 +61,39 @@ export const ScrollContainer = ({
   horizontal = false,
   children
 }: ScrollContainerProps) => {
+  // TODO(burdon): Outer div required since doesn't work if external div has flex-col.
   return (
-    <ScrollArea.Root className={mx('flex w-full overflow-hidden', slots.root?.className)}>
-      <ScrollArea.Viewport className={mx('w-full h-full', slots.viewport?.className)}>{children}</ScrollArea.Viewport>
-      {vertical && (
-        <ScrollArea.Scrollbar
-          orientation='vertical'
-          className={mx(
-            'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
-            slots.scrollbar?.className
-          )}
-        >
-          <ScrollArea.Thumb
-            className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
-          />
-        </ScrollArea.Scrollbar>
-      )}
-      {/* TODO(burdon): Incorrect range. */}
-      {horizontal && (
-        <ScrollArea.Scrollbar
-          orientation='horizontal'
-          className={mx(
-            'flex h-1 select-none touch-none transition-colors duration-[160ms] ease-out',
-            slots.scrollbar?.className
-          )}
-        >
-          <ScrollArea.Thumb
-            className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
-          />
-        </ScrollArea.Scrollbar>
-      )}
-    </ScrollArea.Root>
+    <div className='flex flex-1 overflow-hidden'>
+      <ScrollArea.Root className={mx('flex flex-1 overflow-hidden', slots.root?.className)}>
+        <ScrollArea.Viewport className={mx('w-full h-full', slots.viewport?.className)}>{children}</ScrollArea.Viewport>
+        {vertical && (
+          <ScrollArea.Scrollbar
+            orientation='vertical'
+            className={mx(
+              'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
+              slots.scrollbar?.className
+            )}
+          >
+            <ScrollArea.Thumb
+              className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
+            />
+          </ScrollArea.Scrollbar>
+        )}
+        {/* TODO(burdon): Incorrect range. */}
+        {horizontal && (
+          <ScrollArea.Scrollbar
+            orientation='horizontal'
+            className={mx(
+              'flex h-1 select-none touch-none transition-colors duration-[160ms] ease-out',
+              slots.scrollbar?.className
+            )}
+          >
+            <ScrollArea.Thumb
+              className={mx("flex-1 relative before:block before:content-['']", slots.thumb?.className)}
+            />
+          </ScrollArea.Scrollbar>
+        )}
+      </ScrollArea.Root>
+    </div>
   );
 };
