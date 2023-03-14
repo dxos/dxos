@@ -265,7 +265,7 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
-      displayName: 'Chess',
+      displayName: 'Games',
       description: 'Peer-to-peer and engine powered games.'
     },
     runtime: {
@@ -289,8 +289,7 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-// TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.kanban';
+export const defaultFrameId = 'dxos.module.frame.table';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -298,16 +297,15 @@ export const defaultFrames = [
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.contact',
-  'dxos.module.frame.kanban'
-  // 'dxos.module.frame.bot'
-  // 'dxos.module.frame.table',
+  'dxos.module.frame.kanban',
+  'dxos.module.frame.table',
+  'dxos.module.frame.note',
+  'dxos.module.frame.file',
+  'dxos.module.frame.chess'
+
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
-  // 'dxos.module.frame.note',
-  // 'dxos.module.frame.chess',
-  // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer',
-  // 'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;

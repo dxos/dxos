@@ -8,7 +8,7 @@ const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
 const primary = colors.sky;
-const secondary = colors.stone;
+const secondary = colors.blue;
 const neutral = colors.zinc;
 
 module.exports = {

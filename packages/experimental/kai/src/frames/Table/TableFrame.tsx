@@ -109,7 +109,7 @@ export const TableFrame = () => {
       </Toolbar>
 
       {/* TODO(burdon): Editable variant. */}
-      <div className='flex flex-1 px-2'>
+      <div className='flex flex-1 overflow-hidden px-2'>
         <Table<Document>
           columns={type.columns}
           data={objects}
