@@ -82,18 +82,20 @@ export const EditableObjectList = <T extends Document>({
                   <Icon className={getSize(6)} />
                 </Button>
               </ListItemEndcap>
+
               <Input
                 variant='subdued'
                 label='Title'
                 labelVisuallyHidden
                 placeholder='Title'
                 slots={{
-                  root: { className: 'grow' },
+                  root: { className: 'grow pl-1' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
+
               {onAction && (
                 <ListItemEndcap asChild>
                   <Button
@@ -111,9 +113,11 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <Button density='fine' variant='ghost' onClick={handleCreate}>
-          <Plus className={getSize(5)} />
-        </Button>
+        <ListItemEndcap>
+          <Button variant='ghost' onClick={handleCreate}>
+            <Plus className={getSize(5)} />
+          </Button>
+        </ListItemEndcap>
       )}
     </div>
   );

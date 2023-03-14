@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import { CaretLeft, Globe, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from 'phosphor-react';
-import React, { useContext, useEffect, useState } from 'react';
+import { CaretLeft, FrameCorners, PlusCircle, Robot, Target, WifiHigh, WifiSlash } from 'phosphor-react';
+import React, { Suspense, useContext, useEffect, useState } from 'react';
 import { Link, useHref, useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction } from '../../components';
@@ -35,35 +35,29 @@ import { objectMeta, SearchPanel } from '../SearchPanel';
 const FrameSelector = () => {
   const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
-  const { section, frame: currentFrame } = useAppRouter();
-  const maxTabs = 7; // TODO(burdon): Media query?
+  const { frame: currentFrame } = useAppRouter();
   if (!space) {
     return null;
   }
 
   return (
     <div className='flex flex-col'>
-      <div className='flex flex-col p-4 space-y-2'>
+      <div className='flex flex-col'>
         {Array.from(activeFrames)
           .map((frameId) => frames.get(frameId)!)
           .filter(Boolean)
           .map(({ module: { id, displayName }, runtime: { Icon } }) => (
-            <Link key={id} className='flex w-full' to={createPath({ spaceKey: space.key, frame: id })}>
-              <Icon className={getSize(6)} />
-              <div className='flex pl-2'>{displayName}</div>
-            </Link>
+            <div
+              key={id}
+              className={mx('flex w-full px-4 py-1 items-center', id === currentFrame?.module.id && 'bg-zinc-200')}
+            >
+              <Link className='flex w-full' to={createPath({ spaceKey: space.key, frame: id })}>
+                <Icon className={mx(getSize(6), id === currentFrame?.module.id && 'text-selection-text')} />
+                <div className='flex pl-2'>{displayName}</div>
+              </Link>
+              {/* {id === currentFrame?.module.id && <Circle className='text-selection-text' weight='fill' />} */}
+            </div>
           ))}
-      </div>
-
-      <div className='flex flex-col p-4 space-y-2'>
-        <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}>
-          <Globe className={getSize(6)} />
-          <div className='flex pl-2'>Frames</div>
-        </Link>
-        <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.BOTS })}>
-          <Robot className={getSize(6)} />
-          <div className='flex pl-2'>Bots</div>
-        </Link>
       </div>
     </div>
   );
@@ -84,6 +78,7 @@ export const Sidebar = () => {
   const { state: connectionState } = useNetworkStatus();
   const [searchMode, setSearchMode] = useState(true);
   const [showSpaceList, setShowSpaceList] = useState(false);
+  const List = frame?.runtime.List;
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
@@ -259,6 +254,29 @@ export const Sidebar = () => {
 
           {/* TODO(burdon): Items if not actively searching. */}
           <FrameSelector />
+
+          {List && (
+            <>
+              <Divider />
+              <div className='flex px-3'>
+                <DensityProvider density='fine'>
+                  <Suspense>{<List />}</Suspense>
+                </DensityProvider>
+              </div>
+            </>
+          )}
+
+          <Divider />
+          <div className='flex flex-col p-4 space-y-2'>
+            <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}>
+              <FrameCorners className={getSize(6)} />
+              <div className='flex pl-2'>Frames</div>
+            </Link>
+            <Link className='flex w-full' to={createPath({ spaceKey: space.key, section: Section.BOTS })}>
+              <Robot className={getSize(6)} />
+              <div className='flex pl-2'>Bots</div>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -268,7 +286,7 @@ export const Sidebar = () => {
       <div className='flex shrink-0 flex-col my-4'>
         <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
 
-        <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />
+        <Divider />
 
         <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>
           {connectionState === ConnectionState.ONLINE ? (
@@ -282,3 +300,5 @@ export const Sidebar = () => {
     </div>
   );
 };
+
+const Divider = () => <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
