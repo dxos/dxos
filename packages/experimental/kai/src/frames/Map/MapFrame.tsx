@@ -3,7 +3,6 @@
 //
 
 import { Circle } from '@phosphor-icons/react';
-
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
