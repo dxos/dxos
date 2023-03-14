@@ -22,7 +22,7 @@ export const DX_BOT_RPC_PORT_MAX = 7300;
 export const BOT_STARTUP_CHECK_INTERVAL = 250;
 export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
-const BOT_IMAGE_URL = 'ghcr.io/dxos/bot';
+const BOT_IMAGE_URL = 'ghcr.io/dxos/bot:latest';
 
 export type BotClientOptions = {
   proxy?: string;
