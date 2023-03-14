@@ -231,4 +231,4 @@ export const createEnum = (type: pb.Enum) => {
       ${values}
     }
   `;
-}
+};
