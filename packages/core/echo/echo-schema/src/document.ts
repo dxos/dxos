@@ -56,7 +56,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
-  private _linkCache?= new Map<string, EchoObject>();
+  private _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
   // prettier-ignore
   constructor(
