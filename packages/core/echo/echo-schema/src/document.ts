@@ -244,17 +244,18 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
         this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
-        if (item instanceof EchoObject) {
-          this._linkObject(item);
-          return new Reference(item.id);
-        } else if (isReferenceLike(item)) {
-          return new Reference(item['@id']);
-        } else {
-          const sub = this._createProxy({}, key);
-          for (const [subKey, subValue] of Object.entries(value)) {
-            sub[subKey] = subValue;
+          if (item instanceof EchoObject) {
+            this._linkObject(item);
+            return new Reference(item.id);
+          } else if (isReferenceLike(item)) {
+            return new Reference(item['@id']);
+          } else {
+            const sub = this._createProxy({}, key);
+            for (const [subKey, subValue] of Object.entries(value)) {
+              sub[subKey] = subValue;
+            }
           }
-        }
+        });
       } else {
         this._mutate(this._model.builder().set(key, value).build());
       }
