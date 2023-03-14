@@ -143,6 +143,10 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
     }
   }
 
+  if (ns instanceof pb.Enum) {
+    yield createEnum(ns);
+  }
+
   if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
     yield text`
       export namespace ${ns.name} {
@@ -209,3 +213,22 @@ export const createPlainInterface = (type: pb.Type) => {
   }
   `;
 };
+
+/**
+ * Generate enum definition.
+ */
+export const createEnum = (type: pb.Enum) => {
+  if (reservedTypeNames.includes(type.name)) {
+    throw new Error(`Reserved type name: ${type.name}`);
+  }
+
+  const name = type.name;
+  const values = Object.entries(type.values).map(([key, value]) => `${key} = ${value},`);
+
+  // prettier-ignore
+  return text`
+    export enum ${name} {
+      ${values}
+    }
+  `;
+}
