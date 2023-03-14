@@ -67,8 +67,7 @@ export class EchoDatabase {
    * Add object to th database.
    * Restores the object if it was deleted.
    */
-  // TODO(burdon): Batches?
-  async add<T extends EchoObject>(obj: T): Promise<T> {
+  add<T extends EchoObject>(obj: T): T {
     log('save', { id: obj.id, type: (obj as any).__typename });
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
@@ -91,28 +90,36 @@ export class EchoDatabase {
     assert(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
-    obj[base]._beforeBind();
 
-    const snapshot = obj[base]._createSnapshot();
+    const batchCreated = this._backend.beginBatch();
+    try {
+      obj[base]._beforeBind();
 
-    const result = this._backend.mutate({
-      objects: [
-        {
-          objectId: obj[base]._id,
-          genesis: {
-            modelType: obj[base]._modelConstructor.meta.type
-          },
-          snapshot: {
-            // TODO(dmaretskyi): Parent id, deleted flag.
-            model: snapshot
+      const snapshot = obj[base]._createSnapshot();
+
+      const result = this._backend.mutate({
+        objects: [
+          {
+            objectId: obj[base]._id,
+            genesis: {
+              modelType: obj[base]._modelConstructor.meta.type
+            },
+            snapshot: {
+              // TODO(dmaretskyi): Parent id, deleted flag.
+              model: snapshot
+            }
           }
-        }
-      ]
-    });
-    assert(result.objectsCreated.length === 1);
+        ]
+      });
+      assert(result.objectsCreated.length === 1);
 
-    await obj[base]._bind(result.objectsCreated[0]);
-    await result.getReceipt(); // wait to be saved to feed.
+      obj[base]._bind(result.objectsCreated[0]);
+    } finally {
+      if (batchCreated) {
+        this._backend.commitBatch();
+      }
+    }
+
     return obj;
   }
 
@@ -132,6 +139,13 @@ export class EchoDatabase {
         }
       ]
     });
+  }
+
+  /**
+   * Wait for all pending operations to complete.
+   */
+  async flush() {
+    await this._backend.flush();
   }
 
   /**
@@ -162,7 +176,7 @@ export class EchoDatabase {
         obj[base]._id = object.id;
         this._objects.set(object.id, obj);
         obj[base]._database = this;
-        obj[base]._bind(object).catch((err) => log.catch(err));
+        obj[base]._bind(object);
       }
     }
 
