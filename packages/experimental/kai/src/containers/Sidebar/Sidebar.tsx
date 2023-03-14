@@ -246,7 +246,8 @@ export const Sidebar = () => {
       {/* Search */}
       {!showSpaceList && (
         <div className='flex flex-col overflow-hidden space-y-4'>
-          <SearchPanel __onResults={setSearchResults} onSelect={handleSearchSelect} />
+          {/* TODO(burdon): Recursion bug. */}
+          <SearchPanel onResults={setSearchResults} onSelect={handleSearchSelect} />
 
           {searchResults.length === 0 && (
             <>

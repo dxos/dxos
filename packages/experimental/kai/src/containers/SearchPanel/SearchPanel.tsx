@@ -162,11 +162,10 @@ export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   const { space } = useAppRouter();
   const results = useQuery(space).map(matchFilter(text));
   const sorted = (results.filter(Boolean) as SearchResult[]).sort(sort);
-  // TODO(burdon): Causes recursion.
   useEffect(() => {
-    console.log('!!!!!!!!!!!!!!!!!');
-    onResults?.(sorted);
-  }, [results]);
+    // TODO(burdon): Causes recursion.
+    // onResults?.(sorted);
+  }, [results]); // TODO(burdon): The `sorted` array would always be updated.
 
   return (
     <div className='flex flex-col w-full'>
