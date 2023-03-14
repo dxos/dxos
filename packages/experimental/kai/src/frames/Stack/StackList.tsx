@@ -27,8 +27,8 @@ export const StackList = () => {
       getTitle={(object) => object.title}
       setTitle={(object, title) => (object.title = title)}
       onSelect={(objectId) => navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))}
-      onCreate={async () => {
-        const stack = await space.db.add(new DocumentStack());
+      onCreate={() => {
+        const stack = space.db.add(new DocumentStack());
         stack.sections.push(new Document());
         return stack;
       }}

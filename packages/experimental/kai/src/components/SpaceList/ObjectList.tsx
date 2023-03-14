@@ -19,7 +19,7 @@ export type ObjectListProps<T extends Document> = {
   Action?: FC<any>;
   onSelect: (objectId: string) => void;
   onAction?: (objectId: string) => void;
-  onCreate?: () => Promise<T>;
+  onCreate?: () => T;
 };
 
 export const ObjectList = <T extends Document>({
@@ -33,9 +33,9 @@ export const ObjectList = <T extends Document>({
   onAction,
   onCreate
 }: ObjectListProps<T>) => {
-  const handleCreate = async () => {
+  const handleCreate = () => {
     assert(onCreate);
-    const object = await onCreate();
+    const object = onCreate();
     onSelect(object.id);
     return object.id;
   };
