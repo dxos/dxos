@@ -56,7 +56,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
-  private _linkCache? = new Map<string, EchoObject>();
+  private _linkCache?= new Map<string, EchoObject>();
 
   // prettier-ignore
   constructor(
@@ -250,12 +250,25 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
           } else if (isReferenceLike(item)) {
             return new Reference(item['@id']);
           } else {
-            const sub = this._createProxy({}, key);
-            for (const [subKey, subValue] of Object.entries(value)) {
-              sub[subKey] = subValue;
-            }
+            return item;
           }
         });
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
+        value._attach(this[base], key);
+      } else if (Array.isArray(value)) {
+        // TODO(dmaretskyi): Make a single mutation.
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
+        this._get(key).push(...value);
+      } else if (typeof value === 'object' && value !== null) {
+        if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+          // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
+        } else {
+          const sub = this._createProxy({}, key);
+          for (const [subKey, subValue] of Object.entries(value)) {
+            sub[subKey] = subValue;
+          }
+        }
       } else {
         this._mutate(this._model.builder().set(key, value).build());
       }
