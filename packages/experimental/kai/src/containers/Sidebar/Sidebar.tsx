@@ -178,6 +178,81 @@ export const Sidebar = () => {
 
   const Icon = getIcon(space.properties.icon);
 
+  // TODO(burdon): Factor out.
+  const SpaceListPanel = () => {
+    return (
+      <div className='flex flex-col overflow-y-auto bg-white border-b'>
+        <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
+
+        {/* TODO(burdon): Observable. */}
+        <div className='flex flex-col m-2 my-4'>
+          <SpaceSettings space={space} />
+        </div>
+
+        {/* Menu */}
+        <div className='flex flex-col w-full px-4 py-2 border-t'>
+          <Button
+            variant='ghost'
+            className='flex p-0 justify-start'
+            title='Create new space'
+            data-testid='sidebar.createSpace'
+            onClick={handleCreateSpace}
+          >
+            <PlusCircle className={getSize(6)} />
+            <span className='pl-2'>Create space</span>
+          </Button>
+          <Button
+            variant='ghost'
+            className='flex p-0 justify-start'
+            title='Join a space'
+            data-testid='sidebar.joinSpace'
+            onClick={handleJoinSpace}
+          >
+            <Target className={getSize(6)} />
+            <span className='pl-2'>Join space</span>
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const FrameListPanel = () => {
+    return (
+      <div className='flex flex-col space-y-4'>
+        <FrameList />
+
+        {List && (
+          <>
+            <Divider />
+            <div className='flex px-3'>
+              <DensityProvider density='fine'>
+                <Suspense>{<List />}</Suspense>
+              </DensityProvider>
+            </div>
+            <Divider />
+          </>
+        )}
+
+        <div className='flex flex-col'>
+          <Link
+            className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
+            to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
+          >
+            <FrameCorners className={getSize(6)} />
+            <div className='flex pl-2'>Frames</div>
+          </Link>
+          <Link
+            className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
+            to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+          >
+            <Robot className={getSize(6)} />
+            <div className='flex pl-2'>Bots</div>
+          </Link>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       role='none'
@@ -208,81 +283,17 @@ export const Sidebar = () => {
 
       {/* Spaces */}
       {/* TODO(burdon): Radix Popover. */}
-      {showSpaceList && (
-        <div className='flex flex-col overflow-y-auto bg-white border-b'>
-          <SpaceList spaces={spaces} frame={frame} selected={space?.key} onAction={handleSpaceListAction} />
-
-          {/* TODO(burdon): Observable. */}
-          <div className='flex flex-col m-2 my-4'>
-            <SpaceSettings space={space} />
-          </div>
-
-          {/* Menu */}
-          <div className='flex flex-col w-full px-4 py-2 border-t'>
-            <Button
-              variant='ghost'
-              className='flex p-0 justify-start'
-              title='Create new space'
-              data-testid='sidebar.createSpace'
-              onClick={handleCreateSpace}
-            >
-              <PlusCircle className={getSize(6)} />
-              <span className='pl-2'>Create space</span>
-            </Button>
-            <Button
-              variant='ghost'
-              className='flex p-0 justify-start'
-              title='Join a space'
-              data-testid='sidebar.joinSpace'
-              onClick={handleJoinSpace}
-            >
-              <Target className={getSize(6)} />
-              <span className='pl-2'>Join space</span>
-            </Button>
-          </div>
-        </div>
-      )}
+      {showSpaceList && <SpaceListPanel />}
 
       {/* Search */}
       {!showSpaceList && (
-        <div className='flex flex-col overflow-hidden space-y-4'>
+        <div className='flex flex-col overflow-hidden'>
           {/* TODO(burdon): Recursion bug. */}
-          <SearchPanel onResults={setSearchResults} onSelect={handleSearchSelect} />
+          <div className='flex flex-col __overflow-hidden flex-1'>
+            <SearchPanel onResults={setSearchResults} onSelect={handleSearchSelect} />
+          </div>
 
-          {searchResults.length === 0 && (
-            <>
-              <FrameList />
-
-              {List && (
-                <>
-                  <Divider />
-                  <div className='flex px-3'>
-                    <DensityProvider density='fine'>
-                      <Suspense>{<List />}</Suspense>
-                    </DensityProvider>
-                  </div>
-                  <Divider />
-                </>
-              )}
-
-              <div className='flex flex-col'>
-                <Link
-                  className={mx('flex w-full px-4 py-1 items-center', section === Section.REGISTRY && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.REGISTRY })}
-                >
-                  <FrameCorners className={getSize(6)} />
-                  <div className='flex pl-2'>Frames</div>
-                </Link>
-                <Link
-                  className={mx('flex w-full px-4 py-1 items-center', section === Section.BOTS && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-                >
-                  <Robot className={getSize(6)} />
-                  <div className='flex pl-2'>Bots</div>
-                </Link>
-              </div>
-            </>
-          )}
+          {searchResults.length === 0 && <FrameListPanel />}
         </div>
       )}
 

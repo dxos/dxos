@@ -168,7 +168,7 @@ export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   }, [results]); // TODO(burdon): The `sorted` array would always be updated.
 
   return (
-    <div className='flex flex-col w-full'>
+    <div className='flex flex-col overflow-hidden w-full'>
       <div className='flex items-center p-4'>
         <MagnifyingGlass className={getSize(6)} />
         <Searchbar
@@ -177,7 +177,7 @@ export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
         />
       </div>
 
-      <div className='flex flex-1 overflow-hidden overflow-y-scroll'>
+      <div className='flex flex-1 overflow-y-scroll'>
         <div className='flex flex-col w-full'>
           {sorted.map(({ object, Icon, title, snippet }, i) => (
             <div
