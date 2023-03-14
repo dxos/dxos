@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { noCase } from 'change-case';
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
@@ -38,7 +39,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
         const column: Column<Document> = {
-          Header: field.name,
+          Header: noCase(field.name),
           accessor: field.name
         };
 

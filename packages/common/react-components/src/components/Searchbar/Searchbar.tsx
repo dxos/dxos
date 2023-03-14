@@ -61,6 +61,7 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         onChange={({ target }) => handleChange(target.value)}
       />
 
+      {/* TODO(burdon): Place inside input? */}
       <button className={mx('p-1', slots.button?.className)} onClick={handleReset}>
         <X />
       </button>

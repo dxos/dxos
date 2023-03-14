@@ -57,6 +57,7 @@
     "@sentry/react": "^7.41.0",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
+    "change-case": "^4.1.2",
     "chess.js": "1.0.0-alpha.0",
     "clipboard-copy": "^4.0.1",
     "d3": "^7.4.4",
