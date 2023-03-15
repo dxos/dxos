@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { Document as DocumentType, DocumentStack } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
-import { Button } from '@dxos/react-components';
 
 import { Deck } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
@@ -39,15 +38,13 @@ export const PresenterFrame = observer(() => {
     }
   }, [space, frame, stacks, stack]);
 
-  const [content, setContent] = useState<string[]>(['# Hello DXOS']);
-  const handleUpdate = () => {
-    console.log(stack?.title);
-    console.log(stack?.sections.length);
-    const text = stack?.sections[0]?.object.content.doc.getText('utf8').toString();
+  const [content, setContent] = useState<string[]>([]);
+  useEffect(() => {
+    const text1 = stack?.sections[0]?.object.content.doc.getText('utf8').toString();
     const text2 = stack?.sections[0]?.object.content.toString();
-    console.log('::', text, text2);
-    // setContent();
-  };
+    console.log('>>>', stack?.sections.length, text1, text2);
+    setContent(() => Array.from({ length: stack?.sections.length ?? 0 }).map((_, i) => `# Slide ${i + 1}`));
+  }, [stack, stack?.sections.length]);
 
   if (!space || !stack) {
     return null;
@@ -64,15 +61,12 @@ export const PresenterFrame = observer(() => {
   );
 
   return (
-    <div className='flex flex-1 overflow-hidden'>
-      <div className='flex flex-1 shrink-0'>
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <div className='flex flex-1 shrink-0 overflow-hidden'>
         <Editor />
-        <div className='m-4'>
-          <Button onClick={handleUpdate}>Update</Button>
-        </div>
       </div>
 
-      <div className='flex flex-1 shrink-0'>
+      <div className='flex flex-1 shrink-0 overflow-hidden'>
         <Deck slides={content} />
       </div>
     </div>

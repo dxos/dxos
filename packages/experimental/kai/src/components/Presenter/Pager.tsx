@@ -13,11 +13,7 @@ export type PagerProps = {
   onMove?: (index: number) => void;
 };
 
-export const Pager = ({ index = 1, count = 1, onMove }: PagerProps) => {
-  if (!count) {
-    return null;
-  }
-
+export const Pager = ({ index = 0, count = 0, onMove }: PagerProps) => {
   const handleMove = (direction: number) => {
     const next = index + direction;
     if (next > 0 && next <= count) {
@@ -51,10 +47,14 @@ export const Pager = ({ index = 1, count = 1, onMove }: PagerProps) => {
     return () => window.removeEventListener('keydown', handler);
   });
 
+  if (!index || !count) {
+    return null;
+  }
+
   return (
     <div className='flex m-4 items-center text-gray-400'>
       <Button variant='ghost' className='p-0' onClick={() => onMove?.(1)}>
-        <CaretDoubleLeft className={mx(getSize(8))} />
+        <CaretDoubleLeft className={mx(getSize(6))} />
       </Button>
       <Button variant='ghost' className='p-0' onClick={() => handleMove(-1)}>
         <CaretLeft className={mx(getSize(8))} />
@@ -63,7 +63,7 @@ export const Pager = ({ index = 1, count = 1, onMove }: PagerProps) => {
         <CaretRight className={mx(getSize(8))} />
       </Button>
       <Button variant='ghost' className='p-0' onClick={() => onMove?.(count)}>
-        <CaretDoubleRight className={mx(getSize(8))} />
+        <CaretDoubleRight className={mx(getSize(6))} />
       </Button>
     </div>
   );
@@ -80,7 +80,7 @@ export const PageNumber = ({ index = 1, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex m-4 items-center text-gray-400 text-4xl'>
+    <div className='flex m-4 items-center text-gray-400 text-3xl'>
       <div>
         {index} / {count}
       </div>

@@ -33,10 +33,9 @@ export const StackContent: FC<{
 
       switch (object.type) {
         case DocumentType.Type.MARKDOWN:
-          // TODO(burdon): Different indent.
           return (
             <MarkdownComposer
-              text={object.content}
+              text={object.content} // TODO(burdon): ???
               slots={{
                 editor: {
                   spellCheck

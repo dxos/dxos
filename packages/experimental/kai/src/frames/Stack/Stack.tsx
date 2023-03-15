@@ -36,8 +36,7 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
 
   // TODO(burdon): Drag (mosaic).
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
-    console.log('!!!!!!!!!!!!!', type.name);
-
+    console.log('handleInsertSection', type.name);
     let object: Document;
     if (objectId) {
       object = space!.db.getObjectById(objectId)!;
