@@ -36,7 +36,6 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
 
   // TODO(burdon): Drag (mosaic).
   const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
-    console.log('handleInsertSection', type.name);
     let object: Document;
     if (objectId) {
       object = space!.db.getObjectById(objectId)!;
@@ -112,7 +111,6 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
         </StackRow>
       )}
 
-      {/* TODO(burdon): Hide while typing. */}
       <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
         <SortableContext
           strategy={verticalListSortingStrategy}

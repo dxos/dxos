@@ -18,7 +18,6 @@ import { getColumnType } from '../Table';
 // TODO(burdon): Normalize API for both editors.
 const Markdown: FC<{ space: Space; content: Text }> = ({ space, content }) => {
   const model = usePlainTextModel({ space, text: content });
-
   return <MarkdownComposer model={model} />;
 };
 
