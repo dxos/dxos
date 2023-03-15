@@ -12,17 +12,16 @@ import { Presenter } from './Presenter';
 
 export type DeckProps = {
   slides?: string[];
+  fullscreen?: boolean;
+  onToggleFullscreen?: (fullscreen: boolean) => void;
 };
 
-export const Deck = ({ slides = [] }: DeckProps) => {
+export const Deck = ({ slides = [], fullscreen, onToggleFullscreen }: DeckProps) => {
   const [index, setIndex] = useState(1);
-
-  // TODO(burdon): Navigate.
-  const handleToggle = () => {};
 
   const Expand = () => {
     return (
-      <Button variant='ghost' className='mx-2 my-4 text-gray-400' onClick={handleToggle}>
+      <Button variant='ghost' className='mx-2 my-4 text-gray-400' onClick={() => onToggleFullscreen?.(!fullscreen)}>
         <ArrowsOut className={mx(getSize(8))} />
       </Button>
     );

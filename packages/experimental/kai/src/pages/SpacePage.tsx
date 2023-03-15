@@ -10,18 +10,27 @@ import { useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppMenu, BotManager, FrameContainer, FrameRegistry, Sidebar } from '../containers';
-import { useAppRouter, useTheme, Section, createPath, defaultFrameId } from '../hooks';
+import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
+import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
 /**
  * Home page with current space.
  */
 const SpacePage = () => {
+  const { fullscreen } = useAppState();
   const { space, frame } = useAppRouter();
   const spaces = useSpaces();
 
   if (!space && spaces.length > 0) {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
+  }
+
+  if (frame && fullscreen) {
+    return (
+      <div className='flex w-full h-full overflow-hidden'>
+        <FrameContainer frame={frame} />
+      </div>
+    );
   }
 
   return (
@@ -59,12 +68,11 @@ const Content = () => {
         <AppMenu />
       </div>
 
-      <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
+      {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
 
       {/* Main content. */}
       {space && (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
-          {section === Section.REGISTRY && <FrameRegistry />}
           {section === Section.BOTS && <BotManager />}
           {frame && <FrameContainer frame={frame} />}
         </div>

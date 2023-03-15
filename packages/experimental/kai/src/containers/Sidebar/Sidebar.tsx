@@ -199,7 +199,7 @@ export const Sidebar = () => {
           </Button>
         </div>
 
-        <div className={mx('flex h-[8px]', theme.classes.toolbar)} />
+        {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
       </div>
 
       {/* Spaces */}

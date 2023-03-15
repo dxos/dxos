@@ -5,11 +5,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack } from '@dxos/kai-types';
 import { useQuery, observer } from '@dxos/react-client';
 
 import { Deck } from '../../components';
-import { createPath, useAppRouter } from '../../hooks';
+import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Stack } from '../Stack';
 
 // TODO(burdon): Fullscreen frames (Fullscreen page).
@@ -21,6 +22,8 @@ import { Stack } from '../Stack';
 export const PresenterFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
+  const { fullscreen } = useAppState();
+  const { setFullscreen } = useAppReducer();
 
   const stacks = useQuery(space, DocumentStack.filter());
   const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
@@ -33,10 +36,20 @@ export const PresenterFrame = observer(() => {
         });
 
         if (!stack) {
+          const content = [
+            '# DXOS\n- HALO: Decentralized identity\n- ECHO: Decentralized data\n- MESH: Decentralized networks',
+            '# Why Decentralization Matters\n- Privacy\n- Performance\n- User experience\n- Cost',
+            '# Get Involved\nhello@dxos.org'
+          ];
+
           stack = await space.db.add(new DocumentStack({ title: 'New Deck' }));
-          stack.sections.push(
-            new DocumentStack.Section({ object: new DocumentType({ type: DocumentType.Type.MARKDOWN }) })
-          );
+          content.forEach((content) => {
+            stack!.sections.push(
+              new DocumentStack.Section({
+                object: new DocumentType({ type: DocumentType.Type.MARKDOWN, content: new Text(content) })
+              })
+            );
+          });
         }
 
         navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
@@ -44,19 +57,26 @@ export const PresenterFrame = observer(() => {
     }
   }, [space, frame, stacks, stack]);
 
+  const handleUpdate = () => {
+    setContent(stack?.sections?.map((section) => section.object.content.toString()) ?? []);
+  };
+
   const [content, setContent] = useState<string[]>([]);
-  useEffect(() => {
-    const text1 = stack?.sections[0]?.object.content.doc.getText('utf8').toString();
-    const text2 = stack?.sections[0]?.object.content.toString();
-    console.log('>>>', stack?.sections.length, text1, text2);
-    setContent(() => Array.from({ length: stack?.sections.length ?? 0 }).map((_, i) => `# Slide ${i + 1}`));
-  }, [stack, stack?.sections.length]);
+  useEffect(handleUpdate, [stack, stack?.sections.length]);
 
   if (!space || !stack) {
     return null;
   }
 
-  // TODO(burdon): Split/fullscreen mode.
+  if (fullscreen) {
+    return (
+      <div className='flex flex-1 shrink-0 overflow-hidden'>
+        <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />
+      </div>
+    );
+  }
+
+  // TODO(burdon): Split screen mode.
   const Editor = () => (
     <div className='flex flex-1 justify-center overflow-y-auto'>
       <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
@@ -73,7 +93,7 @@ export const PresenterFrame = observer(() => {
       </div>
 
       <div className='flex flex-1 shrink-0 overflow-hidden'>
-        <Deck slides={content} />
+        <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />
       </div>
     </div>
   );
