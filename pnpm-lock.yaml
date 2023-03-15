@@ -609,6 +609,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/util': workspace:*
       '@lezer/common': ^1.0.2
       '@lezer/highlight': ^1.1.3
       '@lezer/markdown': ^1.0.2
@@ -648,6 +649,7 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-components': link:../../../common/react-components
+      '@dxos/util': link:../../../common/util
       '@lezer/common': 1.0.2
       '@lezer/highlight': 1.1.3
       '@lezer/markdown': 1.0.2
@@ -3006,7 +3008,6 @@ importers:
       react-sketch-canvas: ^6.2.0
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
-      rehype: ^12.0.1
       rehype-add-classes: ^1.0.0
       string-hash: ~1.1.3
       tailwindcss: ^3.2.7
@@ -3082,7 +3083,6 @@ importers:
       react-sketch-canvas: 6.2.0_react@18.2.0
       react-syntax-highlighter: 15.5.0_react@18.2.0
       react-table: 7.8.0_react@18.2.0
-      rehype: 12.0.1
       rehype-add-classes: 1.0.0
       string-hash: 1.1.3
       url-join: 5.0.0
@@ -3849,6 +3849,7 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.6.0
       '@testing-library/dom': ^8.17.1
@@ -3885,6 +3886,7 @@ importers:
       use-subscription: 1.8.0_react@18.2.0
     optionalDependencies:
       '@dxos/react-components': link:../../common/react-components
+      '@dxos/text-model': link:../../core/echo/text-model
       '@faker-js/faker': 7.6.0
     devDependencies:
       '@testing-library/dom': 8.19.0
@@ -22339,18 +22341,6 @@ packages:
       type-fest: 0.8.1
     dev: true
 
-  /hast-util-from-parse5/7.1.2:
-    resolution: {integrity: sha512-Nz7FfPBuljzsN3tCQ4kCBKqdNhQE2l0Tn+X1ubgKBPRoiDIu1mL08Cfw4k7q71+Duyaw7DXDN+VTAp4Vh3oCOw==}
-    dependencies:
-      '@types/hast': 2.3.4
-      '@types/unist': 2.0.6
-      hastscript: 7.1.0
-      property-information: 6.1.1
-      vfile: 5.3.6
-      vfile-location: 4.0.1
-      web-namespaces: 2.0.1
-    dev: false
-
   /hast-util-has-property/1.0.4:
     resolution: {integrity: sha512-ghHup2voGfgFoHMGnaLHOjbYFACKrRh9KFttdCzMCbFoBMJXiNi2+XTrPP8+q6cDJM/RSqlCfVWrjp1H201rZg==}
     dev: false
@@ -22372,6 +22362,7 @@ packages:
     resolution: {integrity: sha512-AyjlI2pTAZEOeu7GeBPZhROx0RHBnydkQIXlhnFzDi0qfXTmGUWoCYZtomHbrdrheV4VFUlPcfJ6LMF5T6sQzg==}
     dependencies:
       '@types/hast': 2.3.4
+    dev: true
 
   /hast-util-select/1.0.1:
     resolution: {integrity: sha512-wNFpEC9Or4YTcSzDERXu5n7L+dNTy9tLbqW+LMIkCH69g9NkLEKcGBoXUnJwOVG5KmecLmHxVbrRh3RJmUxtmA==}
@@ -22458,6 +22449,7 @@ packages:
       hast-util-parse-selector: 3.1.0
       property-information: 6.1.1
       space-separated-tokens: 2.0.1
+    dev: true
 
   /hawk/1.1.1:
     resolution: {integrity: sha512-am8sVA2bCJIw8fuuVcKvmmNnGFUGW8spTkVtj2fXTEZVkfN42bwFZFtDem57eFi+NSxurJB8EQ7Jd3uCHLn8Vw==}
@@ -31030,29 +31022,11 @@ packages:
       unist-util-visit: 4.1.1
     dev: true
 
-  /rehype-parse/8.0.4:
-    resolution: {integrity: sha512-MJJKONunHjoTh4kc3dsM1v3C9kGrrxvA3U8PxZlP2SjH8RNUSrb+lF7Y0KVaUDnGH2QZ5vAn7ulkiajM9ifuqg==}
-    dependencies:
-      '@types/hast': 2.3.4
-      hast-util-from-parse5: 7.1.2
-      parse5: 6.0.1
-      unified: 10.1.2
-    dev: false
-
   /rehype-stringify/9.0.3:
     resolution: {integrity: sha512-kWiZ1bgyWlgOxpqD5HnxShKAdXtb2IUljn3hQAhySeak6IOQPPt6DeGnsIh4ixm7yKJWzm8TXFuC/lPfcWHJqw==}
     dependencies:
       '@types/hast': 2.3.4
       hast-util-to-html: 8.0.3
-      unified: 10.1.2
-    dev: false
-
-  /rehype/12.0.1:
-    resolution: {integrity: sha512-ey6kAqwLM3X6QnMDILJthGvG1m1ULROS9NT4uG9IDCuv08SFyLlreSuvOa//DgEvbXx62DS6elGVqusWhRUbgw==}
-    dependencies:
-      '@types/hast': 2.3.4
-      rehype-parse: 8.0.4
-      rehype-stringify: 9.0.3
       unified: 10.1.2
     dev: false
 
@@ -35719,10 +35693,6 @@ packages:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
     dependencies:
       defaults: 1.0.4
-
-  /web-namespaces/2.0.1:
-    resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
-    dev: false
 
   /web-resource-inliner/6.0.1:
     resolution: {integrity: sha512-kfqDxt5dTB1JhqsCUQVFDj0rmY+4HLwGQIsLPbyrsN9y9WV/1oFDSx3BQ4GfCv9X+jVeQ7rouTqwK53rA/7t8A==}

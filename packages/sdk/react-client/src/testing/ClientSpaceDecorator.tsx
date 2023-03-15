@@ -5,14 +5,15 @@
 import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
-import React, { PropsWithChildren, useState } from 'react';
+import React, { PropsWithChildren, ReactNode, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { EchoSchema, Invitation, Space } from '@dxos/client';
+import { EchoSchema, Invitation, PublicKey, Space } from '@dxos/client';
 import { TestBuilder } from '@dxos/client-services/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-components';
+import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
 
@@ -62,43 +63,51 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
   );
 };
 
-export type ClientSpaceDecoratorOptions = {
-  schema?: EchoSchema;
+export type PeersInSpaceProps = {
   count?: number;
+  schema?: EchoSchema;
+  onCreateSpace?: (space: Space) => MaybePromise<void>;
+  children: (id: number, spaceKey: PublicKey) => ReactNode;
+};
+
+/**
+ * Sets up identity for n peers and join them into a single space.
+ * Child is function which recieves an id and a space key.
+ * The child is rendered n times, once for each peer.
+ */
+export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: PeersInSpaceProps) => {
+  const [space, setSpace] = useState<Space>();
+
+  return (
+    <div className='flex' style={{ display: 'flex' }}>
+      <ClientProvider
+        fallback={() => <Loading label='Loading…' />}
+        services={services}
+        onInitialized={async (client) => {
+          await client.halo.createIdentity({ displayName: faker.name.firstName() });
+          schema && client.echo.addSchema(schema);
+          const space = await client.echo.createSpace({ name: faker.animal.bird() });
+          await onCreateSpace?.(space);
+          setSpace(space);
+        }}
+      >
+        {space && children(0, space.key)}
+      </ClientProvider>
+      {space &&
+        [...Array(count - 1)].map((_, index) => (
+          <ChildClient key={index} rootSpace={space} schema={schema}>
+            {children(index + 1, space.key)}
+          </ChildClient>
+        ))}
+    </div>
+  );
 };
 
 /**
  * Storybook decorator to setup identity for n peers and join them into a single space.
  * The story is rendered n times, once for each peer and the space is passed to the story as an arg.
- *
- * @param {number} count Number of peers to join.
- * @returns {DecoratorFunction}
  */
 export const ClientSpaceDecorator =
-  ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
-  (Story, context) => {
-    const [space, setSpace] = useState<Space>();
-
-    return (
-      <div className='flex' style={{ display: 'flex' }}>
-        <ClientProvider
-          fallback={() => <Loading label='Loading…' />}
-          services={services}
-          onInitialized={async (client) => {
-            await client.halo.createIdentity({ displayName: faker.name.firstName() });
-            schema && client.echo.addSchema(schema);
-            const space = await client.echo.createSpace({ name: faker.animal.bird() });
-            setSpace(space);
-          }}
-        >
-          <Story args={{ spaceKey: space?.key, id: 0, ...context.args }} />
-        </ClientProvider>
-        {space &&
-          [...Array(count - 1)].map((_, index) => (
-            <ChildClient key={index} rootSpace={space} schema={schema}>
-              <Story args={{ spaceKey: space?.key, id: index + 1, ...context.args }} />
-            </ChildClient>
-          ))}
-      </div>
-    );
-  };
+  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> =>
+  (Story, context) =>
+    <PeersInSpace {...options}>{(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}</PeersInSpace>;
