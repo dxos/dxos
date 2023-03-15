@@ -40,7 +40,7 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col w-[180px] h-[100px] border-0 rounded-lg px-3 py-2',
+        'flex flex-col w-[180px] h-[100px] border-0 rounded px-3 py-2',
         'cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
         active && 'border-selection-border !bg-selection-bg',
         slots.root?.className

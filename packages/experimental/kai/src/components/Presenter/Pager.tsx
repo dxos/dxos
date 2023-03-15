@@ -80,7 +80,7 @@ export const PageNumber = ({ index = 1, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex m-4 items-center text-gray-400 text-3xl'>
+    <div className='flex m-4 items-center text-gray-400 text-2xl'>
       <div>
         {index} / {count}
       </div>

@@ -166,7 +166,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.stack',
       type: 'dxos:type/frame',
       displayName: 'Stacks',
-      description: 'Structured documents.'
+      description: 'Dynamic structured documents.'
     },
     runtime: {
       Icon: StackIcon,
@@ -264,8 +264,8 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.sandbox',
       type: 'dxos:type/frame',
-      displayName: 'Notebook',
-      description: 'Collaborative script editor.'
+      displayName: 'Script',
+      description: 'Frame and Bot script editor.'
     },
     runtime: {
       Icon: Code,

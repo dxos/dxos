@@ -62,6 +62,8 @@ export type PresenterProps = {
   content?: string;
   className?: string;
   classes?: { [selector: string]: string };
+  topLeft?: ReactNode;
+  topRight?: ReactNode;
   bottomLeft?: ReactNode;
   bottomRight?: ReactNode;
 };
@@ -70,6 +72,8 @@ export const Presenter = ({
   content = '',
   className,
   classes = defaultClasses,
+  topLeft,
+  topRight,
   bottomLeft,
   bottomRight
 }: PresenterProps) => {
@@ -90,12 +94,17 @@ export const Presenter = ({
 
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden', className ?? 'bg-gray-800')}>
+    <div
+      ref={containerRef}
+      className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-gray-800')}
+    >
       {width && height && (
         <div className={mx('flex flex-col absolute', defaultStyles)} style={props}>
           <ReactMarkdown rehypePlugins={[[addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}
+      <div className='absolute top-0 left-0'>{topLeft}</div>
+      <div className='absolute top-0 right-0'>{topRight}</div>
       <div className='absolute bottom-0 left-0'>{bottomLeft}</div>
       <div className='absolute bottom-0 right-0'>{bottomRight}</div>
     </div>
