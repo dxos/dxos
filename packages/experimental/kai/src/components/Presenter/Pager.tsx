@@ -21,6 +21,7 @@ export const Pager = ({ index = 0, count = 0, onMove }: PagerProps) => {
     }
   };
 
+  // TODO(burdon): Full screen. ESC.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       switch (event.key) {

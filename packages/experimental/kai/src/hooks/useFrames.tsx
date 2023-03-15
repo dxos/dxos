@@ -281,7 +281,7 @@ export const defaultFrameId = 'dxos.module.frame.stack';
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.stack',
-  // 'dxos.module.frame.presenter',
+  'dxos.module.frame.presenter',
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.contact',

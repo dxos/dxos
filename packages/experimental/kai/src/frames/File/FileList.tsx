@@ -49,6 +49,8 @@ export const FileList: FC<FileListProps> = ({ disableDownload, onSelect }) => {
   // https://developer.mozilla.org/en-US/docs/Web/API/File
   // TODO(burdon): Handle multiple files.
   const handleUpload = async (uploadedFile: any) => {
+    console.log(':::::::::::::', uploadedFile);
+
     log('uploading...', { filename: uploadedFile.name });
     const { cid, path, size } = await ipfsClient.add(uploadedFile);
     log('uploaded', { cid: path, size });

@@ -99,7 +99,7 @@ export const Presenter = ({
       className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-gray-800')}
     >
       {width && height && (
-        <div className={mx('flex flex-col absolute', defaultStyles)} style={props}>
+        <div className={mx('hidden md:visible flex flex-col absolute', defaultStyles)} style={props}>
           <ReactMarkdown rehypePlugins={[[addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}

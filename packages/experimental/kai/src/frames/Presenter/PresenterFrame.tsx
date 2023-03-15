@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack } from '@dxos/kai-types';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
 
 import { Deck } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
@@ -44,9 +44,12 @@ export const PresenterFrame = observer(() => {
 
           stack = await space.db.add(new DocumentStack({ title: 'New Deck' }));
           content.forEach((content) => {
+            // TODO(burdon): Hack.
+            const text = new Text();
+            text.doc!.getText('utf8').insert(0, content);
             stack!.sections.push(
               new DocumentStack.Section({
-                object: new DocumentType({ type: DocumentType.Type.MARKDOWN, content: new Text(content) })
+                object: new DocumentType({ type: DocumentType.Type.MARKDOWN, content: text })
               })
             );
           });
@@ -57,13 +60,6 @@ export const PresenterFrame = observer(() => {
     }
   }, [space, frame, stacks, stack]);
 
-  const handleUpdate = () => {
-    setContent(stack?.sections?.map((section) => section.object.content.toString()) ?? []);
-  };
-
-  const [content, setContent] = useState<string[]>([]);
-  useEffect(handleUpdate, [stack, stack?.sections.length]);
-
   if (!space || !stack) {
     return null;
   }
@@ -71,7 +67,7 @@ export const PresenterFrame = observer(() => {
   if (fullscreen) {
     return (
       <div className='flex flex-1 shrink-0 overflow-hidden'>
-        <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />
+        <DeckContainer space={space} stack={stack} />
       </div>
     );
   }
@@ -80,7 +76,12 @@ export const PresenterFrame = observer(() => {
   const Editor = () => (
     <div className='flex flex-1 justify-center overflow-y-auto'>
       <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
-        <Stack slots={{ root: { className: 'py-12 bg-paper-bg shadow-1' } }} space={space} stack={stack} />
+        <Stack
+          slots={{ root: { className: 'py-12 bg-paper-bg shadow-1' } }}
+          showTitle={false}
+          space={space}
+          stack={stack}
+        />
         <div className='pb-4' />
       </div>
     </div>
@@ -93,12 +94,33 @@ export const PresenterFrame = observer(() => {
       </div>
 
       <div className='flex flex-1 shrink-0 overflow-hidden'>
-        <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />
+        <DeckContainer space={space} stack={stack} />
       </div>
     </div>
   );
 
   return <Editor />;
 });
+
+const DeckContainer: FC<{ space: Space; stack: DocumentStack }> = ({ space, stack }) => {
+  const { fullscreen } = useAppState();
+  const { setFullscreen } = useAppReducer();
+  const [content, setContent] = useState<string[]>([]);
+
+  // TODO(burdon): Hack to listen for document section updates.
+  const docs = useQuery(space, DocumentType.filter());
+  const texts = useMemo(() => {
+    return docs
+      .map((doc) => {
+        return doc.type === DocumentType.Type.MARKDOWN && doc.content ? doc.content : undefined;
+      })
+      .filter(Boolean) as Text[];
+  }, [space, docs]);
+  useSubscription(() => {
+    setContent(texts.map((text) => text.doc!.getText('utf8').toString()) ?? []);
+  }, [texts]);
+
+  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />;
+};
 
 export default PresenterFrame;
