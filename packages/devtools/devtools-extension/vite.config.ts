@@ -35,9 +35,11 @@ export default defineConfig({
     }
   },
   plugins: [
-    ReactPlugin(),
+    ConfigPlugin({
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY']
+    }),
 
-    ConfigPlugin(),
+    ReactPlugin(),
 
     ThemePlugin({
       content: [
