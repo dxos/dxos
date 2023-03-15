@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
+import { DotsThreeVertical, FileArrowDown, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
 import React, {
   Dispatch,
   PropsWithChildren,
@@ -20,6 +20,7 @@ import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
 import { Space } from '@dxos/client';
+import { log } from '@dxos/log';
 import { useFileDownload } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 import {
@@ -185,6 +186,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
 
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [ghBindOpen, setGhBindOpen] = useState(false);
   const [ghFileValue, setGhFileValue] = useState('');
 
@@ -221,6 +223,25 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     }
   }, [ghFileValue]);
 
+  const importGhFileContent = useCallback(async () => {
+    if (octokit && docGhFileId && editorRef.current?.view && editorRef.current?.state?.doc) {
+      const { data } = await octokit.rest.repos.getContent({
+        owner: docGhFileId.owner,
+        repo: docGhFileId.repo,
+        path: docGhFileId.path
+      });
+      if (!Array.isArray(data) && data.type === 'file') {
+        editorRef.current.view.dispatch({
+          changes: { from: 0, to: editorRef.current.state.doc.length, insert: atob(data.content) }
+        });
+      } else {
+        log.error('Did not receive file with content from Github.');
+      }
+    } else {
+      log.error('Not prepared to import when requested.');
+    }
+  }, [octokit, docGhFileId]);
+
   const dropdownMenuContent = docGhFileId ? (
     <>
       <DropdownMenuItem
@@ -232,6 +253,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
       >
         <LinkBreak className={getSize(4)} />
         <span>{t('unbind to file in github label')}</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
+        <FileArrowDown className={getSize(4)} />
+        <span>{t('import from github label')}</span>
       </DropdownMenuItem>
     </>
   ) : (
@@ -287,6 +312,24 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
               validationMessage: t('error github markdown path message')
             })}
         />
+      </Dialog>
+      <Dialog
+        title={t('confirm import title')}
+        open={importConfirmOpen}
+        onOpenChange={setImportConfirmOpen}
+        closeTriggers={[
+          <Button key='cancel'>{t('cancel label', { ns: 'appkit' })}</Button>,
+          <Button
+            key='done'
+            variant='primary'
+            className='bg-warning-600 dark:bg-warning-600 hover:bg-warning-700 dark:hover:bg-warning-700'
+            onClick={importGhFileContent}
+          >
+            {t('import from github label')}
+          </Button>
+        ]}
+      >
+        <p className='plb-2'>{t('confirm import body')}</p>
       </Dialog>
     </>
   );

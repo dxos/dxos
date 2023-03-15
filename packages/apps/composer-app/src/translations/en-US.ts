@@ -17,7 +17,7 @@ export const composer = {
   'import from github label': 'Import from Github',
   'confirm import title': 'Overwrite this document’s content?',
   'confirm import body':
-    'Importing a Markdown file will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
+    'Importing will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
   'upload file message': 'Drag file here or click to browse',
   'space settings label': 'Settings',
   'space name label': 'Space name',
@@ -28,7 +28,7 @@ export const composer = {
   'error github pat message': 'There was a problem authenticating with Github using the personal access token provided',
   'github explorer title': 'Choose a Markdown file',
   'bind to file in github label': 'Connect to a file in Github',
-  'unbind to file in github label': 'Disconnect from Github file',
+  'unbind to file in github label': 'Disconnect from Github',
   'error github markdown path message': 'This is not a valid path to a Markdown file in Github.',
   'paste url to file in github label': 'Paste the URL to the Markdown file in Github',
   'paste url to file in github description':
