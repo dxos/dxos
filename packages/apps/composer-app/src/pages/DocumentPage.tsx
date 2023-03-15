@@ -21,7 +21,7 @@ import TurndownService from 'turndown';
 
 import { Space } from '@dxos/client';
 import { useFileDownload } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
+import { observer, useIdentity } from '@dxos/react-client';
 import {
   Button,
   DropdownMenu,
@@ -33,7 +33,13 @@ import {
   Dialog,
   DropdownMenuItem
 } from '@dxos/react-components';
-import { MarkdownComposer, RichTextComposer, TipTapEditor, MarkdownComposerRef } from '@dxos/react-composer';
+import {
+  MarkdownComposer,
+  RichTextComposer,
+  TipTapEditor,
+  MarkdownComposerRef,
+  usePlainTextModel
+} from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
@@ -171,7 +177,10 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
   );
 });
 
-const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
+const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
+  const identity = useIdentity();
+  const model = usePlainTextModel({ identity, space, text: document?.content });
+
   const editorRef = useRef<MarkdownComposerRef>(null);
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
@@ -233,7 +242,7 @@ const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDoc
       >
         <MarkdownComposer
           ref={editorRef}
-          text={document.content}
+          model={model}
           slots={{
             root: {
               role: 'none',
@@ -280,9 +289,9 @@ export const DocumentPage = () => {
 
   return (
     <div role='none' className='pli-14 plb-11'>
-      {document ? (
+      {document && space ? (
         document.textintention === 'markdown' ? (
-          <PureMarkdownDocumentPage document={document} />
+          <MarkdownDocumentPage document={document} space={space} />
         ) : (
           <PureRichTextDocumentPage document={document} />
         )

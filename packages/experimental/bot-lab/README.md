@@ -1,26 +1,21 @@
 # @dxos/bot-lab
 
-## Set-up
 
-1. Start Docker (e.g., Docker Desktop).
+## Running bots locally
 
-2. Run the proxy:
+1. Make sure you have `kube version` >= `1.17.6-dev`.
+2. Enable bots in config (ask @egor).
+3. Configure kai `dxos.services.bot.proxy` to `http://kube.local/.well-known/dx/bot` (must be http).
+4. Build bot with `pnpm run build:local` (in `bot-lab`).
 
-```bash
-cd bot-lab
-pnpm run proxy
-```
+## Running bots on hosted KUBE
 
-## Development
-
-Build image of NodeJS server.
-
-```bash
-pnpm run build:image
-````
-
-NOTE: Delete running containers via the Docker Desktop or cli.
-
+1. Login to github container registry: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+  - Create a personal access token with `read:packages`, `write:packages`, and `delete:packages` permissions.
+  - `export CR_PAT=YOUR_TOKEN`
+  - `echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin`
+2. Configure kai `dxos.services.bot.proxy` to `https://bots.kube.dxos.org/.well-known/dx/bot` (must be https).
+3. Build bot with `pnpm run build:remote` (in `bot-lab`).
 
 ## Installation
 

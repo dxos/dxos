@@ -8,12 +8,11 @@ import { Document, TypeFilter } from '@dxos/echo-schema';
 import { Contact, Project } from '@dxos/kai-types';
 import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
-import { Searchbar, Select } from '@dxos/react-components';
+import { Select } from '@dxos/react-components';
 
+import { ProjectCard, ContactCard } from '../../cards';
 import { Toolbar } from '../../components';
-import { ProjectCard } from '../../containers';
 import { useAppRouter } from '../../hooks';
-import { ContactCard } from '../Contact';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 type Type = {
@@ -27,18 +26,18 @@ type Type = {
 // TODO(burdon): From metadata.
 const types: Type[] = [
   {
-    name: 'dxos.experimental.kai.Project',
-    label: 'Projects',
-    filter: Project.filter(),
-    getTitle: (object) => object.title,
-    Card: ProjectCard
-  },
-  {
     name: 'dxos.experimental.kai.Contact',
     label: 'Contacts',
     filter: Contact.filter(),
     getTitle: (object) => object.name,
     Card: ContactCard
+  },
+  {
+    name: 'dxos.experimental.kai.Project',
+    label: 'Projects',
+    filter: Project.filter(),
+    getTitle: (object) => object.title,
+    Card: ProjectCard
   }
 ];
 
@@ -48,11 +47,7 @@ export const KanbanFrame: FC = () => {
 
   const [typeName, setTypeName] = useState<string>(types[0].name);
   const type = types.find(({ name }) => name === typeName)!;
-
-  const [text, setText] = useState<string>();
-  const handleSearch = (text: string) => {
-    setText(text);
-  };
+  const [text] = useState<string>();
 
   // TODO(burdon): Chain filters.
   const objects = useQuery(space, type.filter).filter(
@@ -83,9 +78,6 @@ export const KanbanFrame: FC = () => {
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <Toolbar className='mb-4'>
-        <div className='w-screen md:w-column mr-4'>
-          <Searchbar onSearch={handleSearch} />
-        </div>
         <Select value={typeName} onValueChange={setTypeName}>
           {types.map(({ name, label }) => (
             <Select.Item key={name} value={name}>

@@ -2,7 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle } from '@phosphor-icons/react';
+import {
+  Bag,
+  Buildings,
+  Calendar,
+  Check,
+  Circle,
+  Envelope,
+  FileText,
+  MagnifyingGlass,
+  UserCircle
+} from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
@@ -130,7 +140,7 @@ export type SearchPanelProps = {
   onSelect?: (object: Document) => void;
 };
 
-export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
+export const SearchPanel = ({ onSelect }: SearchPanelProps) => {
   // TODO(burdon): Search across spaces.
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
@@ -154,8 +164,12 @@ export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
 
   return (
     <div className='flex flex-col w-full'>
-      <div className='flex justify-center p-4'>
-        <Searchbar slots={{ input: { autoFocus: true, className: 'border-b' } }} onSearch={handleSearch} />
+      <div className='flex items-center p-4'>
+        <MagnifyingGlass className={getSize(6)} />
+        <Searchbar
+          slots={{ root: { className: 'pl-2' }, input: { autoFocus: true, className: 'border-b' } }}
+          onSearch={handleSearch}
+        />
       </div>
 
       <div className='flex flex-1 overflow-hidden overflow-y-scroll'>

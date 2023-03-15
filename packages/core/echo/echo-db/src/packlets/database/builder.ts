@@ -4,7 +4,7 @@
 
 import { Any, ProtoCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 import { ModelMeta } from '@dxos/model-factory';
-import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject, EchoObjectBatch, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
 
 /**
  * Assigns a unique tag to each mutation in a batch with proper indexing.
@@ -18,6 +18,17 @@ export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string) => {
       mutation.meta ??= {};
       mutation.meta.clientTag = `${tag}:${objectIndex}:${mutationIndex}`;
     });
+  });
+};
+
+/**
+ * Assigns metadata to object message and every mutation.
+ */
+export const setMetadataOnObject = (object: EchoObject, meta: MutationMeta) => {
+  object.meta = meta;
+
+  object.mutations?.forEach((mutation) => {
+    mutation.meta = meta;
   });
 };
 

@@ -16,21 +16,25 @@ export const colors: { id: string; color: string; border: string }[] = [
   { id: 'yellow', color: 'bg-amber-100', border: 'border-amber-200' },
   { id: 'cyan', color: 'bg-sky-100', border: 'border-sky-200' },
   { id: 'green', color: 'bg-emerald-100', border: 'border-emerald-200' },
-  { id: 'orange', color: 'bg-violet-100', border: 'border-violet-200' }
+  { id: 'violet', color: 'bg-violet-100', border: 'border-violet-200' }
 ];
 
-const Menu: FC<{ onDelete: () => void; onColorChange: () => void }> = ({ onDelete, onColorChange }) => {
+const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = ({ onDelete, onColorChange }) => {
   return (
-    <>
+    <div className='flex flex-col'>
+      <div className='border-b'>
+        {colors.map(({ id }) => (
+          <DropdownMenuItem key={id} onClick={() => onColorChange(id)}>
+            <Palette className={getSize(5)} />
+            <span className='mis-2'>{id}</span>
+          </DropdownMenuItem>
+        ))}
+      </div>
       <DropdownMenuItem onClick={onDelete}>
         <X className={getSize(5)} />
         <span className='mis-2'>Delete</span>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={onColorChange}>
-        <Palette className={getSize(5)} />
-        <span className='mis-2'>Color</span>
-      </DropdownMenuItem>
-    </>
+    </div>
   );
 };
 
@@ -43,9 +47,8 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
     onDelete?.(item);
   };
 
-  const handleColorChange = () => {
-    const idx = colors.findIndex(({ id }) => id === note.color);
-    note.color = colors[idx === -1 ? 1 : idx < colors.length - 1 ? idx + 1 : 0].id;
+  const handleColorChange = (color: string) => {
+    note.color = color;
   };
 
   return (

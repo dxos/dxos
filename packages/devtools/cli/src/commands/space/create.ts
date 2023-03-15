@@ -30,7 +30,7 @@ export default class Create extends BaseCommand {
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),
-        name: space.properties?.name // TODO(dmaretskyi): Fix.
+        name: space.properties.name
       };
 
       this.log(`Created: ${data.key}`);

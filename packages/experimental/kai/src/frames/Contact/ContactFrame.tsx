@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { Contact } from '@dxos/kai-types';
 import { Space, useQuery } from '@dxos/react-client';
 
+import { ContactCard } from '../../cards';
 import { createPath, useAppRouter } from '../../hooks';
-import { ContactCard } from './ContactCard';
 import { ContactStack } from './ContactStack';
 
 const stringSort = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

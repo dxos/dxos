@@ -83,15 +83,33 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
     );
   };
 
+  const errorCallback = (event: ErrorEvent) => {
+    setTimeout(() =>
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.window.error`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          message: event.message,
+          filename: event.filename,
+          stack: (event.error as Error).stack
+        }
+      })
+    );
+  };
+
   window.addEventListener('click', clickCallback, true);
   window.addEventListener('focus', focusCallback);
   window.addEventListener('blur', blurCallback);
   window.addEventListener('beforeunload', unloadCallback);
+  window.addEventListener('error', errorCallback);
 
   return () => {
     window.removeEventListener('click', clickCallback, true);
     window.removeEventListener('focus', focusCallback);
     window.removeEventListener('blur', blurCallback);
     window.removeEventListener('beforeunload', unloadCallback);
+    window.removeEventListener('error', errorCallback);
   };
 };

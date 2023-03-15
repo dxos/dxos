@@ -90,30 +90,35 @@ export const TableFrame = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <Toolbar className='mb-4'>
-        <div className='w-screen md:w-column mr-4'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
+      <Toolbar className='mb-2'>
+        <div className='w-screen md:w-column'>
+          <Select value={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+            {types?.map((type) => (
+              <Select.Item key={type.id} value={type.id}>
+                {type.title}
+              </Select.Item>
+            ))}
+          </Select>
+        </div>
+
+        <div className='grow' />
+        <div className='w-screen md:w-column'>
           <Searchbar onSearch={handleSearch} />
         </div>
-        <Select value={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
-          {types?.map((type) => (
-            <Select.Item key={type.id} value={type.id}>
-              {type.title}
-            </Select.Item>
-          ))}
-        </Select>
       </Toolbar>
 
       {/* TODO(burdon): Editable variant. */}
-      <Table<Document>
-        columns={type.columns}
-        data={objects}
-        slots={{
-          header: { className: 'bg-paper-1-bg' },
-          row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
-        }}
-      />
-      {/* </div> */}
+      <div className='flex flex-1 overflow-hidden px-2'>
+        <Table<Document>
+          columns={type.columns}
+          data={objects}
+          slots={{
+            header: { className: 'bg-paper-1-bg' },
+            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+          }}
+        />
+      </div>
     </div>
   );
 };
