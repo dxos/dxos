@@ -135,6 +135,7 @@
       "@nrwl/js@15.4.5": "patches/@nrwl__js@15.4.5.patch",
       "@nrwl/storybook@15.4.5": "patches/@nrwl__storybook@15.4.5.patch",
       "@nrwl/vite@15.4.5": "patches/@nrwl__vite@15.4.5.patch",
+      "@uiw/react-codemirror@4.19.9": "patches/@uiw__react-codemirror@4.19.9.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch"
