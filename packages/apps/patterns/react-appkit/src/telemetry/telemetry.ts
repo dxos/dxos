@@ -37,14 +37,14 @@ export const isTelemetryDisabled = (namespace: string) =>
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
-export const initializeAppTelemetry = async (namespace: string, config: Config) => {
-  const group = localStorage.getItem(`${namespace}:telemetry-group`);
+export const initializeAppTelemetry = async (namespace: string, config: Config, localStorageAPIEnabled = true) => {
+  const group = localStorageAPIEnabled && localStorage.getItem(`${namespace}:telemetry-group`);
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
   BASE_TELEMETRY_PROPERTIES.group = group;
   BASE_TELEMETRY_PROPERTIES.release = release;
   BASE_TELEMETRY_PROPERTIES.environment = environment;
-  const telemetryDisabled = isTelemetryDisabled(namespace);
+  const telemetryDisabled = localStorageAPIEnabled && isTelemetryDisabled(namespace);
 
   const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
   Sentry.init({

@@ -61,7 +61,7 @@ const waitForRpc = async () =>
   });
 
 const namespace = 'devtools-extension';
-void initializeAppTelemetry(namespace, new Config(Defaults()));
+void initializeAppTelemetry(namespace, new Config(Defaults()), false);
 
 const App = () => {
   log('initializing...');
