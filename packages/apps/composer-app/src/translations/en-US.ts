@@ -27,7 +27,8 @@ export const composer = {
   'empty github pat message': 'Set a Github personal access token to continue',
   'error github pat message': 'There was a problem authenticating with Github using the personal access token provided',
   'github explorer title': 'Choose a Markdown file',
-  'bind to file in github label': 'Bind to a file in Github',
+  'bind to file in github label': 'Connect to a file in Github',
+  'unbind to file in github label': 'Disconnect from Github file',
   'error github markdown path message': 'This is not a valid path to a Markdown file in Github.',
   'paste url to file in github label': 'Paste the URL to the Markdown file in Github',
   'paste url to file in github description':

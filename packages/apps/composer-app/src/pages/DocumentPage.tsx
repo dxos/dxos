@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FilePlus, GithubLogo } from '@phosphor-icons/react';
+import { DotsThreeVertical, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
 import React, {
   Dispatch,
   PropsWithChildren,
@@ -221,12 +221,23 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     }
   }, [ghFileValue]);
 
-  console.log('[file id]', docGhFileId, ghFileId);
-
-  const dropdownMenuContent = (
+  const dropdownMenuContent = docGhFileId ? (
+    <>
+      <DropdownMenuItem
+        className='flex items-center gap-2'
+        onClick={() => {
+          document.github = '';
+          setGhFileValue('');
+        }}
+      >
+        <LinkBreak className={getSize(4)} />
+        <span>{t('unbind to file in github label')}</span>
+      </DropdownMenuItem>
+    </>
+  ) : (
     <>
       <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
-        <GithubLogo className={getSize(4)} />
+        <Link className={getSize(4)} />
         <span>{t('bind to file in github label')}</span>
       </DropdownMenuItem>
     </>
