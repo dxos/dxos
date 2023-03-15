@@ -2,8 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FilePlus } from '@phosphor-icons/react';
-import React, { Dispatch, PropsWithChildren, ReactNode, SetStateAction, useCallback, useRef, useState } from 'react';
+import { DotsThreeVertical, FilePlus, GithubLogo } from '@phosphor-icons/react';
+import React, {
+  Dispatch,
+  PropsWithChildren,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -13,11 +22,28 @@ import TurndownService from 'turndown';
 import { Space } from '@dxos/client';
 import { useFileDownload } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import { Button, DropdownMenu, getSize, Input, mx, useTranslation, ThemeContext, Dialog } from '@dxos/react-components';
+import {
+  Button,
+  DropdownMenu,
+  getSize,
+  Input,
+  mx,
+  useTranslation,
+  ThemeContext,
+  Dialog,
+  DropdownMenuItem
+} from '@dxos/react-components';
 import { MarkdownComposer, RichTextComposer, TipTapEditor, MarkdownComposerRef } from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
+
+type GhFileIdentifier = {
+  owner: string;
+  repo: string;
+  ref?: string;
+  path: string;
+};
 
 const turndownService = new TurndownService({
   headingStyle: 'atx',
@@ -148,23 +174,61 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
 const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const { octokit } = useOctokitContext();
+  const { t } = useTranslation('composer');
 
-  const _download = useFileDownload();
+  const [ghBindOpen, setGhBindOpen] = useState(false);
+  const [ghFileValue, setGhFileValue] = useState('');
 
-  const handleExportToGithub = useCallback(async () => {
-    // setGhExplorerOpen(true);
-  }, [document, octokit]);
+  const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
+    try {
+      const extantFileId = JSON.parse(document.github);
+      if (extantFileId) {
+        return extantFileId;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }, [document.github]);
 
-  const handleImportFromGithub = useCallback(async () => {
-    // setGhExplorerOpen(true);
-  }, [document, octokit]);
+  const ghFileId = useMemo<GhFileIdentifier | null>(() => {
+    try {
+      const url = new URL(ghFileValue);
+      const [_, owner, repo, _blob, ref, ...pathParts] = url.pathname.split('/');
+      const path = pathParts.join('/');
+      const ext = pathParts[pathParts.length - 1].split('.')[1];
+
+      return ext === 'md'
+        ? {
+            owner,
+            repo,
+            ref,
+            path
+          }
+        : null;
+    } catch (e) {
+      return null;
+    }
+  }, [ghFileValue]);
+
+  console.log('[file id]', docGhFileId, ghFileId);
+
+  const dropdownMenuContent = (
+    <>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
+        <GithubLogo className={getSize(4)} />
+        <span>{t('bind to file in github label')}</span>
+      </DropdownMenuItem>
+    </>
+  );
 
   return (
     <>
       <DocumentPageContent
         {...{
           document,
-          ...(octokit && { handleExportToGithub, handleImportFromGithub })
+          ...(octokit && { dropdownMenuContent })
         }}
       >
         <MarkdownComposer
@@ -179,6 +243,31 @@ const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDoc
           }}
         />
       </DocumentPageContent>
+      <Dialog
+        title={t('bind to file in github label')}
+        open={ghBindOpen}
+        onOpenChange={(nextOpen) => {
+          document.github = JSON.stringify(ghFileId);
+          setGhBindOpen(nextOpen);
+        }}
+        closeTriggers={[
+          <Button key='done' variant='primary'>
+            {t('done label', { ns: 'os' })}
+          </Button>
+        ]}
+      >
+        <Input
+          label={t('paste url to file in github label')}
+          description={t('paste url to file in github description')}
+          value={ghFileValue}
+          onChange={({ target: { value } }) => setGhFileValue(value)}
+          {...(ghFileValue.length > 0 &&
+            !ghFileId && {
+              validationValence: 'error',
+              validationMessage: t('error github markdown path message')
+            })}
+        />
+      </Dialog>
     </>
   );
 });
