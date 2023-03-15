@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FileArrowDown, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
+import { DotsThreeVertical, FileArrowDown, FileArrowUp, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
 import React, {
   Dispatch,
   PropsWithChildren,
@@ -48,7 +48,7 @@ import { ComposerDocument } from '../proto';
 type GhFileIdentifier = {
   owner: string;
   repo: string;
-  ref?: string;
+  ref: string;
   path: string;
 };
 
@@ -224,15 +224,12 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   }, [ghFileValue]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhFileId && editorRef.current?.view && editorRef.current?.state?.doc) {
-      const { data } = await octokit.rest.repos.getContent({
-        owner: docGhFileId.owner,
-        repo: docGhFileId.repo,
-        path: docGhFileId.path
-      });
+    if (octokit && docGhFileId && model?.fragment && editorRef.current?.view && editorRef.current?.state?.doc) {
+      const { owner, repo, path } = docGhFileId;
+      const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
       if (!Array.isArray(data) && data.type === 'file') {
         editorRef.current.view.dispatch({
-          changes: { from: 0, to: editorRef.current.state.doc.length, insert: atob(data.content) }
+          changes: { from: 0, to: model.fragment.toString().length, insert: atob(data.content) }
         });
       } else {
         log.error('Did not receive file with content from Github.');
@@ -240,7 +237,59 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     } else {
       log.error('Not prepared to import when requested.');
     }
-  }, [octokit, docGhFileId]);
+  }, [octokit, docGhFileId, editorRef.current, model?.fragment]);
+
+  const exportGhFileContent = useCallback(
+    async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
+      if (octokit && docGhFileId && model?.fragment) {
+        const { owner, repo, path, ref } = docGhFileId;
+        const content = model.fragment.toString();
+        console.log('[Attempting export]');
+        const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
+        if (Array.isArray(fileData) || fileData.type !== 'file') {
+          log.error('Attempted to export to a destination in Github that is not a file.');
+          return;
+        }
+        const { sha: fileSha } = fileData;
+        const {
+          data: {
+            object: { sha: baseSha }
+          }
+        } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
+        console.log('[Creating ref]', baseSha);
+        await octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${branchName}`,
+          sha: baseSha
+        });
+        console.log('[Committing file update]', fileSha, content);
+        await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path,
+          message: commitMessage,
+          branch: branchName,
+          sha: fileSha,
+          content: btoa(content)
+        });
+        console.log('[Creating PR]');
+        const {
+          data: { html_url: prUrl }
+        } = await octokit.rest.pulls.create({
+          owner,
+          repo,
+          head: branchName,
+          base: ref,
+          title: commitMessage
+        });
+        console.log('[Done]', prUrl);
+      } else {
+        log.error('Not prepared to export when requested.');
+      }
+    },
+    [octokit, docGhFileId, model?.fragment]
+  );
 
   const dropdownMenuContent = docGhFileId ? (
     <>
@@ -257,6 +306,15 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
       <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
         <FileArrowDown className={getSize(4)} />
         <span>{t('import from github label')}</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className='flex items-center gap-2'
+        onClick={() =>
+          exportGhFileContent({ branchName: 'composer-test/discard-this', commitMessage: 'Test PR from Composer' })
+        }
+      >
+        <FileArrowUp className={getSize(4)} />
+        <span>{t('export to github label')}</span>
       </DropdownMenuItem>
     </>
   ) : (
