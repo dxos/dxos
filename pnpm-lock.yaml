@@ -1856,7 +1856,6 @@ importers:
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
       faker: ^5.5.3
-      fast-check: ~3.3.0
       yjs: ^13.5.44
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1872,7 +1871,6 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@types/faker': 5.5.9
       faker: 5.5.3
-      fast-check: 3.3.0
 
   packages/core/halo/credentials:
     specifiers:
