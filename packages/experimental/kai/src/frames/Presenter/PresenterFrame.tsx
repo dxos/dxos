@@ -12,6 +12,12 @@ import { Deck } from '../../components';
 import { createPath, useAppRouter } from '../../hooks';
 import { Stack } from '../Stack';
 
+// TODO(burdon): Fullscreen frames (Fullscreen page).
+// TODO(burdon): Load/save Deck to IPFS.
+// TODO(burdon): IPFS images.
+// TODO(burdon): Layout.
+// TODO(burdon): MDX components (runtime build).
+
 export const PresenterFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
