@@ -1,0 +1,88 @@
+diff --git a/cjs/useCodeMirror.js b/cjs/useCodeMirror.js
+index 6a340f26918d20b24a518f74277ed2f0d1dbc1ee..4b02a8c6efd9f9d23ae8a29159a0a1d06931233c 100644
+--- a/cjs/useCodeMirror.js
++++ b/cjs/useCodeMirror.js
+@@ -179,22 +179,23 @@ function useCodeMirror(props) {
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [theme, extensions, height, minHeight, maxHeight, width, minWidth, maxWidth, placeholderStr, editable, readOnly, defaultIndentWithTab, defaultBasicSetup, onChange, onUpdate]);
+-  (0, _react.useEffect)(function () {
+-    if (value === undefined) {
+-      return;
+-    }
+-    var currentValue = view ? view.state.doc.toString() : '';
+-    if (view && value !== currentValue) {
+-      view.dispatch({
+-        changes: {
+-          from: 0,
+-          to: currentValue.length,
+-          insert: value || ''
+-        },
+-        annotations: [External.of(true)]
+-      });
+-    }
+-  }, [value, view]);
++  // NOTE: Causes race condition with yjs if the content in editor syncs faster than the content in echo state.
++  // (0, _react.useEffect)(function () {
++  //   if (value === undefined) {
++  //     return;
++  //   }
++  //   var currentValue = view ? view.state.doc.toString() : '';
++  //   if (view && value !== currentValue) {
++  //     view.dispatch({
++  //       changes: {
++  //         from: 0,
++  //         to: currentValue.length,
++  //         insert: value || ''
++  //       },
++  //       annotations: [External.of(true)]
++  //     });
++  //   }
++  // }, [value, view]);
+   return {
+     state: state,
+     setState: setState,
+diff --git a/esm/useCodeMirror.js b/esm/useCodeMirror.js
+index b56b9a0217c90e20d82f392cbc02a84cfd4a5867..2f661b36b59466ad72d00991379233aa2dc18dc4 100644
+--- a/esm/useCodeMirror.js
++++ b/esm/useCodeMirror.js
+@@ -145,22 +145,23 @@ export function useCodeMirror(props) {
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [theme, extensions, height, minHeight, maxHeight, width, minWidth, maxWidth, placeholderStr, editable, readOnly, defaultIndentWithTab, defaultBasicSetup, onChange, onUpdate]);
+-  useEffect(() => {
+-    if (value === undefined) {
+-      return;
+-    }
+-    var currentValue = view ? view.state.doc.toString() : '';
+-    if (view && value !== currentValue) {
+-      view.dispatch({
+-        changes: {
+-          from: 0,
+-          to: currentValue.length,
+-          insert: value || ''
+-        },
+-        annotations: [External.of(true)]
+-      });
+-    }
+-  }, [value, view]);
++  // NOTE: Causes race condition with yjs if the content in editor syncs faster than the content in echo state.
++  // useEffect(() => {
++  //   if (value === undefined) {
++  //     return;
++  //   }
++  //   var currentValue = view ? view.state.doc.toString() : '';
++  //   if (view && value !== currentValue) {
++  //     view.dispatch({
++  //       changes: {
++  //         from: 0,
++  //         to: currentValue.length,
++  //         insert: value || ''
++  //       },
++  //       annotations: [External.of(true)]
++  //     });
++  //   }
++  // }, [value, view]);
+   return {
+     state,
+     setState,

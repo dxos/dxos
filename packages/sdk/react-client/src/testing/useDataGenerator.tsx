@@ -57,5 +57,5 @@ export const useDataGenerator = <T,>({ generator, options }: UseDataGeneratorOpt
     const unsubscribe = generator(options);
 
     return () => unsubscribe();
-  }, [generator, options]);
+  }, [generator, ...Object.values(options ?? {})]);
 };

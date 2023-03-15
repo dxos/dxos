@@ -12,6 +12,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-components';
+import { YText } from '@dxos/text-model';
 
 import { ComposerModel } from '../../model';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
@@ -35,7 +36,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
   const extensions = useMemo(
     () => [
       markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-      ...(content && !('firstChild' in content) ? [yCollab(content, awareness)] : [])
+      ...(content instanceof YText ? [yCollab(content, awareness)] : [])
     ],
     [content, awareness]
   );

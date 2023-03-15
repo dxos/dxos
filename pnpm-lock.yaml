@@ -10,6 +10,9 @@ patchedDependencies:
   '@nrwl/vite@15.4.5':
     hash: 2zvjaizhm475w2b6tjziizqfw4
     path: patches/@nrwl__vite@15.4.5.patch
+  '@uiw/react-codemirror@4.19.9':
+    hash: axwedyug4ef2mtn6y4zz65xvem
+    path: patches/@uiw__react-codemirror@4.19.9.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
@@ -632,7 +635,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@uiw/react-codemirror': ^4.19.9
+      '@uiw/react-codemirror': 4.19.9
       codemirror: ^6.0.1
       lib0: ^0.2.65
       lodash.get: ^4.4.2
@@ -669,7 +672,7 @@ importers:
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
       '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
       '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      '@uiw/react-codemirror': 4.19.9_ait6gevfkmedunxpdipvuv4r6a
+      '@uiw/react-codemirror': 4.19.9_axwedyug4ef2mtn6y4zz65xvem_ait6gevfkmedunxpdipvuv4r6a
       codemirror: 6.0.1_@lezer+common@1.0.2
       lib0: 0.2.65
       lodash.get: 4.4.2
@@ -14519,7 +14522,7 @@ packages:
       - '@lezer/common'
     dev: false
 
-  /@uiw/react-codemirror/4.19.9_ait6gevfkmedunxpdipvuv4r6a:
+  /@uiw/react-codemirror/4.19.9_axwedyug4ef2mtn6y4zz65xvem_ait6gevfkmedunxpdipvuv4r6a:
     resolution: {integrity: sha512-U+A1fSfELMFFs5a+ZOPwCJKZMYaMy6QHOfNOOV7WhSveM7GYHT970GjTfs2dn1LlvhebwyK9ei0rCXZdsI9n9Q==}
     peerDependencies:
       '@codemirror/state': '>=6.0.0'
@@ -14542,6 +14545,7 @@ packages:
       - '@codemirror/language'
       - '@lezer/common'
     dev: false
+    patched: true
 
   /@ungap/promise-all-settled/1.1.2:
     resolution: {integrity: sha512-sL/cEvJWAnClXw0wHk85/2L0G6Sj8UB0Ctc1TEMbKSsmpRosqhwj9gWgFRZSrBr2f9tiXISwNhCPmlfqUqyb9Q==}
