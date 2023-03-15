@@ -39,7 +39,8 @@ module.exports = {
     },
 
     listStyleType: {
-      square: 'square'
+      square: 'square',
+      dash: '"-"'
     },
 
     // TODO(burdon): Levels.

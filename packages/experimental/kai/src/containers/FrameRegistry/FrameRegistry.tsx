@@ -156,7 +156,7 @@ export const FrameRegistryDialog = ({ open, onClose }: FrameRegistryDialogProps)
       onOpenChange={() => onClose()}
       title='Frame Plugins'
       closeLabel='Close'
-      slots={{ content: { className: 'overflow-hidden max-h-[50vh] max-w-full md:max-h-[50vh] md:max-w-[620px]' } }}
+      slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[620px] md:max-h-[640px]' } }}
     >
       <FrameRegistry />
     </Dialog>

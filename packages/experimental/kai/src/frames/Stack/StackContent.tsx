@@ -9,7 +9,7 @@ import { Document } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { RichTextComposer } from '@dxos/react-composer';
+import { MarkdownComposer, RichTextComposer } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
@@ -31,17 +31,33 @@ export const StackContent: FC<{
       //   throw new Error(`Invalid object type: ${object.__typename}`);
       // }
 
-      return (
-        <RichTextComposer
-          text={object.content}
-          slots={{
-            editor: {
-              className: 'kai-composer',
-              spellCheck
-            }
-          }}
-        />
-      );
+      switch (object.type) {
+        case DocumentType.Type.MARKDOWN:
+          // TODO(burdon): Different indent.
+          return (
+            <MarkdownComposer
+              text={object.content}
+              slots={{
+                editor: {
+                  spellCheck
+                }
+              }}
+            />
+          );
+
+        case DocumentType.Type.RICH_TEXT:
+        default:
+          return (
+            <RichTextComposer
+              text={object.content}
+              slots={{
+                editor: {
+                  spellCheck
+                }
+              }}
+            />
+          );
+      }
     }
 
     case Table.type.name: {

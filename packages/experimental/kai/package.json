@@ -74,11 +74,13 @@
     "react-drag-drop-files": "^2.3.8",
     "react-is": "^18.2.0",
     "react-leaflet": "^4.2.0",
+    "react-markdown": "^8.0.5",
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^6.4.0",
     "react-sketch-canvas": "^6.2.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-table": "^7.8.0",
+    "rehype-add-classes": "^1.0.0",
     "string-hash": "~1.1.3",
     "url-join": "^5.0.0"
   },

@@ -13,6 +13,7 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
+  Presentation,
   Stack as StackIcon,
   Sword,
   Table,
@@ -37,6 +38,7 @@ import {
   MapFrame,
   MessageFrame,
   Note,
+  PresenterFrame,
   SandboxFrame,
   SearchFrame,
   SketchFrame,
@@ -174,6 +176,18 @@ export const frameDefs: FrameDef[] = [
   },
   {
     module: {
+      id: 'dxos.module.frame.presenter',
+      type: 'dxos:type/frame',
+      displayName: 'Presenter',
+      description: 'Slide presentations.'
+    },
+    runtime: {
+      Icon: Presentation,
+      Component: PresenterFrame
+    }
+  },
+  {
+    module: {
       id: 'dxos.module.frame.note',
       type: 'dxos:type/frame',
       displayName: 'Notes',
@@ -267,6 +281,7 @@ export const defaultFrameId = 'dxos.module.frame.stack';
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.stack',
+  'dxos.module.frame.presenter',
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.contact',
