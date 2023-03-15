@@ -10,9 +10,9 @@ import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
 import { ClientDecorator, ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-components';
 
-import { ComposerDocument, Replicator, schema, usePlainYjsModel } from '../../testing';
+import { useTextModel } from '../../model';
+import { ComposerDocument, Replicator, schema, useYjsModel } from '../../testing';
 import { MarkdownComposer } from './Markdown';
-import { usePlainTextModel } from './model';
 
 export default {
   component: MarkdownComposer
@@ -26,11 +26,11 @@ export const Echo = {
     const identity = useIdentity();
     const space = useSpace(spaceKey);
     const [document] = useQuery(space, ComposerDocument.filter());
-    const model = usePlainTextModel({ identity, space, text: document?.content });
+    const model = useTextModel({ identity, space, text: document?.content });
 
     useDataGenerator({
       generator: generate ? loremGenerator : undefined,
-      options: { plainText: model?.fragment }
+      options: { text: model?.content }
     });
 
     return (
@@ -48,7 +48,7 @@ export const Echo = {
       schema,
       count: 2,
       onCreateSpace: async (space) => {
-        const document = new ComposerDocument({ content: new Text() });
+        const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
         await space?.db.add(document);
       }
     })
@@ -61,11 +61,11 @@ export const Yjs = {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
 
-    const model = usePlainYjsModel({ replicator });
+    const model = useYjsModel({ replicator });
 
     useDataGenerator({
       generator: generate ? loremGenerator : undefined,
-      options: { plainText: model.fragment }
+      options: { text: model.content }
     });
 
     return (

@@ -40,7 +40,7 @@ import {
   RichTextComposer,
   TipTapEditor,
   MarkdownComposerRef,
-  usePlainTextModel
+  useTextModel
 } from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components/OctokitProvider';
@@ -185,7 +185,7 @@ type ExportViewState = 'init' | 'pending' | 'response' | null;
 
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
   const identity = useIdentity();
-  const model = usePlainTextModel({ identity, space, text: document?.content });
+  const model = useTextModel({ identity, space, text: document?.content });
 
   const editorRef = useRef<MarkdownComposerRef>(null);
   const { octokit } = useOctokitContext();

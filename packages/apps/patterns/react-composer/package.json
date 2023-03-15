@@ -58,6 +58,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

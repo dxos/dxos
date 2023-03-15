@@ -8,33 +8,33 @@ import { useEffect } from 'react';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Doc } from '@dxos/text-model';
+import { YText, YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?
 type DataGenerator<T = { space: Space }> = (options: T) => UnsubscribeCallback;
 
 type LoremOptions = {
-  plainText?: ReturnType<Doc['getText']>;
+  text?: YText | YXmlFragment;
   period?: number;
 };
 
-export const loremGenerator: DataGenerator<LoremOptions> = ({ plainText, period = 1000 }) => {
-  if (!plainText) {
+export const loremGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000 }) => {
+  if (!text || text instanceof YXmlFragment) {
     return () => {};
   }
 
   const interval = setInterval(() => {
     const lorem = faker.lorem.sentence() + '\n';
-    const indices: number[] = [...plainText.toString().matchAll(/\./gi)].map((a) => a.index! + 2);
+    const indices: number[] = [...text.toString().matchAll(/\./gi)].map((a) => a.index! + 2);
     const startPosition = indices[Math.floor(Math.random() * indices.length) - 1] ?? 0;
     log('inserting', {
-      plainText,
+      text,
       indices,
       startPosition,
       lorem
     });
-    plainText.insert(startPosition, lorem);
-    log('inserted', { result: plainText.toString() });
+    text.insert(startPosition, lorem);
+    log('inserted', { result: text.toString() });
   }, period);
 
   return () => clearInterval(interval);

@@ -4,35 +4,29 @@
 
 import { useMemo, useReducer } from 'react';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { Doc } from 'yjs';
 
 import { Identity, Space, Text } from '@dxos/client';
 import { useSubscription } from '@dxos/react-client';
+import type { YText, YXmlFragment } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
-import { cursorColor, SpaceProvider } from '../../yjs';
+import { cursorColor, SpaceProvider } from './yjs';
 
 type Awareness = awarenessProtocol.Awareness;
 
-export type PlainTextModel = {
+export type ComposerModel = {
   id: string;
-  fragment: ReturnType<Doc['getText']>;
+  content: YText | YXmlFragment;
   awareness?: Awareness;
 };
 
-export type UsePlainTextModelOptions = {
+export type UseTextModelOptions = {
   identity?: Identity;
   space?: Space;
   text?: Text;
-  field?: string;
 };
 
-export const usePlainTextModel = ({
-  identity,
-  space,
-  text,
-  field = 'utf8'
-}: UsePlainTextModelOptions): PlainTextModel | undefined => {
+export const useTextModel = ({ identity, space, text }: UseTextModelOptions): ComposerModel | undefined => {
   // TODO(wittjosiah): Support `observer` with `forwardRef`.
   const [, forceUpdate] = useReducer((state) => state + 1, 0);
   useSubscription(forceUpdate, [text]);
@@ -55,10 +49,9 @@ export const usePlainTextModel = ({
     return provider;
   }, [identity, space, text?.doc]);
 
-  if (!text?.doc) {
+  if (!text?.doc || !text?.content) {
     return undefined;
   }
 
-  const fragment = text.doc.getText(field);
-  return { id: text.doc.guid, fragment, awareness };
+  return { id: text.doc.guid, content: text.content, awareness };
 };

@@ -11,6 +11,13 @@ message Mutation {
   int32 client_id = 2;
 }
 
+enum TextKind {
+  PLAIN = 0;
+  RICH = 1;
+}
+
 message Snapshot {
   bytes data = 1;
+  TextKind kind = 2;
+  string field = 3;
 }

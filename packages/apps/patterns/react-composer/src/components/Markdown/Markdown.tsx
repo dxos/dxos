@@ -13,14 +13,14 @@ import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-components';
 
+import { ComposerModel } from '../../model';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
-import { PlainTextModel } from './model';
 
 export type MarkdownComposerSlots = {};
 
 export type MarkdownComposerProps = {
-  model?: PlainTextModel;
+  model?: ComposerModel;
   slots?: MarkdownComposerSlots;
 };
 
@@ -29,15 +29,15 @@ export type MarkdownComposerRef = ReactCodeMirrorRef;
 const theme = EditorView.theme(markdownDarktheme);
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ model }, forwardedRef) => {
-  const { id, fragment, awareness } = model ?? {};
+  const { id, content, awareness } = model ?? {};
   const { themeMode } = useThemeContext();
 
   const extensions = useMemo(
     () => [
       markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-      ...(fragment ? [yCollab(fragment, awareness)] : [])
+      ...(content && !('firstChild' in content) ? [yCollab(content, awareness)] : [])
     ],
-    [fragment, awareness]
+    [content, awareness]
   );
 
   return (
@@ -53,7 +53,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
         syntaxHighlighting(markdownDarkHighlighting)
       ]}
       ref={forwardedRef}
-      value={fragment?.toString()}
+      value={content?.toString()}
       extensions={extensions}
     />
   );

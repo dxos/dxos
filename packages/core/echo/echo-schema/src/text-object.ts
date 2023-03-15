@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TextModel, type Doc } from '@dxos/text-model';
+import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { EchoObject } from './object';
 
@@ -21,6 +21,10 @@ export class Text extends EchoObject<TextModel> {
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
     return this._model?.doc;
+  }
+
+  get content(): YText | YXmlFragment | undefined {
+    return this.model?.content;
   }
 
   get model(): TextModel | undefined {

@@ -13,7 +13,7 @@ import { Doc } from 'yjs';
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { PlainTextModel } from '../components';
+import { ComposerModel } from '../model';
 import { cursorColor } from '../yjs';
 
 type Awareness = awarenessProtocol.Awareness;
@@ -146,13 +146,13 @@ export class AwarenessProvider extends Observable<any> {
  */
 export class Replicator {
   private readonly _update = new Event<Uint8Array>();
-  private _peers: PlainTextModel[] = [];
+  private _peers: ComposerModel[] = [];
 
-  setPeers(peers: PlainTextModel[]) {
+  setPeers(peers: ComposerModel[]) {
     this._peers = peers;
   }
 
-  createPeer = (doc: Doc = new Doc()): PlainTextModel => {
+  createPeer = (doc: Doc = new Doc()): ComposerModel => {
     const provider = new AwarenessProvider({ update: this._update, doc });
     provider.awareness.setLocalStateField('user', {
       name: 'Anonymous ' + Math.floor(Math.random() * 100),
@@ -161,9 +161,9 @@ export class Replicator {
     });
 
     // TODO(burdon): Create concrete class that implements SyncModel?
-    const model: PlainTextModel = {
+    const model: ComposerModel = {
       id: doc.guid,
-      fragment: doc.getText('utf8'),
+      content: doc.getText('content'),
       awareness: provider.awareness
     };
 
@@ -178,7 +178,7 @@ export type UseYjsModelOptions = {
   doc?: Doc;
 };
 
-export const usePlainYjsModel = ({ replicator, doc }: UseYjsModelOptions): PlainTextModel => {
+export const useYjsModel = ({ replicator, doc }: UseYjsModelOptions): ComposerModel => {
   const peer = useMemo(() => replicator.createPeer(doc), [doc]);
 
   return peer;
