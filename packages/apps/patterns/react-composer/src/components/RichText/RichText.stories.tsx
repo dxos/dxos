@@ -3,12 +3,12 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { Button, mx } from '@dxos/react-components';
+import { mx } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
 import { RichTextComposer, RichTextComposerProps } from './RichText';
@@ -21,10 +21,7 @@ const Story = ({
   spaceKey,
   id,
   ...args
-}: Omit<RichTextComposerProps, 'text'> & { spaceKey?: PublicKey; id?: number }) => {
-  // TODO(wittjosiah): Text being created isn't firing react updates.
-  const [, forceUpdate] = useReducer((state) => state + 1, 0);
-
+}: Omit<RichTextComposerProps, 'text'> & { spaceKey?: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Update on mutation?
   const [document] = useQuery(space, ComposerDocument.filter());
@@ -38,12 +35,8 @@ const Story = ({
     }
   }, [space]);
 
-  if (!document?.content) {
-    return <Button onClick={() => forceUpdate()}>Update</Button>;
-  }
-
   return (
-    <main className='grow p-4'>
+    <main className='flex-1 min-w-0 p-4'>
       <RichTextComposer
         {...args}
         text={document.content}

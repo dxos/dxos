@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@dxos/react-components": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@faker-js/faker": "^7.6.0",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
@@ -53,6 +54,7 @@
   },
   "optionalDependencies": {
     "@dxos/react-components": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@faker-js/faker": "^7.6.0"
   },
   "publishConfig": {

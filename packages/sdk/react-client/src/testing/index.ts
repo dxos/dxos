@@ -5,3 +5,4 @@
 export * from './ClientDecorator';
 export * from './ClientSpaceDecorator';
 export * from './ProfileInitializer';
+export * from './useDataGenerator';
