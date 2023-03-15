@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, DownloadSimple, FilePlus, UploadSimple } from '@phosphor-icons/react';
-import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useRef, useState } from 'react';
+import { DotsThreeVertical, FilePlus } from '@phosphor-icons/react';
+import React, { Dispatch, PropsWithChildren, ReactNode, SetStateAction, useCallback, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext, useParams } from 'react-router-dom';
 // todo(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -13,20 +13,9 @@ import TurndownService from 'turndown';
 import { Space } from '@dxos/client';
 import { useFileDownload } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import {
-  Button,
-  DropdownMenu,
-  getSize,
-  Input,
-  mx,
-  useTranslation,
-  ThemeContext,
-  DropdownMenuItem,
-  Dialog
-} from '@dxos/react-components';
+import { Button, DropdownMenu, getSize, Input, mx, useTranslation, ThemeContext, Dialog } from '@dxos/react-components';
 import { MarkdownComposer, RichTextComposer, TipTapEditor, MarkdownComposerRef } from '@dxos/react-composer';
 
-import { OctokitExplorer } from '../components/OctokitExplorer/OctokitExplorer';
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
 
@@ -43,20 +32,16 @@ const nestedParagraphOutput = / +\n/g;
 const DocumentPageContent = ({
   children,
   document,
-  handleExport,
+  dropdownMenuContent,
   handleImport,
-  handleExportToGithub,
-  handleImportFromGithub,
-  dialogOpen,
-  setDialogOpen
+  importDialogOpen,
+  setImportDialogOpen
 }: PropsWithChildren<{
   document: ComposerDocument;
-  handleExport?: () => void;
+  dropdownMenuContent?: ReactNode;
   handleImport?: (file: File) => Promise<void>;
-  handleExportToGithub?: () => Promise<void>;
-  handleImportFromGithub?: () => Promise<void>;
-  dialogOpen: boolean;
-  setDialogOpen: Dispatch<SetStateAction<boolean>>;
+  importDialogOpen?: boolean;
+  setImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
 }>) => {
   const { t } = useTranslation('composer');
   return (
@@ -83,56 +68,31 @@ const DocumentPageContent = ({
               </Button>
             }
           >
-            {handleExport && (
-              <DropdownMenuItem onClick={handleExport} className='gap-2 font-system-normal'>
-                <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
-                <span>{t('export to markdown label')}</span>
-              </DropdownMenuItem>
-            )}
-            {handleImport && (
-              <DropdownMenuItem className='gap-2 font-system-normal' onClick={() => setDialogOpen(true)}>
-                <UploadSimple className={mx(getSize(6), 'shrink-0')} />
-                <span>{t('import from markdown label')}</span>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              className='gap-2 font-system-normal'
-              onClick={handleExportToGithub}
-              disabled={!handleExportToGithub}
-            >
-              <DownloadSimple className={mx(getSize(6), 'shrink-0')} />
-              <span>{t('export to github label')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className='gap-2 font-system-normal'
-              onClick={handleImportFromGithub}
-              disabled={!handleImportFromGithub}
-            >
-              <UploadSimple className={mx(getSize(6), 'shrink-0')} />
-              <span>{t('import from github label')}</span>
-            </DropdownMenuItem>
+            {dropdownMenuContent}
           </DropdownMenu>
         </div>
-        <Dialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          title={t('confirm import title')}
-          slots={{ overlay: { className: 'backdrop-blur-sm' } }}
-        >
-          <p className='mlb-4'>{t('confirm import body')}</p>
-          <FileUploader
-            types={['md']}
-            classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
-            dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-            handleChange={handleImport}
+        {handleImport && (
+          <Dialog
+            open={importDialogOpen}
+            onOpenChange={setImportDialogOpen}
+            title={t('confirm import title')}
+            slots={{ overlay: { className: 'backdrop-blur-sm' } }}
           >
-            <FilePlus weight='duotone' className={getSize(8)} />
-            <span>{t('upload file message')}</span>
-          </FileUploader>
-          <Button className='block is-full' onClick={() => setDialogOpen(false)}>
-            {t('cancel label', { ns: 'appkit' })}
-          </Button>
-        </Dialog>
+            <p className='mlb-4'>{t('confirm import body')}</p>
+            <FileUploader
+              types={['md']}
+              classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
+              dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+              handleChange={handleImport}
+            >
+              <FilePlus weight='duotone' className={getSize(8)} />
+              <span>{t('upload file message')}</span>
+            </FileUploader>
+            <Button className='block is-full' onClick={() => setImportDialogOpen?.(false)}>
+              {t('cancel label', { ns: 'appkit' })}
+            </Button>
+          </Dialog>
+        )}
       </ThemeContext.Provider>
     </>
   );
@@ -186,27 +146,26 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
 });
 
 const PureMarkdownDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<MarkdownComposerRef>(null);
   const { octokit } = useOctokitContext();
 
   const _download = useFileDownload();
 
-  const [ghExplorerOpen, setGhExplorerOpen] = useState(false);
-
   const handleExportToGithub = useCallback(async () => {
-    setGhExplorerOpen(true);
+    // setGhExplorerOpen(true);
   }, [document, octokit]);
 
   const handleImportFromGithub = useCallback(async () => {
-    setGhExplorerOpen(true);
+    // setGhExplorerOpen(true);
   }, [document, octokit]);
 
   return (
     <>
-      <OctokitExplorer open={ghExplorerOpen} onOpenChange={setGhExplorerOpen} />
       <DocumentPageContent
-        {...{ document, dialogOpen, setDialogOpen, ...(octokit && { handleExportToGithub, handleImportFromGithub }) }}
+        {...{
+          document,
+          ...(octokit && { handleExportToGithub, handleImportFromGithub })
+        }}
       >
         <MarkdownComposer
           ref={editorRef}
