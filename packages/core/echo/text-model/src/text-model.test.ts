@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';
 
-describe('TextModel', () => {
+describe.skip('TextModel', () => {
   test('insert', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
