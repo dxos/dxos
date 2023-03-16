@@ -7,9 +7,10 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
-import { Document as DocumentType, DocumentStack, Presentation } from '@dxos/kai-types';
-import { useQuery, observer, Space, useSubscription } from '@dxos/react-client';
+import { Document, DocumentStack, Presentation } from '@dxos/kai-types';
+import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
+import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
@@ -108,10 +109,10 @@ const Editor: FC<{ space: Space; presentation: Presentation }> = ({ space, prese
         stack={presentation.stack}
         items={[
           {
-            type: DocumentType.type.name,
+            type: Document.type.name,
             label: 'New slide',
             Icon: Layout,
-            onCreate: async (space: Space) => space!.db.add(new DocumentType({ type: DocumentType.Type.MARKDOWN }))
+            onCreate: async (space: Space) => space!.db.add(new Document())
           }
         ]}
       />
@@ -137,7 +138,7 @@ const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide'
       .filter(Boolean) as Text[];
 
     setContent(texts.map((text) => text.content!.toString()) ?? []);
-  }, [texts]);
+  }, [presentation]);
 
   // First time.
   useEffect(handleUpdate, []);

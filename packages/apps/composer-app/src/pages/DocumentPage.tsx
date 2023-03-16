@@ -237,13 +237,13 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   }, [ghFileValue]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhFileId && model?.fragment && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhFileId && model?.content && editorRef.current?.view && editorRef.current?.state?.doc) {
       try {
         const { owner, repo, path } = docGhFileId;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: model.fragment.toString().length, insert: atob(data.content) }
+            changes: { from: 0, to: model.content.toString().length, insert: atob(data.content) }
           });
         } else {
           log.error('Did not receive file with content from Github.');
@@ -254,15 +254,15 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     } else {
       log.error('Not prepared to import when requested.');
     }
-  }, [octokit, docGhFileId, editorRef.current, model?.fragment]);
+  }, [octokit, docGhFileId, editorRef.current, model?.content]);
 
   const exportGhFileContent = useCallback(
     async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
-      if (octokit && docGhFileId && model?.fragment) {
+      if (octokit && docGhFileId && model?.content) {
         setExportViewState('pending');
         try {
           const { owner, repo, path, ref } = docGhFileId;
-          const content = model.fragment.toString();
+          const content = model.content.toString();
           const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
           if (Array.isArray(fileData) || fileData.type !== 'file') {
             log.error('Attempted to export to a destination in Github that is not a file.');
@@ -309,7 +309,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         setGhPrValue(null);
       }
     },
-    [octokit, docGhFileId, model?.fragment]
+    [octokit, docGhFileId, model?.content]
   );
 
   const dropdownMenuContent = docGhFileId ? (
