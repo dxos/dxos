@@ -26,10 +26,20 @@ export const Deck = ({
   onSlideChange,
   onToggleFullscreen
 }: DeckProps) => {
-  const [slide, setSlide] = useState(controlledSlide);
+  const [slide, setSlide] = useState(controlledSlide); // TODO(burdon): Move up.
   useEffect(() => {
-    onSlideChange?.(slide);
-  }, [slide]);
+    if (slide !== controlledSlide) {
+      setSlide(controlledSlide);
+    }
+  }, [slide, controlledSlide]);
+
+  const handleUpdateSlide = (slide: number) => {
+    if (onSlideChange) {
+      onSlideChange(slide);
+    } else {
+      setSlide(slide);
+    }
+  };
 
   const Expand = () => {
     return (
@@ -49,7 +59,7 @@ export const Deck = ({
           index={slide}
           count={slides.length}
           keys={fullscreen}
-          onMove={setSlide}
+          onMove={handleUpdateSlide}
           onClose={() => onToggleFullscreen?.(false)}
         />
       }
