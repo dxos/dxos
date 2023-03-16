@@ -20,7 +20,7 @@ import { DataServiceHost } from './data-service-host';
 export class DatabaseBackendHost {
   private _echoProcessor!: EchoProcessor;
   private _itemManager!: ItemManager;
-  private _itemDemuxer!: ItemDemuxer;
+  public _itemDemuxer!: ItemDemuxer;
 
   constructor(
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,

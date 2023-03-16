@@ -37,8 +37,7 @@ export class EchoDatabase {
     public readonly _backend: DatabaseBackendProxy,
     private readonly _router: DatabaseRouter
   ) {
-    // TODO(dmaretskyi): Don't debounce?
-    this._itemManager.update.on((item) => this._update([item]));
+    this._backend.itemUpdate.on(this._update.bind(this));
     this._update([]);
   }
 
@@ -111,9 +110,9 @@ export class EchoDatabase {
           }
         ]
       });
-      assert(result.objectsCreated.length === 1);
+      assert(result.objectsUpdated.length === 1);
 
-      obj[base]._bind(result.objectsCreated[0]);
+      obj[base]._bind(result.objectsUpdated[0]);
     } finally {
       if (batchCreated) {
         this._backend.commitBatch();
@@ -177,6 +176,14 @@ export class EchoDatabase {
         this._objects.set(object.id, obj);
         obj[base]._database = this;
         obj[base]._bind(object);
+      }
+    }
+
+    // Dispatch update events.
+    for(const item of changed) {
+      const obj = this._objects.get(item.id);
+      if (obj) {
+        obj[base]._itemUpdate();
       }
     }
 
