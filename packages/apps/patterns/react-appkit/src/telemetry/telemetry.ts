@@ -13,6 +13,7 @@ export const BASE_TELEMETRY_PROPERTIES: any = {};
 if (navigator.storage?.estimate) {
   setInterval(async () => {
     try {
+      // TODO(mykola): LocalStorage is not available in Chrome extensions.
       const storageEstimate = await navigator.storage.estimate();
       BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
       BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
@@ -45,6 +46,7 @@ export const isTelemetryDisabled = (namespace: string) =>
 export const initializeAppTelemetry = async (namespace: string, config: Config) => {
   let group: string | null = 'default';
   try {
+    // TODO(mykola): LocalStorage is not available in Chrome extensions.
     group = localStorage.getItem(`${namespace}:telemetry-group`);
   } catch (err) {
     log.warn(String(err));
@@ -56,6 +58,7 @@ export const initializeAppTelemetry = async (namespace: string, config: Config) 
   BASE_TELEMETRY_PROPERTIES.environment = environment;
   let telemetryDisabled = false;
   try {
+    // TODO(mykola): LocalStorage is not available in Chrome extensions.
     telemetryDisabled = isTelemetryDisabled(namespace);
   } catch (err) {
     log.warn(String(err));
