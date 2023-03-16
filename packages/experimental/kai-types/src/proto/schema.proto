@@ -161,6 +161,12 @@ message DocumentStack {
   string subject_id = 10; // TODO(burdon): Create external link instead.
 }
 
+message Presentation {
+  option (object) = true;
+
+  DocumentStack stack = 1;
+}
+
 // TODO(burdon): Rename;
 // TODO(burdon): System type for external GUIDs.
 message Source {
