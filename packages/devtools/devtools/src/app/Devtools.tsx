@@ -18,7 +18,7 @@ const Routes = () => {
 };
 
 const Telemetry = ({ namespace }: { namespace: string }) => {
-  useTelemetry({ namespace, router: false });
+  useTelemetry({ namespace });
   return null;
 };
 
