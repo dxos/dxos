@@ -32,5 +32,12 @@ export const composer = {
   'error github markdown path message': 'This is not a valid path to a Markdown file in Github.',
   'paste url to file in github label': 'Paste the URL to the Markdown file in Github',
   'paste url to file in github description':
-    'Navigate to the file in Github, then copy the URL in your browser and paste it here.'
+    'Navigate to the file in Github, then copy the URL in your browser and paste it here.',
+  'paste url to file in github placeholder': 'https://github.com/owner/repo/blob/main/path/to/README.md',
+  'confirm export title': 'Export to Github',
+  'export to github success message':
+    '<resultStyle>Success!</resultStyle> Your changes are now available at this Github pull request: <prLink>{{linkText}}</prLink>',
+  'github branch name label': 'Name of the branch to create',
+  'github branch name placeholder': 'update-readme',
+  'github commit message label': 'Updated README.md'
 };

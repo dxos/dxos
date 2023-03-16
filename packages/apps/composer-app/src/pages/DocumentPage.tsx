@@ -32,7 +32,8 @@ import {
   useTranslation,
   ThemeContext,
   Dialog,
-  DropdownMenuItem
+  DropdownMenuItem,
+  Trans
 } from '@dxos/react-components';
 import {
   MarkdownComposer,
@@ -178,6 +179,8 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
   );
 });
 
+type ExportViewState = 'init' | 'pending' | 'response' | null;
+
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
   const identity = useIdentity();
   const model = usePlainTextModel({ identity, space, text: document?.content });
@@ -187,8 +190,12 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const { t } = useTranslation('composer');
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
   const [ghBindOpen, setGhBindOpen] = useState(false);
   const [ghFileValue, setGhFileValue] = useState('');
+  const [ghBranchValue, setGhBranchValue] = useState('');
+  const [ghMessageValue, setGhMessageValue] = useState('');
+  const [ghPrValue, setGhPrValue] = useState<string | null>(null);
 
   const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
     try {
@@ -225,14 +232,18 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
 
   const importGhFileContent = useCallback(async () => {
     if (octokit && docGhFileId && model?.fragment && editorRef.current?.view && editorRef.current?.state?.doc) {
-      const { owner, repo, path } = docGhFileId;
-      const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
-      if (!Array.isArray(data) && data.type === 'file') {
-        editorRef.current.view.dispatch({
-          changes: { from: 0, to: model.fragment.toString().length, insert: atob(data.content) }
-        });
-      } else {
-        log.error('Did not receive file with content from Github.');
+      try {
+        const { owner, repo, path } = docGhFileId;
+        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
+        if (!Array.isArray(data) && data.type === 'file') {
+          editorRef.current.view.dispatch({
+            changes: { from: 0, to: model.fragment.toString().length, insert: atob(data.content) }
+          });
+        } else {
+          log.error('Did not receive file with content from Github.');
+        }
+      } catch (err) {
+        log.error('Failed to import from Github', err);
       }
     } else {
       log.error('Not prepared to import when requested.');
@@ -242,50 +253,54 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const exportGhFileContent = useCallback(
     async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
       if (octokit && docGhFileId && model?.fragment) {
-        const { owner, repo, path, ref } = docGhFileId;
-        const content = model.fragment.toString();
-        console.log('[Attempting export]');
-        const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
-        if (Array.isArray(fileData) || fileData.type !== 'file') {
-          log.error('Attempted to export to a destination in Github that is not a file.');
-          return;
-        }
-        const { sha: fileSha } = fileData;
-        const {
-          data: {
-            object: { sha: baseSha }
+        setExportViewState('pending');
+        try {
+          const { owner, repo, path, ref } = docGhFileId;
+          const content = model.fragment.toString();
+          const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
+          if (Array.isArray(fileData) || fileData.type !== 'file') {
+            log.error('Attempted to export to a destination in Github that is not a file.');
+            return;
           }
-        } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
-        console.log('[Creating ref]', baseSha);
-        await octokit.rest.git.createRef({
-          owner,
-          repo,
-          ref: `refs/heads/${branchName}`,
-          sha: baseSha
-        });
-        console.log('[Committing file update]', fileSha, content);
-        await octokit.rest.repos.createOrUpdateFileContents({
-          owner,
-          repo,
-          path,
-          message: commitMessage,
-          branch: branchName,
-          sha: fileSha,
-          content: btoa(content)
-        });
-        console.log('[Creating PR]');
-        const {
-          data: { html_url: prUrl }
-        } = await octokit.rest.pulls.create({
-          owner,
-          repo,
-          head: branchName,
-          base: ref,
-          title: commitMessage
-        });
-        console.log('[Done]', prUrl);
+          const { sha: fileSha } = fileData;
+          const {
+            data: {
+              object: { sha: baseSha }
+            }
+          } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
+          await octokit.rest.git.createRef({
+            owner,
+            repo,
+            ref: `refs/heads/${branchName}`,
+            sha: baseSha
+          });
+          await octokit.rest.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path,
+            message: commitMessage,
+            branch: branchName,
+            sha: fileSha,
+            content: btoa(content)
+          });
+          const {
+            data: { html_url: prUrl }
+          } = await octokit.rest.pulls.create({
+            owner,
+            repo,
+            head: branchName,
+            base: ref,
+            title: commitMessage
+          });
+          setGhPrValue(prUrl);
+          setExportViewState('response');
+        } catch (err) {
+          log.error('Failed to export to Github', err);
+          setGhPrValue(null);
+        }
       } else {
         log.error('Not prepared to export when requested.');
+        setGhPrValue(null);
       }
     },
     [octokit, docGhFileId, model?.fragment]
@@ -307,12 +322,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         <FileArrowDown className={getSize(4)} />
         <span>{t('import from github label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem
-        className='flex items-center gap-2'
-        onClick={() =>
-          exportGhFileContent({ branchName: 'composer-test/discard-this', commitMessage: 'Test PR from Composer' })
-        }
-      >
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setExportViewState('init')}>
         <FileArrowUp className={getSize(4)} />
         <span>{t('export to github label')}</span>
       </DropdownMenuItem>
@@ -362,6 +372,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         <Input
           label={t('paste url to file in github label')}
           description={t('paste url to file in github description')}
+          placeholder={t('paste url to file in github placeholder')}
           value={ghFileValue}
           onChange={({ target: { value } }) => setGhFileValue(value)}
           {...(ghFileValue.length > 0 &&
@@ -388,6 +399,74 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         ]}
       >
         <p className='plb-2'>{t('confirm import body')}</p>
+      </Dialog>
+      <Dialog
+        title={t('confirm export title')}
+        open={!!exportViewState}
+        onOpenChange={(nextOpen) => {
+          setExportViewState(nextOpen ? 'init' : null);
+        }}
+      >
+        {exportViewState === 'response' ? (
+          <>
+            <p>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'export to github success message',
+                  values: { linkText: ghPrValue },
+                  components: {
+                    resultStyle: <span className='text-success-600 dark:text-success-300'>_</span>,
+                    prLink: (
+                      <a
+                        href={ghPrValue!}
+                        target='_blank'
+                        rel='noreferrer'
+                        className='text-primary-600 dark:text-primary-600 hover:text-primary-700 dark:hover:text-primary-500'
+                      >
+                        _
+                      </a>
+                    )
+                  }
+                }}
+              />
+            </p>
+            <div role='none' className='flex justify-end'>
+              <Button variant='primary' onClick={() => setExportViewState(null)}>
+                {t('done label', { ns: 'os' })}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div role='none' className='mbs-2 space-b-2'>
+            <Input
+              disabled={exportViewState === 'pending'}
+              label={t('github branch name label')}
+              placeholder={t('github branch name placeholder')}
+              value={ghBranchValue}
+              onChange={({ target: { value } }) => setGhBranchValue(value)}
+              slots={{ input: { autoFocus: true, className: 'font-mono' } }}
+            />
+            <Input
+              disabled={exportViewState === 'pending'}
+              label={t('github commit message label')}
+              placeholder={t('github commit message placeholder')}
+              value={ghMessageValue}
+              onChange={({ target: { value } }) => setGhMessageValue(value)}
+              size='textarea'
+            />
+            <div role='none' className='flex justify-end gap-2'>
+              <Button onClick={() => setExportViewState(null)}>{t('close label', { ns: 'os' })}</Button>
+              <Button
+                disabled={exportViewState === 'pending'}
+                variant='primary'
+                onClick={() => exportGhFileContent({ branchName: ghBranchValue, commitMessage: ghMessageValue })}
+              >
+                {t('continue label', { ns: 'os' })}
+              </Button>
+            </div>
+          </div>
+        )}
       </Dialog>
     </>
   );
