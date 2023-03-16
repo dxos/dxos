@@ -7,7 +7,7 @@ import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAs
 
 import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 import { ItemID, schema } from '@dxos/protocols';
-import { Mutation, Snapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { TextMutation, TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 type TextModelState = {
   doc: Doc;
@@ -15,18 +15,25 @@ type TextModelState = {
   field: string;
 };
 
-class TextModelStateMachine implements StateMachine<TextModelState, Mutation, Snapshot> {
+class TextModelStateMachine implements StateMachine<TextModelState, TextMutation, TextSnapshot> {
   private _text = { doc: new Doc(), kind: TextKind.PLAIN, field: 'content' };
 
   getState(): TextModelState {
     return this._text;
   }
 
-  process(mutation: Mutation): void {
-    const { update, clientId } = mutation;
-    assert(update);
+  process(mutation: TextMutation): void {
+    const { update, clientId, kind, field } = mutation;
 
-    if (clientId !== this._text.doc.clientID) {
+    if (kind) {
+      this._text.kind = kind;
+    }
+
+    if (field) {
+      this._text.field = field;
+    }
+
+    if (update && clientId !== this._text.doc.clientID) {
       // Passing empty buffer make the process hang: https://github.com/yjs/yjs/issues/498
       assert(update.length > 0, 'update buffer is empty');
 
@@ -42,7 +49,7 @@ class TextModelStateMachine implements StateMachine<TextModelState, Mutation, Sn
     };
   }
 
-  reset(snapshot: Snapshot): void {
+  reset(snapshot: TextSnapshot): void {
     assert(snapshot.data);
     applyUpdate(this._text.doc, snapshot.data);
     this._text.kind = snapshot.kind;
@@ -50,12 +57,12 @@ class TextModelStateMachine implements StateMachine<TextModelState, Mutation, Sn
   }
 }
 
-export class TextModel extends Model<TextModelState, Mutation> {
+export class TextModel extends Model<TextModelState, TextMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/text',
     stateMachine: () => new TextModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.model.text.Mutation'),
-    snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
+    mutationCodec: schema.getCodecForType('dxos.echo.model.text.TextMutation'),
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.text.TextSnapshot')
   };
 
   private _unsubscribe: (() => void) | undefined;
@@ -65,7 +72,7 @@ export class TextModel extends Model<TextModelState, Mutation> {
     meta: ModelMeta,
     itemId: ItemID,
     getState: () => TextModelState,
-    writeStream?: MutationWriter<Mutation>
+    writeStream?: MutationWriter<TextMutation>
   ) {
     super(meta, itemId, getState, writeStream);
 

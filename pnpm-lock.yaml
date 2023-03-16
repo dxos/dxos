@@ -3876,6 +3876,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       use-subscription: ^1.8.0
+      yjs: ^13.5.44
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
@@ -3899,6 +3900,7 @@ importers:
       '@dxos/react-components': link:../../common/react-components
       '@dxos/text-model': link:../../core/echo/text-model
       '@faker-js/faker': 7.6.0
+      yjs: 13.5.44
     devDependencies:
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y

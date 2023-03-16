@@ -2,13 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
+import { TextKind, TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { EchoObject } from './object';
 
 export class Text extends EchoObject<TextModel> {
-  constructor(text?: string) {
+  constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
+
+    const mutation: TextMutation = {};
+    if (kind) {
+      mutation.kind = kind;
+    }
+
+    if (field) {
+      mutation.field = field;
+    }
+
+    if (Object.keys(mutation).length > 0) {
+      this._mutate(mutation);
+    }
+
     if (text) {
       this.model?.insert(text, 0);
     }

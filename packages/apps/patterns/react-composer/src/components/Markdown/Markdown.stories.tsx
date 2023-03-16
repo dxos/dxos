@@ -6,6 +6,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
 import { ClientDecorator, ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-components';
@@ -16,6 +17,15 @@ import { MarkdownComposer } from './Markdown';
 
 export default {
   component: MarkdownComposer
+};
+
+export const Default = {
+  args: {
+    model: {
+      id: 'editor',
+      content: 'Hello, Storybook!'
+    }
+  }
 };
 
 export const Echo = {
@@ -30,7 +40,7 @@ export const Echo = {
 
     useDataGenerator({
       generator: generate ? loremGenerator : undefined,
-      options: { text: model?.content }
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 
     return (
@@ -55,17 +65,18 @@ export const Echo = {
   ]
 };
 
-const replicator = new Replicator();
+const replicator = new Replicator(TextKind.PLAIN);
 export const Yjs = {
   render: () => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
 
-    const model = useYjsModel({ replicator });
+    const [id] = useState(PublicKey.random().toHex());
+    const model = useYjsModel({ id, replicator });
 
     useDataGenerator({
       generator: generate ? loremGenerator : undefined,
-      options: { text: model.content }
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 
     return (

@@ -12,6 +12,7 @@ import { Doc } from 'yjs';
 
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { ComposerModel } from '../model';
 import { cursorColor } from '../yjs';
@@ -148,11 +149,13 @@ export class Replicator {
   private readonly _update = new Event<Uint8Array>();
   private _peers: ComposerModel[] = [];
 
+  constructor(private readonly _kind: TextKind) {}
+
   setPeers(peers: ComposerModel[]) {
     this._peers = peers;
   }
 
-  createPeer = (doc: Doc = new Doc()): ComposerModel => {
+  createPeer = (id: string, doc: Doc = new Doc()): ComposerModel => {
     const provider = new AwarenessProvider({ update: this._update, doc });
     provider.awareness.setLocalStateField('user', {
       name: 'Anonymous ' + Math.floor(Math.random() * 100),
@@ -163,8 +166,9 @@ export class Replicator {
     // TODO(burdon): Create concrete class that implements SyncModel?
     const model: ComposerModel = {
       id: doc.guid,
-      content: doc.getText('content'),
-      awareness: provider.awareness
+      content: this._kind === TextKind.PLAIN ? doc.getText('content') : doc.getXmlFragment('content'),
+      provider,
+      peer: { id }
     };
 
     this._peers.push(model);
@@ -175,11 +179,12 @@ export class Replicator {
 
 export type UseYjsModelOptions = {
   replicator: Replicator;
+  id: string;
   doc?: Doc;
 };
 
-export const useYjsModel = ({ replicator, doc }: UseYjsModelOptions): ComposerModel => {
-  const peer = useMemo(() => replicator.createPeer(doc), [doc]);
+export const useYjsModel = ({ replicator, id, doc }: UseYjsModelOptions): ComposerModel => {
+  const peer = useMemo(() => replicator.createPeer(id, doc), [doc]);
 
   return peer;
 };

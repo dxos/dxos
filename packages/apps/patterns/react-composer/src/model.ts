@@ -8,16 +8,20 @@ import * as awarenessProtocol from 'y-protocols/awareness';
 import { Identity, Space, Text } from '@dxos/client';
 import { useSubscription } from '@dxos/react-client';
 import type { YText, YXmlFragment } from '@dxos/text-model';
-import { humanize } from '@dxos/util';
 
-import { cursorColor, SpaceProvider } from './yjs';
+import { SpaceProvider } from './yjs';
 
 type Awareness = awarenessProtocol.Awareness;
+type Provider = { awareness: Awareness };
 
 export type ComposerModel = {
   id: string;
-  content: YText | YXmlFragment;
-  awareness?: Awareness;
+  content: string | YText | YXmlFragment;
+  provider?: Provider;
+  peer?: {
+    id: string;
+    name?: string;
+  };
 };
 
 export type UseTextModelOptions = {
@@ -31,27 +35,25 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Co
   const [, forceUpdate] = useReducer((state) => state + 1, 0);
   useSubscription(forceUpdate, [text]);
 
-  const { awareness } = useMemo(() => {
+  const provider = useMemo(() => {
     if (!space || !text?.doc) {
-      return { awareness: undefined };
+      return undefined;
     }
 
-    const provider = new SpaceProvider({ space, doc: text.doc });
-    if (identity) {
-      provider.awareness.setLocalStateField('user', {
-        name: identity.profile?.displayName ?? humanize(identity.identityKey),
-        // TODO(wittjosiah): Pick colours from theme based on identity key.
-        color: cursorColor.color,
-        colorLight: cursorColor.light
-      });
-    }
-
-    return provider;
+    return new SpaceProvider({ space, doc: text.doc });
   }, [identity, space, text?.doc]);
 
   if (!text?.doc || !text?.content) {
     return undefined;
   }
 
-  return { id: text.doc.guid, content: text.content, awareness };
+  return {
+    id: text.doc.guid,
+    content: text.content,
+    provider,
+    peer: identity && {
+      id: identity.identityKey.toHex(),
+      name: identity.profile?.displayName
+    }
+  };
 };
