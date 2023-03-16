@@ -85,6 +85,9 @@ export const Presenter = ({
   } = useResizeDetector({
     refreshMode: 'debounce',
     refreshRate: 200,
+    refreshOptions: {
+      leading: true
+    },
     onResize: (width, height) => {
       if (width && height) {
         setProps(createProps({ width, height }));
@@ -99,7 +102,7 @@ export const Presenter = ({
       className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-gray-800')}
     >
       {width && height && (
-        <div className={mx('flex flex-col absolute', defaultStyles)} style={props}>
+        <div className={mx('flex flex-col absolute transition', defaultStyles)} style={props}>
           <ReactMarkdown rehypePlugins={[[addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}
