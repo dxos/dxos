@@ -37,10 +37,11 @@ import {
 } from '@dxos/react-components';
 import {
   MarkdownComposer,
-  RichTextComposer,
-  TipTapEditor,
   MarkdownComposerRef,
-  usePlainTextModel
+  RichTextComposer,
+  TextKind,
+  TipTapEditor,
+  useTextModel
 } from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components/OctokitProvider';
@@ -134,7 +135,10 @@ const DocumentPageContent = observer(
   }
 );
 
-const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
+const RichTextDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
+  const identity = useIdentity();
+  const model = useTextModel({ identity, space, text: document?.content });
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
 
@@ -168,7 +172,7 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
     <DocumentPageContent {...{ document, handleExport, handleImport, dialogOpen, setDialogOpen }}>
       <RichTextComposer
         ref={editorRef}
-        text={document.content}
+        model={model}
         slots={{
           root: {
             role: 'none',
@@ -185,7 +189,7 @@ type ExportViewState = 'init' | 'pending' | 'response' | null;
 
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
   const identity = useIdentity();
-  const model = usePlainTextModel({ identity, space, text: document?.content });
+  const model = useTextModel({ identity, space, text: document?.content });
 
   const editorRef = useRef<MarkdownComposerRef>(null);
   const { octokit } = useOctokitContext();
@@ -233,13 +237,13 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   }, [ghFileValue]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhFileId && model?.fragment && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhFileId && model?.content && editorRef.current?.view && editorRef.current?.state?.doc) {
       try {
         const { owner, repo, path } = docGhFileId;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: model.fragment.toString().length, insert: atob(data.content) }
+            changes: { from: 0, to: model.content.toString().length, insert: atob(data.content) }
           });
         } else {
           log.error('Did not receive file with content from Github.');
@@ -250,15 +254,15 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     } else {
       log.error('Not prepared to import when requested.');
     }
-  }, [octokit, docGhFileId, editorRef.current, model?.fragment]);
+  }, [octokit, docGhFileId, editorRef.current, model?.content]);
 
   const exportGhFileContent = useCallback(
     async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
-      if (octokit && docGhFileId && model?.fragment) {
+      if (octokit && docGhFileId && model?.content) {
         setExportViewState('pending');
         try {
           const { owner, repo, path, ref } = docGhFileId;
-          const content = model.fragment.toString();
+          const content = model.content.toString();
           const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
           if (Array.isArray(fileData) || fileData.type !== 'file') {
             log.error('Attempted to export to a destination in Github that is not a file.');
@@ -305,7 +309,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         setGhPrValue(null);
       }
     },
-    [octokit, docGhFileId, model?.fragment]
+    [octokit, docGhFileId, model?.content]
   );
 
   const dropdownMenuContent = docGhFileId ? (
@@ -483,10 +487,10 @@ export const DocumentPage = observer(() => {
   return (
     <div role='none' className='pli-14 plb-11'>
       {document && space ? (
-        document.textintention === 'markdown' ? (
+        document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />
         ) : (
-          <PureRichTextDocumentPage document={document} />
+          <RichTextDocumentPage document={document} space={space} />
         )
       ) : (
         <p role='alert' className='p-8 text-center'>

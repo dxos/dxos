@@ -7,18 +7,33 @@ import urlJoin from 'url-join';
 
 import { Document, Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
-import { Config, Space, useQuery } from '@dxos/react-client';
+import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { MarkdownComposer, RichTextComposer, usePlainTextModel } from '@dxos/react-composer';
+import { MarkdownComposer, RichTextComposer, useTextModel, YText, YXmlFragment } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
 import { getColumnType } from '../Table';
 
-// TODO(burdon): Normalize API for both editors.
-const Markdown: FC<{ space: Space; content: Text }> = ({ space, content }) => {
-  const model = usePlainTextModel({ space, text: content });
-  return <MarkdownComposer model={model} />;
+const Composer: FC<{ space: Space; content: Text; spellCheck: boolean }> = ({ space, content, spellCheck }) => {
+  const identity = useIdentity();
+  const model = useTextModel({ identity, space, text: content });
+  if (model?.content instanceof YText) {
+    return <MarkdownComposer model={model} />;
+  } else if (model?.content instanceof YXmlFragment) {
+    return (
+      <RichTextComposer
+        model={model}
+        slots={{
+          editor: {
+            spellCheck
+          }
+        }}
+      />
+    );
+  } else {
+    return null;
+  }
 };
 
 export const StackContent: FC<{
@@ -36,24 +51,7 @@ export const StackContent: FC<{
       // if (!(object instanceof DocumentType)) {
       //   throw new Error(`Invalid object type: ${object.__typename}`);
       // }
-
-      switch (object.type) {
-        case DocumentType.Type.MARKDOWN:
-          return <Markdown space={space} content={object.content} />;
-
-        case DocumentType.Type.RICH_TEXT:
-        default:
-          return (
-            <RichTextComposer
-              text={object.content}
-              slots={{
-                editor: {
-                  spellCheck
-                }
-              }}
-            />
-          );
-      }
+      return <Composer space={space} content={object.content} spellCheck={spellCheck} />;
     }
 
     case Table.type.name: {

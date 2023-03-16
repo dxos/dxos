@@ -3,4 +3,3 @@
 //
 
 export * from './Markdown';
-export * from './model';
