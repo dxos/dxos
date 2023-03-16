@@ -11,7 +11,6 @@ export const ExplorerFrame = React.lazy(() => import('./Explorer'));
 export const KanbanFrame = React.lazy(() => import('./Kanban'));
 export const MapFrame = React.lazy(() => import('./Map'));
 export const MessageFrame = React.lazy(() => import('./Message'));
-export const PresenterFrame = React.lazy(() => import('./Presenter'));
 export const SandboxFrame = React.lazy(() => import('./Sandbox'));
 export const SearchFrame = React.lazy(() => import('./Search'));
 export const SketchFrame = React.lazy(() => import('./Sketch'));
@@ -26,6 +25,11 @@ export const Document = {
 export const Stack = {
   Frame: React.lazy(() => import('./Stack/StackFrame')),
   List: React.lazy(() => import('./Stack/StackList')) // TODO(burdon): Remove.
+};
+
+export const Presenter = {
+  Frame: React.lazy(() => import('./Presenter/PresenterFrame')),
+  List: React.lazy(() => import('./Presenter/PresenterList')) // TODO(burdon): Remove.
 };
 
 export const Note = {

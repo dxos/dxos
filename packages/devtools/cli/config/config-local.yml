@@ -13,6 +13,7 @@ runtime:
     signal:
       server: ws://127.0.0.1:9002/.well-known/dx/signal
     ice:
+      - urls: stun:127.0.0.1:3478
       - urls: turn:127.0.0.1:3478
         username: dxos
         credential: dxos

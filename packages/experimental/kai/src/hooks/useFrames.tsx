@@ -38,7 +38,7 @@ import {
   MapFrame,
   MessageFrame,
   Note,
-  PresenterFrame,
+  Presenter,
   SandboxFrame,
   SearchFrame,
   SketchFrame,
@@ -183,7 +183,8 @@ export const frameDefs: FrameDef[] = [
     },
     runtime: {
       Icon: Presentation,
-      Component: PresenterFrame
+      Component: Presenter.Frame,
+      List: Presenter.List
     }
   },
   {
@@ -276,12 +277,12 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.presenter';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.stack',
-  // 'dxos.module.frame.presenter',
+  'dxos.module.frame.presenter',
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.contact',
