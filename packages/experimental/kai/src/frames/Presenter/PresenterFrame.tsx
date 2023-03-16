@@ -38,7 +38,7 @@ export const PresenterFrame = observer(() => {
         if (!stack) {
           const content = [
             '# DXOS\n- HALO: Decentralized identity\n- ECHO: Decentralized data\n- MESH: Decentralized networks',
-            '# Why Decentralization Matters\n- Privacy\n- Performance\n- User experience\n- Cost',
+            '# Why Decentralization Matters\n- User experience\n- Privacy\n- Performance\n- Cost',
             '# Get Involved\nhello@dxos.org'
           ];
 
