@@ -37,9 +37,10 @@ import {
 } from '@dxos/react-components';
 import {
   MarkdownComposer,
-  RichTextComposer,
-  TipTapEditor,
   MarkdownComposerRef,
+  RichTextComposer,
+  TextKind,
+  TipTapEditor,
   useTextModel
 } from '@dxos/react-composer';
 
@@ -486,8 +487,7 @@ export const DocumentPage = observer(() => {
   return (
     <div role='none' className='pli-14 plb-11'>
       {document && space ? (
-        // TODO(wittjosiah): Use native text kind.
-        document.textintention === 'markdown' ? (
+        document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />
         ) : (
           <RichTextDocumentPage document={document} space={space} />
