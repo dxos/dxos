@@ -38,7 +38,7 @@ import {
   MapFrame,
   MessageFrame,
   Note,
-  PresenterFrame,
+  Presenter,
   SandboxFrame,
   SearchFrame,
   SketchFrame,
@@ -183,7 +183,8 @@ export const frameDefs: FrameDef[] = [
     },
     runtime: {
       Icon: Presentation,
-      Component: PresenterFrame
+      Component: Presenter.Frame,
+      List: Presenter.List
     }
   },
   {
