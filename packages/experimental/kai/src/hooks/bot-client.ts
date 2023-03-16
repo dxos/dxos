@@ -90,8 +90,6 @@ export class BotClient {
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
-    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
-
     /**
      * {@see DX_BOT_RPC_PORT_MIN}
      */
@@ -118,8 +116,10 @@ export class BotClient {
       }
     };
 
-    log.info('createing bot', { request });
+    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
+
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
+    log('creating bot', { request, botInstanceId });
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
@@ -156,6 +156,7 @@ export class BotClient {
         log.error('connection', err);
       }
     }, BOT_STARTUP_CHECK_INTERVAL);
+
     try {
       await done.wait({ timeout: BOT_STARTUP_CHECK_TIMEOUT });
     } finally {

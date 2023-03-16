@@ -277,7 +277,7 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.presenter';
+export const defaultFrameId = 'dxos.module.frame.stack';
 
 // prettier-ignore
 export const defaultFrames = [

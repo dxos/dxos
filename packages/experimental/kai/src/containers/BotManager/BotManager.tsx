@@ -6,6 +6,7 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 import { Column } from 'react-table';
 
+import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
@@ -19,6 +20,7 @@ type BotRecord = {
   id: string;
   image: string;
   name: string;
+  port: number;
   created: number;
   state: string;
   status: string;
@@ -26,26 +28,32 @@ type BotRecord = {
 
 const columns: Column<BotRecord>[] = [
   {
-    Header: 'id',
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
-    accessor: (record) => PublicKey.from(record.id).truncate(),
-    width: 120
-  },
-  // {
-  //   Header: 'image',
-  //   Cell: ({ value }: any) => <div className='font-mono'>{truncateKey(value, 4)}</div>,
-  //   accessor: (record) => record.image.split(':')[1],
-  //   width: 120
-  // },
-  {
     Header: 'name',
     accessor: (record) => record.name,
     width: 200
   },
   {
+    Header: 'container',
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (record) => truncateKey(PublicKey.from(record.id), { length: 8, start: true }),
+    width: 120
+  },
+  {
+    Header: 'image',
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (record) => truncateKey(PublicKey.from(record.image.split(':')[1]), { length: 8, start: true }),
+    width: 120
+  },
+  {
+    Header: 'port',
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (record) => record.port,
+    width: 80
+  },
+  {
     Header: 'created',
     accessor: (record) => formatDistance(new Date(record.created), Date.now(), { addSuffix: true }),
-    width: 160
+    width: 140
   },
   {
     Header: 'state',
@@ -55,7 +63,7 @@ const columns: Column<BotRecord>[] = [
   {
     Header: 'status',
     accessor: (record) => record.status,
-    width: 160
+    width: 140
   }
 ];
 
@@ -88,6 +96,7 @@ export const BotManager = () => {
         id: record.Id,
         image: record.ImageID,
         name: record.Labels['dxos.bot.name'],
+        port: record.Ports[0].PublicPort,
         created: new Date(record.Created * 1000).getTime(),
         state: record.State,
         status: record.Status
@@ -109,9 +118,9 @@ export const BotManager = () => {
 
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
-      <Toolbar>
+      <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
-          <Select value={botId} onValueChange={setBotId} className='w-full'>
+          <Select value={botId} onValueChange={setBotId}>
             {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
               <Select.Item key={id} value={id!}>
                 <div className='flex items-center'>
@@ -125,8 +134,6 @@ export const BotManager = () => {
             Start
           </Button>
         </div>
-        <div className='grow' />
-        {/* TODO(burdon): Menu. */}
         <div className='flex items-center space-x-2'>
           <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
           <Button onClick={handleDelete}>Reset</Button>
