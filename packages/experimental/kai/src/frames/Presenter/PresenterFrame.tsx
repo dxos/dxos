@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Layout } from '@phosphor-icons/react';
+import { Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, Presentation } from '@dxos/kai-types';
 import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
-import { Button } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/react-components';
 
 import { Deck } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
@@ -43,7 +43,7 @@ export const PresenterFrame = observer(() => {
   useEffect(() => {
     if (space && frame && !presentation) {
       setTimeout(async () => {
-        let presentation = presentations.find((presentation) => presentation.id === objectId);
+        let presentation = presentations[0];
         if (!presentation) {
           presentation = await space.db.add(new Presentation({ stack: new DocumentStack({ title: 'New Deck' }) }));
           defaultSlides.forEach((content) => {
@@ -68,22 +68,31 @@ export const PresenterFrame = observer(() => {
   }
 
   return (
-    <div className='flex flex-1 overflow-hidden'>
-      {view !== View.MARKDOWN && !fullscreen && (
-        <div className='flex flex-1 shrink-0 overflow-hidden'>
-          <Editor space={space} presentation={presentation} />
-        </div>
-      )}
+    <div className='flex flex-col flex-1 overflow-hidden'>
+      <div className='flex flex-1 overflow-hidden'>
+        {view !== View.MARKDOWN && !fullscreen && (
+          <div className='flex flex-1 shrink-0 overflow-hidden'>
+            <Editor space={space} presentation={presentation} />
+          </div>
+        )}
 
-      <div>
-        <Button onClick={() => setView(View.EDITOR)}>A</Button>
-        <Button onClick={() => setView(View.SPLIT)}>B</Button>
-        <Button onClick={() => setView(View.MARKDOWN)}>C</Button>
+        {(view !== View.EDITOR || fullscreen) && (
+          <div className='flex flex-1 shrink-0 overflow-hidden'>
+            <DeckContainer space={space} presentation={presentation} />
+          </div>
+        )}
       </div>
-
-      {view !== View.EDITOR && (
-        <div className='flex flex-1 shrink-0 overflow-hidden'>
-          <DeckContainer space={space} presentation={presentation} />
+      {!fullscreen && (
+        <div className='flex shrink-0 justify-center m-2 space-x-2'>
+          <Button onClick={() => setView(View.EDITOR)} variant={view === View.EDITOR ? 'ghost' : 'default'}>
+            <Pen className={getSize(6)} />
+          </Button>
+          <Button onClick={() => setView(View.SPLIT)}>
+            <SquareSplitHorizontal className={getSize(6)} />
+          </Button>
+          <Button onClick={() => setView(View.MARKDOWN)} variant={view === View.MARKDOWN ? 'ghost' : 'default'}>
+            <Eye className={getSize(6)} />
+          </Button>
         </div>
       )}
     </div>

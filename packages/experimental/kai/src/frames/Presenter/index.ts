@@ -4,4 +4,6 @@
 
 import { PresenterFrame } from './PresenterFrame';
 
+export * from './PresenterList';
+
 export default PresenterFrame;
