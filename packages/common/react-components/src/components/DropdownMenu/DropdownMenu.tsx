@@ -10,6 +10,7 @@ import {
 import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
 
 import { useThemeContext } from '../../hooks';
+import { dataDisabled } from '../../styles';
 import { mx } from '../../util';
 import { defaultDropdownMenuItem } from './dropdownMenuStyles';
 
@@ -32,7 +33,7 @@ export const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps
       <DropdownMenuPrimitive.Item
         ref={forwardedRef}
         {...props}
-        className={mx(defaultDropdownMenuItem(themeVariant), className)}
+        className={mx(defaultDropdownMenuItem(themeVariant), dataDisabled, className)}
       />
     );
   }

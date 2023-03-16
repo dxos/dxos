@@ -9,6 +9,7 @@ import {
   Circle,
   DotsThreeVertical,
   EyeSlash,
+  GearSix,
   Intersect,
   PaperPlaneTilt,
   Planet,
@@ -25,6 +26,7 @@ import {
   Button,
   buttonStyles,
   DensityProvider,
+  Dialog,
   DropdownMenu,
   DropdownMenuItem,
   ElevationProvider,
@@ -48,6 +50,7 @@ import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
+import { useOctokitContext } from '../OctokitProvider';
 
 const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
   const { t } = useTranslation('composer');
@@ -144,13 +147,15 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
             }
             slots={{ content: { className: 'z-[31]' } }}
           >
-            <Input
-              label={t('space name label')}
-              labelVisuallyHidden
-              value={space.properties.name ?? ''}
-              placeholder={space.key.truncate()}
-              onChange={({ target: { value } }) => (space.properties.name = value)}
-            />
+            <DropdownMenuItem asChild>
+              <Input
+                label={t('space name label')}
+                labelVisuallyHidden
+                value={space.properties.name ?? ''}
+                placeholder={space.key.truncate()}
+                onChange={({ target: { value } }) => (space.properties.name = value)}
+              />
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
               <PaperPlaneTilt className={getSize(4)} />
               <span>{t('view space invitations label', { ns: 'os' })}</span>
@@ -209,6 +214,13 @@ const SidebarContent = () => {
   const { t } = useTranslation('composer');
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const identity = useIdentity();
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const { pat, setPat } = useOctokitContext();
+  const [patValue, setPatValue] = useState(pat);
+
+  useEffect(() => {
+    setPatValue(pat);
+  }, [pat]);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -225,6 +237,32 @@ const SidebarContent = () => {
     <ThemeContext.Provider value={{ themeVariant: 'os' }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
+          <Dialog
+            title={t('profile settings label')}
+            open={settingsDialogOpen}
+            onOpenChange={(nextOpen) => {
+              setSettingsDialogOpen(nextOpen);
+              if (!nextOpen) {
+                void setPat(patValue);
+              }
+            }}
+            slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
+            closeTriggers={[
+              <Button key='a1' variant='primary'>
+                {t('done label', { ns: 'os' })}
+              </Button>
+            ]}
+          >
+            <Input
+              label={t('github pat label')}
+              value={patValue}
+              onChange={({ target: { value } }) => setPatValue(value)}
+              slots={{
+                root: { className: 'mlb-2' },
+                input: { autoFocus: true, spellCheck: false, className: 'font-mono' }
+              }}
+            />
+          </Dialog>
           <div role='none' className='flex flex-col bs-full'>
             <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
@@ -273,8 +311,15 @@ const SidebarContent = () => {
                   variant='circle'
                   fallbackValue={identity.identityKey.toHex()}
                   status='active'
-                  label={<p className='text-sm'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>}
+                  label={
+                    <p className='grow text-sm'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>
+                  }
                 />
+                <Tooltip content={t('profile settings label')} zIndex='z-[31]' side='bottom' tooltipLabelsTrigger>
+                  <Button variant='ghost' onClick={() => setSettingsDialogOpen(true)} className='pli-1'>
+                    <GearSix className={mx(getSize(4), 'rotate-90')} />
+                  </Button>
+                </Tooltip>
               </div>
             )}
           </div>
