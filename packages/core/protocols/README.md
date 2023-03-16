@@ -2,6 +2,8 @@
 
 System-wide protocol buffer definitions.
 
+SQUIRRELS :squirrel:
+
 ## Typescript Protobuf Defs
 
 Generate by running script:
