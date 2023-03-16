@@ -3,34 +3,60 @@
 //
 
 import { CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button, getSize, mx } from '@dxos/react-components';
 
 export type PagerProps = {
   index?: number;
   count?: number;
+  keys?: boolean;
   onMove?: (index: number) => void;
+  onClose?: () => void;
 };
 
-export const Pager = ({ index = 0, count = 0, onMove }: PagerProps) => {
-  const handleMove = (direction: number) => {
-    const next = index + direction;
-    if (next > 0 && next <= count) {
-      onMove?.(next);
-    }
+export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onMove, onClose }: PagerProps) => {
+  const [index, setIndex] = useState(controlledIndex);
+  useEffect(() => {
+    setIndex(controlledIndex);
+  }, [controlledIndex]);
+  useEffect(() => {
+    onMove?.(index);
+  }, [index]);
+
+  const handleMove = (dir: number) => {
+    setIndex((index) => {
+      const next = index + dir;
+      return next >= 1 && next <= count ? next : index;
+    });
   };
 
-  // TODO(burdon): Full screen. ESC.
   useEffect(() => {
+    // TODO(burdon): Esc.
     const handler = (event: KeyboardEvent) => {
+      if (!keys) {
+        return;
+      }
+
       switch (event.key) {
+        case 'Escape': {
+          onClose?.();
+          break;
+        }
         case 'ArrowLeft': {
-          handleMove(-1);
+          if (event.shiftKey) {
+            onMove?.(1);
+          } else {
+            handleMove(-1);
+          }
           break;
         }
         case 'ArrowRight': {
-          handleMove(1);
+          if (event.shiftKey) {
+            onMove?.(count);
+          } else {
+            handleMove(1);
+          }
           break;
         }
         case 'ArrowUp': {
@@ -46,7 +72,7 @@ export const Pager = ({ index = 0, count = 0, onMove }: PagerProps) => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  });
+  }, [keys, count]);
 
   if (!index || !count) {
     return null;

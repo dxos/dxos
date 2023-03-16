@@ -62,6 +62,7 @@ export type PresenterProps = {
   content?: string;
   className?: string;
   classes?: { [selector: string]: string };
+  fullscreen?: boolean;
   topLeft?: ReactNode;
   topRight?: ReactNode;
   bottomLeft?: ReactNode;
@@ -72,6 +73,7 @@ export const Presenter = ({
   content = '',
   className,
   classes = defaultClasses,
+  fullscreen,
   topLeft,
   topRight,
   bottomLeft,

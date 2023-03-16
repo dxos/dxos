@@ -30,9 +30,18 @@ export const Deck = ({ slides = [], fullscreen, onToggleFullscreen }: DeckProps)
   return (
     <Presenter
       content={slides[index - 1] ?? ''}
+      fullscreen={fullscreen}
       topRight={<Expand />}
       bottomLeft={<PageNumber index={index} count={slides.length} />}
-      bottomRight={<Pager index={index} count={slides.length} onMove={setIndex} />}
+      bottomRight={
+        <Pager
+          index={index}
+          count={slides.length}
+          keys={fullscreen}
+          onMove={setIndex}
+          onClose={() => onToggleFullscreen?.(false)}
+        />
+      }
     />
   );
 };

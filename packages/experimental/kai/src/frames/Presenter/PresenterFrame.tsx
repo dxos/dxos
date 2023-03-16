@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Layout } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +24,6 @@ export const PresenterFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
   const { fullscreen } = useAppState();
-  const { setFullscreen } = useAppReducer();
 
   const stacks = useQuery(space, DocumentStack.filter());
   const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
@@ -72,7 +72,6 @@ export const PresenterFrame = observer(() => {
     );
   }
 
-  // TODO(burdon): Split screen mode.
   const Editor = () => (
     <div className='flex flex-1 justify-center overflow-y-auto'>
       <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
@@ -81,12 +80,21 @@ export const PresenterFrame = observer(() => {
           showTitle={false}
           space={space}
           stack={stack}
+          items={[
+            {
+              type: DocumentType.type.name,
+              label: 'Slide',
+              Icon: Layout,
+              onCreate: async (space: Space) => space!.db.add(new DocumentType({ type: DocumentType.Type.MARKDOWN }))
+            }
+          ]}
         />
         <div className='pb-4' />
       </div>
     </div>
   );
 
+  // TODO(burdon): Split screen mode.
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <div className='flex flex-1 shrink-0 overflow-hidden'>
@@ -98,8 +106,6 @@ export const PresenterFrame = observer(() => {
       </div>
     </div>
   );
-
-  return <Editor />;
 });
 
 const DeckContainer: FC<{ space: Space; stack: DocumentStack }> = ({ space, stack }) => {
@@ -108,14 +114,15 @@ const DeckContainer: FC<{ space: Space; stack: DocumentStack }> = ({ space, stac
   const [content, setContent] = useState<string[]>([]);
 
   // TODO(burdon): Hack to listen for document section updates.
-  const docs = useQuery(space, DocumentType.filter());
   const texts = useMemo(() => {
-    return docs
+    return stack.sections
+      .map((section) => section.object)
       .map((doc) => {
         return doc.type === DocumentType.Type.MARKDOWN && doc.content ? doc.content : undefined;
       })
       .filter(Boolean) as Text[];
-  }, [space, docs]);
+  }, [space, stack, stack.sections.length]);
+
   useSubscription(() => {
     setContent(texts.map((text) => text.doc!.getText('utf8').toString()) ?? []);
   }, [texts]);
