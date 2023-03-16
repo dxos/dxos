@@ -34,7 +34,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
-    "vite": "4.0.4",
+    "vite": "^4.2.0",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }
