@@ -134,7 +134,10 @@ const DocumentPageContent = observer(
   }
 );
 
-const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
+const RichTextDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
+  const identity = useIdentity();
+  const model = useTextModel({ identity, space, text: document?.content });
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
 
@@ -168,7 +171,7 @@ const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDoc
     <DocumentPageContent {...{ document, handleExport, handleImport, dialogOpen, setDialogOpen }}>
       <RichTextComposer
         ref={editorRef}
-        text={document.content}
+        model={model}
         slots={{
           root: {
             role: 'none',
@@ -483,10 +486,11 @@ export const DocumentPage = observer(() => {
   return (
     <div role='none' className='pli-14 plb-11'>
       {document && space ? (
+        // TODO(wittjosiah): Use native text kind.
         document.textintention === 'markdown' ? (
           <MarkdownDocumentPage document={document} space={space} />
         ) : (
-          <PureRichTextDocumentPage document={document} />
+          <RichTextDocumentPage document={document} space={space} />
         )
       ) : (
         <p role='alert' className='p-8 text-center'>

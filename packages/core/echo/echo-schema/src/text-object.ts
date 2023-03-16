@@ -33,6 +33,10 @@ export class Text extends EchoObject<TextModel> {
     return this.text;
   }
 
+  get kind(): TextKind | undefined {
+    return this.model?.kind;
+  }
+
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
     return this._model?.doc;

@@ -4,3 +4,4 @@
 
 export * from './components';
 export * from './model';
+export { Doc, YText, YXmlFragment } from '@dxos/text-model';

@@ -48,12 +48,9 @@ export const PresenterFrame = observer(() => {
         if (!presentation) {
           presentation = await space.db.add(new Presentation({ stack: new DocumentStack({ title: 'New Deck' }) }));
           defaultSlides.forEach((content) => {
-            // TODO(burdon): Hack.
-            const text = new Text();
-            text.doc!.getText('utf8').insert(0, content);
             presentation!.stack.sections.push(
               new DocumentStack.Section({
-                object: new DocumentType({ type: DocumentType.Type.MARKDOWN, content: text })
+                object: new Document({ content: new Text(content) })
               })
             );
           });
@@ -134,13 +131,13 @@ const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide'
   const handleUpdate = useCallback(() => {
     const texts = presentation.stack.sections
       .map((section) => section.object)
-      .map((document) => {
-        return document.type === DocumentType.Type.MARKDOWN && document.content ? document.content : undefined;
+      .map((doc) => {
+        return doc.content?.kind === TextKind.PLAIN ? doc.content : undefined;
       })
       .filter(Boolean) as Text[];
 
-    setContent(texts.map((text) => text.doc!.getText('utf8').toString()) ?? []);
-  }, [presentation]);
+    setContent(texts.map((text) => text.content!.toString()) ?? []);
+  }, [texts]);
 
   // First time.
   useEffect(handleUpdate, []);

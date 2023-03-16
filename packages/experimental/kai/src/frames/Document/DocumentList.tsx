@@ -5,7 +5,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Text } from '@dxos/client';
 import { Document } from '@dxos/kai-types';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery } from '@dxos/react-client';
 
 import { ObjectList } from '../../components';
@@ -27,7 +29,8 @@ export const DocumentList = () => {
       getTitle={(object) => object.title}
       setTitle={(object, title) => (object.title = title)}
       onSelect={(objectId) => navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))}
-      onCreate={() => space.db.add(new Document())}
+      // TODO(wittjosiah): Remove text initalization once rich text annotation is hooked up.
+      onCreate={() => space.db.add(new Document({ content: new Text('', TextKind.RICH) }))}
     />
   );
 };
