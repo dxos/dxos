@@ -19,7 +19,7 @@ const getStyles = (props: any, align = 'left') => [
   {
     style: {
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: align === 'right' ? 'flex-end' : 'flex-start'
     }
   }
@@ -74,11 +74,14 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
         <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
-            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2.5rem] border-b border-zinc-300'>
+            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b border-zinc-300'>
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-2', slots.header?.className)}>
+                <div
+                  {...column.getHeaderProps(headerProps)}
+                  className={mx('th px-4 items-center', slots.header?.className)}
+                >
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}

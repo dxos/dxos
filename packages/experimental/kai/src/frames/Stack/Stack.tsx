@@ -5,14 +5,17 @@
 import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import assert from 'assert';
 import React from 'react';
 
-import { Contact, Document as DocumentType, DocumentStack, Table, TaskList } from '@dxos/kai-types';
-import { Document, EchoSchemaType, useConfig, observer, Space } from '@dxos/react-client';
+import { Document } from '@dxos/echo-schema';
+import { DocumentStack } from '@dxos/kai-types';
+import { useConfig, observer, Space } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
 
 import { StackContent } from './StackContent';
 import { SortableStackRow, StackRow } from './StackRow';
+import { StackItemType, defaultItems } from './defaults';
 
 // TODO(burdon): Configurable menu options and section renderers (like frames).
 // TODO(burdon): Factor out new section data factories.
@@ -28,44 +31,25 @@ export type StackProps = {
   slots?: StackSlots;
   space: Space;
   stack: DocumentStack;
+  items?: StackItemType[];
   showTitle?: boolean;
 };
 
-export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: StackProps) => {
+export const Stack = observer(({ slots = {}, space, stack, items = defaultItems, showTitle = true }: StackProps) => {
   const config = useConfig();
 
-  // TODO(burdon): Drag (mosaic).
-  const handleInsertSection = async (type: EchoSchemaType, objectId: string | undefined, index: number) => {
-    console.log('!!!!!!!!!!!!!', type.name);
-
-    let object: Document;
-    if (objectId) {
-      object = space!.db.getObjectById(objectId)!;
-    } else {
-      switch (type) {
-        case DocumentType.type: {
-          object = await space!.db.add(new DocumentType());
-          break;
-        }
-
-        case Table.type: {
-          object = await space!.db.add(new Table({ type: Contact.type.name }));
-          break;
-        }
-
-        case TaskList.type: {
-          object = await space!.db.add(new TaskList());
-          break;
-        }
-        default: {
-          object = await space!.db.add(new DocumentType());
-          break;
-        }
-      }
+  const handleInsertSection = async (type: StackItemType, objectId: string | undefined, index: number) => {
+    if (!objectId) {
+      assert(type.onCreate);
+      const object = await type.onCreate(space);
+      objectId = object.id;
     }
 
-    const section = new DocumentStack.Section({ object });
-    stack.sections.splice(index === -1 ? stack.sections.length : index, 0, section);
+    const object: Document | undefined = space.db.getObjectById(objectId);
+    if (object) {
+      const section = new DocumentStack.Section({ object });
+      stack.sections.splice(index === -1 ? stack.sections.length : index, 0, section);
+    }
   };
 
   const handleDeleteSection = (index: number) => {
@@ -113,7 +97,6 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
         </StackRow>
       )}
 
-      {/* TODO(burdon): Hide while typing. */}
       <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
         <SortableContext
           strategy={verticalListSortingStrategy}
@@ -128,7 +111,8 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
                 id={section.id}
                 className={mx('py-6', i < stack.sections.length - 1 && 'border-b')}
                 showMenu
-                onCreate={(type, objectId) => handleInsertSection(type, objectId, i)}
+                items={items}
+                onInsert={(item, objectId) => handleInsertSection(item as StackItemType, objectId, i)}
                 onDelete={() => handleDeleteSection(i)}
               >
                 <StackContent config={config} space={space!} section={section} spellCheck={spellCheck} />
@@ -138,7 +122,7 @@ export const Stack = observer(({ slots = {}, space, stack, showTitle = true }: S
         </SortableContext>
       </DndContext>
 
-      <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} />
+      {/* <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} /> */}
     </div>
   );
 });

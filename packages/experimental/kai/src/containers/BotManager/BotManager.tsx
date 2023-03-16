@@ -59,7 +59,7 @@ const columns: Column<BotRecord>[] = [
   }
 ];
 
-export const BotFrame = () => {
+export const BotManager = () => {
   const [status, setStatus] = useState('');
   const [records, setRecords] = useState<BotRecord[]>([]);
   const [botId, setBotId] = useState<string>(botDefs[0].module.id!);
