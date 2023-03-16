@@ -141,21 +141,19 @@ export class BotClient {
     const fetchUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     const wsUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     wsUrl.protocol = protocol === 'https:' ? 'wss:' : 'ws:';
-    console.log({ fetchUrl, wsUrl });
 
     const done = new Trigger();
     const clear = exponentialBackoffInterval(async () => {
       try {
         const res = await fetch(fetchUrl);
-        console.log(res.status);
         if (res.status >= 400 && res.status !== 426) {
           // 426 Upgrade Required
           return;
         }
-        console.log('connected', { fetchUrl });
+        log('connected', { fetchUrl });
         done.wake();
       } catch (err: any) {
-        console.log(err);
+        log.error('connection', err);
       }
     }, BOT_STARTUP_CHECK_INTERVAL);
     try {

@@ -3,15 +3,15 @@
 //
 
 import { Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, Presentation } from '@dxos/kai-types';
-import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
+import { useQuery, observer, Space, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { Deck } from '../../components';
+import { Deck, DeckProps } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Stack } from '../Stack';
 
@@ -37,6 +37,7 @@ export const PresenterFrame = observer(() => {
   const { space, frame, objectId } = useAppRouter();
   const { fullscreen } = useAppState();
   const [view, setView] = useState<View>(View.EDITOR);
+  const [slide, setSlide] = useState(1); // TODO(burdon): Reset when goes into full screen.
 
   const presentations = useQuery(space, Presentation.filter());
   const presentation = objectId ? (space!.db.getObjectById(objectId) as Presentation) : undefined;
@@ -78,16 +79,17 @@ export const PresenterFrame = observer(() => {
 
         {(view !== View.EDITOR || fullscreen) && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <DeckContainer space={space} presentation={presentation} />
+            <DeckContainer presentation={presentation} slide={slide} onSlideChange={setSlide} />
           </div>
         )}
       </div>
+
       {!fullscreen && (
         <div className='flex shrink-0 justify-center m-2 space-x-2'>
           <Button onClick={() => setView(View.EDITOR)} variant={view === View.EDITOR ? 'ghost' : 'default'}>
             <Pen className={getSize(6)} />
           </Button>
-          <Button onClick={() => setView(View.SPLIT)}>
+          <Button onClick={() => setView(View.SPLIT)} variant={view === View.SPLIT ? 'ghost' : 'default'}>
             <SquareSplitHorizontal className={getSize(6)} />
           </Button>
           <Button onClick={() => setView(View.MARKDOWN)} variant={view === View.MARKDOWN ? 'ghost' : 'default'}>
@@ -121,26 +123,36 @@ const Editor: FC<{ space: Space; presentation: Presentation }> = ({ space, prese
   </div>
 );
 
-const DeckContainer: FC<{ space: Space; presentation: Presentation }> = observer(({ space, presentation }) => {
+const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide' | 'onSlideChange'>> = ({
+  presentation,
+  ...rest
+}) => {
   const { fullscreen } = useAppState();
   const { setFullscreen } = useAppReducer();
   const [content, setContent] = useState<string[]>([]);
 
-  // TODO(burdon): Hack to listen for document section updates.
-  const texts = useMemo(() => {
-    return presentation.stack.sections
+  const handleUpdate = useCallback(() => {
+    const texts = presentation.stack.sections
       .map((section) => section.object)
-      .map((doc) => {
-        return doc.type === DocumentType.Type.MARKDOWN && doc.content ? doc.content : undefined;
+      .map((document) => {
+        return document.type === DocumentType.Type.MARKDOWN && document.content ? document.content : undefined;
       })
       .filter(Boolean) as Text[];
-  }, [space, presentation, presentation.stack.sections.length]);
 
-  useSubscription(() => {
     setContent(texts.map((text) => text.doc!.getText('utf8').toString()) ?? []);
-  }, [texts]);
+  }, [presentation]);
 
-  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} />;
-});
+  // First time.
+  useEffect(handleUpdate, []);
+
+  // Get update if stack sections updated.
+  useSubscription(handleUpdate, [presentation.stack]);
+
+  // Get update if any text content changed.
+  // TODO(burdon): This seems unnecessary?
+  useSubscription(handleUpdate, [presentation.stack.sections.map((section) => section.object.content)]);
+
+  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} {...rest} />;
+};
 
 export default PresenterFrame;
