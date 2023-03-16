@@ -27,7 +27,7 @@ export const SpaceList: FC<{
       onSelect={(spaceKey) => onSelect(PublicKey.from(spaceKey))}
       items={spaces.map((space) => ({
         id: space.key.toHex(),
-        key: truncateKey(space.key, 4),
+        key: truncateKey(space.key),
         text: space.properties.name
       }))}
     />

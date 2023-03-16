@@ -31,7 +31,7 @@ export const SpaceInfo: FC<{
         },
         {
           property: 'Public key',
-          value: truncateKey(space.key, 4)
+          value: truncateKey(space.key)
         }
       ]}
     />
