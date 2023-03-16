@@ -4,37 +4,37 @@
 
 import { faker } from '@faker-js/faker';
 import { useEffect } from 'react';
+import { XmlElement, XmlText } from 'yjs';
 
 import { UnsubscribeCallback } from '@dxos/async';
 import { Space } from '@dxos/client';
-import { log } from '@dxos/log';
-import { Doc } from '@dxos/text-model';
+import { YText, YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?
 type DataGenerator<T = { space: Space }> = (options: T) => UnsubscribeCallback;
 
 type LoremOptions = {
-  plainText?: ReturnType<Doc['getText']>;
+  text?: YText | YXmlFragment;
   period?: number;
 };
 
-export const loremGenerator: DataGenerator<LoremOptions> = ({ plainText, period = 1000 }) => {
-  if (!plainText) {
+export const textGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000 }) => {
+  if (!text) {
     return () => {};
   }
 
   const interval = setInterval(() => {
     const lorem = faker.lorem.sentence() + '\n';
-    const indices: number[] = [...plainText.toString().matchAll(/\./gi)].map((a) => a.index! + 2);
-    const startPosition = indices[Math.floor(Math.random() * indices.length) - 1] ?? 0;
-    log('inserting', {
-      plainText,
-      indices,
-      startPosition,
-      lorem
-    });
-    plainText.insert(startPosition, lorem);
-    log('inserted', { result: plainText.toString() });
+    if (text instanceof YText) {
+      const indices: number[] = [...text.toString().matchAll(/\./gi)].map((a) => a.index! + 2);
+      const startPosition = indices[Math.floor(Math.random() * indices.length) - 1] ?? 0;
+      text.insert(startPosition, lorem);
+    } else {
+      const startPosition = Math.floor(Math.random() * text.toArray().length);
+      const paragraph = new XmlElement('paragraph');
+      paragraph.insert(0, [new XmlText(lorem)]);
+      text.insert(startPosition, [paragraph]);
+    }
   }, period);
 
   return () => clearInterval(interval);

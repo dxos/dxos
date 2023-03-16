@@ -20,7 +20,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
 import { Tooltip } from '@dxos/react-appkit';
-import { observer, ShellLayout, Space, Text, useClient, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
+import { observer, ShellLayout, Space, useClient, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 import {
   Avatar,
   Button,
@@ -46,6 +46,7 @@ import {
   useId,
   useTranslation
 } from '@dxos/react-components';
+import { TextKind } from '@dxos/react-composer';
 import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
@@ -56,7 +57,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
   const { t } = useTranslation('composer');
   const { docKey } = useParams();
   const active = docKey === document.id;
-  const Icon = document.textintention === 'markdown' ? ArticleMedium : Article;
+  const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
     <TreeItem>
       <TreeItemHeading asChild>
@@ -89,8 +90,6 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
-    document.content = new Text(); // TODO(burdon): Make automatic?
-    document.textintention = 'markdown';
     return navigate(getPath(space, document));
   }, [space, navigate]);
 
@@ -225,7 +224,6 @@ const SidebarContent = () => {
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     const document = await space.db.add(new ComposerDocument());
-    document.content = new Text(); // TODO(burdon): Make automatic?
     return navigate(getPath(space, document));
   };
 

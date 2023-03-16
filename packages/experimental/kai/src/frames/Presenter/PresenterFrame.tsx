@@ -7,9 +7,10 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
-import { Document as DocumentType, DocumentStack, Presentation } from '@dxos/kai-types';
+import { Document, DocumentStack, Presentation } from '@dxos/kai-types';
 import { useQuery, observer, Space, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
+import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
@@ -48,12 +49,9 @@ export const PresenterFrame = observer(() => {
         if (!presentation) {
           presentation = await space.db.add(new Presentation({ stack: new DocumentStack({ title: 'New Deck' }) }));
           defaultSlides.forEach((content) => {
-            // TODO(burdon): Hack.
-            const text = new Text();
-            text.doc!.getText('utf8').insert(0, content);
             presentation!.stack.sections.push(
               new DocumentStack.Section({
-                object: new DocumentType({ type: DocumentType.Type.MARKDOWN, content: text })
+                object: new Document({ content: new Text(content) })
               })
             );
           });
@@ -111,10 +109,10 @@ const Editor: FC<{ space: Space; presentation: Presentation }> = ({ space, prese
         stack={presentation.stack}
         items={[
           {
-            type: DocumentType.type.name,
+            type: Document.type.name,
             label: 'New slide',
             Icon: Layout,
-            onCreate: async (space: Space) => space!.db.add(new DocumentType({ type: DocumentType.Type.MARKDOWN }))
+            onCreate: async (space: Space) => space!.db.add(new Document())
           }
         ]}
       />
@@ -135,11 +133,11 @@ const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide'
     const texts = presentation.stack.sections
       .map((section) => section.object)
       .map((document) => {
-        return document.type === DocumentType.Type.MARKDOWN && document.content ? document.content : undefined;
+        return document.content?.kind === TextKind.PLAIN ? document.content : undefined;
       })
       .filter(Boolean) as Text[];
 
-    setContent(texts.map((text) => text.doc!.getText('utf8').toString()) ?? []);
+    setContent(texts.map((text) => text.content!.toString()) ?? []);
   }, [presentation]);
 
   // First time.
