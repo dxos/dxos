@@ -8,7 +8,7 @@ import { Space, SpaceMember } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
-const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key.toHex(), 8) : key.toHex());
+const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
 //
 // Spaces
@@ -23,7 +23,7 @@ export const selectSpace = async (spaces: Space[]) => {
       type: 'list',
       message: 'Select a space:',
       choices: spaces.map((space) => ({
-        name: `[${truncateKey(space.key, 8)}] ${space.properties.name}`,
+        name: `[${truncateKey(space.key)}] ${space.properties.name}`,
         value: space.key
       }))
     }
