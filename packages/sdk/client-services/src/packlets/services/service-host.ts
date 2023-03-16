@@ -110,9 +110,8 @@ export class ClientServicesHost {
     });
 
     // TODO(burdon): Start to think of DMG (dynamic services).
-    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService
-    });
+    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle);
+    this._serviceRegistry.addService('SystemService', this._systemService);
   }
 
   get isOpen() {
@@ -170,47 +169,35 @@ export class ClientServicesHost {
     // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
 
-    // TODO(burdon): Start to think of DMG (dynamic services).
-    this._serviceRegistry.setServices({
-      SystemService: this._systemService,
-
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
-
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
-
-      DeviceInvitationsService: new DeviceInvitationsServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.deviceInvitations
-      ),
-
-      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
-        this._serviceContext.identityManager,
-        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
-        () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
-      ),
-
-      SpacesService: new SpacesServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.spaceManager,
-        this._serviceContext.dataServiceSubscriptions,
-        async () => {
-          await this._serviceContext.initialized.wait();
-          return this._serviceContext.dataSpaceManager!;
-        }
-      ),
-
-      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
-
-      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
-
-      // TODO(burdon): Move to new protobuf definitions.
-      TracingService: new TracingServiceImpl(this._config),
-      DevtoolsHost: new DevtoolsServiceImpl({
-        events: new DevtoolsHostEvents(),
-        config: this._config,
-        context: this._serviceContext
-      })
-    });
+    this._serviceRegistry.addService('IdentityService', new IdentityServiceImpl(this._serviceContext));
+    this._serviceRegistry.addService('DevicesService', new DevicesServiceImpl(this._serviceContext.identityManager));
+    this._serviceRegistry.addService('DeviceInvitationsService', new DeviceInvitationsServiceImpl(
+      this._serviceContext.identityManager,
+      this._serviceContext.deviceInvitations
+    ));
+    this._serviceRegistry.addService('SpaceInvitationsService', new SpaceInvitationsServiceImpl(
+      this._serviceContext.identityManager,
+      () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+      () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
+    ))
+    this._serviceRegistry.addService('SpacesService', new SpacesServiceImpl(
+      this._serviceContext.identityManager,
+      this._serviceContext.spaceManager,
+      this._serviceContext.dataServiceSubscriptions,
+      async () => {
+        await this._serviceContext.initialized.wait();
+        return this._serviceContext.dataSpaceManager!;
+      }
+    ))
+    this._serviceRegistry.addService('DataService', new DataServiceImpl(this._serviceContext.dataServiceSubscriptions))
+    this._serviceRegistry.addService('NetworkService', new NetworkServiceImpl(this._serviceContext.networkManager))
+    // TODO(burdon): Move to new protobuf definitions.
+    this._serviceRegistry.addService('TracingService', new TracingServiceImpl(this._config))
+    this._serviceRegistry.addService('DevtoolsHost', new DevtoolsServiceImpl({
+      events: new DevtoolsHostEvents(),
+      config: this._config,
+      context: this._serviceContext
+    }))
 
     await this._serviceContext.open();
     this._open = true;
@@ -226,7 +213,17 @@ export class ClientServicesHost {
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
-    this._serviceRegistry.setServices({ SystemService: this._systemService });
+
+    this._serviceRegistry.removeService('IdentityService');
+    this._serviceRegistry.removeService('DevicesService');
+    this._serviceRegistry.removeService('DeviceInvitationsService');
+    this._serviceRegistry.removeService('SpaceInvitationsService');
+    this._serviceRegistry.removeService('SpacesService');
+    this._serviceRegistry.removeService('DataService');
+    this._serviceRegistry.removeService('NetworkService');
+    this._serviceRegistry.removeService('TracingService');
+    this._serviceRegistry.removeService('DevtoolsHost');
+
     await this._serviceContext.close();
     this._open = false;
     this._statusUpdate.emit();

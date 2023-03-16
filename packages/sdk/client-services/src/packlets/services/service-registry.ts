@@ -8,10 +8,10 @@ import { ServiceBundle } from '@dxos/rpc';
  * Registry of operational services.
  */
 export class ServiceRegistry<Services> {
+  private _handlers: Partial<Services> = {}
   // prettier-ignore
   constructor (
     private readonly _serviceBundle: ServiceBundle<Services>,
-    private _handlers: Partial<Services> = {}
   ) {}
 
   get descriptors() {
@@ -20,10 +20,6 @@ export class ServiceRegistry<Services> {
 
   get services() {
     return this._handlers;
-  }
-
-  setServices(services: Partial<Services>) {
-    this._handlers = services;
   }
 
   addService(name: keyof Services, service: Services[keyof Services]) {
