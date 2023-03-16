@@ -64,7 +64,7 @@ export const ContextMenu = ({ items, onOpenChange, onInsert, onDelete }: Context
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete}>
               <Trash className={getSize(5)} />
-              <span className='mis-2'>Remove block</span>
+              <span className='mis-2'>Remove section</span>
             </DropdownMenuItem>
           </>
         )}
