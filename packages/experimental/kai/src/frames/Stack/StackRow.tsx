@@ -4,30 +4,12 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  CaretCircleDown,
-  DotsSixVertical,
-  Image,
-  ListBullets,
-  Table as TableIcon,
-  TextAlignLeft,
-  Trash
-} from '@phosphor-icons/react';
+import { DotsSixVertical } from '@phosphor-icons/react';
 import React, { FC, ForwardedRef, forwardRef, ReactNode, useState } from 'react';
 
-import { EchoSchemaType } from '@dxos/echo-schema';
-import { Document, File, Table, TaskList } from '@dxos/kai-types';
-import {
-  Button,
-  Dialog,
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  getSize,
-  mx
-} from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 
-import { FileList } from '../File';
+import { ContextMenu, ContextMenuItem, ContextMenuProps } from './ContextMenu';
 
 export type StackRowProps = {
   style?: any;
@@ -37,9 +19,53 @@ export type StackRowProps = {
   Handle?: JSX.Element;
   className?: string;
   showMenu?: boolean;
-  onCreate?: (type: EchoSchemaType, objectId?: string) => void;
-  onDelete?: () => void;
-};
+  items?: ContextMenuItem[];
+} & Pick<ContextMenuProps, 'onInsert' | 'onDelete'>;
+
+export const StackRow = forwardRef(
+  (
+    {
+      children,
+      Handle,
+      dragging,
+      style,
+      dragAttributes,
+      showMenu,
+      className,
+      items,
+      onInsert,
+      onDelete
+    }: StackRowProps,
+    ref: ForwardedRef<HTMLDivElement>
+  ) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    return (
+      <div
+        ref={ref}
+        style={style}
+        className={mx('group flex overflow-hidden mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
+      >
+        <div className='md:flex shink-0 w-24 text-gray-400'>
+          {showMenu && (
+            <>
+              <div className={mx('flex invisible group-hover:visible ml-6 -mt-0.5', menuOpen && 'visible')}>
+                <div className='w-8'>
+                  {!dragging && (
+                    <ContextMenu items={items} onOpenChange={setMenuOpen} onInsert={onInsert} onDelete={onDelete} />
+                  )}
+                </div>
+                {Handle}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className='flex flex-col flex-1 overflow-hidden mr-2 md:mr-16'>{children}</div>
+      </div>
+    );
+  }
+);
 
 export const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...rest }) => {
   // https://docs.dndkit.com/presets/sortable/usesortable
@@ -64,98 +90,3 @@ export const SortableStackRow: FC<StackRowProps & { id: string }> = ({ id, ...re
     />
   );
 };
-
-// TODO(burdon): Remove transparency while dragging.
-export const StackRow = forwardRef(
-  (
-    { children, Handle, dragging, style, dragAttributes, showMenu, className, onCreate, onDelete }: StackRowProps,
-    ref: ForwardedRef<HTMLDivElement>
-  ) => {
-    const [fileDialogVisible, setFileDialogVisible] = useState(false);
-
-    return (
-      <div
-        ref={ref}
-        style={style}
-        className={mx('group flex overflow-hidden mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
-      >
-        <div className='hidden md:flex shink-0 w-24 text-gray-400'>
-          {showMenu && (
-            <div className='flex invisible group-hover:visible ml-6 -mt-0.5'>
-              <div className='w-8'>
-                {!dragging && (
-                  <DropdownMenu
-                    slots={{ content: { className: 'z-50' } }}
-                    trigger={
-                      <Button variant='ghost' className='p-1'>
-                        <CaretCircleDown className={getSize(6)} />
-                      </Button>
-                    }
-                  >
-                    {onCreate && (
-                      <>
-                        {/* TODO(burdon): Factor out options (and renderers). */}
-                        <DropdownMenuItem onClick={() => onCreate(Document.type)}>
-                          <TextAlignLeft className={getSize(5)} />
-                          <span className='mis-2'>Text</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onCreate(TaskList.type)}>
-                          <ListBullets className={getSize(5)} />
-                          <span className='mis-2'>Tasks</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onCreate(Table.type)}>
-                          <TableIcon className={getSize(5)} />
-                          <span className='mis-2'>Table</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setFileDialogVisible(true)}>
-                          <Image className={getSize(5)} />
-                          <span className='mis-2'>Image</span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-
-                    {onDelete && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={onDelete}>
-                          <Trash className={getSize(5)} />
-                          <span className='mis-2'>Remove block</span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenu>
-                )}
-              </div>
-
-              {Handle}
-            </div>
-          )}
-
-          {/* TODO(burdon): Generalize pickers. */}
-          {fileDialogVisible && (
-            <Dialog title='Select image' open={fileDialogVisible}>
-              {/* TODO(burdon): Filter by image. */}
-              {/* TODO(burdon): Standardize dialogs. */}
-              <div className='mt-4'>
-                <FileList
-                  disableDownload
-                  onSelect={(objectId) => {
-                    setFileDialogVisible(false);
-                    onCreate?.(File.type, objectId);
-                  }}
-                />
-              </div>
-              <div className='flex flex-row-reverse'>
-                <Button variant='primary' onClick={() => setFileDialogVisible(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </Dialog>
-          )}
-        </div>
-
-        <div className='flex flex-col flex-1 overflow-hidden mr-2 md:mr-16'>{children}</div>
-      </div>
-    );
-  }
-);

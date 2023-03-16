@@ -89,7 +89,7 @@ export const markdownDarktheme = {
     outline: 'none'
   },
   '& .cm-line': {
-    paddingInline: '1.5rem'
+    paddingInline: 0
   },
   '& .cm-selectionBackground': {
     background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa'

@@ -5,7 +5,7 @@
 /**
  * Debounce callback.
  */
-export const debounce = <T>(cb: (arg: T) => void, wait = 100) => {
+export const debounce = <T = void>(cb: (arg: T) => void, wait = 100) => {
   let t: ReturnType<typeof setTimeout>;
   return (arg: T) => {
     clearTimeout(t);

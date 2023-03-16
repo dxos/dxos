@@ -89,6 +89,7 @@ export const Dialog = ({
           onCloseAutoFocus={(event) => event.preventDefault()}
           {...slots.content}
           className={mx(
+            'flex flex-col',
             'fixed z-50',
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
@@ -101,10 +102,11 @@ export const Dialog = ({
             <DialogPrimitive.Title
               {...slots.title}
               className={mx(
+                'shrink-0',
                 'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
                 titleVisuallyHidden && 'sr-only',
                 defaultFocus,
-                slots.content?.className
+                slots?.title?.className
               )}
               tabIndex={0}
             >
