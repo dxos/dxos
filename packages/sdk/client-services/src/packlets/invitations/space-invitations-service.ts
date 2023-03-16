@@ -6,7 +6,6 @@ import assert from 'node:assert';
 
 import { InvitationsHandler } from '@dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { DataSpace, DataSpaceManager } from '../spaces';
@@ -19,16 +18,15 @@ export class SpaceInvitationsServiceImpl extends AbstractInvitationsService<Data
   // prettier-ignore
   constructor (
     identityManager: IdentityManager,
-    private readonly invitationsHandler: Provider<InvitationsHandler<DataSpace>>,
-    private readonly _getSpaceManager: Provider<DataSpaceManager>
+    private readonly invitationsHandler: InvitationsHandler<DataSpace>,
+    private readonly _spaceManager: DataSpaceManager
   ) {
-    super(identityManager, invitationsHandler);
+    super(identityManager, () => invitationsHandler);
   }
 
   override getContext(invitation: Invitation): DataSpace {
     assert(invitation.spaceKey);
-    const spaceManager = this._getSpaceManager();
-    const space = spaceManager.spaces.get(invitation.spaceKey!);
+    const space = this._spaceManager.spaces.get(invitation.spaceKey!);
     assert(space);
     return space;
   }

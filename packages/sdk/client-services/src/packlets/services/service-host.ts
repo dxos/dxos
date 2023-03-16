@@ -167,7 +167,14 @@ export class ClientServicesHost {
 
     // TODO(wittjosiah): Make re-entrant.
     // TODO(burdon): Break into components.
-    this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
+    this._serviceContext = new ServiceContext({ 
+      storage: this._storage,
+      networkManager: this._networkManager,
+      modelFactory: this._modelFactory,
+      onIdentityLoaded: async () => {
+        this._initSpaceServices();
+      }
+    });
 
     this._serviceRegistry.addService('IdentityService', new IdentityServiceImpl(this._serviceContext));
     this._serviceRegistry.addService('DevicesService', new DevicesServiceImpl(this._serviceContext.identityManager));
@@ -175,20 +182,6 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.deviceInvitations
     ));
-    this._serviceRegistry.addService('SpaceInvitationsService', new SpaceInvitationsServiceImpl(
-      this._serviceContext.identityManager,
-      () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
-      () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
-    ))
-    this._serviceRegistry.addService('SpacesService', new SpacesServiceImpl(
-      this._serviceContext.identityManager,
-      this._serviceContext.spaceManager,
-      this._serviceContext.dataServiceSubscriptions,
-      async () => {
-        await this._serviceContext.initialized.wait();
-        return this._serviceContext.dataSpaceManager!;
-      }
-    ))
     this._serviceRegistry.addService('DataService', new DataServiceImpl(this._serviceContext.dataServiceSubscriptions))
     this._serviceRegistry.addService('NetworkService', new NetworkServiceImpl(this._serviceContext.networkManager))
     // TODO(burdon): Move to new protobuf definitions.
@@ -204,6 +197,23 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
+  }
+
+  /**
+   * Space-related services are initialized after identity is loaded.
+   */
+  private _initSpaceServices() {
+    this._serviceRegistry.addService('SpaceInvitationsService', new SpaceInvitationsServiceImpl(
+      this._serviceContext.identityManager,
+      this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+      this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
+    ))
+    this._serviceRegistry.addService('SpacesService', new SpacesServiceImpl(
+      this._serviceContext.identityManager,
+      this._serviceContext.spaceManager,
+      this._serviceContext.dataServiceSubscriptions,
+      this._serviceContext.dataSpaceManager ?? raise(new Error('DataSpaceManager not initialized')),
+    ))
   }
 
   async close() {

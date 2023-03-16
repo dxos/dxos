@@ -28,16 +28,16 @@ describe('services/space-invitation-service', () => {
     assert(host.spaceInvitations);
     const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
-      () => host.spaceInvitations!,
-      () => host.dataSpaceManager!
+      host.spaceInvitations!,
+      host.dataSpaceManager!
     );
 
     assert(guest.dataSpaceManager);
     assert(guest.spaceInvitations);
     const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
-      () => guest.spaceInvitations!,
-      () => guest.dataSpaceManager!
+      guest.spaceInvitations!,
+      guest.dataSpaceManager!
     );
 
     const space1 = await host.dataSpaceManager.createSpace();
@@ -89,16 +89,16 @@ describe('services/space-invitation-service', () => {
     assert(host.spaceInvitations);
     const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
-      () => host.spaceInvitations!,
-      () => host.dataSpaceManager!
+      host.spaceInvitations!,
+      host.dataSpaceManager!
     );
 
     assert(guest.dataSpaceManager);
     assert(guest.spaceInvitations);
     const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
-      () => guest.spaceInvitations!,
-      () => guest.dataSpaceManager!
+      guest.spaceInvitations!,
+      guest.dataSpaceManager!
     );
 
     const space1 = await host.dataSpaceManager.createSpace();

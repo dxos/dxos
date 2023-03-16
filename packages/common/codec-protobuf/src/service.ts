@@ -68,7 +68,7 @@ export class Service {
       // TODO(dmaretskyi): What about primitive types.
       const requestCodec = schema.tryGetCodecForType(method.resolvedRequestType.fullName);
       const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName);
-      const methodName = mapRpcMethodName(method.name);
+      const methodName = jsRpcMethodName(method.name);
 
       if (method.responseStream) {
         (this as any)[methodName] = (request: unknown) => {
@@ -117,7 +117,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
-    const mappedMethodName = mapRpcMethodName(methodName);
+    const mappedMethodName = jsRpcMethodName(methodName);
 
     const handler = await this._getHandler(mappedMethodName);
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
@@ -138,7 +138,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
-    const mappedMethodName = mapRpcMethodName(methodName);
+    const mappedMethodName = jsRpcMethodName(methodName);
     const handlerPromise = this._getHandler(mappedMethodName);
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
@@ -176,4 +176,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   }
 }
 
-const mapRpcMethodName = (name: string) => name[0].toLocaleLowerCase() + name.substring(1);
+/**
+ * Maps protobuf RPC method name to JS method name.
+ */
+export const jsRpcMethodName = (name: string) => name[0].toLocaleLowerCase() + name.substring(1);

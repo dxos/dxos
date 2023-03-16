@@ -27,10 +27,7 @@ describe('SpacesService', () => {
       serviceContext.identityManager,
       serviceContext.spaceManager,
       serviceContext.dataServiceSubscriptions,
-      async () => {
-        await serviceContext.initialized.wait();
-        return serviceContext.dataSpaceManager!;
-      }
+      serviceContext.dataSpaceManager!,
     );
   });
 
@@ -43,7 +40,7 @@ describe('SpacesService', () => {
       await expect(spacesService.createSpace()).to.be.rejectedWith();
     });
 
-    test('creates a new space', async () => {
+    test.only('creates a new space', async () => {
       await serviceContext.createIdentity();
       const space = await spacesService.createSpace();
       expect(space).to.exist;

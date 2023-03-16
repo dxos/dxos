@@ -21,7 +21,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { humanize, Provider } from '@dxos/util';
+import { humanize } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
@@ -35,15 +35,14 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
-    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>
+    private readonly _dataSpaceManager: DataSpaceManager
   ) {}
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
       throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
     }
-    const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace();
+    const space = await this._dataSpaceManager.createSpace();
     return this._transformSpace(space);
   }
 
@@ -54,8 +53,7 @@ export class SpacesServiceImpl implements SpacesService {
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
       const onUpdate = async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values())
+        const spaces = Array.from(this._dataSpaceManager.spaces.values())
           // Skip spaces without data service available.
           .filter((space) => this._dataServiceSubscriptions.getDataService(space.key))
           .map((space) => this._transformSpace(space));
@@ -63,14 +61,13 @@ export class SpacesServiceImpl implements SpacesService {
         next({ spaces });
       };
 
-      setTimeout(async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
+      scheduleTask(ctx, async () => {
         const subscriptions = new EventSubscriptions();
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
         const subscribeSpaces = () => {
           subscriptions.clear();
 
-          for (const space of dataSpaceManager.spaces.values()) {
+          for (const space of this._dataSpaceManager.spaces.values()) {
             if (!this._dataServiceSubscriptions.getDataService(space.key)) {
               // Skip spaces without data service available.
               continue;
@@ -81,7 +78,7 @@ export class SpacesServiceImpl implements SpacesService {
           }
         };
 
-        dataSpaceManager.updated.on(ctx, () => {
+        this._dataSpaceManager.updated.on(ctx, () => {
           subscribeSpaces();
           void onUpdate();
         });
@@ -100,16 +97,14 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
-    const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    const space = this._dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     await space.postMessage(getChannelId(channel), message);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
     return new Stream<GossipMessage>(({ ctx, next }) => {
       scheduleTask(ctx, async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
-        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+        const space = this._dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         const handle = space.listen(getChannelId(channel), (message) => {
           next(message);
         });

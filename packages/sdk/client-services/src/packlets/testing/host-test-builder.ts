@@ -51,7 +51,7 @@ export const createServiceContext = ({
   });
 
   const modelFactory = createDefaultModelFactory();
-  return new ServiceContext(storage, networkManager, modelFactory);
+  return new ServiceContext({ storage, networkManager, modelFactory });
 };
 
 export const createPeers = async (numPeers: number) => {

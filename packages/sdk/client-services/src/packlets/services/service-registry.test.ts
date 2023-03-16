@@ -39,8 +39,8 @@ describe('service registry', () => {
     const serviceRegistry = new ServiceRegistry(serviceBundle);
     serviceRegistry.addService('SpaceInvitationsService', new SpaceInvitationsServiceImpl(
       serviceContext.identityManager,
-      () => serviceContext.spaceInvitations!,
-      () => serviceContext.dataSpaceManager!
+      serviceContext.spaceInvitations!,
+      serviceContext.dataSpaceManager!
     ));
 
     const [proxyPort, serverPort] = createLinkedPorts();

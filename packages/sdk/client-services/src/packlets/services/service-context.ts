@@ -22,9 +22,17 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 
-import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
+import { CreateIdentityOptions, Identity, IdentityManager, JoinIdentityParams } from '../identity';
 import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 import { DataSpaceManager } from '../spaces';
+
+export type ServiceContextParams = {
+  storage: Storage;
+  networkManager: NetworkManager;
+  modelFactory: ModelFactory;
+  
+  onIdentityLoaded?: (identity: Identity) => Promise<void>;
+}
 
 /**
  * Shared backend for all client services.
@@ -32,6 +40,9 @@ import { DataSpaceManager } from '../spaces';
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
+  public readonly storage: Storage;
+  public readonly networkManager: NetworkManager;
+  public readonly modelFactory: ModelFactory;
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   public readonly snapshotStore: SnapshotStore;
@@ -41,6 +52,8 @@ export class ServiceContext {
   public readonly identityManager: IdentityManager;
   public readonly deviceInvitations: DeviceInvitationsHandler;
 
+  private readonly _onIdentityLoaded?: (identity: Identity) => Promise<void>;
+
   private _deviceSpaceSync?: CredentialConsumer<any>;
 
   // Initialized after identity is initialized.
@@ -48,11 +61,17 @@ export class ServiceContext {
   public spaceInvitations?: SpaceInvitationsHandler;
 
   // prettier-ignore
-  constructor(
-    public readonly storage: Storage,
-    public readonly networkManager: NetworkManager,
-    public readonly modelFactory: ModelFactory
-  ) {
+  constructor({
+    storage,
+    networkManager,
+    modelFactory,
+    onIdentityLoaded
+  }: ServiceContextParams) {
+    this.storage = storage;
+    this.networkManager = networkManager;
+    this.modelFactory = modelFactory;
+    this._onIdentityLoaded = onIdentityLoaded;
+
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -96,7 +115,7 @@ export class ServiceContext {
     await this.spaceManager.open();
     await this.identityManager.open();
     if (this.identityManager.identity) {
-      await this._initialize();
+      await this._handleIdentityLoaded();
     }
     log('opened');
   }
@@ -123,19 +142,19 @@ export class ServiceContext {
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
 
-    await this._initialize();
+    await this._handleIdentityLoaded();
     return identity;
   }
 
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
 
-    await this._initialize();
+    await this._handleIdentityLoaded();
     return identity;
   }
 
   // Called when identity is created.
-  private async _initialize() {
+  private async _handleIdentityLoaded() {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
@@ -199,5 +218,6 @@ export class ServiceContext {
       }
     });
     await this._deviceSpaceSync.open();
+    await this._onIdentityLoaded?.(identity);
   }
 }
