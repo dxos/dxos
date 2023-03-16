@@ -39,7 +39,8 @@ module.exports = {
     },
 
     listStyleType: {
-      square: 'square'
+      square: 'square',
+      dash: '"-"'
     },
 
     // TODO(burdon): Levels.
@@ -87,6 +88,7 @@ module.exports = {
       selection: {
         bg: secondary[200],
         text: secondary[700],
+        marker: secondary[400],
         border: secondary[300]
       },
 

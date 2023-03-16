@@ -3,20 +3,16 @@
 //
 
 import { Command, User } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { ShellLayout } from '@dxos/react-client';
 import { Button, DensityProvider, DropdownMenu, getSize } from '@dxos/react-components';
 import { useShell } from '@dxos/react-ui';
 
-import { SpaceSettingsDialog } from '../../containers';
-import { useAppRouter } from '../../hooks';
 import { Actions } from './Actions';
 
 export const AppMenu = () => {
-  const { space } = useAppRouter();
   const shell = useShell();
-  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <>
@@ -39,8 +35,6 @@ export const AppMenu = () => {
           </Button>
         </DensityProvider>
       </div>
-
-      {space && <SpaceSettingsDialog space={space} open={showSettings} onOpenChange={setShowSettings} />}
     </>
   );
 };
