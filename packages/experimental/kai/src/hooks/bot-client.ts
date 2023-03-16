@@ -66,6 +66,16 @@ export class BotClient {
   }
 
   /**
+   * Fetch latest image.
+   */
+  async fetchImage() {
+    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
+      method: 'POST',
+      body: JSON.stringify({}) // Empty body required.
+    });
+  }
+
+  /**
    * Start bot container.
    */
   async startBot(botId: string, envMap?: Map<string, string>) {
@@ -81,12 +91,6 @@ export class BotClient {
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
     const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
-
-    // Fetch latest image.
-    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
-      method: 'POST',
-      body: JSON.stringify({}) // Empty body required.
-    });
 
     /**
      * {@see DX_BOT_RPC_PORT_MIN}

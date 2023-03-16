@@ -110,6 +110,9 @@ export const BotManager = () => {
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
       <Toolbar>
+        <Button className='mr-2' onClick={() => botId && botClient.fetchImage()}>
+          Download Latest Image
+        </Button>
         <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
           Start
         </Button>
