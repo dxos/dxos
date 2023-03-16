@@ -10,6 +10,7 @@ import { defaultOsButtonColors, mx, useButtonShadow } from '@dxos/react-componen
 import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
 
 import { SidebarContent, SidebarToggle } from '../../components';
+import { OctokitProvider } from '../../components/OctokitProvider';
 import { namespace, abbreviateKey } from '../../router';
 
 export const DocumentLayout = () => {
@@ -34,20 +35,22 @@ export const DocumentLayout = () => {
         console.log('[joined space]', spaceKey);
       }}
     >
-      <PanelSidebarProvider
-        slots={{
-          content: {
-            children: <SidebarContent />,
-            className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
-            onOpenAutoFocus: (event) => event.preventDefault(),
-            onCloseAutoFocus: (event) => event.preventDefault()
-          },
-          main: { role: 'main', className: 'min-bs-full' }
-        }}
-      >
-        <Outlet context={{ space }} />
-        <SidebarToggle />
-      </PanelSidebarProvider>
+      <OctokitProvider>
+        <PanelSidebarProvider
+          slots={{
+            content: {
+              children: <SidebarContent />,
+              className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
+              onOpenAutoFocus: (event) => event.preventDefault(),
+              onCloseAutoFocus: (event) => event.preventDefault()
+            },
+            main: { role: 'main', className: 'min-bs-full' }
+          }}
+        >
+          <Outlet context={{ space }} />
+          <SidebarToggle />
+        </PanelSidebarProvider>
+      </OctokitProvider>
     </ShellProvider>
   );
 };

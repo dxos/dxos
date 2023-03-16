@@ -27,6 +27,11 @@ export default defineConfig({
   build: {
     sourcemap: true
   },
+  resolve: {
+    alias: {
+      'node-fetch': 'isomorphic-fetch'
+    }
+  },
   plugins: [
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
