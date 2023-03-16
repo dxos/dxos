@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
 import { Document, DocumentStack, Presentation } from '@dxos/kai-types';
-import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
+import { useQuery, observer, Space, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 import { TextKind } from '@dxos/react-composer';
 
@@ -132,8 +132,8 @@ const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide'
   const handleUpdate = useCallback(() => {
     const texts = presentation.stack.sections
       .map((section) => section.object)
-      .map((doc) => {
-        return doc.content?.kind === TextKind.PLAIN ? doc.content : undefined;
+      .map((document) => {
+        return document.content?.kind === TextKind.PLAIN ? document.content : undefined;
       })
       .filter(Boolean) as Text[];
 
