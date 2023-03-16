@@ -5,15 +5,21 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document } from '@dxos/echo-schema';
+import { Document, Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { RichTextComposer } from '@dxos/react-composer';
+import { MarkdownComposer, RichTextComposer, usePlainTextModel } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
 import { getColumnType } from '../Table';
+
+// TODO(burdon): Normalize API for both editors.
+const Markdown: FC<{ space: Space; content: Text }> = ({ space, content }) => {
+  const model = usePlainTextModel({ space, text: content });
+  return <MarkdownComposer model={model} />;
+};
 
 export const StackContent: FC<{
   config: Config;
@@ -31,17 +37,23 @@ export const StackContent: FC<{
       //   throw new Error(`Invalid object type: ${object.__typename}`);
       // }
 
-      return (
-        <RichTextComposer
-          text={object.content}
-          slots={{
-            editor: {
-              className: 'kai-composer',
-              spellCheck
-            }
-          }}
-        />
-      );
+      switch (object.type) {
+        case DocumentType.Type.MARKDOWN:
+          return <Markdown space={space} content={object.content} />;
+
+        case DocumentType.Type.RICH_TEXT:
+        default:
+          return (
+            <RichTextComposer
+              text={object.content}
+              slots={{
+                editor: {
+                  spellCheck
+                }
+              }}
+            />
+          );
+      }
     }
 
     case Table.type.name: {

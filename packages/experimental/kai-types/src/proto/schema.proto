@@ -134,10 +134,16 @@ message Kanban {
 message Document {
   option (object) = true;
 
-  string title = 1;
-  dxos.schema.Text content = 2;
+  enum Type {
+    RICH_TEXT = 0;
+    MARKDOWN = 1;
+  }
+
+  Type type = 1;
+  string title = 2;
+  dxos.schema.Text content = 3;
 //  repeated string tags = 2;
-  string tag = 3;
+  string tag = 4;
 }
 
 message DocumentStack {
@@ -150,8 +156,9 @@ message DocumentStack {
   }
 
   string title = 1;
-  string subject_id = 2; // TODO(burdon): Reference.
-  repeated Section sections = 3;
+  repeated Section sections = 2;
+
+  string subject_id = 10; // TODO(burdon): Create external link instead.
 }
 
 // TODO(burdon): Rename;

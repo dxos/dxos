@@ -55,7 +55,7 @@ const views: View[] = [
 ];
 
 export const ExplorerFrame = () => {
-  const [view, setView] = useState(ViewType.TREE);
+  const [view, setView] = useState(ViewType.GRAPH);
 
   // TODO(burdon): Echo model.
   const model = useMemo(() => {
