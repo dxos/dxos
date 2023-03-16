@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+import { withProfiler } from '@sentry/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -63,7 +64,7 @@ const waitForRpc = async () =>
 const namespace = 'devtools-extension';
 void initializeAppTelemetry(namespace, new Config(Defaults()));
 
-const App = () => {
+const App = withProfiler(() => {
   log('initializing...');
 
   const [context, setContext] = useState<ClientContextProps>();
@@ -83,7 +84,7 @@ const App = () => {
   }, []);
 
   return <Devtools context={context} namespace={namespace} />;
-};
+});
 
 const init = async () => {
   createRoot(document.getElementById('root')!).render(<App />);

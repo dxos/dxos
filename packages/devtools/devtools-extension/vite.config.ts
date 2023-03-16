@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -92,7 +93,18 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'devtools-extension',
+            include: './out/devtools-extension',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**
