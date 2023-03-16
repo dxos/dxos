@@ -13,7 +13,7 @@ import {
   MagnifyingGlass,
   UserCircle
 } from '@phosphor-icons/react';
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
@@ -21,6 +21,7 @@ import { getSize, Searchbar } from '@dxos/react-components';
 
 import { FrameDef, frameDefs, useAppRouter } from '../../hooks';
 
+// TODO(burdon): Factor out search hook.
 // TODO(burdon): Reconcile with type and frame system.
 export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
   'dxos.experimental.kai.Organization': {
@@ -50,6 +51,11 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
     Icon: FileText,
     frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.document')
   },
+  'dxos.experimental.kai.DocumentStack': {
+    rank: 2,
+    Icon: FileText,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.stack')
+  },
   'dxos.experimental.kai.Message': {
     rank: 1,
     Icon: Envelope,
@@ -60,7 +66,7 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
 // TODO(burdon): Based on schema. Convert documents. to text.
 const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from.name'];
 
-type SearchResult = {
+export type SearchResult = {
   object: Document;
   rank: number;
   Icon: FC<any>;
@@ -136,11 +142,17 @@ const matchFilter = (text: string) => {
 
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
+export type SearchResults = {
+  text: string;
+  results: SearchResult[];
+};
+
 export type SearchPanelProps = {
+  onResults?: (object: SearchResults) => void;
   onSelect?: (object: Document) => void;
 };
 
-export const SearchPanel = ({ onSelect }: SearchPanelProps) => {
+export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   // TODO(burdon): Search across spaces.
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
@@ -159,20 +171,26 @@ export const SearchPanel = ({ onSelect }: SearchPanelProps) => {
   };
 
   const { space } = useAppRouter();
-  const results = useQuery(space).map(matchFilter(text)).filter(Boolean) as SearchResult[];
-  const sorted = results.sort(sort);
+  const results = useQuery(space);
+  const sorted = useMemo(
+    () => (results.map(matchFilter(text)).filter(Boolean) as SearchResult[]).sort(sort),
+    [results, text]
+  );
+  useEffect(() => {
+    onResults?.({ text, results: sorted });
+  }, [sorted]);
 
   return (
-    <div className='flex flex-col w-full'>
+    <div className='flex flex-col overflow-hidden w-full'>
       <div className='flex items-center p-4'>
         <MagnifyingGlass className={getSize(6)} />
         <Searchbar
-          slots={{ root: { className: 'pl-2' }, input: { autoFocus: true, className: 'border-b' } }}
+          slots={{ root: { className: 'pl-2', variant: 'subdued' }, input: { autoFocus: true, className: 'border-b' } }}
           onSearch={handleSearch}
         />
       </div>
 
-      <div className='flex flex-1 overflow-hidden overflow-y-scroll'>
+      <div className='flex flex-1 overflow-y-scroll'>
         <div className='flex flex-col w-full'>
           {sorted.map(({ object, Icon, title, snippet }, i) => (
             <div
