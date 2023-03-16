@@ -63,74 +63,76 @@ const converter = new Converter();
 
 const nestedParagraphOutput = / +\n/g;
 
-const DocumentPageContent = ({
-  children,
-  document,
-  dropdownMenuContent,
-  handleImport,
-  importDialogOpen,
-  setImportDialogOpen
-}: PropsWithChildren<{
-  document: ComposerDocument;
-  dropdownMenuContent?: ReactNode;
-  handleImport?: (file: File) => Promise<void>;
-  importDialogOpen?: boolean;
-  setImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
-}>) => {
-  const { t } = useTranslation('composer');
-  return (
-    <>
-      <div role='none' className='mli-auto max-is-[50rem] min-bs-screen border border-neutral-500/20'>
-        <Input
-          key={document.id}
-          variant='subdued'
-          label={t('document title label')}
-          labelVisuallyHidden
-          placeholder={t('untitled document title')}
-          value={document.title ?? ''}
-          onChange={({ target: { value } }) => (document.title = value)}
-          slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
-        />
-        {children}
-      </div>
-      <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-        <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
-          <DropdownMenu
-            trigger={
-              <Button className='p-0 is-10' density='coarse'>
-                <DotsThreeVertical className={getSize(6)} />
-              </Button>
-            }
-          >
-            {dropdownMenuContent}
-          </DropdownMenu>
+const DocumentPageContent = observer(
+  ({
+    children,
+    document,
+    dropdownMenuContent,
+    handleImport,
+    importDialogOpen,
+    setImportDialogOpen
+  }: PropsWithChildren<{
+    document: ComposerDocument;
+    dropdownMenuContent?: ReactNode;
+    handleImport?: (file: File) => Promise<void>;
+    importDialogOpen?: boolean;
+    setImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
+  }>) => {
+    const { t } = useTranslation('composer');
+    return (
+      <>
+        <div role='none' className='mli-auto max-is-[50rem] min-bs-screen border border-neutral-500/20'>
+          <Input
+            key={document.id}
+            variant='subdued'
+            label={t('document title label')}
+            labelVisuallyHidden
+            placeholder={t('untitled document title')}
+            value={document.title ?? ''}
+            onChange={({ target: { value } }) => (document.title = value)}
+            slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
+          />
+          {children}
         </div>
-        {handleImport && (
-          <Dialog
-            open={importDialogOpen}
-            onOpenChange={setImportDialogOpen}
-            title={t('confirm import title')}
-            slots={{ overlay: { className: 'backdrop-blur-sm' } }}
-          >
-            <p className='mlb-4'>{t('confirm import body')}</p>
-            <FileUploader
-              types={['md']}
-              classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
-              dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-              handleChange={handleImport}
+        <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+          <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
+            <DropdownMenu
+              trigger={
+                <Button className='p-0 is-10' density='coarse'>
+                  <DotsThreeVertical className={getSize(6)} />
+                </Button>
+              }
             >
-              <FilePlus weight='duotone' className={getSize(8)} />
-              <span>{t('upload file message')}</span>
-            </FileUploader>
-            <Button className='block is-full' onClick={() => setImportDialogOpen?.(false)}>
-              {t('cancel label', { ns: 'appkit' })}
-            </Button>
-          </Dialog>
-        )}
-      </ThemeContext.Provider>
-    </>
-  );
-};
+              {dropdownMenuContent}
+            </DropdownMenu>
+          </div>
+          {handleImport && (
+            <Dialog
+              open={importDialogOpen}
+              onOpenChange={setImportDialogOpen}
+              title={t('confirm import title')}
+              slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+            >
+              <p className='mlb-4'>{t('confirm import body')}</p>
+              <FileUploader
+                types={['md']}
+                classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
+                dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+                handleChange={handleImport}
+              >
+                <FilePlus weight='duotone' className={getSize(8)} />
+                <span>{t('upload file message')}</span>
+              </FileUploader>
+              <Button className='block is-full' onClick={() => setImportDialogOpen?.(false)}>
+                {t('cancel label', { ns: 'appkit' })}
+              </Button>
+            </Dialog>
+          )}
+        </ThemeContext.Provider>
+      </>
+    );
+  }
+);
 
 const PureRichTextDocumentPage = observer(({ document }: { document: ComposerDocument }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -472,7 +474,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   );
 });
 
-export const DocumentPage = () => {
+export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
@@ -493,4 +495,4 @@ export const DocumentPage = () => {
       )}
     </div>
   );
-};
+});
