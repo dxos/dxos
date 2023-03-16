@@ -61,11 +61,17 @@ export const PresenterFrame = observer(() => {
 
   return (
     <div className='flex flex-1 overflow-hidden'>
+<<<<<<< HEAD
       {!fullscreen && (
         <div className='flex flex-1 shrink-0 overflow-hidden'>
           <Editor space={space} presentation={presentation} />
         </div>
       )}
+=======
+      <div className='flex flex-1 shrink-0 overflow-hidden'>
+        <Editor />
+      </div>
+>>>>>>> main
 
       {/* TODO(burdon): Toggle split screen mode. */}
       <div className='flex flex-1 shrink-0 overflow-hidden'>
