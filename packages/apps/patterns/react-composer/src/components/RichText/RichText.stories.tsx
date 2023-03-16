@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { PublicKey, Text } from '@dxos/client';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
-import { ClientDecorator, ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { ClientDecorator, ClientSpaceDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { mx, useId } from '@dxos/react-components';
 
 import { useTextModel } from '../../model';
@@ -28,7 +28,7 @@ export const Default = {
   }
 };
 
-export const Echo = {
+export const WithEcho = {
   render: ({ spaceKey, id, ...args }: Omit<RichTextComposerProps, 'model'> & { spaceKey?: PublicKey; id: number }) => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
@@ -40,7 +40,7 @@ export const Echo = {
     const model = useTextModel({ identity, space, text: document?.content });
 
     useDataGenerator({
-      generator: generate ? loremGenerator : undefined,
+      generator: generate ? textGenerator : undefined,
       options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 
@@ -78,7 +78,7 @@ export const Echo = {
 };
 
 const replicator = new Replicator(TextKind.RICH);
-export const Yjs = {
+export const WithYjs = {
   render: (args: Omit<RichTextComposerProps, 'model'>) => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
@@ -87,7 +87,7 @@ export const Yjs = {
     const model = useYjsModel({ id, replicator });
 
     useDataGenerator({
-      generator: generate ? loremGenerator : undefined,
+      generator: generate ? textGenerator : undefined,
       options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 

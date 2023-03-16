@@ -14,6 +14,7 @@ import { SpaceProvider } from './yjs';
 type Awareness = awarenessProtocol.Awareness;
 type Provider = { awareness: Awareness };
 
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export type ComposerModel = {
   id: string;
   content: string | YText | YXmlFragment;
@@ -30,6 +31,7 @@ export type UseTextModelOptions = {
   text?: Text;
 };
 
+// TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): ComposerModel | undefined => {
   // TODO(wittjosiah): Support `observer` with `forwardRef`.
   const [, forceUpdate] = useReducer((state) => state + 1, 0);

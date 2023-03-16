@@ -18,7 +18,7 @@ type LoremOptions = {
   period?: number;
 };
 
-export const loremGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000 }) => {
+export const textGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000 }) => {
   if (!text) {
     return () => {};
   }
