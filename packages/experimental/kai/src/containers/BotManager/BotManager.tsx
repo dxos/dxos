@@ -110,31 +110,27 @@ export const BotManager = () => {
   return (
     <div className='flex-1 flex-col px-2 overflow-hidden'>
       <Toolbar>
-        <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
-          Start
-        </Button>
-        <Select value={botId} onValueChange={setBotId}>
-          {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
-            <Select.Item key={id} value={id!}>
-              <div className='flex items-center'>
-                <Icon className={mx(getSize(5), 'mr-2')} />
-                {displayName}
-              </div>
-            </Select.Item>
-          ))}
-        </Select>
+        <div className='flex items-center space-x-2'>
+          <Select value={botId} onValueChange={setBotId} className='w-full'>
+            {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
+              <Select.Item key={id} value={id!}>
+                <div className='flex items-center'>
+                  <Icon className={mx(getSize(5), 'mr-2')} />
+                  {displayName}
+                </div>
+              </Select.Item>
+            ))}
+          </Select>
+          <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
+            Start
+          </Button>
+        </div>
         <div className='grow' />
         {/* TODO(burdon): Menu. */}
-        <div>
-          <Button className='mr-2' onClick={() => botId && botClient.fetchImage()}>
-            Pull Image
-          </Button>
-          <Button className='mr-2' onClick={handleDelete}>
-            Reset
-          </Button>
-          <Button className='mr-2' onClick={refresh}>
-            Refresh
-          </Button>
+        <div className='flex items-center space-x-2'>
+          <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
+          <Button onClick={handleDelete}>Reset</Button>
+          <Button onClick={refresh}>Refresh</Button>
         </div>
       </Toolbar>
 
