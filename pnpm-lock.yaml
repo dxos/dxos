@@ -59,6 +59,8 @@ importers:
       '@storybook/addon-links': 7.0.0-beta.48
       '@storybook/builder-vite': 7.0.0-beta.48
       '@storybook/core-server': 7.0.0-beta.48
+      '@storybook/html': 7.0.0-beta.48
+      '@storybook/html-vite': 7.0.0-beta.48
       '@storybook/mdx2-csf': ^0.0.3
       '@storybook/react': 7.0.0-beta.48
       '@storybook/react-vite': 7.0.0-beta.48
@@ -158,6 +160,8 @@ importers:
       '@storybook/addon-links': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/builder-vite': 7.0.0-beta.48_7wxlrseamykcr6ndq744yyf47i
       '@storybook/core-server': 7.0.0-beta.48
+      '@storybook/html': 7.0.0-beta.48
+      '@storybook/html-vite': 7.0.0-beta.48_7wxlrseamykcr6ndq744yyf47i
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 7.0.0-beta.48_yalvw3r2waubxycyb7k7qsruca
       '@storybook/react-vite': 7.0.0-beta.48_7wxlrseamykcr6ndq744yyf47i
@@ -603,6 +607,7 @@ importers:
       '@codemirror/theme-one-dark': ^6.1.1
       '@codemirror/view': ^6.9.2
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -679,6 +684,7 @@ importers:
       yjs: 13.5.44
     devDependencies:
       '@dxos/client': link:../../../sdk/client
+      '@dxos/client-services': link:../../../sdk/client-services
       '@dxos/config': link:../../../sdk/config
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
@@ -11963,6 +11969,21 @@ packages:
       - supports-color
     dev: true
 
+  /@storybook/addons/7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-n5sryp7u6yM8KJrQCbvcQmTheITtVQsCpyzfBRBuTzMe+PlVvn/Ql94VJxlA8mbsFy35O0BxldEc/0ujtCVV9g==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      '@storybook/manager-api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/preview-api': 7.0.0-beta.48
+      '@storybook/types': 7.0.0-beta.48
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@storybook/blocks/7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-LHnkO7nbskl6JnpJF1+EjCEaEklD+31iNf8v+GJ+fFx5sY3fFLeGmjHgU4bYZuIHJFu1MKcG6SHY4OGuwH5vag==}
     peerDependencies:
@@ -12089,6 +12110,15 @@ packages:
 
   /@storybook/channels/7.0.0-beta.48:
     resolution: {integrity: sha512-sP+dMU4vsHQTwlmTvt7QOTl7JjOkGIb2P1zkEwOYXx2ilMyHEpeyPG/iTlKX5T1pGEq274NeUwEE+6Zecqj30w==}
+    dev: true
+
+  /@storybook/client-api/7.0.0-beta.48:
+    resolution: {integrity: sha512-WQKSN+xWzZLKcYTTr6/2LalKVlxu9pvVhJSXHIEk6j4VzboQru5slO4cLjh53tjOXhnrdNQY45DmSndshLXJuA==}
+    dependencies:
+      '@storybook/client-logger': 7.0.0-beta.48
+      '@storybook/preview-api': 7.0.0-beta.48
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /@storybook/client-logger/7.0.0-beta.48:
@@ -12260,6 +12290,51 @@ packages:
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
     dev: true
 
+  /@storybook/html-vite/7.0.0-beta.48_7wxlrseamykcr6ndq744yyf47i:
+    resolution: {integrity: sha512-1UEiAkJX5DFpCck2yCTCNpzoT/z6zP1qJS+BY/G8RDQMI/qRixoM2Glgxv/EF1PQTeKDKTNjEujDOj/6+5pMNw==}
+    engines: {node: ^14.18 || >=16}
+    dependencies:
+      '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/builder-vite': 7.0.0-beta.48_7wxlrseamykcr6ndq744yyf47i
+      '@storybook/channel-postmessage': 7.0.0-beta.48
+      '@storybook/channel-websocket': 7.0.0-beta.48
+      '@storybook/client-api': 7.0.0-beta.48
+      '@storybook/core-server': 7.0.0-beta.48
+      '@storybook/html': 7.0.0-beta.48
+      '@storybook/node-logger': 7.0.0-beta.48
+      '@storybook/preview-web': 7.0.0-beta.48
+      magic-string: 0.27.0
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@preact/preset-vite'
+      - '@storybook/mdx1-csf'
+      - bufferutil
+      - encoding
+      - react
+      - react-dom
+      - supports-color
+      - typescript
+      - utf-8-validate
+      - vite
+      - vite-plugin-glimmerx
+    dev: true
+
+  /@storybook/html/7.0.0-beta.48:
+    resolution: {integrity: sha512-wTxMjGREJP65Oaj2x3MdDg26lq/Ujm2m1sMX8oHEufdTM/PAaz9a2lcobsbHOF6xtpM8R6rCtsvXaiGFf/3F0A==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      '@babel/core': '*'
+    dependencies:
+      '@storybook/core-client': 7.0.0-beta.48
+      '@storybook/docs-tools': 7.0.0-beta.48
+      '@storybook/global': 5.0.0
+      '@storybook/preview-api': 7.0.0-beta.48
+      '@storybook/types': 7.0.0-beta.48
+      ts-dedent: 2.2.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@storybook/instrumenter/7.0.0-beta.48:
     resolution: {integrity: sha512-AN1tBlBkY23CbfJaWAuoKWghXw8njO1JbYQ6SFeK8KuwxXbQkakAUebdD/Fz3vCBo8Wzn8wqV4Ba32xJG0Q81Q==}
     dependencies:
@@ -12354,6 +12429,15 @@ packages:
       synchronous-promise: 2.0.16
       ts-dedent: 2.2.0
       util-deprecate: 1.0.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@storybook/preview-web/7.0.0-beta.48:
+    resolution: {integrity: sha512-Jw3EK2u9o9bk5+ogZN7ioay/gFpJ9QBa0Eyo1LgaO/Pv0pTOyqATKT3W0JuDPTzn6alMUL308ATgPvkUXHnOMg==}
+    dependencies:
+      '@storybook/client-logger': 7.0.0-beta.48
+      '@storybook/preview-api': 7.0.0-beta.48
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14923,7 +15007,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14975,7 +15059,7 @@ packages:
   /@vue/compiler-sfc/3.2.45:
     resolution: {integrity: sha512-1jXDuWah1ggsnSAOGsec8cFjT/K6TMZ0sPL3o3d84Ft2AYZi2jWJgRMjw4iaK0rBfA89L5gw427H4n1RZQBu6Q==}
     dependencies:
-      '@babel/parser': 7.19.4
+      '@babel/parser': 7.20.7
       '@vue/compiler-core': 3.2.45
       '@vue/compiler-dom': 3.2.45
       '@vue/compiler-ssr': 3.2.45
@@ -35749,7 +35833,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
