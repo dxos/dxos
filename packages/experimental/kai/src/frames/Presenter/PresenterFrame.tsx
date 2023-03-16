@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, Presentation } from '@dxos/kai-types';
 import { useQuery, observer, useSubscription, Space } from '@dxos/react-client';
+import { Button } from '@dxos/react-components';
 
 import { Deck } from '../../components';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
@@ -25,10 +26,17 @@ const defaultSlides = [
   '# Get Involved\nhello@dxos.org'
 ];
 
+enum View {
+  EDITOR = 1,
+  MARKDOWN = 2,
+  SPLIT = 3
+}
+
 export const PresenterFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
   const { fullscreen } = useAppState();
+  const [view, setView] = useState<View>(View.EDITOR);
 
   const presentations = useQuery(space, Presentation.filter());
   const presentation = objectId ? (space!.db.getObjectById(objectId) as Presentation) : undefined;
@@ -61,16 +69,23 @@ export const PresenterFrame = observer(() => {
 
   return (
     <div className='flex flex-1 overflow-hidden'>
-      {!fullscreen && (
+      {view !== View.MARKDOWN && !fullscreen && (
         <div className='flex flex-1 shrink-0 overflow-hidden'>
           <Editor space={space} presentation={presentation} />
         </div>
       )}
 
-      {/* TODO(burdon): Toggle split screen mode. */}
-      <div className='flex flex-1 shrink-0 overflow-hidden'>
-        <DeckContainer space={space} presentation={presentation} />
+      <div>
+        <Button onClick={() => setView(View.EDITOR)}>A</Button>
+        <Button onClick={() => setView(View.SPLIT)}>B</Button>
+        <Button onClick={() => setView(View.MARKDOWN)}>C</Button>
       </div>
+
+      {view !== View.EDITOR && (
+        <div className='flex flex-1 shrink-0 overflow-hidden'>
+          <DeckContainer space={space} presentation={presentation} />
+        </div>
+      )}
     </div>
   );
 });
