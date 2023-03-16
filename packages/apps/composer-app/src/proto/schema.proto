@@ -13,6 +13,5 @@ message ComposerDocument {
 
   string title = 1;
   dxos.schema.Text content = 2;
-  string textintention = 3;
-  string github = 4;
+  string github = 3;
 }
