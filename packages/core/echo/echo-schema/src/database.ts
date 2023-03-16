@@ -180,7 +180,7 @@ export class EchoDatabase {
     }
 
     // Dispatch update events.
-    for(const item of changed) {
+    for (const item of changed) {
       const obj = this._objects.get(item.id);
       if (obj) {
         obj[base]._itemUpdate();

@@ -87,7 +87,7 @@ export class DatabaseBackendProxy {
           objectCount: msg.batch.objects?.length ?? 0
         });
 
-        const objectsUpdated: Item[] = []
+        const objectsUpdated: Item[] = [];
         this._processMessage(msg.batch, objectsUpdated);
 
         if (msg.clientTag) {
@@ -251,13 +251,12 @@ export class DatabaseBackendProxy {
 
       // Optimistic apply.
       for (const objectMutation of batchInput.objects ?? []) {
-          const item = this._processOptimistic(objectMutation);
-          if (item) {
-            objectsUpdated.push(item);
-          }
+        const item = this._processOptimistic(objectMutation);
+        if (item) {
+          objectsUpdated.push(item);
+        }
       }
       this.itemUpdate.emit(objectsUpdated);
-
 
       const batch = this._currentBatch!;
       return {

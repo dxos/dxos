@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
