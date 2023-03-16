@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import {
   Article,
-  Robot,
   Calendar,
   Cards,
   Code,
@@ -15,21 +13,21 @@ import {
   HighlighterCircle,
   Kanban as KanbanIcon,
   ListChecks,
-  Monitor,
+  Presentation,
   Stack as StackIcon,
   Sword,
   Table,
   Tray,
   MagnifyingGlass,
   IdentificationCard
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
+import assert from 'assert';
 import { FC, useMemo } from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
-  BotFrame,
   CalendarFrame,
   ChessFrame,
   ContactFrame,
@@ -38,9 +36,9 @@ import {
   File,
   KanbanFrame,
   MapFrame,
-  MasonryFrame,
   MessageFrame,
   Note,
+  Presenter,
   SandboxFrame,
   SearchFrame,
   SketchFrame,
@@ -64,18 +62,6 @@ export type FrameDef = {
  */
 // prettier-ignore
 export const frameDefs: FrameDef[] = [
-  {
-    module: {
-      id: 'dxos.module.frame.dashboard',
-      type: 'dxos:type/frame',
-      displayName: 'Dashboard',
-      description: 'Configurable tiles.'
-    },
-    runtime: {
-      Icon: Monitor,
-      Component: MasonryFrame
-    }
-  },
   {
     module: {
       id: 'dxos.module.frame.search',
@@ -140,18 +126,6 @@ export const frameDefs: FrameDef[] = [
   },
   {
     module: {
-      id: 'dxos.module.frame.bot',
-      type: 'dxos:type/frame',
-      displayName: 'Bots',
-      description: 'Bot manager.'
-    },
-    runtime: {
-      Icon: Robot,
-      Component: BotFrame
-    }
-  },
-  {
-    module: {
       id: 'dxos.module.frame.inbox',
       type: 'dxos:type/frame',
       displayName: 'Inbox',
@@ -160,18 +134,6 @@ export const frameDefs: FrameDef[] = [
     runtime: {
       Icon: Tray,
       Component: MessageFrame
-    }
-  },
-  {
-    module: {
-      id: 'dxos.module.frame.bot',
-      type: 'dxos:type/frame',
-      displayName: 'Bots',
-      description: 'Bot management.'
-    },
-    runtime: {
-      Icon: Robot,
-      Component: BotFrame
     }
   },
   {
@@ -204,12 +166,25 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.stack',
       type: 'dxos:type/frame',
       displayName: 'Stacks',
-      description: 'Structured documents.'
+      description: 'Dynamic structured documents.'
     },
     runtime: {
       Icon: StackIcon,
       Component: Stack.Frame,
       List: Stack.List
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.presenter',
+      type: 'dxos:type/frame',
+      displayName: 'Presenter',
+      description: 'Slide presentations.'
+    },
+    runtime: {
+      Icon: Presentation,
+      Component: Presenter.Frame,
+      List: Presenter.List
     }
   },
   {
@@ -255,7 +230,7 @@ export const frameDefs: FrameDef[] = [
       id: 'dxos.module.frame.explorer',
       type: 'dxos:type/frame',
       displayName: 'Explorer',
-      description: 'Graphical User Interface and Data Explorer (GUIDE).'
+      description: 'Graphical User Interface and Data Explorer.'
     },
     runtime: {
       Icon: Graph,
@@ -278,7 +253,7 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.chess',
       type: 'dxos:type/frame',
-      displayName: 'Chess',
+      displayName: 'Games',
       description: 'Peer-to-peer and engine powered games.'
     },
     runtime: {
@@ -290,8 +265,8 @@ export const frameDefs: FrameDef[] = [
     module: {
       id: 'dxos.module.frame.sandbox',
       type: 'dxos:type/frame',
-      displayName: 'Code Notebook',
-      description: 'Collaborative script editor.'
+      displayName: 'Script',
+      description: 'Frame and Bot script editor.'
     },
     runtime: {
       Icon: Code,
@@ -302,26 +277,26 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-// TODO(burdon): Make switchable based on dev/prod mode.
-export const defaultFrameId = 'dxos.module.frame.dashboard';
+export const defaultFrameId = 'dxos.module.frame.presenter';
 
 // prettier-ignore
 export const defaultFrames = [
-  'dxos.module.frame.dashboard',
-  'dxos.module.frame.inbox',
-  'dxos.module.frame.contact',
-  'dxos.module.frame.calendar',
   'dxos.module.frame.stack',
-  'dxos.module.frame.bot'
-  // 'dxos.module.frame.kanban'
-  // 'dxos.module.frame.table',
+  'dxos.module.frame.presenter',
+  'dxos.module.frame.inbox',
+  'dxos.module.frame.calendar',
+  'dxos.module.frame.contact',
+  'dxos.module.frame.kanban',
+  'dxos.module.frame.table',
+  'dxos.module.frame.note',
+  'dxos.module.frame.sketch',
+  'dxos.module.frame.file',
+  'dxos.module.frame.chess'
+
+  // 'dxos.module.frame.maps'
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
-  // 'dxos.module.frame.note',
-  // 'dxos.module.frame.chess',
-  // 'dxos.module.frame.file',
   // 'dxos.module.frame.explorer',
-  // 'dxos.module.frame.note'
 ];
 
 export type FrameMap = Map<string, FrameDef>;

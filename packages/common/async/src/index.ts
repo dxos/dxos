@@ -4,6 +4,7 @@
 
 export * from './callback';
 export * from './chain';
+export * from './debounce';
 export * from './errors';
 export * from './event-emitter';
 export * from './events';

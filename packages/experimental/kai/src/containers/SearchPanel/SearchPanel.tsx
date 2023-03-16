@@ -2,8 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle } from 'phosphor-react';
-import React, { FC, useRef, useState } from 'react';
+import {
+  Bag,
+  Buildings,
+  Calendar,
+  Check,
+  Circle,
+  Envelope,
+  FileText,
+  MagnifyingGlass,
+  UserCircle
+} from '@phosphor-icons/react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
@@ -11,6 +21,7 @@ import { getSize, Searchbar } from '@dxos/react-components';
 
 import { FrameDef, frameDefs, useAppRouter } from '../../hooks';
 
+// TODO(burdon): Factor out search hook.
 // TODO(burdon): Reconcile with type and frame system.
 export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
   'dxos.experimental.kai.Organization': {
@@ -40,6 +51,11 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
     Icon: FileText,
     frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.document')
   },
+  'dxos.experimental.kai.DocumentStack': {
+    rank: 2,
+    Icon: FileText,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.stack')
+  },
   'dxos.experimental.kai.Message': {
     rank: 1,
     Icon: Envelope,
@@ -50,7 +66,7 @@ export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?:
 // TODO(burdon): Based on schema. Convert documents. to text.
 const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from.name'];
 
-type SearchResult = {
+export type SearchResult = {
   object: Document;
   rank: number;
   Icon: FC<any>;
@@ -126,11 +142,17 @@ const matchFilter = (text: string) => {
 
 const sort = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
 
+export type SearchResults = {
+  text: string;
+  results: SearchResult[];
+};
+
 export type SearchPanelProps = {
+  onResults?: (object: SearchResults) => void;
   onSelect?: (object: Document) => void;
 };
 
-export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
+export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
   // TODO(burdon): Search across spaces.
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
@@ -149,16 +171,26 @@ export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
   };
 
   const { space } = useAppRouter();
-  const results = useQuery(space).map(matchFilter(text)).filter(Boolean) as SearchResult[];
-  const sorted = results.sort(sort);
+  const results = useQuery(space);
+  const sorted = useMemo(
+    () => (results.map(matchFilter(text)).filter(Boolean) as SearchResult[]).sort(sort),
+    [results, text]
+  );
+  useEffect(() => {
+    onResults?.({ text, results: sorted });
+  }, [sorted]);
 
   return (
-    <div className='flex flex-col w-full'>
-      <div className='flex justify-center p-4'>
-        <Searchbar slots={{ input: { autoFocus: true, className: 'border-b' } }} onSearch={handleSearch} />
+    <div className='flex flex-col overflow-hidden w-full'>
+      <div className='flex items-center p-4'>
+        <MagnifyingGlass className={getSize(6)} />
+        <Searchbar
+          slots={{ root: { className: 'pl-2', variant: 'subdued' }, input: { autoFocus: true, className: 'border-b' } }}
+          onSearch={handleSearch}
+        />
       </div>
 
-      <div className='flex flex-1 overflow-hidden overflow-y-scroll'>
+      <div className='flex flex-1 overflow-y-scroll'>
         <div className='flex flex-col w-full'>
           {sorted.map(({ object, Icon, title, snippet }, i) => (
             <div
@@ -175,7 +207,7 @@ export const SearchPanel: FC<SearchPanelProps> = ({ onSelect }) => {
               {snippet && snippet.length > 0 && (
                 <div className='flex overflow-hidden'>
                   <div className='flex w-[40px]' />
-                  <div className='w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm text-zinc-400'>
+                  <div className='w-full truncate text-sm text-zinc-400'>
                     <span>{snippet[0]}</span>
                     <span className='text-black'>{snippet[1]}</span>
                     <span>{snippet[2]}</span>

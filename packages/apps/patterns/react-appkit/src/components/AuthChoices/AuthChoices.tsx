@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
+import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
 import { CompoundButton, useTranslation } from '@dxos/react-components';

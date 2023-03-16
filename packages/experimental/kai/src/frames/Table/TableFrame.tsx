@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { noCase } from 'change-case';
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
@@ -38,7 +39,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
         const column: Column<Document> = {
-          Header: field.name,
+          Header: noCase(field.name),
           accessor: field.name
         };
 
@@ -66,7 +67,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
       subFilter:
         (match = '') =>
         (object: Document) =>
-          JSON.stringify(object.toJSON()).includes(match)
+          JSON.stringify(object.toJSON()).toLowerCase().includes(match)
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 };
@@ -77,12 +78,14 @@ export const getColumnType = (id: string): ColumnType<any> => types.find((type) 
 
 export const TableFrame = () => {
   const { space } = useAppRouter();
-  const [type, setType] = useState<ColumnType<any>>(types[0]);
+  const [type, setType] = useState<ColumnType<any> | undefined>(types[0]);
   const [text, setText] = useState<string>();
-  const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
+  // TODO(burdon): Bug if changes.
+  const objects = useQuery(space, type?.filter).filter(type?.subFilter?.(text?.toLowerCase()) ?? Boolean);
 
   useEffect(() => {
-    setType(types[0]);
+    const initialType = types.find((type) => type.id === 'dxos.experimental.kai.Contact');
+    setType(initialType);
   }, []);
 
   const handleSearch = (text: string) => {
@@ -90,30 +93,36 @@ export const TableFrame = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 px-2 overflow-hidden'>
-      <Toolbar className='mb-4'>
-        <div className='w-screen md:w-column mr-4'>
-          <Searchbar onSearch={handleSearch} />
+    <div className='flex flex-col flex-1 overflow-hidden'>
+      <Toolbar className='mb-2'>
+        <div className='w-screen md:w-column'>
+          <Select value={type?.id} onValueChange={(value) => value && setType(getColumnType(value))}>
+            {types?.map((type) => (
+              <Select.Item key={type.id} value={type.id}>
+                {type.title}
+              </Select.Item>
+            ))}
+          </Select>
         </div>
-        <Select value={type.id} onValueChange={(value) => value && setType(getColumnType(value))}>
-          {types?.map((type) => (
-            <Select.Item key={type.id} value={type.id}>
-              {type.title}
-            </Select.Item>
-          ))}
-        </Select>
+
+        <div className='grow' />
+        <div className='w-screen md:w-column'>
+          <Searchbar slots={{ root: { placeholder: 'Filter...' } }} onSearch={handleSearch} />
+        </div>
       </Toolbar>
 
-      {/* TODO(burdon): Editable variant. */}
-      <Table<Document>
-        columns={type.columns}
-        data={objects}
-        slots={{
-          header: { className: 'bg-paper-1-bg' },
-          row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
-        }}
-      />
-      {/* </div> */}
+      {type && (
+        <div className='flex flex-1 overflow-hidden px-2'>
+          <Table<Document>
+            columns={type.columns}
+            data={objects}
+            slots={{
+              header: { className: 'bg-paper-1-bg' },
+              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

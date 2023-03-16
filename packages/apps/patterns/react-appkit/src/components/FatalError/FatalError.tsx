@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Clipboard } from 'phosphor-react';
+import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Alert, Button, Dialog, useTranslation } from '@dxos/react-components';

@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { tagMutationsInBatch, ItemDemuxer, ItemManager } from '@dxos/echo-db';
+import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,25 +45,17 @@ export class DataServiceHost {
 
       // subscribe to mutations
 
-      this._itemDemuxer.mutation.on(ctx, (mutation) => {
-        log('Object update', { mutation });
+      this._itemDemuxer.mutation.on(ctx, (message) => {
+        const { batch, meta } = message;
+        log('Object update', { batch, meta });
 
-        const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
+        const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
         // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
 
         // Assign feed metadata
-        const batch = {
-          objects: [
-            {
-              ...mutation.data,
-              mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
-                ...m,
-                meta: mutation.meta
-              })),
-              meta: mutation.meta
-            }
-          ]
-        };
+        batch.objects?.forEach((object) => {
+          setMetadataOnObject(object, meta);
+        });
 
         // Assign client tag metadata
         if (clientTag) {
@@ -72,8 +64,8 @@ export class DataServiceHost {
 
         next({
           clientTag,
-          feedKey: mutation.meta.feedKey,
-          seq: mutation.meta.seq,
+          feedKey: message.meta.feedKey,
+          seq: message.meta.seq,
           batch
         });
       });
@@ -82,16 +74,18 @@ export class DataServiceHost {
 
   async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
-    assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
+    // Clear client metadata.
     const receipt = await this._writeStream.write({
-      object: {
-        ...request.batch.objects[0],
-        mutations: request.batch.objects[0].mutations?.map((m) => ({
-          ...m,
+      batch: {
+        objects: request.batch.objects?.map((object) => ({
+          ...object,
+          mutations: object.mutations?.map((m) => ({
+            ...m,
+            meta: undefined
+          })),
           meta: undefined
-        })),
-        meta: undefined
+        }))
       }
     });
     if (request.clientTag) {

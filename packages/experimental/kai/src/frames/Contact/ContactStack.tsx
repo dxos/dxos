@@ -7,9 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Contact, DocumentStack, Message } from '@dxos/kai-types';
 import { Button } from '@dxos/react-components';
 
+import { AddressSection, CardProps } from '../../cards';
 import { formatShortDate, sortMessage } from '../Message';
 import { Stack, StackRow } from '../Stack';
-import { AddressSection, CardProps } from './Card';
 
 export const ContactStack = ({ space, object }: CardProps<Contact>) => {
   const name = object.name ?? object.email;

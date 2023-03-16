@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
 import assert from 'assert';
-import { Database, Envelope, Flower, Sword } from 'phosphor-react';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { useConfig, useKeyStore } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import { BotClient } from './bot-client';
 import { useAppState } from './useAppState';
-import { useKeyStore } from './useKeyStore';
 
 export type BotDef = {
   module: Module;
@@ -80,6 +79,8 @@ export type BotMap = Map<string, BotDef>;
 
 // TODO(burdon): Bot KMS in HALO?
 export const botKeys: { [key: string]: string } = {
+  'com.amadeus.client_id': 'COM_AMADEUS_CLIENT_ID',
+  'com.amadeus.client_secret': 'COM_AMADEUS_CLIENT_SECRET',
   'com.protonmail.username': 'COM_PROTONMAIL_USERNAME',
   'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
   'com.protonmail.tls': 'COM_PROTONMAIL_TLS',

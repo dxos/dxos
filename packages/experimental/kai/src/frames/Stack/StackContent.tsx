@@ -5,14 +5,36 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document } from '@dxos/echo-schema';
+import { Document, Text } from '@dxos/echo-schema';
 import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
-import { Config, Space, useQuery } from '@dxos/react-client';
+import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { RichTextComposer } from '@dxos/react-composer';
+import { MarkdownComposer, RichTextComposer, useTextModel, YText, YXmlFragment } from '@dxos/react-composer';
 
-import { FilePreview, TaskList as TaskListComponent } from '../../components';
+import { TaskList as TaskListComponent } from '../../cards';
+import { FilePreview } from '../../components';
 import { getColumnType } from '../Table';
+
+const Composer: FC<{ space: Space; content: Text; spellCheck: boolean }> = ({ space, content, spellCheck }) => {
+  const identity = useIdentity();
+  const model = useTextModel({ identity, space, text: content });
+  if (model?.content instanceof YText) {
+    return <MarkdownComposer model={model} />;
+  } else if (model?.content instanceof YXmlFragment) {
+    return (
+      <RichTextComposer
+        model={model}
+        slots={{
+          editor: {
+            spellCheck
+          }
+        }}
+      />
+    );
+  } else {
+    return null;
+  }
+};
 
 export const StackContent: FC<{
   config: Config;
@@ -29,18 +51,7 @@ export const StackContent: FC<{
       // if (!(object instanceof DocumentType)) {
       //   throw new Error(`Invalid object type: ${object.__typename}`);
       // }
-
-      return (
-        <RichTextComposer
-          text={object.content}
-          slots={{
-            editor: {
-              className: 'kai-composer',
-              spellCheck
-            }
-          }}
-        />
-      );
+      return <Composer space={space} content={object.content} spellCheck={spellCheck} />;
     }
 
     case Table.type.name: {
@@ -64,9 +75,9 @@ export const StackContent: FC<{
 
       return (
         <TaskListComponent
-          space={space!}
+          id='tasks'
           tasks={(object as TaskList).tasks}
-          onCreate={(task) => object.tasks.push(task)}
+          onCreateItem={(task) => object.tasks.push(task)}
         />
       );
     }

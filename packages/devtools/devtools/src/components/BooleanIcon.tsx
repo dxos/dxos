@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Check, Stop } from 'phosphor-react';
+import { Check, Stop } from '@phosphor-icons/react';
 import React from 'react';
 
 // TODO(burdon): Use theme.

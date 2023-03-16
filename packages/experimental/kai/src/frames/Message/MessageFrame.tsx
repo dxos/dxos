@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle } from 'phosphor-react';
+import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { ContactCard } from '../../frames/Contact';
+import { ContactCard } from '../../cards';
 import { createPath, useAppRouter } from '../../hooks';
 import { formatDate, getCompanyName, sortMessage } from './util';
 
@@ -22,6 +22,11 @@ export const MessageFrame = () => {
 
   // TODO(burdon): Add sort to filter.
   const messages = useQuery(space, Message.filter()).sort(sortMessage);
+  useEffect(() => {
+    if (frame && messages.length && !objectId) {
+      navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: messages[0].id }));
+    }
+  }, [frame]);
 
   const selected = objectId ? space?.db.getObjectById<Message>(objectId) : undefined;
   useEffect(() => {
@@ -80,16 +85,12 @@ export const MessageFrame = () => {
 
                 {/* Subject */}
                 <Row>
-                  <div className='overflow-hidden text-ellipsis whitespace-nowrap text-lg text-black pr-3'>
-                    {subject}
-                  </div>
+                  <div className='truncate text-lg text-black pr-3'>{subject}</div>
                 </Row>
 
                 {/* Body */}
                 <Row>
-                  <div className='mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-zinc-500'>
-                    {body.slice(0, 60)}
-                  </div>
+                  <div className='mt-1 truncate text-zinc-500'>{body.slice(0, 60)}</div>
                 </Row>
               </div>
             );

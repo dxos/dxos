@@ -121,7 +121,7 @@ export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBac
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
 
-  await result.getReceipt();
+  await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
   assert(create._itemManager.entities.has(result.objectsCreated[0].id));
 

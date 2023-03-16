@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { CaretDown, CaretUp, Check } from 'phosphor-react';
 import React, { ReactNode } from 'react';
 
 import { mx } from '../../util';
@@ -50,7 +50,7 @@ export const Select = (props: SelectProps) => {
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
-      <SelectPrimitive.Content className='z-[1]'>
+      <SelectPrimitive.Content className='z-[50]'>
         <SelectPrimitive.ScrollUpButton className='flex items-center justify-center text-gray-700 dark:text-gray-300'>
           <div className=''>
             <CaretUp />

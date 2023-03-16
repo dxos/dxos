@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { Contact } from '@dxos/kai-types';
 import { Space, useQuery } from '@dxos/react-client';
 
+import { ContactCard } from '../../cards';
 import { createPath, useAppRouter } from '../../hooks';
-import { ContactCard } from './ContactCard';
 import { ContactStack } from './ContactStack';
 
 const stringSort = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -46,6 +46,7 @@ export const ContactFrame = () => {
       {objects.map((object) => (
         <div key={object.id} ref={object.id === selected?.id ? selectedRef : undefined} className='flex mb-2 md:mr-2'>
           {/* TODO(burdon): Generalize cards. */}
+          {/* TODO(burdon): Constrain width to same as Kanban. */}
           <ContactCard
             slots={{ root: { className: 'w-column' } }}
             space={space}
@@ -62,31 +63,28 @@ export const ContactFrame = () => {
     return null;
   }
 
-  // Column.
-  if (selected) {
-    return (
-      <div className='flex flex-1 overflow-hidden mt-2 md:mx-2'>
-        <div className='flex flex-col shrink-0 overflow-y-scroll'>
-          <CardList space={space} objects={contacts} selected={selected} onSelect={handleSelect} />
-          {/* Allow scrolling to top of last item. */}
-          <div className='flex flex-col mb-[100vh]' />
-        </div>
-        <div className='flex flex-col flex-1 overflow-hidden bg-white'>
-          <ContactStack space={space} object={selected} />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='flex flex-1 overflow-x-scroll mt-2 md:mx-2'>
-      <CardList
-        space={space}
-        className='flex flex-col flex-wrap'
-        objects={contacts}
-        selected={selected}
-        onSelect={handleSelect}
-      />
+    <div className='flex flex-1 overflow-x-scroll mt-4 md:mx-4'>
+      {(selected && (
+        <>
+          <div className='flex flex-col shrink-0 overflow-y-scroll'>
+            <CardList space={space} objects={contacts} selected={selected} onSelect={handleSelect} />
+            {/* Allow scrolling to top of last item. */}
+            <div className='flex flex-col mb-[100vh]' />
+          </div>
+          <div className='flex flex-col flex-1 overflow-hidden bg-white'>
+            <ContactStack space={space} object={selected} />
+          </div>
+        </>
+      )) || (
+        <CardList
+          space={space}
+          className='flex flex-col flex-wrap'
+          objects={contacts}
+          selected={selected}
+          onSelect={handleSelect}
+        />
+      )}
     </div>
   );
 };

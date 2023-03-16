@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Bug } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
-import { Bug } from 'phosphor-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { useConfig } from '@dxos/react-client';
+import { useConfig, useKeyStore } from '@dxos/react-client';
 import { getSize, Input, mx } from '@dxos/react-components';
 
-import { botKeys, useAppState, useKeyStore } from '../hooks';
+import { botKeys, useAppState } from '../hooks';
 
 // prettier-ignore
 const settingsKeys = [

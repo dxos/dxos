@@ -13,30 +13,18 @@ module.exports = {
   ],
   framework: {
     name: '@storybook/react-vite',
-    options: {}
+    options: {
+      strictMode: true
+    }
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
-      optimizeDeps: {
-        esbuildOptions: {
-          plugins: [
-            {
-              name: 'yjs',
-              setup: ({ onResolve }) => {
-                onResolve({ filter: /yjs/ }, () => {
-                  return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-                });
-              }
-            }
-          ]
-        }
-      },
       plugins: [
         ConfigPlugin(),
         ThemePlugin({
           content: [
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-            resolve(__dirname, 'node_modules/@dxos/react-components/dist/**/*.mjs')
+            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
           ]
         })
       ]

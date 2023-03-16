@@ -2,15 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from 'phosphor-react';
+import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { mx } from '../../util';
-import { Input } from '../Input';
+import { Input, InputProps } from '../Input';
 
+// TODO(burdon): Differentiate slots applied to Input vs slots spread into Input slots?
 type SearchbarSlots = {
   root?: {
     className?: string;
+    placeholder?: string;
+    variant?: InputProps['variant'];
   };
   input?: {
     className?: string;
@@ -33,19 +36,23 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
     onSearch?.(text);
   };
 
+  const handleReset = () => {
+    handleChange('');
+  };
+
   return (
     <div className={mx('flex w-full items-center', slots.root?.className)}>
       <Input
-        variant='subdued'
         label='Search'
         labelVisuallyHidden
-        placeholder='Search...'
+        placeholder={slots.root?.placeholder ?? 'Search...'}
+        variant={slots.root?.variant ?? 'default'}
         slots={{
           root: {
             className: 'w-full'
           },
           input: {
-            onKeyDown: ({ key }) => key === 'Escape' && handleChange(''),
+            onKeyDown: ({ key }) => key === 'Escape' && handleReset(),
             spellCheck: false,
             ...slots.input
           }
@@ -54,8 +61,9 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         onChange={({ target }) => handleChange(target.value)}
       />
 
-      <button className={mx('p-1', slots.button?.className)} onClick={() => onSearch?.(text)}>
-        <MagnifyingGlass />
+      {/* TODO(burdon): Place inside input? */}
+      <button className={mx('p-1', slots.button?.className)} onClick={handleReset}>
+        <X />
       </button>
     </div>
   );

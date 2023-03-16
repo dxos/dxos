@@ -3,16 +3,34 @@
 //
 import { mergeAttributes } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import Heading from '@tiptap/extension-heading';
 import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
+import React, { ComponentProps, forwardRef, useImperativeHandle, useMemo } from 'react';
 
-import type { Text } from '@dxos/client';
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
+
+import { ComposerModel } from '../../model';
+import {
+  blockquote,
+  bold,
+  codeBlock,
+  heading,
+  HeadingLevel,
+  horizontalRule,
+  italic,
+  listItem,
+  orderedList,
+  paragraph,
+  strikethrough,
+  unorderedList,
+  codeWithoutMarks
+} from '../../styles';
+import { cursorColor } from '../../yjs';
 
 export type TipTapEditor = Editor;
 
@@ -26,34 +44,12 @@ export type RichTextComposerSlots = {
 };
 
 type UseEditorOptions = {
-  text?: Text;
-  field?: string;
+  model?: ComposerModel;
   placeholder?: string;
   slots?: Pick<RichTextComposerSlots, 'editor'>;
 };
 
-type Levels = 1 | 2 | 3 | 4 | 5 | 6;
-
-const headingClassNames: Record<Levels, string> = {
-  1: 'mbs-4 mbe-2 text-4xl font-semibold',
-  2: 'mbs-4 mbe-2 text-3xl font-bold',
-  3: 'mbs-4 mbe-2 text-2xl font-bold',
-  4: 'mbs-4 mbe-2 text-xl font-extrabold',
-  5: 'mbs-4 mbe-2 text-lg font-extrabold',
-  6: 'mbs-4 mbe-2 font-black'
-};
-
-const onDocUpdate = (update: Uint8Array) => {
-  log.debug('[doc update]', update);
-};
-
-const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
-  useEffect(() => {
-    log.debug('[text.doc]', 'referential change');
-    text?.doc?.on('update', onDocUpdate);
-    return () => text?.doc?.off('update', onDocUpdate);
-  }, [text?.doc]);
-
+const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
   const extensions = useMemo(
     () => [
       StarterKit.configure({
@@ -62,70 +58,67 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
         // Nodes
         blockquote: {
           HTMLAttributes: {
-            class: 'mlb-2 border-is-4 border-neutral-500/50 pis-5'
+            class: blockquote
           }
         },
         bulletList: {
           HTMLAttributes: {
-            class:
-              // todo (thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
-              'mlb-2 grid grid-cols-[min-content_1fr] [&>li:before]:content-[attr(marker)] [&>li:before]:mlb-1 [&>li:before]:mie-2'
+            class: unorderedList
           }
         },
         codeBlock: {
           HTMLAttributes: {
-            class: 'mlb-2 font-mono bg-neutral-500/10 p-3 rounded'
+            class: codeBlock
           }
         },
         heading: false, // (thure): `StarterKit` doesn’t let you configure how headings are rendered, see `Heading` below.
         horizontalRule: {
           HTMLAttributes: {
-            class: 'mlb-4 border-neutral-500/50'
+            class: horizontalRule
           }
         },
         listItem: false, // (thure): `StarterKit` doesn’t let you configure how list items are rendered, see `ListItem` below.
         orderedList: {
           HTMLAttributes: {
-            class:
-              'mlb-2 grid grid-cols-[min-content_1fr]  [&>li:before]:content-[counters(section,_".")_"._"] [counter-reset:section] [&>li:before]:mlb-1'
+            class: orderedList
           }
         },
         paragraph: {
           HTMLAttributes: {
-            class: 'mlb-1'
+            class: paragraph
           }
         },
         // Marks
         bold: {
           HTMLAttributes: {
-            class: 'font-bold'
+            class: bold
           }
         },
         code: {
           HTMLAttributes: {
-            class: 'font-mono bg-neutral-500/10 rounded pli-1.5 mli-0.5 plb-0.5 -mlb-0.5'
+            class: codeWithoutMarks
           }
         },
         italic: {
           HTMLAttributes: {
-            class: 'italic'
+            class: italic
           }
         },
         strike: {
           HTMLAttributes: {
-            class: 'line-through'
+            class: strikethrough
           }
         }
       }),
       Heading.extend({
         renderHTML({ node, HTMLAttributes }) {
           const hasLevel = this.options.levels.includes(node.attrs.level);
-          const level: Levels = hasLevel ? node.attrs.level : this.options.levels[0];
+          const level: HeadingLevel = hasLevel ? node.attrs.level : this.options.levels[0];
 
           return [
             `h${level}`,
             mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-              class: headingClassNames[level]
+              class: heading[level]
             }),
             0
           ];
@@ -136,19 +129,30 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
           'li',
           mergeAttributes(HTMLAttributes, {
             marker: '• ',
-            class: 'contents before:[counter-increment:section]'
+            class: listItem
           }),
           ['div', { role: 'none' }, 0]
         ]
       }),
       // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
-      ...(text ? [Collaboration.configure({ document: text.doc, field })] : []),
+      ...(model && typeof model.content !== 'string' ? [Collaboration.configure({ fragment: model.content })] : []),
+      ...(model?.provider
+        ? [
+            CollaborationCursor.configure({
+              provider: model.provider,
+              user: model.peer && {
+                name: model.peer.name ?? humanize(model.peer.id),
+                color: cursorColor.color
+              }
+            })
+          ]
+        : []),
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
       })
     ],
-    [text?.doc?.guid, field]
+    [model?.id]
   );
 
   return useNaturalEditor(
@@ -158,30 +162,25 @@ const useEditor = ({ text, field = 'content', placeholder = 'Enter text…', slo
         attributes: {
           class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
           spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
-          tabindex: slots?.editor?.tabIndex ? String(slots?.editor?.tabIndex) : '0'
+          tabindex: slots.editor?.tabIndex ? String(slots.editor?.tabIndex) : '0'
         }
       }
     },
-    [text?.doc?.guid]
+    [extensions]
   );
 };
 
-export type RichTextComposerProps = {
-  text?: UseEditorOptions['text'];
-  field?: UseEditorOptions['field'];
-  placeholder?: UseEditorOptions['placeholder'];
+export type RichTextComposerProps = UseEditorOptions & {
   slots?: RichTextComposerSlots;
 };
 
-export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>(
-  ({ text, field, placeholder, slots = {} }, ref) => {
-    const editor = useEditor({ text, field, placeholder, slots });
-    useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
+export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>((props, ref) => {
+  const editor = useEditor(props);
+  useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);
 
-    // Reference:
-    // https://tiptap.dev/installation/react
-    // https://github.com/ueberdosis/tiptap
-    // https://tiptap.dev/guide/output/#option-3-yjs
-    return <EditorContent {...slots?.root} editor={editor} />;
-  }
-);
+  // Reference:
+  // https://tiptap.dev/installation/react
+  // https://github.com/ueberdosis/tiptap
+  // https://tiptap.dev/guide/output/#option-3-yjs
+  return <EditorContent {...props.slots?.root} editor={editor} />;
+});

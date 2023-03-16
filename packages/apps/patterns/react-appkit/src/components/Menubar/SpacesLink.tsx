@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, Planet } from 'phosphor-react';
+import { CaretLeft, Planet } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, getSize, useTranslation } from '@dxos/react-components';

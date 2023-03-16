@@ -29,7 +29,8 @@ export const StackFrame = observer(() => {
       setTimeout(async () => {
         let stack = stacks[0];
         if (!stacks.length) {
-          stack = await space.db.add(new DocumentStack());
+          stack = await space.db.add(new DocumentStack({ title: 'New Stack' }));
+
           // TODO(burdon): Cannot add documents directly (recursion bug).
           documents.forEach((document) => {
             const section = new DocumentStack.Section({ object: document });

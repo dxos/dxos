@@ -3,14 +3,16 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect, useReducer } from 'react';
+import React, { useState } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
-import { useQuery, useSpace } from '@dxos/react-client';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { Button } from '@dxos/react-components';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
+import { ClientDecorator, ClientSpaceDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { useId } from '@dxos/react-components';
 
-import { ComposerDocument, schema } from '../../testing';
+import { useTextModel } from '../../model';
+import { ComposerDocument, Replicator, schema, useYjsModel } from '../../testing';
 import { MarkdownComposer } from './Markdown';
 
 export default {
@@ -18,28 +20,75 @@ export default {
 };
 
 export const Default = {
-  render: ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
-    // TODO(wittjosiah): Text being created isn't firing react updates.
-    const [, forceUpdate] = useReducer((state) => state + 1, 0);
+  args: {
+    model: {
+      id: 'editor',
+      content: 'Hello, Storybook!'
+    }
+  }
+};
 
+export const WithEcho = {
+  render: ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
+    const [generate, setGenerate] = useState(false);
+    const generateId = useId('generate');
+
+    const identity = useIdentity();
     const space = useSpace(spaceKey);
     const [document] = useQuery(space, ComposerDocument.filter());
+    const model = useTextModel({ identity, space, text: document?.content });
 
-    useEffect(() => {
-      if (space && id === 0) {
-        setTimeout(async () => {
-          // TODO(burdon): Auto-create document.
-          const document = new ComposerDocument({ content: new Text() });
-          await space?.db.add(document);
-        });
-      }
-    }, [space]);
+    useDataGenerator({
+      generator: generate ? textGenerator : undefined,
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
+    });
 
-    if (!document?.content) {
-      return <Button onClick={() => forceUpdate()}>Update</Button>;
-    }
-
-    return <MarkdownComposer text={document.content} />;
+    return (
+      <main className='flex-1 min-w-0 p-4'>
+        <div id={generateId} className='flex'>
+          <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
+          Generate Data
+        </div>
+        <MarkdownComposer model={model} />
+      </main>
+    );
   },
-  decorators: [ClientSpaceDecorator({ schema, count: 2 })]
+  decorators: [
+    ClientSpaceDecorator({
+      schema,
+      count: 2,
+      onCreateSpace: async (space) => {
+        const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
+        await space?.db.add(document);
+      }
+    })
+  ]
+};
+
+const replicator = new Replicator(TextKind.PLAIN);
+export const WithYjs = {
+  render: () => {
+    const [generate, setGenerate] = useState(false);
+    const generateId = useId('generate');
+
+    const [id] = useState(PublicKey.random().toHex());
+    const model = useYjsModel({ id, replicator });
+
+    useDataGenerator({
+      generator: generate ? textGenerator : undefined,
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
+    });
+
+    return (
+      <main className='flex-1 min-w-0 p-4'>
+        <div id={generateId} className='flex'>
+          <input type='checkbox' onChange={(event) => setGenerate(event.target.checked)} />
+          Generate Data
+        </div>
+        <MarkdownComposer model={model} />
+      </main>
+    );
+  },
+  // TODO(wittjosiah): Decorator for doing this without clients being initialized?
+  decorators: [ClientDecorator({ count: 2 })]
 };

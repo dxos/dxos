@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Aperture } from '@phosphor-icons/react';
 import * as d3 from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
-import { Aperture } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';

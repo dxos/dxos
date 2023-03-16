@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
+import { ArrowsIn, ArrowsOut, PlusCircle } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Text } from '@dxos/client';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
@@ -88,7 +90,8 @@ export const NoteFrame = () => {
   };
 
   const handleCreateNote = async (location: Location) => {
-    const note = new Note();
+    // TODO(wittjosiah): Remove text initalization once rich text annotation is hooked up.
+    const note = new Note({ content: new Text('', TextKind.RICH) });
     setItemLocation(board!, note.id, location);
     // TODO(burdon): Need transaction.
     // NOTE: Must happen after updating board; otherwise will be assigned a random location on layout.

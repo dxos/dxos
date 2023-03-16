@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsteriskSimple, Graph, Leaf, Tree } from 'phosphor-react';
+import { AsteriskSimple, Graph, Leaf, Tree } from '@phosphor-icons/react';
 import React, { FC, useMemo, useState } from 'react';
 
 import { GraphModel } from '@dxos/gem-spore';
@@ -55,7 +55,7 @@ const views: View[] = [
 ];
 
 export const ExplorerFrame = () => {
-  const [view, setView] = useState(ViewType.TREE);
+  const [view, setView] = useState(ViewType.GRAPH);
 
   // TODO(burdon): Echo model.
   const model = useMemo(() => {

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Activity, Eraser } from 'phosphor-react';
+import { Activity, Eraser } from '@phosphor-icons/react';
 import React, { ChangeEvent, useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit/telemetry';
