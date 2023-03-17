@@ -33,13 +33,13 @@ export namespace Features {
       '@dxos/react-components': depVersion,
       '@dxos/react-appkit': depVersion,
       '@phosphor-icons/react': '^2.0.5',
-      'react-router-dom': '^6.3.0'
+      'react-router-dom': '^6.4.0'
     }
   });
 
   export const tailwind = (): Partial<PackageJson> => ({
     devDependencies: {
-      tailwindcss: '^3.1.8',
+      tailwindcss: '^3.2.7',
       autoprefixer: '^10.4.12',
       postcss: '^8.4.17'
     }
