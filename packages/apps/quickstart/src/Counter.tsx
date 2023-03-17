@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 import { useQuery, Document, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
@@ -11,20 +11,10 @@ export const Counter = () => {
   const identity = useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
   const [counter] = useQuery(space, { type: 'counter' });
-  const creating = useRef(false);
   useEffect(() => {
-    console.log('counter effect', counter, space, creating.current);
-    if (!counter && space && !creating.current) {
-      creating.current = true;
+    if (!counter && space) {
       const c = new Document({ type: 'counter' });
-      space.db.add(c);
-      void space.db
-        .flush()
-        .catch((err) => {
-          console.error(err);
-          creating.current = false;
-        })
-        .then(() => (creating.current = false));
+      void space.db.add(c);
     }
   }, [counter, space]);
   if (!space) {
@@ -40,7 +30,7 @@ export const Counter = () => {
             counter.count = (counter.count ?? 0) + 1;
           }}
         >
-          {counter.count ? `Clicked ${counter.count} times` : 'click me!'}
+          {counter.count ? `Clicked ${counter.count} times` : 'Click me!'}
         </button>
       )}
     </div>
