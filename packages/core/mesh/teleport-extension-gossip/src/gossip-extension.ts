@@ -48,7 +48,10 @@ export class GossipExtension implements TeleportExtension {
       },
       handlers: {
         GossipService: {
-          announce: async (message: GossipMessage) => await this._callbacks.onAnnounce?.(message)
+          announce: async (message: GossipMessage) => {
+            log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
+            await this._callbacks.onAnnounce?.(message);
+          }
         }
       },
       port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })

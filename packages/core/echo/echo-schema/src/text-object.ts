@@ -71,9 +71,9 @@ export class Text extends EchoObject<TextModel> {
 
   protected override _afterBind() {
     this._model.initialize();
-    // TODO(dmaretskyi): Unsubscribe.
-    this._item!.subscribe(() => {
-      this._model.initialize();
-    });
+  }
+
+  override _itemUpdate(): void {
+    this._model.initialize();
   }
 }
