@@ -75,7 +75,7 @@ export const testLocalDatabase = async (
   });
 
   await asyncTimeout(
-    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    check.databaseBackend!._itemDemuxer.mutation.waitForCondition(() => check._itemManager.entities.has(objectId)),
     500
   );
 };

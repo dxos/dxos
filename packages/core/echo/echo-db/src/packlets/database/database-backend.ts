@@ -4,12 +4,12 @@
 
 import assert from 'node:assert';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { Model, ModelFactory } from '@dxos/model-factory';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -19,7 +19,7 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 export type MutateResult = {
-  objectsCreated: Item<any>[];
+  objectsUpdated: Item<any>[];
   batch: Batch;
 };
 
@@ -33,6 +33,8 @@ export class DatabaseBackendProxy {
 
   private readonly _ctx = new Context();
   public _itemManager!: ItemManager;
+
+  public readonly itemUpdate = new Event<Item<Model>[]>();
 
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
@@ -85,7 +87,8 @@ export class DatabaseBackendProxy {
           objectCount: msg.batch.objects?.length ?? 0
         });
 
-        this._processMessage(msg.batch);
+        const objectsUpdated: Item[] = [];
+        this._processMessage(msg.batch, objectsUpdated);
 
         if (msg.clientTag) {
           const batch = this._pendingBatches.get(msg.clientTag);
@@ -105,6 +108,9 @@ export class DatabaseBackendProxy {
 
         // Notify that initial set of items has been loaded.
         loaded.wake();
+
+        // Emit update event.
+        this.itemUpdate.emit(objectsUpdated);
       },
       (err) => {
         if (err) {
@@ -117,7 +123,7 @@ export class DatabaseBackendProxy {
     await loaded.wait();
   }
 
-  private _processMessage(batch: EchoObjectBatch, objectsCreated: Item<any>[] = []) {
+  private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
     for (const object of batch.objects ?? []) {
       assert(object.objectId);
 
@@ -129,7 +135,6 @@ export class DatabaseBackendProxy {
           itemId: object.objectId,
           modelType: object.genesis.modelType
         });
-        objectsCreated.push(entity);
       } else {
         entity = this._itemManager.entities.get(object.objectId);
       }
@@ -137,6 +142,7 @@ export class DatabaseBackendProxy {
         log.warn('Item not found', { objectId: object.objectId });
         return;
       }
+      objectsUpdated.push(entity);
 
       if (object.snapshot) {
         log('reset to snapshot', { object });
@@ -238,24 +244,23 @@ export class DatabaseBackendProxy {
     try {
       this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
 
-      const objectsCreated: Item<any>[] = [];
+      const objectsUpdated: Item<any>[] = [];
 
       tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!);
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.
       for (const objectMutation of batchInput.objects ?? []) {
-        if (objectsCreated) {
-          const item = this._processOptimistic(objectMutation);
-          if (item) {
-            objectsCreated.push(item);
-          }
+        const item = this._processOptimistic(objectMutation);
+        if (item) {
+          objectsUpdated.push(item);
         }
       }
+      this.itemUpdate.emit(objectsUpdated);
 
       const batch = this._currentBatch!;
       return {
-        objectsCreated,
+        objectsUpdated,
         batch
       };
     } finally {

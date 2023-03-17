@@ -22,7 +22,7 @@ import { CancellableInvitationObservable, Document, Invitation, PublicKey, Shell
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
@@ -49,7 +49,7 @@ const Separator = () => {
   return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
 };
 
-export const Sidebar = () => {
+export const Sidebar = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const client = useClient();
@@ -321,4 +321,4 @@ export const Sidebar = () => {
       <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
     </div>
   );
-};
+});
