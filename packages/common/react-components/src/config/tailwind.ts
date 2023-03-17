@@ -444,8 +444,11 @@ export const tailwindConfig = ({
     extend: merge(
       {
         colors: {
-          ...tailwindColors,
           ...configPalettes,
+          slate: tailwindColors.slate,
+          gray: tailwindColors.gray,
+          zinc: tailwindColors.zinc,
+          stone: tailwindColors.stone,
           success: configPalettes.emerald,
           warning: configPalettes.amber,
           error: configPalettes.rose,
