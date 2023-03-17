@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ProhibitInset, XCircle } from 'phosphor-react';
+import { ProhibitInset, XCircle } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';
@@ -14,13 +14,13 @@ import {
   defaultGroup,
   getSize,
   Loading,
-  Tooltip,
   useTranslation,
   mx
 } from '@dxos/react-components';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 import { InvitationStatus } from '../InvitationStatus';
+import { Tooltip } from '../Tooltip';
 
 export interface PendingInvitationProps {
   wrapper: CancellableInvitationObservable;

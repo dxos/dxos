@@ -2,40 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import { List, Palette, X } from 'phosphor-react';
+import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { observer } from '@dxos/react-client';
 import { mx, Button, DropdownMenu, DropdownMenuItem, getSize, Input } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer, useTextModel } from '@dxos/react-composer';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
   { id: 'yellow', color: 'bg-amber-100', border: 'border-amber-200' },
   { id: 'cyan', color: 'bg-sky-100', border: 'border-sky-200' },
   { id: 'green', color: 'bg-emerald-100', border: 'border-emerald-200' },
-  { id: 'orange', color: 'bg-violet-100', border: 'border-violet-200' }
+  { id: 'violet', color: 'bg-violet-100', border: 'border-violet-200' }
 ];
 
-const Menu: FC<{ onDelete: () => void; onColorChange: () => void }> = ({ onDelete, onColorChange }) => {
+const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = ({ onDelete, onColorChange }) => {
   return (
-    <>
+    <div className='flex flex-col'>
+      <div className='border-b'>
+        {colors.map(({ id }) => (
+          <DropdownMenuItem key={id} onClick={() => onColorChange(id)}>
+            <Palette className={getSize(5)} />
+            <span className='mis-2'>{id}</span>
+          </DropdownMenuItem>
+        ))}
+      </div>
       <DropdownMenuItem onClick={onDelete}>
         <X className={getSize(5)} />
         <span className='mis-2'>Delete</span>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={onColorChange}>
-        <Palette className={getSize(5)} />
-        <span className='mis-2'>Color</span>
-      </DropdownMenuItem>
-    </>
+    </div>
   );
 };
 
 export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
   const note = item.data as Note;
+  // TODO(wittjosiah): Hook up cursors with space.
+  const model = useTextModel({ text: note.content });
 
   const { color, border } = colors.find(({ id }) => id === note.color) ?? colors[0];
 
@@ -43,9 +49,8 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
     onDelete?.(item);
   };
 
-  const handleColorChange = () => {
-    const idx = colors.findIndex(({ id }) => id === note.color);
-    note.color = colors[idx === -1 ? 1 : idx < colors.length - 1 ? idx + 1 : 0].id;
+  const handleColorChange = (color: string) => {
+    note.color = color;
   };
 
   return (
@@ -91,8 +96,8 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       {/* TODO(burdon): Error when syncing: Cannot read properties of undefined (reading doc). */}
       <div className='flex flex-1 overflow-hidden mt-2 p-1 text-gray-600'>
         {note.content && (
-          <Composer
-            document={note.content}
+          <RichTextComposer
+            model={model}
             slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full' } }}
           />
         )}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-app",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "private": true,
   "description": "DXOS tasks application.",
   "homepage": "https://dxos.org",
@@ -22,8 +22,8 @@
     "@dxos/react-components": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",
-    "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0"

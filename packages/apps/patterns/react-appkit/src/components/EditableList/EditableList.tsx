@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X, Plus } from 'phosphor-react';
+import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
@@ -20,13 +20,14 @@ import {
   Button,
   getSize,
   useTranslation,
-  Tooltip,
   defaultDescription,
   ButtonProps,
   Density,
   useListDensity,
   DensityProvider
 } from '@dxos/react-components';
+
+import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
   listItem?: ListItemProps['slots'];

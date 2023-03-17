@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import { Info } from 'phosphor-react';
+import { Info } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Alert } from './Alert';

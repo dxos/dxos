@@ -35,7 +35,8 @@ describe('ordered-set', () => {
     expect(root.subTasks.length).to.eq(3);
 
     const db = await createDatabase();
-    await db.add(root);
+    db.add(root);
+    await db.flush();
   });
 
   test('splice', async () => {
@@ -45,7 +46,8 @@ describe('ordered-set', () => {
     expect(root.subTasks).to.have.length(2);
 
     const db = await createDatabase();
-    await db.add(root);
+    db.add(root);
+    await db.flush();
   });
 
   test('array of plain objects', async () => {
@@ -53,7 +55,8 @@ describe('ordered-set', () => {
     const plain: Container.Record = { title: 'test', persons: [new Contact({ name: 'Mykola' })] };
     root.objects.push(plain);
     const db = await createDatabase();
-    await db.add(root);
+    db.add(root);
+    await db.flush();
 
     expect(root.objects).to.have.length(1);
     const queriedContainer = db.query(Container.filter()).objects[0];

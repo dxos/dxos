@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
@@ -70,10 +70,13 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs')
       ]
     }),
     VitePWA({
+      // TODO(wittjosiah): Remove.
+      selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
@@ -95,7 +98,7 @@ export default defineConfig({
           }
         ]
       }
-    }),
+    })
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // sentryVitePlugin({
     //   org: "dxos",

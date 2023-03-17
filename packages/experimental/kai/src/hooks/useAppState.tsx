@@ -18,6 +18,9 @@ export type AppState = {
   // PWA mode.
   pwa?: boolean;
 
+  // Fullscreen.
+  fullscreen?: boolean;
+
   // Active frames.
   frames?: string[];
 
@@ -26,7 +29,7 @@ export type AppState = {
 };
 
 type Action = {
-  type: 'set-active-bot' | 'set-active-frame';
+  type: 'set-active-bot' | 'set-active-frame' | 'set-fullscreen';
 };
 
 type SetBotAction = Action & {
@@ -40,7 +43,11 @@ type SetFrameAction = Action & {
   active: boolean;
 };
 
-type ActionType = SetBotAction | SetFrameAction;
+type SetFullscreenAction = Action & {
+  fullscreen: boolean;
+};
+
+type ActionType = SetBotAction | SetFrameAction | SetFullscreenAction;
 
 const reducer =
   (config: Config) =>
@@ -58,6 +65,11 @@ const reducer =
         }
 
         return { ...state, bots };
+      }
+
+      case 'set-fullscreen': {
+        const { fullscreen } = action as SetFullscreenAction;
+        return { ...state, fullscreen };
       }
 
       case 'set-active-frame': {
@@ -80,6 +92,7 @@ export type AppReducer = {
   state: AppState;
   setActiveBot: (id: string, active: boolean, space?: Space) => void;
   setActiveFrame: (id: string, active: boolean) => void;
+  setFullscreen: (fullscreen: boolean) => void;
 };
 
 export const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
@@ -97,6 +110,9 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
     },
     setActiveFrame: (id: string, active: boolean) => {
       dispatch({ type: 'set-active-frame', frameId: id, active });
+    },
+    setFullscreen: (fullscreen: boolean) => {
+      dispatch({ type: 'set-fullscreen', fullscreen });
     }
   };
 

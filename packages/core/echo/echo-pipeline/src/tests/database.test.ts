@@ -29,11 +29,11 @@ describe('database', () => {
       const database = await createDatabase();
 
       const result = database.backend.mutate(genesisMutation(PublicKey.random().toHex(), DocumentModel.meta.type));
-      expect(result.objectsCreated.length).toEqual(1);
-      expect(database.itemManager.entities.has(result.objectsCreated[0].id));
+      expect(result.objectsUpdated.length).toEqual(1);
+      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
 
-      await (await result.getReceipt()).waitToBeProcessed();
-      expect(database.itemManager.entities.has(result.objectsCreated[0].id));
+      await result.batch.waitToBeProcessed();
+      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
     });
 
     test('mutate document', async () => {
@@ -46,7 +46,7 @@ describe('database', () => {
       );
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
 
-      await (await result.getReceipt()).waitToBeProcessed();
+      await result.batch.waitToBeProcessed();
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
     });
   });

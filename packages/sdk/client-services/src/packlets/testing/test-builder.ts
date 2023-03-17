@@ -4,12 +4,14 @@
 
 import assert from 'node:assert';
 
-import { asyncTimeout } from '@dxos/async';
-import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client';
+import { asyncTimeout, Trigger } from '@dxos/async';
+import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory, Invitation } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
@@ -119,12 +121,12 @@ export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBac
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
 
-  await result.getReceipt();
+  await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
-  assert(create._itemManager.entities.has(result.objectsCreated[0].id));
+  assert(create._itemManager.entities.has(result.objectsUpdated[0].id));
 
   await asyncTimeout(
-    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
     1000
   );
 
@@ -137,4 +139,42 @@ export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendP
 
   // Check item replicated from 2 => 1.
   await testSpace(db2, db1);
+};
+
+export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
+  const rootSpace = spaceKey ? initialPeer.echo.getSpace(spaceKey) : await initialPeer.echo.createSpace();
+  assert(rootSpace, 'Space not found.');
+
+  await Promise.all(
+    peers.map(async (peer) => {
+      const hostDone = new Trigger<Invitation>();
+      const guestDone = new Trigger<Invitation>();
+
+      const hostObservabli = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      log('invitation created');
+      hostObservabli.subscribe({
+        onConnecting: (invitation) => {
+          const guestObservable = peer.echo.acceptInvitation(invitation);
+          log('invitation accepted');
+
+          guestObservable.subscribe({
+            onSuccess: (invitation: Invitation) => {
+              guestDone.wake(invitation);
+              log('invitation guestDone');
+            },
+            onError: (err: Error) => raise(err)
+          });
+        },
+        onSuccess: (invitation) => {
+          hostDone.wake(invitation);
+          log('invitation hostDone');
+        },
+        onError: (err) => raise(err)
+      });
+
+      await Promise.all([hostDone.wait(), guestDone.wait()]);
+    })
+  );
+
+  return rootSpace.key;
 };

@@ -4,8 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { useButtonShadow, useThemeContext } from '../../hooks';
-import { useDensityContext } from '../../hooks/useDensityContext';
+import { useButtonShadow, useDensityContext, useThemeContext } from '../../hooks';
 import { mx } from '../../util';
 import { ButtonProps } from './ButtonProps';
 import { buttonStyles } from './buttonStyles';

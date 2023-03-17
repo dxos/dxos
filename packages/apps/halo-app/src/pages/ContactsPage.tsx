@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus } from 'phosphor-react';
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { HeadingWithActions } from '@dxos/react-appkit';

@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Clipboard } from 'phosphor-react';
+import { Clipboard } from '@phosphor-icons/react';
 import React, { Component, PropsWithChildren, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { log } from '@dxos/log';
-import { Alert, Button, Tooltip } from '@dxos/react-components';
+import { Tooltip } from '@dxos/react-appkit';
+import { Alert, Button } from '@dxos/react-components';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
   let insideRouter = false;
@@ -31,7 +32,7 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
         <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
       </Alert>
       <div role='none' className='flex'>
-        <Tooltip content={'Copy'} zIndex={'z-[21]'}>
+        <Tooltip content='Copy' zIndex='z-[21]'>
           <Button onClick={onCopyError}>
             <Clipboard weight='duotone' size='1em' />
           </Button>

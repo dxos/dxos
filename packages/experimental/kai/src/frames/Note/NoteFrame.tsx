@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsIn, ArrowsOut, PlusCircle } from 'phosphor-react';
+import { ArrowsIn, ArrowsOut, PlusCircle } from '@phosphor-icons/react';
 import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Text } from '@dxos/client';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
@@ -22,6 +24,7 @@ const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
   if (idx === -1) {
     board.locations.push({ ...location, objectId: id });
   } else {
+    // TODO(burdon): If not object, then remove based on ID.
     board.locations.splice(idx, 1, { ...location, objectId: id });
   }
 };
@@ -48,7 +51,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 };
 
 export const NoteFrame = () => {
-  const range = { x: 4, y: 3 };
+  const range = { x: 4, y: 3 }; // TODO(burdon): Props.
 
   const { space, frame, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
@@ -76,7 +79,7 @@ export const NoteFrame = () => {
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
   useSubscription(() => {
-    // TODO(burdon): Rename.
+    // TODO(burdon): Board is stale (undefined -- even though set below).
     if (board) {
       setItems(doLayout(board, notes, layout));
     }
@@ -87,7 +90,8 @@ export const NoteFrame = () => {
   };
 
   const handleCreateNote = async (location: Location) => {
-    const note = new Note();
+    // TODO(wittjosiah): Remove text initalization once rich text annotation is hooked up.
+    const note = new Note({ content: new Text('', TextKind.RICH) });
     setItemLocation(board!, note.id, location);
     // TODO(burdon): Need transaction.
     // NOTE: Must happen after updating board; otherwise will be assigned a random location on layout.

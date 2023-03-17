@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FrameCorners, Robot } from 'phosphor-react';
+import { FrameCorners, Robot } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize, mx, Searchbar, Button, ButtonGroup } from '@dxos/react-components';
+import { ScrollContainer } from '@dxos/mosaic';
+import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
 
 import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
 
@@ -39,19 +40,20 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
-        active && '!bg-selection-bg border-selection-border',
+        'flex flex-col w-[180px] h-[100px] border-0 rounded px-3 py-2',
+        'cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
+        active && 'border-selection-border !bg-selection-bg',
         slots.root?.className
       )}
       onClick={() => onSelect(id)}
     >
-      <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-display font-medium mb-1'>{label}</h2>
-        <div className='text-black'>{description}</div>
+      <div className='flex w-full'>
+        <h2 className='flex w-full mb-1 text-lg font-display font-medium'>{label}</h2>
+        <div>
+          <Icon weight='duotone' className={mx(getSize(8), '[&>*]:stroke-[8]')} />
+        </div>
       </div>
-      <div className='flex flex-col justify-center ml-2'>
-        <Icon weight='duotone' className={mx(getSize(16), '[&>*]:stroke-[8]')} />
-      </div>
+      <div className='flex w-full pt-1 text-black text-sm'>{description}</div>
     </div>
   );
 };
@@ -95,49 +97,68 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
   const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex py-8 justify-center'>
-        <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
-          <Searchbar />
-          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
-            <FrameCorners
-              weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
-              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
-            />
-          </Button>
-          <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
-            <Robot
-              weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
-              className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
-            />
-          </Button>
-        </ButtonGroup>
-      </div>
-
-      <div className='flex flex-1 justify-center overflow-y-scroll'>
-        <div className='flex flex-col'>
-          <div className='flex flex-col grid-cols-1 gap-6 lg:grid lg:grid-cols-3 pb-24'>
-            {Array.from(modules.values())
-              .sort(sorter)
-              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-                <Tile
-                  key={id!}
-                  id={id!}
-                  label={displayName ?? id!}
-                  description={description}
-                  slots={slots}
-                  Icon={Icon}
-                  onSelect={handleSelect}
-                  active={
-                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                      (active) => active === id
-                    )
-                  }
-                />
-              ))}
-          </div>
+    <div className='flex flex-col flex-1 overflow-hidden py-4'>
+      {false && (
+        <div className='flex py-8 justify-center'>
+          <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
+            <Searchbar />
+            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+              <FrameCorners
+                weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
+              />
+            </Button>
+            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+              <Robot
+                weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
+              />
+            </Button>
+          </ButtonGroup>
         </div>
-      </div>
+      )}
+
+      <ScrollContainer vertical>
+        <div className='flex flex-wrap gap-3'>
+          {Array.from(modules.values())
+            .sort(sorter)
+            .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+              <Tile
+                key={id!}
+                id={id!}
+                label={displayName ?? id!}
+                description={description}
+                slots={slots}
+                Icon={Icon}
+                onSelect={handleSelect}
+                active={
+                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                    (active) => active === id
+                  )
+                }
+              />
+            ))}
+        </div>
+      </ScrollContainer>
     </div>
+  );
+};
+
+export type FrameRegistryDialogProps = {
+  open?: boolean;
+  onClose: () => void;
+};
+
+export const FrameRegistryDialog = ({ open, onClose }: FrameRegistryDialogProps) => {
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={() => onClose()}
+      title='Frame Plugins'
+      closeLabel='Close'
+      slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[620px] md:max-h-[640px]' } }}
+    >
+      <FrameRegistry />
+    </Dialog>
   );
 };

@@ -4,13 +4,14 @@
 
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
-import { resolve } from 'node:path';
-import type { Config } from 'tailwindcss';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
-import { ThemeConfig } from 'tailwindcss/types/config';
+import { Config, ThemeConfig } from 'tailwindcss/types/config';
+
+export type TailwindConfig = Config;
+export type TailwindThemeConfig = ThemeConfig;
 
 export const tailwindConfig = ({
   env = 'production',
@@ -21,8 +22,8 @@ export const tailwindConfig = ({
   env?: string;
   root?: string;
   content?: string[];
-  extensions?: Partial<ThemeConfig>[];
-}): Config => ({
+  extensions?: Partial<TailwindThemeConfig>[];
+}): TailwindConfig => ({
   darkMode: 'class',
   theme: {
     fontFamily: {
@@ -255,7 +256,7 @@ export const tailwindConfig = ({
   },
   plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
-  content: [resolve(root, 'node_modules/@dxos/react-components/dist/**/*.mjs'), ...content],
+  content,
   future: {
     hoverOnlyWhenSupported: true
   }

@@ -4,4 +4,6 @@
 
 import { MessageFrame } from './MessageFrame';
 
+export * from './util';
+
 export default MessageFrame;

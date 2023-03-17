@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, Plus } from 'phosphor-react';
+import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Document } from '@dxos/echo-schema';
@@ -28,7 +28,7 @@ export type EditableObjectListProps<T extends Document> = {
   onSelect?: (id: string) => void;
   onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
-  onCreate?: () => Promise<string>;
+  onCreate?: () => string;
 };
 
 // TODO(burdon): Replace with react-components list.
@@ -49,7 +49,7 @@ export const EditableObjectList = <T extends Document>({
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
-      const objectId = await onCreate();
+      const objectId = onCreate();
       if (objectId) {
         onSelect?.(objectId);
       }
@@ -82,18 +82,20 @@ export const EditableObjectList = <T extends Document>({
                   <Icon className={getSize(6)} />
                 </Button>
               </ListItemEndcap>
+
               <Input
                 variant='subdued'
                 label='Title'
                 labelVisuallyHidden
                 placeholder='Title'
                 slots={{
-                  root: { className: 'grow' },
+                  root: { className: 'grow pl-1' },
                   input: { autoFocus: !getTitle(object)?.length }
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
+
               {onAction && (
                 <ListItemEndcap asChild>
                   <Button
@@ -111,9 +113,11 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <Button density='fine' variant='ghost' onClick={handleCreate}>
-          <Plus className={getSize(5)} />
-        </Button>
+        <ListItemEndcap>
+          <Button variant='ghost' onClick={handleCreate}>
+            <Plus className={getSize(5)} />
+          </Button>
+        </ListItemEndcap>
       )}
     </div>
   );

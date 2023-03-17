@@ -10,8 +10,11 @@ import { getConfig, getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
 
 // TODO(burdon): Set-up in-memory test for CI.
-describe('Mail', () => {
-  test.skip('IMAP', async () => {
+
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('IMAP processor', () => {
+  // eslint-disable-next-line mocha/no-skipped-tests
+  test('basic', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
     assert(config);
 
@@ -20,7 +23,7 @@ describe('Mail', () => {
       password: process.env.COM_PROTONMAIL_PASSWORD!,
       host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
       port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
-      tls: true,
+      tls: false,
       tlsOptions: {
         ca: process.env.COM_PROTONMAIL_CERT ?? getKey(config, 'com.protonmail.ca'),
         rejectUnauthorized: false

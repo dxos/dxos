@@ -32,10 +32,12 @@ export const globalTypes = {
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
-    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn)})
-}
+
+  useEffect(() => {
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
+  }, [theme]);
+
+  return createElement(ThemeProvider, { children: StoryFn() });
+};
 
 export const decorators = [withTheme];
