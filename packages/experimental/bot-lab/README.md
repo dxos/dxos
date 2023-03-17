@@ -1,12 +1,25 @@
-# @dxos/bot-lab
+# Experimental Bot Lab
 
+NOTE: Bots are rapidly evolving experimental features with limited documentation.
 
-## Running bots locally
+## Developing Bots
 
-1. Make sure you have `kube version` >= `1.17.6-dev`.
-2. Enable bots in config (ask @egor).
-3. Configure kai `dxos.services.bot.proxy` to `http://kube.local/.well-known/dx/bot` (must be http).
-4. Build bot with `pnpm run build:local` (in `bot-lab`).
+For development, we assume you will interact with bots from Kai running from a local Vite server.
+
+To run bots locally you will need to install and run a local KUBE server, and install a local Docker machine (e.g., via. Docker Desktop).
+
+1. Install the latest dev build of the KUBE server [following the bot development README](https://github.com/dxos/kube/blob/main/docs/bot_development.md).
+2. Build the local bots bundle: `pnpm run build:local`
+3. Open the settings panel in Kai (via the menu) and configure the bot proxy to point to your local KUBE:
+   - Set `dxos.services.bot.proxy` to `http://kube.local/.well-known/dx/bot` (NOTE: This must use `http`).
+
+NOTES
+- The bots bundle includes an in-memory map of ALL bots from `@dxos/kai-bots`.
+- Bots can be started via the Bots panel accessible from the Kai sidebar.
+- Each bot instance will cause a new container to be instantiated using the latest Docker image.
+- Rebuild the Docker image after making any changes to individual bots.
+- Bots will automatically join the current Space, but will disconnect (and will not reconnect) after the Space is closed.
+- Errors are not currently supported so rely on the Docker machine logs.
 
 ## Running bots on a hosted KUBE
 
