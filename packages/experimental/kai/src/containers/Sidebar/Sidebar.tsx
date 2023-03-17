@@ -241,9 +241,14 @@ export const Sidebar = observer(() => {
       <div className='flex flex-col shrink-0'>
         <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
           <div className='flex items-center'>
-            <Icon className={getSize(6)} />
+            <Icon className={getSize(6)} data-testid='sidebar.spaceIcon' />
             <div className='pl-2 text-lg'>{space.properties.name}</div>
-            <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
+            <Button
+              variant='ghost'
+              className='p-0'
+              data-testid='sidebar.showSpaceList'
+              onClick={() => setShowSpaceList((show) => !show)}
+            >
               <CaretUpDown className={mx(getSize(4), 'ml-2')} />
             </Button>
           </div>
