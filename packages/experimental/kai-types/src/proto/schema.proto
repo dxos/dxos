@@ -146,7 +146,7 @@ message DocumentStack {
 
   message Section {
     option (object) = true; // TODO(burdon): REMOVE (but requires id property).
-    string type = 1; // TODO(burdon): Metadata.
+    Source source = 1; // TODO(burdon): Metadata from resolver.
     dxos.schema.Document object = 2;
   }
 
@@ -163,10 +163,12 @@ message Presentation {
   DocumentStack stack = 2;
 }
 
-// TODO(burdon): Rename;
-// TODO(burdon): System type for external GUIDs.
+// TODO(burdon): Rename.
+// TODO(burdon): System type for external GUIDs (identifies resolver).
+// TODO(burdon): Timestamp, temporal context, TTL.
+// TODO(burdon): Dependency graph (resolvers that preceded this).
 message Source {
-  string vendor = 1;
+  string resolver = 1; // TODO(burdon): DXN of resolver.
   string guid = 2; // TODO(burdon): `id` should be allowed on non-objects.
 }
 
