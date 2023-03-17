@@ -8,15 +8,15 @@ import { languages } from '@codemirror/language-data';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import { parseInt } from 'lib0/number';
 import React, { forwardRef, useEffect, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
-import { useThemeContext } from '@dxos/react-components';
+import { useThemeContext, configPalettes } from '@dxos/react-components';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel } from '../../model';
-import { cursorColor } from '../../yjs';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
 
@@ -30,6 +30,31 @@ export type MarkdownComposerProps = {
 export type MarkdownComposerRef = ReactCodeMirrorRef;
 
 const theme = EditorView.theme(markdownDarktheme);
+
+const hexadecimalPaletteSeries: (keyof typeof configPalettes)[] = [
+  'red' as const,
+  'orange' as const,
+  'amber' as const,
+  'yellow' as const,
+  'lime' as const,
+  'green' as const,
+  'emerald' as const,
+  'teal' as const,
+  'cyan' as const,
+  'sky' as const,
+  'indigo' as const,
+  'violet' as const,
+  'purple' as const,
+  'fuchsia' as const,
+  'pink' as const,
+  'rose' as const
+];
+
+const shadeKeys = {
+  color: '450' as const,
+  highlightDark: '800' as const,
+  highlightLight: '100' as const
+};
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ model }, forwardedRef) => {
   const { id, content, provider, peer } = model ?? {};
@@ -45,11 +70,14 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
 
   useEffect(() => {
     if (provider && peer) {
+      const peerColorDigit = parseInt(peer.id.slice(-1), 16);
       provider.awareness.setLocalStateField('user', {
         name: peer.name ?? humanize(peer.id),
-        // TODO(wittjosiah): Pick colours from theme based on identity key.
-        color: cursorColor.color,
-        colorLight: cursorColor.light
+        color: configPalettes[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
+        colorLight:
+          configPalettes[hexadecimalPaletteSeries[peerColorDigit]][
+            shadeKeys[themeMode === 'dark' ? 'highlightDark' : 'highlightLight']
+          ]
       });
     }
   }, [provider, peer]);
