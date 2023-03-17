@@ -174,7 +174,6 @@ export const Sidebar = observer(() => {
       ctx.onDispose(
         space!.listen('currentLocation', ({ payload: { identityKey, location } }) => {
           if (!membersLocations.has(identityKey) || membersLocations.get(identityKey) !== location) {
-            console.log('currentLocation', identityKey, location);
             membersLocations.set(identityKey, location);
           }
         })
@@ -187,7 +186,6 @@ export const Sidebar = observer(() => {
 
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
-    console.log('handleMemberFocus', member, path);
     if (path) {
       navigate(path);
     }
