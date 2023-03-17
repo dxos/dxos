@@ -40,8 +40,8 @@ export class TestWireProtocol {
     return this.connections.get(peerId)!;
   }
 
-  async testConnection(peerId: PublicKey) {
+  async testConnection(peerId: PublicKey, message?: string) {
     const connection = await this.waitForConnection(peerId);
-    await connection.test();
+    await connection.test(message);
   }
 }

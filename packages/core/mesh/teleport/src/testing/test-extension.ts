@@ -70,9 +70,9 @@ export class TestExtension implements TeleportExtension {
     await this._rpc?.close();
   }
 
-  async test() {
+  async test(message = 'test') {
     await this.open.wait({ timeout: 500 });
-    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
-    assert(res.data === 'test');
+    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 500);
+    assert(res.data === message);
   }
 }
