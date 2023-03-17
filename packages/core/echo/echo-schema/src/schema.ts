@@ -19,7 +19,7 @@ export type EchoType = { options?: { [key: string]: any } } & (
       /**
        * Plain JS object.
        */
-      kind: 'record'; // TODO(mykola) Figure out a better name.
+      kind: 'record';
       objectType: string;
       // TODO(mykola): Add ability to list fields.
     }
