@@ -18,7 +18,7 @@ describe.skip('IMAP processor', () => {
     const config = getConfig(process.env.TEST_CONFIG);
     assert(config);
 
-    const processor = new ImapProcessor({
+    const processor = new ImapProcessor('dxos.module.bot.mail', {
       user: process.env.COM_PROTONMAIL_USERNAME!,
       password: process.env.COM_PROTONMAIL_PASSWORD!,
       host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',

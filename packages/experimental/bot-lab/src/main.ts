@@ -115,34 +115,25 @@ const start = async () => {
   setInterval(printStatus, 60_000);
 };
 
-const createBot = (bot?: string): Bot => {
-  log.info('creating bot', { bot });
-
-  switch (bot) {
-    case 'dxos.module.bot.chess': {
-      return new ChessBot();
-    }
-
-    case 'dxos.module.bot.kai': {
-      return new KaiBot();
-    }
-
-    case 'dxos.module.bot.mail': {
-      return new MailBot();
-    }
-
-    case 'dxos.module.bot.store': {
-      return new StoreBot();
-    }
-
-    case 'dxos.module.bot.travel': {
-      return new TravelBot();
-    }
-
-    default: {
-      throw new Error(`Invalid bot type: ${bot}`);
+const createBot = (botId?: string): Bot => {
+  if (botId) {
+    log.info('creating bot', { botId });
+    const BotConstructor = botRegistry[botId];
+    if (BotConstructor) {
+      return new BotConstructor(botId);
     }
   }
+
+  throw new Error(`Invalid bot type: ${botId}`);
+};
+
+// TODO(burdon): DMG.
+const botRegistry: { [id: string]: new (botId: string) => Bot } = {
+  'dxos.module.bot.chess': ChessBot,
+  'dxos.module.bot.kai': KaiBot,
+  'dxos.module.bot.mail': MailBot,
+  'dxos.module.bot.store': StoreBot,
+  'dxos.module.bot.travel': TravelBot
 };
 
 // TODO(burdon): Create class.
