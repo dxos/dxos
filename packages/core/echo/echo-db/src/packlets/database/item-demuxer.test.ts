@@ -42,7 +42,7 @@ describe('Item demuxer', () => {
     //
 
     const [updatedItems, onUpdateItem] = latch();
-    const unsubscribe = itemManager.update.on(() => {
+    const unsubscribe = itemDemuxer.mutation.on(() => {
       const items = Array.from(itemManager.entities.values()).filter((entity) => entity instanceof Item);
       expect(items).toHaveLength(1);
       onUpdateItem();

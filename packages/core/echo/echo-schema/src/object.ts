@@ -100,6 +100,13 @@ export abstract class EchoObject<T extends Model = any> {
 
   /**
    * @internal
+   * Called before object is bound to database.
+   * `_database` is guaranteed to be set.
+   */
+  _itemUpdate(): void {}
+
+  /**
+   * @internal
    * Called when the object is imported to the database. Assigns the backing item.
    */
   _bind(item: Item<T>) {
