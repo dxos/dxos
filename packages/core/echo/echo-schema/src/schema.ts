@@ -11,7 +11,7 @@ import { TextModel } from '@dxos/text-model';
 import { TypeFilter } from './query';
 import { strip } from './util';
 
-export type EchoType = { options?: { [key: string]: any } } & (
+export type EchoType =
   | {
       kind: 'number' | 'string' | 'boolean' | 'bytes';
     }
@@ -36,12 +36,12 @@ export type EchoType = { options?: { [key: string]: any } } & (
       kind: 'enum';
       enumType: string;
       // TODO(mykola): Add ability to list enum values.
-    }
-);
+    };
 
 export type EchoSchemaField = {
   name: string;
   type: EchoType;
+  options?: { [key: string]: any };
 };
 
 /**
@@ -161,7 +161,7 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
       type: getEchoType(field)
     };
     if (field.options) {
-      echoField.type.options = field.options;
+      echoField.options = field.options;
     }
     return echoField;
   });

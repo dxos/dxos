@@ -84,11 +84,11 @@ describe('schema', () => {
       {
         name: 'name',
         type: {
-          kind: 'string',
-          options: {
-            default: 'Anonymous',
-            required: true
-          }
+          kind: 'string'
+        },
+        options: {
+          default: 'Anonymous',
+          required: true
         }
       },
       { name: 'username', type: { kind: 'string' } },
