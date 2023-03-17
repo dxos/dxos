@@ -7,6 +7,7 @@ import { ux } from '@oclif/core';
 import { Space, SpaceMember } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
@@ -77,6 +78,30 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
       },
       name: {
         header: 'Display name'
+      }
+    },
+    {
+      ...flags
+    }
+  );
+};
+
+export const mapCredentials = (credentials: Credential[], truncateKeys = false) => {
+  return credentials.map((credential) => ({
+    id: maybeTruncateKey(credential.id!, truncateKeys),
+    type: credential.subject.assertion['@type']
+  }));
+};
+
+export const printCredentials = (credentials: Credential[], flags = {}) => {
+  CliUx.ux.table(
+    mapCredentials(credentials, true),
+    {
+      id: {
+        header: 'Id'
+      },
+      type: {
+        header: 'Type'
       }
     },
     {
