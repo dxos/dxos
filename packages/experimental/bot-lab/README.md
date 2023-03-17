@@ -21,6 +21,8 @@ NOTES
 - Bots will automatically join the current Space, but will disconnect (and will not reconnect) after the Space is closed.
 - Errors are not currently supported so rely on the Docker machine logs.
 
+To check your KUBE is running, enter `kube status` and/or `curl http://localhost:9002/.well-known/dx/status`
+
 ## Running bots on a hosted KUBE
 
 1. Login to github container registry: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
