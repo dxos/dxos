@@ -23,7 +23,7 @@ message Contact {
 
   option (object) = true;
 
-  string name = 1 [primary = true, required = true];
+  string name = 1 [default="Anonymous", required = true];
   string username = 2;
   string email = 3;
   Address address = 4;

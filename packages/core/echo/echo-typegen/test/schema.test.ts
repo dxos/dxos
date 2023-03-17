@@ -86,7 +86,7 @@ describe('schema', () => {
         type: {
           kind: 'string',
           options: {
-            primary: true,
+            default: 'Anonymous',
             required: true
           }
         }
