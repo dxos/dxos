@@ -193,7 +193,6 @@ export const Sidebar = observer(() => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
 
     const id = path?.split('/')[3].split('_').join('.');
-    console.log('focusOnMember', id);
     // TODO(mykola): Reconcile with FrameRegistry
     if (id) {
       const activate = !activeFrames.find((frameId) => frameId === id);
