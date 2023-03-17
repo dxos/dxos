@@ -15,12 +15,14 @@ import {
 } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
-import React, { useContext, useEffect, useState, Suspense } from 'react';
+import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
 import { useHref, useNavigate, Link } from 'react-router-dom';
 
+import { scheduleTaskInterval } from '@dxos/async';
 import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
@@ -150,6 +152,44 @@ export const Sidebar = observer(() => {
       }
     }
   };
+
+  //
+  // Members focusing.
+  //
+  const membersLocations = new Map<string, string>();
+  useEffect(() => {
+    if (space) {
+      const ctx = new Context();
+      scheduleTaskInterval(
+        ctx,
+        async () => {
+          await space.postMessage('currentLocation', {
+            identityKey: client.halo.identity?.identityKey.toHex(),
+            location: window.location.pathname
+          });
+        },
+        500
+      );
+
+      ctx.onDispose(
+        space!.listen('currentLocation', ({ payload: { identityKey, location } }) => {
+          if (!membersLocations.has(identityKey) || membersLocations.get(identityKey) !== location) {
+            membersLocations.set(identityKey, location);
+          }
+        })
+      );
+      return () => {
+        ctx.dispose();
+      };
+    }
+  }, [space]);
+
+  const focusOnMember = useCallback((member: SpaceMember) => {
+    const path = membersLocations.get(member.identity.identityKey.toHex());
+    if (path) {
+      navigate(path);
+    }
+  }, []);
 
   //
   // Connection.
@@ -296,7 +336,7 @@ export const Sidebar = observer(() => {
           </Button>
         </div>
 
-        <MemberList identityKey={client.halo.identity!.identityKey} members={members} />
+        <MemberList identityKey={client.halo.identity!.identityKey} members={members} focusOnMember={focusOnMember} />
 
         <Link
           className={mx('flex w-full px-4 py-1 mt-2 items-center', section === Section.BOTS && 'bg-zinc-200')}
