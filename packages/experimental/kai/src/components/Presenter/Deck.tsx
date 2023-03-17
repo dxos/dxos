@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button, getSize, mx } from '@dxos/react-components';
 
@@ -12,12 +12,34 @@ import { Presenter } from './Presenter';
 
 export type DeckProps = {
   slides?: string[];
+  slide?: number;
   fullscreen?: boolean;
+  onSlideChange?: (index: number) => void;
   onToggleFullscreen?: (fullscreen: boolean) => void;
 };
 
-export const Deck = ({ slides = [], fullscreen, onToggleFullscreen }: DeckProps) => {
-  const [index, setIndex] = useState(1);
+// TODO(burdon): Subscribe to fullscreen/index.
+export const Deck = ({
+  slides = [],
+  slide: controlledSlide = 1,
+  fullscreen,
+  onSlideChange,
+  onToggleFullscreen
+}: DeckProps) => {
+  const [slide, setSlide] = useState(controlledSlide); // TODO(burdon): Move up.
+  useEffect(() => {
+    if (slide !== controlledSlide) {
+      setSlide(controlledSlide);
+    }
+  }, [slide, controlledSlide]);
+
+  const handleUpdateSlide = (slide: number) => {
+    if (onSlideChange) {
+      onSlideChange(slide);
+    } else {
+      setSlide(slide);
+    }
+  };
 
   const Expand = () => {
     return (
@@ -29,16 +51,15 @@ export const Deck = ({ slides = [], fullscreen, onToggleFullscreen }: DeckProps)
 
   return (
     <Presenter
-      content={slides[index - 1] ?? ''}
-      fullscreen={fullscreen}
+      content={slides[slide - 1] ?? ''}
       topRight={<Expand />}
-      bottomLeft={<PageNumber index={index} count={slides.length} />}
+      bottomLeft={<PageNumber index={slide} count={slides.length} />}
       bottomRight={
         <Pager
-          index={index}
+          index={slide}
           count={slides.length}
           keys={fullscreen}
-          onMove={setIndex}
+          onMove={handleUpdateSlide}
           onClose={() => onToggleFullscreen?.(false)}
         />
       }

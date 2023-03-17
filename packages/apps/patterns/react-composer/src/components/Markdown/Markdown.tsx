@@ -8,19 +8,22 @@ import { languages } from '@codemirror/language-data';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useEffect, useMemo } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/react-components';
+import { YText } from '@dxos/text-model';
+import { humanize } from '@dxos/util';
 
+import { ComposerModel } from '../../model';
+import { cursorColor } from '../../yjs';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
-import { PlainTextModel } from './model';
 
 export type MarkdownComposerSlots = {};
 
 export type MarkdownComposerProps = {
-  model?: PlainTextModel;
+  model?: ComposerModel;
   slots?: MarkdownComposerSlots;
 };
 
@@ -29,16 +32,27 @@ export type MarkdownComposerRef = ReactCodeMirrorRef;
 const theme = EditorView.theme(markdownDarktheme);
 
 export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ model }, forwardedRef) => {
-  const { id, fragment, awareness } = model ?? {};
+  const { id, content, provider, peer } = model ?? {};
   const { themeMode } = useThemeContext();
 
   const extensions = useMemo(
     () => [
       markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-      ...(fragment ? [yCollab(fragment, awareness)] : [])
+      ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
     ],
-    [fragment, awareness]
+    [content, provider?.awareness]
   );
+
+  useEffect(() => {
+    if (provider && peer) {
+      provider.awareness.setLocalStateField('user', {
+        name: peer.name ?? humanize(peer.id),
+        // TODO(wittjosiah): Pick colours from theme based on identity key.
+        color: cursorColor.color,
+        colorLight: cursorColor.light
+      });
+    }
+  }, [provider, peer]);
 
   return (
     <CodeMirror
@@ -53,7 +67,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
         syntaxHighlighting(markdownDarkHighlighting)
       ]}
       ref={forwardedRef}
-      value={fragment?.toString()}
+      value={content?.toString()}
       extensions={extensions}
     />
   );

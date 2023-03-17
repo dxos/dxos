@@ -66,6 +66,16 @@ export class BotClient {
   }
 
   /**
+   * Fetch latest image.
+   */
+  async fetchImage() {
+    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
+      method: 'POST',
+      body: JSON.stringify({}) // Empty body required.
+    });
+  }
+
+  /**
    * Start bot container.
    */
   async startBot(botId: string, envMap?: Map<string, string>) {
@@ -79,14 +89,6 @@ export class BotClient {
     };
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
-
-    const botInstanceId = 'bot-' + PublicKey.random().toHex().slice(0, 8) + '-' + botId;
-
-    // Fetch latest image.
-    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
-      method: 'POST',
-      body: JSON.stringify({}) // Empty body required.
-    });
 
     /**
      * {@see DX_BOT_RPC_PORT_MIN}
@@ -114,8 +116,10 @@ export class BotClient {
       }
     };
 
-    log.info('createing bot', { request });
+    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
+
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
+    log('creating bot', { request, botInstanceId });
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
@@ -137,23 +141,22 @@ export class BotClient {
     const fetchUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     const wsUrl = new URL(`${containerId}/rpc`, `${this._botServiceEndpoint}/`);
     wsUrl.protocol = protocol === 'https:' ? 'wss:' : 'ws:';
-    console.log({ fetchUrl, wsUrl });
 
     const done = new Trigger();
     const clear = exponentialBackoffInterval(async () => {
       try {
         const res = await fetch(fetchUrl);
-        console.log(res.status);
         if (res.status >= 400 && res.status !== 426) {
           // 426 Upgrade Required
           return;
         }
-        console.log('connected', { fetchUrl });
+        log('connected', { fetchUrl });
         done.wake();
       } catch (err: any) {
-        console.log(err);
+        log.error('connection', err);
       }
     }, BOT_STARTUP_CHECK_INTERVAL);
+
     try {
       await done.wait({ timeout: BOT_STARTUP_CHECK_TIMEOUT });
     } finally {
