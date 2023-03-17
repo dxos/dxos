@@ -39,16 +39,13 @@ export class TestAgent extends TestPeerBase {
     connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
   }
 
-  waitForExactAgentsOnline(agents: TestAgent[], timeout = 1000) {
+  waitForAgentsOnline(agents: TestAgent[], timeout = 1000) {
     assert(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
         const connections = this.presence.getPeersOnline().map((state) => state.identityKey.toHex());
         const expectedConnections = agents.map((agent) => agent.peerId.toHex());
-        return (
-          connections.length === expectedConnections.length &&
-          expectedConnections.every((value) => connections.includes(value))
-        );
+        return expectedConnections.every((value) => connections.includes(value));
       }),
       timeout
     );
