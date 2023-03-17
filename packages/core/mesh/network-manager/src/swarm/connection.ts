@@ -93,6 +93,12 @@ export class Connection {
       this.errors.raise(err);
     });
 
+    // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
+    this._protocol.stream.on('close', () => {
+      log('protocol stream closed')
+      this.close().catch((err) => this.errors.raise(err));
+    });
+
     assert(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,

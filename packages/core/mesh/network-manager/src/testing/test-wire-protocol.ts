@@ -13,6 +13,7 @@ import { createTeleportProtocolFactory } from '../wire-protocol';
 export class TestWireProtocol {
   public readonly connections = new ComplexMap<PublicKey, TestExtension>(PublicKey.hash);
   public readonly connected = new Event<PublicKey>();
+  public readonly disconnected = new Event<PublicKey>();
 
   constructor(public readonly peerId: PublicKey) {}
 
@@ -21,6 +22,7 @@ export class TestWireProtocol {
     const extension = new TestExtension({
       onClose: async () => {
         this.connections.delete(teleport.remotePeerId);
+        this.disconnected.emit(teleport.remotePeerId);
       }
     });
     this.connections.set(teleport.remotePeerId, extension);
