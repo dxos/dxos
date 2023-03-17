@@ -59,5 +59,5 @@ describe('Memory transport', () => {
         })
       );
     })
-    .timeout(1000_000);
+    .timeout(1_000_000);
 });
