@@ -107,7 +107,7 @@ export class TravelBot extends Bot {
       // TODO(burdon): Upgrade JSON to object.
       const ticket: Ticket = {
         source: {
-          vendor: offer.source,
+          resolver: offer.source,
           guid: offer.id
         },
 

@@ -10,6 +10,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
@@ -159,7 +160,7 @@ export class Generator {
 
   createNote = async () => {
     const document = await this._db.add(createNote());
-    document.content = new Text(faker.lorem.sentence());
+    document.content = new Text(faker.lorem.sentence(), TextKind.RICH);
     return document;
   };
 
@@ -201,7 +202,6 @@ export const createOrganization = () => {
 export const createProject = (tag?: string) => {
   return new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
-    description: new Text(),
     url: faker.internet.url(),
     tag: tag ?? faker.random.arrayElement(tags)
   });
@@ -246,15 +246,12 @@ export const createEvent = () => {
 export const createDocument = () => {
   const document = new Document();
   document.title = faker.lorem.sentence(3);
-  document.content = new Text();
+  document.content = new Text('', TextKind.RICH);
   return document;
 };
 
 export const createNote = () => {
-  const note = new Note();
-  note.title = faker.lorem.words(2);
-  note.content = new Text();
-  return note;
+  return new Note({ title: faker.lorem.words(2) });
 };
 
 // TODO(burdon): Error if directly setting value with undefined.

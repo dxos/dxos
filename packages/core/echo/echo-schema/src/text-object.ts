@@ -8,6 +8,7 @@ import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-m
 import { EchoObject } from './object';
 
 export class Text extends EchoObject<TextModel> {
+  // TODO(burdon): Change to object.
   constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
 
