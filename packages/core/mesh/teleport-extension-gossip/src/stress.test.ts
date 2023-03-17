@@ -12,7 +12,7 @@ import { TestAgent } from './testing';
 
 describe('Presence stress-test ', () => {
   test('N peers chain', async () => {
-    const amountOfPeers = 20;
+    const amountOfPeers = 80;
 
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
