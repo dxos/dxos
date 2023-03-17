@@ -70,7 +70,11 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
 
   useEffect(() => {
     if (provider && peer) {
-      const peerColorDigit = parseInt(peer.id.slice(-1), 16);
+      let peerColorDigit = Math.floor(16 * Math.random());
+      try {
+        // `peer.id` is already a `string`, so we attempt `parseInt` within a `try` since we can’t be certain it is hexadecimal.
+        peerColorDigit = parseInt(peer.id.slice(-1), 16);
+      } catch (_) {}
       provider.awareness.setLocalStateField('user', {
         name: peer.name ?? humanize(peer.id),
         color: configPalettes[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
