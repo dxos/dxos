@@ -12,8 +12,8 @@ import { getSize, mx } from '@dxos/react-components';
 export const MemberList: FC<{
   identityKey: PublicKey;
   members: SpaceMember[];
-  focusOnMember?: (member: SpaceMember) => void;
-}> = ({ identityKey, members, focusOnMember }) => {
+  onSelect?: (member: SpaceMember) => void;
+}> = ({ identityKey, members, onSelect }) => {
   members.sort((member) => (member.identity.identityKey.equals(identityKey) ? -1 : 1));
 
   return (
@@ -21,7 +21,7 @@ export const MemberList: FC<{
       {members.map((member) => (
         <div
           onClick={() => {
-            focusOnMember?.(member);
+            onSelect?.(member);
           }}
           key={member.identity.identityKey.toHex()}
           className='flex overflow-hidden mb-1 items-center'
