@@ -20,6 +20,8 @@ Arguments:
 
 
 ## Properties
+### [[devtoolsFormatter]]()
+Type: <code>DevtoolsFormatter</code>
 
 
 ## Methods
@@ -37,14 +39,6 @@ Arguments:
 `depth`: <code>number</code>
 
 `options`: <code>InspectOptionsStylized</code>
-
-### [\[devtoolsFormatter\]()]()
-
-
-
-Returns: <code>DevtoolsFormatter</code>
-
-Arguments: none
 
 ### [asBuffer()]()
 

@@ -107,7 +107,7 @@ Arguments:
 
 
 
-Get list of all spaces.
+Gets a list of all spaces.
 
 
 Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)[]</code>
@@ -126,7 +126,7 @@ Arguments: none
 
 
 
-Subscribe to spaces changes.
+Subscribes to spaces changes.
 
 
 Returns: <code>UnsubscribeCallback</code>
