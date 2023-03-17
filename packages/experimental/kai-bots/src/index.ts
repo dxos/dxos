@@ -4,6 +4,7 @@
 
 export * from './bot';
 export * from './bot-manager';
+export * from './resolver';
 
 export * from './chess-bot';
 export * from './github-bot';

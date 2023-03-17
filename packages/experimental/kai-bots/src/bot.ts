@@ -15,6 +15,14 @@ export abstract class Bot {
   protected _config?: Config;
   protected _space?: Space;
 
+  constructor(private readonly _id: string) {
+    assert(this._id);
+  }
+
+  get id() {
+    return this._id;
+  }
+
   get config(): Config {
     return this._config!;
   }

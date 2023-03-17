@@ -6,16 +6,16 @@ syntax = "proto3";
 
 package dxos.echo.model.text;
 
+enum TextKind {
+  PLAIN = 0;
+  RICH = 1;
+}
+
 message TextMutation {
   optional bytes update = 1;
   optional int32 client_id = 2;
   optional TextKind kind = 3;
   optional string field = 4;
-}
-
-enum TextKind {
-  PLAIN = 0;
-  RICH = 1;
 }
 
 message TextSnapshot {

@@ -122,7 +122,12 @@ export const Stack = observer(({ slots = {}, space, stack, items = defaultItems,
         </SortableContext>
       </DndContext>
 
-      {/* <StackRow showMenu className='py-6' onCreate={() => handleInsertSection(DocumentType.type, undefined, -1)} /> */}
+      <StackRow
+        showMenu
+        className='py-6'
+        items={items}
+        onInsert={(item, objectId) => handleInsertSection(item as StackItemType, objectId, -1)}
+      />
     </div>
   );
 });

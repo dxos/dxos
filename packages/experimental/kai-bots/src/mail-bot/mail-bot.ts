@@ -19,7 +19,7 @@ export class MailBot extends Bot {
   private _interval?: ReturnType<typeof setTimeout>;
 
   override async onInit() {
-    this._processor = new ImapProcessor({
+    this._processor = new ImapProcessor(this.id, {
       user: process.env.COM_PROTONMAIL_USERNAME!,
       password: process.env.COM_PROTONMAIL_PASSWORD!,
       host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
@@ -61,6 +61,7 @@ export class MailBot extends Bot {
     // TODO(burdon): Annotate source of message (in GUID?)
     log.info('processed', { current: currentMessages.length, messages: messages.length });
     for (const message of messages) {
+      // TODO(burdon): Check resolver id.
       if (!message.source?.guid || !findCurrent(message.source?.guid)) {
         await this.space.db.add(message);
       }
