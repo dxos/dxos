@@ -29,7 +29,7 @@ describe.skip('TravelBot', () => {
     await client.halo.createIdentity();
     const space = await client.echo.createSpace();
 
-    const bot = new TravelBot();
+    const bot = new TravelBot('dxos.module.bot.travel');
     await bot.init(client.config, space);
     await bot.start();
 

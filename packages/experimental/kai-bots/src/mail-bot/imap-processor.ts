@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
 import sub from 'date-fns/sub';
 import { convert } from 'html-to-text';
 import { Config as ImapConfig } from 'imap';
@@ -21,7 +22,10 @@ const toArray = (value: any) => (Array.isArray(value) ? value : [value]);
 const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
 
 export class ImapProcessor {
-  constructor(private readonly _config: ImapConfig) {}
+  constructor(private readonly _id: string, private readonly _config: ImapConfig) {
+    assert(this._id);
+    assert(this._config);
+  }
 
   /**
    * Make IMAP request.
@@ -66,6 +70,7 @@ export class ImapProcessor {
 
         const message = new Message({
           source: {
+            resolver: this._id,
             guid: messageId
           },
           date: date.toISOString(),

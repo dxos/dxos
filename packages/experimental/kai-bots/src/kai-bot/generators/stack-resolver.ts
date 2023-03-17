@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
 import startCase from 'lodash.startcase';
 import { ChatCompletionRequestMessage } from 'openai';
 
@@ -11,8 +12,8 @@ import { Contact, Document, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
+import { Resolver } from '../../resolver';
 import { ChatModel } from '../chat-model';
-import { Generator } from '../generator';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const parseJson = (content: string) => {
@@ -23,12 +24,15 @@ const parseJson = (content: string) => {
   }
 };
 
-export class ContactStackGenerator implements Generator<DocumentStack> {
-  async update(chatModel: ChatModel, space: Space, stack: DocumentStack) {
-    // TODO(burdon): Prevent multiple generations.
+export class ContactStackResolver implements Resolver<DocumentStack> {
+  constructor(private readonly _id: string, private readonly _chatModel: ChatModel) {
+    assert(this._id);
+    assert(this._chatModel);
+  }
+
+  async update(space: Space, stack: DocumentStack) {
     // TODO(burdon): Update existing if meta changes?
-    const generated = stack.sections.find((section) => section.type === 'generated');
-    if (generated) {
+    if (stack.sections.find((section) => section.source?.resolver === this._id)) {
       return;
     }
 
@@ -61,7 +65,7 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       });
 
       log('request', { messages });
-      const message = await chatModel?.request(messages);
+      const message = await this._chatModel?.request(messages);
       if (!message) {
         return;
       }
@@ -77,7 +81,7 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       const document = await space.db.add(new Document({ title, content: text }));
 
       // TODO(burdon): Add metadata.
-      const section = new DocumentStack.Section({ type: 'generated', object: document });
+      const section = new DocumentStack.Section({ source: { resolver: this._id }, object: document });
       stack.sections.push(section);
 
       // Add response.
