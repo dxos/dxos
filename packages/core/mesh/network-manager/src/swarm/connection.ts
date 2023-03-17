@@ -187,6 +187,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
+    log('stateChanged', { from: this._state, too: state, peerId: this.ownId });
     assert(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
