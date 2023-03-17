@@ -4,12 +4,19 @@ import config from '../config.t';
 export default defineTemplate(
   ({ input: { react } }) => {
     return react ? text /* javascript */`
-    import React, { useState } from 'react';
+    import React, { useEffect, useState } from 'react';
+    import { useIdentity } from '@dxos/react-client';
     import { Counter } from './Counter';
     
     export const Welcome = ({ name }: { name: string }) => {
       const isDark = document.documentElement.classList.contains('dark');
-      const [showCounter, setShowCounter] = useState(false);
+      const identity = useIdentity();
+      const [showCounter, setShowCounter] = useState(!!identity);
+      useEffect(() => {
+        if (identity) {
+          setShowCounter(true);
+        }
+      }, [identity]);
       return (
         <div className='dxos flex justify-center align-middle'>
           <div className='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>

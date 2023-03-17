@@ -54,7 +54,7 @@ export const Welcome = ({ name }: { name: string }) => {
         <h2>Learn more:</h2>
         <ul>
           <li>
-            <a href='https://docs.dxos.org/guide/echo/react' target='_blank' rel='noreferrer'>
+            <a href='https://docs.dxos.org/guide/react' target='_blank' rel='noreferrer'>
               Using ECHO with React
             </a>
           </li>
