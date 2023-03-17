@@ -1,5 +1,5 @@
 # Class `EchoDatabase`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:15]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:9]()</sub>
 
 
 Database wrapper.
@@ -39,11 +39,22 @@ Add object to th database.
 Restores the object if it was deleted.
 
 
-Returns: <code>Promise&lt;T&gt;</code>
+Returns: <code>T</code>
 
 Arguments: 
 
 `obj`: <code>T</code>
+
+### [flush()]()
+
+
+
+Wait for all pending operations to complete.
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
 
 ### [getObjectById(id)]()
 
