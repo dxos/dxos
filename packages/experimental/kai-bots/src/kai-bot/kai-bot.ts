@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { Bot } from '../bot';
 import { getKey } from '../util';
 import { ChatModel } from './chat-model';
-import { ContactStackGenerator } from './generators';
+import { ContactStackResolver } from './generators';
 
 export class KaiBot extends Bot {
   private _chatModel?: ChatModel;
@@ -24,13 +24,13 @@ export class KaiBot extends Bot {
 
   override async onStart() {
     // TODO(burdon): Generalize generators and triggers.
-    const generator = new ContactStackGenerator();
+    const resolver = new ContactStackResolver(this.id, this._chatModel!);
     const stacks = this.space.db.query(DocumentStack.filter());
     this._subscription = stacks.subscribe(async ({ objects: stacks }) => {
       log.info('updated', { objects: stacks.length });
       for (const stack of stacks) {
         log.info('stack', { stack: JSON.stringify(stack) });
-        await generator.update(this._chatModel!, this.space, stack);
+        await resolver.update(this.space, stack);
       }
     });
   }

@@ -126,7 +126,7 @@ After the HALO Device invitations to the Wallet, we should see DXNS Account addr
 
 ![Developer mode extensions](./images/wallet3.png)
 
-With the Wallet, we can go to a public (Console instance)[https://demo.kube.dxos.network/app/dxos:app.console/]. One of the Console purposes is to serve as a blockchain explorer.
+With the Wallet, we can go to a public (Console instance)[https://kube.dxos.network/app/dxos:app.console/]. One of the Console purposes is to serve as a blockchain explorer.
 
 On the **Developer** page you should see information about your DXNS Account, the devices, and Apps deployed with this DXNS Account.
 
