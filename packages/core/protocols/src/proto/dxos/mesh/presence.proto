@@ -10,13 +10,10 @@ package dxos.mesh.presence;
 // Import Any so that the protobuf compiler is happy that there's a substitution.
 import "google/protobuf/any.proto";
 
-message Alive {
-  message Connection {
-    bytes peer_id = 1;
-    optional bool initiator = 2;
-  }
+message PeerState {
+  /// Will be used to build network graph
+  repeated dxos.keys.PublicKey connections = 1; 
 
-  bytes peer_id = 1;
-  repeated Connection connections = 2;
-  optional bytes metadata = 3;
+  // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
+  dxos.keys.PublicKey identity_key = 2;
 }

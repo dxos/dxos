@@ -229,7 +229,7 @@ describe('RpcPeer', () => {
       await expect(await parallel1).toEqual(createPayload('p1'));
       await expect(await parallel2).toEqual(createPayload('p2'));
       await expect(error).toBeRejected();
-    });
+    }).tag('flaky');
 
     test('errors get serialized', async () => {
       const [alicePort, bobPort] = createLinkedPorts();

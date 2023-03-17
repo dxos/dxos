@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Circle, Moon } from '@phosphor-icons/react';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import * as PortalPrimitive from '@radix-ui/react-portal';
 import { toSvg } from 'jdenticon';
-import { Circle, Moon } from 'phosphor-react';
 import React, {
   cloneElement,
   ComponentProps,

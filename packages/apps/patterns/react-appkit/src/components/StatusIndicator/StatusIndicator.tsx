@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { WifiHigh, WifiSlash } from 'phosphor-react';
+import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { Tooltip, valenceColorText, mx, Button } from '@dxos/react-components';
+import { valenceColorText, mx, Button } from '@dxos/react-components';
+
+import { Tooltip } from '../Tooltip';
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.

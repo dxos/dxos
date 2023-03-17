@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CheckCircle, HourglassSimple, X } from 'phosphor-react';
+import { CheckCircle, HourglassSimple, X } from '@phosphor-icons/react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
 import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretRight } from 'phosphor-react';
+import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useState } from 'react';
 
 import { getSize } from '../../styles';

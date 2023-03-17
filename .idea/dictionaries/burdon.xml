@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>blueyard</w>
       <w>bot's</w>
       <w>braneframe</w>
       <w>brunicki</w>
@@ -25,7 +26,9 @@
       <w>hypercore</w>
       <w>hypercore's</w>
       <w>hypertrie</w>
+      <w>iata</w>
       <w>kodama</w>
+      <w>latlng</w>
       <w>lichess</w>
       <w>localizer</w>
       <w>memdown</w>
@@ -54,6 +57,7 @@
       <w>orgs</w>
       <w>packlets</w>
       <w>prefs</w>
+      <w>pricings</w>
       <w>protos</w>
       <w>proxied</w>
       <w>rehype</w>

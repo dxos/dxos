@@ -1,5 +1,5 @@
 # Class `Item`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:25]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:24]()</sub>
 
 
 A globally addressable data item.
@@ -47,9 +47,6 @@ Type: <code>ItemManager</code>
 
 ### [_modelMeta]()
 Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
-
-### [_onUpdate]()
-Type: <code>Event&lt;[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;&gt;</code>
 
 ### [deleted]()
 Type: <code>boolean</code>
@@ -135,19 +132,6 @@ Returns: <code>void</code>
 Arguments: 
 
 `snapshot`: <code>EchoObject</code>
-
-### [subscribe(listener)]()
-
-
-
-Subscribe for updates.
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`listener`: <code>function</code>
 
 ### [toString()]()
 

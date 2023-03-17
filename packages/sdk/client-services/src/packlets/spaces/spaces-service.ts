@@ -8,16 +8,19 @@ import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import {
+  PostMessageRequest,
   QueryCredentialsRequest,
   QuerySpacesResponse,
   Space,
   SpaceMember,
   SpacesService,
   SpaceStatus,
+  SubscribeMessagesRequest,
   UpdateSpaceRequest,
   WriteCredentialsRequest
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { humanize, Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
@@ -96,6 +99,25 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
+  async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    await space.postMessage(getChannelId(channel), message);
+  }
+
+  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
+    return new Stream<GossipMessage>(({ ctx, next }) => {
+      scheduleTask(ctx, async () => {
+        const dataSpaceManager = await this._getDataSpaceManager();
+        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+        const handle = space.listen(getChannelId(channel), (message) => {
+          next(message);
+        });
+        ctx.onDispose(() => handle.unsubscribe());
+      });
+    });
+  }
+
   queryCredentials({ spaceKey }: QueryCredentialsRequest): Stream<Credential> {
     return new Stream(({ ctx, next }) => {
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
@@ -137,3 +159,6 @@ export class SpacesServiceImpl implements SpacesService {
     };
   }
 }
+
+// Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
+const getChannelId = (channel: string): string => `user-channel/${channel}`;

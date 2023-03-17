@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus } from 'phosphor-react';
+import { Plus } from '@phosphor-icons/react';
 import React, { useRef, useEffect } from 'react';
 
 import { Button, getSize, Loading } from '@dxos/react-components';

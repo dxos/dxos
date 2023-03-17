@@ -73,13 +73,15 @@ export class Serializer {
             echoSchema
           );
           obj[base]._id = id;
-          await database.add(obj);
+          database.add(obj);
+          await database.flush();
           break;
         }
         case TextModel.meta.type: {
           const obj = new Text(data.text);
           obj[base]._id = id;
-          await database.add(obj);
+          database.add(obj);
+          await database.flush();
           break;
         }
       }

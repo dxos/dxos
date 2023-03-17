@@ -3,4 +3,4 @@
 //
 
 export * from './text-model';
-export type { Doc } from 'yjs';
+export { Doc, Text as YText, XmlFragment as YXmlFragment } from 'yjs';

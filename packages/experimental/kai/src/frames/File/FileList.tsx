@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DownloadSimple, FilePlus } from 'phosphor-react';
+import { DownloadSimple, FilePlus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';

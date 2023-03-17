@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,14 +44,15 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/teleport-extension-presence": "workspace:*",
+    "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@types/readable-stream": "^2.3.9"
+    "@types/readable-stream": "^2.3.9",
+    "fast-check": "~3.3.0"
   },
   "publishConfig": {
     "access": "public"

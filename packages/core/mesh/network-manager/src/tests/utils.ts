@@ -53,7 +53,7 @@ export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
  */
 // TODO(burdon): Based on plugin instance.
 // TODO(burdon): Configure to send more messages.
-export const exchangeMessages = async (swarm1: TestSwarmConnection, swarm2: TestSwarmConnection) => {
-  await swarm1.protocol.testConnection(swarm2.peer.peerId);
-  await swarm2.protocol.testConnection(swarm1.peer.peerId);
+export const exchangeMessages = async (swarm1: TestSwarmConnection, swarm2: TestSwarmConnection, message?: string) => {
+  await swarm1.protocol.testConnection(swarm2.peer.peerId, message);
+  await swarm2.protocol.testConnection(swarm1.peer.peerId, message);
 };

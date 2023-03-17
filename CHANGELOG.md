@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.1.30](https://github.com/dxos/dxos/compare/v0.1.29...v0.1.30) (2023-03-17)
+
+
+### Features
+
+* Add Enums in ECHO typegen ([#2733](https://github.com/dxos/dxos/issues/2733)) ([6ff1c2c](https://github.com/dxos/dxos/commit/6ff1c2c2dd4538e90bfa7916856003c1d6b0d1e8))
+* Add Error event listener ([#2731](https://github.com/dxos/dxos/issues/2731)) ([59df848](https://github.com/dxos/dxos/commit/59df8482b8c0099bf587b5c4f975b0d71a89853f))
+* Add general purpose pub/sub API in Space ([#2681](https://github.com/dxos/dxos/issues/2681)) ([1a9425c](https://github.com/dxos/dxos/commit/1a9425cd6773c4a4123412eb7e85f9ecf70ce65f))
+* Add member focusing in Kai ([#2766](https://github.com/dxos/dxos/issues/2766)) ([64177cf](https://github.com/dxos/dxos/commit/64177cf30633e47861f12432baa0ac29679e8a4b))
+* Add options to fields in EchoSchema ([#2760](https://github.com/dxos/dxos/issues/2760)) ([b29d308](https://github.com/dxos/dxos/commit/b29d308ff131750e2c9eafe503316358c7471c6e))
+* Batches ([#2704](https://github.com/dxos/dxos/issues/2704)) ([3ec6ca8](https://github.com/dxos/dxos/commit/3ec6ca831cd4f7a6906d7adde2ed6eb13f0aaabf))
+* Bots running on KUBE ([#2732](https://github.com/dxos/dxos/issues/2732)) ([7a58386](https://github.com/dxos/dxos/commit/7a5838668f8f00af197a480d6a269b74999ca504))
+* **composer-app:** Github integration ([#2728](https://github.com/dxos/dxos/issues/2728)) ([181aa6c](https://github.com/dxos/dxos/commit/181aa6caa65349c564cf756defe4d04699618ef2))
+* **composer-app:** Sidebar increment ([#2699](https://github.com/dxos/dxos/issues/2699)) ([8b002ba](https://github.com/dxos/dxos/commit/8b002ba09e1d306ed678b673c82a13719754440f))
+* Emit events only after entire batch was processed ([#2751](https://github.com/dxos/dxos/issues/2751)) ([0dfa6b5](https://github.com/dxos/dxos/commit/0dfa6b5543509de312a06b59ac761bb54edaa92a))
+* Fix presentations ([#2757](https://github.com/dxos/dxos/issues/2757)) ([a251547](https://github.com/dxos/dxos/commit/a251547e674f34fcd73be63f9d2bc0658d792588))
+* kai presenter update ([#2743](https://github.com/dxos/dxos/issues/2743)) ([4784cb0](https://github.com/dxos/dxos/commit/4784cb01707d45049ca4e86d3e5685473fca6767))
+* Minor UX fix. ([#2729](https://github.com/dxos/dxos/issues/2729)) ([750bcf6](https://github.com/dxos/dxos/commit/750bcf6916a353501f4d5b6a54f0a1662e4d7d92))
+* Mosaic cards. ([#2712](https://github.com/dxos/dxos/issues/2712)) ([e7d6ff4](https://github.com/dxos/dxos/commit/e7d6ff472793175580e1c11ab8289acc7585be0e))
+* Presenter fix. ([#2758](https://github.com/dxos/dxos/issues/2758)) ([d2d2daf](https://github.com/dxos/dxos/commit/d2d2daf12166e9ea32e462cd456dc959522c9887))
+* Presenter refactoring. ([#2754](https://github.com/dxos/dxos/issues/2754)) ([72a6af7](https://github.com/dxos/dxos/commit/72a6af77068f2c74a932638b9963935e4556c538))
+* **react-composer:** cursors ([#2715](https://github.com/dxos/dxos/issues/2715)) ([ca2383c](https://github.com/dxos/dxos/commit/ca2383ca3e95c47adbc21e41ba28591dfb285aa4))
+* **react-composer:** plain text support ([#2696](https://github.com/dxos/dxos/issues/2696)) ([73bbaef](https://github.com/dxos/dxos/commit/73bbaef9aaaac102692703d0b935aa134670816a))
+* **react-composer:** StackEdit-style Markdown editing experience ([#2713](https://github.com/dxos/dxos/issues/2713)) ([ca8634d](https://github.com/dxos/dxos/commit/ca8634d4d7b7b6b7217d3ee04ee91f6982728bc9))
+* Search frame ([#2661](https://github.com/dxos/dxos/issues/2661)) ([667efee](https://github.com/dxos/dxos/commit/667efee51c7e87f1d17728d2dfc2e344b4a93e16))
+* Simplify list/cards. ([#2725](https://github.com/dxos/dxos/issues/2725)) ([56d20a7](https://github.com/dxos/dxos/commit/56d20a7f2cee09481af603dac29235ef8228be45))
+* Switch presenter orientation ([#2746](https://github.com/dxos/dxos/issues/2746)) ([79499d5](https://github.com/dxos/dxos/commit/79499d59440bc72913592518006143df0d9fe163))
+* **text-model:** support plain text ([#2738](https://github.com/dxos/dxos/issues/2738)) ([35935e3](https://github.com/dxos/dxos/commit/35935e331d0040c8d451fe5d92b4565bc761feed))
+* Travel bot ([#2720](https://github.com/dxos/dxos/issues/2720)) ([e2d0826](https://github.com/dxos/dxos/commit/e2d08269f43f335de6c42792aa49ee5e60125dbb))
+* Update bot manager ([#2759](https://github.com/dxos/dxos/issues/2759)) ([0596618](https://github.com/dxos/dxos/commit/059661823f0f7c85920231a4f2e5174129db0139))
+
+
+### Bug Fixes
+
+* Add controlled value property to Select. ([#2711](https://github.com/dxos/dxos/issues/2711)) ([c573d44](https://github.com/dxos/dxos/commit/c573d44f1cf209a4cd8849be1085c011e6f18dd0))
+* add ice endpoints to cli config. ([#2747](https://github.com/dxos/dxos/issues/2747)) ([5e9dea8](https://github.com/dxos/dxos/commit/5e9dea83a6f4658c2288fc057567eabe5831824b))
+* Add minimum delay between notarizations ([#2748](https://github.com/dxos/dxos/issues/2748)) ([41988d9](https://github.com/dxos/dxos/commit/41988d9b616070f75d913976f32e8d8115a3a047))
+* Close connections when they timeout & recover from network failures ([#2765](https://github.com/dxos/dxos/issues/2765)) ([d5e169b](https://github.com/dxos/dxos/commit/d5e169bbebf62c667ea2de4ebebaf6ac8b4502f3))
+* **composer-app:** Single-character typo ([#2700](https://github.com/dxos/dxos/issues/2700)) ([c195fed](https://github.com/dxos/dxos/commit/c195fed1a20b9840831f1b02fac55a54f29d673a))
+* Creating space on new devices & space properties init ([#2735](https://github.com/dxos/dxos/issues/2735)) ([a3fcb19](https://github.com/dxos/dxos/commit/a3fcb195b0aa496bbf1366f31ceb0f35e1872c8d))
+* Fix bot Docker image overriding ([#2756](https://github.com/dxos/dxos/issues/2756)) ([56a8ced](https://github.com/dxos/dxos/commit/56a8ced723d1f2851f52df3bb8f11f207d2bde28))
+* halo vault pwa cache ([#2709](https://github.com/dxos/dxos/issues/2709)) ([0fb1ad8](https://github.com/dxos/dxos/commit/0fb1ad810d33a354715e8e82634dc33d294f991f))
+* Import referenced documents into DB before setting refs on documents ([#2703](https://github.com/dxos/dxos/issues/2703)) ([0dc1482](https://github.com/dxos/dxos/commit/0dc1482354995970355891089c727dc5004ce2f3))
+* **kai:** enable telemetry ([#2702](https://github.com/dxos/dxos/issues/2702)) ([4b8cb53](https://github.com/dxos/dxos/commit/4b8cb538ad5cce3e8d007fab2982150afe3e6a3f))
+* **react-composer:** concurrency ([#2737](https://github.com/dxos/dxos/issues/2737)) ([087e2e4](https://github.com/dxos/dxos/commit/087e2e439854ef3f0591364a6fd30609fa7c53a5))
+* temporarily disable pwas ([#2705](https://github.com/dxos/dxos/issues/2705)) ([7520d8f](https://github.com/dxos/dxos/commit/7520d8fba3fe789c1c701cdfab969379a2f585f6))
+* ThemePlugin content paths. ([#2717](https://github.com/dxos/dxos/issues/2717)) ([6f0fdd6](https://github.com/dxos/dxos/commit/6f0fdd6818a1414c3f8fd1728d0cf99a37e2dd00))
+* use conventional commits for release merge commits ([#2694](https://github.com/dxos/dxos/issues/2694)) ([257ff77](https://github.com/dxos/dxos/commit/257ff77bc9d40f9c1f69d761230eaa44056362e7))
+
 ## [0.1.29](https://github.com/dxos/dxos/compare/v0.1.28...v0.1.29) (2023-03-08)
 
 

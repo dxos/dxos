@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
@@ -27,11 +27,15 @@ export default defineConfig({
     ConfigPlugin({ env: ['DX_VAULT'] }),
     ReactPlugin(),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: "dxos",
-      project: "todomvc",
-      include: "./out/todomvc",
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    }),
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'todomvc',
+            include: './out/todomvc',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
   ]
 });

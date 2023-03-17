@@ -53,7 +53,11 @@ export default defineConfig({
 
     // TODO(burdon): Document.
     ThemePlugin({
-      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs')
+      ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
 

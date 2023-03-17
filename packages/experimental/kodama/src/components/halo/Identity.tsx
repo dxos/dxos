@@ -30,7 +30,7 @@ export const Identity = () => {
       rows={[
         {
           property: 'Identity key',
-          value: truncateKey(identity.identityKey, 4)
+          value: truncateKey(identity.identityKey)
         },
         {
           property: 'Display name',

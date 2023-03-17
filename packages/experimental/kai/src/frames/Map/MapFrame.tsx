@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Circle } from '@phosphor-icons/react';
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
-import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { LatLng, Organization } from '@dxos/kai-types';
+import { GeoLocation, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
 
@@ -27,8 +27,8 @@ const defaults = {
 
 export const MapFrame = () => {
   return (
-    <div className='flex flex-1 overflow-hidden'>
-      <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>
+    <div className='flex flex-1 overflow-hidden z-10'>
+      <MapContainer className='flex flex-1'>
         <MapControl />
       </MapContainer>
     </div>
@@ -38,7 +38,7 @@ export const MapFrame = () => {
 type MapPropsGetter<T> = {
   id: (object: T) => string;
   label: (object: T) => string;
-  coordinates: (object: T) => LatLng | undefined;
+  coordinates: (object: T) => GeoLocation | undefined;
 };
 
 /**
@@ -54,11 +54,11 @@ export const MapControl = () => {
   };
 
   const [selected, setSelected] = useState<string>();
-  const [center, setCenter] = useState<LatLngExpression>();
+  const [center, setCenter] = useState<LatLngExpression>(defaults.center);
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.setView(center, map.getZoom() ?? 10);
+      map.setView(center, map.getZoom() ?? defaults.zoom);
     }
   }, [center]);
 
@@ -80,6 +80,7 @@ export const MapControl = () => {
 
   return (
     <div className='flex flex-1 overflow-hidden'>
+      {/* Map tiles. */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
       {/* Markers. */}
@@ -89,13 +90,13 @@ export const MapControl = () => {
           return null;
         }
 
-        // TODO(burdon): Marker icon doesn't load on mobile?
+        // TODO(burdon): Marker icon doesn't load on mobile.
         return <Marker key={getter.id(object)} position={{ lat, lng }} />;
       })}
 
       {/* List panel. */}
       {objects.length > 0 && (
-        <div className='absolute block-start-4 block-end-4 inline-end-4 overflow-hidden z-[400] bs-sm'>
+        <div className='absolute block-start-4 block-end-4 inline-end-4 overflow-hidden bs-sm z-[9999]'>
           {/* TODO(burdon): Clicking on list starts map drag. */}
           <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
         </div>
@@ -132,12 +133,13 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
   return (
     <NavMenu
       variant='vertical'
+      slots={{ root: { className: 'cursor-default pointer-events-none' } }}
       items={items.map((item) => {
         const active = getter.id(item) === selected;
         return {
           children: (
             <>
-              <Check weight='bold' className={mx(getSize(4), !active && 'invisible')} />
+              <Circle weight='fill' className={mx(getSize(4), 'text-selection-marker', !active && 'invisible')} />
               <span>{getter.label(item)}</span>
             </>
           ),
@@ -147,7 +149,6 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
           }
         };
       })}
-      slots={{ root: { className: 'cursor-default pointer-events-none' } }}
     />
   );
 };

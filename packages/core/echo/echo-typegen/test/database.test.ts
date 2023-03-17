@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db, Text } from '@dxos/echo-schema';
+import { base, data, db, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
@@ -19,7 +19,8 @@ describe('database', () => {
     expect(task[db]).to.be.undefined;
 
     const database = await createDatabase();
-    await database.add(task);
+    database.add(task);
+    await database.flush();
     expect(task[db]).to.exist;
 
     const { objects: tasks } = database.query(Task.filter());
@@ -31,7 +32,8 @@ describe('database', () => {
     const database = await createDatabase();
 
     const container = new Container();
-    await database.add(container);
+    database.add(container);
+    await database.flush();
 
     container.documents.push(new Task());
     container.documents.push(new Contact());
@@ -48,11 +50,22 @@ describe('database', () => {
       expect(task.description).to.be.instanceOf(Text);
 
       const database = await createDatabase();
-      await database.add(task);
+      database.add(task);
+      await database.flush();
       expect(task.description).to.be.instanceOf(Text);
 
       task.description.model!.insert('test', 0);
       expect(task.description.model!.textContent).to.eq('test');
     });
+  });
+
+  test('enums', async () => {
+    const database = await createDatabase();
+
+    const container = new Container({ objects: [{ type: Container.Record.Type.BRAINFRAME }] });
+    await database.add(container);
+    const queriedContainer = database.query(Container.filter()).objects[0];
+    expect(queriedContainer.objects).to.have.length(1);
+    expect(queriedContainer.objects[0].type).to.eq(Container.Record.Type.BRAINFRAME);
   });
 });
