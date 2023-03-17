@@ -126,7 +126,7 @@ export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBac
   assert(create._itemManager.entities.has(result.objectsUpdated[0].id));
 
   await asyncTimeout(
-    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
     1000
   );
 
