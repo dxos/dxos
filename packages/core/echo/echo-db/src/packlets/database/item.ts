@@ -36,9 +36,6 @@ import { MutationInQueue, MutationQueue } from './ordering';
  */
 // TODO(dmaretskyi): Rename to ObjectState.
 export class Item<M extends Model = Model> {
-  // Called whenever item processes mutation.
-  protected readonly _onUpdate = new Event<Item<any>>();
-
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
@@ -190,10 +187,6 @@ export class Item<M extends Model = Model> {
     }
   }
 
-  private _emitUpdate() {
-    this._onUpdate.emit(this);
-  }
-
   private _decodeMutation(mutation: EchoObject.Mutation): MutationInQueue<MutationOf<M>> {
     assert(this.modelMeta);
     return {
@@ -240,7 +233,6 @@ export class Item<M extends Model = Model> {
     if (this.initialized) {
       log('Optimistic apply', mutation);
       this._applyMutation(queueEntry);
-      this._emitUpdate();
     }
   }
 
@@ -264,12 +256,10 @@ export class Item<M extends Model = Model> {
         // Order will be broken, reset the state machine and re-apply all mutations.
         log('Reset due to order change');
         this._resetState();
-        this._emitUpdate();
       } else if (apply) {
         log('Apply', { meta: queueEntry.mutation.meta });
         // Mutation can safely be append at the end preserving order.
         this._applyMutation(queueEntry);
-        this._emitUpdate();
       }
     }
 
@@ -339,16 +329,7 @@ export class Item<M extends Model = Model> {
 
       if (this.initialized) {
         this._resetState();
-        this._emitUpdate();
       }
     }
-  }
-
-  /**
-   * Subscribe for updates.
-   * @param listener
-   */
-  subscribe(listener: (entity: this) => void) {
-    return this._onUpdate.on(listener as any);
   }
 }

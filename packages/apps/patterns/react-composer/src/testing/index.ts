@@ -3,3 +3,4 @@
 //
 
 export * from './proto';
+export * from './replicator';

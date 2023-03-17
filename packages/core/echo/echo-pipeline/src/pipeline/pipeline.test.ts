@@ -34,8 +34,12 @@ describe('pipeline/Pipeline', () => {
               timeframe: new Timeframe(),
               payload: {
                 data: {
-                  object: {
-                    objectId: `${feedIdx}-${msgIdx}`
+                  batch: {
+                    objects: [
+                      {
+                        objectId: `${feedIdx}-${msgIdx}`
+                      }
+                    ]
                   }
                 }
               }
@@ -54,8 +58,12 @@ describe('pipeline/Pipeline', () => {
     for (const msgIdx in range(messagesPerFeed)) {
       await pipeline.writer!.write({
         data: {
-          object: {
-            objectId: `local-${msgIdx}`
+          batch: {
+            objects: [
+              {
+                objectId: `local-${msgIdx}`
+              }
+            ]
           }
         }
       });

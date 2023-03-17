@@ -22,7 +22,7 @@ export const SpaceMembers: FC<{
       columns={[
         {
           key: 'identity_key',
-          value: (key) => truncateKey(key, 4),
+          value: (key) => truncateKey(key),
           width: 20,
           color: 'green',
           label: 'key'

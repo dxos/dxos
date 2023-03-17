@@ -3,15 +3,15 @@
 //
 
 import { Transition } from '@headlessui/react';
+import { X } from '@phosphor-icons/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { X } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
 import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
-import { Tooltip } from '../Tooltip';
+import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 import { defaultOverlay } from './dialogStyles';
 
 export interface DialogSlots {
@@ -89,6 +89,7 @@ export const Dialog = ({
           onCloseAutoFocus={(event) => event.preventDefault()}
           {...slots.content}
           className={mx(
+            'flex flex-col',
             'fixed z-50',
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
@@ -101,10 +102,11 @@ export const Dialog = ({
             <DialogPrimitive.Title
               {...slots.title}
               className={mx(
-                'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+                'shrink-0',
+                'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
                 titleVisuallyHidden && 'sr-only',
                 defaultFocus,
-                slots.content?.className
+                slots?.title?.className
               )}
               tabIndex={0}
             >
@@ -122,24 +124,27 @@ export const Dialog = ({
             {children}
 
             {closeLabel && (
-              <Tooltip zIndex='z-[51]' content={closeLabel}>
-                <DialogPrimitive.Close
-                  className={mx(
-                    'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
-                    defaultFocus,
-                    hover(),
-                    slots.close?.className
-                  )}
-                >
-                  <X
+              <TooltipRoot>
+                <TooltipContent className='z-[51]'>{closeLabel}</TooltipContent>
+                <TooltipTrigger asChild>
+                  <DialogPrimitive.Close
                     className={mx(
-                      getSize(4),
-                      'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
-                      slots.closeIcon?.className
+                      'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
+                      defaultFocus,
+                      hover(),
+                      slots.close?.className
                     )}
-                  />
-                </DialogPrimitive.Close>
-              </Tooltip>
+                  >
+                    <X
+                      className={mx(
+                        getSize(4),
+                        'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
+                        slots.closeIcon?.className
+                      )}
+                    />
+                  </DialogPrimitive.Close>
+                </TooltipTrigger>
+              </TooltipRoot>
             )}
             {closeTriggers && (
               <div

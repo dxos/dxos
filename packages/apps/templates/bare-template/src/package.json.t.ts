@@ -32,7 +32,7 @@ export namespace Features {
     dependencies: {
       '@dxos/react-components': depVersion,
       '@dxos/react-appkit': depVersion,
-      'phosphor-react': '^1.4.1',
+      '@phosphor-icons/react': '^2.0.5',
       'react-router-dom': '^6.3.0'
     }
   });

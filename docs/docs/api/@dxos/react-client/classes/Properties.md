@@ -76,6 +76,14 @@ Arguments:
 
 `inspect_`: <code>function</code>
 
+### [_beforeBind()]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: none
+
 ### [toJSON()]()
 
 

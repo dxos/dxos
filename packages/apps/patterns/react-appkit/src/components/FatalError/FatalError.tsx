@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Clipboard } from 'phosphor-react';
+import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-components';
+import { Alert, Button, Dialog, useTranslation } from '@dxos/react-components';
+
+import { Tooltip } from '../Tooltip';
 
 // TODO(burdon): Factor out.
 const parseError = (error: Error) => {

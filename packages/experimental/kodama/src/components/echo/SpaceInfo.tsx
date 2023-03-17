@@ -27,11 +27,11 @@ export const SpaceInfo: FC<{
       rows={[
         {
           property: 'Name',
-          value: space.properties?.name // TODO(dmaretskyi): Fix.
+          value: space.properties.name
         },
         {
           property: 'Public key',
-          value: truncateKey(space.key, 4)
+          value: truncateKey(space.key)
         }
       ]}
     />

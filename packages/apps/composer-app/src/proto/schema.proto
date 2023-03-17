@@ -13,4 +13,5 @@ message ComposerDocument {
 
   string title = 1;
   dxos.schema.Text content = 2;
+  string github = 3;
 }

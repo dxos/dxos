@@ -30,7 +30,7 @@ const textFilter = (text?: string) => {
 // TODO(burdon): Rationalize with new API.
 const getItemType = (doc: Document) => doc.__typename;
 const getItemDetails = (item: Document) => ({
-  id: truncateKey(item.id, 4),
+  id: truncateKey(item.id),
   type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
   properties: <JsonView data={item.toJSON()} />

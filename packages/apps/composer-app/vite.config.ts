@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -14,7 +14,6 @@ const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
   server: {
     host: true,
     https:
@@ -25,24 +24,13 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      // TODO(wittjosiah): Remove.
-      plugins: [
-        {
-          name: 'yjs',
-          setup: ({ onResolve }) => {
-            onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-            });
-          }
-        }
-      ]
-    }
-  },
   build: {
-    sourcemap: true,
-    outDir: 'out/composer'
+    sourcemap: true
+  },
+  resolve: {
+    alias: {
+      'node-fetch': 'isomorphic-fetch'
+    }
   },
   plugins: [
     ConfigPlugin({
@@ -52,7 +40,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
@@ -85,11 +73,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    sentryVitePlugin({
-      org: "dxos",
-      project: "composer-app",
-      include: "./out/composer",
-      authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
-    }),
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          sentryVitePlugin({
+            org: 'dxos',
+            project: 'composer-app',
+            include: './out/composer',
+            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+          })
+        ]
+      : [])
   ]
 });

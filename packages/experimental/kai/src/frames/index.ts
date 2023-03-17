@@ -4,14 +4,13 @@
 
 import React from 'react';
 
-export const BotFrame = React.lazy(() => import('./Bot'));
 export const CalendarFrame = React.lazy(() => import('./Calendar'));
 export const ChessFrame = React.lazy(() => import('./Chess'));
+export const ContactFrame = React.lazy(() => import('./Contact'));
 export const ExplorerFrame = React.lazy(() => import('./Explorer'));
 export const KanbanFrame = React.lazy(() => import('./Kanban'));
 export const MapFrame = React.lazy(() => import('./Map'));
 export const MessageFrame = React.lazy(() => import('./Message'));
-export const MasonryFrame = React.lazy(() => import('./Masonry'));
 export const SandboxFrame = React.lazy(() => import('./Sandbox'));
 export const SearchFrame = React.lazy(() => import('./Search'));
 export const SketchFrame = React.lazy(() => import('./Sketch'));
@@ -20,17 +19,22 @@ export const TaskFrame = React.lazy(() => import('./Task'));
 
 export const Document = {
   Frame: React.lazy(() => import('./Document/DocumentFrame')),
-  List: React.lazy(() => import('./Document/DocumentList'))
+  List: React.lazy(() => import('./Document/DocumentList')) // TODO(burdon): Remove.
 };
 
 export const Stack = {
   Frame: React.lazy(() => import('./Stack/StackFrame')),
-  List: React.lazy(() => import('./Stack/StackList'))
+  List: React.lazy(() => import('./Stack/StackList')) // TODO(burdon): Remove.
+};
+
+export const Presenter = {
+  Frame: React.lazy(() => import('./Presenter/PresenterFrame')),
+  List: React.lazy(() => import('./Presenter/PresenterList')) // TODO(burdon): Remove.
 };
 
 export const Note = {
   Frame: React.lazy(() => import('./Note/NoteFrame')),
-  List: React.lazy(() => import('./Note/NoteList'))
+  List: React.lazy(() => import('./Note/NoteList')) // TODO(burdon): Remove.
 };
 
 export const File = {

@@ -10,5 +10,9 @@
 Type: <code>string</code>
 
 
+### [options]()
+Type: <code>object</code>
+
+
 ### [type]()
 Type: <code>[EchoType](/api/@dxos/client/types/EchoType)</code>

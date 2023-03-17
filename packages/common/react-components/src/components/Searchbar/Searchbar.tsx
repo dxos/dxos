@@ -2,57 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from 'phosphor-react';
+import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
-import { Input } from '../Input';
+import { mx } from '../../util';
+import { Input, InputProps } from '../Input';
 
+// TODO(burdon): Differentiate slots applied to Input vs slots spread into Input slots?
 type SearchbarSlots = {
+  root?: {
+    className?: string;
+    placeholder?: string;
+    variant?: InputProps['variant'];
+  };
   input?: {
+    className?: string;
     autoFocus?: boolean;
+  };
+  button?: {
+    className?: string;
   };
 };
 
 export type SearchbarProps = {
-  disabled?: boolean;
   slots?: SearchbarSlots;
   onSearch?: (text: string) => void;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
     onSearch?.(text);
   };
 
-  return (
-    <div className='flex flex-1 flex-col'>
-      <div className='flex flex-1 items-center'>
-        <Input
-          variant='subdued'
-          label='Search'
-          labelVisuallyHidden
-          placeholder='Search...'
-          disabled={disabled}
-          slots={{
-            root: {
-              className: 'flex flex-1'
-            },
-            input: {
-              spellCheck: false,
-              className: 'w-full',
-              ...slots.input
-            }
-          }}
-          onChange={(event) => handleChange(event.target.value)}
-        />
+  const handleReset = () => {
+    handleChange('');
+  };
 
-        {/* TODO(burdon): Move decorator inside input. */}
-        <button className='p-1' onClick={() => onSearch?.(text)}>
-          <MagnifyingGlass />
-        </button>
-      </div>
+  return (
+    <div className={mx('flex w-full items-center', slots.root?.className)}>
+      <Input
+        label='Search'
+        labelVisuallyHidden
+        placeholder={slots.root?.placeholder ?? 'Search...'}
+        variant={slots.root?.variant ?? 'default'}
+        slots={{
+          root: {
+            className: 'w-full'
+          },
+          input: {
+            onKeyDown: ({ key }) => key === 'Escape' && handleReset(),
+            spellCheck: false,
+            ...slots.input
+          }
+        }}
+        value={text}
+        onChange={({ target }) => handleChange(target.value)}
+      />
+
+      {/* TODO(burdon): Place inside input? */}
+      <button className={mx('p-1', slots.button?.className)} onClick={handleReset}>
+        <X />
+      </button>
     </div>
   );
 };

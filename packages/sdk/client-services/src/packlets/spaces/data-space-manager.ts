@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
@@ -150,11 +150,14 @@ export class DataSpaceManager {
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
+    const gossip = new Gossip({
+      localPeerId: this._signingContext.deviceKey
+    });
     const presence = new Presence({
-      localPeerId: this._signingContext.deviceKey,
-      announceInterval: 1_000,
-      offlineTimeout: 10_000, // TODO(burdon): Config.
-      identityKey: this._signingContext.identityKey
+      announceInterval: 500,
+      offlineTimeout: 5_000, // TODO(burdon): Config.
+      identityKey: this._signingContext.identityKey,
+      gossip
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore);
 
@@ -171,8 +174,8 @@ export class DataSpaceManager {
       },
       onNetworkConnection: (session) => {
         session.addExtension(
-          'dxos.mesh.teleport.presence',
-          presence.createExtension({ remotePeerId: session.remotePeerId })
+          'dxos.mesh.teleport.gossip',
+          gossip.createExtension({ remotePeerId: session.remotePeerId })
         );
         session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
@@ -186,6 +189,7 @@ export class DataSpaceManager {
       modelFactory: this._modelFactory,
       metadataStore: this._metadataStore,
       snapshotManager,
+      gossip,
       presence,
       memberKey: this._signingContext.identityKey,
       keyring: this._keyring,

@@ -8,8 +8,10 @@ import { RouterProvider } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import '@dxosTheme';
+import { Config, Defaults } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { captureException } from '@dxos/sentry';
 
 import { AppState } from './hooks';
@@ -17,6 +19,8 @@ import { createRouter } from './router';
 
 import '@dxos/client/shell.css';
 import '../style.css';
+
+void initializeAppTelemetry('kai', new Config(Defaults()));
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 

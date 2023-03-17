@@ -55,6 +55,7 @@ export class PublicKey {
     if (!source) {
       return undefined;
     }
+
     try {
       return PublicKey.from(source);
     } catch (error: any) {
@@ -155,9 +156,8 @@ export class PublicKey {
     }
   }
 
-  // TODO(burdon): Rename toDebugHex? Make default for toString?
-  truncate(length = 4) {
-    return truncateKey(this, length);
+  truncate(length = 8) {
+    return truncateKey(this, { length });
   }
 
   toString(): string {
@@ -220,7 +220,7 @@ export class PublicKey {
     )})`;
   }
 
-  [devtoolsFormatter](): DevtoolsFormatter {
+  get [devtoolsFormatter](): DevtoolsFormatter {
     return {
       header: () => {
         // NOTE: Keep in sync with inspect colors.

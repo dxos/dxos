@@ -88,14 +88,14 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch production
-          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git merge --no-ff ${{ github.ref_name }} -m "chore: Merge ${{ github.ref_name }} into production"
           git push
 
       - name: Merge main
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch main
-          git merge --no-ff production -m "Merge ${{ github.ref_name }} into main from production"
+          git merge --no-ff production -m "chore: Merge ${{ github.ref_name }} into main from production"
           git push
 
       - name: Delete release branch

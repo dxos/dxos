@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsClockwise, CaretLeft, CaretRight } from 'phosphor-react';
+import { ArrowsClockwise, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 
 import { AuthenticatingInvitationObservable, Invitation } from '@dxos/client';

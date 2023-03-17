@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { Config } from '@dxos/config';
 import { describe, test } from '@dxos/test';
 
@@ -16,7 +18,8 @@ const getKey = (config: Config, name: string) => {
   return key?.value;
 };
 
-describe('ChatModel', () => {
+// eslint-disable-next-line mocha/no-skipped-tests
+describe.skip('ChatModel', () => {
   const createChatModel = (): ChatModel => {
     const config = getConfig()!;
     return new ChatModel({
@@ -25,12 +28,15 @@ describe('ChatModel', () => {
     });
   };
 
-  test.skip('basic', async () => {
+  // eslint-disable-next-line mocha/no-skipped-tests
+  test('basic', async () => {
     const chat = createChatModel();
-    const { messages } = loadJson('packages/experimental/kai-bots/data/messages.json');
-    await chat.request(messages);
+    const { messages } = loadJson('packages/experimental/kai-bots/testing/messages.json');
+    const result = await chat.request(messages);
+    expect(result).to.exist;
   });
 
+  // eslint-disable-next-line mocha/no-skipped-tests
   test('create contact stack', async () => {
     const _schema: SchemaMap = {
       person: [

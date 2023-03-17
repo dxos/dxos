@@ -15,38 +15,6 @@ body {
 }
 
 /**
- * Composer
- */
-.kai-composer {}
-.kai-composer p {
-  @apply text-gray-600;
-}
-.kai-composer h1, h2, h3 {
-  @apply text-black;
-}
-.kai-composer h1 {
-  @apply text-2xl;
-}
-.kai-composer h2 {
-  @apply text-xl;
-}
-.kai-composer h2 {
-  @apply text-lg;
-}
-.kai-composer ul {
-  @apply ml-8 list-square;
-}
-.kai-composer ul li p {
-  @apply ml-1;
-}
-.kai-composer ol {
-  @apply ml-8 list-decimal;
-}
-.kai-composer ol li p {
-  @apply ml-1;
-}
-
-/**
  * TODO(burdon): Custom RBC style.
  * TODO(burdon): Tailwind colors.
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-custom-styling--page
@@ -80,8 +48,14 @@ body {
 .rbc-agenda-table {
   border: none !important;
 }
+.rbc-agenda-date-cell {
+  @apply text-sm pl-0 pt-2 !important;
+}
 .rbc-agenda-time-cell {
+  @apply text-sm pt-2 !important;
   padding: 5px 0 5px 0 !important;
+}
+.rbc-agenda-event-cell {
 }
 .rbc-agenda-table td {
   border: none !important;

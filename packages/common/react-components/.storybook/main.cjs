@@ -1,5 +1,5 @@
 const { mergeConfig } = require('vite');
-const { resolve } = require('node:path');
+const { resolve } = require('path');
 
 const { ThemePlugin } = require('../dist/plugin/node/plugin.cjs');
 
@@ -19,7 +19,10 @@ module.exports = {
   },
   viteFinal: async (config) => mergeConfig(config, {
     plugins: [ThemePlugin({
-      content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
+      content: [
+        resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
+        resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
+      ]
     })],
   })
 };

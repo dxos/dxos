@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import { PaperPlane } from 'phosphor-react';
+import { PaperPlane } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, DensityProvider, ElevationProvider, Input } from '../components';

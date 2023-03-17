@@ -6,15 +6,16 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@dxos/kai-types';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery, observer, useIdentity } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
-import { Composer } from '@dxos/react-composer';
+import { RichTextComposer, useTextModel } from '@dxos/react-composer';
 
 import { createPath, useAppRouter } from '../../hooks';
 
 export const DocumentFrame = observer(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useAppRouter();
+  const identity = useIdentity();
   const documents = useQuery(space, Document.filter());
 
   // Default to first.
@@ -26,7 +27,9 @@ export const DocumentFrame = observer(() => {
     }
   }, [frame, document, documents]);
 
-  if (!document || !document.content) {
+  const model = useTextModel({ identity, space, text: document?.content });
+
+  if (!model) {
     return null;
   }
 
@@ -51,14 +54,18 @@ export const DocumentFrame = observer(() => {
                 spellCheck
               }
             }}
-            value={document.title ?? ''}
+            value={document?.title ?? ''}
             onChange={(event) => {
+              if (!document) {
+                return;
+              }
+
               document.title = event.target.value;
             }}
           />
 
-          <Composer
-            document={document.content}
+          <RichTextComposer
+            model={model}
             slots={{
               editor: {
                 className: 'kai-composer',

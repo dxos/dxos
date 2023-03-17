@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client, ClientServices, Config, PublicKey } from '@dxos/client';
+import { Client, ClientServices, Config, PublicKey, Space } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Bot, ChessBot, KaiBot, MailBot, StoreBot } from '@dxos/kai-bots';
+import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -21,24 +21,16 @@ const config = new Config({
     },
     services: {
       signal: {
-        server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
+        server: 'wss://kube.dxos.org/.well-known/dx/signal'
       },
       ice: [
         {
-          urls: 'stun:demo.kube.dxos.org:3478',
+          urls: 'stun:kube.dxos.org:3478',
           username: 'dxos',
           credential: 'dxos'
         },
         {
-          urls: 'turn:demo.kube.dxos.org:3478',
-          username: 'dxos',
-          credential: 'dxos'
-        },
-        {
-          urls: 'stun:dev.kube.dxos.org:3478'
-        },
-        {
-          urls: 'turn:dev.kube.dxos.org:3478',
+          urls: 'turn:kube.dxos.org:3478',
           username: 'dxos',
           credential: 'dxos'
         }
@@ -63,6 +55,7 @@ const start = async () => {
     services: fromHost(config)
   });
 
+  // TODO(burdon): When is the identity created?
   await client.initialize();
   log.info('client initialized', { identity: client.halo.identity?.identityKey });
 
@@ -89,7 +82,8 @@ const start = async () => {
   log.info('listening ', { rpcPort });
 
   let bot: Bot | undefined;
-  client.echo.subscribeSpaces(async (spaces) => {
+  // TODO(burdon): Reconcile this subscription with the ECHO db.query.
+  const onUpdate = async (spaces: Space[]) => {
     if (spaces.length) {
       const space = spaces[0];
       log.info('joined', { space: space.key });
@@ -99,7 +93,26 @@ const start = async () => {
         await bot.start();
       }
     }
-  });
+  };
+
+  // TODO(burdon): Fix race condition? Trigger callback on subscription.
+  void onUpdate(client.echo.getSpaces());
+  client.echo.subscribeSpaces(onUpdate);
+
+  const printStatus = () => {
+    log.info('status', {
+      bot: bot?.constructor.name,
+      identity: client.halo.identity,
+      spaces: client.echo.getSpaces().map((space) => ({
+        key: space.key,
+        title: space.properties.title,
+        members: space.getMembers()
+      }))
+    });
+  };
+
+  printStatus();
+  setInterval(printStatus, 60_000);
 };
 
 const createBot = (bot?: string): Bot => {
@@ -120,6 +133,10 @@ const createBot = (bot?: string): Bot => {
 
     case 'dxos.module.bot.store': {
       return new StoreBot();
+    }
+
+    case 'dxos.module.bot.travel': {
+      return new TravelBot();
     }
 
     default: {

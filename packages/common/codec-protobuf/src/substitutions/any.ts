@@ -5,6 +5,7 @@
 import { EncodingOptions, WithTypeUrl } from '../common';
 import { TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
+import { structSubstitutions } from './struct';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {
@@ -29,8 +30,12 @@ export const anySubstitutions = {
       }
 
       if (value['@type'] === 'google.protobuf.Any') {
-        // eslint-disable-next-line camelcase
         return value as any;
+      }
+
+      if (value['@type'] === 'google.protobuf.Struct') {
+        const codec = schema.tryGetCodecForType(value['@type']);
+        return codec.encodeAsAny(structSubstitutions['google.protobuf.Struct'].encode(value));
       }
 
       const codec = schema.tryGetCodecForType(value['@type']);
@@ -59,7 +64,12 @@ export const anySubstitutions = {
         };
       }
       const codec = schema.tryGetCodecForType(value.type_url);
-      const data = codec.decode(value.value);
+      let data = codec.decode(value.value);
+
+      if (value.type_url === 'google.protobuf.Struct') {
+        data = structSubstitutions['google.protobuf.Struct'].decode(data);
+      }
+
       return {
         ...data,
         '@type': value.type_url
