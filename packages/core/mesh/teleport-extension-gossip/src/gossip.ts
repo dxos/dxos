@@ -114,7 +114,7 @@ export class Gossip {
         if (this._params.localPeerId.equals(message.peerId) || remotePeerId.equals(message.peerId)) {
           return;
         }
-        return extension.sendAnnounce(message).catch((err) => log.catch(err));
+        return extension.sendAnnounce(message).catch((err) => log.warn(err));
       })
     );
   }
