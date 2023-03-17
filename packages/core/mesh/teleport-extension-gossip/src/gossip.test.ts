@@ -5,36 +5,10 @@
 import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { TestBuilder, TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
+import { TestBuilder } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Gossip } from './gossip';
-
-export type TestAgentOptions = {
-  peerId?: PublicKey;
-};
-
-export class TestAgent extends TestPeerBase {
-  public readonly gossip: Gossip;
-
-  constructor({ peerId = PublicKey.random() }: TestAgentOptions = {}) {
-    super(peerId);
-    this.gossip = new Gossip({
-      localPeerId: peerId
-    });
-  }
-
-  override async onOpen(connection: TestConnection) {
-    const extension = this.gossip.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
-    connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
-  }
-
-  override async destroy() {
-    await super.destroy();
-    await this.gossip.destroy();
-  }
-}
+import { TestAgent } from './testing';
 
 describe('Gossip', () => {
   test('Two peers exchange messages', async () => {

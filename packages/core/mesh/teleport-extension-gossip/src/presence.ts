@@ -96,8 +96,8 @@ export class Presence {
     assert(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
     const oldPeerState = this._peerStates.get(message.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
-      this.updated.emit();
       this._peerStates.set(message.peerId, message);
+      this.updated.emit();
     }
   }
 }
