@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-appkit",
-  "version": "0.1.30",
+  "version": "0.1.31",
   "description": "DXOS opinions for building React applications",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -56,7 +56,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
-    "vite": "4.0.4"
+    "vite": "^4.2.0"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",

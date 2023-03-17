@@ -20,6 +20,6 @@
     "patch-package": "^6.5.0",
     "postinstall-postinstall": "^2.1.0",
     "typescript": "^4.8.4",
-    "vite": "4.0.4"
+    "vite": "^4.2.0"
   }
 }

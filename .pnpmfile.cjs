@@ -16,7 +16,7 @@ function readPackage(packageJson, context) {
 
     case '@nrwl/vite': {
       // Ensure nx uses patched vite.
-      packageJson.peerDependencies['vite'] = '4.0.4'
+      // packageJson.peerDependencies['vite'] = '4.0.4'
 
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
@@ -75,7 +75,7 @@ function readPackage(packageJson, context) {
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '4.0.4'
+      packageJson.peerDependencies['vite'] = '^4.2.0'
       break;
     }
 
@@ -88,15 +88,15 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // Ensure vuepress uses patched vite.
+    // Ensure vuepress uses compatible vite version.
     case '@vuepress/bundler-vite': {
-      packageJson.dependencies['vite'] = '4.0.4'
+      packageJson.dependencies['vite'] = '^4.2.0'
       break;
     }
     
-    // Ensure vuepress uses patched vite.
+    // Ensure vuepress uses compatible vite version.
     case '@vitejs/plugin-vue': {
-      packageJson.peerDependencies['vite'] = '4.0.4'
+      packageJson.peerDependencies['vite'] = '^4.2.0'
       break;
     }
   }
