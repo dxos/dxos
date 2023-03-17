@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
+import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor } from '@dxos/credentials';
 import { FeedWriter } from '@dxos/feed-store';
@@ -16,7 +16,13 @@ import { NotarizationService, NotarizeRequest } from '@dxos/protocols/proto/dxos
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
-const RETRY_TIMEOUT = 1000;
+// Timeout for retrying notarization.
+const RETRY_TIMEOUT = 1_000;
+
+// Minimum wait time after a peer confirms successful notarization before attempting with a new peer.
+const SUCCESS_DELAY = 1_000;
+
+// Timeout for the whole notarization process.
 const NOTARIZE_TIMEOUT = 10_000;
 
 /**
@@ -92,6 +98,7 @@ export class NotarizationPlugin implements CredentialProcessor {
           credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!))
         });
         log('success');
+        await sleep(SUCCESS_DELAY); // wait before trying with a new peer
       } catch (err) {
         log.warn('error notarizing (recoverable)', err);
         notarizeTask.schedule(); // retry immediately with next peer
