@@ -4,3 +4,8 @@
 
 
 ## Properties
+### [listen]()
+Type: <code>function</code>
+
+### [postMessage]()
+Type: <code>function</code>

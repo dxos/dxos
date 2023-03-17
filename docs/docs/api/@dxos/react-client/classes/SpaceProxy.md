@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:28]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:31]()</sub>
 
 
 
@@ -125,6 +125,21 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
+### [listen(channel, callback)]()
+
+
+
+Listen for messages posted to the space.
+
+
+Returns: <code>function</code>
+
+Arguments: 
+
+`channel`: <code>string</code>
+
+`callback`: <code>function</code>
+
 ### [open()]()
 
 
@@ -132,6 +147,21 @@ Arguments: none
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+### [postMessage(channel, message)]()
+
+
+
+Post a message to the space.
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`channel`: <code>string</code>
+
+`message`: <code>any</code>
 
 ### [removeInvitation(id)]()
 
