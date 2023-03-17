@@ -37,7 +37,9 @@ import {
   getIcon,
   useAppRouter,
   useTheme,
-  Section
+  Section,
+  useFrames,
+  useAppReducer
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
@@ -179,13 +181,27 @@ export const Sidebar = observer(() => {
         })
       );
       return () => {
-        ctx.dispose();
+        void ctx.dispose();
       };
     }
   }, [space]);
 
+  const { active: activeFrames } = useFrames();
+  const { setActiveFrame } = useAppReducer();
+
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
+
+    // Check if Frame which we are try to focus in is installed, and install it if necessary.
+    const id = path?.split('/')[3].split('_').join('.');
+    // TODO(mykola): Reconcile with FrameRegistry
+    if (id) {
+      const activate = !activeFrames.find((frameId) => frameId === id);
+      if (activate) {
+        setActiveFrame(id, activate);
+      }
+    }
+
     if (path) {
       navigate(path);
     }
@@ -225,9 +241,14 @@ export const Sidebar = observer(() => {
       <div className='flex flex-col shrink-0'>
         <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
           <div className='flex items-center'>
-            <Icon className={getSize(6)} />
+            <Icon className={getSize(6)} data-testid='sidebar.spaceIcon' />
             <div className='pl-2 text-lg'>{space.properties.name}</div>
-            <Button variant='ghost' className='p-0' onClick={() => setShowSpaceList((show) => !show)}>
+            <Button
+              variant='ghost'
+              className='p-0'
+              data-testid='sidebar.showSpaceList'
+              onClick={() => setShowSpaceList((show) => !show)}
+            >
               <CaretUpDown className={mx(getSize(4), 'ml-2')} />
             </Button>
           </div>
@@ -336,7 +357,7 @@ export const Sidebar = observer(() => {
           </Button>
         </div>
 
-        <MemberList identityKey={client.halo.identity!.identityKey} members={members} focusOnMember={focusOnMember} />
+        <MemberList identityKey={client.halo.identity!.identityKey} members={members} onSelect={focusOnMember} />
 
         <Link
           className={mx('flex w-full px-4 py-1 mt-2 items-center', section === Section.BOTS && 'bg-zinc-200')}

@@ -18,7 +18,7 @@
   "dependencies": {
     "@dxos/bare-template": "workspace:*",
     "@dxos/plate": "workspace:*",
-    "postcss": "^8.4.17",
+    "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7"
   },
   "devDependencies": {
