@@ -9,10 +9,9 @@ import type { StoryObj } from '@storybook/html';
 import { basicSetup } from '@uiw/react-codemirror';
 import { yCollab } from 'y-codemirror.next';
 
-import { sleep } from '@dxos/async';
-import { Client, PublicKey, Text } from '@dxos/client';
+import { EventSubscriptions } from '@dxos/async';
+import { Client, Identity, PublicKey, Space, Text } from '@dxos/client';
 import { joinCommonSpace, TestBuilder } from '@dxos/client-services/testing';
-// import { textGenerator } from '@dxos/react-client/testing';
 import { textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
@@ -26,37 +25,54 @@ export default {
   title: 'CodeMirror'
 };
 
-const createEditor = async (id: number, client: Client, spaceKey: PublicKey, editor: HTMLDivElement) => {
-  const space = await client.echo.getSpace(spaceKey)!;
-  const query = space.db.query(ComposerDocument.filter());
-
-  // TODO(wittjosiah): Works until doc is recreated.
-  // Wait for text to replicate to get the right yText instance.
-  await sleep(100);
-  const doc = query.objects[0]?.content?.doc;
-  const text = query.objects[0]?.content?.content;
-  if (!(text instanceof YText) || !doc) {
+const views: Record<number, EditorView> = {};
+const group = new EventSubscriptions();
+const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identity, space: Space, text: Text) => {
+  const doc = text.doc;
+  const ytext = text.content;
+  if (!(ytext instanceof YText) || !doc) {
     return;
   }
 
   const { awareness } = new SpaceProvider({ space, doc });
   awareness.setLocalStateField('user', {
-    name: client.halo.identity?.profile?.displayName ?? humanize(client.halo.identity!.identityKey),
+    name: identity.profile?.displayName ?? humanize(identity.identityKey),
     // TODO(wittjosiah): Pick colours from theme based on identity key.
     color: cursorColor.color,
     colorLight: cursorColor.light
   });
 
   const state = EditorState.create({
-    doc: text.toString(),
-    extensions: [basicSetup(), markdown({ base: markdownLanguage }), yCollab(text, awareness)]
+    doc: ytext.toString(),
+    extensions: [basicSetup(), markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
   });
 
-  const _view = new EditorView({ state, parent: editor });
+  const view = views[id];
+  if (view) {
+    console.log('setstate', { id });
+    view.setState(state);
+  } else {
+    console.log('create', { id });
+    views[id] = new EditorView({ state, parent: editor });
+  }
 
   if (id === 0) {
-    textGenerator({ text });
+    group.clear();
+    group.add(textGenerator({ text: ytext }));
   }
+};
+
+const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, editor: HTMLDivElement) => {
+  const space = await client.echo.getSpace(spaceKey)!;
+  const query = space.db.query(ComposerDocument.filter());
+  query.subscribe(({ objects }) => {
+    console.log('update', objects);
+    const text = objects[0]?.content;
+    text && updateEditor(id, editor, client.halo.identity!, space, text);
+  });
+
+  const text = query.objects[0]?.content;
+  text && updateEditor(id, editor, client.halo.identity!, space, text);
 };
 
 const setupSpace = async (count: number) => {
@@ -80,7 +96,7 @@ export const Default: StoryObj<{ id: number; client: Client; spaceKey: PublicKey
   render: ({ id, client, spaceKey }) => {
     const editor = document.createElement('div');
     editor.setAttribute('style', 'min-width: 0; flex: 1; padding: 1rem;');
-    void createEditor(id, client, spaceKey, editor);
+    void setupEditor(id, client, spaceKey, editor);
     return editor;
   },
   decorators: [
