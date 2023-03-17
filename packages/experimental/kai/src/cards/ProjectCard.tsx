@@ -5,7 +5,7 @@
 import { Archive, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Space } from '@dxos/client';
+import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, mx, Input } from '@dxos/react-components';
@@ -17,8 +17,12 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
   // TODO(burdon): Pass in Task1, Task2.
   const handleDrag = (active: number, over: number) => {
     const task = object.tasks[active];
-    object.tasks.splice(active, 1);
-    object.tasks.splice(over, 0, task);
+
+    // TODO(dmaretskyi): Expose batch API properly.
+    (object[base] as any)._inBatch(() => {
+      object.tasks.splice(active, 1);
+      object.tasks.splice(over, 0, task);
+    });
   };
 
   const handleCreateTask = async (task: Task) => {

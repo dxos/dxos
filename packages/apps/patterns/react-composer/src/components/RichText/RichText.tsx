@@ -9,12 +9,12 @@ import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
+import React, { ComponentProps, forwardRef, useImperativeHandle, useMemo } from 'react';
 
-import type { Space, Text } from '@dxos/client';
-import { log } from '@dxos/log';
 import { mx } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
 
+import { ComposerModel } from '../../model';
 import {
   blockquote,
   bold,
@@ -30,7 +30,7 @@ import {
   unorderedList,
   codeWithoutMarks
 } from '../../styles';
-import { cursorColor, SpaceProvider } from '../../yjs';
+import { cursorColor } from '../../yjs';
 
 export type TipTapEditor = Editor;
 
@@ -44,29 +44,12 @@ export type RichTextComposerSlots = {
 };
 
 type UseEditorOptions = {
-  text?: Text;
-  space?: Space;
-  field?: string;
+  model?: ComposerModel;
   placeholder?: string;
   slots?: Pick<RichTextComposerSlots, 'editor'>;
 };
 
-const onDocUpdate = (update: Uint8Array) => {
-  log.debug('[doc update]', update);
-};
-
-const useEditor = ({ text, space, field = 'content', placeholder = 'Enter textâ€¦', slots = {} }: UseEditorOptions) => {
-  useEffect(() => {
-    log.debug('[text.doc]', 'referential change');
-    text?.doc?.on('update', onDocUpdate);
-    return () => text?.doc?.off('update', onDocUpdate);
-  }, [text?.doc]);
-
-  const provider = useMemo(
-    () => (space && text?.doc ? new SpaceProvider({ space, doc: text.doc }) : null),
-    [space, text?.doc]
-  );
-
+const useEditor = ({ model, placeholder = 'Enter textâ€¦', slots = {} }: UseEditorOptions) => {
   const extensions = useMemo(
     () => [
       StarterKit.configure({
@@ -152,13 +135,13 @@ const useEditor = ({ text, space, field = 'content', placeholder = 'Enter textâ€
         ]
       }),
       // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
-      ...(text ? [Collaboration.configure({ document: text.doc, field })] : []),
-      ...(provider
+      ...(model && typeof model.content !== 'string' ? [Collaboration.configure({ fragment: model.content })] : []),
+      ...(model?.provider
         ? [
             CollaborationCursor.configure({
-              provider,
-              user: {
-                name: 'Anonymous ' + Math.floor(Math.random() * 100),
+              provider: model.provider,
+              user: model.peer && {
+                name: model.peer.name ?? humanize(model.peer.id),
                 color: cursorColor.color
               }
             })
@@ -169,7 +152,7 @@ const useEditor = ({ text, space, field = 'content', placeholder = 'Enter textâ€
         emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
       })
     ],
-    [text?.doc?.guid, field]
+    [model?.id]
   );
 
   return useNaturalEditor(
@@ -183,7 +166,7 @@ const useEditor = ({ text, space, field = 'content', placeholder = 'Enter textâ€
         }
       }
     },
-    [text?.doc?.guid]
+    [extensions]
   );
 };
 

@@ -134,16 +134,11 @@ message Kanban {
 message Document {
   option (object) = true;
 
-  enum Type {
-    RICH_TEXT = 0;
-    MARKDOWN = 1;
-  }
-
-  Type type = 1;
-  string title = 2;
-  dxos.schema.Text content = 3;
-//  repeated string tags = 2;
-  string tag = 4;
+  string title = 1;
+  // TODO(wittjosiah): Annotate as rich text.
+  dxos.schema.Text content = 2;
+  // repeated string tags = 2;
+  string tag = 3;
 }
 
 message DocumentStack {
@@ -159,6 +154,13 @@ message DocumentStack {
   repeated Section sections = 2;
 
   string subject_id = 10; // TODO(burdon): Create external link instead.
+}
+
+message Presentation {
+  option (object) = true;
+
+  string title = 1;
+  DocumentStack stack = 2;
 }
 
 // TODO(burdon): Rename;
@@ -243,6 +245,7 @@ message Note {
   option (object) = true;
 
   string title = 1;
+  // TODO(wittjosiah): Annotate as rich text.
   dxos.schema.Text content = 2;
   string color = 3;
 }

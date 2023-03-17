@@ -44,7 +44,7 @@ describe('Spaces', () => {
       // TODO(burdon): API (client.echo/client.halo).
       const space = await client.echo.createSpace();
       const {
-        objectsCreated: [item]
+        objectsUpdated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
       expect(space.getMembers()).to.be.length(1);

@@ -51,7 +51,8 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@types/readable-stream": "^2.3.9"
+    "@types/readable-stream": "^2.3.9",
+    "fast-check": "~3.3.0"
   },
   "publishConfig": {
     "access": "public"

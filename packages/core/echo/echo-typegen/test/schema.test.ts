@@ -81,7 +81,16 @@ describe('schema', () => {
 
   test('fields', () => {
     expect(Contact.type.fields).to.deep.eq([
-      { name: 'name', type: { kind: 'string' } },
+      {
+        name: 'name',
+        type: {
+          kind: 'string'
+        },
+        options: {
+          default: 'Anonymous',
+          required: true
+        }
+      },
       { name: 'username', type: { kind: 'string' } },
       { name: 'email', type: { kind: 'string' } },
       { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },

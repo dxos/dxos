@@ -6,19 +6,29 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { PublicKey, Text } from '@dxos/client';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
-import { ClientDecorator, ClientSpaceDecorator, loremGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { ClientDecorator, ClientSpaceDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-components';
 
-import { ComposerDocument, Replicator, schema, usePlainYjsModel } from '../../testing';
+import { useTextModel } from '../../model';
+import { ComposerDocument, Replicator, schema, useYjsModel } from '../../testing';
 import { MarkdownComposer } from './Markdown';
-import { usePlainTextModel } from './model';
 
 export default {
   component: MarkdownComposer
 };
 
-export const Echo = {
+export const Default = {
+  args: {
+    model: {
+      id: 'editor',
+      content: 'Hello, Storybook!'
+    }
+  }
+};
+
+export const WithEcho = {
   render: ({ id, spaceKey }: { id: number; spaceKey: PublicKey }) => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
@@ -26,11 +36,11 @@ export const Echo = {
     const identity = useIdentity();
     const space = useSpace(spaceKey);
     const [document] = useQuery(space, ComposerDocument.filter());
-    const model = usePlainTextModel({ identity, space, text: document?.content });
+    const model = useTextModel({ identity, space, text: document?.content });
 
     useDataGenerator({
-      generator: generate ? loremGenerator : undefined,
-      options: { plainText: model?.fragment }
+      generator: generate ? textGenerator : undefined,
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 
     return (
@@ -48,24 +58,25 @@ export const Echo = {
       schema,
       count: 2,
       onCreateSpace: async (space) => {
-        const document = new ComposerDocument({ content: new Text() });
+        const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
         await space?.db.add(document);
       }
     })
   ]
 };
 
-const replicator = new Replicator();
-export const Yjs = {
+const replicator = new Replicator(TextKind.PLAIN);
+export const WithYjs = {
   render: () => {
     const [generate, setGenerate] = useState(false);
     const generateId = useId('generate');
 
-    const model = usePlainYjsModel({ replicator });
+    const [id] = useState(PublicKey.random().toHex());
+    const model = useYjsModel({ id, replicator });
 
     useDataGenerator({
-      generator: generate ? loremGenerator : undefined,
-      options: { plainText: model.fragment }
+      generator: generate ? textGenerator : undefined,
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
     });
 
     return (
