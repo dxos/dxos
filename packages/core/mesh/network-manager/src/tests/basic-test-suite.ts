@@ -111,6 +111,28 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   }).tag('flaky');
 
+  test('peers reconnect after and error in connection', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
+
+    const topic = PublicKey.random();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
+    await exchangeMessages(swarm1, swarm2);
+
+    swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
+
+    // Wait until both peers are disconnected.
+    await Promise.all([
+      swarm1.protocol.disconnected.waitForCondition(() => swarm1.protocol.connections.size === 0),
+      swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0)
+    ]);
+
+    await exchangeMessages(swarm1, swarm2);
+
+    await leaveSwarm([peer1, peer2], topic);
+  });
+
   test('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
