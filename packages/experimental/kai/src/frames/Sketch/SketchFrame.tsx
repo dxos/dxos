@@ -177,7 +177,7 @@ export const SketchFrame = observer(() => {
           <Button variant='ghost' title='Download' onClick={handleDownload}>
             <DownloadSimple className={getSize(6)} />
           </Button>
-          <Button variant='ghost' title='Upload' onClick={handleUpload}>
+          <Button variant='ghost' title='Upload to IPFS' onClick={handleUpload}>
             <UploadSimple className={getSize(6)} />
           </Button>
         </div>
