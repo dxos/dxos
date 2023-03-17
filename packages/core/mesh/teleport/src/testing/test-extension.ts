@@ -75,4 +75,11 @@ export class TestExtension implements TeleportExtension {
     const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 500);
     assert(res.data === message);
   }
+
+  /**
+   * Force-close the connection.
+   */
+  async closeConnection(err?: Error) {
+    this.extensionContext?.close(err);
+  }
 }
