@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.31](https://github.com/dxos/dxos/compare/v0.1.30...v0.1.31) (2023-03-17)
+
+
+### Features
+
+* Fix bot resolvers ([#2769](https://github.com/dxos/dxos/issues/2769)) ([31c1eb5](https://github.com/dxos/dxos/commit/31c1eb5f14abf5d1629df267da0e99d8ef28f56b))
+* More colors ([#2768](https://github.com/dxos/dxos/issues/2768)) ([92e0224](https://github.com/dxos/dxos/commit/92e0224d26091e469586bef7ffc21dae82c6be72))
+
+
+### Bug Fixes
+
+* **quickstart:** align template with sdk updates ([#2770](https://github.com/dxos/dxos/issues/2770)) ([7a83678](https://github.com/dxos/dxos/commit/7a836788e8833d9f9bde30fa9d14529400cdb263))
+
 ## [0.1.30](https://github.com/dxos/dxos/compare/v0.1.29...v0.1.30) (2023-03-17)
 
 
