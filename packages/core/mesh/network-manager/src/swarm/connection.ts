@@ -95,7 +95,7 @@ export class Connection {
 
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
-      log('protocol stream closed')
+      log('protocol stream closed');
       this.close().catch((err) => this.errors.raise(err));
     });
 

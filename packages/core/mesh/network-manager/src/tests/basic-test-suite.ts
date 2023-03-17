@@ -126,12 +126,12 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await Promise.all([
       swarm1.protocol.disconnected.waitForCondition(() => swarm1.protocol.connections.size === 0),
       swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0)
-    ])
+    ]);
 
     await exchangeMessages(swarm1, swarm2);
 
     await leaveSwarm([peer1, peer2], topic);
-  })
+  });
 
   test('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
