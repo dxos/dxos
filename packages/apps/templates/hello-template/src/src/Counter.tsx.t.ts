@@ -9,16 +9,16 @@ export default defineTemplate(
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-components';
-    import { useQuery, Document, useIdentity, useSpace } from '@dxos/react-client';
+    import { useQuery, Document, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
 
     export const Counter = () => {
       const identity = useIdentity({ login: true });
-      const space = useSpace(null, { create: true });
+      const space = useOrCreateFirstSpace();
       const [counter] = useQuery(space, { type: 'counter' });
       useEffect(() => {
         if (!counter && space) {
           const c = new Document({ type: 'counter' });
-          void space.db.save(c);
+          void space.db.add(c);
         }
       }, [counter, space]);
       if (!space) {
@@ -26,14 +26,14 @@ export default defineTemplate(
       }
       return (
         <div>
-          {identity && \`Hello \${identity?.displayName}!\`}
+          {identity && \`Hello \${identity?.profile?.displayName}!\`}
           {counter && (
             <button
               className='p-4 m-2 border'
               onClick={() => {
                 counter.count = (counter.count ?? 0) + 1;
               }}>
-              {counter.count ? \`Clicked \${counter.count} times\` : \`Hey \${identity?.displayName ?? ''}, click me!\`}
+              {counter.count ? \`Clicked \${counter.count} times\` : 'Click me!'}
             </button>
           )}
         </div>
