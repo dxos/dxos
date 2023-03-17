@@ -192,6 +192,7 @@ export const Sidebar = observer(() => {
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
 
+    // Check if Frame which we are try to focus in is installed, and install it if necessary.
     const id = path?.split('/')[3].split('_').join('.');
     // TODO(mykola): Reconcile with FrameRegistry
     if (id) {
