@@ -211,6 +211,19 @@ Arguments:
 
 `initialObservable`: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)</code>
 
+### [useKeyStore(defaultKeys)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/util/useKeyStore.ts#L13)
+
+
+
+Settings store.
+
+
+Returns: <code>[Map&lt;string, string&gt;, function]</code>
+
+Arguments: 
+
+`defaultKeys`: <code>string[]</code>
+
 ### [useMembers(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
 
 

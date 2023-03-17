@@ -1,5 +1,5 @@
 # Class `Text`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/text-object.d.ts:3]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/text-object.d.ts:4]()</sub>
 
 
 Base class for all echo objects.
@@ -7,7 +7,7 @@ Can carry different models.
 
 
 ## Constructors
-### [constructor(\[text\])]()
+### [constructor(\[text\], \[kind\], \[field\])]()
 
 
 
@@ -16,6 +16,10 @@ Returns: <code>[Text](/api/@dxos/react-client/classes/Text)</code>
 Arguments: 
 
 `text`: <code>string</code>
+
+`kind`: <code>TextKind</code>
+
+`field`: <code>string</code>
 
 
 ## Properties
@@ -29,6 +33,9 @@ Type: <code>undefined | [EchoDatabase](/api/@dxos/react-client/classes/EchoDatab
 
 Database reference if bound.
 
+### [content]()
+Type: <code>undefined | YText | YXmlFragment</code>
+
 ### [doc]()
 Type: <code>undefined | Doc</code>
 
@@ -36,6 +43,9 @@ Type: <code>undefined | Doc</code>
 Type: <code>string</code>
 
 ID accessor.
+
+### [kind]()
+Type: <code>undefined | TextKind</code>
 
 ### [model]()
 Type: <code>undefined | TextModel</code>
@@ -47,11 +57,19 @@ Returns the text content of the object.
 
 
 ## Methods
-### [_onBind()]()
+### [_afterBind()]()
 
 
 
-Returns: <code>Promise&lt;void&gt;</code>
+Returns: <code>void</code>
+
+Arguments: none
+
+### [_itemUpdate()]()
+
+
+
+Returns: <code>void</code>
 
 Arguments: none
 
