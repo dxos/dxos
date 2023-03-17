@@ -9,6 +9,7 @@ import { Space } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
 import { Contact, Document, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { ChatModel } from '../chat-model';
 import { Generator } from '../generator';
@@ -72,7 +73,7 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       // const data = parseJson(content);
 
       // TODO(burdon): Add formatting?
-      const text = new Text([title, '', content].join('\n'));
+      const text = new Text([title, '', content].join('\n'), TextKind.RICH);
       const document = await space.db.add(new Document({ title, content: text }));
 
       // TODO(burdon): Add metadata.
@@ -83,6 +84,7 @@ export class ContactStackGenerator implements Generator<DocumentStack> {
       messages.push(message);
     };
 
+    // TODO(burdon): Check if already added.
     await addTextSection(`write a short bio about ${name}`, 'Biography');
     await addTextSection(`write a short summary about ${organization}`, `About ${startCase(organization)}`);
     // await addTextSection(
