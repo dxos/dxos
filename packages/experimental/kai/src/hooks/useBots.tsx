@@ -11,7 +11,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig, useKeyStore } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
-import { BotClient } from './bot-client';
+import { BotClient } from '../bots';
 import { useAppState } from './useAppState';
 
 export type BotDef = {

@@ -2,19 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Presentation as PresentationIcon, Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
+import { Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/echo-schema';
-import { Document, DocumentStack, Presentation } from '@dxos/kai-types';
-import { useQuery, observer, Space, useSubscription } from '@dxos/react-client';
+import { Document, Presentation } from '@dxos/kai-types';
+import { observer, Space, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
-import { FrameRuntime, Presenter } from '../../frames';
-import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
+import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Stack } from '../Stack';
 
 // TODO(burdon): Load/save Deck to IPFS.
@@ -22,60 +20,18 @@ import { Stack } from '../Stack';
 // TODO(burdon): Layout.
 // TODO(burdon): MDX components (runtime build).
 
-const defaultSlides = [
-  '# DXOS\n- HALO: Decentralized identity\n- ECHO: Decentralized data\n- MESH: Decentralized networks',
-  '# Why Decentralization Matters\n- User experience\n- Privacy\n- Performance\n- Cost',
-  '# Get Involved\nhello@dxos.org'
-];
-
 enum View {
   EDITOR = 1,
   MARKDOWN = 2,
   SPLIT = 3
 }
 
-// TODO(burdon): Factor out defs.
-export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
-  Icon: PresentationIcon,
-  Component: Presenter.Frame,
-  // List: Presenter.List,
-  onCreate: async (space: Space) => {
-    const stack = new DocumentStack();
-    const section = new DocumentStack.Section({ object: new Document() });
-    stack.sections.push(section);
-    return space.db.add(new Presentation({ stack }));
-  }
-};
-
 export const PresenterFrame = observer(() => {
-  const navigate = useNavigate();
-  const { space, frame, objectId } = useAppRouter();
+  const { space, objectId } = useAppRouter();
   const { fullscreen } = useAppState();
   const [view, setView] = useState<View>(View.EDITOR);
   const [slide, setSlide] = useState(1); // TODO(burdon): Reset when goes into full screen.
-
-  const presentations = useQuery(space, Presentation.filter());
-  const presentation = objectId ? (space!.db.getObjectById(objectId) as Presentation) : undefined;
-  useEffect(() => {
-    if (space && frame && !presentation) {
-      setTimeout(async () => {
-        let presentation = presentations[0];
-        if (!presentation) {
-          presentation = await space.db.add(new Presentation({ stack: new DocumentStack({ title: 'New Deck' }) }));
-          defaultSlides.forEach((content) => {
-            presentation!.stack.sections.push(
-              new DocumentStack.Section({
-                object: new Document({ content: new Text(content) })
-              })
-            );
-          });
-        }
-
-        navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: presentation.id }));
-      });
-    }
-  }, [space, frame, presentations, presentation]);
-
+  const presentation = objectId ? space!.db.getObjectById<Presentation>(objectId) : undefined;
   if (!space || !presentation) {
     return null;
   }

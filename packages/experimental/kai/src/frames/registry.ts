@@ -2,53 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Article,
-  Calendar,
-  Cards,
-  Code,
-  Compass,
-  Files,
-  Graph,
-  HighlighterCircle,
-  Kanban as KanbanIcon,
-  ListChecks,
-  Stack as StackIcon,
-  Sword,
-  Table,
-  Tray,
-  MagnifyingGlass,
-  IdentificationCard
-} from '@phosphor-icons/react';
-
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
-import {
-  FrameDef,
-  CalendarFrame,
-  ChessFrame,
-  ContactFrame,
-  Document as DocumentFrame,
-  ExplorerFrame,
-  File,
-  KanbanFrame,
-  MapFrame,
-  MessageFrame,
-  Note,
-  SandboxFrame,
-  SearchFrame,
-  SketchFrame,
-  Stack,
-  TableFrame,
-  TaskFrame
-} from '../frames';
+// TODO(burdon): Move frames to sub-directory.
+import { FrameDef } from '../registry';
+import { CalendarFrameRuntime } from './Calendar';
+import { ChessFrameRuntime } from './Chess';
+import { ContactFrameRuntime } from './Contact';
+import { DocumentFrameRuntime } from './Document';
+import { ExplorerFrameRuntime } from './Explorer';
+import { FileFrameRuntime } from './File';
+import { KanbanFrameRuntime } from './Kanban';
+import { MapFrameRuntime } from './Map';
+import { MessageFrameRuntime } from './Message';
+import { NoteFrameRuntime } from './Note';
 import { PresenterFrameRuntime } from './Presenter';
-
-// TODO(burdon): Metagraph.
+import { SandboxFrameRuntime } from './Sandbox';
+import { SearchFrameRuntime } from './Search';
+import { SketchFrameRuntime } from './Sketch';
+import { StackFrameRuntime } from './Stack';
+import { TableFrameRuntime } from './Table';
+import { TaskFrameRuntime } from './Task';
 
 /**
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
+// TODO(burdon): Move into metagraph.
 export const frameDefs: FrameDef<any>[] = [
   {
     module: {
@@ -57,10 +36,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Search',
       description: 'Universal search.'
     },
-    runtime: {
-      Icon: MagnifyingGlass,
-      Component: SearchFrame
-    }
+    runtime: SearchFrameRuntime
   },
   {
     module: {
@@ -69,10 +45,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Contacts',
       description: 'Address book.'
     },
-    runtime: {
-      Icon: IdentificationCard,
-      Component: ContactFrame
-    }
+    runtime: ContactFrameRuntime
   },
   {
     module: {
@@ -81,10 +54,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Table',
       description: 'Generic data browser.'
     },
-    runtime: {
-      Icon: Table,
-      Component: TableFrame
-    }
+    runtime: TableFrameRuntime
   },
   {
     module: {
@@ -93,10 +63,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Kanban',
       description: 'Card based pipelines.'
     },
-    runtime: {
-      Icon: KanbanIcon,
-      Component: KanbanFrame
-    }
+    runtime: KanbanFrameRuntime
   },
   {
     module: {
@@ -105,10 +72,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Tasks',
       description: 'Projects and task management.'
     },
-    runtime: {
-      Icon: ListChecks,
-      Component: TaskFrame
-    }
+    runtime: TaskFrameRuntime
   },
   {
     module: {
@@ -117,10 +81,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Inbox',
       description: 'Universal message inbox.'
     },
-    runtime: {
-      Icon: Tray,
-      Component: MessageFrame
-    }
+    runtime: MessageFrameRuntime
   },
   {
     module: {
@@ -129,10 +90,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Calendar',
       description: 'Calendar and time management tools.'
     },
-    runtime: {
-      Icon: Calendar,
-      Component: CalendarFrame
-    }
+    runtime: CalendarFrameRuntime
   },
   {
     module: {
@@ -141,11 +99,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Documents',
       description: 'Realtime structured document editing.'
     },
-    runtime: {
-      Icon: Article,
-      Component: DocumentFrame.Frame,
-      List: DocumentFrame.List
-    }
+    runtime: DocumentFrameRuntime
   },
   {
     module: {
@@ -154,11 +108,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Stacks',
       description: 'Dynamic structured documents.'
     },
-    runtime: {
-      Icon: StackIcon,
-      Component: Stack.Frame,
-      List: Stack.List
-    }
+    runtime: StackFrameRuntime
   },
   {
     module: {
@@ -176,11 +126,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Notes',
       description: 'Brainstorming notes.'
     },
-    runtime: {
-      Icon: Cards,
-      Component: Note.Frame,
-      List: Note.List
-    }
+    runtime: NoteFrameRuntime
   },
   {
     module: {
@@ -189,11 +135,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Files',
       description: 'Distributed file sharing.'
     },
-    runtime: {
-      Icon: Files,
-      Component: File.Frame,
-      List: File.List
-    }
+    runtime: FileFrameRuntime
   },
   {
     module: {
@@ -202,10 +144,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Sketch',
       description: 'Vector drawings.'
     },
-    runtime: {
-      Icon: HighlighterCircle,
-      Component: SketchFrame
-    }
+    runtime: SketchFrameRuntime
   },
   {
     module: {
@@ -214,10 +153,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Explorer',
       description: 'Graphical User Interface and Data Explorer.'
     },
-    runtime: {
-      Icon: Graph,
-      Component: ExplorerFrame
-    }
+    runtime: ExplorerFrameRuntime
   },
   {
     module: {
@@ -226,10 +162,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Maps',
       description: 'Community contributed street maps.'
     },
-    runtime: {
-      Icon: Compass,
-      Component: MapFrame
-    }
+    runtime: MapFrameRuntime
   },
   {
     module: {
@@ -238,10 +171,7 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Games',
       description: 'Peer-to-peer and engine powered games.'
     },
-    runtime: {
-      Icon: Sword,
-      Component: ChessFrame
-    }
+    runtime: ChessFrameRuntime
   },
   {
     module: {
@@ -250,11 +180,9 @@ export const frameDefs: FrameDef<any>[] = [
       displayName: 'Script',
       description: 'Frame and Bot script editor.'
     },
-    runtime: {
-      Icon: Code,
-      Component: SandboxFrame
-    }
+    runtime: SandboxFrameRuntime
   }
 ];
 
+// TODO(burdon): Create map of modules to runtime defs.
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);

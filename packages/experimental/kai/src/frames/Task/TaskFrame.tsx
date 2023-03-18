@@ -25,3 +25,5 @@ export const TaskFrame = () => {
     </div>
   );
 };
+
+export default TaskFrame;

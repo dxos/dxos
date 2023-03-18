@@ -2,8 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MessageFrame } from './MessageFrame';
-
+export * from './defs';
 export * from './util';
-
-export default MessageFrame;

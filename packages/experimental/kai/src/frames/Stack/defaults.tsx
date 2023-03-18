@@ -3,20 +3,15 @@
 //
 
 import { Article, Image, ListChecks, Table as TableIcon } from '@phosphor-icons/react';
-import React, { FC } from 'react';
 
 import { Document, Space } from '@dxos/client';
 import { Contact, Document as DocumentType, File, Table, TaskList } from '@dxos/kai-types';
 
-import { FileList } from '../File';
+import { FileSelector } from '../File';
 import { ContextMenuItem } from './ContextMenu';
 
 export type StackItemType = ContextMenuItem & {
   onCreate?: (space: Space) => Promise<Document>;
-};
-
-const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void }> = ({ onSelect }) => {
-  return <FileList disableDownload onSelect={onSelect} />;
 };
 
 // TODO(burdon): Factor out.

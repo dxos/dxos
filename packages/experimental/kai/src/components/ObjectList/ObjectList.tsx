@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { Document } from '@dxos/echo-schema';
 
 import { EditableObjectList } from '../../components';
-import { FrameDef } from '../../frames';
+import { FrameDef } from '../../registry';
 
 export type ObjectListProps<T extends Document> = {
   frame: FrameDef<T>;
@@ -19,7 +19,7 @@ export type ObjectListProps<T extends Document> = {
   Action?: FC<any>;
   onSelect: (objectId: string) => void;
   onAction?: (objectId: string) => void;
-  onCreate?: () => T; // TODO(burdon): Tie to FrameDef.
+  onCreate?: () => Promise<T>; // TODO(burdon): Tie to FrameDef.
 };
 
 export const ObjectList = <T extends Document>({
@@ -33,9 +33,9 @@ export const ObjectList = <T extends Document>({
   onAction,
   onCreate
 }: ObjectListProps<T>) => {
-  const handleCreate = () => {
+  const handleCreate = async () => {
     assert(onCreate);
-    const object = onCreate();
+    const object = await onCreate();
     onSelect(object.id);
     return object.id;
   };

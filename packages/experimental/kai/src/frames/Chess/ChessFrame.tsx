@@ -169,3 +169,5 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
     </div>
   );
 };
+
+export default ChessFrame;

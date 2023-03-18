@@ -2,47 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
-import { Document as DocumentType, DocumentStack } from '@dxos/kai-types';
-import { useQuery, observer } from '@dxos/react-client';
+import { DocumentStack } from '@dxos/kai-types';
+import { observer } from '@dxos/react-client';
 
-import { createPath, useAppRouter } from '../../hooks';
+import { useAppRouter } from '../../hooks';
+import { FrameComponent } from '../../registry';
 import { Stack } from './Stack';
 
-// TODO(burdon): Configurable menu options and section renderers (like frames).
-// TODO(burdon): Factor out new section data factories.
-// TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
-
-export const StackFrame = observer(() => {
-  const navigate = useNavigate();
-  const { space, frame, objectId } = useAppRouter();
-
-  // TODO(burdon): Arrow of documents (part of stack).
-  const stacks = useQuery(space, DocumentStack.filter());
-  const documents = useQuery(space, DocumentType.filter());
-
-  const stack = objectId ? (space!.db.getObjectById(objectId) as DocumentStack) : undefined;
-  useEffect(() => {
-    if (space && frame && !stack) {
-      setTimeout(async () => {
-        let stack = stacks[0];
-        if (!stacks.length) {
-          stack = await space.db.add(new DocumentStack({ title: 'New Stack' }));
-
-          // TODO(burdon): Cannot add documents directly (recursion bug).
-          documents.forEach((document) => {
-            const section = new DocumentStack.Section({ object: document });
-            stack.sections.push(section);
-          });
-        }
-
-        navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: stack.id }));
-      });
-    }
-  }, [space, frame, stacks, stack]);
-
+export const StackFrame: FrameComponent = observer(() => {
+  const { space, objectId } = useAppRouter();
+  const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {
     return null;
   }

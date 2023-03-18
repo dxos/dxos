@@ -29,7 +29,7 @@ import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
-import { FrameRegistryDialog } from '../../containers';
+import { FrameObjectList, FrameRegistryDialog } from '../../containers';
 import {
   createInvitationPath,
   createPath,
@@ -66,7 +66,7 @@ export const Sidebar = observer(() => {
   const { state: connectionState } = useNetworkStatus();
   const [showSpaceList, setShowSpaceList] = useState(false);
   const [showFrames, setShowFrames] = useState(false);
-  const List = frame?.runtime.List;
+  const { Plugin } = frame?.runtime ?? {};
 
   //
   // Invitations.
@@ -307,23 +307,25 @@ export const Sidebar = observer(() => {
             <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
           </div>
 
-          {/* TODO(burdon): Items if not actively searching. */}
+          {/* Items if not actively searching. */}
           {!showSearchResults && (
             <div className='overflow-y-scroll space-y-4'>
+              {/* Frame list filter. */}
               <FrameList />
 
-              {List && (
-                <>
-                  <Separator />
-                  <div className='flex px-3'>
-                    <DensityProvider density='fine'>
-                      <Suspense>{<List />}</Suspense>
-                    </DensityProvider>
-                  </div>
-                  <Separator />
-                </>
+              {/* Object list. */}
+              <div className='flex px-3'>{frame?.runtime.filter && <FrameObjectList frameDef={frame.runtime} />}</div>
+
+              {/* Frame-specific plugin. */}
+              {Plugin && (
+                <div className='flex px-3'>
+                  <DensityProvider density='fine'>
+                    <Suspense>{<Plugin />}</Suspense>
+                  </DensityProvider>
+                </div>
               )}
 
+              {/* Frame registry dialog. */}
               <div className='flex flex-col'>
                 <div className='ml-4'>
                   <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>

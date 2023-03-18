@@ -19,8 +19,9 @@ import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, Searchbar } from '@dxos/react-components';
 
-import { FrameDef, frameDefs } from '../../frames';
+import { frameDefs } from '../../frames';
 import { useAppRouter } from '../../hooks';
+import { FrameDef } from '../../registry';
 
 // TODO(burdon): Factor out search hook.
 // TODO(burdon): Reconcile with type and frame system.

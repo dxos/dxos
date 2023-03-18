@@ -8,7 +8,7 @@ import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { FrameDef } from '.././frames';
+import { FrameDef } from '../registry';
 import { defaultFrameId, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.

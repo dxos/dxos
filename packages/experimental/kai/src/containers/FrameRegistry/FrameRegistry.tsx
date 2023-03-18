@@ -9,8 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { ScrollContainer } from '@dxos/mosaic';
 import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
 
-import { FrameDef } from '../../frames';
 import { useBots, useFrames, BotDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
+import { FrameDef } from '../../registry';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
