@@ -9,7 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { ScrollContainer } from '@dxos/mosaic';
 import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
 
-import { useBots, useFrames, BotDef, FrameDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
+import { FrameDef } from '../../frames';
+import { useBots, useFrames, BotDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
@@ -62,8 +63,8 @@ const Tile: FC<{
 // TODO(burdon): Create sections (e.g., Community).
 const len = (array?: any[]) => array?.length ?? 0;
 const sorter = (
-  { module: { displayName: a, tags: t1 } }: FrameDef | BotDef,
-  { module: { displayName: b, tags: t2 } }: FrameDef | BotDef
+  { module: { displayName: a, tags: t1 } }: FrameDef<any> | BotDef,
+  { module: { displayName: b, tags: t2 } }: FrameDef<any> | BotDef
 ) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
 
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
@@ -94,7 +95,8 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
     }
   };
 
-  const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
+  // TODO(burdon): Remove bots.
+  const modules: Map<string, FrameDef<any> | BotDef> = type === ExtensionType.FRAME ? frames : bots;
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden py-4'>

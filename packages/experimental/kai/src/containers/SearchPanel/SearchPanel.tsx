@@ -19,11 +19,12 @@ import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, Searchbar } from '@dxos/react-components';
 
-import { FrameDef, frameDefs, useAppRouter } from '../../hooks';
+import { FrameDef, frameDefs } from '../../frames';
+import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Factor out search hook.
 // TODO(burdon): Reconcile with type and frame system.
-export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef } } = {
+export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef<any> } } = {
   'dxos.experimental.kai.Organization': {
     rank: 3,
     Icon: Buildings

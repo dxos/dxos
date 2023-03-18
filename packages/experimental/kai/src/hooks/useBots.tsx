@@ -105,6 +105,9 @@ export const useBotClient = (space: Space) => {
   return useMemo(() => new BotClient(config, space, { proxy }), [config, space, proxy]);
 };
 
+/**
+ * @deprecated
+ */
 export const useBots = (): { bots: BotMap; active: string[] } => {
   const { modules } = useModules({ type: 'dxos:type/bot' });
   const { bots: active = [] } = useAppState()!;

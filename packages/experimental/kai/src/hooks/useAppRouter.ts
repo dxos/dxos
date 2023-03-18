@@ -8,7 +8,8 @@ import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { defaultFrameId, FrameDef, useFrames } from './useFrames';
+import { FrameDef } from '.././frames';
+import { defaultFrameId, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
@@ -58,7 +59,7 @@ export const createInvitationPath = (invitation: Invitation) =>
 export type AppRoute = {
   space?: Space;
   section?: string;
-  frame?: FrameDef;
+  frame?: FrameDef<any>;
   objectId?: string;
 };
 

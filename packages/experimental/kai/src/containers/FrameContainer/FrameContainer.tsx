@@ -4,12 +4,12 @@
 
 import React, { FC, Suspense } from 'react';
 
-import { FrameDef } from '../../hooks';
+import { FrameDef } from '../../frames';
 
 /**
  * Viewport for frame.
  */
-export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
+export const FrameContainer: FC<{ frame: FrameDef<any> }> = ({ frame }) => {
   const Component = frame.runtime.Component;
   if (!Component) {
     return null;

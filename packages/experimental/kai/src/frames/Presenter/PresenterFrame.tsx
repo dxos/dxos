@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
+import { Presentation as PresentationIcon, Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ import { Button, getSize } from '@dxos/react-components';
 import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
+import { FrameRuntime, Presenter } from '../../frames';
 import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Stack } from '../Stack';
 
@@ -32,6 +33,19 @@ enum View {
   MARKDOWN = 2,
   SPLIT = 3
 }
+
+// TODO(burdon): Factor out defs.
+export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
+  Icon: PresentationIcon,
+  Component: Presenter.Frame,
+  // List: Presenter.List,
+  onCreate: async (space: Space) => {
+    const stack = new DocumentStack();
+    const section = new DocumentStack.Section({ object: new Document() });
+    stack.sections.push(section);
+    return space.db.add(new Presentation({ stack }));
+  }
+};
 
 export const PresenterFrame = observer(() => {
   const navigate = useNavigate();
