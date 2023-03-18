@@ -4,9 +4,10 @@
 
 import { Robot, Ghost } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
+import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
@@ -14,7 +15,7 @@ import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
 import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
-const REFRESH_DELAY = 1000;
+const REFRESH_DELAY = 5_000;
 
 type BotRecord = {
   id: string;
@@ -77,20 +78,25 @@ export const BotManager = () => {
 
   useEffect(() => {
     void refresh();
-    return botClient.onStatusUpdate.on((status) => {
+    const interval = setInterval(refresh, REFRESH_DELAY);
+    const unsubscribe = botClient.onStatusUpdate.on((status) => {
       setStatus(status);
       void refresh();
     });
+
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, [botClient]);
 
-  // TODO(burdon): Debounce.
   // TODO(burdon): Error handling.
   // TODO(burdon): Show status in a pending table row.
-  const refreshTimeout = useRef<ReturnType<typeof setTimeout>>();
-  const refresh = () => {
-    clearTimeout(refreshTimeout.current);
-    refreshTimeout.current = setTimeout(async () => {
-      refreshTimeout.current = undefined;
+  const refresh = useCallback(
+    debounce(async () => {
+      if (!botClient.active) {
+        return;
+      }
 
       const response = await botClient?.getBots();
       const records = response.map((record: any) => ({
@@ -104,8 +110,9 @@ export const BotManager = () => {
 
       setRecords(records);
       setStatus('');
-    }, REFRESH_DELAY);
-  };
+    }),
+    [botClient]
+  );
 
   const handleFlush = async () => {
     setStatus('flushing...');
@@ -149,7 +156,7 @@ export const BotManager = () => {
           <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
           <Button onClick={handleStop}>Stop</Button>
           <Button onClick={handleFlush}>Flush</Button>
-          <Button onClick={refresh}>Refresh</Button>
+          <Button onClick={() => refresh}>Refresh</Button>
         </div>
       </Toolbar>
 

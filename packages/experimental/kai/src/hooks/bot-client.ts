@@ -49,6 +49,10 @@ export class BotClient {
 
   // TODO(burdon): Error handling.
 
+  get active() {
+    return !!this._botServiceEndpoint;
+  }
+
   async getBots(): Promise<any[]> {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerList
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
