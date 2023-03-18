@@ -10,14 +10,14 @@ import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import mainUrl from './frame-main?url';
 import frameSrc from './frame.html?raw';
+import mainUrl from './main?url';
 
 export type EmbeddedFrameProps = {
   frame: Frame;
 };
 
-export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
+export const FrameContainer = ({ frame }: EmbeddedFrameProps) => {
   const code = frame.compiled?.bundle ?? 'throw new Error("No bundle")';
 
   const html = frameSrc.replace(
@@ -25,6 +25,7 @@ export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
     '${importMap}',
     JSON.stringify({
       imports: {
+        // TODO(burdon): Change namespace (separate GH domain).
         '@frame/main': mainUrl,
         '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`,
         ...Object.fromEntries(
@@ -69,5 +70,6 @@ const createReexportingModule = (namedImports: string[], key: string) => {
     export { ${namedImports.join(',')} }
     export default window.__DXOS_FRAMEBOX_MODULES[${JSON.stringify(key)}].default;
   `;
+
   return `data:text/javascript;base64,${btoa(code)}`;
 };

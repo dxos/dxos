@@ -11,8 +11,8 @@ import { useQuery, observer } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { EmbeddedFrame } from '../../frame-container';
 import { useAppRouter } from '../../hooks';
+import { FrameContainer, sampleCode } from './FrameContainer';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
@@ -33,7 +33,7 @@ export const SandboxFrame = observer(() => {
         });
 
         await space?.db.add(frame);
-        frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
+        frame.content.doc!.getText('monaco').insert(0, sampleCode);
         setSelected(frame);
       });
     } else {
@@ -74,43 +74,9 @@ export const SandboxFrame = observer(() => {
         </div>
       </div>
 
-      <div className='flex-1 overflow-hidden'>{selected?.compiled && <EmbeddedFrame frame={selected} />}</div>
+      <div className='flex-1 overflow-hidden'>{selected?.compiled && <FrameContainer frame={selected} />}</div>
     </div>
   );
 });
 
 export default SandboxFrame;
-
-// TODO(burdon): Factor out to testing.
-const EXAMPLE = `// Example frame component.
-
-import React, { useState } from 'react'
-import { useQuery, useSpaces } from '@dxos/react-client'
-import { Task } from '@dxos/kai-types'
-import { id } from '@dxos/echo-schema'
-
-const Frame = () => {
-  const [space] = useSpaces()
-  const tasks = useQuery(space, Task.filter())
-  const [value, setValue] = useState('');
-  
-  const handleCreate = () => {
-    const task = new Task({ title: value });
-    space.db.save(task);
-  }
-
-  return (
-    <div className='w-full p-4'>
-      <ul>
-        {tasks.map(task => (
-          <li key={task.id} className='p-1 hover:bg-blue-200'>{task.title}</li>
-        ))}
-      </ul>
-      <div className='flex p-1 mt-4'>
-        <input className='w-full border-b pr-4' value={value} onChange={ev => setValue(ev.target.value)} />
-        <Button compact onClick={handleCreate}>Add</Button>
-      </div>
-    </div>
-  )
-}
-`;

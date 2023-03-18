@@ -9,8 +9,6 @@ import { ClientServicesProxy } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-console.log('frame main');
-
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
