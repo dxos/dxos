@@ -340,7 +340,7 @@ export const Sidebar = observer(() => {
       <div className='flex-1' />
 
       {/* Members */}
-      <div className='flex shrink-0 flex-col my-4'>
+      <div className='flex shrink-0 flex-col my-2'>
         <div className='pl-2'>
           <Button
             variant='ghost'
