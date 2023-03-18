@@ -72,7 +72,7 @@ export const MessageFrame = () => {
                     <Button variant='ghost'>
                       <Circle
                         weight={selected?.id === message.id ? 'fill' : 'regular'}
-                        className={mx(getSize(5), 'text-zinc-300', selected?.id === message.id && 'text-sky-500')}
+                        className={mx(getSize(4), 'text-zinc-300', selected?.id === message.id && 'text-sky-500')}
                       />
                     </Button>
                   }
