@@ -277,7 +277,7 @@ export const frameDefs: FrameDef[] = [
 
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.sandbox';
 
 // prettier-ignore
 export const defaultFrames = [
@@ -291,8 +291,9 @@ export const defaultFrames = [
   'dxos.module.frame.note',
   'dxos.module.frame.sketch',
   'dxos.module.frame.file',
-  'dxos.module.frame.chess'
+  'dxos.module.frame.chess',
 
+  'dxos.module.frame.sandbox'
   // 'dxos.module.frame.maps'
   // 'dxos.module.frame.document',
   // 'dxos.module.frame.task',
