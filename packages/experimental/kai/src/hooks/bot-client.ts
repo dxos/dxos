@@ -49,6 +49,10 @@ export class BotClient {
 
   // TODO(burdon): Error handling.
 
+  get active() {
+    return !!this._botServiceEndpoint;
+  }
+
   async getBots(): Promise<any[]> {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerList
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
@@ -56,12 +60,19 @@ export class BotClient {
     });
   }
 
-  async removeBots(): Promise<void> {
+  async flushBots(): Promise<void> {
     const containers = await this.getBots();
     for (const { Id } of containers) {
       // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerDelete
-      await fetch(`${this._botServiceEndpoint}/docker/containers/${Id}/stop`, { method: 'POST' });
       await fetch(`${this._botServiceEndpoint}/docker/containers/${Id}`, { method: 'DELETE' });
+    }
+  }
+
+  async stopBots(): Promise<void> {
+    const containers = await this.getBots();
+    for (const { Id } of containers) {
+      // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStop
+      await fetch(`${this._botServiceEndpoint}/docker/containers/${Id}/stop`, { method: 'POST' });
     }
   }
 
