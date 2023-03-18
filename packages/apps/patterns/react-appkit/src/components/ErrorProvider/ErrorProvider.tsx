@@ -62,7 +62,7 @@ export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
       {children}
-      <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('warning'))}>
+      <div role='none' className={mx('fixed bottom-2 right-2', valenceColorText('warning'))}>
         {/* TODO(wittjosiah): Render this warning conditionally based on a prop (e.g., isInternalUser?). */}
         {!!errors.length && (
           <Tooltip content={t('caught error message')}>
