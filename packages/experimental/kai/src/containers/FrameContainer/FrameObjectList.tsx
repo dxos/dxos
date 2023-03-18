@@ -4,19 +4,20 @@
 
 import assert from 'assert';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { ObjectList } from '../../components';
-import { createPath, useAppRouter } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { FrameRuntime } from '../../registry';
 
-export type FrameObjectListProps<T extends Document> = { frameDef: FrameRuntime<T> };
+export type FrameObjectListProps<T extends Document> = {
+  frameDef: FrameRuntime<T>;
+  onSelect: (objectId: string) => void;
+};
 
-export const FrameObjectList = <T extends Document>({ frameDef }: FrameObjectListProps<T>) => {
-  const navigate = useNavigate();
+export const FrameObjectList = <T extends Document>({ frameDef, onSelect }: FrameObjectListProps<T>) => {
   const { space, frame, objectId } = useAppRouter();
   const objects = useQuery(space, frameDef.filter?.());
   if (!space || !frame || !frameDef.filter) {
@@ -38,7 +39,7 @@ export const FrameObjectList = <T extends Document>({ frameDef }: FrameObjectLis
       selected={objectId}
       getTitle={(object) => (frameDef.title ? object[frameDef.title] : undefined)}
       setTitle={(object, title) => frameDef.title && ((object as any)[frameDef.title] = title)}
-      onSelect={(objectId) => navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))}
+      onSelect={onSelect}
       onCreate={handleCreate}
     />
   );

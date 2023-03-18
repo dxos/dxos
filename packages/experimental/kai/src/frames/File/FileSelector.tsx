@@ -11,7 +11,7 @@ import { FileFrameRuntime } from './defs';
 export const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void }> = ({ onSelect }) => {
   return (
     <div>
-      <FrameObjectList frameDef={FileFrameRuntime} />
+      <FrameObjectList onSelect={onSelect} frameDef={FileFrameRuntime} />
       <FilePlugin onSelect={onSelect} />
     </div>
   );

@@ -314,7 +314,16 @@ export const Sidebar = observer(() => {
               <FrameList />
 
               {/* Object list. */}
-              <div className='flex px-3'>{frame?.runtime.filter && <FrameObjectList frameDef={frame.runtime} />}</div>
+              <div className='flex px-3'>
+                {frame?.runtime.filter && (
+                  <FrameObjectList
+                    frameDef={frame.runtime}
+                    onSelect={(objectId: string) =>
+                      navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }))
+                    }
+                  />
+                )}
+              </div>
 
               {/* Frame-specific plugin. */}
               {Plugin && (
