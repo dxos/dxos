@@ -17,10 +17,12 @@ export type FrameComponent = FC<any>;
 export type FrameRuntime<T extends Document> = {
   Icon: FC<any>;
   Component: FrameComponent;
-  Plugin?: FC<any>;
+
+  // Sidebar
   title?: string;
   filter?: () => TypeFilter<T>;
   onCreate?: (space: Space) => Promise<T>;
+  Plugin?: FC<any>;
 };
 
 export type FrameDef<T extends Document> = {

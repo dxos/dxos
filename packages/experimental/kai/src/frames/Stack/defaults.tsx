@@ -3,12 +3,17 @@
 //
 
 import { Article, Image, ListChecks, Table as TableIcon } from '@phosphor-icons/react';
+import React, { FC } from 'react';
 
 import { Document, Space } from '@dxos/client';
 import { Contact, Document as DocumentType, File, Table, TaskList } from '@dxos/kai-types';
 
-import { FileSelector } from '../File';
+import { FilePlugin, imageTypes } from '../File';
 import { ContextMenuItem } from './ContextMenu';
+
+export const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void }> = ({ onSelect }) => {
+  return <FilePlugin disableDownload fileTypes={imageTypes} onSelect={onSelect} />;
+};
 
 export type StackItemType = ContextMenuItem & {
   onCreate?: (space: Space) => Promise<Document>;

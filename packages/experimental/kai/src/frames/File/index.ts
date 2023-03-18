@@ -4,4 +4,4 @@
 
 export * from './defs';
 
-export * from './FileSelector';
+export * from './FilePlugin';

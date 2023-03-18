@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
@@ -11,16 +12,19 @@ import { log } from '@dxos/log';
 import { useConfig, useQuery } from '@dxos/react-client';
 import { useMediaQuery } from '@dxos/react-components';
 
+import { FrameObjectList } from '../../containers';
 import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
+import { FileFrameRuntime, defaultFileTypes } from './defs';
 
 export type FileListProps = {
   disableDownload?: boolean;
-  onSelect?: (objectId: string) => void;
+  fileTypes?: string[];
+  onSelect?: (objectId: string | undefined) => void;
 };
 
 // TODO(burdon): Rename.
-export const FilePlugin: FC<FileListProps> = ({ disableDownload, onSelect }) => {
+export const FilePlugin: FC<FileListProps> = ({ disableDownload, fileTypes = defaultFileTypes, onSelect }) => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
@@ -65,7 +69,18 @@ export const FilePlugin: FC<FileListProps> = ({ disableDownload, onSelect }) => 
     }
   };
 
-  return <div className='flex flex-col w-full'>{isMd && <FileUpload onUpload={handleUpload} />}</div>;
+  return (
+    <div className='flex flex-col w-full'>
+      <FrameObjectList
+        frameDef={FileFrameRuntime}
+        Action={DownloadSimple}
+        onSelect={onSelect}
+        onAction={disableDownload ? undefined : handleDownload}
+      />
+
+      {isMd && <FileUpload fileTypes={fileTypes} onUpload={handleUpload} />}
+    </div>
+  );
 };
 
 export default FilePlugin;

@@ -4,7 +4,6 @@
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
-// TODO(burdon): Move frames to sub-directory.
 import { FrameDef } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
 import { ChessFrameRuntime } from './Chess';
@@ -27,7 +26,7 @@ import { TaskFrameRuntime } from './Task';
 /**
  * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
  */
-// TODO(burdon): Move into metagraph.
+// TODO(burdon): Metagraph registry with dynamic defs (loaded separately from frames).
 export const frameDefs: FrameDef<any>[] = [
   {
     module: {

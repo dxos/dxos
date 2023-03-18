@@ -9,9 +9,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { File } from '@dxos/kai-types';
 import { getSize } from '@dxos/react-components';
 
-import { fileTypes } from './defs';
-
-export const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
+export const FileUpload: FC<{ fileTypes: string[]; onUpload: (file: File) => void }> = ({ fileTypes, onUpload }) => {
   return (
     <div className='hidden md:flex shrink-0 flex-col w-full h-[160px] p-2'>
       <FileUploader

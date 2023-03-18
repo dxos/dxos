@@ -336,10 +336,12 @@ export const Sidebar = observer(() => {
               {/* Frame list filter. */}
               <FrameList />
 
-              {/* Object list. */}
-              <div className='flex px-3'>
-                {frame?.runtime.filter && <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />}
-              </div>
+              {/* Generic object list. */}
+              {!Plugin && frame?.runtime.filter && (
+                <div className='flex px-3'>
+                  <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />
+                </div>
+              )}
 
               {/* Frame-specific plugin. */}
               {Plugin && (

@@ -17,7 +17,7 @@ export type ObjectListProps<T extends Document> = {
   getTitle: (object: T) => string;
   setTitle: (object: T, title: string) => void;
   Action?: FC<any>;
-  onSelect: (objectId: string) => void;
+  onSelect?: (objectId: string) => void;
   onAction?: (objectId: string) => void;
   onCreate?: () => Promise<T>; // TODO(burdon): Tie to FrameDef.
 };
@@ -36,7 +36,7 @@ export const ObjectList = <T extends Document>({
   const handleCreate = async () => {
     assert(onCreate);
     const object = await onCreate();
-    onSelect(object.id);
+    onSelect?.(object.id);
     return object.id;
   };
 
@@ -56,7 +56,7 @@ export const ObjectList = <T extends Document>({
       Icon={Icon}
       getTitle={getTitle}
       Action={Action}
-      onSelect={(objectId) => onSelect(objectId)}
+      onSelect={(objectId) => onSelect?.(objectId)}
       onAction={onAction}
       onUpdate={handleUpdate}
       onCreate={onCreate && handleCreate}
