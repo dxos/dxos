@@ -107,7 +107,11 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
  * Storybook decorator to setup identity for n peers and join them into a single space.
  * The story is rendered n times, once for each peer and the space is passed to the story as an arg.
  */
+// prettier-ignore
 export const ClientSpaceDecorator =
   (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> =>
-  (Story, context) =>
-    <PeersInSpace {...options}>{(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}</PeersInSpace>;
+  (Story, context) => (
+    <PeersInSpace {...options}>
+      {(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}
+    </PeersInSpace>
+  );

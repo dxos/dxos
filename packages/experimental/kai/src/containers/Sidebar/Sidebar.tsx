@@ -16,7 +16,7 @@ import {
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
-import { useHref, useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
@@ -52,12 +52,19 @@ const Separator = () => {
   return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
 };
 
+export type SidebarProps = {
+  onNavigate: (path: string) => void;
+};
+
+// TODO(burdon): Remove observer?
 // TODO(burdon): Split into sub-components.
-export const Sidebar = observer(() => {
-  const { space, section, frame, objectId } = useAppRouter();
-  const theme = useTheme();
-  const navigate = useNavigate();
+export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
+  // TODO(burdon): Factor out app state/nav.
+  const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
+  const { setActiveFrame } = useAppReducer();
   const shell = useShell();
+
+  const theme = useTheme();
   const client = useClient();
   const spaces = useSpaces();
   const members = useMembers(space?.key);
@@ -88,7 +95,6 @@ export const Sidebar = observer(() => {
   //
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
-  const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
   useEffect(() => {
     return () => {
       void observable?.cancel();
@@ -97,7 +103,9 @@ export const Sidebar = observer(() => {
 
   useEffect(() => {
     if (observable) {
+      const href = createInvitationPath(observable.invitation!);
       const url = new URL(href, window.origin);
+      console.log(url);
       void clipboardCopy(url.toString());
     }
   }, [observable]);
@@ -116,7 +124,7 @@ export const Sidebar = observer(() => {
       // TODO(burdon): Add to search result.
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
-        navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
+        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
       }
     }
   };
@@ -126,12 +134,12 @@ export const Sidebar = observer(() => {
   //
 
   const handleSelectObject = (objectId: string) => {
-    navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+    onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
   };
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
-    navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
+    onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
   const handleJoinSpace = () => {
@@ -144,7 +152,7 @@ export const Sidebar = observer(() => {
 
     switch (intent.action) {
       case IntentAction.SPACE_SELECT: {
-        navigate(createPath({ spaceKey: intent.data.spaceKey, frame: frame?.module.id }));
+        onNavigate(createPath({ spaceKey: intent.data.spaceKey, frame: frame?.module.id }));
         break;
       }
 
@@ -211,7 +219,6 @@ export const Sidebar = observer(() => {
   }, [space]);
 
   const { active: activeFrames } = useFrames();
-  const { setActiveFrame } = useAppReducer();
 
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
@@ -227,7 +234,7 @@ export const Sidebar = observer(() => {
     }
 
     if (path) {
-      navigate(path);
+      onNavigate(path);
     }
   }, []);
 
@@ -256,160 +263,154 @@ export const Sidebar = observer(() => {
   const { Plugin } = frame?.runtime ?? {};
 
   return (
-    <div
-      role='none'
-      className={mx(
-        'flex flex-col h-full overflow-hidden min-bs-full bg-sidebar-bg',
-        theme.panel === 'flat' && 'border-r'
-      )}
-    >
-      {/* Space Selector */}
-      <div className='flex flex-col shrink-0'>
-        <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
-          <div className='flex items-center'>
-            <Icon className={getSize(6)} data-testid='sidebar.spaceIcon' />
-            <div className='pl-2 text-lg'>{space.properties.name}</div>
-            <Button
-              variant='ghost'
-              className='p-0'
-              data-testid='sidebar.showSpaceList'
-              onClick={() => setShowSpaceList((show) => !show)}
-            >
-              <CaretUpDown className={mx(getSize(4), 'ml-2')} />
+    <DensityProvider density='fine'>
+      <div
+        role='none'
+        className={mx(
+          'flex flex-col h-full overflow-hidden min-bs-full bg-sidebar-bg',
+          theme.panel === 'flat' && 'border-r'
+        )}
+      >
+        {/* Space Selector */}
+        <div className='flex flex-col shrink-0'>
+          <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
+            <div className='flex items-center'>
+              <Icon className={getSize(6)} data-testid='sidebar.spaceIcon' />
+              <div className='pl-2 text-lg'>{space.properties.name}</div>
+              <Button
+                variant='ghost'
+                className='p-0'
+                data-testid='sidebar.showSpaceList'
+                onClick={() => setShowSpaceList((show) => !show)}
+              >
+                <CaretUpDown className={mx(getSize(4), 'ml-2')} />
+              </Button>
+            </div>
+
+            <div className='flex grow' />
+
+            <Button variant='ghost' className='p-0 pr-4' onClick={toggleSidebar}>
+              {displayState === 'show' && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>
 
-          <div className='flex grow' />
-
-          <Button variant='ghost' className='p-0 pr-4' onClick={toggleSidebar}>
-            {displayState === 'show' && <CaretLeft className={getSize(6)} />}
-          </Button>
+          {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
         </div>
 
-        {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
-      </div>
+        {/* Spaces */}
+        {/* TODO(burdon): Radix Popover. */}
+        {showSpaceList && (
+          <div className='flex flex-col overflow-y-auto bg-white border-b'>
+            <SpaceList spaces={spaces} selected={space.key} onAction={handleSpaceListAction} />
 
-      {/* Spaces */}
-      {/* TODO(burdon): Radix Popover. */}
-      {showSpaceList && (
-        <div className='flex flex-col overflow-y-auto bg-white border-b'>
-          <SpaceList spaces={spaces} selected={space.key} onAction={handleSpaceListAction} />
+            {/* TODO(burdon): Observable. */}
+            <div className='flex flex-col m-2 my-4'>
+              <SpaceSettings space={space} />
+            </div>
 
-          {/* TODO(burdon): Observable. */}
-          <div className='flex flex-col m-2 my-4'>
-            <SpaceSettings space={space} />
+            {/* Menu */}
+            <div className='flex flex-col w-full px-4 py-2 border-t'>
+              <Button
+                variant='ghost'
+                className='flex p-0 justify-start'
+                title='Create new space'
+                data-testid='sidebar.createSpace'
+                onClick={handleCreateSpace}
+              >
+                <PlusCircle className={getSize(6)} />
+                <span className='pl-2'>Create space</span>
+              </Button>
+              <Button
+                variant='ghost'
+                className='flex p-0 justify-start'
+                title='Join a space'
+                data-testid='sidebar.joinSpace'
+                onClick={handleJoinSpace}
+              >
+                <Target className={getSize(6)} />
+                <span className='pl-2'>Join space</span>
+              </Button>
+            </div>
           </div>
+        )}
 
-          {/* Menu */}
-          <div className='flex flex-col w-full px-4 py-2 border-t'>
-            <Button
-              variant='ghost'
-              className='flex p-0 justify-start'
-              title='Create new space'
-              data-testid='sidebar.createSpace'
-              onClick={handleCreateSpace}
-            >
-              <PlusCircle className={getSize(6)} />
-              <span className='pl-2'>Create space</span>
-            </Button>
-            <Button
-              variant='ghost'
-              className='flex p-0 justify-start'
-              title='Join a space'
-              data-testid='sidebar.joinSpace'
-              onClick={handleJoinSpace}
-            >
-              <Target className={getSize(6)} />
-              <span className='pl-2'>Join space</span>
-            </Button>
-          </div>
-        </div>
-      )}
+        {/* Search */}
+        {!showSpaceList && (
+          <div className='flex flex-col overflow-hidden space-y-2'>
+            <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
 
-      {/* Search */}
-      {!showSpaceList && (
-        <div className='flex flex-col overflow-hidden space-y-2'>
-          <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+            {/* Items if not actively searching. */}
+            {!showSearchResults && (
+              <div className='overflow-y-scroll space-y-4'>
+                {/* Frame list filter. */}
+                <FrameList />
 
-          {/* Items if not actively searching. */}
-          {!showSearchResults && (
-            <div className='overflow-y-scroll space-y-4'>
-              {/* Frame list filter. */}
-              <FrameList />
-
-              {/* Generic object list. */}
-              {!Plugin && frame?.runtime.filter && (
-                <div className='flex px-3'>
+                {/* Generic object list. */}
+                {!Plugin && frame?.runtime.filter && (
                   <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />
-                </div>
-              )}
+                )}
 
-              {/* Frame-specific plugin. */}
-              {Plugin && (
-                <div className='flex px-3'>
-                  <DensityProvider density='fine'>
-                    <Suspense>{<Plugin />}</Suspense>
-                  </DensityProvider>
-                </div>
-              )}
+                {/* Frame-specific plugin. */}
+                <div className='px-2'>{Plugin && <Suspense>{<Plugin />}</Suspense>}</div>
 
-              {/* Frame registry dialog. */}
-              <div className='flex flex-col'>
-                <div className='ml-4'>
+                {/* Frame registry dialog. */}
+                <div className='flex px-4 items-center'>
                   <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
                     <FrameCorners className={getSize(6)} />
-                    <div className='flex pl-2'>Frames</div>
                   </Button>
+                  {/* TODO(burdon): Put inside button? */}
+                  <span className='w-full pl-2'>Frames</span>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      <div className='flex-1' />
+        <div className='flex-1' />
 
-      {/* Members */}
-      <div className='flex shrink-0 flex-col my-2'>
-        <div className='pl-2'>
-          <Button
-            variant='ghost'
-            title='Share space'
-            onClick={(event) =>
-              handleSpaceListAction({
-                action: IntentAction.SPACE_SHARE,
-                data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
-              })
-            }
-            data-testid='space-share'
+        {/* Members */}
+        <div className='flex shrink-0 flex-col my-2'>
+          <div className='pl-2'>
+            <Button
+              variant='ghost'
+              title='Share space'
+              onClick={(event) =>
+                handleSpaceListAction({
+                  action: IntentAction.SPACE_SHARE,
+                  data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+                })
+              }
+              data-testid='space-share'
+            >
+              <UserPlus className={getSize(6)} />
+            </Button>
+          </div>
+
+          <MemberList identityKey={client.halo.identity!.identityKey} members={members} onSelect={focusOnMember} />
+
+          <Link
+            className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
+            to={createPath({ spaceKey: space.key, section: Section.BOTS })}
           >
-            <UserPlus className={getSize(6)} />
-          </Button>
+            <Robot className={getSize(6)} />
+            <div className='pl-2'>Bots</div>
+          </Link>
+
+          <Separator />
+          <div className='flex mli-2 items-center'>
+            <Button variant='ghost' className='p-0 px-2' onClick={handleToggleConnection}>
+              {connectionState === ConnectionState.ONLINE ? (
+                <WifiHigh className={getSize(6)} />
+              ) : (
+                <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
+              )}
+            </Button>
+            <span>Toggle connection</span>
+          </div>
         </div>
 
-        <MemberList identityKey={client.halo.identity!.identityKey} members={members} onSelect={focusOnMember} />
-
-        <Link
-          className={mx('flex w-full px-4 py-1 mt-2 items-center', section === Section.BOTS && 'bg-zinc-200')}
-          to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-        >
-          <Robot className={getSize(6)} />
-          <div className='flex pl-2'>Bots</div>
-        </Link>
-
-        <Separator />
-
-        <Button variant='ghost' onClick={handleToggleConnection} className='justify-start mli-2'>
-          {connectionState === ConnectionState.ONLINE ? (
-            <WifiHigh className={getSize(5)} />
-          ) : (
-            <WifiSlash className={mx(getSize(5), 'text-selection-text')} />
-          )}
-          <span className='mis-2'>Toggle connection</span>
-        </Button>
+        <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
       </div>
-
-      <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
-    </div>
+    </DensityProvider>
   );
 });

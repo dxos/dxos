@@ -74,7 +74,9 @@ export const SandboxFrame = observer(() => {
         </div>
       </div>
 
-      <div className='flex-1 overflow-hidden'>{selected?.compiled && <FrameContainer frame={selected} />}</div>
+      <div className='flex-1 overflow-hidden'>
+        {selected?.compiled && <FrameContainer space={space} frame={selected} />}
+      </div>
     </div>
   );
 });

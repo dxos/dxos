@@ -4,7 +4,7 @@
 
 import { CaretRight } from '@phosphor-icons/react';
 import React, { useContext } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
@@ -20,15 +20,16 @@ const SpacePage = () => {
   const { fullscreen } = useAppState();
   const { space, frame } = useAppRouter();
   const spaces = useSpaces();
+  const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
 
   if (!space && spaces.length > 0) {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
   }
 
-  if (frame && fullscreen) {
+  if (space && frame && fullscreen) {
     return (
       <div className='flex w-full h-full overflow-hidden'>
-        <FrameContainer frame={frame} />
+        <FrameContainer space={space} frame={frame} />
       </div>
     );
   }
@@ -38,7 +39,7 @@ const SpacePage = () => {
       inlineStart
       slots={{
         // TODO(thure): both `block-start` rules are applied, but `mx` is not understanding the `appbar` as a length.
-        content: { className: '!block-start-appbar', children: <Sidebar /> },
+        content: { className: '!block-start-appbar', children: <Sidebar onNavigate={(path) => navigate(path)} /> },
         main: { className: 'pbs-header bs-full overflow-hidden' }
       }}
     >
@@ -74,7 +75,7 @@ const Content = () => {
       {space && (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
-          {frame && <FrameContainer frame={frame} />}
+          {frame && <FrameContainer space={space} frame={frame} />}
         </div>
       )}
     </div>
