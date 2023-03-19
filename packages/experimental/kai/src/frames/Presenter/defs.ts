@@ -12,10 +12,39 @@ import { FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 
+// TODO(burdon): Import.
+// prettier-ignore
 const defaultSlides = [
-  '# DXOS\n- HALO: Decentralized identity\n- ECHO: Decentralized data\n- MESH: Decentralized networks',
-  '# Why Decentralization Matters\n- User experience\n- Privacy\n- Performance\n- Cost',
-  '# Get Involved\nhello@dxos.org'
+  [
+    '# DXOS',
+    '- HALO: Decentralized identity',
+    '- ECHO: Decentralized data',
+    '- MESH: Decentralized networks'
+  ].join('\n'),
+  [
+    '# Why Decentralization Matters',
+    '- User experience',
+    '- Privacy',
+    '- Performance',
+    '- Cost'
+  ].join('\n'),
+  [
+    '# Code sample',
+    'Getting started:',
+    '```tsx',
+    'import React from \'react\';',
+    'import { useClient } from \'@dxos/react-client\';',
+    '',
+    'const Hello = () => {',
+    '  const client = useClient();',
+    '  return <div>DXOS</div>',
+    '};',
+    '```'
+  ].join('\n'),
+  [
+    '# Get Involved',
+    'hello@dxos.org'
+  ].join('\n')
 ];
 
 export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
