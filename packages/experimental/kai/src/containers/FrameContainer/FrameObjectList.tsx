@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { Document } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { ObjectList } from '../../components';
+import { EditableObjectList } from '../../components';
 import { useAppRouter } from '../../hooks';
 import { FrameRuntime } from '../../registry';
 
@@ -20,7 +20,7 @@ export type FrameObjectListProps<T extends Document> = {
 };
 
 export const FrameObjectList = <T extends Document>({
-  frameDef,
+  frameDef, // TODO(burdon): Not required.
   Action,
   onSelect,
   onAction
@@ -31,25 +31,34 @@ export const FrameObjectList = <T extends Document>({
     return null;
   }
 
-  let handleCreate;
-  if (frameDef.onCreate) {
-    handleCreate = async () => {
-      assert(frameDef.onCreate);
-      return await frameDef.onCreate(space);
-    };
-  }
+  const handleCreate = async () => {
+    assert(frameDef.onCreate);
+    const object = await frameDef.onCreate(space);
+    onSelect?.(object.id);
+    return object.id;
+  };
 
+  const handleUpdate = async (objectId: string, text: string) => {
+    const object = objects.find((object) => object.id === objectId);
+    if (object && frameDef.title) {
+      (object as any)[frameDef.title] = text;
+    }
+  };
+
+  const Icon = frame!.runtime.Icon;
+
+  // TODO(burdon): Create hint if list is empty.
   return (
-    <ObjectList<T>
-      frame={frame}
+    <EditableObjectList<T>
       objects={objects}
       selected={objectId}
+      Icon={Icon}
       getTitle={(object) => (frameDef.title ? object[frameDef.title] : undefined)}
-      setTitle={(object, title) => frameDef.title && ((object as any)[frameDef.title] = title)}
       Action={Action}
       onSelect={onSelect}
       onAction={onAction}
-      onCreate={handleCreate}
+      onCreate={frameDef.onCreate ? handleCreate : undefined}
+      onUpdate={handleUpdate}
     />
   );
 };

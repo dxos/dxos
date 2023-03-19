@@ -174,8 +174,8 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
       chalk: 4.1.2
@@ -365,7 +365,7 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       typescript: 4.8.4
       vite: 4.2.0_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/apps/composer-app:
@@ -440,7 +440,7 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       react-is: 18.2.0
       vite: 4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -525,7 +525,7 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       typescript: 4.8.4
       vite: 4.2.0_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/apps/patterns/assets:
@@ -645,7 +645,7 @@ importers:
     dependencies:
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/language': 6.6.0
-      '@codemirror/language-data': 6.1.0_252h5dwvsiu2pnu2vr7ql3rya4
+      '@codemirror/language-data': 6.1.0
       '@codemirror/state': 6.2.0
       '@codemirror/theme-one-dark': 6.1.1
       '@codemirror/view': 6.9.2
@@ -666,8 +666,8 @@ importers:
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
       '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
       '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      '@uiw/react-codemirror': 4.19.9_ait6gevfkmedunxpdipvuv4r6a
-      codemirror: 6.0.1_@lezer+common@1.0.2
+      '@uiw/react-codemirror': 4.19.9_2hmgtxhxkw2pz5cuyorxi7oyvi
+      codemirror: 6.0.1
       lib0: 0.2.65
       lodash.get: 4.4.2
       prosemirror-model: 1.19.0
@@ -811,10 +811,10 @@ importers:
       '@vitejs/plugin-react': 3.1.0_vite@4.2.0
       autoprefixer: 10.4.13_postcss@8.4.21
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/apps/tasks-app:
@@ -865,7 +865,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       vite: 4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/apps/tasks-app-2:
@@ -925,7 +925,7 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       autoprefixer: 10.4.13_postcss@8.4.21
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0_@types+node@18.11.9
 
@@ -961,7 +961,7 @@ importers:
       '@dxos/bare-template': link:../bare-template
       '@dxos/plate': link:../../../common/plate
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
     devDependencies:
       typescript: 4.8.4
 
@@ -1509,7 +1509,7 @@ importers:
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       react-table: 7.8.0_react@18.2.0
       tailwind-merge: 1.10.0
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       tailwindcss-logical: 3.0.0_ee22xw2qfzolowrlqapvox2wrq
       tailwindcss-radix: 2.8.0
     devDependencies:
@@ -2527,11 +2527,11 @@ importers:
       '@types/react-vis': 1.11.11
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -2629,7 +2629,7 @@ importers:
       postcss: 8.4.21
       rmdir: 1.2.0
       safe-compare: 1.1.4
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
 
@@ -3019,6 +3019,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       rehype-add-classes: ^1.0.0
+      storybook-addon-react-router-v6: ^0.3.2
       string-hash: ~1.1.3
       tailwindcss: ^3.2.7
       typescript: ^4.8.4
@@ -3119,12 +3120,13 @@ importers:
       faker: 5.5.3
       monaco-editor: 0.25.2
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      storybook-addon-react-router-v6: 0.3.2_7n6znr57pe5mj3ofei4orfbria
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
       vite-plugin-inspect: 0.7.15_vite@4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/experimental/kai-bots:
@@ -3417,12 +3419,12 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       faker: 5.5.3
       postcss: 8.4.21
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
       vite-plugin-inspect: 0.7.15_vite@4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/experimental/plexus:
@@ -3488,12 +3490,12 @@ importers:
       faker: 5.5.3
       postcss: 8.4.21
       string-hash: 1.1.3
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       typescript: 4.8.4
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
       vite-plugin-inspect: 0.7.15_vite@4.2.0
-      vite-plugin-pwa: 0.14.1_qiyilc3fs7u6eza5zyshkxwo24
+      vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
   packages/experimental/react-metagraph:
@@ -4071,8 +4073,8 @@ importers:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.25.0
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       eslint-config-semistandard: 16.0.0_u7hi4tob5jexe3bxs45csc22mq
       eslint-config-standard: 17.0.0_qjhcey4ofknbrbveepk4bditci
       eslint-plugin-import: 2.26.0_3rwetfi6epq3x3lrbut2iai3km
@@ -4283,7 +4285,7 @@ importers:
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
       rollup: 3.9.1
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
       tailwindcss-logical: 3.0.0_ee22xw2qfzolowrlqapvox2wrq
       tailwindcss-radix: 2.8.0
       typescript: 4.8.4
@@ -6801,13 +6803,8 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete/6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e:
+  /@codemirror/autocomplete/6.4.2:
     resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
-    peerDependencies:
-      '@codemirror/language': ^6.0.0
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      '@lezer/common': ^1.0.0
     dependencies:
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -6831,23 +6828,20 @@ packages:
       '@lezer/cpp': 1.1.0
     dev: false
 
-  /@codemirror/lang-css/6.1.1_i3aqn63zftbgivbr4riltn5mqe:
+  /@codemirror/lang-css/6.1.1:
     resolution: {integrity: sha512-P6jdNEHyRcqqDgbvHYyC9Wxkek0rnG3a9aVSRi4a7WrjPbQtBTaOmvYpXmm13zZMAatO4Oqpac+0QZs7sy+LnQ==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/css': 1.1.1
-    transitivePeerDependencies:
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-html/6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
-      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/lang-css': 6.1.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -6867,7 +6861,7 @@ packages:
   /@codemirror/lang-javascript/6.1.4:
     resolution: {integrity: sha512-OxLf7OfOZBTMRMi6BO/F72MNGmgOd9B0vetOLvHsDACFXayBzW8fm8aWnDM0yuy68wTK03MBf4HbjSBNRG5q7A==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/state': 6.2.0
@@ -6904,16 +6898,12 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python/6.1.2_252h5dwvsiu2pnu2vr7ql3rya4:
+  /@codemirror/lang-python/6.1.2:
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@lezer/python': 1.1.2
-    transitivePeerDependencies:
-      - '@codemirror/state'
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust/6.0.1:
@@ -6923,17 +6913,14 @@ packages:
       '@lezer/rust': 1.0.0
     dev: false
 
-  /@codemirror/lang-sql/6.4.0_i3aqn63zftbgivbr4riltn5mqe:
+  /@codemirror/lang-sql/6.4.0:
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/highlight': 1.1.3
       '@lezer/lr': 1.3.3
-    transitivePeerDependencies:
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-wast/6.0.1:
@@ -6944,40 +6931,34 @@ packages:
       '@lezer/lr': 1.3.3
     dev: false
 
-  /@codemirror/lang-xml/6.0.2_@codemirror+view@6.9.2:
+  /@codemirror/lang-xml/6.0.2:
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/common': 1.0.2
       '@lezer/xml': 1.0.1
-    transitivePeerDependencies:
-      - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data/6.1.0_252h5dwvsiu2pnu2vr7ql3rya4:
+  /@codemirror/language-data/6.1.0:
     resolution: {integrity: sha512-g9V23fuLRI9AEbpM6bDy1oquqgpFlIDHTihUhL21NPmxp+x67ZJbsKk+V71W7/Bj8SCqEO1PtqQA/tDGgt1nfw==}
     dependencies:
       '@codemirror/lang-cpp': 6.0.2
-      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/lang-css': 6.1.1
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/lang-json': 6.0.1
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2_252h5dwvsiu2pnu2vr7ql3rya4
+      '@codemirror/lang-python': 6.1.2
       '@codemirror/lang-rust': 6.0.1
-      '@codemirror/lang-sql': 6.4.0_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/lang-sql': 6.4.0
       '@codemirror/lang-wast': 6.0.1
-      '@codemirror/lang-xml': 6.0.2_@codemirror+view@6.9.2
+      '@codemirror/lang-xml': 6.0.2
       '@codemirror/language': 6.6.0
       '@codemirror/legacy-modes': 6.3.1
-    transitivePeerDependencies:
-      - '@codemirror/state'
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/language/6.6.0:
@@ -9123,7 +9104,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -12745,7 +12726,7 @@ packages:
     peerDependencies:
       tailwindcss: '>=2.0.0 || >=3.0.0 || >=3.0.0-alpha.1'
     dependencies:
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
     dev: true
 
   /@tailwindcss/forms/0.5.3_tailwindcss@3.2.7:
@@ -12754,7 +12735,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
     dev: false
 
   /@tailwindcss/typography/0.5.8_tailwindcss@3.2.7:
@@ -12766,7 +12747,7 @@ packages:
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.2.7_postcss@8.4.21
+      tailwindcss: 3.2.7
     dev: true
 
   /@testing-library/dom/8.19.0:
@@ -14503,18 +14484,17 @@ packages:
     resolution: {integrity: sha512-RRHc1+8Hc5mf/2lZKnom6kCnqcNS07s8keahniWTOva0KELF6RgDJmaEcvGEKUUJgN4UgessmEsWuidaOycIOw==}
     dev: true
 
-  /@typescript-eslint/eslint-plugin/5.45.0_pi7zx7ojc4phxkdwiczrakx6sq:
+  /@typescript-eslint/eslint-plugin/5.45.0_usuh4uodfyzfr5qbbynfqnfnsy:
     resolution: {integrity: sha512-CXXHNlf0oL+Yg021cxgOdMHNTXD17rHkq7iW6RFHoybdFgQBjU3yIXhhcPpGwr1CjZlo6ET8C6tzX5juQoXeGA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/scope-manager': 5.45.0
       '@typescript-eslint/type-utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -14542,11 +14522,10 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q:
+  /@typescript-eslint/parser/5.45.0_typescript@4.8.4:
     resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
@@ -14697,31 +14676,22 @@ packages:
       '@typescript-eslint/types': 5.45.0
       eslint-visitor-keys: 3.3.0
 
-  /@uiw/codemirror-extensions-basic-setup/4.19.9_lc2v3dpzp2l5pdzwtgfaudkm3e:
+  /@uiw/codemirror-extensions-basic-setup/4.19.9:
     resolution: {integrity: sha512-O4yAgVpD3Pon4t4+lwZ2MTGg2TeU/Jv8YzKS9ap4fP/WMTVrKmpdq+DOafbhZSlhmU0XGfQPPJ4WX6rtZgx3Rw==}
-    peerDependencies:
-      '@codemirror/language': '>=6.0.0'
-      '@codemirror/state': '>=6.0.0'
-      '@codemirror/view': '>=6.0.0'
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/commands': 6.2.1
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.2.3
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
-    transitivePeerDependencies:
-      - '@lezer/common'
     dev: false
 
-  /@uiw/react-codemirror/4.19.9_ait6gevfkmedunxpdipvuv4r6a:
+  /@uiw/react-codemirror/4.19.9_2hmgtxhxkw2pz5cuyorxi7oyvi:
     resolution: {integrity: sha512-U+A1fSfELMFFs5a+ZOPwCJKZMYaMy6QHOfNOOV7WhSveM7GYHT970GjTfs2dn1LlvhebwyK9ei0rCXZdsI9n9Q==}
     peerDependencies:
-      '@codemirror/state': '>=6.0.0'
-      '@codemirror/theme-one-dark': '>=6.0.0'
       '@codemirror/view': '>=6.0.0'
-      codemirror: '>=6.0.0'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
@@ -14730,13 +14700,10 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/theme-one-dark': 6.1.1
       '@codemirror/view': 6.9.2
-      '@uiw/codemirror-extensions-basic-setup': 4.19.9_lc2v3dpzp2l5pdzwtgfaudkm3e
-      codemirror: 6.0.1_@lezer+common@1.0.2
+      '@uiw/codemirror-extensions-basic-setup': 4.19.9
+      codemirror: 6.0.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-    transitivePeerDependencies:
-      - '@codemirror/language'
-      - '@lezer/common'
     dev: false
 
   /@ungap/promise-all-settled/1.1.2:
@@ -14754,7 +14721,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -17966,18 +17933,16 @@ packages:
   /codecs/2.2.0:
     resolution: {integrity: sha512-+xi2ENsvchtUNa8oBUU58gHgmyN6BEEeZ8NIEgeQ0XnC+AoyihivgZYe+OOiNi+fLy/NUowugwV5gP8XWYDm0Q==}
 
-  /codemirror/6.0.1_@lezer+common@1.0.2:
+  /codemirror/6.0.1:
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/commands': 6.2.1
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.2.3
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
-    transitivePeerDependencies:
-      - '@lezer/common'
     dev: false
 
   /codesandbox-import-util-types/2.2.3:
@@ -20801,7 +20766,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       debug: 3.2.7
       eslint: 8.25.0
       eslint-import-resolver-node: 0.3.6
@@ -20841,7 +20806,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       array-includes: 3.1.5
       array.prototype.flat: 1.3.0
       debug: 2.6.9
@@ -20963,7 +20928,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
       eslint: 8.25.0
       eslint-rule-composer: 0.3.0
     dev: false
@@ -24112,6 +24077,13 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  /is-dom/1.1.0:
+    resolution: {integrity: sha512-u82f6mvhYxRPKpw8V1N0W8ce1xXwOrQtgGcxl6UCL5zBmZu3is/18K0rR7uFCnMDuAsS/3W54mGL4vsaFUQlEQ==}
+    dependencies:
+      is-object: 1.0.2
+      is-window: 1.0.2
+    dev: true
+
   /is-electron/2.2.1:
     resolution: {integrity: sha512-r8EEQQsqT+Gn0aXFx7lTFygYQhILLCB+wn0WCDL5LZRINeLH/Rvw1j2oKodELLXYNImQ3CRlVsY8wW4cGOsyuw==}
     dev: false
@@ -24432,6 +24404,10 @@ packages:
     resolution: {integrity: sha512-qctsuLZmIQ0+vSSMfoVvyFe2+GSEvnmZ2ezTup1SBse9+twCCeial6EEi3Nc2KFcf6+qz2FBPnjXsk8xhKSaPQ==}
     dependencies:
       call-bind: 1.0.2
+
+  /is-window/1.0.2:
+    resolution: {integrity: sha512-uj00kdXyZb9t9RcAUAwMZAnkBUwdYGhYlt7djMXhfyhUCzwNba50tIiBKR7q0l7tdoBtFVw/3JmLY6fI3rmZmg==}
+    dev: true
 
   /is-windows/0.2.0:
     resolution: {integrity: sha512-n67eJYmXbniZB7RF4I/FTjK1s6RPOCTxhYrVYLRaCt3lF0mpWZPKr3T2LSZAqyjQsxR2qMmGYXXzK0YWwcPM1Q==}
@@ -30957,6 +30933,17 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
+  /react-inspector/5.1.1_react@18.2.0:
+    resolution: {integrity: sha512-GURDaYzoLbW8pMGXwYPDBIv6nqei4kK7LPRZ9q9HCZF54wqXz/dnylBp/kfE9XmekBhHvLDdcYeyIwSrvtOiWg==}
+    peerDependencies:
+      react: ^18.0.0
+    dependencies:
+      '@babel/runtime': 7.21.0
+      is-dom: 1.1.0
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: true
+
   /react-inspector/6.0.1_react@18.2.0:
     resolution: {integrity: sha512-cxKSeFTf7jpSSVddm66sKdolG90qURAX3g1roTeaN6x0YEbtWc8JpmFN9+yIqLNH2uEkYerWLtJZIXRIFuBKrg==}
     peerDependencies:
@@ -33274,6 +33261,30 @@ packages:
     resolution: {integrity: sha512-siT1RiqlfQnGqgT/YzXVUNsom9S0H1OX+dpdGN1xkyYATo4I6sep5NmsRD/40s3IIOvlCq6akxkqG82urIZW1w==}
     dev: true
 
+  /storybook-addon-react-router-v6/0.3.2_7n6znr57pe5mj3ofei4orfbria:
+    resolution: {integrity: sha512-5mTPFPrAkQlwRrXoNquOhc1PC/e+oXlWaX0J0ENnot8rRMou7AmS/gpoDBfLZvFv9/BcM6FVQecQJVPTrauwOQ==}
+    peerDependencies:
+      '@storybook/addons': ^6.4.0
+      '@storybook/api': ^6.4.0
+      '@storybook/components': ^6.4.0
+      '@storybook/core-events': ^6.4.0
+      '@storybook/theming': ^6.4.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-router: ^6.3.0
+      react-router-dom: ^6.3.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-inspector: 5.1.1_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    dev: true
+
   /stream-browserify/2.0.2:
     resolution: {integrity: sha512-nX6hmklHs/gr2FuxYDltq8fJA1GDlxKQCz8O/IM4atRqBH8OORmBNgfvW5gG10GT/qQ9u0CzIvr2X5Pkt6ntqg==}
     dependencies:
@@ -33865,12 +33876,10 @@ packages:
     transitivePeerDependencies:
       - ts-node
 
-  /tailwindcss/3.2.7_postcss@8.4.21:
+  /tailwindcss/3.2.7:
     resolution: {integrity: sha512-B6DLqJzc21x7wntlH/GsZwEXTBttVSl1FtCzC8WP4oBc/NKef7kaax5jeihkkCEWc831/5NDJ9gRNDK6NEioQQ==}
     engines: {node: '>=12.13.0'}
     hasBin: true
-    peerDependencies:
-      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3
@@ -35525,18 +35534,17 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.14.1_qiyilc3fs7u6eza5zyshkxwo24:
+  /vite-plugin-pwa/0.14.1_vite@4.2.0:
     resolution: {integrity: sha512-5zx7yhQ8RTLwV71+GA9YsQQ63ALKG8XXIMqRJDdZkR8ZYftFcRgnzM7wOWmQZ/DATspyhPih5wCdcZnAIsM+mA==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
-      workbox-window: ^6.5.4
     dependencies:
       '@rollup/plugin-replace': 5.0.2_rollup@3.9.1
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

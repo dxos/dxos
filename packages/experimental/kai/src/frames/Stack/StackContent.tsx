@@ -26,6 +26,7 @@ const Composer: FC<{ space: Space; content: Text; spellCheck: boolean }> = ({ sp
         model={model}
         slots={{
           editor: {
+            className: 'p-0', // TODO(burdon): Not passed through.
             spellCheck
           }
         }}

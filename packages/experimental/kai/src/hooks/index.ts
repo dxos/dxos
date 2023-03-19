@@ -11,4 +11,5 @@ export * from './useFrameContext';
 export * from './useFrames';
 export * from './useGenerator';
 export * from './useIpfsClient';
+export * from './useSearch';
 export * from './useTheme';

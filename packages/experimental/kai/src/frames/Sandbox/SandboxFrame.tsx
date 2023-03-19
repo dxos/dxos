@@ -53,7 +53,7 @@ export const SandboxFrame = observer(() => {
     }, 1000);
   };
 
-  if (!selected) {
+  if (!space || !selected) {
     return null;
   }
 
