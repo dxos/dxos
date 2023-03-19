@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsIn, ArrowsOut, PlusCircle } from '@phosphor-icons/react';
-import React, { FC, useEffect, useMemo, useReducer, useState } from 'react';
+import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/client';
@@ -11,7 +11,7 @@ import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/react-components';
 
 import { createPath, useAppRouter } from '../../hooks';
 import { NoteTile } from './NoteTile';
@@ -85,10 +85,6 @@ export const NoteFrame = () => {
     }
   }, [board, notes]);
 
-  const handleCreateBoard = () => {
-    void space?.db.add(new NoteBoard());
-  };
-
   const handleCreateNote = async (location: Location) => {
     // TODO(wittjosiah): Remove text initalization once rich text annotation is hooked up.
     const note = new Note({ content: new Text('', TextKind.RICH) });
@@ -111,11 +107,7 @@ export const NoteFrame = () => {
   };
 
   if (!board) {
-    if (!frame) {
-      return null;
-    }
-
-    return <CenterButton onCreate={handleCreateBoard} />;
+    return null;
   }
 
   return (
@@ -150,19 +142,6 @@ export const NoteFrame = () => {
         onDelete={handleDeleteNote}
       />
     </>
-  );
-};
-
-// TODO(burdon): Factor out..
-const CenterButton: FC<{ onCreate: () => void }> = ({ onCreate }) => {
-  return (
-    <div className='flex flex-1 flex-col justify-center items-center'>
-      <div className='flex p-6 border-2 rounded-lg bg-white'>
-        <Button variant='ghost' onClick={onCreate}>
-          <PlusCircle className={mx(getSize(16), 'text-neutral-500')} />
-        </Button>
-      </div>
-    </div>
   );
 };
 

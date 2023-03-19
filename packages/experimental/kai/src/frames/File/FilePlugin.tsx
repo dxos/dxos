@@ -2,35 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DownloadSimple, FilePlus } from '@phosphor-icons/react';
+import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
-import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { useConfig, useQuery } from '@dxos/react-client';
-import { getSize, useMediaQuery } from '@dxos/react-components';
+import { useMediaQuery } from '@dxos/react-components';
 
-import { ObjectList } from '../../components';
+import { FrameObjectList } from '../../containers';
 import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
-import { fileTypes } from './defs';
+import { FileUpload } from './FileUpload';
+import { FileFrameRuntime, defaultFileTypes } from './defs';
 
 export type FileListProps = {
   disableDownload?: boolean;
-  onSelect?: (objectId: string) => void;
+  fileTypes?: string[];
+  onSelect?: (objectId: string | undefined) => void;
 };
 
-// TODO(burdon): Separate Tile from component.
-// TODO(burdon): Download optional.
-export const FileList: FC<FileListProps> = ({ disableDownload, onSelect }) => {
+// TODO(burdon): Rename.
+export const FilePlugin: FC<FileListProps> = ({ disableDownload, fileTypes = defaultFileTypes, onSelect }) => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
   const navigate = useNavigate();
   const [isMd] = useMediaQuery('md', { ssr: false });
-  const { space, frame, objectId } = useAppRouter();
+  const { space, frame } = useAppRouter();
   const objects = useQuery(space, File.filter());
   if (!space || !frame) {
     return null;
@@ -71,44 +71,16 @@ export const FileList: FC<FileListProps> = ({ disableDownload, onSelect }) => {
 
   return (
     <div className='flex flex-col w-full'>
-      <ObjectList<File>
-        frame={frame}
-        objects={objects}
-        selected={objectId}
-        getTitle={(object) => object.name}
-        setTitle={(object, title) => (object.name = title)}
+      <FrameObjectList
+        frameDef={FileFrameRuntime}
         Action={DownloadSimple}
-        onSelect={handleSelect}
+        onSelect={onSelect}
         onAction={disableDownload ? undefined : handleDownload}
       />
 
-      {isMd && (
-        <div className='m-2'>
-          <FileUpload onUpload={handleUpload} />
-        </div>
-      )}
+      {isMd && <FileUpload fileTypes={fileTypes} onUpload={handleUpload} />}
     </div>
   );
 };
 
-const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {
-  return (
-    <div className='hidden md:flex shrink-0 flex-col w-full h-[200px] p-2'>
-      <FileUploader
-        name='file'
-        types={fileTypes}
-        hoverTitle={' '}
-        classes='flex flex-1 flex-col justify-center w-full h-full border-4 border-dashed rounded-lg'
-        dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-        handleChange={onUpload}
-      >
-        <div className='flex flex-col items-center cursor-pointer'>
-          <FilePlus weight='thin' className={getSize(10)} />
-          <div className='mt-2'>Click or drag files here.</div>
-        </div>
-      </FileUploader>
-    </div>
-  );
-};
-
-export default FileList;
+export default FilePlugin;

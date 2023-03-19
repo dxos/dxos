@@ -9,6 +9,8 @@ import addClasses from 'rehype-add-classes';
 
 import { mx } from '@dxos/react-components';
 
+import { defaultClasses, defaultStyles } from './styles';
+
 /**
  * Compute CSS properties to transform DIV to be full screen.
  *
@@ -45,18 +47,6 @@ const createProps = ({ width, height }: { width: number; height: number }) => {
     transform: `scale(${scale})`
   };
 };
-
-// TODO(burdon): Compute styles/sizes.
-export const defaultClasses = {
-  h1: 'text-[120px] text-blue-600',
-  h2: 'text-[100px] text-blue-600',
-  h3: 'text-[80px] text-blue-600',
-  ul: 'list-dash ml-12',
-  li: 'text-[60px] pl-6',
-  p: 'text-[60px]'
-};
-
-export const defaultStyles = 'px-32 py-20 bg-white leading-relaxed font-mono';
 
 export type PresenterProps = {
   content?: string;

@@ -8,15 +8,15 @@ import React, { FC } from 'react';
 import { Document, Space } from '@dxos/client';
 import { Contact, Document as DocumentType, File, Table, TaskList } from '@dxos/kai-types';
 
-import { FileList } from '../File';
+import { FilePlugin, imageTypes } from '../File';
 import { ContextMenuItem } from './ContextMenu';
+
+export const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void }> = ({ onSelect }) => {
+  return <FilePlugin disableDownload fileTypes={imageTypes} onSelect={onSelect} />;
+};
 
 export type StackItemType = ContextMenuItem & {
   onCreate?: (space: Space) => Promise<Document>;
-};
-
-const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void }> = ({ onSelect }) => {
-  return <FileList disableDownload onSelect={onSelect} />;
 };
 
 // TODO(burdon): Factor out.

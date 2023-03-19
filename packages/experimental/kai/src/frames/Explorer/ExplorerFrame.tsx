@@ -116,3 +116,5 @@ export const ExplorerFrame = () => {
     </div>
   );
 };
+
+export default ExplorerFrame;
