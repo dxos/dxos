@@ -278,7 +278,7 @@ export const Sidebar = observer(() => {
 
           <div className='flex grow' />
 
-          <Button variant='ghost' className='p-0' onClick={toggleSidebar}>
+          <Button variant='ghost' className='p-0 pr-4' onClick={toggleSidebar}>
             {displayState === 'show' && <CaretLeft className={getSize(6)} />}
           </Button>
         </div>
