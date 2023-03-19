@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@dxos/echo-schema';
 
-import { objectMeta, SearchPanel } from '../../containers';
-import { createPath, useAppRouter } from '../../hooks';
+import { SearchPanel } from '../../containers';
+import { createPath, objectMeta, useAppRouter } from '../../hooks';
 
 export const SearchFrame = () => {
   const navigate = useNavigate();
