@@ -33,17 +33,19 @@ import { FrameObjectList, FrameRegistryDialog } from '../../containers';
 import {
   createInvitationPath,
   createPath,
-  defaultFrameId,
   getIcon,
+  defaultFrameId,
+  objectMeta,
+  Section,
+  SearchResults,
   useAppRouter,
   useTheme,
-  Section,
   useFrames,
   useAppReducer
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
-import { objectMeta, SearchPanel, SearchResults } from '../SearchPanel';
+import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
 
 const Separator = () => {
@@ -111,9 +113,10 @@ export const Sidebar = observer(() => {
 
   const handleSearchSelect = (object: Document) => {
     if (space) {
+      // TODO(burdon): Add to search result.
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
-        handleSelectObject(object.id);
+        navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
       }
     }
   };
@@ -326,9 +329,7 @@ export const Sidebar = observer(() => {
       {/* Search */}
       {!showSpaceList && (
         <div className='flex flex-col overflow-hidden space-y-2'>
-          <div className='shrink-0'>
-            <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
-          </div>
+          <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
 
           {/* Items if not actively searching. */}
           {!showSearchResults && (
