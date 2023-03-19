@@ -11,6 +11,7 @@ import { ContactFrameRuntime } from './Contact';
 import { DocumentFrameRuntime } from './Document';
 import { ExplorerFrameRuntime } from './Explorer';
 import { FileFrameRuntime } from './File';
+import { HomeFrameRuntime } from './Home';
 import { KanbanFrameRuntime } from './Kanban';
 import { MapFrameRuntime } from './Map';
 import { MessageFrameRuntime } from './Message';
@@ -180,6 +181,15 @@ export const frameDefs: FrameDef<any>[] = [
       description: 'Frame and Bot script editor.'
     },
     runtime: SandboxFrameRuntime
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.home',
+      type: 'dxos:type/frame',
+      displayName: 'Home',
+      description: 'IOT devices.'
+    },
+    runtime: HomeFrameRuntime
   }
 ];
 

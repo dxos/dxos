@@ -20,7 +20,8 @@ export const defaultFrames = [
   'dxos.module.frame.inbox',
   'dxos.module.frame.calendar',
   'dxos.module.frame.contact',
-  'dxos.module.frame.file'
+  'dxos.module.frame.file',
+  'dxos.module.frame.home',
   // 'dxos.module.frame.kanban',
   // 'dxos.module.frame.table',
   // 'dxos.module.frame.note',

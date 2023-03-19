@@ -12,7 +12,7 @@ import { EchoDatabase, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
+import { Contact, Document, Event, Message, Organization, Note, Project, Task, LedStrip } from '../proto';
 import { cities } from './data';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
@@ -29,6 +29,7 @@ export type GeneratorOptions = {
   events: MinMax;
   documents: MinMax;
   messages: MinMax;
+  homeDevices: MinMax;
 };
 
 export class Generator {
@@ -41,7 +42,8 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 2, max: 5 },
-      messages: { min: 5, max: 10 }
+      messages: { min: 5, max: 10 },
+      homeDevices: { min: 1, max: 3 },
     }
   ) {}
 
@@ -123,6 +125,8 @@ export class Generator {
         return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
       })
     );
+
+    await Promise.all(range(this._options.homeDevices).map(async () => this.createHomeDevice()));
   }
 
   createOrganization = async () => {
@@ -167,6 +171,11 @@ export class Generator {
   createMessage = async (from?: Contact) => {
     return await this._db.add(createMessage(from));
   };
+  
+  createHomeDevice = async () => this._db.add(new LedStrip({
+    title: faker.commerce.productName(),
+    color: faker.internet.color(),
+  }));
 }
 
 // TODO(burdon): Replace with `new Text(str)` (and remove pm deps).

@@ -380,3 +380,14 @@ message CodeNotebook {
   DocumentStack source = 2;
   repeated Result results = 3;
 }
+
+//
+// Home Frame
+// 
+
+message LedStrip {
+  option (object) = true;
+
+  string title = 1;
+  string color = 2;
+}
