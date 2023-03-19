@@ -44,7 +44,6 @@ const types: Type[] = [
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
   const { space } = useAppRouter();
-
   const [typeName, setTypeName] = useState<string>(types[0].name);
   const type = types.find(({ name }) => name === typeName)!;
   const [text] = useState<string>();

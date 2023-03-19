@@ -88,3 +88,5 @@ export const ContactFrame = () => {
     </div>
   );
 };
+
+export default ContactFrame;

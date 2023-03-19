@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TaskFrame } from './TaskFrame';
+export * from './defs';
 
-export default TaskFrame;
+export * from './TaskFrame';
