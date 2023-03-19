@@ -289,7 +289,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
             <div className='flex grow' />
 
-            <Button variant='ghost' className='p-0 pr-4' onClick={toggleSidebar}>
+            <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
               {displayState === 'show' && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>
@@ -351,7 +351,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 )}
 
                 {/* Frame-specific plugin. */}
-                <div className='px-2'>{Plugin && <Suspense>{<Plugin />}</Suspense>}</div>
+                {Plugin && <Suspense>{<Plugin />}</Suspense>}
 
                 {/* Frame registry dialog. */}
                 <div className='flex px-4 items-center'>
