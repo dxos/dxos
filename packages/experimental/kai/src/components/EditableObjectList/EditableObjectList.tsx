@@ -105,9 +105,11 @@ export const EditableObjectList = <T extends Document>({
 
               {onAction && (
                 <ListItemEndcap asChild>
-                  <Button variant='ghost' onClick={() => onAction?.(object.id)}>
-                    <ActionIcon className={getSize(6)} />
-                  </Button>
+                  <div className='flex justify-center items-center'>
+                    <Button variant='ghost' className='p-0' onClick={() => onAction?.(object.id)}>
+                      <ActionIcon className={getSize(6)} />
+                    </Button>
+                  </div>
                 </ListItemEndcap>
               )}
             </ListItem>
