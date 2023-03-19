@@ -21,6 +21,7 @@ const messageQueryAwareness = 3;
 /**
  * Yjs awareness provider on top of a DXOS space.
  */
+// TODO(burdon): Rename due to likely collisions?
 export class SpaceProvider extends Observable<any> {
   private readonly _space: Space;
   private readonly _awareness: Awareness;

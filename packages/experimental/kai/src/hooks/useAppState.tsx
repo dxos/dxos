@@ -90,9 +90,9 @@ const reducer =
 
 export type AppReducer = {
   state: AppState;
-  setActiveBot: (id: string, active: boolean, space?: Space) => void;
-  setActiveFrame: (id: string, active: boolean) => void;
   setFullscreen: (fullscreen: boolean) => void;
+  setActiveBot: (id: string, active: boolean, space?: Space) => void; // TODO(burdon): Remove.
+  setActiveFrame: (id: string, active: boolean) => void;
 };
 
 export const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
@@ -105,14 +105,14 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
 
   const value: AppReducer = {
     state,
+    setFullscreen: (fullscreen: boolean) => {
+      dispatch({ type: 'set-fullscreen', fullscreen });
+    },
     setActiveBot: (id: string, active: boolean, space?: Space) => {
       dispatch({ type: 'set-active-bot', botId: id, active, space });
     },
     setActiveFrame: (id: string, active: boolean) => {
       dispatch({ type: 'set-active-frame', frameId: id, active });
-    },
-    setFullscreen: (fullscreen: boolean) => {
-      dispatch({ type: 'set-fullscreen', fullscreen });
     }
   };
 
