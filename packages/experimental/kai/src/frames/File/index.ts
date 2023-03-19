@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FileFrame } from './FileFrame';
+export * from './defs';
 
-export default FileFrame;
-
-export * from './FileList';
+export * from './FilePlugin';

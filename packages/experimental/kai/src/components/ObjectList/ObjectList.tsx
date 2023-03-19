@@ -8,18 +8,18 @@ import React, { FC } from 'react';
 import { Document } from '@dxos/echo-schema';
 
 import { EditableObjectList } from '../../components';
-import { FrameDef } from '../../hooks';
+import { FrameDef } from '../../registry';
 
 export type ObjectListProps<T extends Document> = {
-  frame: FrameDef;
+  frame: FrameDef<T>;
   objects: T[];
   selected?: string;
   getTitle: (object: T) => string;
   setTitle: (object: T, title: string) => void;
   Action?: FC<any>;
-  onSelect: (objectId: string) => void;
+  onSelect?: (objectId: string) => void;
   onAction?: (objectId: string) => void;
-  onCreate?: () => T;
+  onCreate?: () => Promise<T>; // TODO(burdon): Tie to FrameDef.
 };
 
 export const ObjectList = <T extends Document>({
@@ -33,10 +33,10 @@ export const ObjectList = <T extends Document>({
   onAction,
   onCreate
 }: ObjectListProps<T>) => {
-  const handleCreate = () => {
+  const handleCreate = async () => {
     assert(onCreate);
-    const object = onCreate();
-    onSelect(object.id);
+    const object = await onCreate();
+    onSelect?.(object.id);
     return object.id;
   };
 
@@ -56,7 +56,7 @@ export const ObjectList = <T extends Document>({
       Icon={Icon}
       getTitle={getTitle}
       Action={Action}
-      onSelect={(objectId) => onSelect(objectId)}
+      onSelect={(objectId) => onSelect?.(objectId)}
       onAction={onAction}
       onUpdate={handleUpdate}
       onCreate={onCreate && handleCreate}

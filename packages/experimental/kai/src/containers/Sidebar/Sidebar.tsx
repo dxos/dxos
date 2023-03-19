@@ -29,7 +29,7 @@ import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
-import { FrameRegistryDialog } from '../../containers';
+import { FrameObjectList, FrameRegistryDialog } from '../../containers';
 import {
   createInvitationPath,
   createPath,
@@ -46,31 +46,45 @@ import { MemberList } from '../MembersList';
 import { objectMeta, SearchPanel, SearchResults } from '../SearchPanel';
 import { FrameList } from './FrameList';
 
-// TODO(burdon): Popup over space name (like Notion: option to rename/create/join, etc.)
-// TODO(burdon): Move space join to members list.
-
 const Separator = () => {
   return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
 };
 
+// TODO(burdon): Split into sub-components.
 export const Sidebar = observer(() => {
+  const { space, section, frame, objectId } = useAppRouter();
   const theme = useTheme();
   const navigate = useNavigate();
+  const shell = useShell();
   const client = useClient();
-  const { space, section, frame } = useAppRouter();
   const spaces = useSpaces();
   const members = useMembers(space?.key);
-  const shell = useShell();
+
+  // TODO(burdon): Error if conditional filter.
+  // const objects = useQuery(space, frame?.runtime.filter?.());
+  useEffect(() => {
+    if (space && frame && frame.runtime.filter && !objectId) {
+      const { objects } = space.db.query(frame.runtime.filter());
+      if (objects.length) {
+        handleSelectObject(objects[0].id);
+      }
+    }
+  }, [space, frame]);
+
+  //
+  // UX state
+  //
+
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
   const { state: connectionState } = useNetworkStatus();
   const [showSpaceList, setShowSpaceList] = useState(false);
   const [showFrames, setShowFrames] = useState(false);
-  const List = frame?.runtime.List;
 
   //
-  // Invitations.
+  // Invitations
   //
+
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
   useEffect(() => {
@@ -89,6 +103,7 @@ export const Sidebar = observer(() => {
   //
   // Search
   //
+
   const [showSearchResults, setShowSearchResults] = useState(false);
   const handleSearchResults = (results: SearchResults) => {
     setShowSearchResults(results.results.length > 0);
@@ -98,14 +113,19 @@ export const Sidebar = observer(() => {
     if (space) {
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
-        navigate(createPath({ spaceKey: space.key, frame: frame.module.id, objectId: object.id }));
+        handleSelectObject(object.id);
       }
     }
   };
 
   //
-  // Space management.
+  // Space management
   //
+
+  const handleSelectObject = (objectId: string) => {
+    navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+  };
+
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
@@ -156,8 +176,9 @@ export const Sidebar = observer(() => {
   };
 
   //
-  // Members focusing.
+  // Members focusing
   //
+
   const membersLocations = new Map<string, string>();
   useEffect(() => {
     if (space) {
@@ -208,8 +229,9 @@ export const Sidebar = observer(() => {
   }, []);
 
   //
-  // Connection.
+  // Connection
   //
+
   const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
@@ -228,6 +250,7 @@ export const Sidebar = observer(() => {
   }
 
   const Icon = getIcon(space.properties.icon);
+  const { Plugin } = frame?.runtime ?? {};
 
   return (
     <div
@@ -307,23 +330,29 @@ export const Sidebar = observer(() => {
             <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
           </div>
 
-          {/* TODO(burdon): Items if not actively searching. */}
+          {/* Items if not actively searching. */}
           {!showSearchResults && (
             <div className='overflow-y-scroll space-y-4'>
+              {/* Frame list filter. */}
               <FrameList />
 
-              {List && (
-                <>
-                  <Separator />
-                  <div className='flex px-3'>
-                    <DensityProvider density='fine'>
-                      <Suspense>{<List />}</Suspense>
-                    </DensityProvider>
-                  </div>
-                  <Separator />
-                </>
+              {/* Generic object list. */}
+              {!Plugin && frame?.runtime.filter && (
+                <div className='flex px-3'>
+                  <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />
+                </div>
               )}
 
+              {/* Frame-specific plugin. */}
+              {Plugin && (
+                <div className='flex px-3'>
+                  <DensityProvider density='fine'>
+                    <Suspense>{<Plugin />}</Suspense>
+                  </DensityProvider>
+                </div>
+              )}
+
+              {/* Frame registry dialog. */}
               <div className='flex flex-col'>
                 <div className='ml-4'>
                   <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>

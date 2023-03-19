@@ -29,3 +29,5 @@ export const SearchFrame = () => {
     </div>
   );
 };
+
+export default SearchFrame;

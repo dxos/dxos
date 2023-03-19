@@ -13,7 +13,8 @@ import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
 
-import { AppState, AppStateProvider, useClientProvider, botModules, frameModules, defaultFrames } from '../../hooks';
+import { frameModules } from '../../frames';
+import { AppState, AppStateProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';
 import { ShellProvider } from '../ShellProvider';
 
