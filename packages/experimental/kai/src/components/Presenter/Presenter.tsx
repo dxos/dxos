@@ -6,6 +6,7 @@ import React, { ReactNode, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
+import highlight from 'rehype-highlight';
 
 import { mx } from '@dxos/react-components';
 
@@ -85,6 +86,7 @@ export const Presenter = ({
     }
   });
 
+  // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
     <div
@@ -93,7 +95,7 @@ export const Presenter = ({
     >
       {width && height && (
         <div className={mx('flex flex-col absolute transition', defaultStyles)} style={props}>
-          <ReactMarkdown rehypePlugins={[[addClasses, classes]]}>{content}</ReactMarkdown>
+          <ReactMarkdown rehypePlugins={[[highlight], [addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}
       <div className='absolute top-0 left-0'>{topLeft}</div>
