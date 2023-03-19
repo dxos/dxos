@@ -19,6 +19,7 @@ export type FrameRuntime<T extends Document> = {
   Component: FrameComponent;
 
   // Sidebar
+  autoCreate?: boolean;
   title?: string;
   filter?: () => TypeFilter<T>;
   onCreate?: (space: Space) => Promise<T>;

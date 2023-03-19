@@ -12,6 +12,9 @@ export type EditableObjectListSlots = {
   root?: {
     className?: string;
   };
+  item?: {
+    className?: string;
+  };
   selected?: {
     className?: string;
   };
@@ -28,7 +31,7 @@ export type EditableObjectListProps<T extends Document> = {
   onSelect?: (id: string) => void;
   onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
-  onCreate?: () => Promise<string>;
+  onCreate?: () => Promise<string | undefined>;
 };
 
 // TODO(burdon): Replace with react-components list.
@@ -60,7 +63,7 @@ export const EditableObjectList = <T extends Document>({
 
   return (
     <div role='none' className={mx('is-full', slots.root?.className)}>
-      <List labelId='todo'>
+      <List labelId='objects'>
         {objects.map((object) => {
           const isSelected = object.id === selected;
           return (
@@ -70,17 +73,21 @@ export const EditableObjectList = <T extends Document>({
               slots={{
                 root: {
                   className: selected === object.id ? slots?.selected?.className : undefined
-                }
+                },
+                mainContent: { className: 'flex w-full px-3 items-center' }
               }}
             >
               <ListItemEndcap asChild>
-                <Button
-                  variant='ghost'
-                  onClick={() => onSelect?.(object.id)}
-                  className={mx('p-0 flex items-center justify-center gap-1', isSelected ? 'text-selection-text' : '')}
-                >
-                  <Icon className={getSize(6)} />
-                </Button>
+                {/* TODO(burdon): Why is div required? */}
+                <div>
+                  <Button
+                    variant='ghost'
+                    onClick={() => onSelect?.(object.id)}
+                    className={mx(isSelected ? 'text-selection-text' : '')}
+                  >
+                    <Icon className={getSize(6)} />
+                  </Button>
+                </div>
               </ListItemEndcap>
 
               <Input
@@ -98,11 +105,7 @@ export const EditableObjectList = <T extends Document>({
 
               {onAction && (
                 <ListItemEndcap asChild>
-                  <Button
-                    variant='ghost'
-                    className='p-0 flex items-center justify-center'
-                    onClick={() => onAction?.(object.id)}
-                  >
+                  <Button variant='ghost' onClick={() => onAction?.(object.id)}>
                     <ActionIcon className={getSize(6)} />
                   </Button>
                 </ListItemEndcap>
@@ -112,12 +115,15 @@ export const EditableObjectList = <T extends Document>({
         })}
       </List>
 
+      {/* TODO(burdon): Not aligned with list. */}
       {onCreate && (
-        <ListItemEndcap>
-          <Button variant='ghost' onClick={handleCreate}>
-            <Plus className={getSize(5)} />
-          </Button>
-        </ListItemEndcap>
+        <div className='flex pl-3'>
+          <ListItemEndcap>
+            <Button variant='ghost' onClick={handleCreate}>
+              <Plus className={getSize(6)} />
+            </Button>
+          </ListItemEndcap>
+        </div>
       )}
     </div>
   );

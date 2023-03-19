@@ -15,6 +15,7 @@ const StackFrame = React.lazy(() => import('./StackFrame'));
 export const StackFrameRuntime: FrameRuntime<DocumentStack> = {
   Icon: StackIcon,
   Component: StackFrame,
+  autoCreate: true,
   title: 'title',
   filter: () => DocumentStack.filter(),
   onCreate: async (space: Space) => {
