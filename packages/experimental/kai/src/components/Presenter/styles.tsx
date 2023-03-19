@@ -10,9 +10,8 @@ export const defaultClasses = {
   ul: 'list-dash ml-12',
   li: 'text-[60px] pl-6',
   p: 'text-[60px]',
-  pre: 'my-[40px] ',
   // TODO(burdon): Colorize.
-  code: 'text-[40px] p-[16px] bg-zinc-100'
+  pre: 'w-full text-[40px] my-[16px] p-[32px] bg-zinc-100'
 };
 
 export const defaultStyles = 'px-32 py-20 bg-white leading-relaxed font-mono';

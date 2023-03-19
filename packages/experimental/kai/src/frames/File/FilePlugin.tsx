@@ -78,7 +78,11 @@ export const FilePlugin: FC<FileListProps> = ({ disableDownload, fileTypes = def
         onAction={disableDownload ? undefined : handleDownload}
       />
 
-      {isMd && <FileUpload fileTypes={fileTypes} onUpload={handleUpload} />}
+      {isMd && (
+        <div className='px-2'>
+          <FileUpload fileTypes={fileTypes} onUpload={handleUpload} />
+        </div>
+      )}
     </div>
   );
 };
