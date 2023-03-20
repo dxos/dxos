@@ -20,7 +20,7 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ClientServicesProvider } from '../client';
 import { CancellableInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
-import { Collection } from '../util';
+import { Observable } from '../util';
 
 interface Internal {
   get db(): DatabaseBackendProxy;
@@ -32,8 +32,8 @@ export interface Space {
   get isOpen(): boolean;
   get db(): EchoDatabase;
   get properties(): TypedObject;
-  get invitations(): Collection<CancellableInvitationObservable>;
-  get members(): Collection<SpaceMember>;
+  get invitations(): Observable<CancellableInvitationObservable[]>;
+  get members(): Observable<SpaceMember[]>;
   get internal(): Internal;
 
   open(): Promise<void>;
@@ -74,11 +74,16 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   private _invitations: CancellableInvitationObservable[] = [];
   private _properties?: TypedObject;
 =======
   private _invitations = new Collection<CancellableInvitationObservable>(this._invitationsUpdate);
   private _members = new Collection<SpaceMember>(this._membersUpdate);
+=======
+  private _invitations = new Observable<CancellableInvitationObservable[]>([], this._invitationsUpdate);
+  private _members = new Observable<SpaceMember[]>([], this._membersUpdate);
+>>>>>>> 14231648a (refactor(client): rename collection to observable)
   private _properties?: Document;
 >>>>>>> be1e63967 (refactor(client): add collection abstraction)
   private _initializing = false;

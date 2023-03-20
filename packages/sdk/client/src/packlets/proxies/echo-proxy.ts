@@ -19,7 +19,7 @@ import { ComplexMap } from '@dxos/util';
 import { ClientServicesProvider, ClientServicesProxy } from '../client';
 import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
-import { Collection } from '../util';
+import { Observable } from '../util';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -27,7 +27,7 @@ import { Space, SpaceProxy } from './space-proxy';
  * TODO(burdon): Public API (move comments here).
  */
 export interface Echo {
-  get spaces(): Collection<Space>;
+  get spaces(): Observable<Space[]>;
 
   createSpace(): Promise<Space>;
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
@@ -44,7 +44,7 @@ export class EchoProxy implements Echo {
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
-  private readonly _spaces = new Collection<Space>(this._spacesChanged);
+  private readonly _spaces = new Observable<Space[]>([], this._spacesChanged);
 
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
@@ -94,7 +94,7 @@ export class EchoProxy implements Echo {
     return this._invitationProxy !== undefined;
   }
 
-  get spaces(): Collection<Space> {
+  get spaces() {
     return this._spaces;
   }
 
