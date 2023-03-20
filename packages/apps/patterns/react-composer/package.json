@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
