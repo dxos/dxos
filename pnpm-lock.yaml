@@ -3336,6 +3336,157 @@ importers:
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
+  packages/experimental/kube-console:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/assets': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
+      '@dxos/mosaic': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/plexus': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-metagraph': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/util': workspace:*
+      '@dxos/websocket-rpc': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@remix-run/router': ^1.0.2
+      '@sentry/react': ^7.41.0
+      '@sentry/vite-plugin': ^0.4.0
+      '@swc-node/register': 1.5.4
+      '@swc/core': 1.3.21
+      '@types/d3': ^7.1.0
+      '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
+      '@types/react-table': ^7.7.14
+      '@types/string-hash': ^1.1.1
+      '@types/three': ^0.149.0
+      '@vitejs/plugin-react': ^3.0.1
+      assert: ^2.0.0
+      base-x: ~3.0.9
+      clipboard-copy: ^4.0.1
+      d3: ^7.4.4
+      date-fns: ^2.29.3
+      faker: ^5.5.3
+      ipfs-http-client: ~56.0.1
+      mobile-detect: ^1.4.5
+      node-fetch: ^2.6.0
+      postcss: ^8.4.21
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      react-is: ^18.2.0
+      react-resize-detector: ^7.1.2
+      react-router-dom: ^6.4.0
+      react-syntax-highlighter: ^15.5.0
+      react-table: ^7.8.0
+      string-hash: ~1.1.3
+      tailwindcss: ^3.2.7
+      three: ^0.150.1
+      typescript: ^4.8.4
+      url-join: ^5.0.0
+      vite: ^4.2.0
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-inspect: ^0.7.15
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/assets': link:../../apps/patterns/assets
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../../common/context
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../metagraph
+      '@dxos/mosaic': link:../mosaic
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/plexus': link:../plexus
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-metagraph': link:../react-metagraph
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/util': link:../../common/util
+      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@sentry/react': 7.42.0_react@18.2.0
+      assert: 2.0.0
+      base-x: 3.0.9
+      clipboard-copy: 4.0.1
+      d3: 7.6.1
+      date-fns: 2.29.3
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      mobile-detect: 1.4.5
+      node-fetch: 2.6.7
+      react: 18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-is: 18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      react-syntax-highlighter: 15.5.0_react@18.2.0
+      react-table: 7.8.0_react@18.2.0
+      string-hash: 1.1.3
+      three: 0.150.1
+      url-join: 5.0.0
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@remix-run/router': 1.0.2
+      '@sentry/vite-plugin': 0.4.0
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/d3': 7.4.0
+      '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
+      '@types/react-table': 7.7.14
+      '@types/string-hash': 1.1.1
+      '@types/three': 0.149.0
+      '@vitejs/plugin-react': 3.1.0_vite@4.2.0
+      faker: 5.5.3
+      postcss: 8.4.21
+      tailwindcss: 3.2.7
+      typescript: 4.8.4
+      vite: 4.2.0
+      vite-plugin-fonts: 0.7.0_vite@4.2.0
+      vite-plugin-inspect: 0.7.15_vite@4.2.0
+      workbox-window: 6.5.4
+
   packages/experimental/metagraph:
     specifiers:
       '@dxos/async': workspace:*
@@ -14341,6 +14492,12 @@ packages:
     resolution: {integrity: sha512-ipixuVrh2OdNmauvtT51o3d8z12p6LtFW9in7U79der/kwejjdNchQC5UMn5u/KxNoM7VHHOs/l8KS8uHxhODQ==}
     dev: true
 
+  /@types/three/0.149.0:
+    resolution: {integrity: sha512-fgNBm9LWc65ER/W0cvoXdC0iMy7Ke9e2CONmEr6Jt8sDSY3sw4DgOubZfmdZ747dkPhbQrgRQAWwDEr2S/7IEg==}
+    dependencies:
+      '@types/webxr': 0.5.1
+    dev: true
+
   /@types/throttle-debounce/2.1.0:
     resolution: {integrity: sha512-5eQEtSCoESnh2FsiLTxE121IiE60hnMqcb435fShf4bpLRjEu1Eoekht23y6zXS9Ts3l+Szu3TARnTsA0GkOkQ==}
     dev: false
@@ -14430,6 +14587,10 @@ packages:
       '@types/webpack-sources': 3.2.0
       anymatch: 3.1.3
       source-map: 0.6.1
+    dev: true
+
+  /@types/webxr/0.5.1:
+    resolution: {integrity: sha512-xlFXPfgJR5vIuDefhaHuUM9uUgvPaXB6GKdXy2gdEh8gBWQZ2ul24AJz3foUd8NNKlSTQuWYJpCb1/pL81m1KQ==}
     dev: true
 
   /@types/ws/7.4.7:
@@ -34161,6 +34322,10 @@ packages:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
     dependencies:
       any-promise: 1.3.0
+    dev: false
+
+  /three/0.150.1:
+    resolution: {integrity: sha512-5C1MqKUWaHYo13BX0Q64qcdwImgnnjSOFgBscOzAo8MYCzEtqfQqorEKMcajnA3FHy1yVlIe9AmaMQ0OQracNA==}
     dev: false
 
   /throttle-debounce/3.0.1:
