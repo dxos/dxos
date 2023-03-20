@@ -33567,11 +33567,11 @@ packages:
   /storybook-addon-react-router-v6/0.3.2_fiznvg5c7kei3wcshodp2lnvm4:
     resolution: {integrity: sha512-5mTPFPrAkQlwRrXoNquOhc1PC/e+oXlWaX0J0ENnot8rRMou7AmS/gpoDBfLZvFv9/BcM6FVQecQJVPTrauwOQ==}
     peerDependencies:
-      '@storybook/addons': ^6.4.0
-      '@storybook/api': ^6.4.0
-      '@storybook/components': ^6.4.0
-      '@storybook/core-events': ^6.4.0
-      '@storybook/theming': ^6.4.0
+      '@storybook/addons': ^7.0.0-beta
+      '@storybook/api': ^7.0.0-beta
+      '@storybook/components': ^7.0.0-beta
+      '@storybook/core-events': ^7.0.0-beta
+      '@storybook/theming': ^7.0.0-beta
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
       react-router: ^6.3.0

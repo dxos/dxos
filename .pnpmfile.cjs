@@ -82,11 +82,11 @@ function readPackage(packageJson, context) {
     }
 
     case 'storybook-addon-react-router-v6': {
-      packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta'
       break;
     }
 
