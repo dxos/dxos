@@ -12,13 +12,14 @@ import { Contact, Container, Task } from './proto';
 
 describe('database', () => {
   test('saving', async () => {
+    const database = await createDatabase();
+
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(task[base]).to.exist;
     expect(task[db]).to.be.undefined;
 
-    const database = await createDatabase();
     database.add(task);
     await database.flush();
     expect(task[db]).to.exist;
@@ -28,12 +29,29 @@ describe('database', () => {
     expect(tasks[0].id).to.eq(task.id);
   });
 
+  test('enums', async () => {
+    const database = await createDatabase();
+
+    {
+      const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
+      await database.add(container);
+    }
+
+    {
+      const { objects } = database.query(Container.filter());
+      const [container] = objects;
+      expect(container.records).to.have.length(1);
+      expect(container.records[0].type).to.eq(Container.Record.Type.WORK);
+    }
+  });
+
   describe('dxos.schema.Text', () => {
     test('text objects are auto-created on schema', async () => {
+      const database = await createDatabase();
+
       const task = new Task();
       expect(task.description).to.be.instanceOf(Text);
 
-      const database = await createDatabase();
       database.add(task);
       await database.flush();
       expect(task.description).to.be.instanceOf(Text);
@@ -46,42 +64,43 @@ describe('database', () => {
   test('dxos.schema.Expando', async () => {
     const database = await createDatabase();
 
-    const container = new Container();
-    database.add(container);
-    await database.flush();
+    {
+      const container = new Container();
+      database.add(container);
+      await database.flush();
 
-    container.expandos.push(new Expando({ foo: 100 }));
-    container.expandos.push(new Expando({ bar: 200 }));
+      container.expandos.push(new Expando({ foo: 100 }));
+      container.expandos.push(new Expando({ bar: 200 }));
+    }
 
-    const queriedContainer = database.query(Container.filter()).objects[0];
-    expect(queriedContainer.expandos).to.have.length(2);
-    expect(queriedContainer.expandos[0].foo).to.equal(100);
-    expect(queriedContainer.expandos[1].bar).to.equal(100);
+    {
+      const { objects } = database.query(Container.filter());
+      const [container] = objects;
+      expect(container.expandos).to.have.length(2);
+      expect(container.expandos[0].foo).to.equal(100);
+      expect(container.expandos[1].bar).to.equal(200);
+    }
   });
 
+  // TODO(burdon): Test cannot update random properties.
   test('dxos.schema.TextObject', async () => {
     const database = await createDatabase();
 
-    const container = new Container();
-    database.add(container);
-    await database.flush();
+    {
+      const container = new Container();
+      database.add(container);
+      await database.flush();
 
-    container.objects.push(new Task());
-    container.objects.push(new Contact());
+      container.objects.push(new Task());
+      container.objects.push(new Contact());
+    }
 
-    const queriedContainer = database.query(Container.filter()).objects[0];
-    expect(queriedContainer.objects).to.have.length(2);
-    expect(queriedContainer.objects[0].__typename).to.equal(Task.type.name);
-    expect(queriedContainer.objects[1].__typename).to.equal(Contact.type.name);
-  });
-
-  test('enums', async () => {
-    const database = await createDatabase();
-
-    const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
-    await database.add(container);
-    const queriedContainer = database.query(Container.filter()).objects[0];
-    expect(queriedContainer.records).to.have.length(1);
-    expect(queriedContainer.records[0].type).to.eq(Container.Record.Type.WORK);
+    {
+      const { objects } = database.query(Container.filter());
+      const [container] = objects;
+      expect(container.objects).to.have.length(2);
+      expect(container.objects[0].__typename).to.equal(Task.type.name);
+      expect(container.objects[1].__typename).to.equal(Contact.type.name);
+    }
   });
 });
