@@ -37,9 +37,25 @@ export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>;
  * Manages state and state transitions vis mutations.
  */
 export interface StateMachine<TState, TMutation, TSnapshot> {
+  /**
+   * @returns Current state.
+   */
   getState(): TState;
+  /**
+   * Resets the state to the given snapshot.
+   * @param snapshot Snapshot to reset to.
+   */
   reset(snapshot: TSnapshot): void;
+
+  /**
+   * Applies a mutation to the state.
+   * @param mutation Mutation to apply.
+   */
   process(mutation: TMutation): void;
+
+  /**
+   * @returns Snapshot of the current state.
+   */
   snapshot(): TSnapshot;
 }
 
