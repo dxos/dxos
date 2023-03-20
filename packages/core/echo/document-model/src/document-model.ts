@@ -131,15 +131,6 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     type: 'dxos:model/document',
     stateMachine: () => new DocumentModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
-
-    // TODO(burdon): Remove.
-    getInitMutation({ obj, type }: { obj: Record<string, any>; type: string }): ObjectMutationSet {
-      return {
-        mutations: obj ? MutationUtil.createMultiFieldMutation(obj) : [],
-        type
-      };
-    },
-
     snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
   };
 

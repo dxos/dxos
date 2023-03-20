@@ -20,13 +20,13 @@ describe.skip('TextModel', () => {
 
     peer1.model.insert('Hello World!', 0);
 
-    await peer2.model.update.waitForCount(1);
+    // await peer2.model.update.waitForCount(1);
     expect(peer2.model.textContent).toBe('Hello World!');
 
     // TODO(burdon): Test delete.
     const words = peer1.model.textContent.split(' ');
     peer2.model.insert(' DXOS', words[0].length);
-    await peer1.model.update.waitForCount(1);
+    // await peer1.model.update.waitForCount(1);
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
