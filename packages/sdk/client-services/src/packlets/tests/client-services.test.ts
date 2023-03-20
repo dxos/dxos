@@ -141,16 +141,16 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      expect(client1.halo.getDevices()).to.have.lengthOf(2);
-      expect(client2.halo.getDevices()).to.have.lengthOf(2);
+      expect(client1.halo.devices.get()).to.have.lengthOf(2);
+      expect(client2.halo.devices.get()).to.have.lengthOf(2);
     });
   });
 
@@ -227,7 +227,7 @@ describe('Client services', () => {
         expect(space.members.get()).to.deep.equal([
           {
             identity: {
-              identityKey: client1.halo.identity!.identityKey,
+              identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 1'
               }
@@ -236,7 +236,7 @@ describe('Client services', () => {
           },
           {
             identity: {
-              identityKey: client2.halo.identity!.identityKey,
+              identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 2'
               }

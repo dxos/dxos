@@ -65,11 +65,11 @@ const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, edit
   const query = space.db.query(ComposerDocument.filter());
   query.subscribe(({ objects }) => {
     const text = objects[0]?.content;
-    text && updateEditor(id, editor, client.halo.identity!, space, text);
+    text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
   });
 
   const text = query.objects[0]?.content;
-  text && updateEditor(id, editor, client.halo.identity!, space, text);
+  text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
 };
 
 const setupSpace = async (count: number) => {

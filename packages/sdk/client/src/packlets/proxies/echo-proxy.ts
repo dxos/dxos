@@ -115,7 +115,7 @@ export class EchoProxy implements Echo {
             continue;
           }
 
-          await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
+          await this._haloProxy.waitForIdentity();
           if (this._destroying) {
             return;
           }

@@ -57,7 +57,7 @@ const start = async () => {
 
   // TODO(burdon): When is the identity created?
   await client.initialize();
-  log.info('client initialized', { identity: client.halo.identity?.identityKey });
+  log.info('client initialized', { identity: client.halo.identity.get()?.identityKey });
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
