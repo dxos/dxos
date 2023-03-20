@@ -3,7 +3,6 @@
 //
 
 import type { Client, Config } from '@dxos/client';
-import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
@@ -12,14 +11,9 @@ export const BASE_TELEMETRY_PROPERTIES: any = {};
 
 if (navigator.storage?.estimate) {
   setInterval(async () => {
-    try {
-      // TODO(mykola): LocalStorage is not available in Chrome extensions.
-      const storageEstimate = await navigator.storage.estimate();
-      BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
-      BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
-    } catch (err) {
-      log.warn(String(err));
-    }
+    const storageEstimate = await navigator.storage.estimate();
+    BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
+    BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
   }, 10e3);
 }
 
@@ -44,25 +38,13 @@ export const isTelemetryDisabled = (namespace: string) =>
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
 export const initializeAppTelemetry = async (namespace: string, config: Config) => {
-  let group: string | null = 'default';
-  try {
-    // TODO(mykola): LocalStorage is not available in Chrome extensions.
-    group = localStorage.getItem(`${namespace}:telemetry-group`);
-  } catch (err) {
-    log.warn(String(err));
-  }
+  const group = localStorage.getItem(`${namespace}:telemetry-group`);
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
   BASE_TELEMETRY_PROPERTIES.group = group;
   BASE_TELEMETRY_PROPERTIES.release = release;
   BASE_TELEMETRY_PROPERTIES.environment = environment;
-  let telemetryDisabled = false;
-  try {
-    // TODO(mykola): LocalStorage is not available in Chrome extensions.
-    telemetryDisabled = isTelemetryDisabled(namespace);
-  } catch (err) {
-    log.warn(String(err));
-  }
+  const telemetryDisabled = isTelemetryDisabled(namespace);
 
   const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
   Sentry.init({
