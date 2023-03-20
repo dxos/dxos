@@ -24,7 +24,7 @@ export default class Members extends BaseCommand {
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await client.echo.getSpaces();
+      const spaces = await client.echo.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }

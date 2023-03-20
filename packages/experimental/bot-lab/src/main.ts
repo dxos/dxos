@@ -96,14 +96,14 @@ const start = async () => {
   };
 
   // TODO(burdon): Fix race condition? Trigger callback on subscription.
-  void onUpdate(client.echo.getSpaces());
-  client.echo.subscribeSpaces(onUpdate);
+  void onUpdate(client.echo.spaces.get());
+  client.echo.spaces.subscribe(onUpdate);
 
   const printStatus = () => {
     log.info('status', {
       bot: bot?.constructor.name,
       identity: client.halo.identity,
-      spaces: client.echo.getSpaces().map((space) => ({
+      spaces: client.echo.spaces.get().map((space) => ({
         key: space.key,
         title: space.properties.title,
         members: space.members.get()

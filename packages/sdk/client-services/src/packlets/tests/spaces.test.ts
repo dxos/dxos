@@ -59,12 +59,12 @@ describe('Spaces', () => {
     {
       // TODO(dmaretskyi): Replace with helper?.
       const spaceTrigger = new Trigger<Space>();
-      if (client.echo.getSpaces()[0]) {
-        spaceTrigger.wake(client.echo.getSpaces()[0]);
+      if (client.echo.spaces.get()[0]) {
+        spaceTrigger.wake(client.echo.spaces.get()[0]);
       }
-      client.echo.subscribeSpaces(() => {
-        if (client.echo.getSpaces()[0]) {
-          spaceTrigger.wake(client.echo.getSpaces()[0]);
+      client.echo.spaces.subscribe(() => {
+        if (client.echo.spaces.get()[0]) {
+          spaceTrigger.wake(client.echo.spaces.get()[0]);
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });

@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
@@ -19,6 +19,7 @@ import { ComplexMap } from '@dxos/util';
 import { ClientServicesProvider, ClientServicesProxy } from '../client';
 import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
+import { Collection } from '../util';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -26,12 +27,11 @@ import { Space, SpaceProxy } from './space-proxy';
  * TODO(burdon): Public API (move comments here).
  */
 export interface Echo {
+  get spaces(): Collection<Space>;
+
   createSpace(): Promise<Space>;
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
-
   getSpace(spaceKey: PublicKey): Space | undefined;
-  getSpaces(): Space[];
-  subscribeSpaces(callback: (spaces: Space[]) => void): UnsubscribeCallback;
 
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 
@@ -40,16 +40,16 @@ export interface Echo {
 }
 
 export class EchoProxy implements Echo {
-  private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
+  private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
+  private readonly _spaces = new Collection<Space>(this._spacesChanged);
 
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: SpaceInvitationsProxy;
-  private _cachedSpaces: Space[] = [];
   private _destroying = false; // TODO(burdon): Standardize enum.
 
   // prettier-ignore
@@ -66,7 +66,7 @@ export class EchoProxy implements Echo {
   // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      spaces: this._spaces.size
+      spaces: this._spacesMap.size
     };
   }
 
@@ -94,6 +94,10 @@ export class EchoProxy implements Echo {
     return this._invitationProxy !== undefined;
   }
 
+  get spaces(): Collection<Space> {
+    return this._spaces;
+  }
+
   async open() {
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
@@ -105,7 +109,7 @@ export class EchoProxy implements Echo {
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
-        if (!this._spaces.has(space.spaceKey)) {
+        if (!this._spacesMap.has(space.spaceKey)) {
           if (space.status === SpaceStatus.INACTIVE) {
             // Skip inactive spaces. They will be added when they are activated.
             continue;
@@ -119,13 +123,13 @@ export class EchoProxy implements Echo {
           const spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
-          this._spaces.set(spaceProxy.key, spaceProxy);
+          this._spacesMap.set(spaceProxy.key, spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
 
           await spaceProxy.initialize();
           emitUpdate = true;
         } else {
-          this._spaces.get(space.spaceKey)!._processSpaceUpdate(space);
+          this._spacesMap.get(space.spaceKey)!._processSpaceUpdate(space);
         }
       }
 
@@ -137,8 +141,7 @@ export class EchoProxy implements Echo {
       }
 
       if (emitUpdate) {
-        this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
-        this._spacesChanged.emit(this._cachedSpaces);
+        this._spacesChanged.emit(Array.from(this._spacesMap.values()).filter((space) => space._initialized));
       }
     });
 
@@ -148,11 +151,11 @@ export class EchoProxy implements Echo {
   }
 
   async close() {
-    for (const space of this._spaces.values()) {
+    for (const space of this._spacesMap.values()) {
       await space.destroy();
     }
-    this._spaces.clear();
-    this._cachedSpaces = [];
+    this._spacesMap.clear();
+    this._spacesChanged.emit([]);
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;
@@ -174,9 +177,9 @@ export class EchoProxy implements Echo {
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
-      return this._spaces.has(space.spaceKey);
+      return this._spacesMap.has(space.spaceKey);
     });
-    const spaceProxy = this._spaces.get(space.spaceKey) ?? failUndefined();
+    const spaceProxy = this._spacesMap.get(space.spaceKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     spaceProxy.db.add(new Properties(meta));
@@ -212,23 +215,7 @@ export class EchoProxy implements Echo {
    * Returns an individual space by its key.
    */
   getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._spaces.get(spaceKey);
-  }
-
-  /**
-   * Gets a list of all spaces.
-   */
-  getSpaces(): Space[] {
-    // TODO(burdon): Why is this different from getSpace?
-    return this._cachedSpaces;
-  }
-
-  /**
-   * Subscribes to spaces changes.
-   */
-  // TODO(burdon): Reconcile with `space.db.query` API.
-  subscribeSpaces(callback: (spaces: Space[]) => void) {
-    return this._spacesChanged.on(callback);
+    return this._spacesMap.get(spaceKey);
   }
 
   /**
