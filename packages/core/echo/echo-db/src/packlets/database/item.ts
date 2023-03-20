@@ -204,7 +204,7 @@ export class Item<M extends Model = Model> {
 
     this._parent = this._initialState.snapshot?.parentId ?? null;
     this._deleted = this._initialState.snapshot?.deleted ?? false;
-    
+
     // Apply the snapshot.
     if (this._initialState.snapshot) {
       if (!this._stateMachine) {
