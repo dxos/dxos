@@ -18,7 +18,10 @@ export const HomeRoute = () => {
       </div>
       <div className='flex flex-col shrink-0 h-[160px]'>
         <div className='flex justify-center'>
-          <div className='flex items-center text-[60px] text-zinc-400 font-light' style={{ fontFamily: 'Sharp Sans' }}>
+          <div
+            className='flex items-center text-[60px] text-zinc-400 font-light select-none'
+            style={{ fontFamily: 'Sharp Sans' }}
+          >
             <img src={Icon} className='w-[80px] h-[80px] opacity-50' />
             <span className='ml-4'>DXOS</span>
           </div>

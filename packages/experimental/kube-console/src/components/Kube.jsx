@@ -14,7 +14,7 @@ export const defaultConfig = {
   maxConnections: 5, // TODO(burdon): No effect.
   limitConnections: false,
   showLines: true,
-  rotation: 0.0002, // Angular velocity.
+  rotation: -0.0003, // Angular velocity.
   mask: {
     color: 0x000000,
     opacity: 0
@@ -54,7 +54,6 @@ class KubeRenderer {
 
   constructor(config) {
     this._config = config;
-    this._config.particleCount = Math.min(this._config.particleCount, this._config.maxParticleCount);
   }
 
   init(container) {
@@ -236,7 +235,7 @@ class KubeRenderer {
 
   render() {
     const time = Date.now();
-    this._group.rotation.y = time * this._config.rotation;
+    this._group.rotation.y = Math.PI / 4 + time * this._config.rotation;
     this._renderer.render(this._scene, this._camera);
     return this;
   }
