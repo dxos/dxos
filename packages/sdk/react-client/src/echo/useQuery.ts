@@ -8,8 +8,8 @@ import { Space } from '@dxos/client';
 import { TypedObject, Filter, Query, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
-  <T extends Document>(space?: Space, filter?: TypeFilter<T>): T[];
-  <T extends Document>(space?: Space, filter?: Filter<T>): TypedObject[];
+  <T extends TypedObject>(space?: Space, filter?: TypeFilter<T>): T[];
+  <T extends TypedObject>(space?: Space, filter?: Filter<T>): TypedObject[];
 };
 
 /**

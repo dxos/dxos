@@ -65,7 +65,7 @@ export const ALL_CARDS = [
   DefaultTile
 ];
 
-export const GenericTile: Tile<Document>['render'] = ({ data }) => {
+export const GenericTile: Tile<TypedObject>['render'] = ({ data }) => {
   const card = ALL_CARDS.find((card) => card.canRender(data));
 
   // TODO(wittjosiah): Infer type of data from `canRender`?
