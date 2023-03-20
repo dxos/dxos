@@ -158,7 +158,13 @@ export class TestAgent {
       .setControlFeed(controlFeed)
       .setDataFeed(dataFeed);
     await space.open();
-    await space.initDataPipeline(dataPipelineController);
+    await dataPipelineController.open({
+      openPipeline: async (start) => {
+        const pipeline = await space.createDataPipeline({ start })
+        await pipeline.start();
+        return pipeline;
+      }
+    });
 
     this._spaces.set(spaceKey, space);
     return [space, dataPipelineController];

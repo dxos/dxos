@@ -156,7 +156,13 @@ export class DataSpace {
       )
     );
 
-    await this._inner.initDataPipeline(this._dataPipelineController);
+    await this._dataPipelineController.open({
+      openPipeline: async (start) => {
+        const pipeline = await this._inner.createDataPipeline({ start })
+        await pipeline.start();
+        return pipeline;
+      }
+    });
   }
 
   @timed(10_000)
