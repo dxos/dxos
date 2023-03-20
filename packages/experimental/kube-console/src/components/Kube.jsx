@@ -30,7 +30,7 @@ export const defaultConfig = {
   },
   camera: {
     perspective: 45,
-    z: 1750
+    z: 2000
   }
 };
 
@@ -235,9 +235,27 @@ class KubeRenderer {
     return this;
   }
 
+  _axes = ['x', 'y', 'z'];
+  _axisIndex = 0;
+  _direction = 1;
+
   render() {
     const time = Date.now();
-    this._group.rotation.y = Math.PI / 4 + time * this._config.rotation;
+    // TODO(burdon): Change axis/direction when normal to camera.
+    let deg = Math.PI / 4 + time * this._config.rotation * this._direction;
+    const rel = deg % Math.PI;
+    if (rel > -0.01 && rel < 0.01) {
+      if (this._axisIndex++ === this._axes.length) {
+        this._axisIndex = 0;
+      }
+      console.log('!!!!!!!!!!!!!!!!!!!', rel);
+      deg = 0;
+    }
+    // console.log(rel);
+
+    // console.log(deg);
+
+    this._group.rotation[this._axes[this._axisIndex]] = deg;
     this._renderer.render(this._scene, this._camera);
     return this;
   }

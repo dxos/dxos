@@ -62,7 +62,7 @@ It's possible to obtain strongly typed objects from `useQuery<T>`.
 
 Because `useQuery` returns tracked ECHO objects, their type must descend from [`DocumentBase`](/api/@dxos/client/classes/DocumentBase). DXOS provides a tool to generate these types from a schema definition file.
 
-> There are many benefits to expressing the type schema of an application in a language-neutral and inter-operable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
+> There are many benefits to expressing the type schema of an application in a language-neutral and interoperable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
