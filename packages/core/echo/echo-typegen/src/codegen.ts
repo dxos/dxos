@@ -16,9 +16,9 @@ const reservedFieldNames = ['id', '__typename', '__deleted'];
 // Types that are injected from `importNamespace`.
 // prettier-ignore
 const injectedTypes = [
-  '.dxos.schema.Expando',
   '.dxos.schema.Text',
-  '.dxos.schema.TypedDocument'
+  '.dxos.schema.Expando',
+  '.dxos.schema.TypedObject'
 ];
 
 /**
@@ -51,7 +51,6 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
  */
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
-    console.log('\n\n\n:::::::::::::::::::', field.name);
     if (field.resolvedType) {
       if (injectedTypes.includes(field.resolvedType.fullName)) {
         return `${importNamespace}.${field.resolvedType.name}`;
@@ -184,7 +183,7 @@ export const createObjectClass = (type: pb.Type) => {
   return text`
     export type ${name}Props = {\n${initializer}\n};
 
-    export class ${name} extends ${importNamespace}.TypedObject<{${name}Props}> {
+    export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
       static readonly type = schema.getType('${fullName}');
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
