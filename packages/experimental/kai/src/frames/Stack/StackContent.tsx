@@ -5,8 +5,8 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document, Text } from '@dxos/echo-schema';
-import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
+import { TypedObject, Text } from '@dxos/echo-schema';
+import { Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
 import { MarkdownComposer, RichTextComposer, useTextModel, YText, YXmlFragment } from '@dxos/react-composer';
@@ -47,9 +47,9 @@ export const StackContent: FC<{
 
   // TODO(burdon): Type?
   switch (object.__typename) {
-    case DocumentType.type.name: {
+    case Document.type.name: {
       // TODO(burdon): This fails if the document is created by the KaiBot!
-      // if (!(object instanceof DocumentType)) {
+      // if (!(object instanceof TypedObject)) {
       //   throw new Error(`Invalid object type: ${object.__typename}`);
       // }
       return <Composer space={space} content={object.content} spellCheck={spellCheck} />;
@@ -107,7 +107,7 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
   const objects = useQuery(space, type.filter);
 
   return (
-    <TableComponent<Document>
+    <TableComponent<TypedObject>
       columns={type.columns.filter((column) => column.Header === 'name' || column.Header === 'email')}
       data={objects}
       slots={{

@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ export interface Space {
   get key(): PublicKey;
   get isOpen(): boolean;
   get db(): EchoDatabase;
-  get properties(): Document;
+  get properties(): TypedObject;
   get invitations(): CancellableInvitationObservable[];
   get internal(): Internal;
 
@@ -69,7 +69,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
   private _invitations: CancellableInvitationObservable[] = [];
-  private _properties?: Document;
+  private _properties?: TypedObject;
   private _initializing = false;
 
   /**

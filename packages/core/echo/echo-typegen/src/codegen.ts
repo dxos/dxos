@@ -14,7 +14,7 @@ const reservedTypeNames = [importNamespace];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 // Types that are injected from `importNamespace`.
-const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Document'];
+const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Expando'];
 
 /**
  * Protobuf schema as JSON object.
@@ -178,7 +178,7 @@ export const createObjectClass = (type: pb.Type) => {
   return text`
     export type ${name}Props = {\n${initializer}\n};
 
-    export class ${name} extends ${importNamespace}.Document<{}> {
+    export class ${name} extends ${importNamespace}.TypedObject<{${name}Props}> {
       static readonly type = schema.getType('${fullName}');
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
