@@ -53,6 +53,7 @@
     "keyring": "packages/core/halo/keyring",
     "keys": "packages/common/keys",
     "kodama": "packages/experimental/kodama",
+    "kube-console": "packages/experimental/kube-console",
     "log": "packages/common/log",
     "log-hook": "tools/log-hook",
     "messaging": "packages/core/mesh/messaging",
