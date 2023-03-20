@@ -11,6 +11,7 @@ import { useIdentity } from '@dxos/react-client';
 import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
+// TODO(burdon): Use @dxos/assets.
 import lightThemeLogo from '../assets/icon-halo-black.png';
 import darkThemeLogo from '../assets/icon-halo-white.png';
 
