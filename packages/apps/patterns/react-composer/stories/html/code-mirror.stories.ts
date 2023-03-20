@@ -19,14 +19,14 @@ import { humanize } from '@dxos/util';
 import { ComposerDocument, schema } from '../../src/testing';
 import { cursorColor, SpaceProvider } from '../../src/yjs';
 
-const testBuilder = new TestBuilder();
-
 export default {
   title: 'CodeMirror'
 };
 
+const testBuilder = new TestBuilder();
 const views: Record<number, EditorView> = {};
-const group = new EventSubscriptions();
+const subscriptions = new EventSubscriptions();
+
 const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identity, space: Space, text: Text) => {
   const doc = text.doc;
   const ytext = text.content;
@@ -49,16 +49,14 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 
   const view = views[id];
   if (view) {
-    console.log('setstate', { id });
     view.setState(state);
   } else {
-    console.log('create', { id });
     views[id] = new EditorView({ state, parent: editor });
   }
 
   if (id === 0) {
-    group.clear();
-    group.add(textGenerator({ text: ytext }));
+    subscriptions.clear();
+    subscriptions.add(textGenerator({ text: ytext }));
   }
 };
 
@@ -66,7 +64,6 @@ const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, edit
   const space = await client.echo.getSpace(spaceKey)!;
   const query = space.db.query(ComposerDocument.filter());
   query.subscribe(({ objects }) => {
-    console.log('update', objects);
     const text = objects[0]?.content;
     text && updateEditor(id, editor, client.halo.identity!, space, text);
   });
