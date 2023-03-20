@@ -82,10 +82,6 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   initialize() {
     this._unsubscribe?.();
     this._unsubscribe = this._subscribeToDocUpdates();
-    this.update.on(() => {
-      this._unsubscribe?.();
-      this._unsubscribe = this._subscribeToDocUpdates();
-    });
   }
 
   get doc(): Doc {
