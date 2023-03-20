@@ -3,6 +3,7 @@
 //
 
 import type { Client, Config } from '@dxos/client';
+import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
@@ -11,9 +12,13 @@ export const BASE_TELEMETRY_PROPERTIES: any = {};
 
 if (navigator.storage?.estimate) {
   setInterval(async () => {
-    const storageEstimate = await navigator.storage.estimate();
-    BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
-    BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
+    try {
+      const storageEstimate = await navigator.storage.estimate();
+      BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
+      BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
+    } catch (error) {
+      log.warn('Failed to run estimate()', error);
+    }
   }, 10e3);
 }
 
