@@ -45,6 +45,9 @@
       "path": "../../common/react-components"
     },
     {
+      "path": "../../common/sentry"
+    },
+    {
       "path": "../../common/util"
     },
     {
