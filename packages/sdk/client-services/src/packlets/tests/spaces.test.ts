@@ -28,7 +28,7 @@ describe('Spaces', () => {
     const space = await client.echo.createSpace();
     await testSpace(space.internal.db);
 
-    expect(space.getMembers()).to.be.length(1);
+    expect(space.members.get()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
@@ -47,7 +47,7 @@ describe('Spaces', () => {
         objectsUpdated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
-      expect(space.getMembers()).to.be.length(1);
+      expect(space.members.get()).to.be.length(1);
     }
 
     await client.destroy();

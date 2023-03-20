@@ -224,7 +224,7 @@ describe('Client services', () => {
 
     for (const space of [space1, space2]) {
       await waitForExpect(() => {
-        expect(space.getMembers()).to.deep.equal([
+        expect(space.members.get()).to.deep.equal([
           {
             identity: {
               identityKey: client1.halo.identity!.identityKey,

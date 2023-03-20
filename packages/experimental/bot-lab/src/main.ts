@@ -106,7 +106,7 @@ const start = async () => {
       spaces: client.echo.getSpaces().map((space) => ({
         key: space.key,
         title: space.properties.title,
-        members: space.getMembers()
+        members: space.members.get()
       }))
     });
   };
