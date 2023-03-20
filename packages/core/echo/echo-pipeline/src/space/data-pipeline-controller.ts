@@ -25,21 +25,6 @@ export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
 };
 
-/**
- * Controls data pipeline in the space.
- * Consumes mutations from the feed and applies them to the database.
- */
-export interface DataPipelineController {
-  open(context: DataPipelineControllerContext): Promise<void>;
-  close(): Promise<void>;
-}
-
-export class NoopDataPipelineController implements DataPipelineController {
-  async open(context: DataPipelineControllerContext): Promise<void> {}
-
-  async close(): Promise<void> {}
-}
-
 export type DataPipelineControllerImplParams = {
   modelFactory: ModelFactory;
   snapshotManager: SnapshotManager;
@@ -71,7 +56,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
-export class DataPipelineControllerImpl implements DataPipelineController {
+export class DataPipelineController {
   private _ctx = new Context();
   private _spaceContext!: DataPipelineControllerContext;
   private _pipeline?: Pipeline;

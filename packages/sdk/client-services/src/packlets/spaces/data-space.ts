@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  DataPipelineControllerImpl,
+  DataPipelineController,
   MetadataStore,
   Space,
   SigningContext,
@@ -47,7 +47,7 @@ const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipelineController: DataPipelineControllerImpl;
+  private readonly _dataPipelineController: DataPipelineController;
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -67,7 +67,7 @@ export class DataSpace {
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
-    this._dataPipelineController = new DataPipelineControllerImpl({
+    this._dataPipelineController = new DataPipelineController({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
       snapshotManager: params.snapshotManager,
@@ -99,7 +99,7 @@ export class DataSpace {
     return this._inner;
   }
 
-  get dataPipelineController(): DataPipelineControllerImpl {
+  get dataPipelineController(): DataPipelineController {
     return this._dataPipelineController;
   }
 
