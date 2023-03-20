@@ -28,8 +28,7 @@ const isValidKey = (key: string | symbol) =>
     key === '__typename'
   );
 
-// TODO(burdon): Rename TypedObject
-export const isDocument = (object: unknown): object is Document =>
+export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
 
 export type ConvertVisitors = {
@@ -49,8 +48,8 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 /**
  * Base class for generated document types and dynamic objects.
  *
- * We define the exported `Document` type separately to have fine-grained control over the typescript type.
- * The runtime semantics should be exactly the same since this compiled down to `export const Document = TypedObjectImpl`.
+ * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
+ * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
@@ -90,7 +89,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   get [Symbol.toStringTag]() {
-    return this[base]?._schemaType?.name ?? 'Document';
+    return this[base]?._schemaType?.name ?? 'TypedObject';
   }
 
   /**
@@ -104,7 +103,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * Returns the schema type descriptor for the object.
    */
-  // TODO(burdon): Method on Document vs EchoObject?
+  // TODO(burdon): Method on TypedObject vs EchoObject?
   get [schema](): EchoSchemaType | undefined {
     return this[base]?._schemaType;
   }
