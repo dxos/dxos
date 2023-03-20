@@ -72,6 +72,7 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
     if (provider && peer) {
       let peerColorDigit = Math.floor(16 * Math.random());
       try {
+        // TODO(wittjosiah): Factor out for use w/ html-only story and RichText component.
         // `peer.id` is already a `string`, so we attempt `parseInt` within a `try` since we can’t be certain it is hexadecimal.
         peerColorDigit = parseInt(peer.id.slice(-1), 16);
       } catch (_) {}
