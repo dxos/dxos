@@ -204,13 +204,18 @@ export class Item<M extends Model = Model> {
 
     this._parent = this._initialState.snapshot?.parentId ?? null;
     this._deleted = this._initialState.snapshot?.deleted ?? false;
-    this._stateMachine = this._modelMeta.stateMachine();
 
     // Apply the snapshot.
     if (this._initialState.snapshot) {
+      if (!this._stateMachine) {
+        this._stateMachine = this._modelMeta.stateMachine();
+      }
+
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.model.value);
       this._stateMachine.reset(decoded);
+    } else {
+      this._stateMachine = this._modelMeta.stateMachine();
     }
 
     // Apply mutations passed with the snapshot.
