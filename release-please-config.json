@@ -373,6 +373,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kube-console/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
