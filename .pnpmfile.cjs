@@ -15,12 +15,14 @@ function readPackage(packageJson, context) {
     }
 
     case '@nrwl/vite': {
-      // Ensure nx uses patched vite.
-      // packageJson.peerDependencies['vite'] = '4.0.4'
-
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
+      break;
+    }
 
+    case '@storybook/html': {
+      // Unused.
+      delete packageJson.peerDependencies['@babel/core'];
       break;
     }
 
@@ -79,12 +81,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'storybook-dark-mode': {
-      packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+    case 'storybook-addon-react-router-v6': {
+      packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta'
       break;
     }
 
