@@ -14,7 +14,12 @@ const reservedTypeNames = [importNamespace];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 // Types that are injected from `importNamespace`.
-const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Expando'];
+// prettier-ignore
+const injectedTypes = [
+  '.dxos.schema.Expando',
+  '.dxos.schema.Text',
+  '.dxos.schema.TypedDocument'
+];
 
 /**
  * Protobuf schema as JSON object.
@@ -46,6 +51,7 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
  */
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
+    console.log('\n\n\n:::::::::::::::::::', field.name);
     if (field.resolvedType) {
       if (injectedTypes.includes(field.resolvedType.fullName)) {
         return `${importNamespace}.${field.resolvedType.name}`;
