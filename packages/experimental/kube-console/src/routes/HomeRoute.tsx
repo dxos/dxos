@@ -16,15 +16,13 @@ export const HomeRoute = () => {
       <div className='flex flex-1'>
         <Kube />
       </div>
-      <div className='flex flex-col shrink-0 h-[160px]'>
-        <div className='flex justify-center'>
-          <div
-            className='flex items-center text-[60px] text-zinc-400 font-light select-none'
-            style={{ fontFamily: 'Sharp Sans' }}
-          >
-            <img src={Icon} className='w-[80px] h-[80px] opacity-50' />
-            <span className='ml-4'>DXOS</span>
-          </div>
+      <div className='flex flex-col shrink-0 h-[180px] select-none' style={{ fontFamily: 'Sharp Sans' }}>
+        <div className='flex justify-center items-center text-white font-light opacity-60'>
+          <img src={Icon} className='w-[80px] h-[80px]' />
+          <span className='ml-4 text-[60px]'>DXOS</span>
+        </div>
+        <div className='flex justify-center items-center text-zinc-500 font-light'>
+          <span className='mt-4 text-2xl'>KUBE Console</span>
         </div>
       </div>
     </div>

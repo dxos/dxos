@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as THREE from 'three';
 
+import { mx } from '@dxos/react-components';
+
 export const defaultConfig = {
   radius: 800,
   minDistance: 150,
@@ -273,7 +275,15 @@ export const Kube = ({ config = {} }) => {
     if (kube && width && height) {
       kube.setSize(width, height);
     }
-  }, [kube, width, height]);
+  }, [width, height]);
 
-  return <div className='flex flex-1 overflow-hidden' ref={ref} />;
+  return (
+    <div
+      className={mx(
+        'flex flex-1 overflow-hidden opacity-0 transition duration-[1s]',
+        width === 0 || height === 0 ? 'invisible' : 'opacity-100'
+      )}
+      ref={ref}
+    />
+  );
 };
