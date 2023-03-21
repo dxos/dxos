@@ -6,14 +6,14 @@ import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { frameDefs } from '../frames'; // TODO(burdon): Cyclic dependency.
 import { FrameDef } from '../registry';
 
 export type SearchResult = {
-  object: Document;
+  object: TypedObject;
   rank: number;
   Icon: FC<any>;
   title: string;
@@ -85,7 +85,7 @@ const getProperty = (object: Object, path: string[]): string | undefined => {
 // TODO(burdon): Ranking via Lyra?
 const matchFilter = (text: string) => {
   const str = text.trim().toLowerCase();
-  return (object: Document): SearchResult | undefined => {
+  return (object: TypedObject): SearchResult | undefined => {
     if (!str.length) {
       return;
     }

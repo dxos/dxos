@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Select } from '@dxos/react-components';
 
@@ -49,7 +49,7 @@ export const TableFrame = () => {
 
       {type && (
         <div className='flex flex-1 overflow-hidden px-2'>
-          <Table<Document>
+          <Table<TypedObject>
             columns={type.columns}
             data={objects}
             slots={{

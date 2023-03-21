@@ -5,14 +5,14 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { getSize, Searchbar } from '@dxos/react-components';
 
 import { SearchResults, useAppRouter, useSearch } from '../../hooks';
 
 export type SearchPanelProps = {
   onResults?: (object: SearchResults) => void;
-  onSelect?: (object: Document) => void;
+  onSelect?: (object: TypedObject) => void;
 };
 
 export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {

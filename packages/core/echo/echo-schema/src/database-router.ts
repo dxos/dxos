@@ -14,7 +14,8 @@ import { EchoObject } from './object';
 import { getCurrentReactComponent } from './react-integration';
 import { EchoSchema } from './schema';
 
-export type SelectionFn = never; // TODO(burdon): Document or remove.
+// TODO(burdon): Document or remove. Generic filter function?
+export type SelectionFn = never;
 
 export type Selection = EchoObject | SelectionFn | Selection[] | undefined | null | false;
 

@@ -5,8 +5,8 @@
 import { Article, Image, ListChecks, Table as TableIcon } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Document, Space } from '@dxos/client';
-import { Contact, Document as DocumentType, File, Table, TaskList } from '@dxos/kai-types';
+import { TypedObject, Space } from '@dxos/client';
+import { Contact, Document, File, Table, TaskList } from '@dxos/kai-types';
 
 import { FilePlugin, imageTypes } from '../File';
 import { ContextMenuItem } from './ContextMenu';
@@ -16,16 +16,16 @@ export const FileSelector: FC<{ onSelect: (objectId: string | undefined) => void
 };
 
 export type StackItemType = ContextMenuItem & {
-  onCreate?: (space: Space) => Promise<Document>;
+  onCreate?: (space: Space) => Promise<TypedObject>;
 };
 
 // TODO(burdon): Factor out.
 export const defaultItems: StackItemType[] = [
   {
-    type: DocumentType.type.name,
+    type: Document.type.name,
     label: 'Text',
     Icon: Article,
-    onCreate: async (space: Space) => space!.db.add(new DocumentType())
+    onCreate: async (space: Space) => space!.db.add(new Document())
   },
   {
     type: TaskList.type.name,

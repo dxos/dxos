@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Document } from '@dxos/client';
+import { TypedObject } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -28,15 +28,15 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: Document) => doc.__typename;
-const getItemDetails = (item: Document) => ({
+const getItemType = (doc: TypedObject) => doc.__typename;
+const getItemDetails = (item: TypedObject) => ({
   id: truncateKey(item.id),
   type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
   properties: <JsonView data={item.toJSON()} />
 });
 
-const getHierarchicalItem = (item: Document): TreeViewItem => ({
+const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   id: item.id,
   title: getItemType(item) || 'Unknown type',
   value: item
@@ -47,7 +47,7 @@ const ItemsPanel = () => {
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
-  const [selectedItem, setSelectedItem] = useState<Document>();
+  const [selectedItem, setSelectedItem] = useState<TypedObject>();
   const [filter, setFilter] = useState('');
 
   return (

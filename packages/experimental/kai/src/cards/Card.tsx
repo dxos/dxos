@@ -5,7 +5,7 @@
 import React, { FC, ReactNode } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { Address } from '@dxos/kai-types';
 import { mx } from '@dxos/react-components';
 
@@ -17,7 +17,7 @@ export type CardSlots = {
   };
 };
 
-export type CardProps<T extends Document> = {
+export type CardProps<T extends TypedObject> = {
   space: Space;
   object: T;
   slots?: CardSlots;

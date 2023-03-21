@@ -28,7 +28,7 @@ const isValidKey = (key: string | symbol) =>
     key === '__typename'
   );
 
-export const isDocument = (object: unknown): object is Document =>
+export const isTypedObject = (object: unknown): object is TypedObject =>
   typeof object === 'object' && object !== null && !!(object as any)[base];
 
 export type ConvertVisitors = {
@@ -48,10 +48,10 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 /**
  * Base class for generated document types and dynamic objects.
  *
- * We define the exported `Document` type separately to have fine-grained control over the typescript type.
- * The runtime semantics should be exactly the same since this compiled down to `export const Document = TypedDocument`.
+ * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
+ * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
-class TypedDocument<T> extends EchoObject<DocumentModel> {
+class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -89,7 +89,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   }
 
   get [Symbol.toStringTag]() {
-    return this[base]?._schemaType?.name ?? 'Document';
+    return this[base]?._schemaType?.name ?? 'TypedObject';
   }
 
   /**
@@ -103,7 +103,7 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   /**
    * Returns the schema type descriptor for the object.
    */
-  // TODO(burdon): Method on Document vs EchoObject?
+  // TODO(burdon): Method on TypedObject vs EchoObject?
   get [schema](): EchoSchemaType | undefined {
     return this[base]?._schemaType;
   }
@@ -387,17 +387,20 @@ class TypedDocument<T> extends EchoObject<DocumentModel> {
   }
 }
 
-// Fix constructor name.
-Object.defineProperty(TypedDocument, 'name', { value: 'Document' });
+// Set stringified name for constructor.
+Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
+
+//
+// TypedObject
+// Generic base class for strongly-typed schema-generated classes.
+//
 
 /**
  * Base class for generated document types and dynamic objects.
  */
-// TODO(burdon): Must rename this (too many collisions).
-export type Document<T extends Record<string, any> = { [key: string]: any }> = TypedDocument<T> & T;
+export type TypedObject<T extends Record<string, any> = { [key: string]: any }> = TypedObjectImpl<T> & T;
 
-// TODO(burdon): Support immutable objects?
-export const Document: {
+type TypedObjectConstructor = {
   /**
    * Create a new document.
    * @param initialProps Initial properties.
@@ -406,5 +409,25 @@ export const Document: {
   new <T extends Record<string, any> = { [key: string]: any }>(
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType
-  ): Document<T>;
-} = TypedDocument as any;
+  ): TypedObject<T>;
+};
+
+export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
+
+//
+// Expando
+// Schema-less expandable object.
+//
+
+type ExpandoConstructor = {
+  /**
+   * Create a new document.
+   * @param initialProps Initial properties.
+   * @param _schemaType Schema type for generated types.
+   */
+  new (initialProps?: Record<string, any>): Expando;
+};
+
+export const Expando: ExpandoConstructor = TypedObject;
+
+export type Expando = TypedObject<{ [key: string]: any }>;
