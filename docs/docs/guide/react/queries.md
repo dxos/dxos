@@ -106,11 +106,7 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-<<<<<<< HEAD
 import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
-=======
-import { TypedObject, TypeFilter, EchoSchema } from "@dxos/react-client";
->>>>>>> main
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
