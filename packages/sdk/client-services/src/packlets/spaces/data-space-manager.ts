@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
   MetadataStore,
@@ -69,19 +69,30 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-      await space.initializeDataPipeline();
       if (spaceMetadata.dataTimeframe) {
-        log('waiting for latest timeframe', { spaceMetadata });
-        await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.dataTimeframe);
+        log('set latest timeframe', { spaceMetadata });
+        space.dataPipelineController.setTargetTimeframe(spaceMetadata.dataTimeframe);
       }
-      await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
-        timeout: DATA_PIPELINE_READY_TIMEOUT
-      });
-      this._dataServiceSubscriptions.registerSpace(
-        space.key,
-        space.dataPipelineController.databaseBackend!.createDataServiceHost()
-      );
+
+      // Asynchronously initialize the data pipeline.
+      scheduleTask(this._ctx, async () => {
+        try {
+          await space.initializeDataPipeline();
+          await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
+            timeout: DATA_PIPELINE_READY_TIMEOUT
+          });
+          this._dataServiceSubscriptions.registerSpace(
+            space.key,
+            space.dataPipelineController.databaseBackend!.createDataServiceHost()
+          );
+          this.updated.emit();
+        } catch (err) {
+          log.error('error initializing space data pipeline', err);
+        }
+      }) 
     }
+
+    this.updated.emit();
   }
 
   @synchronized
@@ -117,6 +128,7 @@ export class DataSpaceManager {
     assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
+    // For the new space this should complete without blocking on network.
     await space.initializeDataPipeline();
     this._dataServiceSubscriptions.registerSpace(
       space.key,
@@ -139,14 +151,31 @@ export class DataSpaceManager {
 
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
-    await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(
-      space.key,
-      space.dataPipelineController.databaseBackend!.createDataServiceHost()
-    );
+
+    // Asynchronously initialize the data pipeline.
+    scheduleTask(this._ctx, async () => {
+      await space.initializeDataPipeline();
+      this._dataServiceSubscriptions.registerSpace(
+        space.key,
+        space.dataPipelineController.databaseBackend!.createDataServiceHost()
+      );
+      this.updated.emit();
+    });
 
     this.updated.emit();
     return space;
+  }
+
+  /**
+   * Wait until the space data pipeline is fully initialized.
+   * Used by invitation handler.
+   * TODO(dmaretskyi): Consider removing.
+   */
+  async waitUntilDataPipelineInitialized(spaceKey: PublicKey) {
+    await cancelWithContext(this._ctx, this.updated.waitForCondition(() => {
+      const space = this._spaces.get(spaceKey);
+      return !!space && space.isOpen && space.dataPipelineController.isOpen;
+    }));
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {

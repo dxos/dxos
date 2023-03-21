@@ -336,6 +336,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               // Record credential in our HALO.
               await this._signingContext.recordCredential(credential);
 
+              // TODO(dmaretskyi): Should we block here?
+              await this._spaceManager.waitUntilDataPipelineInitialized(space.key);
+
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
               complete.wake();

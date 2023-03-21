@@ -61,8 +61,10 @@ export class DataPipelineController {
   private _spaceContext!: DataPipelineControllerContext;
   private _pipeline?: Pipeline;
   private _snapshot?: SpaceSnapshot;
+  private _targetTimeframe?: Timeframe;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
+  private _isOpen = false;
 
   public readonly onTimeframeReached = new Event<Timeframe>();
 
@@ -70,6 +72,10 @@ export class DataPipelineController {
 
   public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;
+
+  get isOpen() {
+    return this._isOpen;
+  }
 
   get pipelineState() {
     return this._pipeline?.state;
@@ -83,6 +89,11 @@ export class DataPipelineController {
     return snapshotTimeframeToStartingTimeframe(this.snapshotTimeframe ?? new Timeframe());
   }
 
+  setTargetTimeframe(timeframe: Timeframe) {
+    this._targetTimeframe = timeframe;
+    this._pipeline?.state.setTargetTimeframe(timeframe);
+  }
+
   async open(spaceContext: DataPipelineControllerContext) {
     this._spaceContext = spaceContext;
     if (this._params.snapshotId) {
@@ -91,6 +102,9 @@ export class DataPipelineController {
     }
 
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
+    if(this._targetTimeframe) {
+      this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
+    }
 
     // Create database backend.
     const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
@@ -110,6 +124,8 @@ export class DataPipelineController {
     });
 
     this._createPeriodicSnapshots();
+
+    this._isOpen = true;
   }
 
   private _createPeriodicSnapshots() {
@@ -145,12 +161,16 @@ export class DataPipelineController {
 
   private async _saveLatestTimeframe() {
     const latestTimeframe = this._pipeline?.state.timeframe;
+    log('save latest timeframe', { latestTimeframe, spaceKey: this._params.spaceKey })
     if (latestTimeframe) {
       await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
     }
   }
 
   async close() {
+    log('close')
+    this._isOpen = false;
+
     try {
       await this._saveLatestTimeframe();
       await this._saveSnapshot();

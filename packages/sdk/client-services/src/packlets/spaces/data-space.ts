@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trackLeaks } from '@dxos/async';
+import { Event, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
@@ -58,9 +58,12 @@ export class DataSpace {
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly stateUpdate = new Event();
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
+
     this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
@@ -103,10 +106,6 @@ export class DataSpace {
     return this._dataPipelineController;
   }
 
-  get stateUpdate() {
-    return this._inner.stateUpdate;
-  }
-
   get presence() {
     return this._presence;
   }
@@ -124,6 +123,7 @@ export class DataSpace {
   async close() {
     await this._ctx.dispose();
 
+    await this._dataPipelineController.close();
     await this.authVerifier.close();
 
     await this._inner.close();
@@ -163,6 +163,7 @@ export class DataSpace {
         return pipeline;
       }
     });
+    this.stateUpdate.emit();
   }
 
   @timed(10_000)
