@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useMachine } from '@xstate/react';
 import { useCallback } from 'react';
-import { assign, createMachine, EventObject, Observer, StateNodeConfig, Subscribable, Subscription } from 'xstate';
+import { assign, createMachine } from 'xstate';
+import type { EventObject, Observer, StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
 import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client';
@@ -16,7 +18,7 @@ type InvitationDomainContext = Partial<{
   invitation: Subscribable<InvitationEvent>;
 }>;
 
-export type JoinMachineContext = {
+type JoinMachineContext = {
   identity: Identity | null;
   halo: InvitationDomainContext;
   space: InvitationDomainContext;
@@ -25,6 +27,12 @@ export type JoinMachineContext = {
 type SelectIdentityEvent = {
   type: 'selectIdentity';
   identity: Identity;
+};
+
+type SetInvitationCodeEvent = {
+  type: 'setInvitationCode';
+  domain: 'halo' | 'space';
+  code: string;
 };
 
 type FailInvitationEvent = {
@@ -55,7 +63,7 @@ const wrapInvitation = (
   } as Subscribable<InvitationEvent>;
 };
 
-export const useJoinMachineClientActions = (client: Client) => {
+const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine>[1]) => {
   const redeemHaloInvitationCode = useCallback(
     () =>
       assign<JoinMachineContext>({
@@ -96,10 +104,10 @@ export const useJoinMachineClientActions = (client: Client) => {
       }),
     [client]
   );
-  return {
-    redeemHaloInvitationCode,
-    redeemSpaceInvitationCode
-  };
+  return useMachine(joinMachine, {
+    ...options,
+    actions: { ...options?.actions, redeemHaloInvitationCode, redeemSpaceInvitationCode }
+  });
 };
 
 const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: string) => {
@@ -110,9 +118,14 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       src: (context) => context[Domain.toLowerCase() as 'space' | 'halo'].invitation!
     },
     states: {
+      [`inputting${Domain}InvitationCode`]: {},
       [`connecting${Domain}Invitation`]: {},
-      [`inputting${Domain}VerificationCode`]: {},
-      [`authenticating${Domain}VerificationCode`]: {},
+      [`inputting${Domain}VerificationCode`]: {
+        on: {
+          [`authenticate${Domain}VerificationCode`]: `.authenticationFailing${Domain}VerificationCode`
+        }
+      },
+      [`authenticationFailing${Domain}VerificationCode`]: {},
       [`failing${Domain}Invitation`]: {}
     },
     on: {
@@ -124,7 +137,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
   return config as StateNodeConfig<JoinMachineContext, typeof config, EventObject>;
 };
 
-export const joinMachine = createMachine<JoinMachineContext>(
+const joinMachine = createMachine<JoinMachineContext>(
   {
     id: 'join',
     predictableActionArguments: true,
@@ -145,13 +158,13 @@ export const joinMachine = createMachine<JoinMachineContext>(
             ]
           },
           choosingAuthMethod: {},
-          restoringIdentity: {},
+          recoveringIdentity: {},
           creatingIdentity: {},
           acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '..confirmingAddedIdentity'),
           confirmingAddedIdentity: {}
         },
         on: {
-          restoreIdentity: '.restoringIdentity',
+          recoverIdentity: '.recoveringIdentity',
           createIdentity: '.creatingIdentity',
           acceptHaloInvitation: '.acceptingHaloInvitation',
           addIdentity: '.confirmingAddedIdentity',
@@ -183,7 +196,26 @@ export const joinMachine = createMachine<JoinMachineContext>(
       }),
       unsetIdentity: assign<JoinMachineContext>({
         identity: () => null
+      }),
+      setInvitationCode: assign<JoinMachineContext, SetInvitationCodeEvent>({
+        halo: (context, event) =>
+          event.domain === 'halo'
+            ? { ...context.halo, unredeemedCode: event.code, invitation: undefined }
+            : context.halo,
+        space: (context, event) =>
+          event.domain === 'space'
+            ? { ...context.space, unredeemedCode: event.code, invitation: undefined }
+            : context.space
       })
     }
   }
 );
+
+type JoinMachine = typeof joinMachine;
+type UseJoinMachineReturnType = ReturnType<typeof useMachine<JoinMachine>>;
+
+type JoinState = UseJoinMachineReturnType[0];
+type JoinSend = UseJoinMachineReturnType[1];
+
+export type { JoinMachine, JoinState, JoinSend, JoinMachineContext };
+export { joinMachine, useJoinMachine };
