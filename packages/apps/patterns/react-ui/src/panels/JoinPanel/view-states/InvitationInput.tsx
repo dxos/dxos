@@ -27,7 +27,7 @@ export const InvitationInput = ({ invitationType, ...viewStateProps }: Invitatio
     dispatch({
       type: 'connecting invitation',
       from: invitationType,
-      invitation: client[invitationType === 'halo' ? 'halo' : 'echo'].acceptInvitation(
+      invitation: (invitationType === 'halo' ? client.halo.acceptInvitation : client.acceptInvitation)(
         InvitationEncoder.decode(inputValue)
       )
     });

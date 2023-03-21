@@ -49,7 +49,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           initialInvitationCode={invitationCode}
           onDone={async () => {
             // TODO(wittjosiah): Is this app-specific?
-            spaces.length > 0 || (await client.echo.createSpace());
+            spaces.length > 0 || (await client.createSpace());
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}

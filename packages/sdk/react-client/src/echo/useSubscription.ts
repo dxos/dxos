@@ -25,7 +25,7 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
   const subscriptionRef = useRef<SubscriptionHandle>();
 
   useEffect(() => {
-    subscriptionRef.current = client.echo.dbRouter.createSubscription(() => {
+    subscriptionRef.current = client.dbRouter.createSubscription(() => {
       callbackRef.current();
     });
 

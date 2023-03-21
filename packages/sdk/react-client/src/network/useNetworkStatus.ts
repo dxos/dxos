@@ -13,22 +13,8 @@ import { useClient } from '../client';
  */
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(client.mesh.getNetworkStatus().value[0]);
-
-  useEffect(() => {
-    const result = client.mesh.getNetworkStatus();
-    setNetworkStatus(result.value[0]);
-
-    const unsubscribe = result.subscribe(() => {
-      setNetworkStatus(result.value[0]);
-    });
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(client.networkStatus.get());
+  useEffect(() => client.networkStatus.subscribe(setNetworkStatus), [client]);
 
   return networkStatus;
 };

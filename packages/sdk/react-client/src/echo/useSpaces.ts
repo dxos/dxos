@@ -37,7 +37,7 @@ export const useOrCreateFirstSpace = () => {
       if (!space && !isCreatingSpace.current) {
         isCreatingSpace.current = true;
         try {
-          const newSpace = await client.echo.createSpace();
+          const newSpace = await client.createSpace();
           setSpace(newSpace);
         } catch (err) {
           log.error('Failed to create space', err);
@@ -60,8 +60,8 @@ export const useOrCreateFirstSpace = () => {
 export const useSpaces = (): Space[] => {
   const client = useClient();
   const spaces = useSyncExternalStore(
-    (listener) => client.echo.spaces.subscribe(listener),
-    () => client.echo.spaces.get()
+    (listener) => client.spaces.subscribe(listener),
+    () => client.spaces.get()
   );
 
   return spaces;

@@ -5,20 +5,31 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, synchronized, Trigger } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
+import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  ConnectionState,
+  Invitation,
+  NetworkStatus,
+  SystemStatus,
+  SystemStatusResponse
+} from '@dxos/protocols/proto/dxos/client/services';
 import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
+import { AuthenticatingInvitationObservable, InvitationsOptions } from '../invitations';
+import { PropertiesProps } from '../proto';
+import { EchoProxy, HaloProxy, MeshProxy, Space } from '../proxies';
+import { Observable } from '../util';
 import { SpaceSerializer } from './serializer';
 import { ClientServicesProvider } from './service-definitions';
 import { fromIFrame } from './utils';
@@ -63,7 +74,7 @@ export class Client {
   private _initialized = false;
   private _statusStream?: Stream<SystemStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
-  private _status?: SystemStatus;
+  private _status = new Observable<SystemStatus | undefined>(undefined, this._statusUpdate);
 
   // prettier-ignore
   constructor({
@@ -97,9 +108,9 @@ export class Client {
   toJSON() {
     return {
       initialized: this.initialized,
-      echo: this.echo,
-      halo: this.halo,
-      mesh: this.mesh
+      echo: this._echo,
+      halo: this._halo,
+      mesh: this._mesh
     };
   }
 
@@ -126,28 +137,70 @@ export class Client {
   }
 
   /**
+   * Client services system status.
+   */
+  get status(): Observable<SystemStatus | undefined> {
+    return this._status;
+  }
+
+  /**
    * HALO credentials.
    */
   get halo(): HaloProxy {
-    assert(this._initialized, 'Client not initialized.');
     return this._halo;
   }
 
   /**
-   * ECHO database.
+   * Client network status.
    */
-  get echo(): EchoProxy {
-    assert(this._initialized, 'Client not initialized.');
-    // if (!this.halo.identity) {
-    //   throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
-    // }
-
-    return this._echo;
+  get networkStatus(): Observable<NetworkStatus> {
+    return this._mesh.networkStatus;
   }
 
-  get mesh(): MeshProxy {
-    assert(this._initialized, 'Client not initialized.');
-    return this._mesh;
+  /**
+   * @deprecated
+   */
+  get dbRouter(): DatabaseRouter {
+    return this._echo.dbRouter;
+  }
+
+  /**
+   * ECHO spaces.
+   */
+  get spaces(): Observable<Space[]> {
+    return this._echo.spaces;
+  }
+
+  /**
+   * Update the connection state of the client.
+   */
+  setConnectionState(state: ConnectionState): Promise<void> {
+    return this._mesh.setConnectionState(state);
+  }
+
+  addSchema(schema: EchoSchema): void {
+    return this._echo.addSchema(schema);
+  }
+
+  /**
+   * Creates a new space.
+   */
+  createSpace(meta?: PropertiesProps): Promise<Space> {
+    return this._echo.createSpace(meta);
+  }
+
+  /**
+   * Get an existing space by its key.
+   */
+  getSpace(spaceKey: PublicKey): Space | undefined {
+    return this._echo.getSpace(spaceKey);
+  }
+
+  /**
+   * Accept an invitation to a space.
+   */
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
+    return this._echo.acceptInvitation(invitation, options);
   }
 
   /**
@@ -176,18 +229,15 @@ export class Client {
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
-        this._status = status;
-        this._statusUpdate.emit(this._status);
+        this._statusUpdate.emit(status);
 
         this._statusTimeout = setTimeout(() => {
-          this._status = undefined;
-          this._statusUpdate.emit(this._status);
+          this._statusUpdate.emit(undefined);
         }, 5000);
       },
       (err) => {
         trigger.wake(err);
-        this._status = undefined;
-        this._statusUpdate.emit(this._status);
+        this._statusUpdate.emit(undefined);
       }
     );
 
@@ -197,7 +247,7 @@ export class Client {
     }
 
     // TODO(wittjosiah): Promise.all?
-    await this._halo.open();
+    await this._halo._open();
     await this._echo.open();
     await this._mesh.open();
 
@@ -214,7 +264,7 @@ export class Client {
       return;
     }
 
-    await this._halo.close();
+    await this._halo._close();
     await this._echo.close();
     await this._mesh.close();
 
@@ -223,17 +273,6 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
-  }
-
-  getStatus(): SystemStatus | undefined {
-    return this._status;
-  }
-
-  /**
-   * Observe the system status.
-   */
-  subscribeStatus(callback: (status: SystemStatus | undefined) => void): UnsubscribeCallback {
-    return this._statusUpdate.on(callback);
   }
 
   /**
@@ -262,6 +301,9 @@ export class Client {
     this._initialized = false;
   }
 
+  /**
+   * @deprecated
+   */
   createSerializer() {
     return new SpaceSerializer(this._echo);
   }

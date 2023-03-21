@@ -184,13 +184,13 @@ describe('Client services', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const space1 = await client1.echo.createSpace();
+    const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
     const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
 
     observable1.subscribe({
       onConnecting: (invitation) => {
-        const observable2 = client2.echo.acceptInvitation(invitation);
+        const observable2 = client2.acceptInvitation(invitation);
         observable2.subscribe({
           onSuccess: (invitation: Invitation) => {
             success2.wake(invitation);
@@ -214,7 +214,7 @@ describe('Client services', () => {
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const space2 = client2.echo.getSpace(invitation2.spaceKey!);
+      const space2 = client2.getSpace(invitation2.spaceKey!);
       assert(space2);
       expect(space2).to.exist;
       trigger.wake(space2);

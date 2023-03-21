@@ -47,7 +47,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
   // const observerComponent = (props: any, ref: React.Ref<TRef>) => {
   const observerComponent = (props: any) => {
     const client = useClient();
-    const accessObserver = client.echo.dbRouter.createAccessObserver();
+    const accessObserver = client.dbRouter.createAccessObserver();
     const [, setState] = useState([]);
     const forceUpdate = () => setState([]);
 
@@ -66,7 +66,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
     const state = stateRef.current!;
     if (!state.handle) {
       // First render or component was not committed.
-      state.handle = client.echo.dbRouter.createSubscription(() => {
+      state.handle = client.dbRouter.createSubscription(() => {
         // Observable has changed, meaning we want to re-render
         // BUT if we're a component that hasn't yet got to the useEffect()
         // stage, we might be a component that _started_ to render, but
@@ -107,7 +107,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
         // and our reaction got cleaned up.
 
         // Re-create the reaction.
-        state.handle = client.echo.dbRouter.createSubscription(() => {
+        state.handle = client.dbRouter.createSubscription(() => {
           // We've definitely already been mounted at this point.
           forceUpdate();
         });

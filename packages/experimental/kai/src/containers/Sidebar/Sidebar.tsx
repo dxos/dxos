@@ -138,7 +138,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   };
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
@@ -245,11 +245,11 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
-        await client.mesh.setConnectionState(ConnectionState.ONLINE);
+        await client.setConnectionState(ConnectionState.ONLINE);
         break;
       }
       case ConnectionState.ONLINE: {
-        await client.mesh.setConnectionState(ConnectionState.OFFLINE);
+        await client.setConnectionState(ConnectionState.OFFLINE);
         break;
       }
     }
