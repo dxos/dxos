@@ -25,11 +25,11 @@ import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
-import { Timeframe } from '@dxos/timeframe';
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -39,13 +39,13 @@ export type AcceptSpaceOptions = {
    * Latest known timeframe for the control pipeline.
    * We will try to catch up to this timeframe before starting the data pipeline.
    */
-  controlTimeframe?: Timeframe
+  controlTimeframe?: Timeframe;
 
   /**
    * Latest known timeframe for the data pipeline.
    * We will try to catch up to this timeframe before initializing the database.
    */
-  dataTimeframe?: Timeframe
+  dataTimeframe?: Timeframe;
 };
 
 @trackLeaks('open', 'close')
@@ -183,7 +183,7 @@ export class DataSpaceManager {
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
-    log('construct space', { metadata })
+    log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey
     });
@@ -240,10 +240,10 @@ export class DataSpaceManager {
 
     await dataSpace.open();
 
-    if(metadata.controlTimeframe) {
+    if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
-    if(metadata.dataTimeframe) {
+    if (metadata.dataTimeframe) {
       dataSpace.dataPipelineController.setTargetTimeframe(metadata.dataTimeframe);
     }
 

@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';

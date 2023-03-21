@@ -177,10 +177,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
             // Updating credentials complete.
             complete.wake(deviceKey);
 
-            return { 
+            return {
               credential: spaceMemberCredential,
               controlTimeframe: space.inner.controlPipeline.state.timeframe,
-              dataTimeframe: space.dataPipelineController.pipelineState?.timeframe,
+              dataTimeframe: space.dataPipelineController.pipelineState?.timeframe
             };
           } catch (err) {
             // TODO(burdon): Generic RPC callback to report error to client.
@@ -320,12 +320,13 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
               // 4. Send admission credentials to host (with local space keys).
               log('request admission', { guest: this._signingContext.deviceKey });
-              const { credential, controlTimeframe, dataTimeframe } = await extension.rpc.SpaceHostService.requestAdmission({
-                identityKey: this._signingContext.identityKey,
-                deviceKey: this._signingContext.deviceKey,
-                controlFeedKey,
-                dataFeedKey
-              });
+              const { credential, controlTimeframe, dataTimeframe } =
+                await extension.rpc.SpaceHostService.requestAdmission({
+                  identityKey: this._signingContext.identityKey,
+                  deviceKey: this._signingContext.deviceKey,
+                  controlFeedKey,
+                  dataFeedKey
+                });
 
               // 4. Create local space.
               const assertion = getCredentialAssertion(credential);
@@ -336,7 +337,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 spaceKey: assertion.spaceKey,
                 genesisFeedKey: assertion.genesisFeedKey,
                 controlTimeframe,
-                dataTimeframe,
+                dataTimeframe
               });
 
               // Record credential in our HALO.
