@@ -56,8 +56,6 @@ export class SpacesServiceImpl implements SpacesService {
       const onUpdate = async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const spaces = Array.from(dataSpaceManager.spaces.values())
-          // Skip spaces without data service available.
-          .filter((space) => this._dataServiceSubscriptions.getDataService(space.key))
           .map((space) => this._transformSpace(space));
         log('update', { spaces });
         next({ spaces });

@@ -41,6 +41,8 @@ export class DataSpaceManager {
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
+  private _isOpen = false;
+
   constructor(
     private readonly _spaceManager: SpaceManager,
     private readonly _metadataStore: MetadataStore,
@@ -74,18 +76,23 @@ export class DataSpaceManager {
       scheduleTask(this._ctx, async () => {
         try {
           await space.initializeDataPipeline();
-          this.updated.emit();
+          
+          if(this._isOpen) {
+            this.updated.emit();
+          }
         } catch (err) {
           log.error('error initializing space data pipeline', err);
         }
       })
     }
 
+    this._isOpen = true;
     this.updated.emit();
   }
 
   @synchronized
   async close() {
+    this._isOpen = false;
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
       await space.close();

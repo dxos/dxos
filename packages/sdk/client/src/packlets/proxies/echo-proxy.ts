@@ -128,7 +128,13 @@ export class EchoProxy implements Echo {
         }
       }
 
-      gotInitialUpdate.wake();
+      // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
+      // This is needed because apps don't handle spaces loading correctly.
+      // TODO(dmaretskyi): Remove when apps and API are ready.
+      if(data.spaces?.every(space => space.status === SpaceStatus.ACTIVE)) {
+        gotInitialUpdate.wake();
+      }
+
       if (emitUpdate) {
         this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
         this._spacesChanged.emit(this._cachedSpaces);
