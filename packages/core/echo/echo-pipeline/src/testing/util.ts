@@ -12,7 +12,7 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DatabaseBackendHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
-import { DataPipelineControllerImpl } from '../space';
+import { DataPipelineController } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
@@ -56,10 +56,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   };
 };
 
-export const testLocalDatabase = async (
-  create: DataPipelineControllerImpl,
-  check: DataPipelineControllerImpl = create
-) => {
+export const testLocalDatabase = async (create: DataPipelineController, check: DataPipelineController = create) => {
   const objectId = PublicKey.random().toHex();
   await create.databaseBackend!.getWriteStream()?.write({
     batch: {

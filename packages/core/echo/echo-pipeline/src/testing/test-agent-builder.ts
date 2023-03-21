@@ -17,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
-import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
+import { DataPipelineController } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -125,7 +125,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
-  ): Promise<[Space, DataPipelineControllerImpl]> {
+  ): Promise<[Space, DataPipelineController]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -140,7 +140,7 @@ export class TestAgent {
 
     const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
     await metadataStore.addSpace({ key: spaceKey });
-    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
+    const dataPipelineController: DataPipelineController = new DataPipelineController({
       modelFactory: new ModelFactory().registerModel(DocumentModel),
       metadataStore,
       snapshotManager,
@@ -158,7 +158,13 @@ export class TestAgent {
       .setControlFeed(controlFeed)
       .setDataFeed(dataFeed);
     await space.open();
-    await space.initDataPipeline(dataPipelineController);
+    await dataPipelineController.open({
+      openPipeline: async (start) => {
+        const pipeline = await space.createDataPipeline({ start });
+        await pipeline.start();
+        return pipeline;
+      }
+    });
 
     this._spaces.set(spaceKey, space);
     return [space, dataPipelineController];

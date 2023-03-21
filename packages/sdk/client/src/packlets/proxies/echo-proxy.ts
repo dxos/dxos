@@ -12,7 +12,7 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
@@ -105,6 +105,11 @@ export class EchoProxy implements Echo {
 
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.spaceKey)) {
+          if (space.status === SpaceStatus.INACTIVE) {
+            // Skip inactive spaces. They will be added when they are activated.
+            continue;
+          }
+
           await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
           if (this._destroying) {
             return;
@@ -123,7 +128,13 @@ export class EchoProxy implements Echo {
         }
       }
 
-      gotInitialUpdate.wake();
+      // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
+      // This is needed because apps don't handle spaces loading correctly.
+      // TODO(dmaretskyi): Remove when apps and API are ready.
+      if (data.spaces?.every((space) => space.status === SpaceStatus.ACTIVE)) {
+        gotInitialUpdate.wake();
+      }
+
       if (emitUpdate) {
         this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
         this._spacesChanged.emit(this._cachedSpaces);
@@ -140,6 +151,7 @@ export class EchoProxy implements Echo {
       await space.destroy();
     }
     this._spaces.clear();
+    this._cachedSpaces = [];
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;
