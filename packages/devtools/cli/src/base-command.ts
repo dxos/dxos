@@ -55,7 +55,7 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => join(context.config.configDir, 'config.yml')
+      default: async (context: any) => join(context.config.configDir, 'dx.yml')
     }),
 
     timeout: Flags.integer({
@@ -69,8 +69,6 @@ export abstract class BaseCommand extends Command {
 
     this._startTime = new Date();
   }
-
-  flags: any;
 
   get clientConfig() {
     return this._clientConfig;
