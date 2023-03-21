@@ -35,6 +35,7 @@ export interface Echo {
 
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 
+  // TODO(burdon): Rename.
   dbRouter: DatabaseRouter;
 }
 
