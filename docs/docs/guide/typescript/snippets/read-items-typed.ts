@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Document } from '@dxos/client';
+import { Client, TypedObject } from '@dxos/client';
 
 const client = new Client();
 
-class Task extends Document {
+class Task extends TypedObject {
   public declare type: 'task';
   public declare isCompleted: boolean;
 }

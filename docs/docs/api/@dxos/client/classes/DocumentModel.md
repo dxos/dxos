@@ -27,9 +27,6 @@ Arguments:
 ### [_getState]()
 Type: <code>function</code>
 
-### [update]()
-Type: <code>Event&lt;Model&lt;DocumentModelState, ObjectMutationSet&gt;&gt;</code>
-
 ### [meta]()
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 
@@ -148,16 +145,6 @@ Arguments:
 `key`: <code>string</code>
 
 `value`: <code>any</code>
-
-### [subscribe(listener)]()
-
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`listener`: <code>function</code>
 
 ### [toJSON()]()
 

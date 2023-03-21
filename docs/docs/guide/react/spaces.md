@@ -53,7 +53,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L19)
 
 Get a specific Space using its key. Returns undefined when no spaceKey is
 available. Requires a ClientProvider somewhere in the parent tree.
@@ -77,9 +77,9 @@ Arguments: none
 :::
 
 :::apidoc[@dxos/react-client.useOrCreateFirstSpace]
-### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
+### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L30)
 
-Returns the first space in the current spaces array. If none exist,  `null`
+Returns the first space in the current spaces array. If none exist,  `undefined`
 will be returned at first, then the hook will re-run and return a space once
 it has been created. Requires a ClientProvider somewhere in the parent tree.
 

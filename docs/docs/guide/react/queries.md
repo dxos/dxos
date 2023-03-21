@@ -47,7 +47,7 @@ The API definition of `useQuery` is below. It returns a generic `Document` type 
 
 Create subscription.
 
-Returns: <code>[Document](/api/@dxos/react-client/values#Document)\<object>\[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)\<object>\[]</code>
 
 Arguments:
 
@@ -106,7 +106,7 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
@@ -115,11 +115,14 @@ export const schema = EchoSchema.fromJson(
 export class Task extends TypedObject {
   static readonly type = schema.getType('dxos.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 

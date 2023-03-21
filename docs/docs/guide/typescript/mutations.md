@@ -13,7 +13,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile()
+  if (!client.halo.profile) await client.halo.createProfile();
   // get a list of all spaces
   const { value: spaces } = client.echo.querySpaces();
   // grab a space
@@ -23,7 +23,7 @@ const client = new Client();
   const object = result.objects[0];
   // mutate the object directly
   object.isCompleted = true;
-})()
+})();
 ```
 
 The mutation will queue up inside the `Client` and begin propagating to listening peers on the next tick.
@@ -34,10 +34,10 @@ To insert an object into an ECHO space, simply construct it and call the `add` m
 
 ### Untyped
 
-Without strong types, the generic `Document` class can be used:
+Without strong types, the generic `Expando` class can be used:
 
 ```tsx file=./snippets/create-objects.ts#L5-
-import { Client, Document } from '@dxos/client';
+import { Client, Expando } from '@dxos/client';
 
 const client = new Client();
 
@@ -56,7 +56,7 @@ const client = new Client();
 
 ### Typed
 
-If strong types are desired, an instance of a specific `Document` descendant should be used:
+If strong types are desired, an instance of a specific `TypedObject` descendant should be used:
 
 ```tsx file=./snippets/create-objects-typed.ts#L5-
 import { Client } from '@dxos/client';

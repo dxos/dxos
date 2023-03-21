@@ -108,7 +108,7 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
@@ -117,11 +117,14 @@ export const schema = EchoSchema.fromJson(
 export class Task extends TypedObject {
   static readonly type = schema.getType('dxos.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 
@@ -139,7 +142,7 @@ To use the type declarations, simply import the relevant type like `Task` from t
 
 ```ts file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
-import { Task } from "./schema";
+import { Task } from './schema';
 
 const client = new Client();
 
