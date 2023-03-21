@@ -131,12 +131,12 @@ The changes will also cause any subscribed UI components in the app to re-render
 Creating new objects:
 
 ```ts
-import { Document } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client';
 
-const newThing = new Document();
-newThing.someProperty = 'example';
+const note = new Expando({ title: 'example' });
+note.description = 'Expandos can have any additional properties.';
 
-space.db.save(newThing);
+space.db.add(note);
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.

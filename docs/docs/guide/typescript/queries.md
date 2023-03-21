@@ -37,14 +37,15 @@ The result is an iterable collection of objects that can be used like an array.
 
 ## Typed Queries
 
-It's possible to receive strongly typed results from a `query`. Pass a type argument to `query<T>` which descends from [`Document`](/api/@dxos/client/classes/Document):
+It's possible to receive strongly typed results from a `query`. 
+Pass a type argument to `query<T>` which descends from [`TypedObject`](/api/@dxos/client/classes/TypedObject):
 
 ```ts{5,17} file=./snippets/read-items-typed.ts#L5-
-import { Client, Document } from '@dxos/client';
+import { Client, TypedObject } from '@dxos/client';
 
 const client = new Client();
 
-class Task extends Document {
+class Task extends TypedObject {
   public declare type: 'task';
   public declare isCompleted: boolean;
 }
@@ -60,7 +61,8 @@ async () => {
 };
 ```
 
-The type of the resulting objects must descend from `Document` because ECHO tracks objects returned from `query`. Mutating the objects directly (setting values, modifying arrays, ..., etc.) will cause ECHO to propagate those changes to all listening ECHO peers in the space.
+The type of the resulting objects must descend from `TypedObject` because ECHO tracks objects returned from `query`. 
+Mutating the objects directly (setting values, modifying arrays, ..., etc.) will cause ECHO to propagate those changes to all listening ECHO peers in the space.
 
 DXOS provides a tool for conveniently generating entity classes (like `Task` above) that work with the `query<T>` interface.
 

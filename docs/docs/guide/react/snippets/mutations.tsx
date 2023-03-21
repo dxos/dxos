@@ -6,10 +6,10 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
+  Expando,
   useOrCreateFirstSpace,
   useIdentity,
-  useQuery,
-  Document
+  useQuery
 } from '@dxos/react-client';
 
 export const App = () => {
@@ -31,7 +31,7 @@ export const App = () => {
       <button
         name="add"
         onClick={() => {
-          const task = new Document({ title: 'buy milk' });
+          const task = new Expando({ title: 'buy milk' });
           space.db.add(task);
         }}
       >

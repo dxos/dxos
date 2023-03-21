@@ -7,7 +7,7 @@ order: 6
 Objects returned from `query` are automatically tracked by the `Client` and direct manipulation of them will result in writes being dispatched over the network to listening peers in the space.
 
 ```ts file=./snippets/write-items.ts#L5-
-import { Client, DocumentModel } from '@dxos/client';
+import { Client } from '@dxos/client';
 
 const client = new Client();
 
@@ -45,10 +45,11 @@ const client = new Client();
   await client.initialize();
   if (!client.halo.profile) await client.halo.createProfile();
 
+  // TODO(burdon): Update.
   const { value: spaces } = client.echo.querySpaces();
   const space = spaces[0];
 
-  const object = new Document({ type: 'task', title: 'buy milk' });
+  const object = new Expando({ type: 'task', title: 'buy milk' });
 
   await space.db.add(object);
 })();

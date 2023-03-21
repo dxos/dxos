@@ -18,10 +18,10 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
+  Expando,
   useOrCreateFirstSpace,
   useIdentity,
-  useQuery,
-  Document
+  useQuery
 } from '@dxos/react-client';
 
 export const App = () => {
@@ -43,7 +43,7 @@ export const App = () => {
       <button
         name="add"
         onClick={() => {
-          const task = new Document({ title: 'buy milk' });
+          const task = new Expando({ title: 'buy milk' });
           space.db.add(task);
         }}
       >
@@ -66,7 +66,7 @@ root.render(
 To create (insert) a new object, simply construct a `new Document` and pass any initial values into the constructor (line 23 above).
 
 ::: note Tip
-Calling `space.db.save(task)` (line 24 above) needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
+Calling `space.db.add(task)` (line 24 above) needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
 :::
 
 ## Typed Mutations
