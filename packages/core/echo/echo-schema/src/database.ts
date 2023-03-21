@@ -13,10 +13,10 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
-import { Document } from './document';
 import { EchoObject } from './object';
 import { Filter, Query, TypeFilter } from './query';
 import { Text } from './text-object';
+import { TypedObject } from './typed-object';
 
 /**
  * Database wrapper.
@@ -125,7 +125,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
-  remove<T extends Document>(obj: T) {
+  remove<T extends TypedObject>(obj: T) {
     this._backend.mutate({
       objects: [
         {
@@ -151,7 +151,7 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends Document>(filter: TypeFilter<T>): Query<T>;
+  query<T extends TypedObject>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
     return new Query(this._objects, this._updateEvent, filter);
@@ -197,13 +197,13 @@ export class EchoDatabase {
     if (item.modelType === DocumentModel.meta.type) {
       const type = item.state['@type'];
       if (!type) {
-        return new Document();
+        return new TypedObject();
       }
 
       const Proto = this._router.schema?.getPrototype(type);
       if (!Proto) {
         log.warn('Unknown schema type', { type });
-        return new Document();
+        return new TypedObject(); // TODO(burdon): Expando?
       } else {
         return new Proto();
       }
