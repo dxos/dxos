@@ -16,7 +16,7 @@ export const defaultConfig = {
   maxConnections: 5, // TODO(burdon): No effect.
   limitConnections: false,
   showLines: true,
-  rotation: -0.0003, // Angular velocity.
+  rotation: 0.0003, // Angular velocity.
   mask: {
     color: 0x000000,
     opacity: 0
@@ -236,26 +236,22 @@ class KubeRenderer {
   }
 
   _axes = ['x', 'y', 'z'];
-  _axisIndex = 0;
+  _axisIndex = 1;
   _direction = 1;
 
   render() {
     const time = Date.now();
-    // TODO(burdon): Change axis/direction when normal to camera.
-    let deg = Math.PI / 4 + time * this._config.rotation * this._direction;
-    const rel = deg % Math.PI;
-    if (rel > -0.01 && rel < 0.01) {
-      if (this._axisIndex++ === this._axes.length) {
-        this._axisIndex = 0;
-      }
-      console.log('!!!!!!!!!!!!!!!!!!!', rel);
-      deg = 0;
+    let rad = (time * this._config.rotation * this._direction) % (Math.PI * 4);
+    // Switch every two revolutions.
+    if (Math.abs(rad < 0.01)) {
+      rad = Math.PI * 2; // Round to nearest revolution, but jump away from "zero" test.
+      this._group.rotation[this._axes[this._axisIndex]] = rad;
+      this._axisIndex = Math.floor(this._axes.length * Math.random());
+      this._direction = 1 - this._direction;
+    } else {
+      this._group.rotation[this._axes[this._axisIndex]] = rad;
     }
-    // console.log(rel);
 
-    // console.log(deg);
-
-    this._group.rotation[this._axes[this._axisIndex]] = deg;
     this._renderer.render(this._scene, this._camera);
     return this;
   }
