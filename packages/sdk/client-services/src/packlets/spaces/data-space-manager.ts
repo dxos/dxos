@@ -8,14 +8,11 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
-  MetadataStore,
-  SigningContext,
-  Space,
+  DataServiceSubscriptions, MetadataStore,
+  SigningContext, SnapshotManager,
+  SnapshotStore, Space,
   spaceGenesis,
-  SpaceManager,
-  DataServiceSubscriptions,
-  SnapshotManager,
-  SnapshotStore
+  SpaceManager
 } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -30,7 +27,6 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
-const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -54,7 +50,7 @@ export class DataSpaceManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) {}
+  ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -78,18 +74,11 @@ export class DataSpaceManager {
       scheduleTask(this._ctx, async () => {
         try {
           await space.initializeDataPipeline();
-          await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
-            timeout: DATA_PIPELINE_READY_TIMEOUT
-          });
-          this._dataServiceSubscriptions.registerSpace(
-            space.key,
-            space.dataPipelineController.databaseBackend!.createDataServiceHost()
-          );
           this.updated.emit();
         } catch (err) {
           log.error('error initializing space data pipeline', err);
         }
-      }) 
+      })
     }
 
     this.updated.emit();
@@ -130,10 +119,6 @@ export class DataSpaceManager {
 
     // For the new space this should complete without blocking on network.
     await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(
-      space.key,
-      space.dataPipelineController.databaseBackend!.createDataServiceHost()
-    );
 
     this.updated.emit();
     return space;
@@ -155,10 +140,6 @@ export class DataSpaceManager {
     // Asynchronously initialize the data pipeline.
     scheduleTask(this._ctx, async () => {
       await space.initializeDataPipeline();
-      this._dataServiceSubscriptions.registerSpace(
-        space.key,
-        space.dataPipelineController.databaseBackend!.createDataServiceHost()
-      );
       this.updated.emit();
     });
 
@@ -224,7 +205,13 @@ export class DataSpaceManager {
       keyring: this._keyring,
       feedStore: this._feedStore,
       signingContext: this._signingContext,
-      snapshotId: metadata.snapshot
+      snapshotId: metadata.snapshot,
+      onDataPipelineReady: async () => {
+        this._dataServiceSubscriptions.registerSpace(
+          space.key,
+          dataSpace.dataPipelineController.databaseBackend!.createDataServiceHost()
+        );
+      }
     });
 
     await dataSpace.open();

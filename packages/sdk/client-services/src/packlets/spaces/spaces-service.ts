@@ -140,12 +140,9 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   private _transformSpace(space: DataSpace): Space {
-    // NOTE: We use the presence of the subscription to specify whether the space is active or not.
-    // TODO(dmaretskyi): Find a better way to track this.
-    const isActive = space.isOpen && space.dataPipelineController.isOpen && !!this._dataServiceSubscriptions.getDataService(space.key);
     return {
       spaceKey: space.key,
-      status: isActive ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      status: space.dataPipelineReady ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

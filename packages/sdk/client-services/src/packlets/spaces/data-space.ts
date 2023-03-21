@@ -29,6 +29,9 @@ import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
 
+// Maximum time to wait for the data pipeline to catch up to its desired timeframe.
+const DATA_PIPELINE_READY_TIMEOUT = 10_000;
+
 export type DataSpaceParams = {
   inner: Space;
   modelFactory: ModelFactory;
@@ -41,6 +44,7 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
+  onDataPipelineReady?: () => Promise<void>;
 };
 
 const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
@@ -56,7 +60,9 @@ export class DataSpace {
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _onDataPipelineReady?: () => Promise<void>;
 
+  private _dataPipelineReady = false;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 
@@ -70,6 +76,7 @@ export class DataSpace {
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
+    this._onDataPipelineReady = params.onDataPipelineReady;
     this._dataPipelineController = new DataPipelineController({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
@@ -97,6 +104,10 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  get dataPipelineReady() {
+    return this._dataPipelineReady;
+  }
+
   // TODO(burdon): Can we mark this for debugging only?
   get inner() {
     return this._inner;
@@ -122,6 +133,7 @@ export class DataSpace {
 
   async close() {
     await this._ctx.dispose();
+    this._dataPipelineReady = false;
 
     await this._dataPipelineController.close();
     await this.authVerifier.close();
@@ -163,6 +175,15 @@ export class DataSpace {
         return pipeline;
       }
     });
+
+    // Wait for the data pipeline to catch up to its desired timeframe.
+    await this._dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
+      timeout: DATA_PIPELINE_READY_TIMEOUT
+    });
+
+    await this._onDataPipelineReady?.();
+    
+    this._dataPipelineReady = true;
     this.stateUpdate.emit();
   }
 
