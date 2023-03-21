@@ -35,18 +35,18 @@ type FailInvitationEvent = {
 type InvitationEvent = FailInvitationEvent | EventObject;
 
 const wrapInvitation = (
-  domain: 'Space' | 'Halo',
+  Domain: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
   return {
     subscribe: (observer: Observer<InvitationEvent>): Subscription => {
       const unsubscribe = invitation.subscribe({
-        onAuthenticating: () => observer.next({ type: `authenticate${domain}VerificationCode` }),
+        onAuthenticating: () => observer.next({ type: `authenticate${Domain}VerificationCode` }),
         onCancelled: () =>
-          observer.next({ type: `fail${domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent),
-        onTimeout: () => observer.next({ type: `fail${domain}Invitation`, reason: 'timeout' } as FailInvitationEvent),
-        onConnecting: () => observer.next({ type: `connect${domain}Invitation` }),
-        onConnected: () => observer.next({ type: `connectionSuccess${domain}Invitation` }),
+          observer.next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent),
+        onTimeout: () => observer.next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent),
+        onConnecting: () => observer.next({ type: `connect${Domain}Invitation` }),
+        onConnected: () => observer.next({ type: `connectionSuccess${Domain}Invitation` }),
         onSuccess: () => observer.complete(),
         onError: (error: any) => observer.error(error)
       });
