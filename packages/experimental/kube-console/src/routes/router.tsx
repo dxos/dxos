@@ -6,10 +6,9 @@ import type { Router } from '@remix-run/router';
 import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { Root } from '../containers';
+import { ModuleContainer, Root } from '../containers';
 
 export const LandingPage = React.lazy(() => import('./Landing'));
-export const StatusPage = React.lazy(() => import('./Status'));
 
 export const createRouter = (): Router => {
   return createBrowserRouter([
@@ -18,16 +17,12 @@ export const createRouter = (): Router => {
       element: <Root />,
       children: [
         {
-          path: '/about',
-          element: <LandingPage />
-        },
-        {
-          path: '/status',
-          element: <StatusPage />
-        },
-        {
           path: '/',
           element: <LandingPage />
+        },
+        {
+          path: '/module/:module',
+          element: <ModuleContainer />
         }
       ]
     }

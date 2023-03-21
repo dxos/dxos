@@ -23,7 +23,7 @@ export const LandingPage = () => {
           <span className='ml-4 text-[60px]'>DXOS</span>
         </div>
         <div className='flex justify-center items-center text-zinc-500 font-light mt-2'>
-          <Link to='/status'>
+          <Link to='/module/status'>
             <span className='text-2xl'>KUBE Console</span>
           </Link>
         </div>

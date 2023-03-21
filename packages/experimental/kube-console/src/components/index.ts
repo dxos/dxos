@@ -3,4 +3,5 @@
 //
 
 export * from './Kube';
+export * from './Sidebar';
 export * from './Toolbar';

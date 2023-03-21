@@ -3,3 +3,4 @@
 //
 
 export * from './useKube';
+export * from './useModules';
