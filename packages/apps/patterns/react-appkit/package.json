@@ -43,6 +43,7 @@
     "@radix-ui/react-toolbar": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.5",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
+    "localforage": "^1.10.0",
     "lodash.throttle": "^4.1.1",
     "url-join": "^5.0.0"
   },
