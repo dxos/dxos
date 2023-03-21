@@ -147,22 +147,22 @@ export const joinMachine = createMachine<JoinMachineContext>(
           choosingAuthMethod: {},
           restoringIdentity: {},
           creatingIdentity: {},
-          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', 'choosingIdentity.confirmingAddedIdentity'),
+          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '..confirmingAddedIdentity'),
           confirmingAddedIdentity: {}
         },
         on: {
           restoreIdentity: '.restoringIdentity',
-          createIdentity: '.createIdentity',
+          createIdentity: '.creatingIdentity',
           acceptHaloInvitation: '.acceptingHaloInvitation',
           addIdentity: '.confirmingAddedIdentity',
           selectIdentity: {
-            target: 'join.acceptingSpaceInvitation',
+            target: '..acceptingSpaceInvitation',
             actions: 'setIdentity'
           },
           deselectAuthMethod: '.choosingAuthMethod'
         }
       },
-      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', 'join.finishingJoining'),
+      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '..finishingJoining'),
       finishingJoining: {
         type: 'final'
       }
