@@ -3,7 +3,7 @@
 //
 
 import { Info, Sliders } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { ConfigPage, StatusPage } from '../routes';
 
