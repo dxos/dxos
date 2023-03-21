@@ -9,9 +9,10 @@ import '@dxosTheme';
 import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
-import { App, namespace } from './App';
+import { App } from './App';
+import { namespace } from './util';
 
-void initializeAppTelemetry(namespace, new Config(Defaults()));
+void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 
 const root = createRoot(document.getElementById('root')!);
 
