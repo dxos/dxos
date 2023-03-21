@@ -120,6 +120,16 @@ export default defineConfig({
   ],
   worker: {
     format: 'es',
-    plugins: [ConfigPlugin()]
+    plugins: [
+      ConfigPlugin({
+        env: [
+          'DX_ENVIRONMENT',
+          'DX_IPDATA_API_KEY',
+          'DX_SENTRY_DESTINATION',
+          'DX_TELEMETRY_API_KEY',
+          'DX_VAULT'
+        ]
+      })
+    ]
   }
 });
