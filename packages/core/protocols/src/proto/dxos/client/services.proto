@@ -145,14 +145,11 @@ enum SpaceState {
   /// Space is closed.
   CLOSED = 1;
 
-  /// Data pipeline is initializing. Database is not available.
-  DATA_INITIALIZING = 2;
+  /// Space is inactive. Database is not available.
+  INACTIVE = 2;
 
   /// Data pipeline is ready.
   READY = 3;
-
-  // TODO(dmaretskyi): Inactive state for disabled spaces.
-  // INACTIVE = 4;
 }
 
 message Space {

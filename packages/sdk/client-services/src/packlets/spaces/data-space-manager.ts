@@ -30,6 +30,7 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { SpaceState } from '@dxos/client';
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -172,12 +173,12 @@ export class DataSpaceManager {
    * Used by invitation handler.
    * TODO(dmaretskyi): Consider removing.
    */
-  async waitUntilDataPipelineInitialized(spaceKey: PublicKey) {
+  async waitUntilSpaceReady(spaceKey: PublicKey) {
     await cancelWithContext(
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.isOpen && space.dataPipeline.isOpen;
+        return !!space && space.state === SpaceState.READY;
       })
     );
   }

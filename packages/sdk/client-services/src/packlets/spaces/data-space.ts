@@ -3,6 +3,7 @@
 //
 
 import { Event, trackLeaks } from '@dxos/async';
+import { SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
@@ -62,7 +63,8 @@ export class DataSpace {
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
   private readonly _onDataPipelineReady?: () => Promise<void>;
 
-  private _dataPipelineReady = false;
+  private _state = SpaceState.CLOSED;
+  
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 
@@ -104,8 +106,8 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
-  get dataPipelineReady() {
-    return this._dataPipelineReady;
+  get state(): SpaceState {
+    return this._state;
   }
 
   // TODO(burdon): Can we mark this for debugging only?
@@ -129,11 +131,12 @@ export class DataSpace {
     await this.notarizationPlugin.open();
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
+    this._state = SpaceState.INACTIVE;
   }
 
   async close() {
+    this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
-    this._dataPipelineReady = false;
 
     await this._dataPipeline.close();
     await this.authVerifier.close();
@@ -154,6 +157,7 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
+    // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       // TODO(dmaretskyi): Should it timeout?
       timeout: CONTROL_PIPELINE_READY_TIMEFRAME
@@ -178,6 +182,7 @@ export class DataSpace {
     });
 
     // Wait for the data pipeline to catch up to its desired timeframe.
+    // TODO(dmaretskyi): Cancel with context.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
       // TODO(dmaretskyi): Shouldn't timeout.
       timeout: DATA_PIPELINE_READY_TIMEOUT
@@ -185,7 +190,7 @@ export class DataSpace {
 
     await this._onDataPipelineReady?.();
 
-    this._dataPipelineReady = true;
+    this._state = SpaceState.READY;
     this.stateUpdate.emit();
   }
 

@@ -139,7 +139,7 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      state: space.dataPipelineReady ? SpaceState.READY : SpaceState.DATA_INITIALIZING,
+      state: space.state,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

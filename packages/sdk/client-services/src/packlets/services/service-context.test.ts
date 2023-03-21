@@ -18,7 +18,7 @@ describe('services/ServiceContext', () => {
     const device2 = createServiceContext({ signalContext: networkContext });
     await performInvitation(device1.deviceInvitations, device2.deviceInvitations, undefined);
 
-    await device2.dataSpaceManager!.waitUntilDataPipelineInitialized(space1!.key);
+    await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
   });
@@ -32,7 +32,7 @@ describe('services/ServiceContext', () => {
     await performInvitation(device1.deviceInvitations, device2.deviceInvitations, undefined);
 
     const space1 = await device1.dataSpaceManager!.createSpace();
-    await device2.dataSpaceManager!.waitUntilDataPipelineInitialized(space1!.key);
+    await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
   });
@@ -50,7 +50,7 @@ describe('services/ServiceContext', () => {
     const space1 = await identity2.dataSpaceManager!.createSpace();
     await performInvitation(identity2.spaceInvitations!, device1.spaceInvitations!, space1);
 
-    await device2.dataSpaceManager!.waitUntilDataPipelineInitialized(space1!.key);
+    await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
   });
