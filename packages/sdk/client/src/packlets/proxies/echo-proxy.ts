@@ -43,8 +43,9 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
-  private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _spaces = new Observable<Space[]>([], this._spacesChanged);
+  // TODO(wittjosiah): Remove this.
+  private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
 
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();

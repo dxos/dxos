@@ -97,6 +97,7 @@ const start = async () => {
 
   // TODO(burdon): Fix race condition? Trigger callback on subscription.
   void onUpdate(client.echo.spaces.get());
+  // TODO(wittjosiah): Unsubscribe on exit.
   client.echo.spaces.subscribe(onUpdate);
 
   const printStatus = () => {
