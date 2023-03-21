@@ -8,10 +8,17 @@ import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
+import { namespace } from '../util';
+
 // NOTE: Verbose logging enabled in the shared worker for the time being.
 const LOG_FILTER = 'client:debug,info';
-
-void initializeAppTelemetry('halo-worker', new Config(Defaults()));
+console.log(Defaults());
+void initializeAppTelemetry({
+  namespace,
+  config: new Config(Defaults()),
+  sentryOptions: { tracing: false, replay: false },
+  telemetryOptions: { enable: false }
+});
 
 const workerRuntime = new WorkerRuntime(async () => {
   const config = new Config(await Dynamics(), await Envs(), Defaults());

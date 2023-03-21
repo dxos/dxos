@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+// NOTE: localStorage is not available in web workers.
+import * as localForage from 'localforage';
+
 import type { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
@@ -36,22 +39,38 @@ export const getTelemetryIdentifier = (client: Client) => {
   return undefined;
 };
 
-export const isTelemetryDisabled = (namespace: string) =>
-  localStorage.getItem(`${namespace}:telemetry-disabled`) === 'true';
+export const isTelemetryDisabled = async (namespace: string) =>
+  (await localForage.getItem(`${namespace}:telemetry-disabled`)) === 'true';
+
+export const storeTelemetryDisabled = async (namespace: string, value: string) =>
+  localForage.setItem(`${namespace}:telemetry-disabled`, value);
+
+export type AppTelemetryOptions = {
+  namespace: string;
+  config: Config;
+  sentryOptions?: Sentry.InitOptions;
+  telemetryOptions?: Telemetry.InitOptions;
+};
 
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
 //   Needs to be hooked up to settings page for user visibility.
-export const initializeAppTelemetry = async (namespace: string, config: Config) => {
-  const group = localStorage.getItem(`${namespace}:telemetry-group`);
+export const initializeAppTelemetry = async ({
+  namespace,
+  config,
+  sentryOptions,
+  telemetryOptions
+}: AppTelemetryOptions) => {
+  const group = await localForage.getItem(`${namespace}:telemetry-group`);
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
   BASE_TELEMETRY_PROPERTIES.group = group;
   BASE_TELEMETRY_PROPERTIES.release = release;
   BASE_TELEMETRY_PROPERTIES.environment = environment;
-  const telemetryDisabled = isTelemetryDisabled(namespace);
+  const telemetryDisabled = await isTelemetryDisabled(namespace);
 
   const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
+  console.log({ SENTRY_DESTINATION, telemetryDisabled });
   Sentry.init({
     enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
     destination: SENTRY_DESTINATION,
@@ -62,13 +81,15 @@ export const initializeAppTelemetry = async (namespace: string, config: Config) 
     // TODO(wittjosiah): Configure these.
     sampleRate: 1.0,
     replaySampleRate: 0.1,
-    replaySampleRateOnError: 1.0
+    replaySampleRateOnError: 1.0,
+    ...sentryOptions
   });
 
   const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
   Telemetry.init({
     apiKey: TELEMETRY_API_KEY,
-    enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled
+    enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled,
+    ...telemetryOptions
   });
 
   const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
