@@ -69,7 +69,6 @@ describe('Spaces', () => {
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
 
-      console.log('TEST==================');
       const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
     }
