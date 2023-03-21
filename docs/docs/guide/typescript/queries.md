@@ -5,7 +5,7 @@ title: Queries
 
 # Queries
 
-The simplest way to read the items in a space is to use the `space.experimental.db.query()` method. It's also possible to obtain strongly typed results as described [below](#typed-queries).
+The simplest way to read the items in a space is to use the `space.db.query()` method. It's also possible to obtain strongly typed results as described [below](#typed-queries).
 
 ## Untyped Queries
 
@@ -23,11 +23,11 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get all items
-  const allObjects = space.experimental.db.query();
+  const allObjects = space.db.query();
   // get items that match a filter
-  const tasks = space.experimental.db.query({ type: 'task' });
+  const tasks = space.db.query({ type: 'task' });
   // get items that match a predicate
-  const finishedTasks = space.experimental.db.query(
+  const finishedTasks = space.db.query(
     (doc) => doc.type == 'task' && doc.isCompleted
   );
 };
@@ -56,7 +56,7 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get items that match a filter
-  const tasks = space.experimental.db.query<Task>({ type: 'task' });
+  const tasks = space.db.query<Task>({ type: 'task' });
 };
 ```
 
@@ -150,7 +150,7 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = space.experimental.db.query(Task.filter());
+  const tasks = space.db.query(Task.filter());
 };
 ```
 

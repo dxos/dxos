@@ -18,5 +18,5 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get items that match a filter
-  const tasks = space.experimental.db.query<Task>({ type: 'task' });
+  const tasks = space.db.query<Task>({ type: 'task' });
 };

@@ -136,7 +136,7 @@ import { Document } from '@dxos/react-client';
 const newThing = new Document();
 newThing.someProperty = 'example';
 
-space.experimental.db.save(newThing);
+space.db.save(newThing);
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.

@@ -19,7 +19,7 @@ const client = new Client();
   // grab a space
   const space = spaces[0];
   // grab an object
-  const result = space.experimental.db.query({ type: 'task' });
+  const result = space.db.query({ type: 'task' });
   const object = result.objects[0];
   // mutate the object directly
   object.isCompleted = true;
@@ -50,7 +50,7 @@ const client = new Client();
 
   const object = new Document({ type: 'task', title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
 ```
 
@@ -73,7 +73,7 @@ const client = new Client();
 
   const object = new Task({ title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
 ```
 
@@ -82,7 +82,7 @@ const client = new Client();
 To delete an object (typed or untyped) call the `delete` API on a space.
 
 ```ts
-await space.experimental.db.delete(object);
+await space.db.delete(object);
 ```
 
 ::: note

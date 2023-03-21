@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Document } from '@dxos/client';
+import { Client, Expando } from '@dxos/client';
 
 const client = new Client();
 
@@ -15,5 +15,5 @@ const client = new Client();
 
   const object = new Document({ type: 'task', title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
