@@ -52,15 +52,15 @@ describe('ordered-set', () => {
 
   test('array of plain objects', async () => {
     const root = new Container();
-    const plain: Container.Record = { title: 'test', persons: [new Contact({ name: 'Mykola' })] };
-    root.objects.push(plain);
+    const plain: Container.Record = { title: 'test', contacts: [new Contact({ name: 'Mykola' })] };
+    root.records.push(plain);
     const db = await createDatabase();
     db.add(root);
     await db.flush();
 
-    expect(root.objects).to.have.length(1);
+    expect(root.records).to.have.length(1);
     const queriedContainer = db.query(Container.filter()).objects[0];
-    expect(queriedContainer.objects.length).to.equal(1);
-    expect(queriedContainer.objects[0].persons?.[0].name).to.equal('Mykola');
+    expect(queriedContainer.records.length).to.equal(1);
+    expect(queriedContainer.records[0].contacts?.[0].name).to.equal('Mykola');
   });
 });

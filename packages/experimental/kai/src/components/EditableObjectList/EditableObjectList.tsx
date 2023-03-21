@@ -5,7 +5,7 @@
 import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { getSize, List, ListItem, Button, Input, ListItemEndcap, mx } from '@dxos/react-components';
 
 export type EditableObjectListSlots = {
@@ -20,8 +20,8 @@ export type EditableObjectListSlots = {
   };
 };
 
-// TODO(burdon): Make fully generic (don't depend on Document).
-export type EditableObjectListProps<T extends Document> = {
+// TODO(burdon): Make fully generic (don't depend on ECHO).
+export type EditableObjectListProps<T extends TypedObject> = {
   objects: T[];
   selected?: string;
   getTitle: (object: T) => string;
@@ -38,7 +38,7 @@ export type EditableObjectListProps<T extends Document> = {
 // TODO(burdon): onCreate, onUpdate title.
 // TODO(burdon): Focus on create.
 // TODO(burdon): Delete.
-export const EditableObjectList = <T extends Document>({
+export const EditableObjectList = <T extends TypedObject>({
   objects,
   selected,
   getTitle,

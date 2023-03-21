@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { useQuery, Document, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
+import { Expando, useQuery, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
 export const Counter = () => {
@@ -13,13 +13,14 @@ export const Counter = () => {
   const [counter] = useQuery(space, { type: 'counter' });
   useEffect(() => {
     if (!counter && space) {
-      const c = new Document({ type: 'counter' });
-      void space.db.add(c);
+      const counter = new Expando({ type: 'counter' });
+      void space.db.add(counter);
     }
   }, [counter, space]);
   if (!space) {
     return <Loading label='Loading' />;
   }
+
   return (
     <div>
       {identity && `Hello ${identity?.profile?.displayName}!`}

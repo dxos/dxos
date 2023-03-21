@@ -6,6 +6,7 @@ import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { useClient } from '../client';
 
@@ -21,7 +22,7 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
 };
 
 /**
- * Returns the first space in the current spaces array. If none exist, `null`
+ * Returns the first space in the current spaces array. If none exist, `undefined`
  * will be returned at first, then the hook will re-run and return a space once
  * it has been created. Requires a ClientProvider somewhere in the parent tree.
  * @returns a Space
@@ -39,8 +40,7 @@ export const useOrCreateFirstSpace = () => {
           const newSpace = await client.echo.createSpace();
           setSpace(newSpace);
         } catch (err) {
-          console.error('Failed to create space');
-          console.error(err);
+          log.error('Failed to create space', err);
         } finally {
           isCreatingSpace.current = false;
         }

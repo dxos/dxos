@@ -49,7 +49,15 @@ const loadProtobufBuiltins = () => {
                   }
                 }
               },
-              Document: {
+              Expando: {
+                fields: {
+                  test: {
+                    type: 'string',
+                    id: 1
+                  }
+                }
+              },
+              TypedObject: {
                 fields: {
                   test: {
                     type: 'string',
