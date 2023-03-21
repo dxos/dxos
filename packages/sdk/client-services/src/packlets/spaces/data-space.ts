@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trackLeaks } from '@dxos/async';
+import { Event, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  DataPipelineControllerImpl,
+  DataPipelineController,
   MetadataStore,
   Space,
   SigningContext,
@@ -29,6 +29,9 @@ import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
 
+// Maximum time to wait for the data pipeline to catch up to its desired timeframe.
+const DATA_PIPELINE_READY_TIMEOUT = 10_000;
+
 export type DataSpaceParams = {
   inner: Space;
   modelFactory: ModelFactory;
@@ -41,13 +44,14 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
+  onDataPipelineReady?: () => Promise<void>;
 };
 
 const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipelineController: DataPipelineControllerImpl;
+  private readonly _dataPipelineController: DataPipelineController;
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -56,18 +60,24 @@ export class DataSpace {
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _onDataPipelineReady?: () => Promise<void>;
 
+  private _dataPipelineReady = false;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly stateUpdate = new Event();
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
+
     this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
-    this._dataPipelineController = new DataPipelineControllerImpl({
+    this._onDataPipelineReady = params.onDataPipelineReady;
+    this._dataPipelineController = new DataPipelineController({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
       snapshotManager: params.snapshotManager,
@@ -94,17 +104,17 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  get dataPipelineReady() {
+    return this._dataPipelineReady;
+  }
+
   // TODO(burdon): Can we mark this for debugging only?
   get inner() {
     return this._inner;
   }
 
-  get dataPipelineController(): DataPipelineControllerImpl {
+  get dataPipelineController(): DataPipelineController {
     return this._dataPipelineController;
-  }
-
-  get stateUpdate() {
-    return this._inner.stateUpdate;
   }
 
   get presence() {
@@ -123,7 +133,9 @@ export class DataSpace {
 
   async close() {
     await this._ctx.dispose();
+    this._dataPipelineReady = false;
 
+    await this._dataPipelineController.close();
     await this.authVerifier.close();
 
     await this._inner.close();
@@ -156,7 +168,23 @@ export class DataSpace {
       )
     );
 
-    await this._inner.initDataPipeline(this._dataPipelineController);
+    await this._dataPipelineController.open({
+      openPipeline: async (start) => {
+        const pipeline = await this._inner.createDataPipeline({ start });
+        await pipeline.start();
+        return pipeline;
+      }
+    });
+
+    // Wait for the data pipeline to catch up to its desired timeframe.
+    await this._dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
+      timeout: DATA_PIPELINE_READY_TIMEOUT
+    });
+
+    await this._onDataPipelineReady?.();
+
+    this._dataPipelineReady = true;
+    this.stateUpdate.emit();
   }
 
   @timed(10_000)

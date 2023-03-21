@@ -4,18 +4,18 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
+  DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
+  SnapshotManager,
+  SnapshotStore,
   Space,
   spaceGenesis,
-  SpaceManager,
-  DataServiceSubscriptions,
-  SnapshotManager,
-  SnapshotStore
+  SpaceManager
 } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -25,16 +25,27 @@ import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
-const DATA_PIPELINE_READY_TIMEOUT = 3_000;
-
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
+
+  /**
+   * Latest known timeframe for the control pipeline.
+   * We will try to catch up to this timeframe before starting the data pipeline.
+   */
+  controlTimeframe?: Timeframe;
+
+  /**
+   * Latest known timeframe for the data pipeline.
+   * We will try to catch up to this timeframe before initializing the database.
+   */
+  dataTimeframe?: Timeframe;
 };
 
 @trackLeaks('open', 'close')
@@ -44,6 +55,8 @@ export class DataSpaceManager {
   public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
+
+  private _isOpen = false;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -69,23 +82,28 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-      await space.initializeDataPipeline();
-      if (spaceMetadata.dataTimeframe) {
-        log('waiting for latest timeframe', { spaceMetadata });
-        await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.dataTimeframe);
-      }
-      await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
-        timeout: DATA_PIPELINE_READY_TIMEOUT
+
+      // Asynchronously initialize the data pipeline.
+      scheduleTask(this._ctx, async () => {
+        try {
+          await space.initializeDataPipeline();
+
+          if (this._isOpen) {
+            this.updated.emit();
+          }
+        } catch (err) {
+          log.error('error initializing space data pipeline', err);
+        }
       });
-      this._dataServiceSubscriptions.registerSpace(
-        space.key,
-        space.dataPipelineController.databaseBackend!.createDataServiceHost()
-      );
     }
+
+    this._isOpen = true;
+    this.updated.emit();
   }
 
   @synchronized
   async close() {
+    this._isOpen = false;
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
       await space.close();
@@ -117,11 +135,8 @@ export class DataSpaceManager {
     assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
+    // For the new space this should complete without blocking on network.
     await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(
-      space.key,
-      space.dataPipelineController.databaseBackend!.createDataServiceHost()
-    );
 
     this.updated.emit();
     return space;
@@ -134,22 +149,41 @@ export class DataSpaceManager {
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      genesisFeedKey: opts.genesisFeedKey
+      genesisFeedKey: opts.genesisFeedKey,
+      controlTimeframe: opts.controlTimeframe,
+      dataTimeframe: opts.dataTimeframe
     };
 
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
-    await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(
-      space.key,
-      space.dataPipelineController.databaseBackend!.createDataServiceHost()
-    );
+
+    // Asynchronously initialize the data pipeline.
+    scheduleTask(this._ctx, async () => {
+      await space.initializeDataPipeline();
+      this.updated.emit();
+    });
 
     this.updated.emit();
     return space;
   }
 
+  /**
+   * Wait until the space data pipeline is fully initialized.
+   * Used by invitation handler.
+   * TODO(dmaretskyi): Consider removing.
+   */
+  async waitUntilDataPipelineInitialized(spaceKey: PublicKey) {
+    await cancelWithContext(
+      this._ctx,
+      this.updated.waitForCondition(() => {
+        const space = this._spaces.get(spaceKey);
+        return !!space && space.isOpen && space.dataPipelineController.isOpen;
+      })
+    );
+  }
+
   private async _constructSpace(metadata: SpaceMetadata) {
+    log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey
     });
@@ -195,10 +229,24 @@ export class DataSpaceManager {
       keyring: this._keyring,
       feedStore: this._feedStore,
       signingContext: this._signingContext,
-      snapshotId: metadata.snapshot
+      snapshotId: metadata.snapshot,
+      onDataPipelineReady: async () => {
+        this._dataServiceSubscriptions.registerSpace(
+          space.key,
+          dataSpace.dataPipelineController.databaseBackend!.createDataServiceHost()
+        );
+      }
     });
 
     await dataSpace.open();
+
+    if (metadata.controlTimeframe) {
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
+    }
+    if (metadata.dataTimeframe) {
+      dataSpace.dataPipelineController.setTargetTimeframe(metadata.dataTimeframe);
+    }
+
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
