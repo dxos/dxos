@@ -5,14 +5,13 @@
 import { Info, Sliders } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-export const ConfigPage = React.lazy(() => import('../routes/Config'));
-export const StatusPage = React.lazy(() => import('../routes/Status'));
+import { ConfigPage, StatusPage } from '../routes';
 
 export type Module = {
   id: string;
   label: string;
   Icon: FC<any>;
-  Component: FC<any>;
+  Component: FC<void>;
 };
 
 export const useModules = (): Module[] => {
