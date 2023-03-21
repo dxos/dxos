@@ -55,8 +55,7 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
       const onUpdate = async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values())
-          .map((space) => this._transformSpace(space));
+        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._transformSpace(space));
         log('update', { spaces });
         next({ spaces });
       };

@@ -102,7 +102,7 @@ export class DataPipelineController {
     }
 
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
-    if(this._targetTimeframe) {
+    if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
     }
 
@@ -161,14 +161,14 @@ export class DataPipelineController {
 
   private async _saveLatestTimeframe() {
     const latestTimeframe = this._pipeline?.state.timeframe;
-    log('save latest timeframe', { latestTimeframe, spaceKey: this._params.spaceKey })
+    log('save latest timeframe', { latestTimeframe, spaceKey: this._params.spaceKey });
     if (latestTimeframe) {
       await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
     }
   }
 
   async close() {
-    log('close')
+    log('close');
     this._isOpen = false;
 
     try {

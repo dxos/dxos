@@ -170,7 +170,7 @@ export class DataSpace {
 
     await this._dataPipelineController.open({
       openPipeline: async (start) => {
-        const pipeline = await this._inner.createDataPipeline({ start })
+        const pipeline = await this._inner.createDataPipeline({ start });
         await pipeline.start();
         return pipeline;
       }
@@ -182,7 +182,7 @@ export class DataSpace {
     });
 
     await this._onDataPipelineReady?.();
-    
+
     this._dataPipelineReady = true;
     this.stateUpdate.emit();
   }

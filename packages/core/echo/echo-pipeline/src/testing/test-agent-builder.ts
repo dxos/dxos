@@ -160,7 +160,7 @@ export class TestAgent {
     await space.open();
     await dataPipelineController.open({
       openPipeline: async (start) => {
-        const pipeline = await space.createDataPipeline({ start })
+        const pipeline = await space.createDataPipeline({ start });
         await pipeline.start();
         return pipeline;
       }

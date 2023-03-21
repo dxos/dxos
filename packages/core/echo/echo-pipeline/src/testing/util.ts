@@ -56,10 +56,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   };
 };
 
-export const testLocalDatabase = async (
-  create: DataPipelineController,
-  check: DataPipelineController = create
-) => {
+export const testLocalDatabase = async (create: DataPipelineController, check: DataPipelineController = create) => {
   const objectId = PublicKey.random().toHex();
   await create.databaseBackend!.getWriteStream()?.write({
     batch: {

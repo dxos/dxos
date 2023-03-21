@@ -11,12 +11,12 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { SpaceProtocol } from './space-protocol';
-import { Timeframe } from '@dxos/timeframe';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
@@ -31,7 +31,7 @@ export type SpaceParams = {
 export type CreatePipelineParams = {
   start: Timeframe;
   // designation: AdmittedFeed.Designation;
-}
+};
 
 /**
  * Spaces are globally addressable databases with access control.
@@ -184,7 +184,7 @@ export class Space {
     if (this._dataFeed) {
       pipeline.setWriteFeed(this._dataFeed);
     }
-    
+
     this._dataPipeline = pipeline;
 
     for (const feed of this._controlPipeline.spaceState.feeds.values()) {

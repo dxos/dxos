@@ -59,17 +59,17 @@ describe('Spaces', () => {
     {
       // TODO(dmaretskyi): Replace with helper?.
       const spaceTrigger = new Trigger<Space>();
-      if(client.echo.getSpaces()[0]) {
+      if (client.echo.getSpaces()[0]) {
         spaceTrigger.wake(client.echo.getSpaces()[0]);
       }
       client.echo.subscribeSpaces(() => {
-        if(client.echo.getSpaces()[0]) {
+        if (client.echo.getSpaces()[0]) {
           spaceTrigger.wake(client.echo.getSpaces()[0]);
         }
-      })
+      });
       const space = await spaceTrigger.wait({ timeout: 500 });
 
-      console.log('TEST==================')
+      console.log('TEST==================');
       const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
     }

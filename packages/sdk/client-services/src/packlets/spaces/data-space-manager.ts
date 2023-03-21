@@ -8,9 +8,12 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
-  DataServiceSubscriptions, MetadataStore,
-  SigningContext, SnapshotManager,
-  SnapshotStore, Space,
+  DataServiceSubscriptions,
+  MetadataStore,
+  SigningContext,
+  SnapshotManager,
+  SnapshotStore,
+  Space,
   spaceGenesis,
   SpaceManager
 } from '@dxos/echo-pipeline';
@@ -26,7 +29,6 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
-
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -52,7 +54,7 @@ export class DataSpaceManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) { }
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -76,14 +78,14 @@ export class DataSpaceManager {
       scheduleTask(this._ctx, async () => {
         try {
           await space.initializeDataPipeline();
-          
-          if(this._isOpen) {
+
+          if (this._isOpen) {
             this.updated.emit();
           }
         } catch (err) {
           log.error('error initializing space data pipeline', err);
         }
-      })
+      });
     }
 
     this._isOpen = true;
@@ -160,10 +162,13 @@ export class DataSpaceManager {
    * TODO(dmaretskyi): Consider removing.
    */
   async waitUntilDataPipelineInitialized(spaceKey: PublicKey) {
-    await cancelWithContext(this._ctx, this.updated.waitForCondition(() => {
-      const space = this._spaces.get(spaceKey);
-      return !!space && space.isOpen && space.dataPipelineController.isOpen;
-    }));
+    await cancelWithContext(
+      this._ctx,
+      this.updated.waitForCondition(() => {
+        const space = this._spaces.get(spaceKey);
+        return !!space && space.isOpen && space.dataPipelineController.isOpen;
+      })
+    );
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {

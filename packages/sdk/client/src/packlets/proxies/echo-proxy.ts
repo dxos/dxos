@@ -105,7 +105,7 @@ export class EchoProxy implements Echo {
 
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.spaceKey)) {
-          if(space.status === SpaceStatus.INACTIVE) {
+          if (space.status === SpaceStatus.INACTIVE) {
             // Skip inactive spaces. They will be added when they are activated.
             continue;
           }
@@ -131,7 +131,7 @@ export class EchoProxy implements Echo {
       // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
       // This is needed because apps don't handle spaces loading correctly.
       // TODO(dmaretskyi): Remove when apps and API are ready.
-      if(data.spaces?.every(space => space.status === SpaceStatus.ACTIVE)) {
+      if (data.spaces?.every((space) => space.status === SpaceStatus.ACTIVE)) {
         gotInitialUpdate.wake();
       }
 
