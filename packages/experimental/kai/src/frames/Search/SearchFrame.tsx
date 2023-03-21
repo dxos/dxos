@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 import { SearchPanel } from '../../containers';
 import { createPath, objectMeta, useAppRouter } from '../../hooks';
@@ -14,7 +14,7 @@ export const SearchFrame = () => {
   const navigate = useNavigate();
   const { space } = useAppRouter();
 
-  const handleSelect = (object: Document) => {
+  const handleSelect = (object: TypedObject) => {
     if (space) {
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {

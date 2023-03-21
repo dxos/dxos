@@ -14,7 +14,7 @@ message Contact {
       fixed32 lat = 1;
       fixed32 lng = 2;
     }
-  
+
     string city = 1;
     string state = 2;
     string zip = 3;
@@ -47,17 +47,18 @@ message Container {
 
   message Record {
     enum Type {
-      UNSPECIFIED = 0;
-      BRAINFRAME = 1;
-      SCHOOL_FRIEND = 2;
+      UNDEFINED = 0;
+      PERSONAL = 1;
+      WORK = 2;
     }
 
     string title = 1;
     string description = 2;
-    repeated Contact persons = 3;
+    repeated Contact contacts = 3;
     Type type = 4;
   }
 
-  repeated dxos.schema.Document documents = 1;
-  repeated Record objects = 2;
+  repeated dxos.schema.TypedObject objects = 1;
+  repeated dxos.schema.Expando expandos = 2;
+  repeated Record records = 3;
 }

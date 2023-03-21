@@ -108,13 +108,13 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from "@dxos/react-client";
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
-export class Task extends DocumentBase {
+export class Task extends TypedObject {
   static readonly type = schema.getType('dxos.tasks.Task');
 
   static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {

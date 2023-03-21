@@ -8,8 +8,8 @@ import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
 
 import { base } from './defs';
-import { Document } from './document';
 import { EchoObject } from './object';
+import { TypedObject } from './typed-object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -27,7 +27,7 @@ export class EchoArray<T> implements Array<T> {
    */
   private _uninitialized?: T[] = [];
 
-  private _document?: Document;
+  private _object?: TypedObject;
   private _property?: string;
 
   [base]: EchoArray<T> = this;
@@ -308,14 +308,14 @@ export class EchoArray<T> implements Array<T> {
   //
 
   private _getBackingModel(): DocumentModel | undefined {
-    return this._document?._model;
+    return this._object?._model;
   }
 
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
-      return this._document!._lookupLink(value.itemId) as T | undefined;
+      return this._object!._lookupLink(value.itemId) as T | undefined;
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return decodeRecords(value, this._document!);
+      return decodeRecords(value, this._object!);
     } else {
       return value;
     }
@@ -323,7 +323,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _encode(value: T) {
     if (value instanceof EchoObject) {
-      void this._document!._linkObject(value);
+      void this._object!._linkObject(value);
       return new Reference(value.id);
     } else if (
       typeof value === 'object' &&
@@ -335,7 +335,7 @@ export class EchoArray<T> implements Array<T> {
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       log('Freezing object before encoding', value);
       Object.freeze(value);
-      return encodeRecords(value, this._document!);
+      return encodeRecords(value, this._object!);
     } else {
       assert(
         value === null ||
@@ -352,8 +352,8 @@ export class EchoArray<T> implements Array<T> {
   /**
    * @internal
    */
-  _attach(document: Document, property: string) {
-    this._document = document;
+  _attach(document: TypedObject, property: string) {
+    this._object = document;
     this._property = property;
     this._uninitialized = undefined;
 
@@ -396,7 +396,7 @@ export class EchoArray<T> implements Array<T> {
   }
 }
 
-const encodeRecords = (value: any, document: Document): any => {
+const encodeRecords = (value: any, document: TypedObject): any => {
   if (value instanceof EchoObject) {
     void document!._linkObject(value);
     return new Reference(value.id);
@@ -410,7 +410,7 @@ const encodeRecords = (value: any, document: Document): any => {
   return value;
 };
 
-const decodeRecords = (value: any, document: Document): any => {
+const decodeRecords = (value: any, document: TypedObject): any => {
   if (value instanceof Reference) {
     return document._lookupLink(value.itemId);
   } else if (Array.isArray(value)) {

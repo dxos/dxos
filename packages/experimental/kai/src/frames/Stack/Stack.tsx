@@ -8,7 +8,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import assert from 'assert';
 import React from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { DocumentStack } from '@dxos/kai-types';
 import { useConfig, observer, Space } from '@dxos/react-client';
 import { DragEndEvent, Input, mx } from '@dxos/react-components';
@@ -45,7 +45,7 @@ export const Stack = observer(({ slots = {}, space, stack, items = defaultItems,
       objectId = object.id;
     }
 
-    const object: Document | undefined = space.db.getObjectById(objectId);
+    const object: TypedObject | undefined = space.db.getObjectById(objectId);
     if (object) {
       const section = new DocumentStack.Section({ object });
       stack.sections.splice(index === -1 ? stack.sections.length : index, 0, section);
