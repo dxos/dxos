@@ -180,7 +180,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
             return {
               credential: spaceMemberCredential,
               controlTimeframe: space.inner.controlPipeline.state.timeframe,
-              dataTimeframe: space.dataPipelineController.pipelineState?.timeframe
+              dataTimeframe: space.dataPipeline.pipelineState?.timeframe
             };
           } catch (err) {
             // TODO(burdon): Generic RPC callback to report error to client.

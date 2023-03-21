@@ -7,12 +7,12 @@ import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  DataPipelineController,
   MetadataStore,
   Space,
   SigningContext,
   createMappedFeedWriter,
-  SnapshotManager
+  SnapshotManager,
+  DataPipeline
 } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -51,7 +51,7 @@ const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipelineController: DataPipelineController;
+  private readonly _dataPipeline: DataPipeline;
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -77,7 +77,7 @@ export class DataSpace {
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._onDataPipelineReady = params.onDataPipelineReady;
-    this._dataPipelineController = new DataPipelineController({
+    this._dataPipeline = new DataPipeline({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
       snapshotManager: params.snapshotManager,
@@ -113,8 +113,8 @@ export class DataSpace {
     return this._inner;
   }
 
-  get dataPipelineController(): DataPipelineController {
-    return this._dataPipelineController;
+  get dataPipeline(): DataPipeline {
+    return this._dataPipeline;
   }
 
   get presence() {
@@ -135,7 +135,7 @@ export class DataSpace {
     await this._ctx.dispose();
     this._dataPipelineReady = false;
 
-    await this._dataPipelineController.close();
+    await this._dataPipeline.close();
     await this.authVerifier.close();
 
     await this._inner.close();
@@ -155,6 +155,7 @@ export class DataSpace {
 
   async initializeDataPipeline() {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
+      // TODO(dmaretskyi): Should it timeout?
       timeout: CONTROL_PIPELINE_READY_TIMEFRAME
     });
 
@@ -168,7 +169,7 @@ export class DataSpace {
       )
     );
 
-    await this._dataPipelineController.open({
+    await this._dataPipeline.open({
       openPipeline: async (start) => {
         const pipeline = await this._inner.createDataPipeline({ start });
         await pipeline.start();
@@ -177,7 +178,8 @@ export class DataSpace {
     });
 
     // Wait for the data pipeline to catch up to its desired timeframe.
-    await this._dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
+    await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
+      // TODO(dmaretskyi): Shouldn't timeout.
       timeout: DATA_PIPELINE_READY_TIMEOUT
     });
 
@@ -226,6 +228,7 @@ export class DataSpace {
     }
 
     if (credentials.length > 0) {
+      // TODO(dmaretskyi): Should't timeout.
       await this.notarizationPlugin.notarize(credentials);
     }
 

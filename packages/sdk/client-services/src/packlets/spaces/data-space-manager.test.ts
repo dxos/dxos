@@ -123,7 +123,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
+    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);

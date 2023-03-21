@@ -177,7 +177,7 @@ export class DataSpaceManager {
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.isOpen && space.dataPipelineController.isOpen;
+        return !!space && space.isOpen && space.dataPipeline.isOpen;
       })
     );
   }
@@ -233,7 +233,7 @@ export class DataSpaceManager {
       onDataPipelineReady: async () => {
         this._dataServiceSubscriptions.registerSpace(
           space.key,
-          dataSpace.dataPipelineController.databaseBackend!.createDataServiceHost()
+          dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
         );
       }
     });
@@ -244,7 +244,7 @@ export class DataSpaceManager {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
     if (metadata.dataTimeframe) {
-      dataSpace.dataPipelineController.setTargetTimeframe(metadata.dataTimeframe);
+      dataSpace.dataPipeline.setTargetTimeframe(metadata.dataTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);
