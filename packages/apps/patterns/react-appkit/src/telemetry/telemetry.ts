@@ -61,7 +61,7 @@ export const initializeAppTelemetry = async (namespace: string, config: Config) 
     replay: true,
     // TODO(wittjosiah): Configure these.
     sampleRate: 1.0,
-    replaySampleRate: 1.0,
+    replaySampleRate: 0.1,
     replaySampleRateOnError: 1.0
   });
 
