@@ -12,6 +12,7 @@ import { join } from 'node:path';
 
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -179,7 +180,7 @@ export abstract class BaseCommand extends Command {
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig });
+      this._client = new Client({ config: this._clientConfig, services: fromHost(this._clientConfig) });
       await this._client.initialize();
       log('Initialized');
     }
