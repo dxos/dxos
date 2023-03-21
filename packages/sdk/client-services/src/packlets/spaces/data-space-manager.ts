@@ -29,10 +29,23 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { Timeframe } from '@dxos/timeframe';
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
+
+  /**
+   * Latest known timeframe for the control pipeline.
+   * We will try to catch up to this timeframe before starting the data pipeline.
+   */
+  controlTimeframe?: Timeframe
+
+  /**
+   * Latest known timeframe for the data pipeline.
+   * We will try to catch up to this timeframe before initializing the database.
+   */
+  dataTimeframe?: Timeframe
 };
 
 @trackLeaks('open', 'close')
@@ -69,10 +82,6 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-      if (spaceMetadata.dataTimeframe) {
-        log('set latest timeframe', { spaceMetadata });
-        space.dataPipelineController.setTargetTimeframe(spaceMetadata.dataTimeframe);
-      }
 
       // Asynchronously initialize the data pipeline.
       scheduleTask(this._ctx, async () => {
@@ -140,7 +149,9 @@ export class DataSpaceManager {
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      genesisFeedKey: opts.genesisFeedKey
+      genesisFeedKey: opts.genesisFeedKey,
+      controlTimeframe: opts.controlTimeframe,
+      dataTimeframe: opts.dataTimeframe
     };
 
     const space = await this._constructSpace(metadata);
@@ -172,6 +183,7 @@ export class DataSpaceManager {
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
+    log('construct space', { metadata })
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey
     });
@@ -227,6 +239,14 @@ export class DataSpaceManager {
     });
 
     await dataSpace.open();
+
+    if(metadata.controlTimeframe) {
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
+    }
+    if(metadata.dataTimeframe) {
+      dataSpace.dataPipelineController.setTargetTimeframe(metadata.dataTimeframe);
+    }
+
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
