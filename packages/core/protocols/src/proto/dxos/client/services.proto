@@ -140,16 +140,28 @@ message SpaceMember {
   PresenceState presence = 2;
 }
 
-enum SpaceStatus {
-  ACTIVE = 0;
-  INACTIVE = 1;
+/// Runtime state of the space object.
+enum SpaceState {
+  /// Space is closed.
+  CLOSED = 1;
+
+  /// Data pipeline is initializing. Database is not available.
+  DATA_INITIALIZING = 2;
+
+  /// Data pipeline is ready.
+  READY = 3;
+
+  // TODO(dmaretskyi): Inactive state for disabled spaces.
+  // INACTIVE = 4;
 }
 
 message Space {
   dxos.keys.PublicKey space_key = 1;
-  SpaceStatus status = 2;
+  SpaceState state = 2;
 
   repeated SpaceMember members = 10;
+
+  // TODO(dmaretskyi): Inline a snapshot of space.properties here so that inactive spaces still display their title.
 }
 
 message UpdateSpaceRequest {

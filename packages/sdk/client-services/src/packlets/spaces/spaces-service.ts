@@ -14,7 +14,7 @@ import {
   Space,
   SpaceMember,
   SpacesService,
-  SpaceStatus,
+  SpaceState,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
   WriteCredentialsRequest
@@ -139,7 +139,7 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      status: space.dataPipelineReady ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      state: space.dataPipelineReady ? SpaceState.READY : SpaceState.DATA_INITIALIZING,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

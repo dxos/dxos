@@ -12,7 +12,7 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Invitation, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
@@ -105,7 +105,8 @@ export class EchoProxy implements Echo {
 
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.spaceKey)) {
-          if (space.status === SpaceStatus.INACTIVE) {
+          // TODO(dmaretskyi): Track spaces that are not ready.
+          if (space.state !== SpaceState.READY) {
             // Skip inactive spaces. They will be added when they are activated.
             continue;
           }
@@ -131,7 +132,7 @@ export class EchoProxy implements Echo {
       // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
       // This is needed because apps don't handle spaces loading correctly.
       // TODO(dmaretskyi): Remove when apps and API are ready.
-      if (data.spaces?.every((space) => space.status === SpaceStatus.ACTIVE)) {
+      if (data.spaces?.every((space) => space.state === SpaceState.READY)) {
         gotInitialUpdate.wake();
       }
 

@@ -32,7 +32,7 @@ export {
   type Identity,
   Invitation,
   SpaceMember,
-  SpaceStatus,
+  SpaceState,
   SystemStatus
 } from '@dxos/protocols/proto/dxos/client/services';
 export type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

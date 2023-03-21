@@ -13,7 +13,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Space as SpaceType, SpaceMember, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { Space as SpaceType, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
@@ -88,7 +88,7 @@ export class SpaceProxy implements Space {
     this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
     // TODO(burdon): Don't shadow properties.
-    if (this._state.status !== SpaceStatus.ACTIVE) { // TODO(burdon): Assert?
+    if (this._state.state !== SpaceState.READY) { // TODO(burdon): Assert?
       return;
     }
 
@@ -109,7 +109,7 @@ export class SpaceProxy implements Space {
   }
 
   get isOpen() {
-    return this._state.status === SpaceStatus.ACTIVE;
+    return this._state.state === SpaceState.READY;
   }
 
   get db() {
