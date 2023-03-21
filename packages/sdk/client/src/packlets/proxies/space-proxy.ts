@@ -72,20 +72,10 @@ export class SpaceProxy implements Space {
   private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
+  private readonly _invitations = new Observable<CancellableInvitationObservable[]>([], this._invitationsUpdate);
+  private readonly _members = new Observable<SpaceMember[]>([], this._membersUpdate);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  private _invitations: CancellableInvitationObservable[] = [];
   private _properties?: TypedObject;
-=======
-  private _invitations = new Collection<CancellableInvitationObservable>(this._invitationsUpdate);
-  private _members = new Collection<SpaceMember>(this._membersUpdate);
-=======
-  private _invitations = new Observable<CancellableInvitationObservable[]>([], this._invitationsUpdate);
-  private _members = new Observable<SpaceMember[]>([], this._membersUpdate);
->>>>>>> 14231648a (refactor(client): rename collection to observable)
-  private _properties?: Document;
->>>>>>> be1e63967 (refactor(client): add collection abstraction)
   private _initializing = false;
 
   /**
