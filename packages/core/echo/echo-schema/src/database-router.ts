@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
@@ -116,9 +115,10 @@ export class DatabaseRouter {
     if (this._accessObserverStack.length === 0) {
       const currentComponent = getCurrentReactComponent();
       if (currentComponent) {
-        log.warn(
-          `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
-        );
+        // Too annoying in kai.
+        // log.warn(
+        //   `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
+        // );
       }
     }
   }

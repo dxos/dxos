@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client, Invitation } from '@dxos/client';
+import { Client, Invitation, Space } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -57,9 +57,17 @@ describe('Spaces', () => {
     await client.initialize();
 
     {
-      const result = client.echo.getSpaces();
-      expect(result).to.have.length(1);
-      const space = result[0];
+      // TODO(dmaretskyi): Replace with helper?.
+      const spaceTrigger = new Trigger<Space>();
+      if (client.echo.getSpaces()[0]) {
+        spaceTrigger.wake(client.echo.getSpaces()[0]);
+      }
+      client.echo.subscribeSpaces(() => {
+        if (client.echo.getSpaces()[0]) {
+          spaceTrigger.wake(client.echo.getSpaces()[0]);
+        }
+      });
+      const space = await spaceTrigger.wait({ timeout: 500 });
 
       const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
