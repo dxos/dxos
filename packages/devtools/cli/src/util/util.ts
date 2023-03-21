@@ -89,6 +89,8 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
 export const mapCredentials = (credentials: Credential[], truncateKeys = false) => {
   return credentials.map((credential) => ({
     id: maybeTruncateKey(credential.id!, truncateKeys),
+    issuer: maybeTruncateKey(credential.issuer!, truncateKeys),
+    subject: maybeTruncateKey(credential.subject!.id!, truncateKeys),
     type: credential.subject.assertion['@type']
   }));
 };
@@ -99,6 +101,12 @@ export const printCredentials = (credentials: Credential[], flags = {}) => {
     {
       id: {
         header: 'Id'
+      },
+      issuer: {
+        header: 'Issuer'
+      },
+      subject: {
+        header: 'Subject'
       },
       type: {
         header: 'Type'
