@@ -105,11 +105,16 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches({
-                choosingIdentity: {
+              active: [
+                {
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
+                },
+                {
+                  acceptingHaloInvitation: {
+                    acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+                  }
                 }
-              }),
+              ].some(joinState.matches),
               invitationType: 'halo'
             }}
           />
