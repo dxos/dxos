@@ -70,7 +70,7 @@ export class InvitationsManager {
   async setConnectionState(id: number, state: ConnectionState) {
     await this.page.evaluate(
       ({ id, state }) => {
-        (window as any)[`peer${id}client`].mesh.setConnectionState(state);
+        (window as any)[`peer${id}client`].setConnectionState(state);
       },
       { id, state }
     );
