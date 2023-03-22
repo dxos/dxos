@@ -37,7 +37,7 @@ export default class Join extends BaseCommand {
 
         if (encoded.startsWith('http')) {
           const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-          encoded = searchParams.get('invitation') ?? encoded;
+          encoded = searchParams.get('invitation') ?? searchParams.get('haloInvitationCode') ?? encoded;
         }
         const invitation = InvitationEncoder.decode(encoded!);
         const observable = client.halo.acceptInvitation(invitation);
@@ -68,7 +68,7 @@ export default class Join extends BaseCommand {
         await done.wait();
 
         // TODO(egorgripasov): Wait to replicate?
-        await sleep(15_000);
+        await sleep(5_000);
       }
     });
   }
