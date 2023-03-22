@@ -49,7 +49,7 @@ export const useClientProvider = (dev: boolean) => {
     client.echo.addSchema(chessSchema);
     client.echo.addSchema(frameboxSchema);
 
-    if (dev && client.halo.identity && client.echo.getSpaces().length === 0) {
+    if (dev && client.halo.identity && client.echo.spaces.get().length === 0) {
       const space = await client.echo.createSpace();
       space.properties.name = 'My Space';
 

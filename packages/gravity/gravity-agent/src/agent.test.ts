@@ -125,10 +125,10 @@ describe('Agent', () => {
     const space2 = new Trigger<Space>();
 
     agent1.sequenceComplete.once(() => {
-      space1.wake(agent1.client.echo.getSpaces()[0]!);
+      space1.wake(agent1.client.echo.spaces.get()[0]!);
     });
     agent2.sequenceComplete.once(() => {
-      space2.wake(agent2.client.echo.getSpaces()[0]!);
+      space2.wake(agent2.client.echo.spaces.get()[0]!);
     });
 
     // Test invitation happened.
