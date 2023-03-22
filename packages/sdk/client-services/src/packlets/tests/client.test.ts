@@ -61,9 +61,7 @@ describe('Client', () => {
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
-    await expect(client.echo.createSpace()).to.eventually.be.rejectedWith(
-      'This device has no HALO identity available.'
-    );
+    await expect(client.createSpace()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
   }).timeout(1_000);
 
   // TODO(burdon): Memory store is reset on close (feed store is closed).

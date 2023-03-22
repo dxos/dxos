@@ -138,7 +138,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   };
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 

@@ -45,7 +45,7 @@ const ShellControls = () => {
       <TooltipRoot>
         <TooltipContent>Create Space</TooltipContent>
         <TooltipTrigger asChild>
-          <Button onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}>
+          <Button onClick={() => client.createSpace({ name: faker.animal.bird() })}>
             <PlusCircle weight='fill' className={getSize(6)} />
           </Button>
         </TooltipTrigger>

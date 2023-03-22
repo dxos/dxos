@@ -23,7 +23,7 @@ export default class Create extends BaseCommand {
     }
 
     return await this.execWithClient(async (client: Client) => {
-      const space = await client.echo.createSpace();
+      const space = await client.createSpace();
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),

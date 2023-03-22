@@ -23,14 +23,17 @@ export const InvitationInput = ({ invitationType, ...viewStateProps }: Invitatio
 
   const [inputValue, setInputValue] = useState('');
 
-  const handleNext = () =>
+  const handleNext = () => {
+    const decodedInvitation = InvitationEncoder.decode(inputValue);
     dispatch({
       type: 'connecting invitation',
       from: invitationType,
-      invitation: client[invitationType === 'halo' ? 'halo' : 'echo'].acceptInvitation(
-        InvitationEncoder.decode(inputValue)
-      )
+      invitation:
+        invitationType === 'halo'
+          ? client.halo.acceptInvitation(decodedInvitation)
+          : client.acceptInvitation(decodedInvitation)
     });
+  };
 
   return (
     <ViewState {...viewStateProps}>
