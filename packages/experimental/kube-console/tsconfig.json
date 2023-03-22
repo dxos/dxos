@@ -103,9 +103,6 @@
       "path": "../mosaic"
     },
     {
-      "path": "../plexus"
-    },
-    {
       "path": "../react-metagraph"
     }
   ],
