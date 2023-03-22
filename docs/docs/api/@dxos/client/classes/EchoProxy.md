@@ -44,7 +44,7 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L224)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L236)
 
 
 
@@ -59,7 +59,7 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/client/types/InvitationsOptions)</code>
 
-### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L148)
+### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L160)
 
 
 
@@ -69,7 +69,7 @@ Arguments:
 
 `schema`: <code>[EchoSchema](/api/@dxos/client/classes/EchoSchema)</code>
 
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L138)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L149)
 
 
 
@@ -77,7 +77,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L159)
+### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L171)
 
 
 
@@ -90,7 +90,7 @@ Arguments:
 
 `meta`: <code>[PropertiesProps](/api/@dxos/client/types/PropertiesProps)</code>
 
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L201)
+### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L213)
 
 
 
@@ -103,7 +103,7 @@ Arguments:
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-### [getSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L208)
+### [getSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L220)
 
 
 
@@ -122,7 +122,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [subscribeSpaces(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L217)
+### [subscribeSpaces(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L229)
 
 
 

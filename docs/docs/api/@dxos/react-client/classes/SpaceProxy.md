@@ -46,7 +46,7 @@ Type: <code>boolean</code>
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 ### [properties]()
-Type: <code>[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;</code>
+Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
 
 
 ## Methods
