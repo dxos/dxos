@@ -52,6 +52,7 @@ export abstract class BaseCommand extends Command {
   private _failing = false;
   protected _telemetryContext?: TelemetryContext;
 
+  public static override enableJsonFlag = true;
   static override flags = {
     config: Flags.string({
       env: ENV_DX_CONFIG,
@@ -63,6 +64,8 @@ export abstract class BaseCommand extends Command {
       description: 'Timeout in seconds',
       default: 30
     })
+
+    // TODO(mykola): Implement JSON args.
   };
 
   constructor(argv: string[], config: OclifConfig) {
