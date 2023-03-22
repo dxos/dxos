@@ -87,10 +87,13 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
     states: {
       [`unknown${Domain}`]: {
         always: [
-          { target: `..inputting${Domain}InvitationCode`, cond: `noUnredeemed${Domain}InvitationCode`, actions: 'log' },
           {
-            target: `..acceptingRedeemed${Domain}Invitation`,
-            cond: `hasUnredeemed${Domain}InvitationCode`,
+            target: `inputting${Domain}InvitationCode`,
+            cond: (context) => !context[Domain.toLowerCase() as 'space' | 'halo'].unredeemedCode,
+            actions: 'log'
+          },
+          {
+            target: `acceptingRedeemed${Domain}Invitation`,
             actions: 'log'
           }
         ]
@@ -106,7 +109,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`connecting${Domain}Invitation`]: {},
           [`inputting${Domain}VerificationCode`]: {
             on: {
-              [`authenticate${Domain}VerificationCode`]: `..authenticationFailing${Domain}VerificationCode`
+              [`authenticate${Domain}VerificationCode`]: `authenticationFailing${Domain}VerificationCode`
             }
           },
           [`authenticationFailing${Domain}VerificationCode`]: {},
@@ -192,9 +195,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
-          // acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '..confirmingAddedIdentity'),
-          acceptingHaloInvitation: {},
-          confirmingAddedIdentity: {}
+          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '#confirmingAddedIdentity'),
+          // acceptingHaloInvitation: {},
+          confirmingAddedIdentity: {
+            id: 'confirmingAddedIdentity'
+          }
         },
         on: {
           recoverIdentity: { target: '.recoveringIdentity', actions: 'log' },
@@ -208,9 +213,10 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
         }
       },
-      // acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '..finishingJoining'),
-      acceptingSpaceInvitation: {},
+      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#finishingJoining'),
+      // acceptingSpaceInvitation: {},
       finishingJoining: {
+        id: 'finishingJoining',
         type: 'final'
       }
     }
@@ -218,9 +224,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
-      hasUnredeemedHaloInvitationCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noUnredeemedHaloInvitationCode: ({ halo }, _event) => !halo.unredeemedCode,
-      hasUnredeemedSpaceInvitationCode: ({ space }, _event) => !!space.unredeemedCode,
       noUnredeemedSpaceInvitationCode: ({ space }, _event) => !space.unredeemedCode
     },
     actions: {
