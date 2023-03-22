@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: kube-console
+    - name: console
       type: dxos:type/app
       displayName: KUBE Console
       description: KUBE Admin Console.
