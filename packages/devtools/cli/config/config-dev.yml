@@ -6,8 +6,6 @@ runtime:
       persistent: true
       path: '/tmp/dx/cli'
 
-    remoteSource: http://localhost:3967/vault.html
-
   services:
     signal:
       server: wss://dev.kube.dxos.org/.well-known/dx/signal
