@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, synchronized, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
@@ -23,7 +23,6 @@ import { createDevtoolsRpcServer } from '../devtools';
 import { AuthenticatingInvitationObservable, InvitationsOptions } from '../invitations';
 import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy, Space } from '../proxies';
-import { Observable } from '../util';
 import { SpaceSerializer } from './serializer';
 import { ClientServicesProvider } from './service-definitions';
 import { fromIFrame } from './utils';
@@ -63,12 +62,13 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
-  private readonly _statusUpdate = new Event<SystemStatus | undefined>();
+  // TODO(wittjosiah): Make `null` status part of enum.
+  private readonly _statusUpdate = new Event<SystemStatus | null>();
 
   private _initialized = false;
   private _statusStream?: Stream<SystemStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
-  private _status = new Observable<SystemStatus | undefined>(undefined, this._statusUpdate);
+  private _status = MulticastObservable.from(this._statusUpdate, null);
 
   // prettier-ignore
   constructor({
@@ -133,7 +133,7 @@ export class Client {
   /**
    * Client services system status.
    */
-  get status(): Observable<SystemStatus | undefined> {
+  get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
   }
 
@@ -145,7 +145,7 @@ export class Client {
   }
 
   /**
-   * Client network status.
+   * MESH networking.
    */
   get mesh(): MeshProxy {
     return this._mesh;
@@ -161,7 +161,7 @@ export class Client {
   /**
    * ECHO spaces.
    */
-  get spaces(): Observable<Space[]> {
+  get spaces(): MulticastObservable<Space[]> {
     return this._echo.spaces;
   }
 
@@ -219,12 +219,12 @@ export class Client {
         this._statusUpdate.emit(status);
 
         this._statusTimeout = setTimeout(() => {
-          this._statusUpdate.emit(undefined);
+          this._statusUpdate.emit(null);
         }, 5000);
       },
       (err) => {
         trigger.wake(err);
-        this._statusUpdate.emit(undefined);
+        this._statusUpdate.emit(null);
       }
     );
 
