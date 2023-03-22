@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { memo } from 'react';
+import React, { forwardRef, memo, Ref } from 'react';
 
 import { YXmlFragment } from '@dxos/text-model';
 
 import { ComposerSlots, useTextModel, UseTextModelOptions } from '../../model';
-import { MarkdownComposer } from '../Markdown';
-import { RichTextComposer } from '../RichText';
+import { MarkdownComposer, MarkdownComposerRef } from '../Markdown';
+import { RichTextComposer, TipTapEditor } from '../RichText';
 
 export type ComposerProps = UseTextModelOptions & {
   slots?: ComposerSlots;
@@ -21,12 +21,14 @@ export type ComposerProps = UseTextModelOptions & {
  */
 // NOTE: Without `memo`, if parent component uses `observer` the composer re-renders excessively.
 // TODO(wittjosiah): Factor out?
-export const Composer = memo(({ slots, ...options }: ComposerProps) => {
-  const model = useTextModel(options);
+export const Composer = memo(
+  forwardRef<TipTapEditor | MarkdownComposerRef, ComposerProps>(({ slots, ...options }, forwardedRef) => {
+    const model = useTextModel(options);
 
-  if (model?.content instanceof YXmlFragment) {
-    return <RichTextComposer model={model} slots={slots} />;
-  } else {
-    return <MarkdownComposer model={model} slots={slots} />;
-  }
-});
+    if (model?.content instanceof YXmlFragment) {
+      return <RichTextComposer ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
+    } else {
+      return <MarkdownComposer ref={forwardedRef as Ref<MarkdownComposerRef>} model={model} slots={slots} />;
+    }
+  })
+);
