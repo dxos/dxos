@@ -8,19 +8,6 @@ package:
       description: KUBE Admin Console.
       build:
         command: pnpm -w nx bundle kube-console
-        env:
-          VITE_PWA: true
-      # TODO(wittjosiah): Currently breaking publish to dev kube.
-      # tunnel: true
-
-    - name: kube-console-web
-      type: dxos:type/app
-      displayName: kube-console-web
-      description: kube-console Demo.
-      build:
-        command: pnpm -w nx bundle kube-console --outputPath packages/experimental/kube-console/out/kube-console-web
-        env:
-          VITE_DEV: true
 
 runtime:
   client:
