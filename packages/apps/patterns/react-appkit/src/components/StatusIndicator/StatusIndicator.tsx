@@ -18,8 +18,8 @@ export const StatusIndicator = () => {
   const client = useClient();
   const handleStateToggle = async () => {
     void (state === ConnectionState.ONLINE
-      ? client.setConnectionState(ConnectionState.OFFLINE)
-      : client.setConnectionState(ConnectionState.ONLINE));
+      ? client.mesh.setConnectionState(ConnectionState.OFFLINE)
+      : client.mesh.setConnectionState(ConnectionState.ONLINE));
   };
 
   const toggleButton = (

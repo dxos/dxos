@@ -245,11 +245,11 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
-        await client.setConnectionState(ConnectionState.ONLINE);
+        await client.mesh.setConnectionState(ConnectionState.ONLINE);
         break;
       }
       case ConnectionState.ONLINE: {
-        await client.setConnectionState(ConnectionState.OFFLINE);
+        await client.mesh.setConnectionState(ConnectionState.OFFLINE);
         break;
       }
     }

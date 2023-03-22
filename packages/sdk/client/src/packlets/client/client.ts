@@ -15,13 +15,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  ConnectionState,
-  Invitation,
-  NetworkStatus,
-  SystemStatus,
-  SystemStatusResponse
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
@@ -153,8 +147,8 @@ export class Client {
   /**
    * Client network status.
    */
-  get networkStatus(): Observable<NetworkStatus> {
-    return this._mesh.networkStatus;
+  get mesh(): MeshProxy {
+    return this._mesh;
   }
 
   /**
@@ -169,13 +163,6 @@ export class Client {
    */
   get spaces(): Observable<Space[]> {
     return this._echo.spaces;
-  }
-
-  /**
-   * Update the connection state of the client.
-   */
-  setConnectionState(state: ConnectionState): Promise<void> {
-    return this._mesh.setConnectionState(state);
   }
 
   addSchema(schema: EchoSchema): void {
@@ -249,7 +236,7 @@ export class Client {
     // TODO(wittjosiah): Promise.all?
     await this._halo._open();
     await this._echo.open();
-    await this._mesh.open();
+    await this._mesh._open();
 
     this._initialized = true;
   }
@@ -266,7 +253,7 @@ export class Client {
 
     await this._halo._close();
     await this._echo.close();
-    await this._mesh.close();
+    await this._mesh._close();
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();

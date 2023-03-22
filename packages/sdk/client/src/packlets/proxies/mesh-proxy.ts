@@ -39,7 +39,10 @@ export class MeshProxy {
     };
   }
 
-  async open() {
+  /**
+   * @internal
+   */
+  async _open() {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
@@ -53,7 +56,10 @@ export class MeshProxy {
     });
   }
 
-  async close() {
+  /**
+   * @internal
+   */
+  async _close() {
     await this._ctx?.dispose();
   }
 

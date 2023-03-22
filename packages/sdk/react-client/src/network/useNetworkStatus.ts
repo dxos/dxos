@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -13,8 +13,10 @@ import { useClient } from '../client';
  */
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(client.networkStatus.get());
-  useEffect(() => client.networkStatus.subscribe(setNetworkStatus), [client]);
+  const networkStatus = useSyncExternalStore(
+    (listener) => client.mesh.networkStatus.subscribe(listener),
+    () => client.mesh.networkStatus.get()
+  );
 
   return networkStatus;
 };
