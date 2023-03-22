@@ -33,6 +33,7 @@ export type UpdateInfo = {
 
 /**
  * Manages cross-space databases.
+ * Tracks observable mutations on objects.
  */
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
