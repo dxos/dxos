@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-export DX_CONFIG=./config/config-dev.yml
+export DX_CONFIG=./config/config-local.yml
 
 dx=./bin/run
 
