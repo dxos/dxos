@@ -12,8 +12,8 @@ export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   const space = useSpace(spaceKey);
   const members =
     useSyncExternalStore(
-      (listener) => (space ? space.subscribeMembers(listener) : () => {}),
-      () => space?.getMembers()
+      (listener) => (space ? space.members.subscribe(listener) : () => {}),
+      () => space?.members.get()
     ) ?? [];
 
   return members;
