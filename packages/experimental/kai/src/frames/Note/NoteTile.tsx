@@ -9,7 +9,7 @@ import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { observer } from '@dxos/react-client';
 import { mx, Button, DropdownMenu, DropdownMenuItem, getSize, Input } from '@dxos/react-components';
-import { RichTextComposer, useTextModel } from '@dxos/react-composer';
+import { Composer } from '@dxos/react-composer';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
@@ -40,8 +40,6 @@ const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = 
 
 export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
   const note = item.data as Note;
-  // TODO(wittjosiah): Hook up cursors with space.
-  const model = useTextModel({ text: note.content });
 
   const { color, border } = colors.find(({ id }) => id === note.color) ?? colors[0];
 
@@ -96,8 +94,9 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       {/* TODO(burdon): Error when syncing: Cannot read properties of undefined (reading doc). */}
       <div className='flex flex-1 overflow-hidden mt-2 p-1 text-gray-600'>
         {note.content && (
-          <RichTextComposer
-            model={model}
+          // TODO(wittjosiah): Hook up cursors with space.
+          <Composer
+            text={note.content}
             slots={{ root: { className: 'grow h-full' }, editor: { className: 'h-full' } }}
           />
         )}
