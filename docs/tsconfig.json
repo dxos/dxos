@@ -8,13 +8,13 @@
     "module": "ESNext",
     "outDir": "dist",
     "types": [
-      "@vuepress/client/types",
-      "node"
+      "node",
+      "@vuepress/client/types"
     ]
   },
   "include": [
+    "docs",
     "src",
-    "typings.d.ts",
     "vuepress.config.ts"
   ],
   "references": [
