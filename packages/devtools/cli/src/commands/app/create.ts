@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import os from 'os';
 import { cwd } from 'process';
@@ -30,13 +30,9 @@ const isDirEmpty = async (dirpath: string) => {
 export default class Create extends BaseCommand {
   static override description = 'Create a DXOS project.';
 
-  static override args = [
-    {
-      name: 'name',
-      required: true,
-      description: 'Name of the project'
-    }
-  ];
+  static override args = {
+    name: Args.string({ required: true, description: 'Name of the project' })
+  };
 
   static override flags = {
     ...BaseCommand.flags,
