@@ -28,6 +28,6 @@ export const ListItemButton = ({ slots, onClick, selected, ...rest }: ListItemBu
   );
 };
 
-export const ListItemText: FC<PropsWithChildren> = ({ children }) => (
-  <div className='w-full px-1 truncate'>{children}</div>
+export const ListItemText: FC<PropsWithChildren<{ className: string }>> = ({ className, children }) => (
+  <div className={mx('w-full px-2 truncate', className)}>{children}</div>
 );
