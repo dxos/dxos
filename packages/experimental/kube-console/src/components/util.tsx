@@ -6,7 +6,7 @@ import React, { FC, PropsWithChildren } from 'react';
 
 import { ListItem, ListItemProps, mx } from '@dxos/react-components';
 
-// TODO(burdon): Move to react-components?
+// TODO(burdon): Move to react-appkit?
 // Removes need for class overrides in console.
 
 export type ListItemButtonProps = ListItemProps & {
