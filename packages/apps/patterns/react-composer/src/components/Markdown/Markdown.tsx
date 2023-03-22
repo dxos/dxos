@@ -36,22 +36,20 @@ import { useThemeContext, configPalettes } from '@dxos/react-components';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
-import { ComposerModel } from '../../model';
+import { ComposerModel, ComposerSlots } from '../../model';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
 
-export type MarkdownComposerSlots = {};
-
 export type MarkdownComposerProps = {
   model?: ComposerModel;
-  slots?: MarkdownComposerSlots;
+  slots?: ComposerSlots;
 };
 
-export interface MarkdownComposerRef {
+export type MarkdownComposerRef = {
   editor: HTMLDivElement | null;
   state?: EditorState;
   view?: EditorView;
-}
+};
 
 const theme = EditorView.theme(markdownDarktheme);
 

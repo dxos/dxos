@@ -27,6 +27,6 @@ export const Composer = memo(({ slots, ...options }: ComposerProps) => {
   if (model?.content instanceof YXmlFragment) {
     return <RichTextComposer model={model} slots={slots} />;
   } else {
-    return <MarkdownComposer model={model} />;
+    return <MarkdownComposer model={model} slots={slots} />;
   }
 });
