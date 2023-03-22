@@ -117,6 +117,11 @@ Packages may also declare scripts in their `package.json` `scripts` field as is 
 *   All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
 *   All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
 
+### Apps
+
+The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
+In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
+
 ## Branch Diagram
 
 ![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
