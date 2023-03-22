@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useClient, useIdentity } from '@dxos/react-client';
 import { DensityProvider } from '@dxos/react-components';
@@ -30,7 +30,7 @@ export const JoinPanel = ({
   const client = useClient();
   const identity = useIdentity();
 
-  const [joinState, joinSend] = useJoinMachine(client, {
+  const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       identity,
       ...(initialInvitationCode && {
@@ -38,6 +38,15 @@ export const JoinPanel = ({
       })
     }
   });
+
+  useEffect(() => {
+    const subscription = joinService.subscribe((state) => {
+      // simple state logging
+      console.log('[state]', state);
+    });
+
+    return subscription.unsubscribe;
+  }, [joinService]);
 
   return (
     <DensityProvider density='fine'>
@@ -51,14 +60,14 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('choosingAuthMethod')
+              active: joinState.matches({ choosingIdentity: 'choosingAuthMethod' })
             }}
           />
           <IdentityInput
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('creatingIdentity'),
+              active: joinState.matches({ choosingIdentity: 'creatingIdentity' }),
               method: 'create identity'
             }}
           />
@@ -66,7 +75,7 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('recoveringIdentity'),
+              active: joinState.matches({ choosingIdentity: 'recoveringIdentity' }),
               method: 'recover identity'
             }}
           />
@@ -74,7 +83,9 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('inputtingHaloInvitationCode'),
+              active: joinState.matches({
+                choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' }
+              }),
               invitationType: 'halo'
             }}
           />
@@ -82,7 +93,11 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('failingHaloInvitation'),
+              active: joinState.matches({
+                choosingIdentity: {
+                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
+                }
+              }),
               invitationType: 'halo'
             }}
           />
@@ -90,7 +105,11 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('inputtingHaloVerificationCode'),
+              active: joinState.matches({
+                choosingIdentity: {
+                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
+                }
+              }),
               invitationType: 'halo'
             }}
           />
@@ -98,7 +117,11 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('successHaloInvitation'),
+              active: joinState.matches({
+                choosingIdentity: {
+                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
+                }
+              }),
               invitationType: 'halo',
               doneActionParent,
               onDone
@@ -109,7 +132,9 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               mode,
-              active: joinState.matches('confirmingAddedIdentity'),
+              active: joinState.matches({
+                choosingIdentity: 'confirmingAddedIdentity'
+              }),
               doneActionParent,
               onDone
             }}
@@ -118,7 +143,9 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('inputtingSpaceInvitationCode'),
+              active: joinState.matches({
+                acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
+              }),
               invitationType: 'space'
             }}
           />
@@ -126,7 +153,9 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('failingSpaceInvitation'),
+              active: joinState.matches({
+                acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
+              }),
               invitationType: 'space'
             }}
           />
@@ -134,9 +163,16 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active:
-                joinState.matches('inputtingSpaceVerificationCode') ||
-                joinState.matches('authenticationFailingSpaceVerificationCode'),
+              active: [
+                {
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
+                },
+                {
+                  acceptingSpaceInvitation: {
+                    acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
+                  }
+                }
+              ].some(joinState.matches),
               invitationType: 'space',
               ...(joinState.matches('authenticationFailingSpaceVerificationCode') && { failed: true })
             }}
@@ -145,7 +181,7 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('successSpaceInvitation'),
+              active: joinState.matches('finishingJoining'),
               invitationType: 'space',
               doneActionParent,
               onDone
