@@ -32,6 +32,7 @@ export class MulticastObservable<T> extends Observable<T> {
   static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
     if ('emit' in value) {
       return new MulticastObservable((observer) => {
+        // TODO(wittjosiah): Do error/complete matter for events?
         value.on((data) => {
           observer.next(data);
         });
@@ -50,6 +51,9 @@ export class MulticastObservable<T> extends Observable<T> {
    * Get the current value of the observable.
    */
   get(): T {
+    // TODO(wittjosiah): Is there a better way to handle this?
+    //   `this._value` is not guaranteed to be set for compatibility with `Observable` base class.
+    //   `get()` should always return `T` to avoid having to sprinkle conditional logic.
     if (this._value === undefined) {
       throw new Error('MulticastObservable is not initialized.');
     }
