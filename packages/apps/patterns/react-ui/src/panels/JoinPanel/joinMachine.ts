@@ -4,8 +4,8 @@
 
 import { useMachine } from '@xstate/react';
 import { useCallback } from 'react';
-import { assign, createMachine } from 'xstate';
-import type { EventObject, Observer, StateNodeConfig, Subscribable, Subscription } from 'xstate';
+import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
+import type { Observer, StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
 import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client';
@@ -30,8 +30,7 @@ type SelectIdentityEvent = {
 };
 
 type SetInvitationCodeEvent = {
-  type: 'setInvitationCode';
-  domain: 'halo' | 'space';
+  type: 'setHaloInvitationCode' | 'setSpaceInvitationCode';
   code: string;
 };
 
@@ -40,7 +39,19 @@ type FailInvitationEvent = {
   reason: FailReason;
 };
 
-type InvitationEvent = FailInvitationEvent | EventObject;
+type EmptyInvitationEvent = {
+  type:
+    | 'authenticateHaloVerificationCode'
+    | 'authenticateSpaceVerificationCode'
+    | 'connectHaloInvitation'
+    | 'connectSpaceInvitation'
+    | 'connectionSuccessHaloInvitation'
+    | 'connectionSuccessSpaceInvitation'
+    | 'successHaloInvitation'
+    | 'successSpaceInvitation';
+};
+
+type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | EmptyInvitationEvent;
 
 const wrapInvitation = (
   Domain: 'Space' | 'Halo',
@@ -55,15 +66,21 @@ const wrapInvitation = (
         onTimeout: () => observer.next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent),
         onConnecting: () => observer.next({ type: `connect${Domain}Invitation` }),
         onConnected: () => observer.next({ type: `connectionSuccess${Domain}Invitation` }),
-        onSuccess: () => observer.complete(),
-        onError: (error: any) => observer.error(error)
+        onSuccess: () => {
+          observer.next({ type: `success${Domain}Invitation` });
+          return observer.complete();
+        },
+        onError: (error: any) => {
+          observer.next({ type: `fail${Domain}Invitation`, reason: 'error' });
+          return observer.error(error);
+        }
       });
       return { unsubscribe };
     }
   } as Subscribable<InvitationEvent>;
 };
 
-const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine>[1]) => {
+const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<JoinMachine>>[1]) => {
   const redeemHaloInvitationCode = useCallback(
     () =>
       assign<JoinMachineContext>({
@@ -111,7 +128,7 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine>[
 };
 
 const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: string) => {
-  const config: StateNodeConfig<JoinMachineContext, any, EventObject> = {
+  const config: StateNodeConfig<JoinMachineContext, any, InvitationEvent> = {
     initial: `connecting${Domain}Invitation`,
     entry: [`redeem${Domain}InvitationCode`], // todo(thure): confirm this evaluates *before* the observable is invoked
     invoke: {
@@ -134,10 +151,22 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       [`authenticationSuccess${Domain}VerificationCode`]: successTarget
     }
   };
-  return config as StateNodeConfig<JoinMachineContext, typeof config, EventObject>;
+  return config as StateNodeConfig<JoinMachineContext, typeof config, JoinEvent>;
 };
 
-const joinMachine = createMachine<JoinMachineContext>(
+type EmptyJoinEvent = {
+  type:
+    | 'recoverIdentity'
+    | 'createIdentity'
+    | 'acceptHaloInvitation'
+    | 'addIdentity'
+    | 'selectIdentity'
+    | 'deselectAuthMethod';
+};
+
+type JoinEvent = InvitationEvent | SelectIdentityEvent | EmptyJoinEvent;
+
+const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     id: 'join',
     predictableActionArguments: true,
@@ -199,11 +228,11 @@ const joinMachine = createMachine<JoinMachineContext>(
       }),
       setInvitationCode: assign<JoinMachineContext, SetInvitationCodeEvent>({
         halo: (context, event) =>
-          event.domain === 'halo'
+          event.type === 'setHaloInvitationCode'
             ? { ...context.halo, unredeemedCode: event.code, invitation: undefined }
             : context.halo,
         space: (context, event) =>
-          event.domain === 'space'
+          event.type === 'setSpaceInvitationCode'
             ? { ...context.space, unredeemedCode: event.code, invitation: undefined }
             : context.space
       })
@@ -212,10 +241,9 @@ const joinMachine = createMachine<JoinMachineContext>(
 );
 
 type JoinMachine = typeof joinMachine;
-type UseJoinMachineReturnType = ReturnType<typeof useMachine<JoinMachine>>;
 
-type JoinState = UseJoinMachineReturnType[0];
-type JoinSend = UseJoinMachineReturnType[1];
+type JoinState = StateFrom<JoinMachine>;
+type JoinSend = InterpreterFrom<JoinMachine>['send'];
 
-export type { JoinMachine, JoinState, JoinSend, JoinMachineContext };
+export type { JoinMachine, JoinState, JoinSend, JoinEvent, JoinMachineContext };
 export { joinMachine, useJoinMachine };
