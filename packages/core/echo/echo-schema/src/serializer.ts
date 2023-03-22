@@ -7,8 +7,8 @@ import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';
 import { base } from './defs';
-import { Document } from './document';
 import { Text } from './text-object';
+import { TypedObject } from './typed-object';
 import { strip } from './util';
 
 export type SerializedObject = {
@@ -63,7 +63,7 @@ export class Serializer {
 
       switch (model) {
         case DocumentModel.meta.type: {
-          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
+          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? TypedObject;
           const echoSchema = type ? database.router.schema?.getType(type) : undefined;
 
           const obj = new Prototype(

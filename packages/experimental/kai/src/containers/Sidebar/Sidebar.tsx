@@ -19,7 +19,7 @@ import React, { useContext, useEffect, useState, Suspense, useCallback } from 'r
 import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -119,7 +119,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     setShowSearchResults(results.results.length > 0);
   };
 
-  const handleSearchSelect = (object: Document) => {
+  const handleSearchSelect = (object: TypedObject) => {
     if (space) {
       // TODO(burdon): Add to search result.
       const frame = objectMeta[object.__typename!]?.frame;

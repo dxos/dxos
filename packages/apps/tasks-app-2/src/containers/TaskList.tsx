@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Space, useQuery, Document, observer } from '@dxos/react-client';
+import { Space, Expando, observer, useQuery } from '@dxos/react-client';
 
 import { TaskList as TaskListComponent } from '../components/TaskList';
 
@@ -27,11 +27,11 @@ export const TaskList = observer((props: TaskListProps) => {
         task.completed = completed;
       }}
       onTaskTitleChanged={(task, title) => (task.title = title)}
-      onTaskDeleted={(task) => space.db.remove(task as any as Document)}
+      onTaskDeleted={(task) => space.db.remove(task as any as Expando)}
       onTaskCreate={() => {
         list.tasks ||= [];
         list.tasks.push(
-          new Document({
+          new Expando({
             type: 'task'
           })
         );

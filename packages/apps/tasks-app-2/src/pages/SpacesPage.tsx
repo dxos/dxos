@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate, generatePath } from 'react-router-dom';
 
 import { SpacesPageComponent } from '@dxos/react-appkit';
-import { Document } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client';
 
 export type SpacesPageProps = {};
 
@@ -15,7 +15,7 @@ export const SpacesPage = (props: SpacesPageProps) => {
   return (
     <SpacesPageComponent
       onSpaceCreated={async (space) => {
-        const defaultList = new Document({ type: 'list' });
+        const defaultList = new Expando({ type: 'list' });
         void space.db.add(defaultList);
       }}
       onSpaceJoined={({ spaceKey }) => {

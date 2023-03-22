@@ -6,7 +6,7 @@ import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
-import { Client, Document, Text } from '@dxos/client';
+import { Client, Expando, Text } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -76,7 +76,7 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
       const space = await client.echo.createSpace();
       const content = new Text();
       content.doc?.getText('utf8').insert(0, initialContent);
-      await space.db.add(new Document({ content }));
+      await space.db.add(new Expando({ content }));
       real.spaceKey = space.key;
     } else {
       const host = Array.from(real.peers.values())[0];

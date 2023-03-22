@@ -55,10 +55,7 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
       const onUpdate = async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values())
-          // Skip spaces without data service available.
-          .filter((space) => this._dataServiceSubscriptions.getDataService(space.key))
-          .map((space) => this._transformSpace(space));
+        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._transformSpace(space));
         log('update', { spaces });
         next({ spaces });
       };
@@ -142,7 +139,7 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      status: space.isOpen ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      status: space.dataPipelineReady ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

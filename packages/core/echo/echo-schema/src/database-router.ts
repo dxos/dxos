@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
@@ -14,7 +13,8 @@ import { EchoObject } from './object';
 import { getCurrentReactComponent } from './react-integration';
 import { EchoSchema } from './schema';
 
-export type SelectionFn = never; // TODO(burdon): Document or remove.
+// TODO(burdon): Document or remove. Generic filter function?
+export type SelectionFn = never;
 
 export type Selection = EchoObject | SelectionFn | Selection[] | undefined | null | false;
 
@@ -116,9 +116,10 @@ export class DatabaseRouter {
     if (this._accessObserverStack.length === 0) {
       const currentComponent = getCurrentReactComponent();
       if (currentComponent) {
-        log.warn(
-          `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
-        );
+        // Too annoying in kai.
+        // log.warn(
+        //   `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
+        // );
       }
     }
   }

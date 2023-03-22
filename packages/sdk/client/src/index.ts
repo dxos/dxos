@@ -18,6 +18,7 @@ export {
   type SchemaRef
 } from '@dxos/echo-db';
 
+// TODO(burdon): Tighten export.
 export * from '@dxos/echo-schema';
 
 export { PublicKey } from '@dxos/keys';

@@ -47,7 +47,7 @@ The API definition of `useQuery` is below. It returns a generic `Document` type 
 
 Create subscription.
 
-Returns: <code>[Document](/api/@dxos/react-client/values#Document)\<object>\[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)\<object>\[]</code>
 
 Arguments:
 
@@ -60,7 +60,7 @@ Arguments:
 
 It's possible to obtain strongly typed objects from `useQuery<T>`.
 
-Because `useQuery` returns tracked ECHO objects, their type must descend from [`DocumentBase`](/api/@dxos/client/classes/DocumentBase). DXOS provides a tool to generate these types from a schema definition file.
+Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject). DXOS provides a tool to generate these types from a schema definition file.
 
 > There are many benefits to expressing the type schema of an application in a language-neutral and interoperable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
 
@@ -106,20 +106,23 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
-export class Task extends DocumentBase {
-  static readonly type = schema.getType('dxos.tasks.Task');
+export class Task extends TypedObject {
+  static readonly type = schema.getType('example.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 

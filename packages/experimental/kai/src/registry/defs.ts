@@ -5,7 +5,7 @@
 import { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document, TypeFilter } from '@dxos/echo-schema';
+import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
 // TODO(burdon): Metagraph definitions.
@@ -14,7 +14,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 export type FrameComponent = FC<any>;
 
 // TODO(burdon): Rename.
-export type FrameRuntime<T extends Document> = {
+export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
   Component: FrameComponent;
 
@@ -26,7 +26,7 @@ export type FrameRuntime<T extends Document> = {
   Plugin?: FC<any>;
 };
 
-export type FrameDef<T extends Document> = {
+export type FrameDef<T extends TypedObject> = {
   module: Module;
   runtime: FrameRuntime<T>;
 };

@@ -5,21 +5,21 @@
 import assert from 'assert';
 import React, { FC } from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
 import { useAppRouter } from '../../hooks';
 import { FrameRuntime } from '../../registry';
 
-export type FrameObjectListProps<T extends Document> = {
+export type FrameObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;
   Action?: FC<any>;
   onSelect?: (objectId: string) => void;
   onAction?: (objectId: string) => void;
 };
 
-export const FrameObjectList = <T extends Document>({
+export const FrameObjectList = <T extends TypedObject>({
   frameDef, // TODO(burdon): Not required.
   Action,
   onSelect,

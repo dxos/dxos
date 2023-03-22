@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Document } from '@dxos/client';
+import { Client, Expando } from '@dxos/client';
 
 const client = new Client();
 
@@ -10,10 +10,11 @@ const client = new Client();
   await client.initialize();
   if (!client.halo.profile) await client.halo.createProfile();
 
+  // TODO(burdon): Update.
   const { value: spaces } = client.echo.querySpaces();
   const space = spaces[0];
 
-  const object = new Document({ type: 'task', title: 'buy milk' });
+  const object = new Expando({ type: 'task', title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
