@@ -87,8 +87,12 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
     states: {
       [`unknown${Domain}`]: {
         always: [
-          { target: `inputting${Domain}InvitationCode`, cond: `noUnredeemed${Domain}InvitationCode` },
-          { target: `connecting${Domain}Invitation`, cond: `hasUnredeemed${Domain}InvitationCode` }
+          { target: `..inputting${Domain}InvitationCode`, cond: `noUnredeemed${Domain}InvitationCode`, actions: 'log' },
+          {
+            target: `..acceptingRedeemed${Domain}Invitation`,
+            cond: `hasUnredeemed${Domain}InvitationCode`,
+            actions: 'log'
+          }
         ]
       },
       [`inputting${Domain}InvitationCode`]: {},
@@ -102,7 +106,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`connecting${Domain}Invitation`]: {},
           [`inputting${Domain}VerificationCode`]: {
             on: {
-              [`authenticate${Domain}VerificationCode`]: `.authenticationFailing${Domain}VerificationCode`
+              [`authenticate${Domain}VerificationCode`]: `..authenticationFailing${Domain}VerificationCode`
             }
           },
           [`authenticationFailing${Domain}VerificationCode`]: {},
@@ -110,34 +114,43 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`success${Domain}Invitation`]: {}
         },
         on: {
-          [`connect${Domain}Invitation`]: `.connecting${Domain}Invitation`,
-          [`connectionSuccess${Domain}Invitation`]: `.inputting${Domain}VerificationCode`,
-          [`authenticate${Domain}VerificationCode`]: `.inputting${Domain}VerificationCode`,
-          [`succeed${Domain}VerificationCode`]: successTarget,
+          [`connect${Domain}Invitation`]: { target: `.connecting${Domain}Invitation`, actions: 'log' },
+          [`connectionSuccess${Domain}Invitation`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
+          [`authenticate${Domain}VerificationCode`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
+          [`succeed${Domain}VerificationCode`]: { target: successTarget, actions: 'log' },
           [`fail${Domain}Invitation`]: {
             target: `.failing${Domain}Invitation`,
-            actions: assign({
-              [Domain.toLowerCase() as 'space' | 'halo']: (
-                context: JoinMachineContext,
-                event: FailInvitationEvent
-              ) => ({
-                ...context[Domain.toLowerCase() as 'space' | 'halo'],
-                failReason: event.reason
-              })
-            })
+            actions: [
+              assign({
+                [Domain.toLowerCase() as 'space' | 'halo']: (
+                  context: JoinMachineContext,
+                  event: FailInvitationEvent
+                ) => ({
+                  ...context[Domain.toLowerCase() as 'space' | 'halo'],
+                  failReason: event.reason
+                })
+              }),
+              'log'
+            ]
           }
         }
       }
     },
     on: {
       [`set${Domain}InvitationCode`]: {
-        target: `.connecting${Domain}Invitation`,
-        actions: assign({
-          [Domain.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
-            ...context[Domain.toLowerCase() as 'space' | 'halo'],
-            unredeemedCode: event.code
-          })
-        })
+        target: `.acceptingRedeemed${Domain}Invitation`,
+        actions: [
+          assign({
+            [Domain.toLowerCase() as 'space' | 'halo']: (
+              context: JoinMachineContext,
+              event: SetInvitationCodeEvent
+            ) => ({
+              ...context[Domain.toLowerCase() as 'space' | 'halo'],
+              unredeemedCode: event.code
+            })
+          }),
+          'log'
+        ]
       }
     }
   };
@@ -165,36 +178,38 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       halo: {},
       space: {}
     },
-    initial: 'choosingIdentity',
+    initial: 'unknown',
     states: {
+      unknown: {
+        always: [
+          { target: 'choosingIdentity', cond: ({ identity }) => !identity, actions: 'log' },
+          { target: 'acceptingSpaceInvitation', actions: 'log' }
+        ]
+      },
       choosingIdentity: {
-        initial: 'unknown',
+        initial: 'choosingAuthMethod',
         states: {
-          unknown: {
-            always: [
-              { target: 'choosingAuthMethod', cond: 'hasSelectedIdentity' },
-              { target: 'connectingToSpace', cond: 'noSelectedIdentity' }
-            ]
-          },
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
-          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '..confirmingAddedIdentity'),
+          // acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '..confirmingAddedIdentity'),
+          acceptingHaloInvitation: {},
           confirmingAddedIdentity: {}
         },
         on: {
-          recoverIdentity: '.recoveringIdentity',
-          createIdentity: '.creatingIdentity',
-          acceptHaloInvitation: '.acceptingHaloInvitation',
-          addIdentity: '.confirmingAddedIdentity',
+          recoverIdentity: { target: '.recoveringIdentity', actions: 'log' },
+          createIdentity: { target: '.creatingIdentity', actions: 'log' },
+          acceptHaloInvitation: { target: '.acceptingHaloInvitation', actions: 'log' },
+          addIdentity: { target: '.confirmingAddedIdentity', actions: 'log' },
           selectIdentity: {
-            target: '..acceptingSpaceInvitation',
-            actions: 'setIdentity'
+            target: 'acceptingSpaceInvitation',
+            actions: ['setIdentity', 'log']
           },
-          deselectAuthMethod: '.choosingAuthMethod'
+          deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
         }
       },
-      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '..finishingJoining'),
+      // acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '..finishingJoining'),
+      acceptingSpaceInvitation: {},
       finishingJoining: {
         type: 'final'
       }
@@ -202,7 +217,6 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   },
   {
     guards: {
-      hasSelectedIdentity: ({ identity }, _event) => !!identity,
       noSelectedIdentity: ({ identity }, _event) => !identity,
       hasUnredeemedHaloInvitationCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noUnredeemedHaloInvitationCode: ({ halo }, _event) => !halo.unredeemedCode,
@@ -225,7 +239,10 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type === 'setSpaceInvitationCode'
             ? { ...context.space, unredeemedCode: event.code, invitation: undefined }
             : context.space
-      })
+      }),
+      log: (context, event) => {
+        console.log('transition', event);
+      }
     }
   }
 );
