@@ -16,9 +16,13 @@
     "prebuild": "dxtype src/testing/proto/schema.proto src/testing/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.4.2",
+    "@codemirror/commands": "^6.2.2",
     "@codemirror/lang-markdown": "^6.1.0",
     "@codemirror/language": "^6.6.0",
     "@codemirror/language-data": "^6.1.0",
+    "@codemirror/lint": "^6.2.0",
+    "@codemirror/search": "^6.3.0",
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.1",
     "@codemirror/view": "^6.9.2",
@@ -39,7 +43,6 @@
     "@tiptap/pm": "2.0.0-beta.220",
     "@tiptap/react": "2.0.0-beta.220",
     "@tiptap/starter-kit": "2.0.0-beta.220",
-    "@uiw/react-codemirror": "4.19.9",
     "codemirror": "^6.0.1",
     "lib0": "^0.2.65",
     "lodash.get": "^4.4.2",
