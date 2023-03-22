@@ -90,7 +90,7 @@ export const MessageFrame = () => {
 
                 {/* Body */}
                 <Row>
-                  <div className='mt-1 truncate text-zinc-500'>{body.slice(0, 60)}</div>
+                  <div className='mt-1 truncate text-zinc-500'>{body?.slice(0, 60)}</div>
                 </Row>
               </div>
             );

@@ -372,6 +372,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         <div className='flex shrink-0 flex-col my-2'>
           <div className='pl-2'>
             <Button
+              data-testid='space-share'
               variant='ghost'
               title='Share space'
               onClick={(event) =>
@@ -380,7 +381,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                   data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
                 })
               }
-              data-testid='space-share'
             >
               <UserPlus className={getSize(6)} />
             </Button>
