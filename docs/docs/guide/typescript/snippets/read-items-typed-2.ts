@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Task } from "./schema";
+import { Task } from './schema';
 
 const client = new Client();
 
@@ -14,5 +14,5 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = space.experimental.db.query(Task.filter());
+  const tasks = space.db.query(Task.filter());
 };
