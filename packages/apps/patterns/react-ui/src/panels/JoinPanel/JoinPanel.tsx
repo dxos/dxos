@@ -69,7 +69,7 @@ export const JoinPanel = ({
         nextState.selectedIdentity = action.identity;
         nextState.activeView = 'space invitation acceptor';
         if (state.unredeemedSpaceInvitationCode) {
-          nextState.spaceInvitation = client.echo.acceptInvitation(
+          nextState.spaceInvitation = client.acceptInvitation(
             InvitationEncoder.decode(state.unredeemedSpaceInvitationCode)
           );
           nextState.unredeemedSpaceInvitationCode = undefined;

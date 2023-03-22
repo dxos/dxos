@@ -61,7 +61,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 };
 
 const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, editor: HTMLDivElement) => {
-  const space = await client.echo.getSpace(spaceKey)!;
+  const space = await client.getSpace(spaceKey)!;
   const query = space.db.query(ComposerDocument.filter());
   query.subscribe(({ objects }) => {
     const text = objects[0]?.content;
@@ -76,9 +76,9 @@ const setupSpace = async (count: number) => {
   const clients = [...Array(count)].map(() => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  clients.map((client) => client.echo.dbRouter.addSchema(schema));
+  clients.map((client) => client.dbRouter.addSchema(schema));
 
-  const space = await clients[0].echo.createSpace();
+  const space = await clients[0].createSpace();
   const text = new Text('Hello, Storybook!');
   const document = new ComposerDocument({ content: text });
   await space.db.add(document);

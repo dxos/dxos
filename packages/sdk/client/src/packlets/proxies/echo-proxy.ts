@@ -64,7 +64,6 @@ export class EchoProxy implements Echo {
     return inspectObject(this);
   }
 
-  // TODO(burdon): Include deviceId.
   toJSON() {
     return {
       spaces: this._spacesMap.size
@@ -116,7 +115,7 @@ export class EchoProxy implements Echo {
             continue;
           }
 
-          await this._haloProxy.waitForIdentity();
+          await this._haloProxy._waitForIdentity();
           if (this._destroying) {
             return;
           }

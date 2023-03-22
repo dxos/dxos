@@ -177,7 +177,7 @@ export class BotClient {
     this.onStatusUpdate.emit('Connecting to bot...');
     const botClient = new Client({ services: fromRemote(wsUrl.href) });
     await botClient.initialize();
-    log('status', await botClient.getStatus());
+    log('status', await botClient.status.get());
 
     this.onStatusUpdate.emit('Initializing bot...');
     await botClient.halo.createIdentity({ displayName: botInstanceId });
@@ -198,7 +198,7 @@ export class BotClient {
     invitation.subscribe({
       onConnecting: async (invitation1) => {
         log('invitation1', invitation1);
-        const observable2 = botClient.echo.acceptInvitation(invitation1);
+        const observable2 = botClient.acceptInvitation(invitation1);
         observable2.subscribe({
           onSuccess: async () => {
             connected.wake();

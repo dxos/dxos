@@ -96,15 +96,15 @@ const start = async () => {
   };
 
   // TODO(burdon): Fix race condition? Trigger callback on subscription.
-  void onUpdate(client.echo.spaces.get());
+  void onUpdate(client.spaces.get());
   // TODO(wittjosiah): Unsubscribe on exit.
-  client.echo.spaces.subscribe(onUpdate);
+  client.spaces.subscribe(onUpdate);
 
   const printStatus = () => {
     log.info('status', {
       bot: bot?.constructor.name,
       identity: client.halo.identity,
-      spaces: client.echo.spaces.get().map((space) => ({
+      spaces: client.spaces.get().map((space) => ({
         key: space.key,
         title: space.properties.title,
         members: space.members.get()

@@ -65,10 +65,10 @@ export class HaloProxy implements Halo {
     return inspectObject(this);
   }
 
-  // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      key: this._identity.get()?.identityKey.truncate()
+      identityKey: this._identity.get()?.identityKey.truncate(),
+      deviceKey: this.device?.deviceKey.truncate()
     };
   }
 
@@ -102,8 +102,10 @@ export class HaloProxy implements Halo {
 
   /**
    * Allocate resources and set-up internal subscriptions.
+   *
+   * @internal
    */
-  async open() {
+  async _open() {
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -139,14 +141,24 @@ export class HaloProxy implements Halo {
 
   /**
    * Destroy the instance and clean-up subscriptions.
+   *
+   * @internal
    */
-  async close() {
+  async _close() {
     this._subscriptions.clear();
     this._invitationProxy = undefined;
     this._identityChanged.emit(undefined);
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
     this._invitationsUpdate.emit([]);
+  }
+
+  /**
+   * @internal
+   */
+  // TODO(wittjosiah): Should `Observable` class support this?
+  _waitForIdentity() {
+    return this._identityChanged.waitForCondition(() => !!this._identity.get());
   }
 
   /**
@@ -167,11 +179,6 @@ export class HaloProxy implements Halo {
     this._identityChanged.emit(identity);
 
     return identity;
-  }
-
-  // TODO(wittjosiah): Should `Observable` class support this?
-  waitForIdentity() {
-    return this._identityChanged.waitForCondition(() => !!this._identity.get());
   }
 
   /**
