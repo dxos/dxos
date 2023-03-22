@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Trigger } from '@dxos/async';
+import { Event, EventSubscriptions, MulticastObservable, Trigger } from '@dxos/async';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
@@ -19,7 +19,6 @@ import { ComplexMap } from '@dxos/util';
 import { ClientServicesProvider, ClientServicesProxy } from '../client';
 import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
-import { Observable } from '../util';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -27,7 +26,7 @@ import { Space, SpaceProxy } from './space-proxy';
  * TODO(burdon): Public API (move comments here).
  */
 export interface Echo {
-  get spaces(): Observable<Space[]>;
+  get spaces(): MulticastObservable<Space[]>;
 
   createSpace(): Promise<Space>;
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
@@ -43,7 +42,7 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
-  private readonly _spaces = new Observable<Space[]>([], this._spacesChanged);
+  private readonly _spaces = MulticastObservable.from(this._spacesChanged, []);
   // TODO(wittjosiah): Remove this.
   private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
 

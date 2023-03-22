@@ -14,7 +14,10 @@ import { useClient } from '../client';
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
   const networkStatus = useSyncExternalStore(
-    (listener) => client.mesh.networkStatus.subscribe(listener),
+    (listener) => {
+      const subscription = client.mesh.networkStatus.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
     () => client.mesh.networkStatus.get()
   );
 
