@@ -9,22 +9,23 @@ import { AuthenticatingInvitationObservable, Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
+import { JoinSend } from '../joinMachine';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export interface InvitationConnectorProps extends ViewStateProps {
-  invitationType: 'space' | 'halo';
+  Domain: 'Space' | 'Halo';
 }
 
 const InvitationActions = ({
   activeInvitation,
   disabled,
-  dispatch,
-  invitationType
+  joinSend,
+  Domain
 }: {
   activeInvitation: AuthenticatingInvitationObservable;
   disabled?: boolean;
-  dispatch: ViewStateProps['dispatch'];
-  invitationType: InvitationConnectorProps['invitationType'];
+  joinSend: JoinSend;
+  Domain: InvitationConnectorProps['Domain'];
 }) => {
   const { status, cancel } = useInvitationStatus(activeInvitation);
   const { t } = useTranslation('os');
@@ -44,7 +45,7 @@ const InvitationActions = ({
               disabled={disabled}
               className='flex items-center gap-2 pis-2 pie-4'
               onClick={cancel}
-              data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
+              data-autofocus={`${Domain.toLowerCase()} invitation acceptor; invitation rescuer`}
               data-testid='invitation-rescuer-cancel'
             >
               <CaretLeft weight='bold' className={getSize(4)} />
@@ -61,8 +62,8 @@ const InvitationActions = ({
         <Button
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'
-          onClick={() => dispatch({ type: 'reset invitation', from: invitationType })}
-          data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
+          onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
+          data-autofocus={`${Domain.toLowerCase()} invitation acceptor; invitation rescuer`}
           data-testid='invitation-rescuer-reset'
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
@@ -73,9 +74,10 @@ const InvitationActions = ({
   }
 };
 
-export const InvitationRescuer = ({ invitationType, ...viewStateProps }: InvitationConnectorProps) => {
+export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConnectorProps) => {
   const disabled = !viewStateProps.active;
-  const { dispatch, activeInvitation } = viewStateProps;
+  const { joinSend, joinState } = viewStateProps;
+  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
   const { t } = useTranslation('os');
   return (
     <ViewState {...viewStateProps}>
@@ -91,7 +93,7 @@ export const InvitationRescuer = ({ invitationType, ...viewStateProps }: Invitat
           <ArrowsClockwise weight='bold' className={getSize(5)} />
         </Button>
       ) : (
-        <InvitationActions {...{ activeInvitation, disabled, dispatch, invitationType }} />
+        <InvitationActions {...{ activeInvitation, disabled, joinSend, Domain }} />
       )}
     </ViewState>
   );

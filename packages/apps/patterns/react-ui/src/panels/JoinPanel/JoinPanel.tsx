@@ -86,7 +86,7 @@ export const JoinPanel = ({
               active: joinState.matches({
                 choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' }
               }),
-              invitationType: 'halo'
+              Domain: 'Halo'
             }}
           />
           <InvitationRescuer
@@ -98,7 +98,7 @@ export const JoinPanel = ({
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
                 }
               }),
-              invitationType: 'halo'
+              Domain: 'Halo'
             }}
           />
           <InvitationAuthenticator
@@ -106,6 +106,9 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: [
+                {
+                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
+                },
                 {
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
                 },
@@ -151,7 +154,7 @@ export const JoinPanel = ({
               active: joinState.matches({
                 acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
               }),
-              invitationType: 'space'
+              Domain: 'Space'
             }}
           />
           <InvitationRescuer
@@ -161,7 +164,7 @@ export const JoinPanel = ({
               active: joinState.matches({
                 acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
               }),
-              invitationType: 'space'
+              Domain: 'Space'
             }}
           />
           <InvitationAuthenticator
@@ -169,6 +172,9 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: [
+                {
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
+                },
                 {
                   acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
                 },

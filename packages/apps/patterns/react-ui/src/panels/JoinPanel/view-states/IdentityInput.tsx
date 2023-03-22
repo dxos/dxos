@@ -16,7 +16,7 @@ export interface IdentityCreatorProps extends ViewStateProps {
 
 export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProps) => {
   const disabled = !viewStateProps.active;
-  const { dispatch } = viewStateProps;
+  const { joinSend } = viewStateProps;
   const { t } = useTranslation('os');
   const [inputValue, setInputValue] = useState('');
   const client = useClient();
@@ -25,7 +25,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
   const handleNext = () => {
     void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
       (identity) => {
-        dispatch({ type: 'added identity', identity });
+        joinSend({ type: 'selectIdentity', identity });
       },
       (_error) => {
         setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
@@ -66,7 +66,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         </Button>
         <Button
           disabled={disabled}
-          onClick={() => dispatch({ type: 'add identity' })}
+          onClick={() => joinSend({ type: 'deselectAuthMethod' })}
           className='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
