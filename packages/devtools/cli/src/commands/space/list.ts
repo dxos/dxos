@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
@@ -14,7 +14,7 @@ export default class List extends BaseCommand {
   static override description = 'List spaces.';
   static override flags = {
     ...BaseCommand.flags,
-    ...CliUx.ux.table.flags()
+    ...ux.table.flags()
   };
 
   async run(): Promise<any> {

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 
 export const KUBE_TAG = 'kube';
 
@@ -37,7 +37,7 @@ export const mapKubes = (kubes: KUBE[]) => {
 };
 
 export const printKubes = (kubes: KUBE[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapKubes(kubes),
     {
       key: {

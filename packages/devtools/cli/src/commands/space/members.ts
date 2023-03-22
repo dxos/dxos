@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { Args, ux } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
@@ -14,14 +14,10 @@ export default class Members extends BaseCommand {
   static override description = 'List space members.';
   static override flags = {
     ...BaseCommand.flags,
-    ...CliUx.ux.table.flags()
+    ...ux.table.flags()
   };
 
-  static override args = [
-    {
-      name: 'key'
-    }
-  ];
+  static override args = { key: Args.string({ required: true }) };
 
   async run(): Promise<any> {
     const { args, flags } = await this.parse(Members);
