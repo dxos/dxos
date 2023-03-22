@@ -120,6 +120,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
     const state = EditorState.create({
       doc: content?.toString(),
       extensions: [
+        // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
         highlightActiveLineGutter(),
         highlightSpecialChars(),
         history(),
@@ -144,6 +145,8 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           ...completionKeymap,
           ...lintKeymap
         ]),
+
+        // Theme
         markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
         theme,
         ...(themeMode === 'dark'
@@ -151,6 +154,8 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           : [syntaxHighlighting(defaultHighlightStyle)]),
         // TODO(thure): All but one rule here apply to both themes; rename or refactor.
         syntaxHighlighting(markdownDarkHighlighting),
+
+        // Collaboration
         ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
       ]
     });
