@@ -6,7 +6,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { StoryObj } from '@storybook/html';
-import { basicSetup } from '@uiw/react-codemirror';
+import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
@@ -44,7 +44,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 
   const state = EditorState.create({
     doc: ytext.toString(),
-    extensions: [basicSetup(), markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
+    extensions: [basicSetup, markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
   });
 
   const view = views[id];
