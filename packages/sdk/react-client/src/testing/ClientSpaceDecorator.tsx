@@ -28,7 +28,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.name.firstName() });
-        schema && client.echo.addSchema(schema);
+        schema && client.addSchema(schema);
 
         const success1 = new Trigger<Invitation>();
         const success2 = new Trigger<Invitation>();
@@ -37,7 +37,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
         log('invitation created');
         observable1.subscribe({
           onConnecting: (invitation) => {
-            const observable2 = client.echo.acceptInvitation(invitation);
+            const observable2 = client.acceptInvitation(invitation);
             log('invitation accepted');
 
             observable2.subscribe({
@@ -85,8 +85,8 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
         services={services}
         onInitialized={async (client) => {
           await client.halo.createIdentity({ displayName: faker.name.firstName() });
-          schema && client.echo.addSchema(schema);
-          const space = await client.echo.createSpace({ name: faker.animal.bird() });
+          schema && client.addSchema(schema);
+          const space = await client.createSpace({ name: faker.animal.bird() });
           await onCreateSpace?.(space);
           setSpace(space);
         }}

@@ -35,10 +35,10 @@ export default class Join extends BaseCommand {
 
     return await this.execWithClient(async (client: Client) => {
       ux.action.start('Waiting for peer to connect');
-      const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
+      const observable = await client.acceptInvitation(InvitationEncoder.decode(encoded!));
       // TODO(burdon): Don't use wrapper since doesn't handle auth.
       const invitation = await wrapObservable(observable);
-      const space = client.echo.getSpace(invitation.spaceKey!)!;
+      const space = client.getSpace(invitation.spaceKey!)!;
       ux.action.stop();
 
       const members = space.members.get();

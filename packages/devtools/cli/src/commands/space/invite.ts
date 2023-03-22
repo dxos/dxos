@@ -20,7 +20,7 @@ export default class Invite extends BaseCommand {
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.echo.spaces.get();
+      const spaces = client.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }

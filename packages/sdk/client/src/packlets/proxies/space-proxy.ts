@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase, Query } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -164,7 +164,7 @@ export class SpaceProxy implements Space {
         this._properties = query.objects[0];
       } else {
         const waitForSpaceMeta = new Trigger();
-        const subscription = query.subscribe((query: Query<Properties>) => {
+        const subscription = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
             waitForSpaceMeta.wake();
