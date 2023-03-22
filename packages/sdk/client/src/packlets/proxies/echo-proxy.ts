@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, EventSubscriptions, scheduleTask, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
@@ -21,6 +21,7 @@ import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitation
 import { Properties, PropertiesProps } from '../proto';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
+import { Context } from '@dxos/context';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -39,8 +40,9 @@ export interface Echo {
 }
 
 export class EchoProxy implements Echo {
+  private readonly _ctx = new Context();
+
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
-  private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
 
@@ -49,7 +51,6 @@ export class EchoProxy implements Echo {
 
   private _invitationProxy?: SpaceInvitationsProxy;
   private _cachedSpaces: Space[] = [];
-  private _destroying = false; // TODO(burdon): Standardize enum.
 
   // prettier-ignore
   constructor(
@@ -98,63 +99,63 @@ export class EchoProxy implements Echo {
     assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
+    // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
-        if (!this._spaces.has(space.spaceKey)) {
-          // TODO(dmaretskyi): Track spaces that are not ready.
-          if (space.state !== SpaceState.READY) {
-            // Skip inactive spaces. They will be added when they are activated.
-            continue;
-          }
+        if (this._ctx.disposed) {
+          return;
+        }
+        
+        let spaceProxy = this._spaces.get(space.spaceKey);
+        if (!spaceProxy) {
+          // await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
 
-          await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
-          if (this._destroying) {
-            return;
-          }
-
-          const spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
+          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
           this._spaces.set(spaceProxy.key, spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
 
-          await spaceProxy.initialize();
           emitUpdate = true;
-        } else {
-          this._spaces.get(space.spaceKey)!._processSpaceUpdate(space);
         }
-      }
 
-      // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
-      // This is needed because apps don't handle spaces loading correctly.
-      // TODO(dmaretskyi): Remove when apps and API are ready.
-      if (data.spaces?.every((space) => space.state === SpaceState.READY)) {
-        gotInitialUpdate.wake();
+        // Initialize space in a separate task.
+        scheduleTask(this._ctx, async () => {
+          await spaceProxy!._processSpaceUpdate(space);
+          
+          // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
+          // This is needed because apps don't handle spaces loading correctly.
+          // TODO(dmaretskyi): Remove when apps and API are ready.
+          if (data.spaces?.every((space) => space.state === SpaceState.READY)) {
+            gotInitialUpdate.wake();
+            this._updateSpaceList();
+          }
+        })
       }
 
       if (emitUpdate) {
-        this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
-        this._spacesChanged.emit(this._cachedSpaces);
+        this._updateSpaceList();
       }
     });
-
-    this._subscriptions.add(() => spacesStream.close());
+    this._ctx.onDispose(() => spacesStream.close());
 
     await gotInitialUpdate.wait();
   }
 
   async close() {
+    await this._ctx.dispose();
+
+    // TODO(dmaretskyi): Parallelize.
     for (const space of this._spaces.values()) {
-      await space.destroy();
+      await space._destroy();
     }
     this._spaces.clear();
     this._cachedSpaces = [];
 
-    await this._subscriptions.clear();
     this._invitationProxy = undefined;
   }
 
@@ -165,6 +166,12 @@ export class EchoProxy implements Echo {
   //
   // Spaces.
   //
+
+
+  private _updateSpaceList() {
+    this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);
+    this._spacesChanged.emit(this._cachedSpaces);
+  }
 
   /**
    * Creates a new space.
@@ -181,7 +188,7 @@ export class EchoProxy implements Echo {
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     spaceProxy.db.add(new Properties(meta));
     await spaceProxy.db.flush();
-    await spaceProxy.initialize(); // Idempotent.
+    await spaceProxy._initializationComplete.wait();
 
     return spaceProxy;
   }
