@@ -28,7 +28,7 @@ describe('Spaces', () => {
     const space = await client.echo.createSpace();
     await testSpace(space.internal.db);
 
-    expect(space.getMembers()).to.be.length(1);
+    expect(space.members.get()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
@@ -47,7 +47,7 @@ describe('Spaces', () => {
         objectsUpdated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
-      expect(space.getMembers()).to.be.length(1);
+      expect(space.members.get()).to.be.length(1);
     }
 
     await client.destroy();
@@ -59,12 +59,12 @@ describe('Spaces', () => {
     {
       // TODO(dmaretskyi): Replace with helper?.
       const spaceTrigger = new Trigger<Space>();
-      if (client.echo.getSpaces()[0]) {
-        spaceTrigger.wake(client.echo.getSpaces()[0]);
+      if (client.echo.spaces.get()[0]) {
+        spaceTrigger.wake(client.echo.spaces.get()[0]);
       }
-      client.echo.subscribeSpaces(() => {
-        if (client.echo.getSpaces()[0]) {
-          spaceTrigger.wake(client.echo.getSpaces()[0]);
+      client.echo.spaces.subscribe(() => {
+        if (client.echo.spaces.get()[0]) {
+          spaceTrigger.wake(client.echo.spaces.get()[0]);
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });

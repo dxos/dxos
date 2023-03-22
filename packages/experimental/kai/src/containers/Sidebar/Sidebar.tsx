@@ -198,7 +198,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         ctx,
         async () => {
           await space.postMessage('currentLocation', {
-            identityKey: client.halo.identity?.identityKey.toHex(),
+            identityKey: client.halo.identity.get()?.identityKey.toHex(),
             location: window.location.pathname
           });
         },
@@ -386,7 +386,11 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             </Button>
           </div>
 
-          <MemberList identityKey={client.halo.identity!.identityKey} members={members} onSelect={focusOnMember} />
+          <MemberList
+            identityKey={client.halo.identity.get()!.identityKey}
+            members={members}
+            onSelect={focusOnMember}
+          />
 
           <Link
             className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
