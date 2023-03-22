@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
@@ -20,7 +20,6 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ClientServicesProvider } from '../client';
 import { CancellableInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
-import { Observable } from '../util';
 
 interface Internal {
   get db(): DatabaseBackendProxy;
@@ -32,8 +31,8 @@ export interface Space {
   get isOpen(): boolean;
   get db(): EchoDatabase;
   get properties(): TypedObject;
-  get invitations(): Observable<CancellableInvitationObservable[]>;
-  get members(): Observable<SpaceMember[]>;
+  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get members(): MulticastObservable<SpaceMember[]>;
   get internal(): Internal;
 
   open(): Promise<void>;
@@ -72,8 +71,8 @@ export class SpaceProxy implements Space {
   private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
-  private readonly _invitations = new Observable<CancellableInvitationObservable[]>([], this._invitationsUpdate);
-  private readonly _members = new Observable<SpaceMember[]>([], this._membersUpdate);
+  private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+  private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _properties?: TypedObject;
   private _initializing = false;

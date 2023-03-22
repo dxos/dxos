@@ -118,7 +118,7 @@ const render = ({ id }: { id: number }) => {
       <Tooltip content='Join Existing Identity'> */}
       <Button
         onClick={() => setPanel('identity')}
-        disabled={panel === 'identity'}
+        disabled={Boolean(identity) || panel === 'identity'}
         data-testid='invitations.open-join-identity'
       >
         <QrCode weight='fill' className={getSize(6)} />

@@ -16,7 +16,10 @@ import { useClient } from '../client';
 export const useContacts = (): Contact[] => {
   const client = useClient();
   const contacts = useSyncExternalStore(
-    (listener) => client.halo.contacts.subscribe(listener),
+    (listener) => {
+      const subscription = client.halo.contacts.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
     () => client.halo.contacts.get()
   );
 

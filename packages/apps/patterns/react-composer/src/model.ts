@@ -26,7 +26,7 @@ export type ComposerModel = {
 };
 
 export type UseTextModelOptions = {
-  identity?: Identity;
+  identity?: Identity | null;
   space?: Space;
   text?: Text;
 };
@@ -53,9 +53,11 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Co
     id: text.doc.guid,
     content: text.content,
     provider,
-    peer: identity && {
-      id: identity.identityKey.toHex(),
-      name: identity.profile?.displayName
-    }
+    peer: identity
+      ? {
+          id: identity.identityKey.toHex(),
+          name: identity.profile?.displayName
+        }
+      : undefined
   };
 };

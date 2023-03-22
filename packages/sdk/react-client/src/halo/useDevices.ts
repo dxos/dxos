@@ -11,7 +11,10 @@ import { useClient } from '../client';
 export const useDevices = (): Device[] => {
   const client = useClient();
   const devices = useSyncExternalStore(
-    (listener) => client.halo.devices.subscribe(listener),
+    (listener) => {
+      const subscription = client.halo.devices.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
     () => client.halo.devices.get()
   );
 

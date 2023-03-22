@@ -4,23 +4,21 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, MulticastObservable } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientServicesProvider } from '../client';
-import { Observable } from '../util';
 
 /**
  * Public API for MESH services.
  */
 export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
-  private readonly _networkStatus = new Observable<NetworkStatus>(
-    { state: ConnectionState.OFFLINE },
-    this._networkStatusUpdated
-  );
+  private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
+    state: ConnectionState.OFFLINE
+  });
 
   private _ctx?: Context;
 
