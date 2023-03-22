@@ -1,94 +1,91 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { createSetDispatch } from '@dxos/util';
+import Observable from 'zen-observable';
+import type { ObservableLike, Observer, Subscriber, Subscription } from 'zen-observable/esm';
 
-import { UnsubscribeCallback } from './events';
+import { Event } from './events';
 
-/**
- * Return type for processes that support cancellable subscriptions.
- * The handler object implements the observable events.
- */
-export interface Observable<Events, Value = unknown> {
-  value?: Value;
-  setValue(value: Value): void;
-  subscribe(handler: Events): UnsubscribeCallback;
-}
+export { Observable };
 
 /**
- * Provider that manages a set of subscriptions.
+ * Observable which supports multiple subscribers and stores the current value.
+ *
+ * The current value is emitted to new subscribers on subscription.
  */
-// TODO(burdon): Support multiple subscribers.
-//  https://betterprogramming.pub/compare-leading-javascript-functional-reactive-stream-libraries-544163c1ded6
-//  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
-//  https://github.com/mostjs/core
-export class ObservableProvider<Events extends {}, Value = unknown> implements Observable<Events, Value> {
-  protected readonly _handlers = new Set<Events>();
-  private readonly _proxy = createSetDispatch<Events>({
-    handlers: this._handlers
-  });
+// Inspired by:
+// https://github.com/zenparsing/zen-push/blob/39949f1/index.js
+// https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
+export class MulticastObservable<T> extends Observable<T> {
+  private readonly _observers = new Set<Observer<T>>();
+  private readonly _observerable: Observable<T>;
+  private _subscription: Subscription;
 
-  private _value?: Value;
+  constructor(subscriber: Observable<T> | Subscriber<T>, private _value?: T) {
+    super((observer) => this._subscribe(observer));
 
-  /**
-   * Proxy used to dispatch callbacks to each subscription.
-   */
-  get callback(): Events {
-    return this._proxy;
+    this._observerable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
+    this._subscription = this._observerable.subscribe(this._handlers);
   }
 
-  get value() {
+  static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
+    if ('emit' in value) {
+      return new MulticastObservable((observer) => {
+        value.on((data) => {
+          observer.next(data);
+        });
+      }, initialValue);
+    }
+
+    const observable = super.from(value);
+    return new MulticastObservable(observable, initialValue);
+  }
+
+  static override of<T>(...items: T[]) {
+    return new MulticastObservable(super.of(...items.slice(1)), items[0]);
+  }
+
+  /**
+   * Get the current value of the observable.
+   */
+  get(): T {
+    if (this._value === undefined) {
+      throw new Error('MulticastObservable is not initialized.');
+    }
+
     return this._value;
   }
 
-  setValue(value: Value) {
-    this._value = value;
-  }
-
-  subscribe(handler: Events): UnsubscribeCallback {
-    this._handlers.add(handler);
-    return () => {
-      this._handlers.delete(handler);
-    };
-  }
-}
-
-export interface CancellableObservableEvents {
-  onCancelled?(): void;
-}
-
-export interface CancellableObservable<Events extends CancellableObservableEvents, Value = unknown>
-  extends Observable<Events, Value> {
-  cancel(): Promise<void>;
-}
-
-/**
- * Implements subscriptions with ability to be cancelled.
- */
-export class CancellableObservableProvider<
-  Events extends CancellableObservableEvents
-> extends ObservableProvider<Events> {
-  private _cancelled = false;
-
-  // prettier-ignore
-  constructor(
-    private readonly _handleCancel?: () => Promise<void>
-  ) {
-    super();
-  }
-
-  get cancelled() {
-    return this._cancelled;
-  }
-
-  async cancel() {
-    if (this._cancelled) {
-      return;
+  private _subscribe(observer: Observer<T>) {
+    if (this._subscription.closed) {
+      this._subscription = this._observerable.subscribe(this._handlers);
     }
 
-    this._cancelled = true;
-    await this._handleCancel?.();
-    this.callback.onCancelled?.();
+    if (!this._observers.has(observer) && this._value !== undefined) {
+      observer.next?.(this._value);
+      this._observers.add(observer);
+    }
+
+    return () => {
+      this._observers.delete(observer);
+
+      if (this._observers.size === 0) {
+        this._subscription.unsubscribe();
+      }
+    };
   }
+
+  private _handlers: Observer<T> = {
+    next: (value) => {
+      this._value = value;
+      this._observers.forEach((observer) => observer.next?.(value));
+    },
+    error: (err) => {
+      this._observers.forEach((observer) => observer.error?.(err));
+    },
+    complete: () => {
+      this._observers.forEach((observer) => observer.complete?.());
+    }
+  };
 }

@@ -60,7 +60,10 @@ export const useOrCreateFirstSpace = () => {
 export const useSpaces = (): Space[] => {
   const client = useClient();
   const spaces = useSyncExternalStore(
-    (listener) => client.spaces.subscribe(listener),
+    (listener) => {
+      const subscription = client.spaces.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
     () => client.spaces.get()
   );
 

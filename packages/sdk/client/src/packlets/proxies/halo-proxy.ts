@@ -5,7 +5,15 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { asyncTimeout, Event, EventSubscriptions, observableError, ObservableProvider, Trigger } from '@dxos/async';
+import {
+  asyncTimeout,
+  Event,
+  EventSubscriptions,
+  MulticastObservable,
+  observableError,
+  ObservableProvider,
+  Trigger
+} from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -20,17 +28,16 @@ import {
   DeviceInvitationsProxy,
   InvitationsOptions
 } from '../invitations';
-import { Observable } from '../util';
 
 /**
  * TODO(burdon): Public API (move comments here).
  */
 export interface Halo {
-  get identity(): Observable<Identity | undefined>;
-  get devices(): Observable<Device[]>;
+  get identity(): MulticastObservable<Identity | null>;
+  get devices(): MulticastObservable<Device[]>;
   get device(): Device | undefined;
-  get contacts(): Observable<Contact[]>;
-  get invitations(): Observable<CancellableInvitationObservable[]>;
+  get contacts(): MulticastObservable<Contact[]>;
+  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
 
   createIdentity(options?: ProfileDocument): Promise<Identity>;
   recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
@@ -47,14 +54,14 @@ export class HaloProxy implements Halo {
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
-  private readonly _identityChanged = new Event<Identity | undefined>(); // TODO(burdon): Move into Identity object.
+  private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
 
   private _invitationProxy?: DeviceInvitationsProxy;
 
-  private _identity = new Observable<Identity | undefined>(undefined, this._identityChanged);
-  private _devices = new Observable<Device[]>([], this._devicesChanged);
-  private _contacts = new Observable<Contact[]>([], this._contactsChanged);
-  private _invitations = new Observable<CancellableInvitationObservable[]>([], this._invitationsUpdate);
+  private _identity = MulticastObservable.from(this._identityChanged, null);
+  private _devices = MulticastObservable.from(this._devicesChanged, []);
+  private _contacts = MulticastObservable.from(this._contactsChanged, []);
+  private _invitations = MulticastObservable.from(this._invitationsUpdate, []);
 
   // prettier-ignore
   constructor(
@@ -115,7 +122,7 @@ export class HaloProxy implements Halo {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
     identityStream.subscribe((data) => {
-      this._identityChanged.emit(data.identity);
+      this._identityChanged.emit(data.identity ?? null);
     });
 
     assert(this._serviceProvider.services.DevicesService, 'DevicesService not available');
@@ -147,7 +154,7 @@ export class HaloProxy implements Halo {
   async _close() {
     this._subscriptions.clear();
     this._invitationProxy = undefined;
-    this._identityChanged.emit(undefined);
+    this._identityChanged.emit(null);
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
     this._invitationsUpdate.emit([]);

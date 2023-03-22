@@ -14,7 +14,14 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const space = useSpace(spaceKey);
   const invitations =
     useSyncExternalStore(
-      (listener) => (space instanceof SpaceProxy ? space.invitations.subscribe(() => listener()) : () => {}),
+      (listener) => {
+        if (!(space instanceof SpaceProxy)) {
+          return () => {};
+        }
+
+        const subscription = space.invitations.subscribe(() => listener());
+        return () => subscription.unsubscribe();
+      },
       () => space?.invitations.get()
     ) ?? [];
 
