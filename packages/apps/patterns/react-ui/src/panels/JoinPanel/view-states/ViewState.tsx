@@ -5,20 +5,19 @@
 import { CheckCircle, HourglassSimple, X } from '@phosphor-icons/react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
+import type { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
 
 import { defaultSurface, subduedSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';
-import { JoinDispatch } from '../JoinPanelProps';
+import { JoinSend, JoinState } from '../joinMachine';
 
 export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
-  dispatch: JoinDispatch;
-  selectedIdentity?: true | Identity;
-  activeInvitation?: true | AuthenticatingInvitationObservable;
+  joinSend: JoinSend;
+  joinState?: JoinState;
 }
 
 const stripe = mx('rounded-full grow', getSize(3));
@@ -74,7 +73,8 @@ const PureViewStateInvitation = ({
   );
 };
 
-const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: AuthenticatingInvitationObservable }) => {
+// todo (thure): Restore this?
+const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: AuthenticatingInvitationObservable }) => {
   const { t } = useTranslation('os');
   const { status, haltedAt } = useInvitationStatus(activeInvitation);
 
@@ -136,18 +136,11 @@ const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Aut
   );
 };
 
-export const ViewState = ({
-  active,
-  children,
-  className,
-  dispatch,
-  selectedIdentity,
-  activeInvitation,
-  ...props
-}: ViewStateProps) => {
+export const ViewState = ({ active, children, className, joinSend, joinState, ...props }: ViewStateProps) => {
   // note (thure): reserve `order-1` and `order-3` for outgoing steps in different directions
   const { t } = useTranslation('os');
   const identityLabel = useId('selectedIdentityLabel');
+  const selectedIdentity = joinState?.context.identity;
 
   return (
     <div
@@ -162,40 +155,17 @@ export const ViewState = ({
             {...{
               defaults: t('join space as identity heading'),
               components: {
-                icon: (
-                  <Avatar
-                    size={4}
-                    fallbackValue={selectedIdentity === true ? '' : selectedIdentity.identityKey.toHex()}
-                    labelId={identityLabel}
-                  />
-                ),
+                icon: <Avatar size={4} fallbackValue={selectedIdentity.identityKey.toHex()} labelId={identityLabel} />,
                 label: <span id={identityLabel} />,
                 part: <span role='none' className='flex items-center gap-1 leading-none' />
               },
               values: {
-                labelValue:
-                  selectedIdentity === true
-                    ? ' '
-                    : selectedIdentity.profile?.displayName ?? selectedIdentity.identityKey.truncate()
+                labelValue: selectedIdentity.profile?.displayName ?? selectedIdentity.identityKey.truncate()
               }
             }}
           />
         </div>
       )}
-      {activeInvitation &&
-        (activeInvitation === true ? (
-          <PureViewStateInvitation
-            {...{
-              halted: false,
-              status: Invitation.State.INIT,
-              label: t('invitation input label'),
-              cursor: 0,
-              resolvedColor: inactiveBgColor
-            }}
-          />
-        ) : (
-          <ViewStateInvitationStatus {...{ activeInvitation }} />
-        ))}
       <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-2')}>
         {children}
       </div>

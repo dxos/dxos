@@ -15,7 +15,8 @@ type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 type InvitationDomainContext = Partial<{
   failReason: FailReason | null;
   unredeemedCode: string;
-  invitation: Subscribable<InvitationEvent>;
+  invitation: AuthenticatingInvitationObservable;
+  invitationSubscribable: Subscribable<InvitationEvent>;
 }>;
 
 type JoinMachineContext = {
@@ -47,13 +48,13 @@ type EmptyInvitationEvent = {
     | 'connectSpaceInvitation'
     | 'connectionSuccessHaloInvitation'
     | 'connectionSuccessSpaceInvitation'
-    | 'successHaloInvitation'
-    | 'successSpaceInvitation';
+    | 'succeedHaloInvitation'
+    | 'succeedSpaceInvitation';
 };
 
 type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | EmptyInvitationEvent;
 
-const wrapInvitation = (
+const getInvitationSubscribable = (
   Domain: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
@@ -67,7 +68,7 @@ const wrapInvitation = (
         onConnecting: () => observer.next({ type: `connect${Domain}Invitation` }),
         onConnected: () => observer.next({ type: `connectionSuccess${Domain}Invitation` }),
         onSuccess: () => {
-          observer.next({ type: `success${Domain}Invitation` });
+          observer.next({ type: `succeed${Domain}Invitation` });
           return observer.complete();
         },
         onError: (error: any) => {
@@ -80,75 +81,64 @@ const wrapInvitation = (
   } as Subscribable<InvitationEvent>;
 };
 
-const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<JoinMachine>>[1]) => {
-  const redeemHaloInvitationCode = useCallback(
-    () =>
-      assign<JoinMachineContext>({
-        halo: ({ halo }, _) => {
-          if (halo.unredeemedCode) {
-            return {
-              ...halo,
-              unredeemedCode: undefined,
-              invitation: wrapInvitation(
-                'Halo',
-                client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode))
-              )
-            };
-          } else {
-            return halo;
-          }
-        }
-      }),
-    [client]
-  );
-  const redeemSpaceInvitationCode = useCallback(
-    () =>
-      assign<JoinMachineContext>({
-        space: ({ space }, _) => {
-          if (space.unredeemedCode) {
-            return {
-              ...space,
-              unredeemedCode: undefined,
-              invitation: wrapInvitation(
-                'Space',
-                client.echo.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode))
-              )
-            };
-          } else {
-            return space;
-          }
-        }
-      }),
-    [client]
-  );
-  return useMachine(joinMachine, {
-    ...options,
-    actions: { ...options?.actions, redeemHaloInvitationCode, redeemSpaceInvitationCode }
-  });
-};
-
 const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: string) => {
   const config: StateNodeConfig<JoinMachineContext, any, InvitationEvent> = {
-    initial: `connecting${Domain}Invitation`,
-    entry: [`redeem${Domain}InvitationCode`], // todo(thure): confirm this evaluates *before* the observable is invoked
-    invoke: {
-      src: (context) => context[Domain.toLowerCase() as 'space' | 'halo'].invitation!
-    },
+    initial: `unknown${Domain}`,
     states: {
-      [`inputting${Domain}InvitationCode`]: {},
-      [`connecting${Domain}Invitation`]: {},
-      [`inputting${Domain}VerificationCode`]: {
-        on: {
-          [`authenticate${Domain}VerificationCode`]: `.authenticationFailing${Domain}VerificationCode`
-        }
+      [`unknown${Domain}`]: {
+        always: [
+          { target: `inputting${Domain}InvitationCode`, cond: `noUnredeemed${Domain}InvitationCode` },
+          { target: `connecting${Domain}Invitation`, cond: `hasUnredeemed${Domain}InvitationCode` }
+        ]
       },
-      [`authenticationFailing${Domain}VerificationCode`]: {},
-      [`failing${Domain}Invitation`]: {}
+      [`inputting${Domain}InvitationCode`]: {},
+      [`acceptingRedeemed${Domain}Invitation`]: {
+        invoke: {
+          src: (context) => context[Domain.toLowerCase() as 'space' | 'halo'].invitationSubscribable!
+        },
+        initial: `connecting${Domain}Invitation`,
+        entry: [`redeem${Domain}InvitationCode`], // todo(thure): confirm this evaluates *before* the observable is invoked
+        states: {
+          [`connecting${Domain}Invitation`]: {},
+          [`inputting${Domain}VerificationCode`]: {
+            on: {
+              [`authenticate${Domain}VerificationCode`]: `.authenticationFailing${Domain}VerificationCode`
+            }
+          },
+          [`authenticationFailing${Domain}VerificationCode`]: {},
+          [`failing${Domain}Invitation`]: {},
+          [`success${Domain}Invitation`]: {}
+        },
+        on: {
+          [`connect${Domain}Invitation`]: `.connecting${Domain}Invitation`,
+          [`connectionSuccess${Domain}Invitation`]: `.inputting${Domain}VerificationCode`,
+          [`authenticate${Domain}VerificationCode`]: `.inputting${Domain}VerificationCode`,
+          [`succeed${Domain}VerificationCode`]: successTarget,
+          [`fail${Domain}Invitation`]: {
+            target: `.failing${Domain}Invitation`,
+            actions: assign({
+              [Domain.toLowerCase() as 'space' | 'halo']: (
+                context: JoinMachineContext,
+                event: FailInvitationEvent
+              ) => ({
+                ...context[Domain.toLowerCase() as 'space' | 'halo'],
+                failReason: event.reason
+              })
+            })
+          }
+        }
+      }
     },
     on: {
-      [`connect${Domain}Invitation`]: `.inputting${Domain}VerificationCode`,
-      [`entered${Domain}VerificationCode`]: `.authenticating${Domain}VerificationCode`,
-      [`authenticationSuccess${Domain}VerificationCode`]: successTarget
+      [`set${Domain}InvitationCode`]: {
+        target: `.connecting${Domain}Invitation`,
+        actions: assign({
+          [Domain.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
+            ...context[Domain.toLowerCase() as 'space' | 'halo'],
+            unredeemedCode: event.code
+          })
+        })
+      }
     }
   };
   return config as StateNodeConfig<JoinMachineContext, typeof config, JoinEvent>;
@@ -212,12 +202,12 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   },
   {
     guards: {
-      hasSelectedIdentity: (context, _event) => {
-        return !!context.identity;
-      },
-      noSelectedIdentity: (context, _event) => {
-        return !context.identity;
-      }
+      hasSelectedIdentity: ({ identity }, _event) => !!identity,
+      noSelectedIdentity: ({ identity }, _event) => !identity,
+      hasUnredeemedHaloInvitationCode: ({ halo }, _event) => !!halo.unredeemedCode,
+      noUnredeemedHaloInvitationCode: ({ halo }, _event) => !halo.unredeemedCode,
+      hasUnredeemedSpaceInvitationCode: ({ space }, _event) => !!space.unredeemedCode,
+      noUnredeemedSpaceInvitationCode: ({ space }, _event) => !space.unredeemedCode
     },
     actions: {
       setIdentity: assign<JoinMachineContext, SelectIdentityEvent>({
@@ -244,6 +234,51 @@ type JoinMachine = typeof joinMachine;
 
 type JoinState = StateFrom<JoinMachine>;
 type JoinSend = InterpreterFrom<JoinMachine>['send'];
+
+const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<JoinMachine>>[1]) => {
+  const redeemHaloInvitationCode = useCallback(
+    () =>
+      assign<JoinMachineContext>({
+        halo: ({ halo }, _) => {
+          if (halo.unredeemedCode) {
+            const invitation = client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode));
+            return {
+              ...halo,
+              unredeemedCode: undefined,
+              invitation,
+              invitationSubscribable: getInvitationSubscribable('Halo', invitation)
+            };
+          } else {
+            return halo;
+          }
+        }
+      }),
+    [client]
+  );
+  const redeemSpaceInvitationCode = useCallback(
+    () =>
+      assign<JoinMachineContext>({
+        space: ({ space }, _) => {
+          if (space.unredeemedCode) {
+            const invitation = client.echo.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode));
+            return {
+              ...space,
+              unredeemedCode: undefined,
+              invitation,
+              invitationSubscribable: getInvitationSubscribable('Space', invitation)
+            };
+          } else {
+            return space;
+          }
+        }
+      }),
+    [client]
+  );
+  return useMachine(joinMachine, {
+    ...options,
+    actions: { ...options?.actions, redeemHaloInvitationCode, redeemSpaceInvitationCode }
+  });
+};
 
 export type { JoinMachine, JoinState, JoinSend, JoinEvent, JoinMachineContext };
 export { joinMachine, useJoinMachine };
