@@ -28,7 +28,8 @@ export const ModuleContainer = () => {
   return (
     <PanelSidebarProvider
       slots={{
-        content: { children: <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} /> }
+        content: { children: <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} /> },
+        main: { className: 'flex overflow-hidden' }
       }}
     >
       <Component />

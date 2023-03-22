@@ -11,7 +11,7 @@ export type Module = {
   id: string;
   label: string;
   Icon: FC<any>;
-  Component: FC<any>; // TODO(burdon): ???
+  Component: FC<any>;
 };
 
 export const useModules = (): Module[] => {
@@ -24,7 +24,7 @@ export const useModules = (): Module[] => {
     },
     {
       id: 'status',
-      label: 'Status a;sldkjfa ;lsdfjklkasjdf lkasjdflaksjdf lskdj ',
+      label: 'Status',
       Icon: Info,
       Component: StatusPage
     }
