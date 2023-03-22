@@ -20,7 +20,7 @@ import { createRouter } from './router';
 import '@dxos/client/shell.css';
 import '../style.css';
 
-void initializeAppTelemetry('kai', new Config(Defaults()));
+void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
