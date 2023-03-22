@@ -21,11 +21,11 @@ Type: "dxos:shell"
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/react-client/types/ConvertVisitors)
 
-### [`Document`]()
-Type: function
-
 ### [`EXPECTED_CONFIG_VERSION`]()
 Type: "1"
+
+### [`Expando`]()
+Type: ExpandoConstructor
 
 ### [`INVITATION_TIMEOUT`]()
 Type: number
@@ -35,6 +35,9 @@ Type: "1000"
 
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
+
+### [`TypedObject`]()
+Type: TypedObjectConstructor
 
 ### [`appServiceBundle`]()
 Type: ServiceBundle&lt;[AppServiceBundle](/api/@dxos/react-client/types/AppServiceBundle)&gt;
