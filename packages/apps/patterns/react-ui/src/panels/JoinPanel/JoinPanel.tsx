@@ -66,7 +66,7 @@ export const JoinPanel = ({
       {/*  {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent, preventExit }} */}
       {/* /> */}
       <div role='none' className='is-full overflow-hidden'>
-        <div role='none' className='flex is-[1300%]' aria-live='polite'>
+        <div role='none' className='flex is-[1200%]' aria-live='polite'>
           <AdditionMethodSelector
             {...{
               joinState,
