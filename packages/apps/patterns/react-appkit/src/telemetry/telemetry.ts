@@ -70,7 +70,7 @@ export const initializeAppTelemetry = async ({
   const telemetryDisabled = await isTelemetryDisabled(namespace);
 
   const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
-  console.log({ SENTRY_DESTINATION, telemetryDisabled });
+  log.info('sentry init', { SENTRY_DESTINATION, telemetryDisabled });
   Sentry.init({
     enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
     destination: SENTRY_DESTINATION,

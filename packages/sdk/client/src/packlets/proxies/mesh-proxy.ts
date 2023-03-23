@@ -27,14 +27,19 @@ export class MeshProxy {
     private readonly _serviceProvider: ClientServicesProvider
   ) {}
 
-  get networkStatus() {
-    return this._networkStatus;
-  }
-
   toJSON() {
     return {
       networkStatus: this._networkStatus.get()
     };
+  }
+
+  get networkStatus() {
+    return this._networkStatus;
+  }
+
+  async setConnectionState(state: ConnectionState) {
+    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
+    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
   }
 
   /**
@@ -59,10 +64,5 @@ export class MeshProxy {
    */
   async _close() {
     await this._ctx?.dispose();
-  }
-
-  async setConnectionState(state: ConnectionState) {
-    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UserCircle } from '@phosphor-icons/react';
+import { UserCircle, X } from '@phosphor-icons/react';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 import formatDistance from 'date-fns/formatDistance';
 import React, { FC, useEffect, useRef, useState } from 'react';
@@ -32,21 +32,32 @@ const colors = [
   'text-cyan-500'
 ];
 
+// TODO(burdon): Presence.
+// TODO(burdon): Video.
+// TODO(burdon): Channels/threads (optional show channel, but can tag message with channel/thread).
+
 // TODO(burdon): Use key.
 const getColor = (username: string) => colors[hash(username) % colors.length];
 
-// TODO(burdon): Add presence?
-// TODO(burdon): Channels/threads (optional show channel, but can tag message with channel/thread).
-
-export const ChatMessage: FC<{ message: Message; onSelect: () => void }> = ({ message, onSelect }) => {
+// TODO(burdon): Delete button only for current user.
+export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete: () => void }> = ({
+  message,
+  onSelect,
+  onDelete
+}) => {
   return (
-    <div className='flex shrink-0 w-full'>
-      <div className='px-1'>
-        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onSelect}>
+    <div className='flex shrink-0 w-full px-1'>
+      <div>
+        <Button variant='ghost' className='p-0' onClick={onSelect}>
           <UserCircle className={mx(getSize(6), getColor(message.from.name ?? 'unknown'))} />
         </Button>
       </div>
-      <div className='py-1 pr-1'>{message.subject}</div>
+      <div className='w-full px-2 py-1'>{message.subject}</div>
+      <div>
+        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onDelete}>
+          <X className={mx(getSize(4))} />
+        </Button>
+      </div>
     </div>
   );
 };
@@ -60,6 +71,7 @@ export const ChatFrame = () => {
   const messages = useQuery(space, Message.filter())
     .filter((message) => message.source?.resolver === 'dxos.module.frame.chat')
     .sort(sortMessage);
+  const first = messages[0];
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -110,8 +122,13 @@ export const ChatFrame = () => {
     }
   };
 
+  const handleDelete = (message: Message) => {
+    space?.db.remove(message);
+  };
+
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
+      {/* Message list */}
       <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
         <div className='flex flex-col-reverse px-2'>
           {blocks.map(({ start, messages }, i) => {
@@ -126,8 +143,12 @@ export const ChatFrame = () => {
                 </div>
                 <div className='flex flex-col-reverse bg-white rounded'>
                   {messages.map((message, i) => (
-                    <div key={i} ref={message === messages[0] ? selectedRef : undefined} className='border-t'>
-                      <ChatMessage message={message} onSelect={() => handleSelect(message)} />
+                    <div key={i} ref={message === first ? selectedRef : undefined} className='border-t'>
+                      <ChatMessage
+                        message={message}
+                        onSelect={() => handleSelect(message)}
+                        onDelete={() => handleDelete(message)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -137,7 +158,8 @@ export const ChatFrame = () => {
         </div>
       </div>
 
-      <div className='flex w-full items-center p-2 my-1'>
+      {/* Message input. */}
+      <div className='flex w-full items-center p-2 my-2'>
         <Input
           label='chat'
           labelVisuallyHidden
