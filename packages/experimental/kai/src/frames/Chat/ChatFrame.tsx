@@ -6,6 +6,7 @@ import { UserCircle } from '@phosphor-icons/react';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 import formatDistance from 'date-fns/formatDistance';
 import React, { FC, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import hash from 'string-hash';
 
 import { Message } from '@dxos/kai-types';
@@ -13,7 +14,7 @@ import { useClient, useQuery } from '@dxos/react-client';
 import { Button, getSize, Input, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { useAppRouter } from '../../hooks';
+import { createPath, useAppRouter } from '../../hooks';
 import { sortMessage } from '..//Message';
 
 type Block = {
@@ -37,12 +38,12 @@ const getColor = (username: string) => colors[hash(username) % colors.length];
 // TODO(burdon): Add presence?
 // TODO(burdon): Channels/threads (optional show channel, but can tag message with channel/thread).
 
-export const ChatMessage: FC<{ message: Message }> = ({ message }) => {
+export const ChatMessage: FC<{ message: Message; onSelect: () => void }> = ({ message, onSelect }) => {
   return (
     <div className='flex shrink-0 w-full'>
       <div className='px-1'>
-        <Button variant='ghost' className='p-0 text-zinc-400'>
-          <UserCircle className={mx(getSize(6), getColor(message.from.name))} />
+        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onSelect}>
+          <UserCircle className={mx(getSize(6), getColor(message.from.name ?? 'unknown'))} />
         </Button>
       </div>
       <div className='py-1 pr-1'>{message.subject}</div>
@@ -51,11 +52,14 @@ export const ChatMessage: FC<{ message: Message }> = ({ message }) => {
 };
 
 export const ChatFrame = () => {
+  const navigate = useNavigate();
   const client = useClient();
-  const { space } = useAppRouter();
+  const { space, frame, objectId } = useAppRouter();
   const [text, setText] = useState('');
   const selectedRef = useRef<HTMLDivElement>(null);
-  const messages = useQuery(space, Message.filter()).sort(sortMessage);
+  const messages = useQuery(space, Message.filter())
+    .filter((message) => message.source?.resolver === 'dxos.module.frame.chat')
+    .sort(sortMessage);
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -65,9 +69,13 @@ export const ChatFrame = () => {
     if (text.length) {
       void space?.db.add(
         new Message({
+          source: {
+            resolver: 'dxos.module.frame.chat'
+          },
           subject: text,
           date: new Date().toISOString(),
-          from: new Message.Recipient({ name: username })
+          from: new Message.Recipient({ name: username }),
+          ref: `${frame?.module.id}/${objectId}`
         })
       );
       setText('');
@@ -93,6 +101,14 @@ export const ChatFrame = () => {
     [{ messages: [], start: new Date() }]
   );
 
+  const handleSelect = (message: Message) => {
+    if (message.ref) {
+      // TODO(burdon): Load frame.
+      const [frame, objectId] = message.ref.split('/');
+      navigate(createPath({ spaceKey: space?.key, frame, objectId }));
+    }
+  };
+
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
       <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
@@ -110,7 +126,7 @@ export const ChatFrame = () => {
                 <div className='flex flex-col-reverse bg-white rounded'>
                   {messages.map((message, i) => (
                     <div key={i} ref={message === messages[0] ? selectedRef : undefined} className='border-t'>
-                      <ChatMessage message={message} />
+                      <ChatMessage message={message} onSelect={() => handleSelect(message)} />
                     </div>
                   ))}
                 </div>
