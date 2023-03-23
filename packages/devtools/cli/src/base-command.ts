@@ -7,10 +7,11 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
+import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { Trigger, sleep, asyncTimeout } from '@dxos/async';
+import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
@@ -30,7 +31,6 @@ import {
 } from './util';
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
-const STDIN_TIMEOUT = 100;
 
 // TODO(wittjosiah): Factor out.
 const exists = async (...args: string[]): Promise<boolean> => {
@@ -53,6 +53,7 @@ export abstract class BaseCommand extends Command {
   private _failing = false;
   protected _telemetryContext?: TelemetryContext;
 
+  private _stdin?: string;
   public static override enableJsonFlag = true;
   static override flags = {
     config: Flags.string({
@@ -74,6 +75,12 @@ export abstract class BaseCommand extends Command {
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
 
+    try {
+      this._stdin = fs.readFileSync(0, 'utf8');
+    } catch (err) {
+      this._stdin = undefined;
+    }
+
     this._startTime = new Date();
   }
 
@@ -81,36 +88,12 @@ export abstract class BaseCommand extends Command {
     return this._clientConfig;
   }
 
-  ok() {
-    this.log('ok');
+  get stdin() {
+    return this._stdin;
   }
 
-  async getStdin() {
-    const trigger = new Trigger<string>();
-    const chunks: Uint8Array[] = [];
-
-    const onData = (chunk: Uint8Array) => chunks.push(chunk);
-    const onEnd = () => trigger.wake(Buffer.concat(chunks).toString('utf8'));
-    const onError = (err: Error) => trigger.throw(err);
-
-    process.stdin.resume();
-
-    process.stdin.on('data', onData);
-    process.stdin.on('end', onEnd);
-    process.stdin.on('error', onError);
-
-    let result: string;
-    try {
-      result = await asyncTimeout(trigger.wait(), STDIN_TIMEOUT);
-    } catch (err) {
-      result = "";
-    } finally {
-      process.stdin.removeListener('data', onData);
-      process.stdin.removeListener('end', onEnd);
-      process.stdin.removeListener('error', onError);
-      process.stdin.pause();
-    }
-    return result;
+  ok() {
+    this.log('ok');
   }
 
   /**

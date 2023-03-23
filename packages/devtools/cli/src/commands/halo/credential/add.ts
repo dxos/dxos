@@ -13,15 +13,16 @@ import { BaseCommand } from '../../../base-command';
 export default class Add extends BaseCommand {
   static override description = 'Import credential into HALO.';
   static override args = {
-    credential: Args.string({ description: 'credential', required: true })
+    credential: Args.string({ description: 'credential', required: false })
   };
 
   async run(): Promise<any> {
-    const { args } = await this.parse(Add);
+    const res = await this.parse(Add);
+    const { args } = res;
     let { credential: credentialHex } = args;
 
     if (!credentialHex) {
-      credentialHex = await this.getStdin();
+      credentialHex = await this.stdin;
     }
 
     assert(credentialHex, 'Invalid credential.');
@@ -33,7 +34,7 @@ export default class Add extends BaseCommand {
       } else {
         try {
           const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
-          const credentialBytes = Buffer.from(credentialHex, 'hex');
+          const credentialBytes = Buffer.from(credentialHex!, 'hex');
 
           const error = codec.protoType.verify(credentialBytes);
           if (error) {

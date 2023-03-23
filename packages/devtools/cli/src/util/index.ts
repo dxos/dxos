@@ -3,7 +3,8 @@
 //
 
 export * from './credential';
-export * from './telemetry';
+export * from './print';
 export * from './publish';
 export * from './supervisor';
+export * from './telemetry';
 export * from './util';
