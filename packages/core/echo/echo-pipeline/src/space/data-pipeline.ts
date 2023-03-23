@@ -23,7 +23,7 @@ import { Pipeline } from '../pipeline';
 
 export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
-};
+}
 
 export type DataPipelineParams = {
   modelFactory: ModelFactory;

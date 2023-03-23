@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
@@ -30,7 +31,6 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
-import { SpaceState } from '@dxos/client';
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;

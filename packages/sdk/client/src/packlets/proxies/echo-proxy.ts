@@ -5,7 +5,8 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, scheduleTask, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, scheduleTask, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
@@ -19,9 +20,7 @@ import { ComplexMap } from '@dxos/util';
 import { ClientServicesProvider, ClientServicesProxy } from '../client';
 import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
-import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
-import { Context } from '@dxos/context';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -40,7 +39,7 @@ export interface Echo {
 }
 
 export class EchoProxy implements Echo {
-  private readonly _ctx = new Context();
+  private _ctx!: Context;
 
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _spacesChanged = new Event<Space[]>();
@@ -55,8 +54,7 @@ export class EchoProxy implements Echo {
   // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _haloProxy: HaloProxy
+    private readonly _modelFactory: ModelFactory
   ) { }
 
   [inspect.custom]() {
@@ -95,25 +93,32 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
+    this._ctx = new Context();
+
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
+
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
+      if (!data.spaces || data.spaces.length === 0) {
+        // If there are no spaces on startup, unblock open immediately.
+        gotInitialUpdate.wake();
+        return;
+      }
+
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
         if (this._ctx.disposed) {
           return;
         }
-        
+
         let spaceProxy = this._spaces.get(space.spaceKey);
         if (!spaceProxy) {
-          // await this._haloProxy.identityChanged.waitForCondition(() => !!this._haloProxy.identity);
-
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
@@ -126,7 +131,7 @@ export class EchoProxy implements Echo {
         // Initialize space in a separate task.
         scheduleTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
-          
+
           // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
           // This is needed because apps don't handle spaces loading correctly.
           // TODO(dmaretskyi): Remove when apps and API are ready.
@@ -134,7 +139,7 @@ export class EchoProxy implements Echo {
             gotInitialUpdate.wake();
             this._updateSpaceList();
           }
-        })
+        });
       }
 
       if (emitUpdate) {
@@ -166,7 +171,6 @@ export class EchoProxy implements Echo {
   //
   // Spaces.
   //
-
 
   private _updateSpaceList() {
     this._cachedSpaces = Array.from(this._spaces.values()).filter((space) => space._initialized);

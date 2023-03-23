@@ -64,7 +64,7 @@ export class DataSpace {
   private readonly _onDataPipelineReady?: () => Promise<void>;
 
   private _state = SpaceState.CLOSED;
-  
+
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 

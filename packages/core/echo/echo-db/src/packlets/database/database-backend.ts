@@ -236,6 +236,7 @@ export class DatabaseBackendProxy {
   // TODO(dmaretskyi): Revert batch.
 
   mutate(batchInput: EchoObjectBatch): MutateResult {
+    assert(this._itemManager, 'Not open');
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }

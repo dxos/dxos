@@ -6,6 +6,7 @@ import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
 import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase, Query } from '@dxos/echo-schema';
@@ -29,13 +30,27 @@ interface Internal {
 export interface Space {
   get key(): PublicKey;
   get isOpen(): boolean;
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  get state(): SpaceState;
   get db(): EchoDatabase;
   get properties(): TypedObject;
   get invitations(): CancellableInvitationObservable[];
   get internal(): Internal;
 
+  stateUpdate: Event;
+
   open(): Promise<void>;
   close(): Promise<void>;
+
+  /**
+   * Waits until the space is in the ready state, with database initialized.
+   */
+  waitUntilReady(): Promise<this>;
 
   getMembers(): SpaceMember[];
   subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
@@ -53,6 +68,8 @@ export interface Space {
 const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
+  private readonly _ctx = new Context();
+
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
@@ -119,7 +136,7 @@ export class SpaceProxy implements Space {
    * Presence is available in `SpaceState.INACTIVE` state.
    */
   get state(): SpaceState {
-    if(this._data.state === SpaceState.READY && !this._initialized) {
+    if (this._data.state === SpaceState.READY && !this._initialized) {
       return SpaceState.INACTIVE;
     } else {
       return this._data.state;
@@ -155,7 +172,7 @@ export class SpaceProxy implements Space {
     this._data = space;
     log('update', { space, emitEvent });
 
-    if(space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
+    if (space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
       await this._initialize();
     }
 
@@ -216,6 +233,7 @@ export class SpaceProxy implements Space {
   @synchronized
   async _destroy() {
     log('destroying...');
+    await this._ctx.dispose();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
@@ -233,6 +251,14 @@ export class SpaceProxy implements Space {
    */
   async close() {
     await this._setOpen(false);
+  }
+
+  /**
+   * Waits until the space is in the ready state, with database initialized.
+   */
+  async waitUntilReady() {
+    await cancelWithContext(this._ctx, this._initializationComplete.wait());
+    return this;
   }
 
   /**
@@ -326,7 +352,6 @@ export class SpaceProxy implements Space {
     //   open
     // });
   }
-
 }
 
 const shouldUpdate = (prev: SpaceData, next: SpaceData) => {

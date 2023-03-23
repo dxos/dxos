@@ -79,7 +79,7 @@ export class Client {
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 
     this._halo = new HaloProxy(this._services);
-    this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
+    this._echo = new EchoProxy(this._services, this._modelFactory);
     this._mesh = new MeshProxy(this._services);
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.

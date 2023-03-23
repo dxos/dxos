@@ -109,7 +109,6 @@ const getNodeConfig = async (reset = false) => {
 const runTest = async (testBuilder: TestBuilder) => {
   const client = new Client({ services: testBuilder.createLocal() });
   const displayName = 'test-user';
-
   {
     // Create identity.
     await client.initialize();
