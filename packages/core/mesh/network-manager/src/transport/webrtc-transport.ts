@@ -69,7 +69,7 @@ export class WebRTCTransport implements Transport {
             });
           });
         }
-      } catch {}
+      } catch {} // TODO(burdon): Ignored?
 
       await this.destroy();
     });
