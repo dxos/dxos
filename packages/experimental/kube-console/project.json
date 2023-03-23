@@ -35,7 +35,7 @@
         "production"
       ],
       "options": {
-        "outputPath": "packages/experimental/kube-console/out/kube-console"
+        "outputPath": "packages/experimental/kube-console/out/console"
       },
       "outputs": [
         "{options.outputPath}"

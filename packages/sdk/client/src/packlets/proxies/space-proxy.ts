@@ -5,10 +5,10 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase, Query } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -31,17 +31,14 @@ export interface Space {
   get isOpen(): boolean;
   get db(): EchoDatabase;
   get properties(): TypedObject;
-  get invitations(): CancellableInvitationObservable[];
+  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get members(): MulticastObservable<SpaceMember[]>;
   get internal(): Internal;
 
   open(): Promise<void>;
   close(): Promise<void>;
 
-  getMembers(): SpaceMember[];
-  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
-
   postMessage: (channel: string, message: any) => Promise<void>;
-
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
@@ -53,8 +50,12 @@ export interface Space {
 const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
-  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
-  public readonly stateUpdate = new Event();
+  /**
+   * @internal
+   * To update the space query when a space changes.
+   */
+  // TODO(wittjosiah): Remove this? Should be consistent w/ ECHO query.
+  public readonly _stateUpdate = new Event();
 
   /**
    * @internal
@@ -62,13 +63,17 @@ export class SpaceProxy implements Space {
    */
   public readonly _databaseInitialized = new Trigger();
 
+  private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
+  private readonly _membersUpdate = new Event<SpaceMember[]>();
+
   private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
   private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
+  private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+  private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private _invitations: CancellableInvitationObservable[] = [];
   private _properties?: TypedObject;
   private _initializing = false;
 
@@ -125,6 +130,10 @@ export class SpaceProxy implements Space {
     return this._invitations;
   }
 
+  get members() {
+    return this._members;
+  }
+
   // TODO(burdon): Remove?
   get internal(): Internal {
     return this._internal;
@@ -154,7 +163,7 @@ export class SpaceProxy implements Space {
         this._properties = query.objects[0];
       } else {
         const waitForSpaceMeta = new Trigger();
-        const subscription = query.subscribe((query: Query<Properties>) => {
+        const subscription = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
             waitForSpaceMeta.wake();
@@ -174,7 +183,8 @@ export class SpaceProxy implements Space {
 
     this._initialized = true;
     this._initializing = false;
-    this.stateUpdate.emit();
+    this._stateUpdate.emit();
+    this._state.members && this._membersUpdate.emit(this._state.members);
     log('initialized');
   }
 
@@ -220,30 +230,15 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * Return set of space members.
-   */
-  getMembers(): SpaceMember[] {
-    return this._state.members ?? [];
-  }
-
-  /**
-   * Subscribe to changes to space members.
-   */
-  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback {
-    return this.stateUpdate.on(() => callback(this.getMembers()));
-  }
-
-  /**
    * Creates an interactive invitation.
    */
   createInvitation(options?: InvitationsOptions) {
     log('create invitation', options);
     const invitation = this._invitationProxy.createInvitation(this.key, options);
-    this._invitations = [...this._invitations, invitation];
 
     const unsubscribe = invitation.subscribe({
       onConnecting: () => {
-        this.invitationsUpdate.emit(invitation);
+        this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
         unsubscribe();
       },
       onCancelled: () => {
@@ -265,10 +260,10 @@ export class SpaceProxy implements Space {
    */
   removeInvitation(id: string) {
     log('remove invitation', { id });
-    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
-    void this._invitations[index]?.cancel();
-    this._invitations = [...this._invitations.slice(0, index), ...this._invitations.slice(index + 1)];
-    this.invitationsUpdate.emit();
+    const invitations = this._invitations.get();
+    const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void invitations[index]?.cancel();
+    this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
   }
 
   /**
@@ -296,14 +291,26 @@ export class SpaceProxy implements Space {
   // TODO(wittjosiah): Make private and trigger with event?
   _processSpaceUpdate(space: SpaceType) {
     const emitEvent = shouldUpdate(this._state, space);
+    const emitMembersEvent = shouldMembersUpdate(this._state.members, space.members);
     this._state = space;
     log('update', { space, emitEvent });
     if (emitEvent) {
-      this.stateUpdate.emit();
+      this._stateUpdate.emit();
+    }
+    if (emitMembersEvent) {
+      this._membersUpdate.emit(space.members!);
     }
   }
 }
 
 const shouldUpdate = (prev: SpaceType, next: SpaceType) => {
+  return !isEqual(prev, next);
+};
+
+const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {
+  if (!next) {
+    return false;
+  }
+
   return !isEqual(prev, next);
 };

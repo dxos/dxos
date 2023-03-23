@@ -2,32 +2,54 @@
 // Copyright 2023 DXOS.org
 //
 
+import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import {
+  bracketMatching,
+  defaultHighlightStyle,
+  foldKeymap,
+  indentOnInput,
+  syntaxHighlighting
+} from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
+import { lintKeymap } from '@codemirror/lint';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { EditorState } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
-import { EditorView } from '@codemirror/view';
-import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import {
+  keymap,
+  highlightSpecialChars,
+  drawSelection,
+  highlightActiveLine,
+  dropCursor,
+  rectangularSelection,
+  crosshairCursor,
+  highlightActiveLineGutter,
+  EditorView
+} from '@codemirror/view';
 import { parseInt } from 'lib0/number';
-import React, { forwardRef, useEffect, useMemo } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext, configPalettes } from '@dxos/react-components';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
-import { ComposerModel } from '../../model';
+import { ComposerModel, ComposerSlots } from '../../model';
 import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
 
-export type MarkdownComposerSlots = {};
-
 export type MarkdownComposerProps = {
   model?: ComposerModel;
-  slots?: MarkdownComposerSlots;
+  slots?: ComposerSlots;
 };
 
-export type MarkdownComposerRef = ReactCodeMirrorRef;
+export type MarkdownComposerRef = {
+  editor: HTMLDivElement | null;
+  state?: EditorState;
+  view?: EditorView;
+};
 
 const theme = EditorView.theme(markdownDarktheme);
 
@@ -56,17 +78,18 @@ const shadeKeys = {
   highlightLight: '100' as const
 };
 
-export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerProps>(({ model }, forwardedRef) => {
+export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(({ model }, forwardedRef) => {
   const { id, content, provider, peer } = model ?? {};
   const { themeMode } = useThemeContext();
 
-  const extensions = useMemo(
-    () => [
-      markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-      ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
-    ],
-    [content, provider?.awareness]
-  );
+  const [parent, setParent] = useState<HTMLDivElement | null>(null);
+  const [state, setState] = useState<EditorState>();
+  const [view, setView] = useState<EditorView>();
+  useImperativeHandle(forwardedRef, () => ({
+    editor: parent,
+    state,
+    view
+  }));
 
   useEffect(() => {
     if (provider && peer) {
@@ -87,21 +110,72 @@ export const MarkdownComposer = forwardRef<ReactCodeMirrorRef, MarkdownComposerP
     }
   }, [provider, peer]);
 
-  return (
-    <CodeMirror
-      key={id}
-      basicSetup={{ lineNumbers: false, foldGutter: false }}
-      theme={[
+  useEffect(() => {
+    if (!parent) {
+      return;
+    }
+
+    const state = EditorState.create({
+      doc: content?.toString(),
+      extensions: [
+        // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
+        highlightActiveLineGutter(),
+        highlightSpecialChars(),
+        history(),
+        drawSelection(),
+        dropCursor(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        bracketMatching(),
+        closeBrackets(),
+        autocompletion(),
+        rectangularSelection(),
+        crosshairCursor(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        keymap.of([
+          ...closeBracketsKeymap,
+          ...defaultKeymap,
+          ...searchKeymap,
+          ...historyKeymap,
+          ...foldKeymap,
+          ...completionKeymap,
+          ...lintKeymap
+        ]),
+
+        // Theme
+        markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
         theme,
         ...(themeMode === 'dark'
           ? [syntaxHighlighting(oneDarkHighlightStyle)]
           : [syntaxHighlighting(defaultHighlightStyle)]),
         // TODO(thure): All but one rule here apply to both themes; rename or refactor.
-        syntaxHighlighting(markdownDarkHighlighting)
-      ]}
-      ref={forwardedRef}
-      value={content?.toString()}
-      extensions={extensions}
-    />
-  );
+        syntaxHighlighting(markdownDarkHighlighting),
+
+        // Collaboration
+        ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
+      ]
+    });
+    setState(state);
+
+    if (view) {
+      // NOTE: This repaints the editor.
+      // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
+      // Ideally this should not be hit except when changing between text objects.
+      view.setState(state);
+    } else {
+      setView(new EditorView({ state, parent }));
+    }
+
+    return () => {
+      if (view) {
+        view.destroy();
+        setView(undefined);
+        setState(undefined);
+      }
+    };
+  }, [parent, content, provider?.awareness]);
+
+  return <div key={id} ref={setParent} />;
 });

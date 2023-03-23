@@ -25,10 +25,10 @@ describe('Spaces', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     await testSpace(space.internal.db);
 
-    expect(space.getMembers()).to.be.length(1);
+    expect(space.members.get()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
@@ -42,12 +42,12 @@ describe('Spaces', () => {
     let itemId: string;
     {
       // TODO(burdon): API (client.echo/client.halo).
-      const space = await client.echo.createSpace();
+      const space = await client.createSpace();
       const {
         objectsUpdated: [item]
       } = await testSpace(space.internal.db);
       itemId = item.id;
-      expect(space.getMembers()).to.be.length(1);
+      expect(space.members.get()).to.be.length(1);
     }
 
     await client.destroy();
@@ -59,12 +59,12 @@ describe('Spaces', () => {
     {
       // TODO(dmaretskyi): Replace with helper?.
       const spaceTrigger = new Trigger<Space>();
-      if (client.echo.getSpaces()[0]) {
-        spaceTrigger.wake(client.echo.getSpaces()[0]);
+      if (client.spaces.get()[0]) {
+        spaceTrigger.wake(client.spaces.get()[0]);
       }
-      client.echo.subscribeSpaces(() => {
-        if (client.echo.getSpaces()[0]) {
-          spaceTrigger.wake(client.echo.getSpaces()[0]);
+      client.spaces.subscribe(() => {
+        if (client.spaces.get()[0]) {
+          spaceTrigger.wake(client.spaces.get()[0]);
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
@@ -94,13 +94,13 @@ describe('Spaces', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const space1 = await client1.echo.createSpace();
+    const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
     const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
 
     observable1.subscribe({
       onConnecting: (invitation) => {
-        const observable2 = client2.echo.acceptInvitation(invitation);
+        const observable2 = client2.acceptInvitation(invitation);
         observable2.subscribe({
           onSuccess: (invitation: Invitation) => {
             success2.wake(invitation);
@@ -117,7 +117,7 @@ describe('Spaces', () => {
 
     const [_, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
 
-    const space2 = client2.echo.getSpace(invitation2.spaceKey!)!;
+    const space2 = client2.getSpace(invitation2.spaceKey!)!;
 
     const hello = new Trigger();
     {

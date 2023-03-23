@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 import { CID } from 'ipfs-http-client';
 
 import type { ConfigProto } from '@dxos/config';
@@ -28,7 +28,7 @@ export const mapTunnels = (tunnels: TunnelResponse[]) => {
 };
 
 export const printModules = (modules: PackageModule[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapModules(modules),
     {
       key: {
@@ -45,7 +45,7 @@ export const printModules = (modules: PackageModule[], flags = {}) => {
 };
 
 export const printTunnels = (tunnels: TunnelResponse[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapTunnels(tunnels),
     {
       key: {

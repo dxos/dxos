@@ -42,6 +42,7 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
  * Base class for all invitation observables and providers.
  * Observable that supports inspection of the current value.
  */
+// TODO(wittjosiah): Use `MulticastObservable`.
 export interface CancellableInvitationObservable extends CancellableObservable<InvitationEvents> {
   get invitation(): Invitation | undefined;
 }

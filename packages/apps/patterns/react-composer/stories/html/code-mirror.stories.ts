@@ -6,7 +6,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { StoryObj } from '@storybook/html';
-import { basicSetup } from '@uiw/react-codemirror';
+import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
@@ -44,7 +44,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 
   const state = EditorState.create({
     doc: ytext.toString(),
-    extensions: [basicSetup(), markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
+    extensions: [basicSetup, markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
   });
 
   const view = views[id];
@@ -61,24 +61,24 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 };
 
 const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, editor: HTMLDivElement) => {
-  const space = await client.echo.getSpace(spaceKey)!;
+  const space = await client.getSpace(spaceKey)!;
   const query = space.db.query(ComposerDocument.filter());
   query.subscribe(({ objects }) => {
     const text = objects[0]?.content;
-    text && updateEditor(id, editor, client.halo.identity!, space, text);
+    text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
   });
 
   const text = query.objects[0]?.content;
-  text && updateEditor(id, editor, client.halo.identity!, space, text);
+  text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
 };
 
 const setupSpace = async (count: number) => {
   const clients = [...Array(count)].map(() => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  clients.map((client) => client.echo.dbRouter.addSchema(schema));
+  clients.map((client) => client.dbRouter.addSchema(schema));
 
-  const space = await clients[0].echo.createSpace();
+  const space = await clients[0].createSpace();
   const text = new Text('Hello, Storybook!');
   const document = new ComposerDocument({ content: text });
   await space.db.add(document);

@@ -35,14 +35,7 @@ import {
   DropdownMenuItem,
   Trans
 } from '@dxos/react-components';
-import {
-  MarkdownComposer,
-  MarkdownComposerRef,
-  RichTextComposer,
-  TextKind,
-  TipTapEditor,
-  useTextModel
-} from '@dxos/react-composer';
+import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
@@ -136,12 +129,9 @@ const DocumentPageContent = observer(
 );
 
 const RichTextDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
-  const identity = useIdentity();
-  const model = useTextModel({ identity, space, text: document?.content });
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
-
+  const identity = useIdentity();
   const download = useFileDownload();
 
   const handleExport = useCallback(() => {
@@ -170,9 +160,11 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Composer
 
   return (
     <DocumentPageContent {...{ document, handleExport, handleImport, dialogOpen, setDialogOpen }}>
-      <RichTextComposer
+      <Composer
         ref={editorRef}
-        model={model}
+        identity={identity}
+        space={space}
+        text={document?.content}
         slots={{
           root: {
             role: 'none',
@@ -188,10 +180,8 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Composer
 type ExportViewState = 'init' | 'pending' | 'response' | null;
 
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
-  const identity = useIdentity();
-  const model = useTextModel({ identity, space, text: document?.content });
-
   const editorRef = useRef<MarkdownComposerRef>(null);
+  const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
 
@@ -202,6 +192,8 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const [ghBranchValue, setGhBranchValue] = useState('');
   const [ghMessageValue, setGhMessageValue] = useState('');
   const [ghPrValue, setGhPrValue] = useState<string | null>(null);
+
+  const content = document?.content.content;
 
   const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
     try {
@@ -237,13 +229,13 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   }, [ghFileValue]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhFileId && model?.content && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (octokit && docGhFileId && content && editorRef.current?.view && editorRef.current?.state?.doc) {
       try {
         const { owner, repo, path } = docGhFileId;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: model.content.toString().length, insert: atob(data.content) }
+            changes: { from: 0, to: content.toString().length, insert: atob(data.content) }
           });
         } else {
           log.error('Did not receive file with content from Github.');
@@ -254,15 +246,14 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     } else {
       log.error('Not prepared to import when requested.');
     }
-  }, [octokit, docGhFileId, editorRef.current, model?.content]);
+  }, [octokit, docGhFileId, editorRef.current, content]);
 
   const exportGhFileContent = useCallback(
     async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
-      if (octokit && docGhFileId && model?.content) {
+      if (octokit && docGhFileId && content) {
         setExportViewState('pending');
         try {
           const { owner, repo, path, ref } = docGhFileId;
-          const content = model.content.toString();
           const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
           if (Array.isArray(fileData) || fileData.type !== 'file') {
             log.error('Attempted to export to a destination in Github that is not a file.');
@@ -287,7 +278,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
             message: commitMessage,
             branch: branchName,
             sha: fileSha,
-            content: btoa(content)
+            content: btoa(content.toString())
           });
           const {
             data: { html_url: prUrl }
@@ -309,7 +300,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         setGhPrValue(null);
       }
     },
-    [octokit, docGhFileId, model?.content]
+    [octokit, docGhFileId, content]
   );
 
   const dropdownMenuContent = docGhFileId ? (
@@ -350,9 +341,11 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
           ...(octokit && { dropdownMenuContent })
         }}
       >
-        <MarkdownComposer
+        <Composer
           ref={editorRef}
-          model={model}
+          identity={identity}
+          space={space}
+          text={document?.content}
           slots={{
             root: {
               role: 'none',
