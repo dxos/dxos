@@ -8,8 +8,8 @@
     "module": "ESNext",
     "outDir": "dist",
     "types": [
-      "node",
-      "@vuepress/client/types"
+      "@vuepress/client/types",
+      "node"
     ]
   },
   "include": [
