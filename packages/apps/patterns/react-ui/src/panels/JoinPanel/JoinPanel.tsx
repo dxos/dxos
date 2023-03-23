@@ -3,9 +3,10 @@
 //
 import React, { useEffect } from 'react';
 
-import { useClient, useIdentity } from '@dxos/react-client';
-import { DensityProvider } from '@dxos/react-components';
+import { InvitationEncoder, useClient, useIdentity } from '@dxos/react-client';
+import { DensityProvider, useId } from '@dxos/react-components';
 
+import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
@@ -29,13 +30,19 @@ export const JoinPanel = ({
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
+  const titleId = useId('joinPanel__title');
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       identity,
-      ...(initialInvitationCode && {
-        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode }
-      })
+      ...(initialInvitationCode &&
+        (mode === 'halo-only'
+          ? {
+              halo: { invitation: client.halo.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
+            }
+          : {
+              space: { invitation: client.echo.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
+            }))
     }
   });
 
@@ -54,17 +61,19 @@ export const JoinPanel = ({
     const $nextAutofocus: HTMLElement | null = document.querySelector(
       `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`
     );
+    console.log('[autofocus]', `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`, $nextAutofocus);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
     }
   }, [joinState.value]);
 
+  const joinStateSpaceInvitation = joinState.context.space.invitation;
+  const spaceInvitation =
+    !joinStateSpaceInvitation || joinStateSpaceInvitation === true ? undefined : joinStateSpaceInvitation;
+
   return (
     <DensityProvider density='fine'>
-      {/* todo(thure): Restore this, fix types elsewhere here. */}
-      {/* <JoinHeading */}
-      {/*  {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent, preventExit }} */}
-      {/* /> */}
+      <JoinHeading {...{ mode, titleId, invitation: spaceInvitation, onExit, exitActionParent, preventExit }} />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1200%]' aria-live='polite'>
           <AdditionMethodSelector

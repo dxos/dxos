@@ -113,7 +113,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
         always: [
           {
             target: `inputting${Domain}InvitationCode`,
-            cond: (context) => !context[Domain.toLowerCase() as 'space' | 'halo'].unredeemedCode,
+            cond: `no${Domain}Invitation`,
             actions: 'log'
           },
           {
@@ -262,8 +262,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
-      noUnredeemedHaloInvitationCode: ({ halo }, _event) => !halo.unredeemedCode,
-      noUnredeemedSpaceInvitationCode: ({ space }, _event) => !space.unredeemedCode
+      noHaloInvitation: ({ halo }, _event) => !halo.invitation && !halo.unredeemedCode,
+      noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode
     },
     actions: {
       setIdentity: assign<JoinMachineContext, SelectIdentityEvent>({
@@ -305,6 +305,11 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
           invitation,
           invitationSubscribable: getInvitationSubscribable('Halo', invitation)
         };
+      } else if (halo.invitation && halo.invitation !== true) {
+        return {
+          ...halo,
+          invitationSubscribable: getInvitationSubscribable('Halo', halo.invitation)
+        };
       } else {
         return halo;
       }
@@ -320,6 +325,11 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
           unredeemedCode: undefined,
           invitation,
           invitationSubscribable: getInvitationSubscribable('Space', invitation)
+        };
+      } else if (space.invitation && space.invitation !== true) {
+        return {
+          ...space,
+          invitationSubscribable: getInvitationSubscribable('Space', space.invitation)
         };
       } else {
         return space;

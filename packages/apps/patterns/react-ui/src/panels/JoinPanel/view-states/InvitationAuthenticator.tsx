@@ -10,7 +10,7 @@ import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { JoinSend } from '../joinMachine';
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 const pinLength = 6;
 
@@ -39,21 +39,22 @@ const PureInvitationAuthenticatorContent = ({
   return (
     <>
       <Input
-        label={t('auth code input label')}
+        label={<ViewStateHeading>{t('auth code input label')}</ViewStateHeading>}
         size='pin'
         length={pinLength}
         onChange={onChange}
         disabled={disabled}
         slots={{
           root: { className: 'm-0' },
-          label: { className: 'sr-only' },
           description: { className: 'text-center' },
           input: {
             disabled,
             inputMode: 'numeric',
+            autocomplete: 'off',
             pattern: '\\d*',
-            'data-autofocus': `connecting${Domain}VerificationCode inputting${Domain}VerificationCode authenticationFailing${Domain}VerificationCode authenticating${Domain}VerificationCode`,
-            'data-testid': `${invitationType}-auth-code-input`
+            'data-autofocus': `connecting${Domain}Invitation inputting${Domain}VerificationCode authenticationFailing${Domain}VerificationCode authenticating${Domain}VerificationCode`,
+            'data-testid': `${invitationType}-auth-code-input`,
+            'data-1p-ignore': true
           } as ComponentPropsWithoutRef<'input'>
         }}
         {...(failed && {
@@ -121,6 +122,7 @@ const InvitationAuthenticatorContent = ({
 };
 
 export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: InvitationAuthenticatorProps) => {
+  const { t } = useTranslation('os');
   const disabled = !viewStateProps.active;
   const { joinSend, joinState } = viewStateProps;
   const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation;

@@ -8,9 +8,9 @@ import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } f
 import type { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
+import { mx, useTranslation, useId, getSize, strongShimmer } from '@dxos/react-components';
 
-import { defaultSurface, subduedSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
+import { defaultSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';
 import { JoinSend, JoinState } from '../joinMachine';
 
@@ -24,7 +24,7 @@ const stripe = mx('rounded-full grow', getSize(3));
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
-    <h2 {...props} className={mx('font-system-medium text-sm md:text-base mbe-1 mli-1 text-center', className)}>
+    <h2 {...props} className={mx('font-system-normal text-sm mbe-1 mli-1 text-center', className)}>
       {children}
     </h2>
   );
@@ -138,10 +138,6 @@ const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Au
 
 export const ViewState = ({ active, children, className, joinSend, joinState, ...props }: ViewStateProps) => {
   // note (thure): reserve `order-1` and `order-3` for outgoing steps in different directions
-  const { t } = useTranslation('os');
-  const identityLabel = useId('selectedIdentityLabel');
-  const selectedIdentity = joinState?.context.identity;
-
   return (
     <div
       role='none'
@@ -149,24 +145,7 @@ export const ViewState = ({ active, children, className, joinSend, joinState, ..
       {...(!active && { 'aria-hidden': true })}
       className={mx('is-[50%] flex flex-col', active ? 'order-2' : 'order-4', className)}
     >
-      {selectedIdentity && (
-        <div role='none' className={mx(subduedSurface, 'flex-none flex items-center gap-1 pli-2 pbe-1.5')}>
-          <Trans
-            {...{
-              defaults: t('join space as identity heading'),
-              components: {
-                icon: <Avatar size={4} fallbackValue={selectedIdentity.identityKey.toHex()} labelId={identityLabel} />,
-                label: <span id={identityLabel} />,
-                part: <span role='none' className='flex items-center gap-1 leading-none' />
-              },
-              values: {
-                labelValue: selectedIdentity.profile?.displayName ?? selectedIdentity.identityKey.truncate()
-              }
-            }}
-          />
-        </div>
-      )}
-      <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-2')}>
+      <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-4 pbs-1')}>
         {children}
       </div>
     </div>

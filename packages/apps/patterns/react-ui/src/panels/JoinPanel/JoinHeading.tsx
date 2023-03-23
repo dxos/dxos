@@ -1,14 +1,23 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { ProhibitInset } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useSpace } from '@dxos/react-client';
-import { Avatar, Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
+import {
+  Avatar,
+  Button,
+  defaultDescription,
+  getSize,
+  Heading,
+  mx,
+  useId,
+  useTranslation
+} from '@dxos/react-components';
 
-import { subduedSurface } from '../../styles';
+import { defaultSurface } from '../../styles';
 import { JoinPanelMode } from './JoinPanelProps';
 
 export interface JoinSpaceHeadingProps {
@@ -29,7 +38,7 @@ export const JoinHeading = forwardRef(
     const { t } = useTranslation('os');
 
     const space = useSpace(invitation?.invitation?.spaceKey);
-    const name = mode === 'halo-only' ? '(Unknown identity)' : space?.properties.name ?? '(Space name not available)';
+    const name = space?.properties.name;
     const nameId = useId(mode === 'halo-only' ? 'identityDisplayName' : 'spaceDisplayName');
 
     const invitationKey =
@@ -38,41 +47,36 @@ export const JoinHeading = forwardRef(
         : invitation?.invitation?.identityKey?.toHex();
 
     const exitButton = (
-      <Button variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0' data-testid='join-exit'>
-        <ProhibitInset className={getSize(5)} />
+      <Button
+        variant='ghost'
+        {...(onExit && { onClick: onExit })}
+        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-2 inline-end-2')}
+        data-testid='join-exit'
+      >
+        <X weight='bold' className={getSize(4)} />
         <span className='sr-only'>{t('exit label')}</span>
       </Button>
     );
 
     return (
-      <div role='none' className={mx(subduedSurface, 'p-2 rounded-bs-md')} ref={ref}>
-        <div role='group' className='flex items-center gap-2'>
+      <div role='none' className={mx(defaultSurface, 'pbs-3 pbe-2 rounded-bs-md relative')} ref={ref}>
+        {!preventExit &&
+          mode !== 'halo-only' &&
+          (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
+        <Heading
+          level={1}
+          className={mx(defaultDescription, 'font-body font-system-normal text-center text-sm grow pbe-1')}
+          id={titleId}
+        >
+          {t('joining space heading')}
+        </Heading>
+        <div role='group' className='flex items-center justify-center gap-2'>
           {invitationKey ? (
             <Avatar fallbackValue={invitationKey} labelId={nameId} />
           ) : (
             <span role='none' className={mx(getSize(10), 'bg-neutral-300 dark:bg-neutral-700 rounded-full')} />
           )}
-          <Heading level={1} className='font-body font-normal text-base grow' id={titleId}>
-            {invitation ? (
-              <Trans
-                {...{
-                  defaults: t('joining heading'),
-                  components: {
-                    small: <span className='block leading-none mbe-1 font-system-medium text-sm' />,
-                    large: <span className='block leading-none' id={nameId} />
-                  },
-                  values: { name }
-                }}
-              />
-            ) : (
-              <span className='block leading-none font-system-medium text-sm'>
-                {mode === 'halo-only' ? t('halo heading') : t('join space heading')}
-              </span>
-            )}
-          </Heading>
-          {!preventExit &&
-            mode !== 'halo-only' &&
-            (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
+          {name && <p id={nameId}>{name}</p>}
         </div>
       </div>
     );
