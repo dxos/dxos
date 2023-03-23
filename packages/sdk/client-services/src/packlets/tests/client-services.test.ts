@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/client';
+import { Client, Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -19,6 +19,19 @@ import { syncItems, TestBuilder } from '../testing';
 // TODO(burdon): Timeouts and progress callback/events.
 
 describe('Client services', () => {
+  test('creates client with local host', async () => {
+    const testBuilder = new TestBuilder();
+
+    const servicesProvider = testBuilder.createLocal();
+    await servicesProvider.open();
+    afterTest(() => servicesProvider.close());
+
+    const client = new Client({ services: servicesProvider });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    expect(client.initialized).to.be.true;
+  });
+
   test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
 

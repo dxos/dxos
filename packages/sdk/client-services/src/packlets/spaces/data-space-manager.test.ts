@@ -91,7 +91,7 @@ describe('DataSpaceManager', () => {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey
     });
-    await dataSpaceManager2.waitUntilDataPipelineInitialized(space2.key);
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
     log('', {
       peer1: {
@@ -123,7 +123,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
+    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
@@ -182,7 +182,7 @@ describe('DataSpaceManager', () => {
 
     // Coincidentally, this also waits until a P2P connection is established between peers.
     // TODO(dmaretskyi): Refine this to wait for connection specifically.
-    await dataSpaceManager2.waitUntilDataPipelineInitialized(space2.key);
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
     const [receivedMessage, inc] = latch({ count: 1 });
     space2.listen('test', (message) => {

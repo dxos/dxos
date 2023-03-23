@@ -6,6 +6,7 @@ import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
 import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
@@ -13,7 +14,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Space as SpaceType, SpaceMember, SpaceStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
@@ -29,14 +30,33 @@ interface Internal {
 export interface Space {
   get key(): PublicKey;
   get isOpen(): boolean;
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
   get db(): EchoDatabase;
   get properties(): TypedObject;
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  get state(): MulticastObservable<SpaceState>;
   get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
   get members(): MulticastObservable<SpaceMember[]>;
+
   get internal(): Internal;
 
   open(): Promise<void>;
   close(): Promise<void>;
+
+  /**
+   * Waits until the space is in the ready state, with database initialized.
+   */
+  waitUntilReady(): Promise<this>;
 
   postMessage: (channel: string, message: any) => Promise<void>;
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
@@ -50,18 +70,34 @@ export interface Space {
 const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
+  private readonly _ctx = new Context();
   /**
    * @internal
    * To update the space query when a space changes.
    */
   // TODO(wittjosiah): Remove this? Should be consistent w/ ECHO query.
-  public readonly _stateUpdate = new Event();
+  public readonly _stateUpdate = new Event<SpaceState>();
+
+  // TODO(dmaretskyi): Reconcile initialization states.
 
   /**
    * @internal
    * To unlock internal operations that should happen after the database is initialized but before initialize() completes.
    */
   public readonly _databaseInitialized = new Trigger();
+
+  /**
+   * @internal
+   * Space proxy is fully initialized, database open, state is READY.
+   */
+  public readonly _initializationComplete = new Trigger();
+
+  private _initializing = false;
+
+  /**
+   * @internal
+   */
+  _initialized = false;
 
   private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
   private readonly _membersUpdate = new Event<SpaceMember[]>();
@@ -71,31 +107,22 @@ export class SpaceProxy implements Space {
   private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
+
+  private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _properties?: TypedObject;
-  private _initializing = false;
-
-  /**
-   * @internal
-   */
-  _initialized = false;
 
   // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
-    private _state: SpaceType,
+    private _data: SpaceData,
     databaseRouter: DatabaseRouter
   ) {
     assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
     this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
-
-    // TODO(burdon): Don't shadow properties.
-    if (this._state.status !== SpaceStatus.ACTIVE) { // TODO(burdon): Assert?
-      return;
-    }
 
     assert(this._clientServices.services.DataService, 'DataService not available');
     this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
@@ -110,11 +137,24 @@ export class SpaceProxy implements Space {
   }
 
   get key() {
-    return this._state.spaceKey;
+    return this._data.spaceKey;
   }
 
   get isOpen() {
-    return this._state.status === SpaceStatus.ACTIVE;
+    return this._data.state === SpaceState.READY && this._initialized;
+  }
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  private get _currentState(): SpaceState {
+    if (this._data.state === SpaceState.READY && !this._initialized) {
+      return SpaceState.INACTIVE;
+    } else {
+      return this._data.state;
+    }
   }
 
   get db() {
@@ -124,6 +164,10 @@ export class SpaceProxy implements Space {
   get properties() {
     assert(this._properties, 'Properties not initialized.');
     return this._properties;
+  }
+
+  get state() {
+    return this._state;
   }
 
   get invitations() {
@@ -140,10 +184,31 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * Called by EchoProxy open.
+   * Called by EchoProxy to update this space instance.
+   * Called once on initial creation.
+   * @internal Package-private.
    */
   @synchronized
-  async initialize() {
+  async _processSpaceUpdate(space: SpaceData) {
+    const emitEvent = shouldUpdate(this._data, space);
+    const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
+
+    this._data = space;
+    log('update', { space, emitEvent });
+
+    if (space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
+      await this._initialize();
+    }
+
+    if (emitEvent) {
+      this._stateUpdate.emit(this._currentState);
+    }
+    if (emitMembersEvent) {
+      this._membersUpdate.emit(space.members!);
+    }
+  }
+
+  private async _initialize() {
     if (this._initializing || this._initialized) {
       return;
     }
@@ -183,28 +248,45 @@ export class SpaceProxy implements Space {
 
     this._initialized = true;
     this._initializing = false;
-    this._stateUpdate.emit();
-    this._state.members && this._membersUpdate.emit(this._state.members);
+    this._initializationComplete.wake();
+    this._stateUpdate.emit(this._currentState);
+    this._data.members && this._membersUpdate.emit(this._data.members);
     log('initialized');
   }
 
   /**
    * Called by EchoProxy close.
+   * @internal Package-private.
    */
   @synchronized
-  async destroy() {
+  async _destroy() {
     log('destroying...');
+    await this._ctx.dispose();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
   }
 
+  /**
+   * TODO
+   */
   async open() {
     await this._setOpen(true);
   }
 
+  /**
+   * TODO
+   */
   async close() {
     await this._setOpen(false);
+  }
+
+  /**
+   * Waits until the space is in the ready state, with database initialized.
+   */
+  async waitUntilReady() {
+    await cancelWithContext(this._ctx, this._initializationComplete.wait());
+    return this;
   }
 
   /**
@@ -283,27 +365,9 @@ export class SpaceProxy implements Space {
     //   open
     // });
   }
-
-  /**
-   * Called by EchoProxy to update this space instance.
-   * @internal
-   */
-  // TODO(wittjosiah): Make private and trigger with event?
-  _processSpaceUpdate(space: SpaceType) {
-    const emitEvent = shouldUpdate(this._state, space);
-    const emitMembersEvent = shouldMembersUpdate(this._state.members, space.members);
-    this._state = space;
-    log('update', { space, emitEvent });
-    if (emitEvent) {
-      this._stateUpdate.emit();
-    }
-    if (emitMembersEvent) {
-      this._membersUpdate.emit(space.members!);
-    }
-  }
 }
 
-const shouldUpdate = (prev: SpaceType, next: SpaceType) => {
+const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
   return !isEqual(prev, next);
 };
 

@@ -180,7 +180,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
             return {
               credential: spaceMemberCredential,
               controlTimeframe: space.inner.controlPipeline.state.timeframe,
-              dataTimeframe: space.dataPipelineController.pipelineState?.timeframe
+              dataTimeframe: space.dataPipeline.pipelineState?.timeframe
             };
           } catch (err) {
             // TODO(burdon): Generic RPC callback to report error to client.
@@ -344,7 +344,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               await this._signingContext.recordCredential(credential);
 
               // TODO(dmaretskyi): Should we block here?
-              await this._spaceManager.waitUntilDataPipelineInitialized(space.key);
+              await this._spaceManager.waitUntilSpaceReady(space.key);
 
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
