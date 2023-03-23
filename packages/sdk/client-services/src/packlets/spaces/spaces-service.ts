@@ -14,7 +14,6 @@ import {
   Space,
   SpaceMember,
   SpacesService,
-  SpaceStatus,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
   WriteCredentialsRequest
@@ -60,9 +59,12 @@ export class SpacesServiceImpl implements SpacesService {
         next({ spaces });
       };
 
-      setTimeout(async () => {
+      scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
+
         const subscriptions = new EventSubscriptions();
+        ctx.onDispose(() => subscriptions.clear());
+
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
         const subscribeSpaces = () => {
           subscriptions.clear();
@@ -82,12 +84,9 @@ export class SpacesServiceImpl implements SpacesService {
           subscribeSpaces();
           void onUpdate();
         });
+        subscribeSpaces();
 
-        ctx.onDispose(() => subscriptions.clear());
-        scheduleTask(ctx, () => {
-          subscribeSpaces();
-          void onUpdate();
-        });
+        void onUpdate();
       });
 
       if (!this._identityManager.identity) {
@@ -139,7 +138,7 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      status: space.dataPipelineReady ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      state: space.state,
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

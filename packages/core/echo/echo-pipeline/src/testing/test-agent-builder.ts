@@ -17,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
-import { DataPipelineController } from '../space/data-pipeline-controller';
+import { DataPipeline } from '../space/data-pipeline';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -125,7 +125,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
-  ): Promise<[Space, DataPipelineController]> {
+  ): Promise<[Space, DataPipeline]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -140,7 +140,7 @@ export class TestAgent {
 
     const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
     await metadataStore.addSpace({ key: spaceKey });
-    const dataPipelineController: DataPipelineController = new DataPipelineController({
+    const dataPipelineController: DataPipeline = new DataPipeline({
       modelFactory: new ModelFactory().registerModel(DocumentModel),
       metadataStore,
       snapshotManager,

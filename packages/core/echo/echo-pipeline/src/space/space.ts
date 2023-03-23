@@ -144,7 +144,6 @@ export class Space {
   // getDataFeeds(): FeedInfo[] {
   //   return this._dataPipeline?.getFeeds();
   // }
-
   @synchronized
   async open() {
     log('opening...');

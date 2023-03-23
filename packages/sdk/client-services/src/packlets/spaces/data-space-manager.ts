@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
@@ -172,12 +173,12 @@ export class DataSpaceManager {
    * Used by invitation handler.
    * TODO(dmaretskyi): Consider removing.
    */
-  async waitUntilDataPipelineInitialized(spaceKey: PublicKey) {
+  async waitUntilSpaceReady(spaceKey: PublicKey) {
     await cancelWithContext(
       this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
-        return !!space && space.isOpen && space.dataPipelineController.isOpen;
+        return !!space && space.state === SpaceState.READY;
       })
     );
   }
@@ -233,7 +234,7 @@ export class DataSpaceManager {
       onDataPipelineReady: async () => {
         this._dataServiceSubscriptions.registerSpace(
           space.key,
-          dataSpace.dataPipelineController.databaseBackend!.createDataServiceHost()
+          dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
         );
       }
     });
@@ -244,7 +245,7 @@ export class DataSpaceManager {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
     if (metadata.dataTimeframe) {
-      dataSpace.dataPipelineController.setTargetTimeframe(metadata.dataTimeframe);
+      dataSpace.dataPipeline.setTargetTimeframe(metadata.dataTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);

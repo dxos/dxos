@@ -21,11 +21,11 @@ import { DatabaseBackendHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
-export type DataPipelineControllerContext = {
+export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
-};
+}
 
-export type DataPipelineControllerImplParams = {
+export type DataPipelineParams = {
   modelFactory: ModelFactory;
   snapshotManager: SnapshotManager;
   metadataStore: MetadataStore;
@@ -56,9 +56,9 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
-export class DataPipelineController {
+export class DataPipeline {
   private _ctx = new Context();
-  private _spaceContext!: DataPipelineControllerContext;
+  private _spaceContext!: PipelineFactory;
   private _pipeline?: Pipeline;
   private _snapshot?: SpaceSnapshot;
   private _targetTimeframe?: Timeframe;
@@ -68,7 +68,7 @@ export class DataPipelineController {
 
   public readonly onTimeframeReached = new Event<Timeframe>();
 
-  constructor(private readonly _params: DataPipelineControllerImplParams) {}
+  constructor(private readonly _params: DataPipelineParams) {}
 
   public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;
@@ -94,7 +94,7 @@ export class DataPipelineController {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
-  async open(spaceContext: DataPipelineControllerContext) {
+  async open(spaceContext: PipelineFactory) {
     this._spaceContext = spaceContext;
     if (this._params.snapshotId) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
