@@ -11,6 +11,7 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
+import { ChatFrame } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
 /**
@@ -50,6 +51,7 @@ const SpacePage = () => {
 
 const Content = () => {
   const theme = useTheme();
+  const { chat } = useAppState();
   const { space, frame } = useAppRouter();
   const { section } = useParams();
   const toggleSidebar = useTogglePanelSidebar();
@@ -75,7 +77,16 @@ const Content = () => {
       {space && (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
-          {frame && <FrameContainer space={space} frame={frame} />}
+          {frame && (
+            <div className='flex flex-1 overflow-hidden'>
+              <FrameContainer space={space} frame={frame} />
+              {chat && frame.module.id !== 'dxos.module.frame.chat' && (
+                <div className='flex shrink-0 w-sidebar'>
+                  <ChatFrame />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

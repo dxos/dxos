@@ -6,6 +6,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 
 import { FrameDef } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
+import { ChatFrameRuntime } from './Chat';
 import { ChessFrameRuntime } from './Chess';
 import { ContactFrameRuntime } from './Contact';
 import { DocumentFrameRuntime } from './Document';
@@ -81,6 +82,15 @@ export const frameDefs: FrameDef<any>[] = [
       description: 'Universal message inbox.'
     },
     runtime: MessageFrameRuntime
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.chat',
+      type: 'dxos:type/frame',
+      displayName: 'Chat',
+      description: 'Real time messaging.'
+    },
+    runtime: ChatFrameRuntime
   },
   {
     module: {

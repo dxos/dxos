@@ -261,6 +261,7 @@ export const createMessage = (from?: Contact) => {
     source: {
       guid: PublicKey.random().toHex()
     },
+    // TODO(burdon): Batch some messages closer.
     date: faker.date.recent(14, new Date()).toISOString(),
     // TODO(burdon): This breaks kai.
     // to: [
