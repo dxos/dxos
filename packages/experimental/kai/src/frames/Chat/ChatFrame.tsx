@@ -110,34 +110,57 @@ export const ChatFrame = () => {
     }
   };
 
-  // TODO(burdon): Factor out.
+  // TODO(burdon): Factor out video.
   // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling
   const config = useConfig();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const [connection, setConnection] = useState<RTCPeerConnection>();
   useEffect(() => {
     setTimeout(async () => {
-      const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
-      console.log(JSON.stringify(iceServers, undefined, 2));
-      const connection = new RTCPeerConnection({ iceServers });
+      if (!connection) {
+        // TODO(burdon): Reuse peer connections.
+        const createPeerConnection = async () => {
+          const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-      videoRef.current!.srcObject = stream;
-      stream.getTracks().forEach((track) => connection.addTrack(track, stream));
+          // TODO(burdon): Get from wrtc.WebRTCTransport?
+          const connection = new RTCPeerConnection({ iceServers });
+          connection.ontrack = (event) => {
+            console.log('ontrack');
+            localVideoRef.current!.srcObject = event.streams[0];
+          };
 
-      connection.createOffer();
+          return connection;
+        };
+
+        const connection = await createPeerConnection();
+        setConnection(connection);
+
+        const offer = await connection.createOffer();
+        await connection.setLocalDescription(offer);
+
+        // TODO(burdon): Connection to signaling server.
+        // await webSocket.send(
+        //   JSON.stringify({
+        //     name: 'user-1',
+        //     target: 'user-2',
+        //     type: 'video-offer',
+        //     sdp: connection.localDescription
+        //   })
+        // );
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        localVideoRef.current!.srcObject = stream;
+        stream.getTracks().forEach((track) => connection.addTrack(track, stream));
+      }
     });
-
-    // TODO(burdon): Use connection directly.
-    // connection.ontrack = (event) => {
-    //   console.log('!!!');
-    //   videoRef.current!.srcObject = event.streams[0];
-    // };
-  }, [config, videoRef]);
+  }, [config, localVideoRef, remoteVideoRef]);
 
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
-      <div>
-        <video ref={videoRef} />
+      <div className='flex bg-zinc-300'>
+        <video ref={remoteVideoRef} />
+        <video ref={localVideoRef} autoPlay muted />
       </div>
 
       {/* Message list */}
