@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 import { Client, Invitation } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { TestBuilder, testSpace } from '../testing';
 
@@ -57,7 +57,7 @@ describe('Spaces/invitations', () => {
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
     {
-      const space = client2.getSpace(invitation2.spaceKey!)!;
+      const space = await client2.getSpace(invitation2.spaceKey!)!.waitUntilReady();
       await testSpace(space.internal.db);
     }
   });
