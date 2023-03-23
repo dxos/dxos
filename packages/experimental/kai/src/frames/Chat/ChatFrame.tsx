@@ -65,7 +65,8 @@ export const ChatFrame = () => {
   }, [messages]);
 
   const handleCreateMessage = (text: string) => {
-    const username = client.halo.identity!.profile?.displayName ?? humanize(client.halo.identity!.identityKey);
+    const identity = client.halo.identity.get()!;
+    const username = identity.profile?.displayName ?? humanize(identity.identityKey);
     if (text.length) {
       void space?.db.add(
         new Message({
