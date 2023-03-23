@@ -46,16 +46,18 @@ export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete:
   onDelete
 }) => {
   return (
-    <div className='flex shrink-0 w-full'>
-      <div className='px-1'>
-        <Button variant='ghost' onClick={onSelect}>
+    <div className='flex shrink-0 w-full px-1'>
+      <div>
+        <Button variant='ghost' className='p-0' onClick={onSelect}>
           <UserCircle className={mx(getSize(6), getColor(message.from.name ?? 'unknown'))} />
         </Button>
       </div>
-      <div className='w-full py-1 pr-1'>{message.subject}</div>
-      <Button variant='ghost' className='p-0 pr-2 text-zinc-400' onClick={onDelete}>
-        <X className={mx(getSize(4))} />
-      </Button>
+      <div className='w-full px-2 py-1'>{message.subject}</div>
+      <div>
+        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onDelete}>
+          <X className={mx(getSize(4))} />
+        </Button>
+      </div>
     </div>
   );
 };
