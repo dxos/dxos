@@ -9,12 +9,12 @@ import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { ComponentProps, forwardRef, useImperativeHandle, useMemo } from 'react';
+import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
 import { mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { ComposerModel } from '../../model';
+import { ComposerModel, ComposerSlots } from '../../model';
 import {
   blockquote,
   bold,
@@ -34,19 +34,10 @@ import { cursorColor } from '../../yjs';
 
 export type TipTapEditor = Editor;
 
-export type RichTextComposerSlots = {
-  root?: Omit<ComponentProps<'div'>, 'ref'>;
-  editor?: {
-    className?: string;
-    spellCheck?: boolean;
-    tabIndex?: number;
-  };
-};
-
 type UseEditorOptions = {
   model?: ComposerModel;
   placeholder?: string;
-  slots?: Pick<RichTextComposerSlots, 'editor'>;
+  slots?: Pick<ComposerSlots, 'editor'>;
 };
 
 const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEditorOptions) => {
@@ -171,7 +162,7 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
 };
 
 export type RichTextComposerProps = UseEditorOptions & {
-  slots?: RichTextComposerSlots;
+  slots?: ComposerSlots;
 };
 
 export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>((props, ref) => {

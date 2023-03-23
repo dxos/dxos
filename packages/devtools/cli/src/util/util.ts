@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 
 import { Space, SpaceMember } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
@@ -40,7 +40,7 @@ export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
 };
 
 export const printSpaces = (spaces: Space[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapSpaces(spaces, true),
     {
       key: {
@@ -69,7 +69,7 @@ export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
 };
 
 export const printMembers = (members: SpaceMember[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapMembers(members, true),
     {
       key: {

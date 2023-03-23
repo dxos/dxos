@@ -11,11 +11,11 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { DataPipelineController } from './data-pipeline-controller';
 import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out?
@@ -26,6 +26,11 @@ export type SpaceParams = {
   protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
+};
+
+export type CreatePipelineParams = {
+  start: Timeframe;
+  // designation: AdmittedFeed.Designation;
 };
 
 /**
@@ -47,7 +52,6 @@ export class Space {
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
   private _dataPipeline?: Pipeline;
-  private _dataPipelineController?: DataPipelineController;
 
   constructor({ spaceKey, protocol, genesisFeed, feedProvider }: SpaceParams) {
     assert(spaceKey && feedProvider);
@@ -55,6 +59,7 @@ export class Space {
     this._genesisFeedKey = genesisFeed.key;
     this._feedProvider = feedProvider;
 
+    // TODO(dmaretskyi): Maybe reuse createPipeline method.
     this._controlPipeline = new ControlPipeline({ spaceKey, genesisFeed, feedProvider });
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
@@ -139,7 +144,6 @@ export class Space {
   // getDataFeeds(): FeedInfo[] {
   //   return this._dataPipeline?.getFeeds();
   // }
-
   @synchronized
   async open() {
     log('opening...');
@@ -164,36 +168,30 @@ export class Space {
 
     // Closes in reverse order to open.
     await this.protocol.stop();
-    await this._dataPipelineController?.close();
     await this._controlPipeline.stop();
 
     this._isOpen = false;
     log('closed');
   }
 
-  async initDataPipeline(controller: DataPipelineController) {
+  // TODO(dmaretskyi): Make reusable.
+  async createDataPipeline({ start }: CreatePipelineParams) {
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    assert(!this._dataPipelineController, 'Data pipeline already initialized.');
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
-    this._dataPipelineController = controller;
-    await this._dataPipelineController.open({
-      openPipeline: async (start) => {
-        assert(!this._dataPipeline, 'Data pipeline already initialized.'); // TODO(dmaretskyi): Allow concurrent pipelines.
-        // Create pipeline.
-        this._dataPipeline = new Pipeline(start);
-        if (this._dataFeed) {
-          this._dataPipeline.setWriteFeed(this._dataFeed);
-        }
-        for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-          if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
-            await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
-          }
-        }
+    const pipeline = new Pipeline(start);
+    if (this._dataFeed) {
+      pipeline.setWriteFeed(this._dataFeed);
+    }
 
-        await this._dataPipeline.start();
-        return this._dataPipeline;
+    this._dataPipeline = pipeline;
+
+    for (const feed of this._controlPipeline.spaceState.feeds.values()) {
+      if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
+        await pipeline.addFeed(await this._feedProvider(feed.key));
       }
-    });
+    }
+
+    return pipeline;
   }
 }

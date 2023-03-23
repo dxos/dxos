@@ -7,7 +7,7 @@ import React from 'react';
 import { Document } from '@dxos/kai-types';
 import { observer, useIdentity } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
-import { RichTextComposer, useTextModel } from '@dxos/react-composer';
+import { Composer } from '@dxos/react-composer';
 
 import { useAppRouter } from '../../hooks';
 
@@ -15,8 +15,7 @@ export const DocumentFrame = observer(() => {
   const { space, objectId } = useAppRouter();
   const identity = useIdentity();
   const document = objectId ? space!.db.getObjectById<Document>(objectId) : undefined;
-  const model = useTextModel({ identity, space, text: document?.content });
-  if (!model) {
+  if (!document?.content) {
     return null;
   }
 
@@ -51,8 +50,10 @@ export const DocumentFrame = observer(() => {
             }}
           />
 
-          <RichTextComposer
-            model={model}
+          <Composer
+            identity={identity}
+            space={space}
+            text={document?.content}
             slots={{
               editor: {
                 className: 'kai-composer',

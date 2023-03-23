@@ -24,7 +24,7 @@ export const Default = {
 
     return (
       <div>
-        <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
+        <Button onClick={() => client.createSpace()}>Add Space</Button>
 
         <SpaceList spaces={spaces} />
       </div>

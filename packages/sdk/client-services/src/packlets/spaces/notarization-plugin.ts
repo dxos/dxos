@@ -64,7 +64,10 @@ export class NotarizationPlugin implements CredentialProcessor {
     scheduleTask(
       ctx,
       () => {
-        log.warn('Notarization timeout');
+        log.warn('Notarization timeout', {
+          timeout: NOTARIZE_TIMEOUT,
+          peers: Array.from(this._extensions).map((extension) => extension.remotePeerId)
+        });
         void ctx.dispose();
         errors.throw(new TimeoutError(NOTARIZE_TIMEOUT, 'Notarization timed out'));
       },
@@ -79,7 +82,6 @@ export class NotarizationPlugin implements CredentialProcessor {
     const notarizeTask = new DeferredTask(ctx, async () => {
       try {
         if (this._extensions.size === 0) {
-          log.warn('No peers to notarize with');
           return; // No peers to try.
         }
 

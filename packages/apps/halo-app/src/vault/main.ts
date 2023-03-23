@@ -15,9 +15,9 @@ import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations, Shell } from '@dxos/react-ui';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
-import { mobileAndTabletCheck } from '../util';
+import { mobileAndTabletCheck, namespace } from '../util';
 
-void initializeAppTelemetry('halo-vault', new Config(Defaults()));
+void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');

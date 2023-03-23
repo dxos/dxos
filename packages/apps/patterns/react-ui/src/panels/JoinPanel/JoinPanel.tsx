@@ -41,7 +41,7 @@ export const JoinPanel = ({
               halo: { invitation: client.halo.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
             }
           : {
-              space: { invitation: client.echo.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
+              space: { invitation: client.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
             }))
     }
   });

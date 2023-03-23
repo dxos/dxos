@@ -16,5 +16,5 @@ const client = new Client();
 
   const object = new Task({ title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();

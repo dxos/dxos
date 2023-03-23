@@ -55,7 +55,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <ButtonGroup className='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
-            onClick={() => client.echo.createSpace({ name: faker.animal.bird() })}
+            onClick={() => client.createSpace({ name: faker.animal.bird() })}
             data-testid='invitations.create-space'
           >
             <PlusCircle className={getSize(6)} />
@@ -118,7 +118,7 @@ const render = ({ id }: { id: number }) => {
       <Tooltip content='Join Existing Identity'> */}
       <Button
         onClick={() => setPanel('identity')}
-        disabled={panel === 'identity'}
+        disabled={Boolean(identity) || panel === 'identity'}
         data-testid='invitations.open-join-identity'
       >
         <QrCode weight='fill' className={getSize(6)} />

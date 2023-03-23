@@ -48,16 +48,6 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [isDocument(object)]()
-
-
-
-Returns: <code>object is [Document](/api/@dxos/client/values#Document)&lt;object&gt;</code>
-
-Arguments: 
-
-`object`: <code>unknown</code>
-
 ### [isReferenceLike(value)]()
 
 
@@ -67,6 +57,16 @@ Returns: <code>value is object</code>
 Arguments: 
 
 `value`: <code>any</code>
+
+### [isTypedObject(object)]()
+
+
+
+Returns: <code>object is [TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;</code>
+
+Arguments: 
+
+`object`: <code>unknown</code>
 
 ### [strip(obj)]()
 

@@ -19,7 +19,7 @@ import React, { useContext, useEffect, useState, Suspense, useCallback } from 'r
 import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { CancellableInvitationObservable, Document, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -119,7 +119,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     setShowSearchResults(results.results.length > 0);
   };
 
-  const handleSearchSelect = (object: Document) => {
+  const handleSearchSelect = (object: TypedObject) => {
     if (space) {
       // TODO(burdon): Add to search result.
       const frame = objectMeta[object.__typename!]?.frame;
@@ -138,7 +138,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   };
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
@@ -198,7 +198,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         ctx,
         async () => {
           await space.postMessage('currentLocation', {
-            identityKey: client.halo.identity?.identityKey.toHex(),
+            identityKey: client.halo.identity.get()?.identityKey.toHex(),
             location: window.location.pathname
           });
         },
@@ -372,6 +372,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         <div className='flex shrink-0 flex-col my-2'>
           <div className='pl-2'>
             <Button
+              data-testid='space-share'
               variant='ghost'
               title='Share space'
               onClick={(event) =>
@@ -380,13 +381,16 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                   data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
                 })
               }
-              data-testid='space-share'
             >
               <UserPlus className={getSize(6)} />
             </Button>
           </div>
 
-          <MemberList identityKey={client.halo.identity!.identityKey} members={members} onSelect={focusOnMember} />
+          <MemberList
+            identityKey={client.halo.identity.get()!.identityKey}
+            members={members}
+            onSelect={focusOnMember}
+          />
 
           <Link
             className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}

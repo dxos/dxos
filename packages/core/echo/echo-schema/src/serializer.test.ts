@@ -7,10 +7,10 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
+import { TypedObject } from './typed-object';
 
 describe('Serializer', () => {
   test('Basic', async () => {
@@ -20,7 +20,7 @@ describe('Serializer', () => {
 
     {
       const db = await createDatabase();
-      const obj = new Document();
+      const obj = new TypedObject();
       obj.title = 'Test';
       db.add(obj);
       await db.flush();
@@ -52,13 +52,13 @@ describe('Serializer', () => {
 
     {
       const db = await createDatabase();
-      const obj = new Document({
+      const obj = new TypedObject({
         title: 'Main task',
         subtasks: [
-          new Document({
+          new TypedObject({
             title: 'Subtask 1'
           }),
-          new Document({
+          new TypedObject({
             title: 'Subtask 2'
           })
         ]
@@ -83,9 +83,9 @@ describe('Serializer', () => {
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
-      expect(main.subtasks[0]).to.be.instanceOf(Document);
+      expect(main.subtasks[0]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[0].title).to.eq('Subtask 1');
-      expect(main.subtasks[1]).to.be.instanceOf(Document);
+      expect(main.subtasks[1]).to.be.instanceOf(TypedObject);
       expect(main.subtasks[1].title).to.eq('Subtask 2');
     }
   });

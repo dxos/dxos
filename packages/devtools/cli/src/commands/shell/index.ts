@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx, run } from '@oclif/core';
+import { ux, run } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
 
@@ -17,7 +17,7 @@ export default class Shell extends BaseCommand {
   async run(): Promise<void> {
     while (true) {
       // https://github.com/oclif/cli-ux
-      const command = await CliUx.ux.prompt('');
+      const command = await ux.prompt('');
       if (command === 'quit') {
         break;
       }

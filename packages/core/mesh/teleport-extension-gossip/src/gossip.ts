@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask } from '@dxos/async';
+import { scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,6 +35,8 @@ export class Gossip {
   // remotePeerId -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
+  public readonly connectionClosed = new Event<PublicKey>();
+
   constructor(private readonly _params: GossipParams) {}
 
   getConnections() {
@@ -60,6 +62,7 @@ export class Gossip {
         if (this._connections.has(remotePeerId)) {
           this._connections.delete(remotePeerId);
         }
+        this.connectionClosed.emit(remotePeerId);
       }
     });
     this._connections.set(remotePeerId, extension);

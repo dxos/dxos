@@ -44,7 +44,7 @@ export const Actions = () => {
   const handleImportSpace = async (file: File) => {
     const data = new Uint8Array(await file.arrayBuffer());
     const json = new TextDecoder('utf-8').decode(data);
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     await serializer.import(space.db, JSON.parse(json));
     navigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };

@@ -18,7 +18,7 @@ export type ClientContextProps = {
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
 
-  status?: SystemStatus;
+  status?: SystemStatus | null;
 };
 
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
@@ -84,7 +84,7 @@ export const ClientProvider = ({
   onInitialized
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-  const [status, setStatus] = useState<SystemStatus>();
+  const [status, setStatus] = useState<SystemStatus | null>(null);
   const [error, setError] = useState();
   if (error) {
     throw error;
@@ -95,7 +95,8 @@ export const ClientProvider = ({
       return;
     }
 
-    return client.subscribeStatus((newStatus) => setStatus(newStatus));
+    const subscription = client.status.subscribe((newStatus) => setStatus(newStatus));
+    return () => subscription.unsubscribe();
   }, [client, setStatus]);
 
   useEffect(() => {
@@ -104,7 +105,7 @@ export const ClientProvider = ({
       await client.initialize().catch(setError);
       await onInitialized?.(client);
       setClient(client);
-      setStatus(client.getStatus() ?? SystemStatus.ACTIVE);
+      setStatus(client.status.get() ?? SystemStatus.ACTIVE);
       printBanner(client);
     };
 

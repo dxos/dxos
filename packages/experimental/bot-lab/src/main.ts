@@ -57,7 +57,7 @@ const start = async () => {
 
   // TODO(burdon): When is the identity created?
   await client.initialize();
-  log.info('client initialized', { identity: client.halo.identity?.identityKey });
+  log.info('client initialized', { identity: client.halo.identity.get()?.identityKey });
 
   const server = new WebsocketRpcServer<{}, ClientServices>({
     port: rpcPort,
@@ -96,17 +96,18 @@ const start = async () => {
   };
 
   // TODO(burdon): Fix race condition? Trigger callback on subscription.
-  void onUpdate(client.echo.getSpaces());
-  client.echo.subscribeSpaces(onUpdate);
+  void onUpdate(client.spaces.get());
+  // TODO(wittjosiah): Unsubscribe on exit.
+  client.spaces.subscribe(onUpdate);
 
   const printStatus = () => {
     log.info('status', {
       bot: bot?.constructor.name,
       identity: client.halo.identity,
-      spaces: client.echo.getSpaces().map((space) => ({
+      spaces: client.spaces.get().map((space) => ({
         key: space.key,
         title: space.properties.title,
-        members: space.getMembers()
+        members: space.members.get()
       }))
     });
   };

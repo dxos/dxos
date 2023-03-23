@@ -11,16 +11,16 @@ import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
 import { data } from './defs';
-import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
+import { TypedObject } from './typed-object';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
     const db = await createDatabase();
 
-    const obj = new Document();
+    const obj = new TypedObject();
     obj.title = 'Test title';
     obj.description = 'Test description';
     expect(obj.title).toEqual('Test title');
@@ -43,7 +43,7 @@ describe('EchoDatabase', () => {
   test('get/set properties after save', async () => {
     const db = await createDatabase();
 
-    const obj = new Document();
+    const obj = new TypedObject();
     db.add(obj);
     await db.flush();
 
@@ -57,18 +57,18 @@ describe('EchoDatabase', () => {
   test('get/set reference after save', async () => {
     const db = await createDatabase();
 
-    const obj = new Document();
+    const obj = new TypedObject();
     db.add(obj);
     await db.flush();
 
-    obj.nested = new Document({ title: 'Test title' });
+    obj.nested = new TypedObject({ title: 'Test title' });
     expect(obj.nested.title).toEqual('Test title');
   });
 
   test('initializer', async () => {
     const db = await createDatabase();
 
-    const obj = new Document({ title: 'Test title', description: 'Test description' });
+    const obj = new TypedObject({ title: 'Test title', description: 'Test description' });
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
@@ -82,8 +82,8 @@ describe('EchoDatabase', () => {
   test('object refs', async () => {
     const db = await createDatabase();
 
-    const task = new Document({ title: 'Fix bugs' });
-    const john = new Document({ name: 'John Doe' });
+    const task = new TypedObject({ title: 'Fix bugs' });
+    const john = new TypedObject({ name: 'John Doe' });
     task.assignee = john;
 
     expect(task.title).toEqual('Fix bugs');
@@ -93,7 +93,7 @@ describe('EchoDatabase', () => {
     await db.flush();
 
     expect(task.title).toEqual('Fix bugs');
-    expect(task.assignee instanceof Document).toBeTruthy();
+    expect(task.assignee instanceof TypedObject).toBeTruthy();
     expect(task.assignee).toStrictEqual(john);
     expect(task.assignee.name).toEqual('John Doe');
   });
@@ -101,7 +101,7 @@ describe('EchoDatabase', () => {
   test('nested props', async () => {
     const db = await createDatabase();
 
-    const task = new Document({ title: 'Fix bugs' });
+    const task = new TypedObject({ title: 'Fix bugs' });
     db.add(task);
     await db.flush();
 
@@ -116,7 +116,7 @@ describe('EchoDatabase', () => {
       const router = new DatabaseRouter();
       const db = await createDatabase(router);
 
-      const task = new Document();
+      const task = new TypedObject();
       db.add(task);
       await db.flush();
 
@@ -129,7 +129,7 @@ describe('EchoDatabase', () => {
       task.title = 'Test title';
       await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
 
-      task.assignee = new Document({ name: 'user-1' });
+      task.assignee = new TypedObject({ name: 'user-1' });
       await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
 
       task.assignee.name = 'user-2';
@@ -143,7 +143,7 @@ describe('EchoDatabase', () => {
       const router = new DatabaseRouter();
       const db = await createDatabase(router);
 
-      const task = new Document();
+      const task = new TypedObject();
       db.add(task);
       await db.flush();
 
@@ -174,13 +174,13 @@ describe('EchoDatabase', () => {
     });
     expect(query.objects).toEqual([]);
 
-    const task1 = new Document({ category: 'eng', title: 'Task 1' });
+    const task1 = new TypedObject({ category: 'eng', title: 'Task 1' });
     db.add(task1);
     await db.flush();
     expect(query.objects).toEqual([task1]);
     expect(counter).toBeGreaterThanOrEqual(1);
 
-    const task2 = new Document({ category: 'legal', title: 'Task 2' });
+    const task2 = new TypedObject({ category: 'legal', title: 'Task 2' });
     db.add(task2);
     await db.flush();
     expect(query.objects).toEqual([task1]);
@@ -193,10 +193,10 @@ describe('EchoDatabase', () => {
   test('toJSON', async () => {
     const db = await createDatabase();
 
-    const task = new Document({
+    const task = new TypedObject({
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: new Document({ name: 'Bob' })
+      assignee: new TypedObject({ name: 'Bob' })
     });
     db.add(task);
     await db.flush();
@@ -216,10 +216,10 @@ describe('EchoDatabase', () => {
   test('inspect', async () => {
     const db = await createDatabase();
 
-    const task = new Document({
+    const task = new TypedObject({
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: new Document({ name: 'Bob' })
+      assignee: new TypedObject({ name: 'Bob' })
     });
     db.add(task);
     await db.flush();
@@ -232,7 +232,7 @@ describe('EchoDatabase', () => {
     test('array of tags', async () => {
       const db = await createDatabase();
 
-      const task = new Document({ title: 'Main task' });
+      const task = new TypedObject({ title: 'Main task' });
       db.add(task);
       await db.flush();
 
@@ -260,25 +260,25 @@ describe('EchoDatabase', () => {
     test('array of sub documents', async () => {
       const db = await createDatabase();
 
-      const task = new Document({ title: 'Main task' });
+      const task = new TypedObject({ title: 'Main task' });
       db.add(task);
       await db.flush();
 
       task.subtasks = new EchoArray();
-      task.subtasks.push(new Document({ title: 'Subtask 1' }));
-      task.subtasks.push(new Document({ title: 'Subtask 2' }));
-      task.subtasks.push(new Document({ title: 'Subtask 3' }));
+      task.subtasks.push(new TypedObject({ title: 'Subtask 1' }));
+      task.subtasks.push(new TypedObject({ title: 'Subtask 2' }));
+      task.subtasks.push(new TypedObject({ title: 'Subtask 3' }));
 
       expect(task.subtasks.length).toEqual(3);
       expect(task.subtasks[0].title).toEqual('Subtask 1');
       expect(task.subtasks[1].title).toEqual('Subtask 2');
       expect(task.subtasks[2].title).toEqual('Subtask 3');
 
-      const titles = task.subtasks.map((subtask: Document) => subtask.title);
+      const titles = task.subtasks.map((subtask: TypedObject) => subtask.title);
       expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
 
-      task.subtasks[0] = new Document({ title: 'New subtask 1' });
-      expect(task.subtasks.map((subtask: Document) => subtask.title)).toEqual([
+      task.subtasks[0] = new TypedObject({ title: 'New subtask 1' });
+      expect(task.subtasks.map((subtask: TypedObject) => subtask.title)).toEqual([
         'New subtask 1',
         'Subtask 2',
         'Subtask 3'
@@ -288,7 +288,7 @@ describe('EchoDatabase', () => {
     test('assign a plain array', async () => {
       const db = await createDatabase();
 
-      const task = new Document({ title: 'Main task' });
+      const task = new TypedObject({ title: 'Main task' });
       db.add(task);
       await db.flush();
 
@@ -304,7 +304,7 @@ describe('EchoDatabase', () => {
     test('empty array', async () => {
       const db = await createDatabase();
 
-      const task = new Document({ title: 'Main task' });
+      const task = new TypedObject({ title: 'Main task' });
       db.add(task);
       await db.flush();
 
@@ -316,8 +316,8 @@ describe('EchoDatabase', () => {
     test('importing arrays into a database', async () => {
       const db = await createDatabase();
 
-      const root = new Document({ title: 'Main task' });
-      root.array = [new Document({ title: 'Subtask 1' }), 'red'];
+      const root = new TypedObject({ title: 'Main task' });
+      root.array = [new TypedObject({ title: 'Subtask 1' }), 'red'];
       expect(root.array.length).toEqual(2);
       expect(root.array[0].title).toEqual('Subtask 1');
       expect(root.array[1]).toEqual('red');
@@ -336,7 +336,7 @@ describe('EchoDatabase', () => {
     test('importing empty arrays into a database', async () => {
       const db = await createDatabase();
 
-      const root = new Document();
+      const root = new TypedObject();
       root.array = [];
       expect(root.array.length).toEqual(0);
 
@@ -363,7 +363,7 @@ describe('EchoDatabase', () => {
 
     test('text property', async () => {
       const db = await createDatabase();
-      const task = new Document();
+      const task = new TypedObject();
       db.add(task);
       await db.flush();
       task.text = new Text();

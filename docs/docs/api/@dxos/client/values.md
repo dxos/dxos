@@ -18,11 +18,11 @@ Type: "dxos:shell"
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/client/types/ConvertVisitors)
 
-### [`Document`]()
-Type: function
-
 ### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L13)
 Type: "1"
+
+### [`Expando`]()
+Type: ExpandoConstructor
 
 ### [`INVITATION_TIMEOUT`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L18)
 Type: number
@@ -32,6 +32,9 @@ Type: "1000"
 
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
+
+### [`TypedObject`]()
+Type: TypedObjectConstructor
 
 ### [`appServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L94)
 Type: ServiceBundle&lt;[AppServiceBundle](/api/@dxos/client/types/AppServiceBundle)&gt;
