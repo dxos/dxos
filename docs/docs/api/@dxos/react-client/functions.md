@@ -62,16 +62,6 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [isDocument(object)]()
-
-
-
-Returns: <code>object is [Document](/api/@dxos/react-client/values#Document)&lt;object&gt;</code>
-
-Arguments: 
-
-`object`: <code>unknown</code>
-
 ### [isReferenceLike(value)]()
 
 
@@ -81,6 +71,16 @@ Returns: <code>value is object</code>
 Arguments: 
 
 `value`: <code>any</code>
+
+### [isTypedObject(object)]()
+
+
+
+Returns: <code>object is [TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+
+Arguments: 
+
+`object`: <code>unknown</code>
 
 ### [observer(baseComponent)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/observer.tsx#L33)
 
@@ -245,11 +245,11 @@ Returns: <code>NetworkStatus</code>
 
 Arguments: none
 
-### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
+### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L30)
 
 
 
-Returns the first space in the current spaces array. If none exist,  `null` 
+Returns the first space in the current spaces array. If none exist,  `undefined` 
 will be returned at first, then the hook will re-run and return a space once
 it has been created. Requires a ClientProvider somewhere in the parent tree.
 
@@ -265,7 +265,7 @@ Arguments: none
 Create subscription.
 
 
-Returns: <code>[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;[]</code>
 
 Arguments: 
 
@@ -287,7 +287,7 @@ Arguments:
 
 `resultSet`: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;T&gt;</code>
 
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L19)
 
 
 

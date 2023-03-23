@@ -46,7 +46,7 @@ Type: <code>boolean</code>
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 ### [properties](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L119)
-Type: <code>[Document](/api/@dxos/client/values#Document)&lt;object&gt;</code>
+Type: <code>[TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;</code>
 
 
 ## Methods

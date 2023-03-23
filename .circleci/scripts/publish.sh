@@ -1,12 +1,13 @@
 #!/bin/bash
 
 APPS=(
+  ./packages/apps/composer-app
   ./packages/apps/halo-app
   ./packages/apps/tasks-app
-  ./packages/apps/composer-app
   ./packages/apps/todomvc
   ./packages/devtools/devtools
   ./packages/experimental/kai
+  ./packages/experimental/kube-console
   ./docs
 )
 
@@ -15,7 +16,7 @@ ROOT=$(git rev-parse --show-toplevel)
 
 for APP in "${APPS[@]}"; do
   pushd $APP
-  
+
   PACKAGE=${PWD##*/}
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}

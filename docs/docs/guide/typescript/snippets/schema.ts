@@ -9,7 +9,7 @@ export const schema = EchoSchema.fromJson(
 );
 
 export class Task extends TypedObject {
-  static readonly type = schema.getType('dxos.tasks.Task');
+  static readonly type = schema.getType('example.tasks.Task');
 
   static filter(opts?: {
     title?: string;

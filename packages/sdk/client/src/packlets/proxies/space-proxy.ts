@@ -5,11 +5,11 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase, Query } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,13 +36,19 @@ export interface Space {
    * The database is ready to be used in `SpaceState.READY` state.
    * Presence is available in `SpaceState.INACTIVE` state.
    */
-  get state(): SpaceState;
   get db(): EchoDatabase;
   get properties(): TypedObject;
-  get invitations(): CancellableInvitationObservable[];
-  get internal(): Internal;
 
-  stateUpdate: Event;
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  get state(): MulticastObservable<SpaceState>;
+  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get members(): MulticastObservable<SpaceMember[]>;
+
+  get internal(): Internal;
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -52,11 +58,7 @@ export interface Space {
    */
   waitUntilReady(): Promise<this>;
 
-  getMembers(): SpaceMember[];
-  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback;
-
   postMessage: (channel: string, message: any) => Promise<void>;
-
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
@@ -69,9 +71,14 @@ const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
+  /**
+   * @internal
+   * To update the space query when a space changes.
+   */
+  // TODO(wittjosiah): Remove this? Should be consistent w/ ECHO query.
+  public readonly _stateUpdate = new Event<SpaceState>();
 
-  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
-  public readonly stateUpdate = new Event();
+  // TODO(dmaretskyi): Reconcile initialization states.
 
   /**
    * @internal
@@ -81,9 +88,20 @@ export class SpaceProxy implements Space {
 
   /**
    * @internal
-   * Triggered when the space is fully initialized.
+   * Space proxy is fully initialized, database open, state is READY.
    */
   public readonly _initializationComplete = new Trigger();
+    
+
+  private _initializing = false;
+
+  /**
+   * @internal
+   */
+  _initialized = false;
+
+  private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
+  private readonly _membersUpdate = new Event<SpaceMember[]>();
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
@@ -91,14 +109,12 @@ export class SpaceProxy implements Space {
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
-  private _invitations: CancellableInvitationObservable[] = [];
-  private _properties?: TypedObject;
-  private _initializing = false;
+  private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
+  private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+  private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  /**
-   * @internal
-   */
-  _initialized = false;
+  private _properties?: TypedObject;
+
 
   // prettier-ignore
   constructor(
@@ -135,7 +151,7 @@ export class SpaceProxy implements Space {
    * The database is ready to be used in `SpaceState.READY` state.
    * Presence is available in `SpaceState.INACTIVE` state.
    */
-  get state(): SpaceState {
+  private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
       return SpaceState.INACTIVE;
     } else {
@@ -152,8 +168,16 @@ export class SpaceProxy implements Space {
     return this._properties;
   }
 
+  get state() {
+    return this._state;
+  }
+
   get invitations() {
     return this._invitations;
+  }
+
+  get members() {
+    return this._members;
   }
 
   // TODO(burdon): Remove?
@@ -169,6 +193,8 @@ export class SpaceProxy implements Space {
   @synchronized
   async _processSpaceUpdate(space: SpaceData) {
     const emitEvent = shouldUpdate(this._data, space);
+    const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
+
     this._data = space;
     log('update', { space, emitEvent });
 
@@ -177,7 +203,10 @@ export class SpaceProxy implements Space {
     }
 
     if (emitEvent) {
-      this.stateUpdate.emit();
+      this._stateUpdate.emit(this._currentState);
+    }
+    if (emitMembersEvent) {
+      this._membersUpdate.emit(space.members!);
     }
   }
 
@@ -201,7 +230,7 @@ export class SpaceProxy implements Space {
         this._properties = query.objects[0];
       } else {
         const waitForSpaceMeta = new Trigger();
-        const subscription = query.subscribe((query: Query<Properties>) => {
+        const subscription = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
             waitForSpaceMeta.wake();
@@ -222,7 +251,8 @@ export class SpaceProxy implements Space {
     this._initialized = true;
     this._initializing = false;
     this._initializationComplete.wake();
-    this.stateUpdate.emit();
+    this._stateUpdate.emit(this._currentState);
+    this._data.members && this._membersUpdate.emit(this._data.members);
     log('initialized');
   }
 
@@ -284,30 +314,15 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * Return set of space members.
-   */
-  getMembers(): SpaceMember[] {
-    return this._data.members ?? [];
-  }
-
-  /**
-   * Subscribe to changes to space members.
-   */
-  subscribeMembers(callback: (members: SpaceMember[]) => void): UnsubscribeCallback {
-    return this.stateUpdate.on(() => callback(this.getMembers()));
-  }
-
-  /**
    * Creates an interactive invitation.
    */
   createInvitation(options?: InvitationsOptions) {
     log('create invitation', options);
     const invitation = this._invitationProxy.createInvitation(this.key, options);
-    this._invitations = [...this._invitations, invitation];
 
     const unsubscribe = invitation.subscribe({
       onConnecting: () => {
-        this.invitationsUpdate.emit(invitation);
+        this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
         unsubscribe();
       },
       onCancelled: () => {
@@ -329,10 +344,10 @@ export class SpaceProxy implements Space {
    */
   removeInvitation(id: string) {
     log('remove invitation', { id });
-    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
-    void this._invitations[index]?.cancel();
-    this._invitations = [...this._invitations.slice(0, index), ...this._invitations.slice(index + 1)];
-    this.invitationsUpdate.emit();
+    const invitations = this._invitations.get();
+    const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void invitations[index]?.cancel();
+    this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
   }
 
   /**
@@ -355,5 +370,13 @@ export class SpaceProxy implements Space {
 }
 
 const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
+  return !isEqual(prev, next);
+};
+
+const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {
+  if (!next) {
+    return false;
+  }
+
   return !isEqual(prev, next);
 };

@@ -2,24 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 
-import { HomeRoute } from './routes';
+import { createRouter } from './routes';
 
 import '@dxosTheme';
-
 import '@dxos/client/shell.css';
-import '../style.css';
-import 'virtual:fonts.css';
 
-const Fullscreen: FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className='flex flex-col overflow-hidden absolute left-0 right-0 top-0 bottom-0'>{children}</div>;
-};
+import 'virtual:fonts.css';
+import '../style.css';
+
+// TODO(burdon): Theme.
+// TODO(burdon): Pluggable modules (panels).
+// TODO(burdon): Separate API from modules.
+// TODO(burdon): Mobile first.
+// TODO(burdon): HALO credentials (initially just HALO identity). Client.
+// TODO(burdon): Async import modules.
 
 const root = createRoot(document.getElementById('root')!);
-root.render(
-  <Fullscreen>
-    <HomeRoute />
-  </Fullscreen>
-);
+root.render(<RouterProvider router={createRouter()} />);

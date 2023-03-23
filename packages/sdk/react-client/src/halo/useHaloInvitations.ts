@@ -11,8 +11,11 @@ export const useHaloInvitations = () => {
   const client = useClient();
   const invitations =
     useSyncExternalStore(
-      (listener) => client.halo.invitationsUpdate.on(() => listener()),
-      () => client.halo.invitations
+      (listener) => {
+        const subscription = client.halo.invitations.subscribe(() => listener());
+        return () => subscription.unsubscribe();
+      },
+      () => client.halo.invitations.get()
     ) ?? [];
 
   return invitations;

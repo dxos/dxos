@@ -222,7 +222,7 @@ const SidebarContent = () => {
   }, [pat]);
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     const document = await space.db.add(new ComposerDocument());
     return navigate(getPath(space, document));
   };

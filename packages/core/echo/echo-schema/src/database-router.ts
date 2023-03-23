@@ -33,6 +33,7 @@ export type UpdateInfo = {
 
 /**
  * Manages cross-space databases.
+ * Tracks observable mutations on objects.
  */
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
@@ -117,7 +118,7 @@ export class DatabaseRouter {
       if (currentComponent) {
         // Too annoying in kai.
         // log.warn(
-        //   `Warning: Data access in a React component without withReactor. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
+        //   `Warning: Data access in a React component without \`observer\`. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
         // );
       }
     }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from '@sentry/vite-plugin';
+// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -29,28 +29,13 @@ export default defineConfig({
             cert: './cert.pem'
           }
         : false
-
-    // TODO(burdon): Disable HMR due to code size issues.
-    // TODO(burdon): If disabled then tailwind doesn't update.
-    // https://vitejs.dev/config/server-options.html#server-hmr
-    // hmr: false
   },
 
   build: {
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          faker: ['faker'],
-          highlighter: ['react-syntax-highlighter'],
-          vendor: ['react', 'react-dom', 'react-router-dom']
-        }
-      }
-    }
+    sourcemap: true
   },
 
   plugins: [
-    // TODO(burdon): Document.
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
@@ -60,11 +45,8 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, consoleThemeExtension]
@@ -95,7 +77,9 @@ export default defineConfig({
       }
     }),
 
+    // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    /*
     ...(process.env.NODE_ENV === 'production'
       ? [
           sentryVitePlugin({
@@ -106,6 +90,7 @@ export default defineConfig({
           })
         ]
       : []),
+    */
 
     // https://www.bundle-buddy.com/rollup
     {

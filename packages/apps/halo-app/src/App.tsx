@@ -27,6 +27,7 @@ import { captureException } from '@dxos/sentry';
 import { NavMenu } from './components';
 import { AppLayout } from './layouts';
 import { haloTranslations } from './translations';
+import { namespace } from './util';
 
 const LockPage = React.lazy(() => import('./pages/LockPage'));
 const AppsPage = React.lazy(() => import('./pages/AppsPage'));
@@ -40,7 +41,6 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
-export const namespace = 'halo-app';
 // TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')
   ? {}
