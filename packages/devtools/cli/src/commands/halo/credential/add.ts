@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Args } from '@oclif/core';
 import assert from 'node:assert';
 
 import { Client } from '@dxos/client';
@@ -11,11 +12,9 @@ import { BaseCommand } from '../../../base-command';
 
 export default class Add extends BaseCommand {
   static override description = 'Import credential into HALO.';
-  static override args = [
-    {
-      name: 'credential'
-    }
-  ];
+  static override args = {
+    credential: Args.string({ description: 'credential', required: true })
+  };
 
   async run(): Promise<any> {
     const { args } = await this.parse(Add);

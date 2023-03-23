@@ -96,7 +96,7 @@ export const mapCredentials = (credentials: Credential[], truncateKeys = false) 
 };
 
 export const printCredentials = (credentials: Credential[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapCredentials(credentials, true),
     {
       id: {

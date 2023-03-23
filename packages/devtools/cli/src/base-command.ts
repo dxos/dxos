@@ -99,11 +99,11 @@ export abstract class BaseCommand extends Command {
     process.stdin.on('end', onEnd);
     process.stdin.on('error', onError);
 
-    let result: string | undefined;
+    let result: string;
     try {
       result = await asyncTimeout(trigger.wait(), STDIN_TIMEOUT);
     } catch (err) {
-      result = undefined;
+      result = "";
     } finally {
       process.stdin.removeListener('data', onData);
       process.stdin.removeListener('end', onEnd);
