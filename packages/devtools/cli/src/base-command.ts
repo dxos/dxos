@@ -57,12 +57,14 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => join(context.config.configDir, 'dx.yml')
+      default: async (context: any) => join(context.config.configDir, 'dx.yml'),
+      aliases: ['c']
     }),
 
     timeout: Flags.integer({
       description: 'Timeout in seconds',
-      default: 30
+      default: 30,
+      aliases: ['t']
     })
 
     // TODO(mykola): Implement JSON args.
