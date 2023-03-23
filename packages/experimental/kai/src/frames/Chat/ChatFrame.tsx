@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import hash from 'string-hash';
 
 import { Message } from '@dxos/kai-types';
-import { useClient, useQuery } from '@dxos/react-client';
+import { useClient, useConfig, useQuery } from '@dxos/react-client';
 import { Button, getSize, Input, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -110,8 +110,37 @@ export const ChatFrame = () => {
     }
   };
 
+  // TODO(burdon): Factor out.
+  // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling
+  const config = useConfig();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    setTimeout(async () => {
+      const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
+      console.log(JSON.stringify(iceServers, undefined, 2));
+      const connection = new RTCPeerConnection({ iceServers });
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+      videoRef.current!.srcObject = stream;
+      stream.getTracks().forEach((track) => connection.addTrack(track, stream));
+
+      connection.createOffer();
+    });
+
+    // TODO(burdon): Use connection directly.
+    // connection.ontrack = (event) => {
+    //   console.log('!!!');
+    //   videoRef.current!.srcObject = event.streams[0];
+    // };
+  }, [config, videoRef]);
+
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
+      <div>
+        <video ref={videoRef} />
+      </div>
+
+      {/* Message list */}
       <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
         <div className='flex flex-col-reverse px-2'>
           {blocks.map(({ start, messages }, i) => {
@@ -137,6 +166,7 @@ export const ChatFrame = () => {
         </div>
       </div>
 
+      {/* Message input. */}
       <div className='flex w-full items-center p-2 my-2'>
         <Input
           label='chat'
