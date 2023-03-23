@@ -5,15 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import {
-  asyncTimeout,
-  Event,
-  EventSubscriptions,
-  MulticastObservable,
-  observableError,
-  ObservableProvider,
-  Trigger
-} from '@dxos/async';
+import { Event, EventSubscriptions, MulticastObservable } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -38,6 +30,7 @@ export interface Halo {
   get device(): Device | undefined;
   get contacts(): MulticastObservable<Contact[]>;
   get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get credentials(): MulticastObservable<Credential[]>;
 
   createIdentity(options?: ProfileDocument): Promise<Identity>;
   recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
@@ -45,9 +38,10 @@ export interface Halo {
   createInvitation(): CancellableInvitationObservable;
   removeInvitation(id: string): void;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
-}
 
-const THROW_TIMEOUT_ERROR_AFTER = 3000;
+  writeCredentials(credentials: Credential[]): Promise<void>;
+  presentCredentials({ ids, nonce }: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation>;
+}
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -55,6 +49,7 @@ export class HaloProxy implements Halo {
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
+  private readonly _credentialsChanged = new Event<Credential[]>();
 
   private _invitationProxy?: DeviceInvitationsProxy;
 
@@ -62,6 +57,7 @@ export class HaloProxy implements Halo {
   private _devices = MulticastObservable.from(this._devicesChanged, []);
   private _contacts = MulticastObservable.from(this._contactsChanged, []);
   private _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+  private _credentials = MulticastObservable.from(this._credentialsChanged, []);
 
   // prettier-ignore
   constructor(
@@ -82,28 +78,32 @@ export class HaloProxy implements Halo {
   /**
    * User identity info.
    */
-  get identity() {
+  get identity(): MulticastObservable<Identity | null> {
     return this._identity;
   }
 
-  get devices() {
+  get devices(): MulticastObservable<Device[]> {
     return this._devices;
   }
 
-  get device() {
+  get device(): Device | undefined {
     return this._devices.get().find((device) => device.kind === DeviceKind.CURRENT);
   }
 
-  get contacts() {
+  get contacts(): MulticastObservable<Contact[]> {
     return this._contacts;
   }
 
-  get invitations() {
+  get invitations(): MulticastObservable<CancellableInvitationObservable[]> {
     return this._invitations;
   }
 
+  get credentials(): MulticastObservable<Credential[]> {
+    return this._credentials;
+  }
+
   // TODO(burdon): Standardize isOpen, etc.
-  get opened() {
+  get opened(): boolean {
     return this._invitationProxy !== undefined;
   }
 
@@ -112,7 +112,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _open() {
+  async _open(): Promise<void> {
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -121,27 +121,38 @@ export class HaloProxy implements Halo {
 
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
+    this._subscriptions.add(() => identityStream.close());
     identityStream.subscribe((data) => {
       this._identityChanged.emit(data.identity ?? null);
+
+      if (data.identity?.spaceKey) {
+        assert(this._serviceProvider.services.SpacesService, 'SpacesService not available');
+        const credentialsStream = this._serviceProvider.services.SpacesService.queryCredentials({
+          spaceKey: data.identity.spaceKey
+        });
+        this._subscriptions.add(() => credentialsStream.close());
+        credentialsStream.subscribe((credential) => {
+          const newCredentials = [...this._credentials.get(), credential];
+          this._credentialsChanged.emit(newCredentials);
+        });
+      }
     });
 
     assert(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
+    this._subscriptions.add(() => devicesStream.close());
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
       }
     });
 
-    this._subscriptions.add(() => identityStream.close());
-
     // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
+    // this._subscriptions.add(() => contactsStream.close());
     // contactsStream.subscribe(data => {
     //   this._contacts = data.contacts as SpaceMember[];
     //   this._contactsChanged.emit();
     // });
-
-    // this._subscriptions.add(() => contactsStream.close());
 
     await Promise.all([gotIdentity]);
   }
@@ -151,7 +162,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
-  async _close() {
+  async _close(): Promise<void> {
     this._subscriptions.clear();
     this._invitationProxy = undefined;
     this._identityChanged.emit(null);
@@ -164,7 +175,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   // TODO(wittjosiah): Should `Observable` class support this?
-  _waitForIdentity() {
+  _waitForIdentity(): Promise<void> {
     return this._identityChanged.waitForCondition(() => !!this._identity.get());
   }
 
@@ -189,59 +200,9 @@ export class HaloProxy implements Halo {
   }
 
   /**
-   * Get Halo credentials for the current user.
-   */
-  // TODO(wittjosiah): Get/Subscribe.
-  queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}) {
-    const identity = this._identity.get();
-    if (!identity) {
-      throw new ApiError('Identity is not available.');
-    }
-    if (!this._serviceProvider.services.SpacesService) {
-      throw new ApiError('SpacesService is not available.');
-    }
-    const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: identity.spaceKey!
-    });
-    this._subscriptions.add(() => stream.close());
-
-    const observable = new ObservableProvider<
-      { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
-      Credential[]
-    >();
-    const credentials: Credential[] = [];
-
-    stream.subscribe(
-      (credential) => {
-        credentials.push(credential);
-        const newCredentials = credentials
-          .filter((c) => !ids || (c.id && ids.some((id) => id.equals(c.id!))))
-          .filter((c) => !type || c.subject.assertion['@type'] === type);
-        if (
-          newCredentials.length !== observable.value?.length ||
-          !newCredentials.every(
-            (credential, index) =>
-              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!)
-          )
-        ) {
-          observable.setValue(newCredentials);
-          observable.callback.onUpdate(newCredentials);
-        }
-      },
-      (err) => {
-        if (err) {
-          observableError(observable, err);
-        }
-      }
-    );
-
-    return observable;
-  }
-
-  /**
    * Initiates device invitation.
    */
-  createInvitation(options?: InvitationsOptions) {
+  createInvitation(options?: InvitationsOptions): CancellableInvitationObservable {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
@@ -271,7 +232,7 @@ export class HaloProxy implements Halo {
   /**
    * Removes device invitation.
    */
-  removeInvitation(id: string) {
+  removeInvitation(id: string): void {
     log('remove invitation', { id });
     const invitations = this._invitations.get();
     const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
@@ -282,7 +243,7 @@ export class HaloProxy implements Halo {
   /**
    * Initiates accepting invitation.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions) {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
@@ -294,7 +255,7 @@ export class HaloProxy implements Halo {
   /**
    * Write credentials to halo profile.
    */
-  async writeCredentials(credentials: Credential[]) {
+  async writeCredentials(credentials: Credential[]): Promise<void> {
     const identity = this._identity.get();
     if (!identity) {
       throw new ApiError('Identity is not available.');
@@ -302,6 +263,7 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
+
     return this._serviceProvider.services.SpacesService.writeCredentials({
       spaceKey: identity.spaceKey!,
       credentials
@@ -315,26 +277,8 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
-    const trigger = new Trigger<Credential[]>();
-    this.queryCredentials({ ids }).subscribe({
-      onUpdate: (credentials) => {
-        if (
-          credentials.every((credential) => ids.some((id) => id.equals(credential.id!))) &&
-          ids.every((id) => credentials.some((credential) => id.equals(credential.id!)))
-        ) {
-          trigger.wake(credentials);
-        }
-      },
-      onError: (err) => {
-        log.catch(err);
-      }
-    });
+    const credentials = this._credentials.get().filter((credential) => ids.some((id) => id.equals(credential.id!)));
 
-    const credentials = await asyncTimeout(
-      trigger.wait(),
-      THROW_TIMEOUT_ERROR_AFTER,
-      new ApiError('Timeout while waiting for credentials')
-    );
     return this._serviceProvider.services.IdentityService.signPresentation({
       presentation: {
         credentials

@@ -11,7 +11,7 @@ import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { TestBuilder } from '../testing';
@@ -40,21 +40,13 @@ describe('Halo', () => {
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
 
-      const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
-      const trigger = new Trigger();
-      credentials.subscribe({
-        onUpdate: (credentials) => {
-          if (credentials.length >= 2) {
-            trigger.wake();
-          }
-        },
-        onError: (err) => log.catch(err)
-      });
-      await asyncTimeout(trigger.wait(), 500);
+      const credentials = client.halo.credentials
+        .get()
+        .filter((credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
 
       const nonce = new Uint8Array([0, 0, 0, 0]);
       const presentation = await client.halo.presentCredentials({
-        ids: credentials.value!.map(({ id }) => id!),
+        ids: credentials.map(({ id }) => id!),
         nonce: new Uint8Array([0, 0, 0, 0])
       });
       expect(presentation.credentials?.length).to.equal(2);
@@ -73,22 +65,19 @@ describe('Halo', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
     expect(client.halo.identity).exist;
 
-    const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
-
-    const trigger = new Trigger();
-    credentials.subscribe({
-      onUpdate: () => {
-        if (credentials.value?.length === 2) {
-          trigger.wake();
-        }
-      },
-      onError: (error) => {
-        throw error;
+    const trigger = new Trigger<Credential[]>();
+    client.halo.credentials.subscribe((credentials) => {
+      const admittedFeeds = credentials.filter(
+        (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'
+      );
+      if (admittedFeeds.length === 2) {
+        trigger.wake(admittedFeeds);
       }
     });
-    await asyncTimeout(trigger.wait(), 500);
+    const credentials = await asyncTimeout(trigger.wait(), 500);
 
-    expect(credentials.value!.every((cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'))
-      .to.be.true;
+    expect(
+      credentials.every((credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed')
+    ).to.be.true;
   });
 });
