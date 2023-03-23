@@ -137,11 +137,11 @@ export const ChatFrame = () => {
         </div>
       </div>
 
-      <div className='flex w-full items-center p-2 my-2'>
+      <div className='flex w-full items-center p-2 my-1'>
         <Input
           label='chat'
           labelVisuallyHidden
-          placeholder='Post message'
+          placeholder='Post a message...'
           slots={{
             root: { className: 'w-full ' },
             input: {

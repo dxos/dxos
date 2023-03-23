@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { stripKeys } from '@dxos/util';
 import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
@@ -58,12 +59,16 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   private _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
+  // TODO(burdon): Remove undefined keys.
   // prettier-ignore
   constructor(
     initialProps?: T,
     private readonly _schemaType?: EchoSchemaType
   ) {
     super(DocumentModel);
+
+    // TODO(burdon): Strip keys.
+    // stripKeys(initialProps);
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
@@ -81,7 +86,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
     if (initialProps) {
       for (const field in initialProps) {
-        this._set(field, initialProps[field]);
+        const value = initialProps[field];
+        this._set(field, value);
       }
     }
 
