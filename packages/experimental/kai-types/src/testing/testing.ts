@@ -11,6 +11,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { stripKeys } from '@dxos/util';
 
 import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
@@ -123,6 +124,14 @@ export class Generator {
         return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
       })
     );
+
+    // Chat.
+    await Promise.all(
+      range(this._options.messages).map(async () => {
+        const contact = faker.random.arrayElement(contacts);
+        return this.createMessage(contact, 'dxos.module.frame.chat', 1);
+      })
+    );
   }
 
   createOrganization = async () => {
@@ -164,8 +173,8 @@ export class Generator {
     return document;
   };
 
-  createMessage = async (from?: Contact) => {
-    return await this._db.add(createMessage(from));
+  createMessage = async (from?: Contact, resolver?: string, recent?: number) => {
+    return await this._db.add(createMessage(from, resolver, recent));
   };
 }
 
@@ -256,13 +265,15 @@ export const createNote = () => {
 
 // TODO(burdon): Error if directly setting value with undefined.
 // TODO(burdon): Use constructors above.
-export const createMessage = (from?: Contact) => {
+export const createMessage = (from?: Contact, resolver?: string, recent = 14) => {
   return new Message({
-    source: {
+    source: stripKeys({
+      // TODO(burdon): Strip keys in TypedObject constructor.
+      resolver,
       guid: PublicKey.random().toHex()
-    },
+    }),
     // TODO(burdon): Batch some messages closer.
-    date: faker.date.recent(14, new Date()).toISOString(),
+    date: faker.date.recent(recent, new Date()).toISOString(),
     // TODO(burdon): This breaks kai.
     // to: [
     //   new Message.Recipient({
