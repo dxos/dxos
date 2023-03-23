@@ -52,7 +52,7 @@ export const JoinPanel = ({
     // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
     const stateStack = joinState.configuration[0].id.split('.');
     const $nextAutofocus: HTMLElement | null = document.querySelector(
-      `[data-autofocus="${stateStack[stateStack.length - 1]}"]`
+      `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`
     );
     if ($nextAutofocus) {
       $nextAutofocus.focus();
