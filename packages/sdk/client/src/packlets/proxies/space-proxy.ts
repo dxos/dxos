@@ -32,11 +32,13 @@ export interface Space {
   get isOpen(): boolean;
 
   /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
+   * Echo database.
    */
   get db(): EchoDatabase;
+
+  /**
+   * Properties object.
+   */
   get properties(): TypedObject;
 
   /**
