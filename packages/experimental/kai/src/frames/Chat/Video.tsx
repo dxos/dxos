@@ -44,7 +44,7 @@ export const Video = () => {
         const offer = await connection.createOffer();
         await connection.setLocalDescription(offer);
 
-        // TODO(burdon): Connection to signaling server.
+        // TODO(burdon): Use swarm connection.
         // await webSocket.send(
         //   JSON.stringify({
         //     name: 'user-1',
