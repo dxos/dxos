@@ -61,7 +61,6 @@ export const JoinPanel = ({
     const $nextAutofocus: HTMLElement | null = document.querySelector(
       `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`
     );
-    console.log('[autofocus]', `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`, $nextAutofocus);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
     }

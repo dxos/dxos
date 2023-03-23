@@ -50,7 +50,7 @@ export const JoinHeading = forwardRef(
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-2 inline-end-2')}
+        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2')}
         data-testid='join-exit'
       >
         <X weight='bold' className={getSize(4)} />
@@ -59,13 +59,13 @@ export const JoinHeading = forwardRef(
     );
 
     return (
-      <div role='none' className={mx(defaultSurface, 'pbs-3 pbe-2 rounded-bs-md relative')} ref={ref}>
+      <div role='none' className={mx(defaultSurface, 'pbs-3 pbe-1 rounded-bs-md relative')} ref={ref}>
         {!preventExit &&
           mode !== 'halo-only' &&
           (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
         <Heading
           level={1}
-          className={mx(defaultDescription, 'font-body font-system-normal text-center text-sm grow pbe-1')}
+          className={mx(defaultDescription, 'font-body font-system-normal text-center text-sm grow pbe-2')}
           id={titleId}
         >
           {t('joining space heading')}

@@ -50,7 +50,7 @@ const PureInvitationAuthenticatorContent = ({
           input: {
             disabled,
             inputMode: 'numeric',
-            autocomplete: 'off',
+            autoComplete: 'off',
             pattern: '\\d*',
             'data-autofocus': `connecting${Domain}Invitation inputting${Domain}VerificationCode authenticationFailing${Domain}VerificationCode authenticating${Domain}VerificationCode`,
             'data-testid': `${invitationType}-auth-code-input`,
@@ -122,13 +122,14 @@ const InvitationAuthenticatorContent = ({
 };
 
 export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: InvitationAuthenticatorProps) => {
-  const { t } = useTranslation('os');
-  const disabled = !viewStateProps.active;
   const { joinSend, joinState } = viewStateProps;
+  const disabled =
+    !viewStateProps.active ||
+    ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str));
   const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
   return (
     <ViewState {...viewStateProps}>
-      {!activeInvitation || activeInvitation === true ? (
+      {!activeInvitation ? (
         <PureInvitationAuthenticatorContent
           {...{ disabled, failed, joinSend, Domain, onChange: () => {}, onAuthenticate: () => {} }}
         />
