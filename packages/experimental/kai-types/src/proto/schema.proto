@@ -190,6 +190,7 @@ message Message {
   repeated Recipient to = 4;
   string subject = 5;
   string body = 6;
+  string ref = 7; // TODO(burdon): Implement as link.
 }
 
 message Event {

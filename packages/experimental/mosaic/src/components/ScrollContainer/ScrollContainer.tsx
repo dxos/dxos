@@ -50,6 +50,7 @@ export type ScrollContainerProps = {
   children?: ReactNode;
 };
 
+// TODO(burdon): Cannot reverse list.
 // TODO(burdon): Currently vertical only (NOTE: Require TW 3.2 for data-attribute variants per radix demo).
 
 /**
@@ -79,6 +80,7 @@ export const ScrollContainer = ({
             />
           </ScrollArea.Scrollbar>
         )}
+
         {/* TODO(burdon): Incorrect range. */}
         {horizontal && (
           <ScrollArea.Scrollbar
