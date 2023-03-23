@@ -19,9 +19,6 @@
       "options": {
         "main": "docs/src/index.ts",
         "outputPath": "docs/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "docs/tsconfig.json"
       },
       "outputs": [

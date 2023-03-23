@@ -18,5 +18,7 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get items that match a filter
+  // TODO(wittjosiah): Fix type inference.
+  // @ts-ignore
   const tasks = space.db.query<Task>({ type: 'task' });
 };
