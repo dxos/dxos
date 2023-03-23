@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { stripKeys } from '@dxos/util';
 import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
