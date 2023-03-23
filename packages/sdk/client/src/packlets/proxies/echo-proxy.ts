@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, scheduleTask, Trigger, UnsubscribeCallback, MulticastObservable } from '@dxos/async';
+import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';

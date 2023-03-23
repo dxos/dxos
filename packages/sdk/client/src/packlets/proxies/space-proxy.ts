@@ -91,7 +91,6 @@ export class SpaceProxy implements Space {
    * Space proxy is fully initialized, database open, state is READY.
    */
   public readonly _initializationComplete = new Trigger();
-    
 
   private _initializing = false;
 
@@ -114,7 +113,6 @@ export class SpaceProxy implements Space {
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _properties?: TypedObject;
-
 
   // prettier-ignore
   constructor(
