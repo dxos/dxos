@@ -66,9 +66,7 @@ export const JoinPanel = ({
     }
   }, [joinState.value]);
 
-  const joinStateSpaceInvitation = joinState.context.space.invitation;
-  const spaceInvitation =
-    !joinStateSpaceInvitation || joinStateSpaceInvitation === true ? undefined : joinStateSpaceInvitation;
+  const spaceInvitation = joinState.context.space.invitation;
 
   return (
     <DensityProvider density='fine'>

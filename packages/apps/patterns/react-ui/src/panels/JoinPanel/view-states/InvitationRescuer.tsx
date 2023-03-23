@@ -81,7 +81,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
   const { t } = useTranslation('os');
   return (
     <ViewState {...viewStateProps}>
-      {activeInvitation === true || !activeInvitation ? (
+      {!activeInvitation ? (
         <Button
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'

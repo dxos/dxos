@@ -57,7 +57,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
 
   return (
     <ViewState {...viewStateProps}>
-      {!activeInvitation || activeInvitation === true ? (
+      {!activeInvitation ? (
         <PureInvitationAcceptedContent {...props} result={null} />
       ) : (
         <InvitationAcceptedContent {...props} activeInvitation={activeInvitation} />
