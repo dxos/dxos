@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import hash from 'string-hash';
 
 import { Message } from '@dxos/kai-types';
-import { useClient, useConfig, useQuery } from '@dxos/react-client';
+import { useClient, useQuery } from '@dxos/react-client';
 import { Button, getSize, Input, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -110,59 +110,8 @@ export const ChatFrame = () => {
     }
   };
 
-  // TODO(burdon): Factor out video.
-  // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling
-  const config = useConfig();
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const [connection, setConnection] = useState<RTCPeerConnection>();
-  useEffect(() => {
-    setTimeout(async () => {
-      if (!connection) {
-        // TODO(burdon): Reuse peer connections.
-        const createPeerConnection = async () => {
-          const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
-
-          // TODO(burdon): Get from wrtc.WebRTCTransport?
-          const connection = new RTCPeerConnection({ iceServers });
-          connection.ontrack = (event) => {
-            console.log('ontrack');
-            localVideoRef.current!.srcObject = event.streams[0];
-          };
-
-          return connection;
-        };
-
-        const connection = await createPeerConnection();
-        setConnection(connection);
-
-        const offer = await connection.createOffer();
-        await connection.setLocalDescription(offer);
-
-        // TODO(burdon): Connection to signaling server.
-        // await webSocket.send(
-        //   JSON.stringify({
-        //     name: 'user-1',
-        //     target: 'user-2',
-        //     type: 'video-offer',
-        //     sdp: connection.localDescription
-        //   })
-        // );
-
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-        localVideoRef.current!.srcObject = stream;
-        stream.getTracks().forEach((track) => connection.addTrack(track, stream));
-      }
-    });
-  }, [config, localVideoRef, remoteVideoRef]);
-
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
-      <div className='flex bg-zinc-300'>
-        <video ref={remoteVideoRef} />
-        <video ref={localVideoRef} autoPlay muted />
-      </div>
-
       {/* Message list */}
       <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
         <div className='flex flex-col-reverse px-2'>
