@@ -42,11 +42,22 @@ export const JoinPanel = ({
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       // simple state logging
-      console.log('[state]', JSON.stringify(state.value));
+      console.log('[state]', state);
     });
 
     return subscription.unsubscribe;
   }, [joinService]);
+
+  useEffect(() => {
+    // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
+    const stateStack = joinState.configuration[0].id.split('.');
+    const $nextAutofocus: HTMLElement | null = document.querySelector(
+      `[data-autofocus="${stateStack[stateStack.length - 1]}"]`
+    );
+    if ($nextAutofocus) {
+      $nextAutofocus.focus();
+    }
+  }, [joinState.value]);
 
   return (
     <DensityProvider density='fine'>
@@ -133,7 +144,7 @@ export const JoinPanel = ({
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
                 }
               }),
-              invitationType: 'halo',
+              Domain: 'Halo',
               doneActionParent,
               onDone
             }}
@@ -199,7 +210,7 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: joinState.matches('finishingJoining'),
-              invitationType: 'space',
+              Domain: 'Space',
               doneActionParent,
               onDone
             }}

@@ -4,7 +4,6 @@
 
 export * from './AdditionMethodSelector';
 export * from './IdentityAdded';
-export * from './IdentitySelector';
 export * from './IdentityInput';
 export * from './InvitationAccepted';
 export * from './InvitationInput';

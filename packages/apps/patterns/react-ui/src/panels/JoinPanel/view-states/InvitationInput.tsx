@@ -36,7 +36,7 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
           root: { className: 'm-0' },
           label: { className: 'sr-only' },
           input: {
-            'data-autofocus': `${Domain.toLowerCase()} invitation acceptor; invitation input`,
+            'data-autofocus': `inputting${Domain}InvitationCode`,
             'data-testid': `${Domain.toLowerCase()}-invitation-input`,
             onKeyUp: ({ key }) => key === 'Enter' && handleNext()
           } as ComponentPropsWithoutRef<'input'>

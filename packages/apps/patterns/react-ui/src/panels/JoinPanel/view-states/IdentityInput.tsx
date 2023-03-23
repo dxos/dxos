@@ -45,7 +45,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         slots={{
           root: { className: 'm-0' },
           input: {
-            'data-autofocus': isRecover ? 'identity input; recover identity' : 'identity input; create identity',
+            'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
             onKeyUp: ({ key }) => key === 'Enter' && handleNext()
           } as ComponentPropsWithoutRef<'input'>
         }}

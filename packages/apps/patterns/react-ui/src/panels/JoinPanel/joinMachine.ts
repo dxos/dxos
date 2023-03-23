@@ -122,9 +122,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           }
         ]
       },
-      [`inputting${Domain}InvitationCode`]: {
-        id: `inputting${Domain}InvitationCode`
-      },
+      [`inputting${Domain}InvitationCode`]: {},
       [`acceptingRedeemed${Domain}Invitation`]: {
         invoke: {
           src: (context) => context[Domain.toLowerCase() as 'space' | 'halo'].invitationSubscribable!
@@ -153,7 +151,12 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`success${Domain}Invitation`]: {}
         },
         on: {
-          [`reset${Domain}Invitation`]: { target: `#inputting${Domain}InvitationCode`, actions: 'log' },
+          [`reset${Domain}Invitation`]: {
+            target: `#join${
+              Domain === 'Halo' ? '.choosingIdentity' : ''
+            }.accepting${Domain}Invitation.inputting${Domain}InvitationCode`,
+            actions: 'log'
+          },
           [`connect${Domain}Invitation`]: { target: `.connecting${Domain}Invitation`, actions: 'log' },
           [`connectionSuccess${Domain}Invitation`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
           [`succeed${Domain}Invitation`]: { target: successTarget, actions: 'log' },
@@ -232,11 +235,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
-          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '#confirmingAddedIdentity'),
-          // acceptingHaloInvitation: {},
-          confirmingAddedIdentity: {
-            id: 'confirmingAddedIdentity'
-          }
+          acceptingHaloInvitation: acceptingInvitationTemplate(
+            'Halo',
+            '#join.choosingIdentity.confirmingAddedIdentity'
+          ),
+          confirmingAddedIdentity: {}
         },
         on: {
           recoverIdentity: { target: '.recoveringIdentity', actions: 'log' },
@@ -250,10 +253,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
         }
       },
-      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#finishingJoining'),
-      // acceptingSpaceInvitation: {},
+      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoining'),
       finishingJoining: {
-        id: 'finishingJoining',
         type: 'final'
       }
     }

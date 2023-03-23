@@ -31,7 +31,7 @@ const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
       className='grow flex items-center gap-2 pli-2'
-      data-autofocus='identity added'
+      data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
@@ -51,7 +51,7 @@ export const IdentityAdded = ({
   ...viewStateProps
 }: IdentityAddedProps) => {
   const disabled = !viewStateProps.active;
-  const { dispatch } = viewStateProps;
+  const { joinSend } = viewStateProps;
   const { t } = useTranslation('os');
 
   return (
@@ -77,8 +77,8 @@ export const IdentityAdded = ({
           <Button
             disabled={disabled || !addedIdentity}
             className='grow flex items-center gap-2 pli-2 order-2'
-            onClick={() => addedIdentity && dispatch({ type: 'select identity', identity: addedIdentity })}
-            data-autofocus='identity added'
+            onClick={() => addedIdentity && joinSend({ type: 'selectIdentity', identity: addedIdentity })}
+            data-autofocus='confirmingAddedIdentity'
           >
             <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
             <span className='grow'>{t('continue label')}</span>
@@ -86,7 +86,7 @@ export const IdentityAdded = ({
           </Button>
           <Button
             disabled={disabled}
-            onClick={() => dispatch({ type: 'deselect identity' })}
+            onClick={() => joinSend({ type: 'deselectAuthMethod' })}
             className='flex items-center gap-2 pis-2 pie-4'
           >
             <CaretLeft weight='bold' className={getSize(4)} />

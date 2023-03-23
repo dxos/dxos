@@ -52,7 +52,7 @@ const PureInvitationAuthenticatorContent = ({
             disabled,
             inputMode: 'numeric',
             pattern: '\\d*',
-            'data-autofocus': `${invitationType} invitation acceptor; invitation authenticator`,
+            'data-autofocus': `authenticating${Domain}VerificationCode`,
             'data-testid': `${invitationType}-auth-code-input`
           } as ComponentPropsWithoutRef<'input'>
         }}

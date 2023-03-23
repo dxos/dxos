@@ -85,7 +85,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
         <Button
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'
-          data-autofocus='space invitation acceptor; invitation rescuer'
+          data-autofocus={`inputting${Domain}InvitationCode`}
           data-testid='invitation-rescuer-connect'
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />

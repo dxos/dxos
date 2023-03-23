@@ -32,7 +32,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
           description={t('create identity description')}
           before={<Plus className={getSize(6)} />}
           onClick={() => joinSend({ type: 'createIdentity' })}
-          data-autofocus='addition method selector'
+          data-autofocus='choosingAuthMethod'
           data-testid='create-identity'
         >
           {t('create identity label')}
