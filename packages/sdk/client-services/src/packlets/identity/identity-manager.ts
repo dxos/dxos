@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
@@ -31,6 +32,12 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey;
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
+
+  /**
+   * Latest known timeframe for the control pipeline.
+   * We will try to catch up to this timeframe before starting the data pipeline.
+   */
+  controlTimeframe?: Timeframe;
 };
 
 export type CreateIdentityOptions = {
@@ -151,7 +158,8 @@ export class IdentityManager {
         spaceKey: params.haloSpaceKey,
         genesisFeedKey: params.haloGenesisFeedKey,
         writeControlFeedKey: params.controlFeedKey,
-        writeDataFeedKey: params.dataFeedKey
+        writeDataFeedKey: params.dataFeedKey,
+        controlTimeframe: params.controlTimeframe
       }
     };
     const identity = await this._constructIdentity(identityRecord);
@@ -194,6 +202,11 @@ export class IdentityManager {
       deviceKey: identityRecord.deviceKey
     });
     log('done', { identityKey: identityRecord.identityKey });
+
+    // TODO(mykola): Set new timeframe on a write to a feed.
+    if (identityRecord.haloSpace.controlTimeframe) {
+      identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
+    }
 
     return identity;
   }

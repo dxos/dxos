@@ -98,7 +98,8 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
           return {
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
-            genesisFeedKey: identity.haloGenesisFeedKey
+            genesisFeedKey: identity.haloGenesisFeedKey,
+            controlTimeframe: identity.controlPipeline.state.timeframe
           };
         },
 
@@ -217,7 +218,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
               // 1. Send request.
               log('sending admission request');
-              const { identityKey, haloSpaceKey, genesisFeedKey } =
+              const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } =
                 await extension.rpc.HaloHostService.requestAdmission();
 
               // 2. Get authentication code.
@@ -250,7 +251,8 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
                 haloSpaceKey,
                 haloGenesisFeedKey: genesisFeedKey,
                 controlFeedKey,
-                dataFeedKey
+                dataFeedKey,
+                controlTimeframe
               });
 
               // 5. Success.
