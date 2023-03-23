@@ -42,7 +42,7 @@ export const JoinPanel = ({
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       // simple state logging
-      console.log('[state]', state);
+      console.log('[state]', JSON.stringify(state.value));
     });
 
     return subscription.unsubscribe;
@@ -113,12 +113,15 @@ export const JoinPanel = ({
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
                 },
                 {
+                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
+                },
+                {
                   acceptingHaloInvitation: {
                     acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
                   }
                 }
               ].some(joinState.matches),
-              invitationType: 'halo'
+              Domain: 'Halo'
             }}
           />
           <InvitationAccepted
@@ -179,12 +182,15 @@ export const JoinPanel = ({
                   acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
                 },
                 {
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' }
+                },
+                {
                   acceptingSpaceInvitation: {
                     acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
                   }
                 }
               ].some(joinState.matches),
-              invitationType: 'space',
+              Domain: 'Space',
               ...(joinState.matches('authenticationFailingSpaceVerificationCode') && { failed: true })
             }}
           />

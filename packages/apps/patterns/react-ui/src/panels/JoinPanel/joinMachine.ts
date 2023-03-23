@@ -42,6 +42,8 @@ type FailInvitationEvent = {
 
 type EmptyInvitationEvent = {
   type:
+    | 'authenticateHaloInvitation'
+    | 'authenticateSpaceInvitation'
     | 'authenticateHaloVerificationCode'
     | 'authenticateSpaceVerificationCode'
     | 'resetHaloInvitation'
@@ -67,16 +69,33 @@ const getInvitationSubscribable = (
       complete?: () => void
     ): Subscription => {
       const unsubscribe = invitation.subscribe({
-        onAuthenticating: () => next({ type: `authenticate${Domain}VerificationCode` }),
-        onCancelled: () => next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent),
-        onTimeout: () => next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent),
-        onConnecting: () => next({ type: `connect${Domain}Invitation` }),
-        onConnected: () => next({ type: `connectionSuccess${Domain}Invitation` }),
+        onAuthenticating: () => {
+          console.log('[invitation authenticating]', Domain, invitation);
+          return next({ type: `authenticate${Domain}Invitation` });
+        },
+        onCancelled: () => {
+          console.log('[invitation cancelled]', Domain, invitation);
+          return next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
+        },
+        onTimeout: () => {
+          console.log('[invitation timeout]', Domain, invitation);
+          return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
+        },
+        onConnecting: () => {
+          console.log('[invitation connecting]', Domain, invitation);
+          return next({ type: `connect${Domain}Invitation` });
+        },
+        onConnected: () => {
+          console.log('[invitation connected]', Domain, invitation);
+          return next({ type: `connectionSuccess${Domain}Invitation` });
+        },
         onSuccess: () => {
+          console.log('[invitation success]', Domain, invitation);
           next({ type: `succeed${Domain}Invitation` });
           return complete?.();
         },
         onError: (error: any) => {
+          console.log('[invitation errored]', Domain, invitation);
           next({ type: `fail${Domain}Invitation`, reason: 'error' });
           return error(error);
         }
@@ -115,7 +134,18 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`connecting${Domain}Invitation`]: {},
           [`inputting${Domain}VerificationCode`]: {
             on: {
-              [`authenticate${Domain}VerificationCode`]: `authenticationFailing${Domain}VerificationCode`
+              [`authenticate${Domain}VerificationCode`]: {
+                target: `authenticating${Domain}VerificationCode`,
+                actions: 'log'
+              }
+            }
+          },
+          [`authenticating${Domain}VerificationCode`]: {
+            on: {
+              [`authenticate${Domain}Invitation`]: {
+                target: `authenticationFailing${Domain}VerificationCode`,
+                actions: 'log'
+              }
             }
           },
           [`authenticationFailing${Domain}VerificationCode`]: {},
@@ -126,8 +156,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`reset${Domain}Invitation`]: { target: `#inputting${Domain}InvitationCode`, actions: 'log' },
           [`connect${Domain}Invitation`]: { target: `.connecting${Domain}Invitation`, actions: 'log' },
           [`connectionSuccess${Domain}Invitation`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
-          [`authenticate${Domain}VerificationCode`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
-          [`succeed${Domain}VerificationCode`]: { target: successTarget, actions: 'log' },
+          [`succeed${Domain}Invitation`]: { target: successTarget, actions: 'log' },
           [`fail${Domain}Invitation`]: {
             target: `.failing${Domain}Invitation`,
             actions: [
