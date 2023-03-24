@@ -37,7 +37,7 @@ const PureInvitationAcceptedContent = ({
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
-      <Check weight='bold' className={getSize(4)} />
+      <Check className={getSize(4)} />
     </Button>
   );
 

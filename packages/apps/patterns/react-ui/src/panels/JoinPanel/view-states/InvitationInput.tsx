@@ -54,7 +54,7 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
           <CaretRight weight='bold' className={getSize(4)} />
         </Button>
         <Button
-          disabled={disabled}
+          disabled={Domain === 'Space'}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
           className='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${Domain.toLowerCase()}-invitation-input-back`}

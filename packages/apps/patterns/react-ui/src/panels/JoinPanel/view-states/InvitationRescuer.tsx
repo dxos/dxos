@@ -93,7 +93,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('connect label')}</span>
-          <ArrowsClockwise weight='bold' className={getSize(5)} />
+          <ArrowsClockwise className={getSize(5)} />
         </Button>
       ) : (
         <InvitationActions {...{ activeInvitation, disabled, joinSend, Domain }} />

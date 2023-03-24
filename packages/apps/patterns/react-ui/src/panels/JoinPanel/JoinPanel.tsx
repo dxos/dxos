@@ -44,7 +44,6 @@ export const JoinPanel = ({
 
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
-      // simple state logging
       log.info('[state]', state);
     });
 
@@ -54,9 +53,9 @@ export const JoinPanel = ({
   useEffect(() => {
     // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
     const stateStack = joinState.configuration[0].id.split('.');
-    const $nextAutofocus: HTMLElement | null = document.querySelector(
-      `[data-autofocus~="${stateStack[stateStack.length - 1]}"]`
-    );
+    const innermostState = stateStack[stateStack.length - 1];
+    const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
+    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus~="${autoFocusValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
     }
@@ -186,9 +185,14 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches({
-                acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
-              }),
+              active: [
+                {
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
+                },
+                {
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
+                }
+              ].some(joinState.matches),
               Domain: 'Space'
             }}
           />
