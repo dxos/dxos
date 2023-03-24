@@ -53,6 +53,9 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+
       await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
       await space1.close();
@@ -116,6 +119,9 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+      
       await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
       await space1.close();
