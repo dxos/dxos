@@ -43,7 +43,7 @@ const PureInvitationAcceptedContent = ({
 
   return (
     <>
-      <p className=' text-center text-sm font-system-normal'>{t('welcome message')}</p>
+      <p className='text-center text-sm font-system-normal'>{t('welcome message')}</p>
       <div role='none' className='grow' />
       {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
     </>
