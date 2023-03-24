@@ -3,7 +3,7 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { useContext } from 'react';
+import React, { Suspense, useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { SpaceState, useSpaces } from '@dxos/react-client';
@@ -11,7 +11,7 @@ import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
-import { ChatFrame } from '../frames/Chat';
+import { ChatFrameRuntime } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
 /**
@@ -80,7 +80,9 @@ const Content = () => {
 
               {chat && frame.module.id !== 'dxos.module.frame.chat' && (
                 <div className='flex shrink-0 w-sidebar'>
-                  <ChatFrame />
+                  <Suspense>
+                    <ChatFrameRuntime.Component />
+                  </Suspense>
                 </div>
               )}
             </div>

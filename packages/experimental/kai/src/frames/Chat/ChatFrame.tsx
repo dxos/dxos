@@ -10,7 +10,7 @@ import { useClient, useQuery } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 import { createPath, useAppRouter } from '../../hooks';
-import { sortMessage } from '..//Message';
+import { sortMessage } from '../Message';
 import { ChatPanel } from './ChatPanel';
 
 export const ChatFrame = () => {
@@ -56,10 +56,6 @@ export const ChatFrame = () => {
   const handleDelete = (message: Message) => {
     space?.db.remove(message);
   };
-
-  if (!space) {
-    return;
-  }
 
   return <ChatPanel messages={messages} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />;
 };
