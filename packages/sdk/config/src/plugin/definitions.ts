@@ -53,7 +53,12 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
           } catch {}
         }
       } catch (err: any) {
-        log.warn(`Failed to load file ${value}`);
+        log(`Failed to load file ${value}:`, err);
+
+        if (key === '__CONFIG_DEFAULTS__') {
+          // Default config is required.
+          throw new Error(`Failed to load default config file from ${value}`);
+        }
       }
 
       return {
