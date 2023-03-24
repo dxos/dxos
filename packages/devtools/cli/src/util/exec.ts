@@ -4,8 +4,6 @@
 
 import { spawn } from 'node:child_process';
 
-import { sleep } from '@dxos/async';
-
 export type ExecOptions = {
   verbose: boolean;
   cwd: string;
