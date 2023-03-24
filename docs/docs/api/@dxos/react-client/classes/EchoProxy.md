@@ -1,12 +1,12 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:24]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:22]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 
 ## Constructors
-### [constructor(_serviceProvider, _modelFactory, _haloProxy)]()
+### [constructor(_serviceProvider, _modelFactory)]()
 
 
 
@@ -17,8 +17,6 @@ Arguments:
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
 `_modelFactory`: <code>ModelFactory</code>
-
-`_haloProxy`: <code>[HaloProxy](/api/@dxos/react-client/classes/HaloProxy)</code>
 
 
 ## Properties
@@ -33,6 +31,9 @@ Type: <code>any</code>
 
 ### [opened]()
 Type: <code>boolean</code>
+
+### [spaces]()
+Type: <code>MulticastObservable&lt;[Space](/api/@dxos/react-client/interfaces/Space)[]&gt;</code>
 
 
 ## Methods
@@ -103,17 +104,6 @@ Arguments:
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
-### [getSpaces()]()
-
-
-
-Gets a list of all spaces.
-
-
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)[]</code>
-
-Arguments: none
-
 ### [open()]()
 
 
@@ -121,19 +111,6 @@ Arguments: none
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-
-### [subscribeSpaces(callback)]()
-
-
-
-Subscribes to spaces changes.
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
 
 ### [toJSON()]()
 

@@ -17,7 +17,7 @@ import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
 import { ComposerDocument, schema } from '../../src/testing';
-import { cursorColor, SpaceProvider } from '../../src/yjs';
+import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
 
 export default {
   title: 'CodeMirror'
@@ -34,7 +34,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
     return;
   }
 
-  const { awareness } = new SpaceProvider({ space, doc });
+  const { awareness } = new SpaceAwarenessProvider({ space, doc, channel: `yjs.awareness.${text.id}` });
   awareness.setLocalStateField('user', {
     name: identity.profile?.displayName ?? humanize(identity.identityKey),
     // TODO(wittjosiah): Pick colours from theme based on identity key.
