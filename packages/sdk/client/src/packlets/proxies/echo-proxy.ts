@@ -13,7 +13,7 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
@@ -108,12 +108,6 @@ export class EchoProxy implements Echo {
 
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
-      if (!data.spaces || data.spaces.length === 0) {
-        // If there are no spaces on startup, unblock open immediately.
-        gotInitialUpdate.wake();
-        return;
-      }
-
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
@@ -125,6 +119,9 @@ export class EchoProxy implements Echo {
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
+          // Propagate space state updates to the space list observable.
+          spaceProxy._stateUpdate.on(this._ctx, () => this._updateSpaceList());
+
           // NOTE: Must set in a map before initializing.
           this._spacesMap.set(spaceProxy.key, spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -132,20 +129,14 @@ export class EchoProxy implements Echo {
           emitUpdate = true;
         }
 
-        // Initialize space in a separate task.
+        // Process space update in a separate task, also initializing the space if necessary.
         scheduleTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
-
-          // NOTE: This is a hack to make sure we wait until all spaces are initialized before returning from open.
-          // This is needed because apps don't handle spaces loading correctly.
-          // TODO(dmaretskyi): Remove when apps and API are ready.
-          if (data.spaces?.every((space) => space.state === SpaceState.READY)) {
-            gotInitialUpdate.wake();
-            this._updateSpaceList();
-          }
+          this._updateSpaceList();
         });
       }
 
+      gotInitialUpdate.wake();
       if (emitUpdate) {
         this._updateSpaceList();
       }
@@ -177,7 +168,7 @@ export class EchoProxy implements Echo {
   //
 
   private _updateSpaceList() {
-    this._spacesChanged.emit(Array.from(this._spacesMap.values()).filter((space) => space._initialized));
+    this._spacesChanged.emit(Array.from(this._spacesMap.values()));
   }
 
   /**
