@@ -89,7 +89,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/halo-app": "workspace:*",
+    "@dxos/vault": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
     "@remix-run/router": "^1.0.2",
     "@storybook/addons": "7.0.0-beta.48",

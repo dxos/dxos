@@ -5,9 +5,9 @@
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/react-ui/testing';
+import { ShellManager as NaturalShellManager } from '@dxos/react-ui/testing';
 
-export class HaloShellManager extends ShellManager {
+export class ShellManager extends NaturalShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
 

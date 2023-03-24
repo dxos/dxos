@@ -2,22 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import { StrictMode } from 'react';
 
 import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
 import { IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations, Shell } from '@dxos/react-ui';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
-import { mobileAndTabletCheck, namespace } from '../util';
-
-void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
+import { mobileAndTabletCheck } from './util';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');
@@ -41,7 +37,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   );
 };
 
-const main = async () => {
+export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
   const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
@@ -66,12 +62,7 @@ const main = async () => {
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.
-    const worker = new SharedWorker(new URL('./shared-worker', import.meta.url), {
-      type: 'module',
-      name: 'dxos-vault'
-    });
-    const portMuxer = new PortMuxer(worker.port);
+    const portMuxer = new PortMuxer(getWorker().port);
 
     let shellClientProxy: ClientServicesProvider;
     if (!shellDisabled) {
@@ -100,5 +91,3 @@ const main = async () => {
     });
   }
 };
-
-void main();
