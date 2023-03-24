@@ -8,11 +8,9 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
 
-  // TODO(burdon): Update.
-  const { value: spaces } = client.echo.querySpaces();
-  const space = spaces[0];
+  const space = client.spaces.get()[0];
 
   const object = new Expando({ type: 'task', title: 'buy milk' });
 

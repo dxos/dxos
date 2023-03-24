@@ -2,12 +2,13 @@
 
 $transform-transition: "0s linear";
 
-$theme-color: (
-  // light: #6cab52 ,
-  // dark: #91d076 
-  light: $emerald-600,
-  dark: $emerald-500
-);
+$theme-color: $emerald-500;
+// $theme-color: (
+//   // light: #6cab52 ,
+//   // dark: #91d076 
+//   light: $emerald-600,
+//   dark: $emerald-500
+// );
 
 $bg-color: (
   light: $zinc-100,
