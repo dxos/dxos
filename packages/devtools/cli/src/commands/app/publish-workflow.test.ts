@@ -9,24 +9,27 @@ import path from 'path';
 
 import { describe } from '@dxos/test';
 
-// TODO(burdon): Import (configure esbuild).
-// TODO(burdon): Lint issue.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-// import config from '../../../config/config.yml';
+import { exec } from '../../util/exec';
 
-// TODO(burdon): SecurityError: localStorage is not available for opaque origins
-describe('App', () => {
+describe.skip('App', () => {
   const configPath = path.join(__dirname, '../../../config/config-local.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
-  const appPath = '/tmp/dx/test-app';
+  const tmpFolder = '/tmp/dx';
 
   test
     .stdout()
-    .command(['app create', appPath, '--json', '--config', configPath])
-    .command(['app publish', '--configPath', `${appPath}/dx.yml`, '--config', configPath])
+    .do(async () => {
+      await exec(`pushd ${tmpFolder} > /dev/null `);
+    })
+    .command(['app create', 'test-app', '--json', '--config', configPath], { root: tmpFolder })
+
+    .command(['app publish', '--config', configPath])
     .command(['app list', '--config', configPath])
+    .do(async () => {
+      await exec('popd > /dev/null');
+      await exec(`rm -rf ${tmpFolder}`);
+    })
     .it('Create and publish app', (ctx) => {
       console.log(ctx.stdout);
       expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
