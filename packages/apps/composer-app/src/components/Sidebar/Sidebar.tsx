@@ -186,6 +186,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 });
 
 const DocumentTree = observer(() => {
+  // TODO(wittjosiah): Fetch all spaces and render pending spaces differently.
   const spaces = useSpaces();
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
