@@ -27,9 +27,11 @@
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-radio-group": "^1.1.2",
     "@react-hook/async": "^3.1.1",
+    "@xstate/react": "^3.2.1",
     "debug": "^4.3.3",
     "qrcode.react": "^3.1.0",
-    "url-join": "^5.0.0"
+    "url-join": "^5.0.0",
+    "xstate": "^4.37.0"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

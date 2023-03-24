@@ -35,6 +35,9 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
       log.info('[next invitation code]', { nextInvitationCode });
       setInvitationCode(nextInvitationCode);
     }
+    if (invitation.authenticationCode) {
+      log.info('[verification code]', invitation.authenticationCode);
+    }
   }, []);
 
   useAsyncEffect(async () => {
@@ -48,7 +51,6 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
     space.properties.name = 'Q3 2022 Planning';
 
     const invitation = space.createInvitation({ type: Invitation.Type.INTERACTIVE });
-    log.info('[invitation created]', invitation);
 
     invitation.subscribe({
       onAuthenticating: onInvitationEvent,
