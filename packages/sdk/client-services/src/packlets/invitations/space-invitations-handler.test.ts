@@ -121,7 +121,7 @@ describe('services/space-invitations-handler', () => {
 
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
-      
+
       await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
       await space1.close();
