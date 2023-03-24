@@ -19,7 +19,7 @@ const client = new Client();
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get all items
@@ -53,10 +53,12 @@ class Task extends TypedObject {
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter
+  // TODO(wittjosiah): Fix type inference.
+  // @ts-ignore
   const tasks = space.db.query<Task>({ type: 'task' });
 };
 ```
@@ -151,7 +153,7 @@ const client = new Client();
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter: type inferred from Task.filter()

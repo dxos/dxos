@@ -5,7 +5,7 @@
 import frontMatter from 'front-matter';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SidebarGroupCollapsible, SidebarItem } from 'vuepress';
+import { SidebarItem, SidebarGroup } from 'vuepress';
 
 import { DOCS_PATH } from '../constants';
 
@@ -23,7 +23,7 @@ const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   return [attributes.position, item];
 };
 
-type SidebarObject = SidebarGroupCollapsible | SidebarItem | string;
+type SidebarObject = SidebarGroup | SidebarItem | string;
 type NumberedSidebarObject = [number, SidebarObject];
 
 export const sidebarSection = (path: string) =>

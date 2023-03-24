@@ -9,7 +9,7 @@ const client = new Client();
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get all items

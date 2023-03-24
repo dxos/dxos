@@ -1,5 +1,5 @@
 # Class `HaloProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:27]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:24]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -18,22 +18,22 @@ Arguments:
 
 
 ## Properties
-### [identityChanged]()
-Type: <code>Event&lt;void&gt;</code>
-
-### [invitationsUpdate]()
-Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
+### [contacts]()
+Type: <code>MulticastObservable&lt;[Contact](/api/@dxos/react-client/interfaces/Contact)[]&gt;</code>
 
 ### [device]()
 Type: <code>undefined | Device</code>
 
+### [devices]()
+Type: <code>MulticastObservable&lt;Device[]&gt;</code>
+
 ### [identity]()
-Type: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
+Type: <code>MulticastObservable&lt;"null" | [Identity](/api/@dxos/react-client/interfaces/Identity)&gt;</code>
 
 User identity info.
 
 ### [invitations]()
-Type: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
+Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]&gt;</code>
 
 ### [opened]()
 Type: <code>boolean</code>
@@ -63,17 +63,6 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
 
-### [close()]()
-
-
-
-Destroy the instance and clean-up subscriptions.
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-
 ### [createIdentity(\[profile\])]()
 
 
@@ -100,33 +89,6 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
-
-### [getContacts()]()
-
-
-
-Returns: <code>[Contact](/api/@dxos/react-client/interfaces/Contact)[]</code>
-
-Arguments: none
-
-### [getDevices()]()
-
-
-
-Returns: <code>Device[]</code>
-
-Arguments: none
-
-### [open()]()
-
-
-
-Allocate resources and set-up internal subscriptions.
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
 
 ### [presentCredentials(options)]()
 
@@ -176,36 +138,6 @@ Returns: <code>void</code>
 Arguments: 
 
 `id`: <code>string</code>
-
-### [subscribeContacts(callback)]()
-
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [subscribeDevices(callback)]()
-
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [subscribeIdentity(callback)]()
-
-
-
-Returns: <code>function</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
 
 ### [toJSON()]()
 
