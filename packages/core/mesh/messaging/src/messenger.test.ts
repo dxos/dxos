@@ -4,12 +4,16 @@
 
 import { expect, mockFn } from 'earljs';
 
-import { asyncTimeout, latch } from '@dxos/async';
+import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { TaggedType } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
+import { range } from '@dxos/util';
 
+import { Messenger } from './messenger';
+import { WebsocketSignalManager } from './signal-manager';
 import { Message } from './signal-methods';
 import { TestBuilder } from './testing';
 
@@ -312,5 +316,40 @@ describe('Messenger', () => {
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
     });
+  });
+
+  describe.skip('load', () => {
+    test('many connections to KUBE', async () => {
+      let numReceived = 0;
+
+      range(100).map(async () => {
+        const peerId = PublicKey.random();
+        const newLocal = new WebsocketSignalManager(['wss://dev.kube.dxos.org/.well-known/dx/signal']);
+        const messenger = new Messenger({ signalManager: newLocal });
+
+        // newLocal.join({
+        //   topic: peerId,
+        //   peerId: peerId,
+        // })
+
+        await messenger.listen({
+          peerId,
+          onMessage: async (msg) => {
+            console.log(++numReceived);
+          }
+        });
+
+        void messenger.sendMessage({
+          author: peerId,
+          recipient: peerId,
+          payload: {
+            type_url: 'dxos.test',
+            value: Buffer.from('TEST')
+          }
+        });
+      });
+
+      await sleep(1000000);
+    }).timeout(100000);
   });
 });

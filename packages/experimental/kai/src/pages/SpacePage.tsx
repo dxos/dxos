@@ -6,8 +6,8 @@ import { CaretRight } from '@phosphor-icons/react';
 import React, { useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { useSpaces } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { SpaceState, useSpaces } from '@dxos/react-client';
+import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
@@ -27,7 +27,7 @@ const SpacePage = () => {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
   }
 
-  if (space && frame && fullscreen) {
+  if (space && space.state.get() === SpaceState.READY && frame && fullscreen) {
     return (
       <div className='flex w-full h-full overflow-hidden'>
         <FrameContainer space={space} frame={frame} />
@@ -74,7 +74,7 @@ const Content = () => {
       {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
 
       {/* Main content. */}
-      {space && (
+      {space?.state.get() === SpaceState.READY ? (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
           {frame && (
@@ -88,6 +88,8 @@ const Content = () => {
             </div>
           )}
         </div>
+      ) : (
+        <Loading label='Space loading' />
       )}
     </div>
   );
