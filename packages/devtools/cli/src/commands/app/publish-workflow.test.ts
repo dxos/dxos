@@ -9,28 +9,26 @@ import path from 'path';
 
 import { describe } from '@dxos/test';
 
-import { exec } from '../../util/exec';
-
 describe.skip('App', () => {
   const configPath = path.join(__dirname, '../../../config/config-local.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
-  const tmpFolder = '/tmp/dx';
+  const tmpFolder = './tmp/dx';
 
   test
     .stdout()
-    .do(async () => {
-      await exec(`pushd ${tmpFolder} > /dev/null `);
-    })
-    .command(['app create', 'test-app', '--json', '--config', configPath], { root: tmpFolder })
+    .stderr()
+    .stdin(`mkdir -p ${tmpFolder}`)
+    .stdin(`pushd ${tmpFolder}`)
 
-    .command(['app publish', '--config', configPath])
+    .command(['app create', 'test-app', '--json', '--config', configPath])
+    .command(['app publish', '--configPath', './test-app/dx.yml', '--config', configPath])
     .command(['app list', '--config', configPath])
-    .do(async () => {
-      await exec('popd > /dev/null');
-      await exec(`rm -rf ${tmpFolder}`);
-    })
+
+    .stdin('popd')
+
     .it('Create and publish app', (ctx) => {
+      console.log(ctx.stderr);
       console.log(ctx.stdout);
       expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
     });
