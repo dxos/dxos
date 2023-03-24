@@ -12,7 +12,8 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { deferFunction } from '@dxos/util';
 
@@ -20,7 +21,7 @@ import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
 
 interface ConstructSpaceParams {
-  spaceRecord: SpaceRecord;
+  spaceRecord: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   identityKey: PublicKey;
 }
@@ -89,10 +90,10 @@ export class IdentityManager {
       identityKey: await this._keyring.createKey(),
       deviceKey: await this._keyring.createKey(),
       haloSpace: {
-        spaceKey: await this._keyring.createKey(),
+        key: await this._keyring.createKey(),
         genesisFeedKey: controlFeedKey,
-        writeControlFeedKey: controlFeedKey,
-        writeDataFeedKey: await this._keyring.createKey()
+        controlFeedKey,
+        dataFeedKey: await this._keyring.createKey()
       }
     };
 
@@ -101,17 +102,16 @@ export class IdentityManager {
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
+      assert(identityRecord.haloSpace.genesisFeedKey, 'Genesis feed key is required.');
+      assert(identityRecord.haloSpace.dataFeedKey, 'Data feed key is required.');
       const credentials = [
         // Space genesis.
-        ...(await generator.createSpaceGenesis(
-          identityRecord.haloSpace.spaceKey,
-          identityRecord.haloSpace.genesisFeedKey
-        )),
+        ...(await generator.createSpaceGenesis(identityRecord.haloSpace.key, identityRecord.haloSpace.genesisFeedKey)),
 
         // Feed admission.
         await generator.createFeedAdmission(
-          identityRecord.haloSpace.spaceKey,
-          identityRecord.haloSpace.writeDataFeedKey,
+          identityRecord.haloSpace.key,
+          identityRecord.haloSpace.dataFeedKey,
           AdmittedFeed.Designation.DATA
         )
       ];
@@ -155,10 +155,10 @@ export class IdentityManager {
       identityKey: params.identityKey,
       deviceKey: params.deviceKey,
       haloSpace: {
-        spaceKey: params.haloSpaceKey,
+        key: params.haloSpaceKey,
         genesisFeedKey: params.haloGenesisFeedKey,
-        writeControlFeedKey: params.controlFeedKey,
-        writeDataFeedKey: params.dataFeedKey,
+        controlFeedKey: params.controlFeedKey,
+        dataFeedKey: params.dataFeedKey,
         controlTimeframe: params.controlTimeframe
       }
     };
@@ -178,10 +178,12 @@ export class IdentityManager {
     log('constructing identity', { identityRecord });
 
     // Must be created before the space so the feeds are writable.
-    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeControlFeedKey, {
+    assert(identityRecord.haloSpace.controlFeedKey);
+    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.controlFeedKey, {
       writable: true
     });
-    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeDataFeedKey, { writable: true });
+    assert(identityRecord.haloSpace.dataFeedKey);
+    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, { writable: true });
 
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
@@ -214,7 +216,7 @@ export class IdentityManager {
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey }: ConstructSpaceParams) {
     return this._spaceManager.constructSpace({
       metadata: {
-        key: spaceRecord.spaceKey,
+        key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey
       },
       swarmIdentity,

@@ -8,8 +8,7 @@ import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { EchoMetadata, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EchoMetadata, SpaceMetadata, IdentityRecord } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
