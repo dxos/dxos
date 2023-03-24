@@ -95,7 +95,6 @@
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
-          "android",
           "chromium",
           "ios",
           "webkit"
