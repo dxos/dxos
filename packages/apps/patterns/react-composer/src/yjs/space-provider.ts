@@ -21,24 +21,13 @@ const messageQueryAwareness = 3;
 /**
  * Yjs awareness provider on top of a DXOS space.
  */
-// TODO(burdon): Rename due to likely collisions?
-export class SpaceProvider extends Observable<any> {
+export class SpaceAwarenessProvider extends Observable<any> {
   private readonly _space: Space;
   private readonly _awareness: Awareness;
   private readonly _clientId: number;
   private readonly _channel: string;
 
-  constructor({
-    space,
-    doc,
-    channel = 'dxos.composer.status',
-    awareness
-  }: {
-    space: Space;
-    doc: Doc;
-    channel?: string;
-    awareness?: Awareness;
-  }) {
+  constructor({ space, doc, channel, awareness }: { space: Space; doc: Doc; channel: string; awareness?: Awareness }) {
     super();
     this._space = space;
     this._awareness = awareness ?? new awarenessProtocol.Awareness(doc);
