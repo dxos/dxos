@@ -32,11 +32,13 @@ export interface Space {
   get isOpen(): boolean;
 
   /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
+   * Echo database.
    */
   get db(): EchoDatabase;
+
+  /**
+   * Properties object.
+   */
   get properties(): TypedObject;
 
   /**
@@ -112,6 +114,11 @@ export class SpaceProxy implements Space {
   private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  // TODO(dmaretskyi): Cache properties in the metadata.
+  private _cachedProperties = new Properties({
+    name: 'Loading...'
+  });
+
   private _properties?: TypedObject;
 
   // prettier-ignore
@@ -162,8 +169,12 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
-    assert(this._properties, 'Properties not initialized.');
-    return this._properties;
+    if (this._currentState !== SpaceState.READY) {
+      return this._cachedProperties;
+    } else {
+      assert(this._properties, 'Properties not initialized.');
+      return this._properties;
+    }
   }
 
   get state() {
@@ -246,6 +257,7 @@ export class SpaceProxy implements Space {
       }
     }
 
+    assert(this._properties);
     this._initialized = true;
     this._initializing = false;
     this._initializationComplete.wake();

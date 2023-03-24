@@ -71,7 +71,7 @@ export type AppRoute = {
 // TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
   const { spaceKey, section, frame, objectId } = useParams();
-  const spaces = useSpaces();
+  const spaces = useSpaces({ all: true });
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
   const { frames, active: activeFrames } = useFrames();
