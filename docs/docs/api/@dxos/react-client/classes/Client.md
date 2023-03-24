@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:25]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:29]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -28,10 +28,8 @@ Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object
 
-### [echo]()
-Type: <code>[EchoProxy](/api/@dxos/react-client/classes/EchoProxy)</code>
-
-ECHO database.
+### [dbRouter]()
+Type: <code>[DatabaseRouter](/api/@dxos/react-client/classes/DatabaseRouter)</code>
 
 ### [halo]()
 Type: <code>[HaloProxy](/api/@dxos/react-client/classes/HaloProxy)</code>
@@ -46,10 +44,22 @@ Returns true if the client has been initialized. Initialize by calling  `.initia
 ### [mesh]()
 Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
 
+MESH networking.
+
 ### [services]()
 Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
 Current client services provider.
+
+### [spaces]()
+Type: <code>MulticastObservable&lt;[Space](/api/@dxos/react-client/interfaces/Space)[]&gt;</code>
+
+ECHO spaces.
+
+### [status]()
+Type: <code>MulticastObservable&lt;"null" | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)&gt;</code>
+
+Client services system status.
 
 
 ## Methods
@@ -61,6 +71,31 @@ Returns: <code>string</code>
 
 Arguments: none
 
+### [acceptInvitation(invitation, \[options\])]()
+
+
+
+Accept an invitation to a space.
+
+
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/interfaces/AuthenticatingInvitationObservable)</code>
+
+Arguments: 
+
+`invitation`: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
+
+`options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
+
+### [addSchema(schema)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`schema`: <code>[EchoSchema](/api/@dxos/react-client/classes/EchoSchema)</code>
+
 ### [createSerializer()]()
 
 
@@ -68,6 +103,19 @@ Arguments: none
 Returns: <code>[SpaceSerializer](/api/@dxos/react-client/classes/SpaceSerializer)</code>
 
 Arguments: none
+
+### [createSpace(\[meta\])]()
+
+
+
+Creates a new space.
+
+
+Returns: <code>Promise&lt;[Space](/api/@dxos/react-client/interfaces/Space)&gt;</code>
+
+Arguments: 
+
+`meta`: <code>[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)</code>
 
 ### [destroy()]()
 
@@ -81,13 +129,18 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [getStatus()]()
+### [getSpace(spaceKey)]()
 
 
 
-Returns: <code>undefined | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
+Get an existing space by its key.
 
-Arguments: none
+
+Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
+
+Arguments: 
+
+`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 ### [initialize()]()
 
@@ -125,19 +178,6 @@ This is useful when connecting to a host running behind a resource lock
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-
-### [subscribeStatus(callback)]()
-
-
-
-Observe the system status.
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
 
 ### [toJSON()]()
 

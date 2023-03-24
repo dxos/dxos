@@ -95,19 +95,6 @@ Arguments:
 
 `baseComponent`: <code>FunctionComponent&lt;P&gt;</code>
 
-### [strip(obj)]()
-
-
-
-Remove keys with undefined values.
-
-
-Returns: <code>any</code>
-
-Arguments: 
-
-`obj`: <code>any</code>
-
 ### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
 
 
@@ -169,7 +156,7 @@ Returns: <code>DevtoolsHost</code>
 
 Arguments: none
 
-### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L21)
+### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L24)
 
 
 
@@ -195,7 +182,7 @@ Hook returning DXOS identity object.
 Requires ClientContext to be set via ClientProvider.
 
 
-Returns: <code>undefined | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
+Returns: <code>"null" | [Identity](/api/@dxos/react-client/interfaces/Identity)</code>
 
 Arguments: 
 
@@ -301,7 +288,7 @@ Arguments:
 
 `spaceKey`: <code>PublicKeyLike</code>
 
-### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L24)
+### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L31)
 
 
 
@@ -339,7 +326,7 @@ Arguments: none
 
 
 
-Returns: <code>undefined | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
+Returns: <code>undefined | "null" | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
 
 Arguments: none
 
