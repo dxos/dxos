@@ -71,7 +71,6 @@ const Content = () => {
         <AppMenu />
       </div>
 
-
       {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
 
       {/* Main content. */}

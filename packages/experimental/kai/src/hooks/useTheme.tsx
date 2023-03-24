@@ -7,14 +7,19 @@ import {
   Atom,
   Bag,
   Bank,
-  Basketball, Bug, Buildings, Confetti,
-  Factory, Presentation, Rocket,
+  Basketball,
+  Bug,
+  Buildings,
+  Confetti,
+  Factory,
+  Presentation,
+  Rocket,
   Users
 } from '@phosphor-icons/react';
 import { FC, useState } from 'react';
 
-
 import { useSubscription } from '@dxos/react-client';
+
 import { useAppRouter } from '../hooks';
 
 export const icons: { id: string; Icon: FC<any> }[] = [
@@ -188,7 +193,7 @@ export const useTheme = (): Theme => {
   const [theme, setTheme] = useState(() => getTheme(space?.properties.theme));
   useSubscription(() => {
     setTheme(getTheme(space?.properties.theme));
-  }, [space?.properties])
+  }, [space?.properties]);
 
   return theme;
 };

@@ -56,8 +56,8 @@ export type UseSpacesParams = {
   /**
    * Return uninitialized spaces as well.
    */
-  all?: boolean
-}
+  all?: boolean;
+};
 
 /**
  * Get all Spaces available to current user.
@@ -76,5 +76,5 @@ export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   );
 
   // TODO(dmaretskyi): Array reference equality.
-  return spaces.filter(space => all || space.state.get() === SpaceState.READY);
+  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
 };
