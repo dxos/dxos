@@ -15,7 +15,7 @@ import { runSetup } from './util';
 export type MochaExecutorOptions = NodeOptions &
   BrowserOptions &
   PlaywrightOptions & {
-    environments?: (TestEnvironment | 'all')[];
+    environments?: (TestEnvironment | 'all' | 'core')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
     serve?: string;
@@ -87,6 +87,8 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
   if (options.environments) {
     return options.environments.includes('all')
       ? Array.from(TestEnvironments)
+      : options.environments.includes('core')
+      ? ['nodejs', ...Array.from(BrowserTypes)]
       : (options.environments as TestEnvironment[]);
   } else if (process.env.CI) {
     return options.ciEnvironments;
