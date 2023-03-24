@@ -57,7 +57,7 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
 
         if (key === '__CONFIG_DEFAULTS__') {
           // Default config is required.
-          throw err;
+          throw new Error(`Failed to load default config file from ${value}`);
         }
       }
 
