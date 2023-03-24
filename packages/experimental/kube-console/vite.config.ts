@@ -7,6 +7,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+import mkcert from 'vite-plugin-mkcert';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -22,13 +23,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   server: {
     host: true,
-    https:
-      process.env.HTTPS === 'true'
-        ? {
-            key: './key.pem',
-            cert: './cert.pem'
-          }
-        : false
+    https: process.env.HTTPS === 'true'
   },
 
   build: {
@@ -36,6 +31,8 @@ export default defineConfig({
   },
 
   plugins: [
+    mkcert(),
+
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
