@@ -9,6 +9,7 @@ import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
 import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client';
+import { log } from '@dxos/log';
 
 type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 
@@ -68,7 +69,7 @@ const getInvitationSubscribable = (
   Domain: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
-  console.log('[subscribing to invitation]', invitation);
+  log.info('[subscribing to invitation]', invitation);
   return {
     subscribe: (
       next: (value: InvitationEvent) => void,
@@ -77,32 +78,32 @@ const getInvitationSubscribable = (
     ): Subscription => {
       const unsubscribe = invitation.subscribe({
         onAuthenticating: (invitation: Invitation) => {
-          console.log('[invitation authenticating]', Domain, invitation);
+          log.info('[invitation authenticating]', { Domain, invitation });
           return next({ type: `authenticate${Domain}Invitation`, invitation });
         },
         onCancelled: () => {
-          console.log('[invitation cancelled]', Domain, invitation);
+          log.warn('[invitation cancelled]', { Domain });
           return next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
         },
         onTimeout: () => {
-          console.log('[invitation timeout]', Domain, invitation);
+          log.error('[invitation timeout]', { Domain });
           return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
         },
         onConnecting: (invitation: Invitation) => {
-          console.log('[invitation connecting]', Domain, invitation);
+          log.info('[invitation connecting]', { Domain, invitation });
           return next({ type: `connect${Domain}Invitation`, invitation });
         },
         onConnected: (invitation: Invitation) => {
-          console.log('[invitation connected]', Domain, invitation);
+          log.info('[invitation connected]', { Domain, invitation });
           return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
         },
         onSuccess: () => {
-          console.log('[invitation success]', Domain, invitation);
+          log.info('[invitation success]', { Domain });
           next({ type: `succeed${Domain}Invitation` });
           return complete?.();
         },
         onError: (error: any) => {
-          console.log('[invitation errored]', Domain, invitation);
+          log.error('[invitation errored]', { Domain, error });
           next({ type: `fail${Domain}Invitation`, reason: 'error' });
           return error(error);
         }
@@ -330,7 +331,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space
       }),
       log: (context, event) => {
-        console.log('transition', event, context.halo.invitation, context.space.invitation);
+        log.info('transition', {
+          event,
+          haloInvitation: context.halo.invitation,
+          spaceInvitation: context.space.invitation
+        });
       }
     }
   }

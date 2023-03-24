@@ -3,6 +3,7 @@
 //
 import React, { useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { DensityProvider, useId } from '@dxos/react-components';
 
@@ -44,7 +45,7 @@ export const JoinPanel = ({
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       // simple state logging
-      console.log('[state]', state);
+      log.info('[state]', state);
     });
 
     return subscription.unsubscribe;
@@ -105,11 +106,18 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches({
-                choosingIdentity: {
-                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
+              active: [
+                {
+                  choosingIdentity: {
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
+                  }
+                },
+                {
+                  choosingIdentity: {
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
+                  }
                 }
-              }),
+              ].some(joinState.matches),
               Domain: 'Halo'
             }}
           />
@@ -118,9 +126,6 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: [
-                {
-                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
-                },
                 {
                   acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
                 },
@@ -133,7 +138,12 @@ export const JoinPanel = ({
                   }
                 }
               ].some(joinState.matches),
-              Domain: 'Halo'
+              Domain: 'Halo',
+              ...(joinState.matches({
+                acceptingHaloInvitation: {
+                  acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+                }
+              }) && { failed: true })
             }}
           />
           <InvitationAccepted
@@ -188,9 +198,6 @@ export const JoinPanel = ({
               joinSend,
               active: [
                 {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
-                },
-                {
                   acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
                 },
                 {
@@ -203,7 +210,11 @@ export const JoinPanel = ({
                 }
               ].some(joinState.matches),
               Domain: 'Space',
-              ...(joinState.matches('authenticationFailingSpaceVerificationCode') && { failed: true })
+              ...(joinState.matches({
+                acceptingSpaceInvitation: {
+                  acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
+                }
+              }) && { failed: true })
             }}
           />
           <InvitationAccepted

@@ -32,11 +32,11 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     if (!invitationCode) {
       const nextInvitationCode = InvitationEncoder.encode(invitation);
-      // log.info('[next invitation code]', { nextInvitationCode });
+      log.info('[next invitation code]', { nextInvitationCode });
       setInvitationCode(nextInvitationCode);
     }
     if (invitation.authenticationCode) {
-      console.log('[verification code]', invitation.authenticationCode);
+      log.info('[verification code]', invitation.authenticationCode);
     }
   }, []);
 

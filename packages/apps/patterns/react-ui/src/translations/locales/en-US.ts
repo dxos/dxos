@@ -62,5 +62,6 @@ export const os = {
   'view space invitations label': 'View space invitations',
   'toggle sidebar label': 'Open/close sidebar',
   'open sidebar label': 'Open sidebar',
-  'close sidebar label': 'Close sidebar'
+  'close sidebar label': 'Close sidebar',
+  'welcome message': 'Welcome'
 };

@@ -59,17 +59,20 @@ const InvitationActions = ({
     case Invitation.State.ERROR:
     default:
       return (
-        <Button
-          disabled={disabled}
-          className='grow flex items-center gap-2 pli-2'
-          onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
-          data-autofocus={`${Domain.toLowerCase()} invitation acceptor; invitation rescuer`}
-          data-testid='invitation-rescuer-reset'
-        >
-          <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
-          <span className='grow'>{t('reset label')}</span>
-          <ArrowsClockwise weight='bold' className={getSize(5)} />
-        </Button>
+        <>
+          <div role='none' className='grow' />
+          <Button
+            disabled={disabled}
+            className='flex items-center gap-2 pli-2'
+            onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
+            data-autofocus={`${Domain.toLowerCase()} invitation acceptor; invitation rescuer`}
+            data-testid='invitation-rescuer-reset'
+          >
+            <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
+            <span className='grow'>{t('reset label')}</span>
+            <ArrowsClockwise className={getSize(4)} />
+          </Button>
+        </>
       );
   }
 };

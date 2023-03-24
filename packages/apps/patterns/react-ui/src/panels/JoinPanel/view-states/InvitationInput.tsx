@@ -34,7 +34,6 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
         onChange={({ target: { value } }) => setInputValue(value)}
         slots={{
           root: { className: 'm-0' },
-          label: { className: 'sr-only' },
           input: {
             'data-autofocus': `inputting${Domain}InvitationCode`,
             'data-testid': `${Domain.toLowerCase()}-invitation-input`,

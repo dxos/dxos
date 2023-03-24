@@ -31,7 +31,7 @@ const PureInvitationAcceptedContent = ({
     <Button
       {...(onDone && { onClick: () => onDone(result) })}
       disabled={disabled}
-      className='grow flex items-center gap-2 pli-2'
+      className='flex items-center gap-2 pli-2'
       data-autofocus={`success${Domain}Invitation`}
       data-testid={`${Domain.toLowerCase()}-invitation-accepted-done`}
     >
@@ -41,7 +41,13 @@ const PureInvitationAcceptedContent = ({
     </Button>
   );
 
-  return doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton;
+  return (
+    <>
+      <p className=' text-center text-sm font-system-normal'>{t('welcome message')}</p>
+      <div role='none' className='grow' />
+      {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+    </>
+  );
 };
 
 const InvitationAcceptedContent = (
