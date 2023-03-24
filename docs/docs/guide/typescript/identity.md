@@ -17,7 +17,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  const identity = client.halo.profile;
+  const identity = client.halo.identity.get();
 })();
 ```
 
@@ -34,7 +34,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  const identity = await client.halo.createProfile();
+  const identity = await client.halo.createIdentity();
 })();
 ```
 
@@ -48,7 +48,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  const identity = await client.halo.createProfile({
+  const identity = await client.halo.createIdentity({
     displayName: 'Alice'
   });
 })();

@@ -1,12 +1,12 @@
 # Class `AuthenticatingInvitationProvider`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:77](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L77)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:78](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L78)</sub>
 
 
 Cancelable observer that relays authentication requests.
 
 
 ## Constructors
-### [constructor(_actions)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L82)
+### [constructor(_actions)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L83)
 
 
 
@@ -29,7 +29,7 @@ Proxy used to dispatch callbacks to each subscription.
 ### [cancelled]()
 Type: <code>boolean</code>
 
-### [invitation](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L56)
+### [invitation](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L57)
 Type: <code>undefined | [Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 ### [value]()
@@ -37,7 +37,7 @@ Type: <code>undefined | Value</code>
 
 
 ## Methods
-### [authenticate(authenticationCode)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L88)
+### [authenticate(authenticationCode)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L89)
 
 
 
@@ -55,7 +55,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [setInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L60)
+### [setInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L61)
 
 
 

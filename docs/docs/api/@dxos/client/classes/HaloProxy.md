@@ -1,12 +1,12 @@
 # Class `HaloProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/halo-proxy.ts:57](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L57)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/halo-proxy.ts:52](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L52)</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L72)
+### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L67)
 
 
 
@@ -18,29 +18,29 @@ Arguments:
 
 
 ## Properties
-### [identityChanged](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L62)
-Type: <code>Event&lt;void&gt;</code>
+### [contacts](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L97)
+Type: <code>MulticastObservable&lt;[Contact](/api/@dxos/client/interfaces/Contact)[]&gt;</code>
 
-### [invitationsUpdate](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L61)
-Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)&gt;</code>
-
-### [device](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L94)
+### [device](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L93)
 Type: <code>undefined | Device</code>
 
-### [identity](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L90)
-Type: <code>undefined | [Identity](/api/@dxos/client/interfaces/Identity)</code>
+### [devices](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L89)
+Type: <code>MulticastObservable&lt;Device[]&gt;</code>
+
+### [identity](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L85)
+Type: <code>MulticastObservable&lt;"null" | [Identity](/api/@dxos/client/interfaces/Identity)&gt;</code>
 
 User identity info.
 
-### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L98)
-Type: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]</code>
+### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L101)
+Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]&gt;</code>
 
-### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L103)
+### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L106)
 Type: <code>boolean</code>
 
 
 ## Methods
-### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L76)
+### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L71)
 
 
 
@@ -48,7 +48,7 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L288)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L285)
 
 
 
@@ -63,18 +63,7 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/client/types/InvitationsOptions)</code>
 
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L149)
-
-
-
-Destroy the instance and clean-up subscriptions.
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-
-### [createIdentity(profile)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L160)
+### [createIdentity(profile)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L175)
 
 
 
@@ -88,7 +77,7 @@ Arguments:
 
 `profile`: <code>object</code>
 
-### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L246)
+### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L244)
 
 
 
@@ -101,34 +90,7 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/client/types/InvitationsOptions)</code>
 
-### [getContacts()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L186)
-
-
-
-Returns: <code>[Contact](/api/@dxos/client/interfaces/Contact)[]</code>
-
-Arguments: none
-
-### [getDevices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L178)
-
-
-
-Returns: <code>Device[]</code>
-
-Arguments: none
-
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L110)
-
-
-
-Allocate resources and set-up internal subscriptions.
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-
-### [presentCredentials(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L316)
+### [presentCredentials(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L314)
 
 
 
@@ -141,7 +103,7 @@ Arguments:
 
 `options`: <code>object</code>
 
-### [queryCredentials(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L198)
+### [queryCredentials(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L195)
 
 
 
@@ -154,7 +116,7 @@ Arguments:
 
 `options`: <code>object</code>
 
-### [recoverIdentity(recoveryKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L167)
+### [recoverIdentity(recoveryKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L183)
 
 
 
@@ -164,7 +126,7 @@ Arguments:
 
 `recoveryKey`: <code>Uint8Array</code>
 
-### [removeInvitation(id)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L277)
+### [removeInvitation(id)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L274)
 
 
 
@@ -177,37 +139,7 @@ Arguments:
 
 `id`: <code>string</code>
 
-### [subscribeContacts(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L190)
-
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [subscribeDevices(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L182)
-
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [subscribeIdentity(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L174)
-
-
-
-Returns: <code>function</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L81)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L75)
 
 
 
@@ -215,7 +147,7 @@ Returns: <code>object</code>
 
 Arguments: none
 
-### [writeCredentials(credentials)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L300)
+### [writeCredentials(credentials)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L297)
 
 
 
