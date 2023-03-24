@@ -9,7 +9,7 @@ import { Identity, Space, Text } from '@dxos/client';
 import { useSubscription } from '@dxos/react-client';
 import type { Doc, YText, YXmlFragment } from '@dxos/text-model';
 
-import { SpaceProvider } from './yjs';
+import { SpaceAwarenessProvider } from './yjs';
 
 export type ComposerSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
@@ -58,7 +58,7 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Co
       return undefined;
     }
 
-    return new SpaceProvider({ space, doc: text.doc });
+    return new SpaceAwarenessProvider({ space, doc: text.doc, channel: `yjs.awareness.${text.id}` });
   }, [identity, space, text?.doc]);
 
   if (!text?.doc || !text?.content) {
