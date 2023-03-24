@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 
-import { Space } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -52,12 +52,20 @@ export const useOrCreateFirstSpace = () => {
   return space;
 };
 
+export type UseSpacesParams = {
+  /**
+   * Return uninitialized spaces as well.
+   */
+  all?: boolean;
+};
+
 /**
  * Get all Spaces available to current user.
  * Requires a ClientProvider somewhere in the parent tree.
+ * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = (): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
   const spaces = useSyncExternalStore(
     (listener) => {
@@ -67,5 +75,6 @@ export const useSpaces = (): Space[] => {
     () => client.spaces.get()
   );
 
-  return spaces;
+  // TODO(dmaretskyi): Array reference equality.
+  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
 };

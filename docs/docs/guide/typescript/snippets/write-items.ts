@@ -8,9 +8,9 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // grab an object

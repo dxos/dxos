@@ -57,12 +57,14 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => join(context.config.configDir, 'dx.yml')
+      default: async (context: any) => join(context.config.configDir, 'dx.yml'),
+      aliases: ['c']
     }),
 
     timeout: Flags.integer({
       description: 'Timeout in seconds',
-      default: 30
+      default: 30,
+      aliases: ['t']
     })
 
     // TODO(mykola): Implement JSON args.
@@ -139,7 +141,7 @@ export abstract class BaseCommand extends Command {
 
     const configExists = await exists(configFile);
     const configContent = await readFile(
-      configExists ? configFile : join(__dirname, '../config/config-default.yml'),
+      configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
       'utf-8'
     );
     if (!configExists) {

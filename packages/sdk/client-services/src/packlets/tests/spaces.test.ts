@@ -68,6 +68,7 @@ describe('Spaces', () => {
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
+      await space.waitUntilReady();
 
       const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
@@ -117,7 +118,7 @@ describe('Spaces', () => {
 
     const [_, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
 
-    const space2 = client2.getSpace(invitation2.spaceKey!)!;
+    const space2 = await client2.getSpace(invitation2.spaceKey!)!.waitUntilReady();
 
     const hello = new Trigger();
     {

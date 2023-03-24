@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L30)
+### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L34)
 
 
 
@@ -68,20 +68,7 @@ Arguments:
 
 `object`: <code>unknown</code>
 
-### [strip(obj)]()
-
-
-
-Remove keys with undefined values.
-
-
-Returns: <code>any</code>
-
-Arguments: 
-
-`obj`: <code>any</code>
-
-### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L99)
+### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L100)
 
 
 

@@ -108,16 +108,20 @@ Values:
 
 - `SPACE_INVITATIONS`
 
-### [`SpaceStatus`]()
+### [`SpaceState`]()
+
+Runtime state of the space object.
 
 Defined in:
    file://./../../../dxos/client/services.proto
 
 
 Values:
-- `ACTIVE`
+- `CLOSED`
 
 - `INACTIVE`
+
+- `READY`
 
 ### [`SystemStatus`]()
 

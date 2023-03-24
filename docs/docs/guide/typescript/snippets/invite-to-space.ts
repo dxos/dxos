@@ -9,9 +9,9 @@ const client = new Client();
 (async () => {
   await client.initialize();
   // ensure an identity exists
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space
-  const space = await client.echo.createSpace();
+  const space = await client.createSpace();
   // create an invitation to join the space
   const { invitation } = space.createInvitation();
   if (invitation) {

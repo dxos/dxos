@@ -8,17 +8,17 @@ import {
   Bag,
   Bank,
   Basketball,
-  Buildings,
   Bug,
-  Presentation,
+  Buildings,
   Confetti,
   Factory,
+  Presentation,
   Rocket,
   Users
 } from '@phosphor-icons/react';
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 
-import { Properties } from '@dxos/client';
+import { useSubscription } from '@dxos/react-client';
 
 import { useAppRouter } from '../hooks';
 
@@ -187,14 +187,13 @@ const defaultTheme = getTheme('sky') ?? themes[0];
 // TODO(wittjosiah): Update head theme as well.
 export const useTheme = (): Theme => {
   const { space } = useAppRouter();
-  const [theme, setTheme] = useState(getTheme(space?.properties.theme));
-  useEffect(() => {
+
+  // TODO(dmaretskyi): useObserver hook? (memo with reactive subscription -- observer(...) in a hook form)
+  // const theme = useObserver(() => getTheme(space?.properties.theme))
+  const [theme, setTheme] = useState(() => getTheme(space?.properties.theme));
+  useSubscription(() => {
     setTheme(getTheme(space?.properties.theme));
-    const query = space?.db.query(Properties.filter());
-    return query?.subscribe(() => {
-      setTheme(getTheme(space?.properties.theme));
-    });
-  }, [space]);
+  }, [space?.properties]);
 
   return theme;
 };

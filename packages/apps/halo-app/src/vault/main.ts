@@ -54,12 +54,13 @@ const main = async () => {
         channel: 'dxos:app',
         onOrigin: async (origin) => {
           iframeRuntime.origin = origin;
-          await iframeRuntime.start();
           iframeRuntime.shell && (await startShell(config, iframeRuntime.shell, iframeRuntime.services, origin));
         }
       }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
+
+    await iframeRuntime.start();
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
