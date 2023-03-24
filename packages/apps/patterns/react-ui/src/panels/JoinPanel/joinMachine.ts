@@ -11,6 +11,8 @@ import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos
 import { Invitation, InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
 
+import { JoinPanelMode } from './JoinPanelProps';
+
 type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 
 type InvitationDomainContext = Partial<{
@@ -22,6 +24,7 @@ type InvitationDomainContext = Partial<{
 }>;
 
 type JoinMachineContext = {
+  mode: JoinPanelMode;
   identity: Identity | null;
   halo: InvitationDomainContext;
   space: InvitationDomainContext;
@@ -119,6 +122,10 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
     states: {
       [`unknown${Domain}`]: {
         always: [
+          {
+            target: '#join.finishingJoining',
+            cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space'
+          },
           {
             target: `inputting${Domain}InvitationCode`,
             cond: `no${Domain}Invitation`,
@@ -247,6 +254,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     id: 'join',
     predictableActionArguments: true,
     context: {
+      mode: 'default',
       identity: null,
       halo: {},
       space: {}
@@ -265,10 +273,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
-          acceptingHaloInvitation: acceptingInvitationTemplate(
-            'Halo',
-            '#join.choosingIdentity.confirmingAddedIdentity'
-          ),
+          acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '#join.acceptingSpaceInvitation'),
           confirmingAddedIdentity: {}
         },
         on: {

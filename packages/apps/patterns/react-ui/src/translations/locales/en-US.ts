@@ -63,5 +63,6 @@ export const os = {
   'toggle sidebar label': 'Open/close sidebar',
   'open sidebar label': 'Open sidebar',
   'close sidebar label': 'Close sidebar',
-  'welcome message': 'Welcome'
+  'welcome message': 'Welcome',
+  'selecting identity heading': 'Selecting identity'
 };

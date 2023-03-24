@@ -21,7 +21,7 @@ import {
 } from './view-states';
 
 export const JoinPanel = ({
-  mode,
+  mode = 'default',
   initialInvitationCode,
   exitActionParent,
   onExit,
@@ -35,6 +35,7 @@ export const JoinPanel = ({
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
+      mode,
       identity,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode }

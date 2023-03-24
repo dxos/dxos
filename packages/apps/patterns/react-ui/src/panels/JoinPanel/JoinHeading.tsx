@@ -65,10 +65,14 @@ export const JoinHeading = forwardRef(
           (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
         <Heading
           level={1}
-          className={mx(defaultDescription, 'font-body font-system-normal text-center text-sm grow pbe-2')}
+          className={mx(
+            defaultDescription,
+            'font-body font-system-normal text-center text-sm grow pbe-2',
+            mode === 'halo-only' && preventExit ? 'sr-only' : 'opacity-0'
+          )}
           id={titleId}
         >
-          {t('joining space heading')}
+          {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         </Heading>
         <div role='group' className='flex items-center justify-center gap-2'>
           {invitationKey ? (
