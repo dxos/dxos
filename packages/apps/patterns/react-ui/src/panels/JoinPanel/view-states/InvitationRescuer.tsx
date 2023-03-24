@@ -77,7 +77,7 @@ const InvitationActions = ({
 export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConnectorProps) => {
   const disabled = !viewStateProps.active;
   const { joinSend, joinState } = viewStateProps;
-  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
+  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitationObservable;
   const { t } = useTranslation('os');
   return (
     <ViewState {...viewStateProps}>

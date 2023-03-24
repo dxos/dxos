@@ -3,7 +3,7 @@
 //
 import React, { useEffect } from 'react';
 
-import { InvitationEncoder, useClient, useIdentity } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 import { DensityProvider, useId } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
@@ -35,14 +35,9 @@ export const JoinPanel = ({
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       identity,
-      ...(initialInvitationCode &&
-        (mode === 'halo-only'
-          ? {
-              halo: { invitation: client.halo.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
-            }
-          : {
-              space: { invitation: client.acceptInvitation(InvitationEncoder.decode(initialInvitationCode)) }
-            }))
+      ...(initialInvitationCode && {
+        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode }
+      })
     }
   });
 
@@ -66,7 +61,7 @@ export const JoinPanel = ({
     }
   }, [joinState.value]);
 
-  const spaceInvitation = joinState.context.space.invitation;
+  const spaceInvitation = joinState.context.space.invitationObservable;
 
   return (
     <DensityProvider density='fine'>

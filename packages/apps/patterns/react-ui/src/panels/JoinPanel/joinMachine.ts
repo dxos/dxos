@@ -15,7 +15,8 @@ type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 type InvitationDomainContext = Partial<{
   failReason: FailReason | null;
   unredeemedCode: string;
-  invitation: AuthenticatingInvitationObservable;
+  invitationObservable: AuthenticatingInvitationObservable;
+  invitation: Invitation;
   invitationSubscribable: Subscribable<InvitationEvent>;
 }>;
 
@@ -35,6 +36,17 @@ type SetInvitationCodeEvent = {
   code: string;
 };
 
+type SetInvitationEvent = {
+  type:
+    | 'authenticateHaloInvitation'
+    | 'authenticateSpaceInvitation'
+    | 'connectHaloInvitation'
+    | 'connectSpaceInvitation'
+    | 'connectionSuccessHaloInvitation'
+    | 'connectionSuccessSpaceInvitation';
+  invitation: Invitation;
+};
+
 type FailInvitationEvent = {
   type: 'failHaloInvitation' | 'failSpaceInvitation';
   reason: FailReason;
@@ -42,26 +54,21 @@ type FailInvitationEvent = {
 
 type EmptyInvitationEvent = {
   type:
-    | 'authenticateHaloInvitation'
-    | 'authenticateSpaceInvitation'
     | 'authenticateHaloVerificationCode'
     | 'authenticateSpaceVerificationCode'
     | 'resetHaloInvitation'
     | 'resetSpaceInvitation'
-    | 'connectHaloInvitation'
-    | 'connectSpaceInvitation'
-    | 'connectionSuccessHaloInvitation'
-    | 'connectionSuccessSpaceInvitation'
     | 'succeedHaloInvitation'
     | 'succeedSpaceInvitation';
 };
 
-type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | EmptyInvitationEvent;
+type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitationEvent | EmptyInvitationEvent;
 
 const getInvitationSubscribable = (
   Domain: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
+  console.log('[subscribing to invitation]', invitation);
   return {
     subscribe: (
       next: (value: InvitationEvent) => void,
@@ -69,9 +76,9 @@ const getInvitationSubscribable = (
       complete?: () => void
     ): Subscription => {
       const unsubscribe = invitation.subscribe({
-        onAuthenticating: () => {
+        onAuthenticating: (invitation: Invitation) => {
           console.log('[invitation authenticating]', Domain, invitation);
-          return next({ type: `authenticate${Domain}Invitation` });
+          return next({ type: `authenticate${Domain}Invitation`, invitation });
         },
         onCancelled: () => {
           console.log('[invitation cancelled]', Domain, invitation);
@@ -81,13 +88,13 @@ const getInvitationSubscribable = (
           console.log('[invitation timeout]', Domain, invitation);
           return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
         },
-        onConnecting: () => {
+        onConnecting: (invitation: Invitation) => {
           console.log('[invitation connecting]', Domain, invitation);
-          return next({ type: `connect${Domain}Invitation` });
+          return next({ type: `connect${Domain}Invitation`, invitation });
         },
-        onConnected: () => {
+        onConnected: (invitation: Invitation) => {
           console.log('[invitation connected]', Domain, invitation);
-          return next({ type: `connectionSuccess${Domain}Invitation` });
+          return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
         },
         onSuccess: () => {
           console.log('[invitation success]', Domain, invitation);
@@ -133,9 +140,10 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
             always: [
               {
                 target: `connecting${Domain}Invitation`,
-                cond: (context) =>
-                  context[Domain.toLowerCase() as 'space' | 'halo'].invitation?.invitation?.state ===
-                  Invitation.State.CONNECTING,
+                cond: (context) => {
+                  const invitation = context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
+                  return !invitation || invitation?.state === Invitation.State.CONNECTING;
+                },
                 actions: 'log'
               },
               {
@@ -172,8 +180,14 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
             }.accepting${Domain}Invitation.inputting${Domain}InvitationCode`,
             actions: 'log'
           },
-          [`connect${Domain}Invitation`]: { target: `.connecting${Domain}Invitation`, actions: 'log' },
-          [`connectionSuccess${Domain}Invitation`]: { target: `.inputting${Domain}VerificationCode`, actions: 'log' },
+          [`connect${Domain}Invitation`]: {
+            target: `.connecting${Domain}Invitation`,
+            actions: ['setInvitation', 'log']
+          },
+          [`connectionSuccess${Domain}Invitation`]: {
+            target: `.inputting${Domain}VerificationCode`,
+            actions: ['setInvitation', 'log']
+          },
           [`succeed${Domain}Invitation`]: { target: successTarget, actions: 'log' },
           [`fail${Domain}Invitation`]: {
             target: `.failing${Domain}Invitation`,
@@ -290,15 +304,33 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       setInvitationCode: assign<JoinMachineContext, SetInvitationCodeEvent>({
         halo: (context, event) =>
           event.type === 'setHaloInvitationCode'
-            ? { ...context.halo, unredeemedCode: event.code, invitation: undefined }
+            ? {
+                ...context.halo,
+                unredeemedCode: event.code,
+                invitation: undefined,
+                invitationObservable: undefined,
+                invitationSubscribable: undefined
+              }
             : context.halo,
         space: (context, event) =>
           event.type === 'setSpaceInvitationCode'
-            ? { ...context.space, unredeemedCode: event.code, invitation: undefined }
+            ? {
+                ...context.space,
+                unredeemedCode: event.code,
+                invitation: undefined,
+                invitationObservable: undefined,
+                invitationSubscribable: undefined
+              }
             : context.space
       }),
+      setInvitation: assign<JoinMachineContext, SetInvitationEvent>({
+        halo: (context, event) =>
+          event.type.includes('Halo') ? { ...context.halo, invitation: event.invitation } : context.halo,
+        space: (context, event) =>
+          event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space
+      }),
       log: (context, event) => {
-        console.log('transition', event);
+        console.log('transition', event, context.halo.invitation, context.space.invitation);
       }
     }
   }
@@ -313,17 +345,12 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
   const redeemHaloInvitationCode = useCallback(
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
-        const invitation = client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode));
+        const invitationObservable = client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode));
         return {
           ...halo,
           unredeemedCode: undefined,
-          invitation,
-          invitationSubscribable: getInvitationSubscribable('Halo', invitation)
-        };
-      } else if (halo.invitation) {
-        return {
-          ...halo,
-          invitationSubscribable: getInvitationSubscribable('Halo', halo.invitation)
+          invitationObservable,
+          invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable)
         };
       } else {
         return halo;
@@ -334,17 +361,12 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
-        const invitation = client.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode));
+        const invitationObservable = client.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode));
         return {
           ...space,
           unredeemedCode: undefined,
-          invitation,
-          invitationSubscribable: getInvitationSubscribable('Space', invitation)
-        };
-      } else if (space.invitation) {
-        return {
-          ...space,
-          invitationSubscribable: getInvitationSubscribable('Space', space.invitation)
+          invitationObservable,
+          invitationSubscribable: getInvitationSubscribable('Space', invitationObservable)
         };
       } else {
         return space;

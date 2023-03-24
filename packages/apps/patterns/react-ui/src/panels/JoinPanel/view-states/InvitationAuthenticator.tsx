@@ -126,13 +126,7 @@ export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: I
   const disabled =
     !viewStateProps.active ||
     ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str));
-  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
-  console.log(
-    '[authenticator active invitation id]',
-    activeInvitation,
-    activeInvitation?.invitation,
-    activeInvitation?.invitation?.invitationId
-  );
+  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitationObservable;
   return (
     <ViewState {...viewStateProps}>
       {!activeInvitation ? (

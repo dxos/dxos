@@ -53,7 +53,8 @@ const InvitationAcceptedContent = (
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { Domain, doneActionParent: _doneActionParent, onDone: _onDone, ...viewStateProps } = props;
-  const activeInvitation = viewStateProps.joinState?.context[Domain.toLowerCase() as 'halo' | 'space'].invitation;
+  const activeInvitation =
+    viewStateProps.joinState?.context[Domain.toLowerCase() as 'halo' | 'space'].invitationObservable;
 
   return (
     <ViewState {...viewStateProps}>
