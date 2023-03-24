@@ -15,4 +15,4 @@ Type: <code>[ClientServices](/api/@dxos/react-client/types/ClientServices)</code
 
 
 ### [status](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L21)
-Type: <code>[SystemStatus](/api/@dxos/react-client/enums#SystemStatus)</code>
+Type: <code>[SystemStatus](/api/@dxos/react-client/enums#SystemStatus) | "null"</code>

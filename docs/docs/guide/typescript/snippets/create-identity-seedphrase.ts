@@ -9,7 +9,7 @@ const client = new Client();
 (async () => {
   await client.initialize();
   const seedphrase = generateSeedPhrase();
-  const identity = await client.halo.createProfile({
+  const identity = await client.halo.createIdentity({
     seedphrase
   });
   console.log(`Don't lose this recovery key: ${seedphrase}`);

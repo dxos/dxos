@@ -46,6 +46,17 @@ Examples of ways to start up different workloads in dev mode:
 | `pnpm nx serve-with-halo composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
 
+## Test commands:
+
+Examples of ways to run different test workloads:
+| Command | Description |
+| :-- | :-- |
+| `pnpm nx test client-services` | Runs the unit tests for `client-services` |
+| `pnpm nx test network-manager --tags flaky` | Runs the tests for `network-manager` which were tagged as flaky |
+| `pnpm nx test echo-db --watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `pnpm nx test echo-db --environments nodejs,webkit` | Runs the tests for `echo-db` in `nodejs` and `webkit` environments |
+| `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
+
 ## Adding new dependencies
 
 Currently, you must manually edit the individual `package.json` files to add packages. When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
+import { Browser, devices, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
 import type { BrowserContext, Page } from 'playwright';
 import { v4 } from 'uuid';
 
 import { getBrowser } from './browser';
-import { BrowserType } from './types';
+import { BrowserType, MobileType } from './types';
 import { Lock } from './util';
 
 export type { BrowserType } from './types';
@@ -94,6 +94,36 @@ export const extensionId = async (context: BrowserContext) => {
   return extensionId;
 };
 
+const getProject = (browser: BrowserType | MobileType): Project => {
+  switch (browser) {
+    case 'chromium':
+    case 'firefox':
+    case 'webkit':
+      return {
+        name: browser,
+        use: {
+          browserName: browser
+        }
+      };
+
+    case 'android':
+      return {
+        name: 'android',
+        use: {
+          ...devices['Pixel 5']
+        }
+      };
+
+    case 'ios':
+      return {
+        name: 'ios',
+        use: {
+          ...devices['iPhone SE']
+        }
+      };
+  }
+};
+
 export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   testDir: '.',
   outputDir: process.env.OUTPUT_PATH,
@@ -110,13 +140,5 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
     headless: process.env.HEADLESS !== 'false',
     trace: 'on-first-retry'
   },
-  projects: process.env.BROWSERS?.split(',').map(
-    (browser) =>
-      ({
-        name: browser,
-        use: {
-          browserName: browser
-        }
-      } as Project)
-  )
+  projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType))
 };

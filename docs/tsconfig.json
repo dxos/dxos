@@ -13,8 +13,8 @@
     ]
   },
   "include": [
+    "docs",
     "src",
-    "typings.d.ts",
     "vuepress.config.ts"
   ],
   "references": [

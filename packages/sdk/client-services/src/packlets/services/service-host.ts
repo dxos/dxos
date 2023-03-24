@@ -62,6 +62,7 @@ export class ClientServicesHost {
    * @internal
    */
   _serviceContext!: ServiceContext;
+  private _opening = false;
   private _open = false;
 
   constructor({
@@ -83,7 +84,9 @@ export class ClientServicesHost {
     this._resourceLock = lockKey
       ? new VaultResourceLock({
           lockKey,
-          onAcquire: () => this.open(),
+          onAcquire: () => {
+            this._opening || this.open();
+          },
           onRelease: () => this.close()
         })
       : undefined;
@@ -163,7 +166,8 @@ export class ClientServicesHost {
     assert(this._storage, 'storage not set');
     assert(this._networkManager, 'network manager not set');
 
-    log('opening...');
+    this._opening = true;
+    log('opening...', { lockKey: this._resourceLock?.lockKey });
     await this._resourceLock?.acquire();
 
     // TODO(wittjosiah): Make re-entrant.
@@ -213,6 +217,7 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open();
+    this._opening = false;
     this._open = true;
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;

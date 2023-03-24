@@ -1,8 +1,9 @@
 # Class `DatabaseRouter`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database-router.d.ts:17]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database-router.d.ts:18]()</sub>
 
 
 Manages cross-space databases.
+Tracks observable mutations on objects.
 
 
 ## Constructors

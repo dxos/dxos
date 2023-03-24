@@ -96,6 +96,7 @@
       "options": {
         "ciEnvironments": [
           "chromium",
+          "ios",
           "webkit"
         ],
         "coveragePath": "coverage/packages/apps/halo-app",

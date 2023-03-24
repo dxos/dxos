@@ -7,10 +7,10 @@ import { Client, InvitationEncoder } from '@dxos/client';
 const client = new Client();
 
 // create a space
-const space = await client.echo.createSpace();
+const space = await client.createSpace();
 
 // get spaces
-const { value: spaces, subscribe } = client.echo.querySpaces();
+const spaces = client.spaces.get();
 
 // create an invitation to join the space, it will be used to locate the inviter
 // in the MESH and to create a secured peer connection
@@ -31,7 +31,7 @@ const authCode = invitation?.authenticationCode!;
 const receivedInvitation = InvitationEncoder.decode(code);
 
 // accept the invitation
-const { authenticate } = client.echo.acceptInvitation(receivedInvitation);
+const { authenticate } = client.acceptInvitation(receivedInvitation);
 
 // verify it's secure by sending the second factor authCode from above TODO:
 // ignore exclamation mark

@@ -1,5 +1,5 @@
 # Class `AccessObserver`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database-router.d.ts:37]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database-router.d.ts:38]()</sub>
 
 
 Observes object access.

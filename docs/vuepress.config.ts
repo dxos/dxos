@@ -49,9 +49,9 @@ const config: UserConfig = defineUserConfig({
       '/api/': await apiSidebar()
     }),
     navbarLayout: {
-      left: ['Brand', 'Links'],
+      start: ['Brand', 'Links'],
       center: [],
-      right: ['Search', 'Outlook', 'Repo']
+      end: ['Search', 'Outlook', 'Repo']
     },
     navbar: [
       {
@@ -70,7 +70,7 @@ const config: UserConfig = defineUserConfig({
         sup: true,
         attrs: true,
         figure: true,
-        imageMark: true
+        imgMark: true
       }
     }
   }),
