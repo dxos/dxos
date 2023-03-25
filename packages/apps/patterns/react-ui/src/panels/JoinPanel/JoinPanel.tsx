@@ -127,14 +127,20 @@ export const JoinPanel = ({
               joinSend,
               active: [
                 {
-                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
+                  choosingIdentity: {
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
+                  }
                 },
                 {
-                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
+                  choosingIdentity: {
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
+                  }
                 },
                 {
-                  acceptingHaloInvitation: {
-                    acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+                  choosingIdentity: {
+                    acceptingHaloInvitation: {
+                      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+                    }
                   }
                 }
               ].some(joinState.matches),
@@ -150,11 +156,14 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches({
-                choosingIdentity: {
-                  acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
-                }
-              }),
+              active: [
+                {
+                  choosingIdentity: {
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
+                  }
+                },
+                'finishingJoiningHalo'
+              ].some(joinState.matches),
               Domain: 'Halo',
               doneActionParent,
               onDone
@@ -226,7 +235,7 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches('finishingJoining'),
+              active: joinState.matches('finishingJoiningSpace'),
               Domain: 'Space',
               doneActionParent,
               onDone

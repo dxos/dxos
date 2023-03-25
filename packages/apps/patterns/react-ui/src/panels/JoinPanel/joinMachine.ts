@@ -123,7 +123,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       [`unknown${Domain}`]: {
         always: [
           {
-            target: '#join.finishingJoining',
+            target: '#join.finishingJoiningHalo',
             cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space'
           },
           {
@@ -288,8 +288,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
         }
       },
-      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoining'),
-      finishingJoining: {
+      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
+      finishingJoiningSpace: {
+        type: 'final'
+      },
+      finishingJoiningHalo: {
         type: 'final'
       }
     }

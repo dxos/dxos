@@ -189,7 +189,9 @@ export class InvitationsManager {
   async doneInvitation(id: number, type: 'device' | 'space') {
     const peer = this._peer(id);
     // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(type === 'device' ? 'identity-added-done' : 'space-invitation-accepted-done').click();
+    await peer
+      .getByTestId(type === 'device' ? 'halo-invitation-accepted-done' : 'space-invitation-accepted-done')
+      .click();
   }
 
   // TODO(wittjosiah): Peer manager?
