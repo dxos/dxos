@@ -46,7 +46,7 @@ export class Swarm {
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
    */
   @logInfo
-  readonly instanceId = PublicKey.random();
+  readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * New connection to a peer is started.
@@ -97,6 +97,13 @@ export class Swarm {
         onMessage: async (message) => await this._swarmMessenger.receiveMessage(message)
       })
       .catch((error) => log.catch(error));
+
+    log.trace('dxos.mesh.swarm', {
+      span: {
+        id: this._instanceId,
+        op: 'begin',
+      }
+    })
   }
 
   get connections() {
@@ -124,6 +131,13 @@ export class Swarm {
 
   // TODO(burdon): async open?
   async destroy() {
+    log.trace('dxos.mesh.swarm', {
+      span: {
+        id: this._instanceId,
+        op: 'end',
+      }
+    })
+
     log('destroying...');
     await this._ctx.dispose();
     await this._topology.destroy();
@@ -273,6 +287,7 @@ export class Swarm {
           }
         }
       );
+      peer._traceParent = this._instanceId;
       this._peers.set(peerId, peer);
     }
 

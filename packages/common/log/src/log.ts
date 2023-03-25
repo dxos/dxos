@@ -15,6 +15,7 @@ type LogFunction = (message: string, context?: LogContext, meta?: LogMetadata) =
  * Logging methods.
  */
 interface LogMethods {
+  trace: LogFunction;
   debug: LogFunction;
   info: LogFunction;
   warn: LogFunction;
@@ -49,6 +50,7 @@ const createLog = (): LogImp => {
   // TODO(burdon): API to set context and separate error object.
   //  E.g., log.warn('failed', { key: 123 }, err);
 
+  log.trace = (...params) => processLog(LogLevel.TRACE, ...params);
   log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
   log.info = (...params) => processLog(LogLevel.INFO, ...params);
   log.warn = (...params) => processLog(LogLevel.WARN, ...params);
@@ -64,7 +66,7 @@ const createLog = (): LogImp => {
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    log._config.processors.forEach(processor => (log._config, { level, message, context, meta, error }));
+    log._config.processors.forEach(processor => processor(log._config, { level, message, context, meta, error }));
   };
 
   return log;

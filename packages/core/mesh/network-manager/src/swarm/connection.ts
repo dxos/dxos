@@ -57,6 +57,9 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
+  public _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
+
   constructor(
     public readonly topic: PublicKey,
     public readonly ownId: PublicKey, // TODO(burdon): peerID?
@@ -87,6 +90,13 @@ export class Connection {
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(ConnectionState.CONNECTING);
+    log.trace('dxos.trace.connection', { 
+      span: {
+        op: 'begin',
+        id: this._instanceId,
+        parent: this._traceParent,
+      }
+    });
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
     this._protocol.initialize().catch((err) => {
@@ -142,8 +152,14 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-
     this._changeState(ConnectionState.CLOSING);
+    log.trace('dxos.trace.connection', { 
+      span: {
+        op: 'end',
+        id: this._instanceId,
+        parent: this._traceParent,
+      }
+    });
 
     log('closing...', { peerId: this.ownId });
 
