@@ -141,7 +141,9 @@ export class InvitationsManager {
   async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {
     const peer = this._peer(id);
     // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(type === 'device' ? 'join-identity' : 'select-identity').click();
+    if (type === 'device') {
+      await peer.getByTestId('join-identity').click();
+    }
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
     await this.page.keyboard.press('Enter');
   }
