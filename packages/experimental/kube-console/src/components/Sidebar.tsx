@@ -18,15 +18,15 @@ export type SidebarProps = {
   onActiveChange: (module: string) => void;
 };
 
-// TODO(burdon): Theme colors?
 export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
   const config = useConfig();
   const version = config.values?.runtime?.app?.build?.version;
 
   return (
-    <div className='flex flex-col h-full space-y-4 bg-zinc-800'>
+    <div className='flex flex-col h-full space-y-4 bg-sidebar-bg dark:bg-dark-sidebar-bg'>
       <div className='flex p-2 items-center space-x-2'>
         <Link to='/'>
+          {/* Create SVG so able to set color for theme. */}
           <Logo className='w-[32px] h-[32px]' />
         </Link>
         <div className='text-xl font-thin'>CONSOLE</div>

@@ -75,7 +75,7 @@ export const StatusPage = () => {
         columns={columns}
         data={services}
         slots={{
-          header: { className: 'bg-black' },
+          header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
           cell: { className: 'align-start font-mono font-thin' }
         }}
       />

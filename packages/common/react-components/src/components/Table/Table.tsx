@@ -68,14 +68,14 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
   );
 
   return (
-    // TODO(burdon): Remove table class to force scrolling.
     <div className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
+        {/* TODO(burdon): Header is transparent. */}
         <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
-            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b border-zinc-300'>
+            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b'>
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
