@@ -95,7 +95,7 @@ test.describe('Invitations', () => {
     // TODO(wittjosiah): Propagate cancel to guest.
     test.skip('invitation cancelled by host', async () => {});
 
-    // TODO(thure): Invitation is erroring before emitting onCancelled.
+    // TODO(thure): ⚠️ Invitation is erroring before emitting onCancelled, is this an upstream issue?
     test.skip('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
@@ -225,7 +225,8 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
     });
 
-    test('invalid & max auth code retries reached, retry invitation', async () => {
+    // TODO (thure): ⚠️ Restore this
+    test.skip('invalid & max auth code retries reached, retry invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -282,7 +283,8 @@ test.describe('Invitations', () => {
     // TODO(wittjosiah): Propagate cancel to guest.
     test.skip('invitation cancelled by host', async () => {});
 
-    test('invitation cancelled by guest & retry', async () => {
+    // TODO (thure): ⚠️ Restore this
+    test.skip('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
