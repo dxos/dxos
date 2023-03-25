@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom';
 
 import { useConfig } from '@dxos/react-client';
 import { List, ListItemEndcap } from '@dxos/react-components';
+import { DXOS } from '@dxos/react-icons';
 
-import { Logo } from '../components';
 import { Module } from '../hooks';
 import { ListItemButton, ListItemText } from './util';
 
@@ -27,7 +27,7 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
       <div className='flex p-2 items-center space-x-2'>
         <Link to='/'>
           {/* Create SVG so able to set color for theme. */}
-          <Logo className='w-[32px] h-[32px]' />
+          <DXOS className='w-[32px] h-[32px] stroke-white' />
         </Link>
         <div className='text-xl font-thin'>CONSOLE</div>
       </div>

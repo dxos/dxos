@@ -1,11 +1,11 @@
-# @dxos/assets
+# @dxos/react-icons
 
 Digital assets.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/assets
+pnpm i @dxos/react-icons
 ```
 
 ## DXOS Resources

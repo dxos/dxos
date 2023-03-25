@@ -54,13 +54,7 @@ export default defineConfig({
   plugins: [
     // TODO(burdon): Document.
     ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_SENTRY_DESTINATION',
-        'DX_TELEMETRY_API_KEY',
-        'DX_VAULT'
-      ]
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
 
     // Directories to scan for Tailwind classes.
@@ -134,7 +128,7 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
           }
         ]
       }

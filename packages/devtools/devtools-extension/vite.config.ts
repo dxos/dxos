@@ -131,7 +131,7 @@ export default defineConfig({
     //     families: [
     //       {
     //         name: 'Sharp Sans',
-    //         src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
+    //         src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
     //       }
     //     ]
     //   }
