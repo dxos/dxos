@@ -114,24 +114,22 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
   return (
     <div className='flex flex-col bg-zinc-300'>
       <div className='flex mx-3 justify-end'>
-        {(initiatorPeerRef.current && (
+        {initiatorPeerRef.current && (
           <Button className='p-1' variant='ghost' onClick={handleStop}>
             <VideoCameraSlash className={getSize(6)} />
           </Button>
-        )) ||
-          (remoteIdentityKey && (
-            <Button className='p-1' variant='ghost' onClick={handleStart}>
-              <VideoCamera className={getSize(6)} />
-            </Button>
-          ))}
+        )}
+        {!initiatorPeerRef.current && remoteIdentityKey && (
+          <Button className='p-1' variant='ghost' onClick={handleStart}>
+            <VideoCamera className={getSize(6)} />
+          </Button>
+        )}
       </div>
-      <div className='flex flex-col'>
-        <div className={mx('flex flex-col invisible', localVideoRef.current?.srcObject && 'visible border')}>
-          <span>local</span>
+      <div className='flex flex-col bg-zinc-400'>
+        <div className={mx('flex flex-col invisible', localVideoRef.current?.srcObject ? 'visible' : 'h-0')}>
           <video ref={localVideoRef} autoPlay={true} muted={true} />
         </div>
-        <div className={mx('flex flex-col invisible', remoteVideoRef.current?.srcObject && 'visible border')}>
-          <span>remote</span>
+        <div className={mx('flex flex-col invisible', remoteVideoRef.current?.srcObject ? 'visible' : 'h-0')}>
           <video ref={remoteVideoRef} autoPlay={true} muted={true} />
         </div>
       </div>
