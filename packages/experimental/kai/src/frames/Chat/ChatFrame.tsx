@@ -3,6 +3,7 @@
 //
 
 import { UserCircle, X } from '@phosphor-icons/react';
+import { UserCircle, X } from '@phosphor-icons/react';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 import formatDistance from 'date-fns/formatDistance';
 import React, { FC, useEffect, useRef, useState } from 'react';
@@ -36,6 +37,10 @@ const colors = [
 // TODO(burdon): Video.
 // TODO(burdon): Channels/threads (optional show channel, but can tag message with channel/thread).
 
+// TODO(burdon): Presence.
+// TODO(burdon): Video.
+// TODO(burdon): Channels/threads (optional show channel, but can tag message with channel/thread).
+
 // TODO(burdon): Use key.
 const getColor = (username: string) => colors[hash(username) % colors.length];
 
@@ -45,19 +50,23 @@ export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete:
   onSelect,
   onDelete
 }) => {
+// TODO(burdon): Delete button only for current user.
+export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete: () => void }> = ({
+  message,
+  onSelect,
+  onDelete
+}) => {
   return (
-    <div className='flex shrink-0 w-full px-1'>
-      <div>
-        <Button variant='ghost' className='p-0' onClick={onSelect}>
+    <div className='flex shrink-0 w-full'>
+      <div className='px-1'>
+        <Button variant='ghost' onClick={onSelect}>
           <UserCircle className={mx(getSize(6), getColor(message.from.name ?? 'unknown'))} />
         </Button>
       </div>
-      <div className='w-full px-2 py-1'>{message.subject}</div>
-      <div>
-        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onDelete}>
-          <X className={mx(getSize(4))} />
-        </Button>
-      </div>
+      <div className='w-full py-1 pr-1'>{message.subject}</div>
+      <Button variant='ghost' className='p-0 pr-2 text-zinc-400' onClick={onDelete}>
+        <X className={mx(getSize(4))} />
+      </Button>
     </div>
   );
 };
@@ -122,6 +131,10 @@ export const ChatFrame = () => {
     }
   };
 
+  const handleDelete = (message: Message) => {
+    space?.db.remove(message);
+  };
+
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
       {/* Message list */}
@@ -139,7 +152,7 @@ export const ChatFrame = () => {
                 </div>
                 <div className='flex flex-col-reverse bg-white rounded'>
                   {messages.map((message, i) => (
-                    <div key={i} ref={message === first ? selectedRef : undefined} className='border-t'>
+                    <div key={i} ref={message === messages[0] ? selectedRef : undefined} className='border-t'>
                       <ChatMessage
                         message={message}
                         onSelect={() => handleSelect(message)}
