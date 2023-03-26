@@ -12,6 +12,7 @@ import { humanize } from '@dxos/util';
 import { createPath, useAppRouter } from '../../hooks';
 import { sortMessage } from '../Message';
 import { ChatPanel } from './ChatPanel';
+import { Video } from './Video';
 
 export const ChatFrame = () => {
   const navigate = useNavigate();
@@ -57,7 +58,12 @@ export const ChatFrame = () => {
     space?.db.remove(message);
   };
 
-  return <ChatPanel messages={messages} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />;
+  return (
+    <div>
+      {space && <Video space={space} />}
+      <ChatPanel messages={messages} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />;
+    </div>
+  );
 };
 
 export default ChatFrame;
