@@ -9,7 +9,7 @@ import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
-import { JoinSend } from '../joinMachine';
+import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 const pinLength = 6;
@@ -23,19 +23,21 @@ const PureInvitationAuthenticatorContent = ({
   disabled,
   failed,
   joinSend,
+  joinState,
   Domain,
   onChange,
   onAuthenticate
 }: {
   disabled?: boolean;
   joinSend: JoinSend;
+  joinState?: JoinState;
   Domain: InvitationAuthenticatorProps['Domain'];
   failed: InvitationAuthenticatorProps['failed'];
   onChange: ComponentProps<typeof Input>['onChange'];
   onAuthenticate: ComponentProps<typeof Button>['onClick'];
 }) => {
   const { t } = useTranslation('os');
-  const invitationType = Domain.toLowerCase();
+  const invitationType = Domain.toLowerCase() as 'space' | 'halo';
   return (
     <>
       <Input
@@ -78,7 +80,7 @@ const PureInvitationAuthenticatorContent = ({
         <Button
           disabled={disabled}
           className='flex items-center gap-2 pis-2 pie-4'
-          onClick={() => joinSend({ type: `fail${Domain}Invitation`, reason: 'cancelled' })}
+          onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />
@@ -91,12 +93,14 @@ const PureInvitationAuthenticatorContent = ({
 
 const InvitationAuthenticatorContent = ({
   joinSend,
+  joinState,
   disabled,
   invitation,
   Domain,
   failed
 }: {
   joinSend: JoinSend;
+  joinState?: JoinState;
   disabled?: boolean;
   invitation: AuthenticatingInvitationObservable;
   Domain: InvitationAuthenticatorProps['Domain'];
@@ -118,7 +122,11 @@ const InvitationAuthenticatorContent = ({
     },
     [authenticate, pinValue]
   );
-  return <PureInvitationAuthenticatorContent {...{ disabled, failed, joinSend, Domain, onChange, onAuthenticate }} />;
+  return (
+    <PureInvitationAuthenticatorContent
+      {...{ disabled, failed, joinSend, joinState, Domain, onChange, onAuthenticate }}
+    />
+  );
 };
 
 export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: InvitationAuthenticatorProps) => {
@@ -131,10 +139,12 @@ export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: I
     <ViewState {...viewStateProps}>
       {!activeInvitation ? (
         <PureInvitationAuthenticatorContent
-          {...{ disabled, failed, joinSend, Domain, onChange: () => {}, onAuthenticate: () => {} }}
+          {...{ disabled, failed, joinSend, joinState, Domain, onChange: () => {}, onAuthenticate: () => {} }}
         />
       ) : (
-        <InvitationAuthenticatorContent {...{ disabled, failed, invitation: activeInvitation, joinSend, Domain }} />
+        <InvitationAuthenticatorContent
+          {...{ disabled, failed, invitation: activeInvitation, joinSend, joinState, Domain }}
+        />
       )}
     </ViewState>
   );
