@@ -106,7 +106,7 @@ test.describe('Invitations', () => {
       await manager.resetInvitation(1);
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'device')
+        manager.clearAuthenticationCode(1, 'device')
       ]);
       await manager.authenticateInvitation(1, 'device', authenticationCode);
       await manager.doneInvitation(1, 'device');
@@ -283,7 +283,6 @@ test.describe('Invitations', () => {
     // TODO(wittjosiah): Propagate cancel to guest.
     test.skip('invitation cancelled by host', async () => {});
 
-    // TODO (thure): ⚠️ Restore this
     test('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
