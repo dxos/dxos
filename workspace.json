@@ -3,7 +3,6 @@
   "version": 2,
   "projects": {
     "apidoc": "tools/apidoc",
-    "assets": "packages/apps/patterns/assets",
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
@@ -76,6 +75,7 @@
     "react-client": "packages/sdk/react-client",
     "react-components": "packages/common/react-components",
     "react-composer": "packages/apps/patterns/react-composer",
+    "react-icons": "packages/apps/patterns/react-icons",
     "react-metagraph": "packages/experimental/react-metagraph",
     "react-ui": "packages/apps/patterns/react-ui",
     "ridoculous": "tools/ridoculous",

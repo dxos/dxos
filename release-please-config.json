@@ -33,17 +33,17 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/patterns/assets/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/patterns/react-appkit/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/patterns/react-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {

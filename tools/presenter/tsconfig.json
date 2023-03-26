@@ -27,7 +27,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/apps/patterns/assets"
+      "path": "../../packages/apps/patterns/react-icons"
     },
     {
       "path": "../../packages/common/log"
