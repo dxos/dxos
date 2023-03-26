@@ -19,10 +19,10 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/assets"
+      "path": "../../apps/patterns/react-appkit"
     },
     {
-      "path": "../../apps/patterns/react-appkit"
+      "path": "../../apps/patterns/react-icons"
     },
     {
       "path": "../../apps/patterns/react-ui"

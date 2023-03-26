@@ -3,15 +3,16 @@
 //
 
 import {
+  CaretCircleDoubleDown,
   CaretLeft,
-  CaretUpDown,
+  Info as CaretUpDown,
   FrameCorners,
   PlusCircle,
   Robot,
-  Target,
   UserPlus,
   WifiHigh,
-  WifiSlash
+  WifiSlash,
+  X
 } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
@@ -273,43 +274,40 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       >
         {/* Space Selector */}
         <div className='flex flex-col shrink-0'>
-          <div className={mx('flex items-center pl-4 h-[40px]', theme.classes.header)}>
-            <div className='flex items-center'>
-              <Icon className={getSize(6)} data-testid='sidebar.spaceIcon' />
-              <div className='pl-2 text-lg'>{space.properties.name}</div>
+          <div className={mx('flex items-center h-[40px]', theme.classes.header)}>
+            <div className='flex w-full items-center'>
+              <div className='flex justify-center px-3'>
+                <Icon className={getSize(8)} weight='duotone' data-testid='sidebar.spaceIcon' />
+              </div>
               <Button
                 variant='ghost'
-                className='p-0'
+                className='flex w-full p-0'
                 data-testid='sidebar.showSpaceList'
                 onClick={() => setShowSpaceList((show) => !show)}
               >
-                <CaretUpDown className={mx(getSize(4), 'ml-2')} />
+                <div className='px-2 text-lg'>{space.properties.name ?? 'Space'}</div>
+                <CaretUpDown className={getSize(4)} />
               </Button>
             </div>
-
-            <div className='flex grow' />
 
             <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
               {displayState === 'show' && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>
-
-          {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
         </div>
 
         {/* Spaces */}
-        {/* TODO(burdon): Radix Popover. */}
         {showSpaceList && (
-          <div className='flex flex-col overflow-y-auto bg-white border-b'>
-            <SpaceList spaces={spaces} selected={space.key} onAction={handleSpaceListAction} />
-
-            {/* TODO(burdon): Observable. */}
-            <div className='flex flex-col m-2 my-4'>
+          <div className='flex flex-col w-full overflow-y-auto bg-white border-b'>
+            <div className='flex justify-center my-4'>
               <SpaceSettings space={space} />
             </div>
 
-            {/* Menu */}
-            <div className='flex flex-col w-full px-4 py-2 border-t'>
+            <div className='border-t border-b'>
+              <SpaceList spaces={spaces} selected={space.key} onAction={handleSpaceListAction} />
+            </div>
+
+            <div className='flex flex-col px-4 py-2'>
               <Button
                 variant='ghost'
                 className='flex p-0 justify-start'
@@ -327,8 +325,18 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 data-testid='sidebar.joinSpace'
                 onClick={handleJoinSpace}
               >
-                <Target className={getSize(6)} />
+                <CaretCircleDoubleDown className={getSize(6)} />
                 <span className='pl-2'>Join space</span>
+              </Button>
+              <Button
+                variant='ghost'
+                className='flex p-0 justify-start'
+                title='Close settings'
+                data-testid='sidebar.joinSpace'
+                onClick={() => setShowSpaceList(false)}
+              >
+                <X className={getSize(6)} />
+                <span className='pl-2'>Close</span>
               </Button>
             </div>
           </div>
