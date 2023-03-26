@@ -17,6 +17,7 @@ import { humanize } from '@dxos/util';
 
 import { createPath, useAppRouter } from '../../hooks';
 import { sortMessage } from '..//Message';
+import { Video } from './Video';
 
 type Block = {
   messages: Message[];
@@ -137,8 +138,14 @@ export const ChatFrame = () => {
     space?.db.remove(message);
   };
 
+  if (!space) {
+    return null;
+  }
+
   return (
     <div className='flex flex-col flex-1 bg-zinc-200'>
+      <Video space={space} />
+
       {/* Message list */}
       <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
         <div className='flex flex-col-reverse px-2'>
