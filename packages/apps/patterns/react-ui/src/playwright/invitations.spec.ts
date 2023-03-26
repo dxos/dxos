@@ -128,7 +128,7 @@ test.describe('Invitations', () => {
       await manager.resetInvitation(1);
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'device')
+        manager.clearAuthenticationCode(1, 'device')
       ]);
       await manager.authenticateInvitation(1, 'device', authenticationCode);
       await manager.doneInvitation(1, 'device');
@@ -323,7 +323,7 @@ test.describe('Invitations', () => {
       await manager.resetInvitation(1);
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');
