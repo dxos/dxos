@@ -19,7 +19,7 @@ export const ListItemButton = ({ slots, onClick, selected, ...rest }: ListItemBu
     <ListItem
       slots={{
         // TODO(burdon): How to deal with colors?
-        root: { className: mx('px-2 py-1', selected && 'bg-zinc-600') },
+        root: { className: mx('px-2 py-1', selected && 'bg-highlight-bg dark:bg-dark-highlight-bg') },
         mainContent: { className: 'flex items-center overflow-hidden cursor-pointer', onClick },
         ...slots
       }}

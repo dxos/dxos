@@ -19,7 +19,7 @@ const getStyles = (props: any, align = 'left') => [
   {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'start',
       justifyContent: align === 'right' ? 'flex-end' : 'flex-start'
     }
   }
@@ -33,6 +33,7 @@ export type TableSlots = {
   root?: { className: string };
   header?: { className: string };
   row?: { className: string };
+  cell?: { className: string };
   selected?: { className: string };
 };
 
@@ -67,14 +68,14 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
   );
 
   return (
-    // TODO(burdon): Remove table class to force scrolling.
     <div className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
+        {/* TODO(burdon): Header is transparent. */}
         <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
-            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b border-zinc-300'>
+            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b'>
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
@@ -109,8 +110,8 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
                 {row.cells.map((cell) => {
                   return (
                     // eslint-disable-next-line react/jsx-key
-                    <div {...cell.getCellProps(cellProps)} className='td px-4 py-2'>
-                      <div className='overflow-hidden text-ellipsis whitespace-nowrap'>{cell.render('Cell')}</div>
+                    <div {...cell.getCellProps(cellProps)} className={mx('td px-4 py-2', slots?.cell?.className)}>
+                      <div className='truncate'>{cell.render('Cell')}</div>
                     </div>
                   );
                 })}

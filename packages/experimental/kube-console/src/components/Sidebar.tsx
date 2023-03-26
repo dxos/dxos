@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom';
 
 import { useConfig } from '@dxos/react-client';
 import { List, ListItemEndcap } from '@dxos/react-components';
+import { DXOS } from '@dxos/react-icons';
 
-import { Logo } from '../components';
 import { Module } from '../hooks';
 import { ListItemButton, ListItemText } from './util';
 
@@ -18,19 +18,20 @@ export type SidebarProps = {
   onActiveChange: (module: string) => void;
 };
 
-// TODO(burdon): Theme colors?
 export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
   const config = useConfig();
   const version = config.values?.runtime?.app?.build?.version;
 
   return (
-    <div className='flex flex-col h-full space-y-4 bg-zinc-800'>
+    <div className='flex flex-col h-full space-y-4 bg-sidebar-bg dark:bg-dark-sidebar-bg'>
       <div className='flex p-2 items-center space-x-2'>
         <Link to='/'>
-          <Logo className='w-[32px] h-[32px]' />
+          {/* Create SVG so able to set color for theme. */}
+          <DXOS className='w-[32px] h-[32px] stroke-white' />
         </Link>
         <div className='text-xl font-thin'>CONSOLE</div>
       </div>
+
       <List labelId='modules'>
         {modules.map(({ id, label, Icon }) => (
           <ListItemButton key={id} selected={id === active} onClick={() => onActiveChange(id)}>
@@ -41,6 +42,7 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
           </ListItemButton>
         ))}
       </List>
+
       <div className='grow' />
       <div className='p-2 text-sm'>{version}</div>
     </div>
