@@ -8,7 +8,7 @@ import React from 'react';
 import { Invitation } from '@dxos/client';
 import { Button, defaultDescription, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { JoinSend } from '../joinMachine';
+import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationConnectorProps extends ViewStateProps {
@@ -19,14 +19,17 @@ const InvitationActions = ({
   invitationState,
   disabled,
   joinSend,
+  joinState,
   Domain
 }: {
   invitationState?: Invitation.State;
   disabled?: boolean;
   joinSend: JoinSend;
+  joinState?: JoinState;
   Domain: InvitationConnectorProps['Domain'];
 }) => {
   const { t } = useTranslation('os');
+  const invitationType = Domain.toLowerCase() as 'space' | 'halo';
   switch (invitationState) {
     case Invitation.State.CONNECTING:
       return (
@@ -42,7 +45,7 @@ const InvitationActions = ({
             <Button
               disabled={disabled}
               className='flex items-center gap-2 pis-2 pie-4'
-              onClick={() => joinSend({ type: `fail${Domain}Invitation`, reason: 'cancelled' })}
+              onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
               data-testid='invitation-rescuer-cancel'
             >
               <CaretLeft weight='bold' className={getSize(4)} />
@@ -92,7 +95,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
           <ArrowsClockwise className={getSize(5)} />
         </Button>
       ) : (
-        <InvitationActions {...{ invitationState, disabled, joinSend, Domain }} />
+        <InvitationActions {...{ invitationState, disabled, joinSend, joinState, Domain }} />
       )}
     </ViewState>
   );
