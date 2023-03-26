@@ -224,8 +224,7 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
     });
 
-    // TODO (thure): ⚠️ Restore this
-    test.skip('invalid & max auth code retries reached, retry invitation', async () => {
+    test('invalid & max auth code retries reached, retry invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -244,10 +243,12 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(1)).to.be.true;
 
       await manager.resetInvitation(1);
+
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
+
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');
 
