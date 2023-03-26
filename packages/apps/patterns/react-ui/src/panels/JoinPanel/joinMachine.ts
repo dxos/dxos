@@ -76,7 +76,7 @@ const getInvitationSubscribable = (
   return {
     subscribe: (
       next: (value: InvitationEvent) => void,
-      error?: (error: any) => void,
+      onError?: (error: any) => void,
       complete?: () => void
     ): Subscription => {
       const unsubscribe = invitation.subscribe({
@@ -108,7 +108,7 @@ const getInvitationSubscribable = (
         onError: (error: any) => {
           log.error('[invitation errored]', { Domain, error });
           next({ type: `fail${Domain}Invitation`, reason: 'error' });
-          return error(error);
+          return onError?.(error);
         }
       });
       return { unsubscribe };
@@ -123,7 +123,7 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       [`unknown${Domain}`]: {
         always: [
           {
-            target: '#join.finishingJoining',
+            target: '#join.finishingJoiningHalo',
             cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space'
           },
           {
@@ -147,11 +147,11 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`unknown${Domain}Invitation`]: {
             always: [
               {
-                target: `connecting${Domain}Invitation`,
                 cond: (context) => {
                   const invitation = context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
+                target: `connecting${Domain}Invitation`,
                 actions: 'log'
               },
               {
@@ -185,8 +185,8 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
           [`reset${Domain}Invitation`]: {
             target: `#join${
               Domain === 'Halo' ? '.choosingIdentity' : ''
-            }.accepting${Domain}Invitation.inputting${Domain}InvitationCode`,
-            actions: 'log'
+            }.accepting${Domain}Invitation.unknown${Domain}`,
+            actions: ['resetInvitation', 'log']
           },
           [`connect${Domain}Invitation`]: {
             target: `.connecting${Domain}Invitation`,
@@ -288,8 +288,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
         }
       },
-      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoining'),
-      finishingJoining: {
+      acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
+      finishingJoiningSpace: {
+        type: 'final'
+      },
+      finishingJoiningHalo: {
         type: 'final'
       }
     }
@@ -307,12 +310,11 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       unsetIdentity: assign<JoinMachineContext>({
         identity: () => null
       }),
-      setInvitationCode: assign<JoinMachineContext, SetInvitationCodeEvent>({
+      resetInvitation: assign<JoinMachineContext, SetInvitationCodeEvent>({
         halo: (context, event) =>
           event.type === 'setHaloInvitationCode'
             ? {
                 ...context.halo,
-                unredeemedCode: event.code,
                 invitation: undefined,
                 invitationObservable: undefined,
                 invitationSubscribable: undefined
@@ -322,7 +324,6 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type === 'setSpaceInvitationCode'
             ? {
                 ...context.space,
-                unredeemedCode: event.code,
                 invitation: undefined,
                 invitationObservable: undefined,
                 invitationSubscribable: undefined
@@ -358,7 +359,6 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
         const invitationObservable = client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode));
         return {
           ...halo,
-          unredeemedCode: undefined,
           invitationObservable,
           invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable)
         };
@@ -374,7 +374,6 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
         const invitationObservable = client.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode));
         return {
           ...space,
-          unredeemedCode: undefined,
           invitationObservable,
           invitationSubscribable: getInvitationSubscribable('Space', invitationObservable)
         };
