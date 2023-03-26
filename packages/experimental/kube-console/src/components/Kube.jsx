@@ -25,12 +25,14 @@ export const defaultConfig = {
     color: 0xaa0044
   },
   node: {
-    color: '#ccc',
-    size: 1
+    color: 0xaa0044,
+    size: 0
   },
   camera: {
     perspective: 45,
-    z: 2000
+    z: 1800
+    // perspective: 15,
+    // z: 500 // TODO(burdon): Zoom in.
   }
 };
 
@@ -61,6 +63,7 @@ class KubeRenderer {
   init(container) {
     const { maxParticleCount, particleCount, radius } = this._config;
 
+    // Camera
     this._camera = new THREE.PerspectiveCamera(
       this._config.camera.perspective,
       window.innerWidth / window.innerHeight,
@@ -69,7 +72,10 @@ class KubeRenderer {
     );
     this._camera.position.z = this._config.camera.z;
 
+    // Group
     this._group = new THREE.Group();
+
+    // Scene
     this._scene = new THREE.Scene();
     this._scene.add(this._group);
 
@@ -83,54 +89,60 @@ class KubeRenderer {
     this._positions = new Float32Array(segments * 3);
     this._colors = new Float32Array(segments * 3);
 
-    const pMaterial = new THREE.PointsMaterial({
-      size: this._config.node.size,
-      color: this._config.node.color,
-      blending: THREE.AdditiveBlending,
-      transparent: true
-    });
+    // Points
+    {
+      this._particles = new THREE.BufferGeometry();
+      this._particlePositions = new Float32Array(maxParticleCount * 3);
 
-    this._particles = new THREE.BufferGeometry();
-    this._particlePositions = new Float32Array(maxParticleCount * 3);
+      for (let i = 0; i < maxParticleCount; i++) {
+        const x = Math.random() * radius - radius / 2;
+        const y = Math.random() * radius - radius / 2;
+        const z = Math.random() * radius - radius / 2;
 
-    for (let i = 0; i < maxParticleCount; i++) {
-      const x = Math.random() * radius - radius / 2;
-      const y = Math.random() * radius - radius / 2;
-      const z = Math.random() * radius - radius / 2;
+        this._particlePositions[i * 3] = x;
+        this._particlePositions[i * 3 + 1] = y;
+        this._particlePositions[i * 3 + 2] = z;
 
-      this._particlePositions[i * 3] = x;
-      this._particlePositions[i * 3 + 1] = y;
-      this._particlePositions[i * 3 + 2] = z;
+        this._particlesData.push({
+          velocity: new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2),
+          numConnections: 0
+        });
+      }
 
-      this._particlesData.push({
-        velocity: new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2),
-        numConnections: 0
+      this._particles.setDrawRange(0, particleCount);
+      this._particles.setAttribute(
+        'position',
+        new THREE.BufferAttribute(this._particlePositions, 3).setUsage(THREE.DynamicDrawUsage)
+      );
+
+      const material = new THREE.PointsMaterial({
+        size: this._config.node.size,
+        color: this._config.node.color,
+        blending: THREE.AdditiveBlending,
+        transparent: true
       });
+
+      this._pointCloud = new THREE.Points(this._particles, material);
+      this._group.add(this._pointCloud);
     }
 
-    this._particles.setDrawRange(0, particleCount);
-    this._particles.setAttribute(
-      'position',
-      new THREE.BufferAttribute(this._particlePositions, 3).setUsage(THREE.DynamicDrawUsage)
-    );
+    // Lines
+    {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(this._positions, 3).setUsage(THREE.DynamicDrawUsage));
+      geometry.setAttribute('color', new THREE.BufferAttribute(this._colors, 3).setUsage(THREE.DynamicDrawUsage));
+      geometry.computeBoundingSphere(this._clearColor);
+      geometry.setDrawRange(0, 0);
 
-    this._pointCloud = new THREE.Points(this._particles, pMaterial);
-    this._group.add(this._pointCloud);
+      const material = new THREE.LineBasicMaterial({
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+        transparent: true
+      });
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(this._positions, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('color', new THREE.BufferAttribute(this._colors, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.computeBoundingSphere(this._clearColor);
-    geometry.setDrawRange(0, 0);
-
-    const material = new THREE.LineBasicMaterial({
-      blending: THREE.AdditiveBlending,
-      vertexColors: true,
-      transparent: true
-    });
-
-    this._linesMesh = new THREE.LineSegments(geometry, material);
-    this._group.add(this._linesMesh);
+      this._linesMesh = new THREE.LineSegments(geometry, material);
+      this._group.add(this._linesMesh);
+    }
 
     this._renderer = new THREE.WebGLRenderer({ antialias: true });
     this._renderer.setClearColor(this._config.mask.color, this._config.mask.opacity);
@@ -235,16 +247,16 @@ class KubeRenderer {
     return this;
   }
 
-  _axes = ['x', 'y', 'z'];
+  _axes = ['x', 'y'];
   _axisIndex = 1;
   _direction = 1;
 
   render() {
     const time = Date.now();
-    let rad = (time * this._config.rotation * this._direction) % (Math.PI * 4);
-    // Switch every two revolutions.
+    // Switch every revolution.
+    let rad = (time * this._config.rotation * this._direction) % (Math.PI * 2);
     if (Math.abs(rad < 0.01)) {
-      rad = Math.PI * 2; // Round to nearest revolution, but jump away from "zero" test.
+      rad = -Math.PI * 2; // Round to nearest revolution, but jump away from "zero" test.
       this._group.rotation[this._axes[this._axisIndex]] = rad;
       this._axisIndex = Math.floor(this._axes.length * Math.random());
       this._direction = 1 - this._direction;
