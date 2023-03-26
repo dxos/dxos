@@ -31,6 +31,7 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
         </Link>
         <div className='text-xl font-thin'>CONSOLE</div>
       </div>
+
       <List labelId='modules'>
         {modules.map(({ id, label, Icon }) => (
           <ListItemButton key={id} selected={id === active} onClick={() => onActiveChange(id)}>
@@ -41,6 +42,7 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
           </ListItemButton>
         ))}
       </List>
+
       <div className='grow' />
       <div className='p-2 text-sm'>{version}</div>
     </div>
