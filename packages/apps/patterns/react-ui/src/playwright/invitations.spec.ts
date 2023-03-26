@@ -284,7 +284,7 @@ test.describe('Invitations', () => {
     test.skip('invitation cancelled by host', async () => {});
 
     // TODO (thure): ⚠️ Restore this
-    test.skip('invitation cancelled by guest & retry', async () => {
+    test('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -295,10 +295,12 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       await manager.cancelInvitation(1, 'space', 'guest');
       await manager.resetInvitation(1);
+
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
+
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');
 
