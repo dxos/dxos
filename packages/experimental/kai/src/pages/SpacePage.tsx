@@ -11,7 +11,7 @@ import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
-import { ChatFrame } from '../frames/Chat';
+import { ChatPanel } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
 /**
@@ -58,7 +58,7 @@ const Content = () => {
   const { displayState } = useContext(PanelSidebarContext);
 
   return (
-    <div className='flex flex-col bs-full overflow-hidden'>
+    <main className='flex flex-col bs-full overflow-hidden'>
       {/* TODO(burdon): Frame toolbar. */}
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
         {displayState !== 'show' && (
@@ -80,9 +80,10 @@ const Content = () => {
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
               <FrameContainer space={space} frame={frame} />
+
               {chat && frame.module.id !== 'dxos.module.frame.chat' && (
                 <div className='flex shrink-0 w-sidebar'>
-                  <ChatFrame />
+                  <ChatPanel />
                 </div>
               )}
             </div>
@@ -91,7 +92,7 @@ const Content = () => {
       ) : (
         <Loading label='Space loading' />
       )}
-    </div>
+    </main>
   );
 };
 
