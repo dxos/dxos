@@ -20,7 +20,7 @@ const JsonTreeBranch = ({ data, prefix }: JsonTreeNodeProps) => {
         const valueIsScalar = isScalar(value);
 
         return (
-          <TreeItem collapsible={!valueIsScalar} id={id} key={id}>
+          <TreeItem key={id} id={id} collapsible={!valueIsScalar}>
             {valueIsScalar ? (
               <TreeItemHeading className='flex items-center'>{String(value)}</TreeItemHeading>
             ) : (
