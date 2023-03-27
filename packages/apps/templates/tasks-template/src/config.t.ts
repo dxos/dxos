@@ -3,5 +3,7 @@ import inherits from '@dxos/bare-template';
 
 export default defineConfig({
   inherits,
-  inputShape: inherits.inputShape
+  inputShape: z.object({
+    name: z.string().default('tasks').describe('Name the new package')
+  })
 });

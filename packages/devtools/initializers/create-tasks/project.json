@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/devtools/initializers/bare/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/devtools/initializers/bare/src/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

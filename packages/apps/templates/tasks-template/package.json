@@ -19,6 +19,14 @@
     "@dxos/plate": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.0",
     "typescript": "^4.8.4"
   },
   "publishConfig": {

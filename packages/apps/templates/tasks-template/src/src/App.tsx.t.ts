@@ -7,8 +7,17 @@ export default defineTemplate(
     return appTsx({
       ...context,
       slots: {
-        content: '{/* tasks template */}',
-        extraImports: ''
+        extraImports: text`
+          import { Routes } from './Routes';
+          import { Main } from './components/Main';
+          `,
+        content: text`
+          <Main >
+            <HashRouter>
+              <Routes />
+            </HashRouter>
+          </Main>
+          `
       }
     });
   },
