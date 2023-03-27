@@ -52,34 +52,30 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               if (listenerPeerRefs.current.has(member.identity.identityKey)) {
                 return;
               }
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-              const peer = new Peer({ stream, config: { iceServers }, initiator: false });
+
+              const peer = new Peer({ config: { iceServers }, initiator: false });
+              listenerPeerRefs.current.set(member.identity.identityKey, peer);
               peer.on('signal', (data) => {
                 void space.postMessage(
                   getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }),
                   { command: 'signal', data, initiator: false }
                 );
               });
-              // TODO(burdon): Stream never called.
               peer.on('stream', (stream) => {
                 // TODO(burdon): Support multiple streams.
                 remoteVideoRef.current!.srcObject = stream;
               });
 
-              listenerPeerRefs.current.set(member.identity.identityKey, peer);
-
-              const cleanup = () => {
+              const cleanup = (err?: Error) => {
                 peer.destroy();
                 listenerPeerRefs.current.delete(member.identity.identityKey);
                 remoteVideoRef.current!.srcObject = null;
+                if (err) {
+                  throw err;
+                }
               };
-              peer.on('error', (err) => {
-                cleanup();
-                throw err;
-              });
-              peer.on('close', () => {
-                cleanup();
-              });
+              peer.on('error', cleanup);
+              peer.on('close', cleanup);
               ctx.onDispose(cleanup);
 
               break;
@@ -151,20 +147,18 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
         command: 'connect'
       });
 
-      const cleanup = () => {
+      const cleanup = (err?: Error) => {
         unsubscribe();
         peer.destroy();
         initiatorPeerRefs.current.delete(member.identity.identityKey);
         localVideoRef.current!.srcObject = null;
+        if (err) {
+          throw err;
+        }
       };
 
-      peer.on('error', (err) => {
-        cleanup();
-        throw err;
-      });
-      peer.on('close', () => {
-        cleanup();
-      });
+      peer.on('error', cleanup);
+      peer.on('close', cleanup);
       ctx.current!.onDispose(cleanup);
     });
   };
