@@ -24,13 +24,9 @@ export const StackContent: FC<{
   const identity = useIdentity();
   const object = section.object;
 
-  // TODO(burdon): Type?
+  // TODO(burdon): Instance of check fails.
   switch (object.__typename) {
     case Document.type.name: {
-      // TODO(burdon): This fails if the document is created by the KaiBot!
-      // if (!(object instanceof TypedObject)) {
-      //   throw new Error(`Invalid object type: ${object.__typename}`);
-      // }
       return (
         <Composer
           identity={identity}
@@ -47,13 +43,9 @@ export const StackContent: FC<{
     }
 
     case Table.type.name: {
-      if (!(object instanceof Table)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <div className='flex w-full h-[400px]'>
-          <TableContainer space={space!} table={object} />
+          <TableContainer space={space!} table={object as Table} />
         </div>
       );
     }
@@ -61,10 +53,6 @@ export const StackContent: FC<{
     // TODO(burdon): Add/delete/sort.
     // TODO(burdon): Hide controls if not highlighted.
     case TaskList.type.name: {
-      if (!(object instanceof TaskList)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <TaskListComponent
           id='tasks'
@@ -75,10 +63,6 @@ export const StackContent: FC<{
     }
 
     case File.type.name: {
-      if (!(object instanceof File)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <div className='flex w-full h-[400px]'>
           <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid)} image />

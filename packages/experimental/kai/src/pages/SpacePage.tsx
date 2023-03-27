@@ -3,7 +3,7 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { useContext, useSyncExternalStore } from 'react';
+import React, { Suspense, useContext, useSyncExternalStore } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
@@ -11,7 +11,7 @@ import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
-import { ChatFrame } from '../frames/Chat';
+import { ChatFrameRuntime } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
 /**
@@ -58,8 +58,7 @@ const Content = () => {
   const { displayState } = useContext(PanelSidebarContext);
 
   return (
-    <div className='flex flex-col bs-full overflow-hidden'>
-      {/* TODO(burdon): Frame toolbar. */}
+    <main className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
         {displayState !== 'show' && (
           <Button variant='ghost' onClick={toggleSidebar}>
@@ -71,8 +70,6 @@ const Content = () => {
         <AppMenu />
       </div>
 
-      {/* <div className={mx('flex h-[8px]', theme.classes.toolbar)} /> */}
-
       {/* Main content. */}
       {space?.state.get() === SpaceState.READY ? (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
@@ -80,9 +77,12 @@ const Content = () => {
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
               <FrameContainer space={space} frame={frame} />
+
               {chat && frame.module.id !== 'dxos.module.frame.chat' && (
                 <div className='flex shrink-0 w-sidebar'>
-                  <ChatFrame />
+                  <Suspense>
+                    <ChatFrameRuntime.Component />
+                  </Suspense>
                 </div>
               )}
             </div>
@@ -91,7 +91,7 @@ const Content = () => {
       ) : (
         space && <SpaceLoading space={space} />
       )}
-    </div>
+    </main>
   );
 };
 
