@@ -23,6 +23,11 @@ export type WaitUntilReachedTargetParams = {
    */
   ctx?: Context;
   timeout?: number;
+  
+  /**
+   * @default true
+   */
+  breakOnStall?: boolean;
 };
 
 /**
@@ -65,7 +70,7 @@ export class PipelineState {
   }
 
   get targetTimeframe() {
-    return this._targetTimeframe ? Timeframe.merge(this.endTimeframe, this._targetTimeframe) : this.endTimeframe;
+    return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
   }
 
   async waitUntilTimeframe(target: Timeframe) {
@@ -83,7 +88,7 @@ export class PipelineState {
    *
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
-  async waitUntilReachedTargetTimeframe({ ctx = new Context(), timeout }: WaitUntilReachedTargetParams = {}) {
+  async waitUntilReachedTargetTimeframe({ ctx = new Context(), timeout, breakOnStall = true }: WaitUntilReachedTargetParams = {}) {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
@@ -94,7 +99,7 @@ export class PipelineState {
       this._timeframeClock.update.waitForCondition(() => {
         return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
       }),
-      this._iterator.stalled.discardParameter().waitForCount(1)
+      ...(breakOnStall ? [this._iterator.stalled.discardParameter().waitForCount(1)] : [])
     ]);
 
     let done = false;

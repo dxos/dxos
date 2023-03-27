@@ -3,14 +3,14 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { useContext } from 'react';
+import React, { useContext, useSyncExternalStore } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { SpaceState, useSpaces } from '@dxos/react-client';
+import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
 import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
+import { AppMenu, BotManager, FrameContainer, MemberList, Sidebar } from '../containers';
 import { ChatFrame } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
@@ -89,8 +89,36 @@ const Content = () => {
           )}
         </div>
       ) : (
-        <Loading label='Space loading' />
+        space && <SpaceLoading space={space} />
       )}
+    </div>
+  );
+};
+
+const SpaceLoading = ({ space }: { space: Space }) => {
+  const identity = useIdentity();
+  // TODO(dmaretskyi): const pipelineState = useObservable(space.pipeline)
+  const pipelineState = useSyncExternalStore(
+    (listener) => {
+      const subscription = space.pipeline.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
+    () => space.pipeline.get()
+  );
+
+  // +1 for the pipeline itself being initialized
+  const currentProgress = (pipelineState.currentControlTimeframe?.totalMessages() ?? -1) + (pipelineState.currentDataTimeframe?.totalMessages() ?? -1) + 2;
+  const targetProgress = (pipelineState.targetControlTimeframe?.totalMessages() ?? -1) + (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) + 2;
+
+  const members = useMembers(space.key)
+  const onlinePeers = members.filter(member => member.presence === SpaceMember.PresenceState.ONLINE && (!identity?.identityKey || member.identity.identityKey.equals(identity?.identityKey))).length;
+
+  return (
+    // center div vertically
+    <div className='flex flex-col justify-center h-full'>
+      <Loading label='Space loading' />
+      <div className='flex justify-center'>{currentProgress} / {targetProgress}</div>
+      <div className='flex justify-center'>{onlinePeers} / {members.length} peers online</div>
     </div>
   );
 };

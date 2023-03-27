@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -139,22 +139,22 @@ export class DataPipeline {
       await this._saveLatestTimeframe();
     });
 
-    this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
-      const latestTimeframe = this._pipeline?.state.timeframe;
-      if (!latestTimeframe) {
-        return;
-      }
+    // this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
+    //   const latestTimeframe = this._pipeline?.state.timeframe;
+    //   if (!latestTimeframe) {
+    //     return;
+    //   }
 
-      // Save snapshot.
-      if (
-        latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
-        MESSAGES_PER_SNAPSHOT
-      ) {
-        const snapshot = await this._saveSnapshot();
-        this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-        log('save', { snapshot });
-      }
-    });
+    //   // Save snapshot.
+    //   if (
+    //     latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
+    //     MESSAGES_PER_SNAPSHOT
+    //   ) {
+    //     const snapshot = await this._saveSnapshot();
+    //     this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+    //     log('save', { snapshot });
+    //   }
+    // });
   }
 
   private async _saveSnapshot() {
@@ -168,7 +168,8 @@ export class DataPipeline {
     const latestTimeframe = this._pipeline?.state.timeframe;
     log('save latest timeframe', { latestTimeframe, spaceKey: this._params.spaceKey });
     if (latestTimeframe) {
-      await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
+      const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), latestTimeframe);
+      await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
     }
   }
 
