@@ -3,7 +3,7 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ComponentPropsWithoutRef, useState } from 'react';
+import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
@@ -15,10 +15,16 @@ export interface InvitationInputProps extends ViewStateProps {
 
 export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputProps) => {
   const disabled = !viewStateProps.active;
-  const { joinSend } = viewStateProps;
+  const { joinSend, joinState } = viewStateProps;
   const { t } = useTranslation('os');
 
-  const [inputValue, setInputValue] = useState('');
+  const contextUnredeemedCode = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].unredeemedCode;
+
+  const [inputValue, setInputValue] = useState(contextUnredeemedCode ?? '');
+
+  useEffect(() => {
+    contextUnredeemedCode && setInputValue(contextUnredeemedCode ?? '');
+  }, [contextUnredeemedCode]);
 
   const handleNext = () =>
     joinSend({
@@ -31,6 +37,7 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
       <Input
         disabled={disabled}
         label={<ViewStateHeading>{t('invitation input label')}</ViewStateHeading>}
+        value={inputValue}
         onChange={({ target: { value } }) => setInputValue(value)}
         slots={{
           root: { className: 'm-0' },

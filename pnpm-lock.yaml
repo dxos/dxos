@@ -1110,9 +1110,11 @@ importers:
 
   packages/common/context:
     specifiers:
+      '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/util': workspace:*
     dependencies:
+      '@dxos/errors': link:../../sdk/errors
       '@dxos/log': link:../log
       '@dxos/util': link:../util
 
@@ -1607,6 +1609,7 @@ importers:
 
   packages/common/timeframe:
     specifiers:
+      '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -1614,6 +1617,7 @@ importers:
       '@types/debug': ^4.1.7
       debug: ^4.3.3
     dependencies:
+      '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
@@ -3041,6 +3045,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-table': ^7.7.14
+      '@types/simple-peer': 9.11.3
       '@types/string-hash': ^1.1.1
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
@@ -3074,6 +3079,7 @@ importers:
       react-table: ^7.8.0
       rehype-add-classes: ^1.0.0
       rehype-highlight: ^6.0.0
+      simple-peer: 9.11.0
       storybook-addon-react-router-v6: ^0.3.2
       string-hash: ~1.1.3
       tailwindcss: ^3.2.7
@@ -3082,6 +3088,7 @@ importers:
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
       vite-plugin-inspect: ^0.7.15
+      vite-plugin-mkcert: ^1.13.4
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
@@ -3152,6 +3159,7 @@ importers:
       react-table: 7.8.0_react@18.2.0
       rehype-add-classes: 1.0.0
       rehype-highlight: 6.0.0
+      simple-peer: 9.11.0
       string-hash: 1.1.3
       url-join: 5.0.0
     devDependencies:
@@ -3176,6 +3184,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@types/react-syntax-highlighter': 15.5.5
       '@types/react-table': 7.7.14
+      '@types/simple-peer': 9.11.3
       '@types/string-hash': 1.1.1
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       faker: 5.5.3
@@ -3188,6 +3197,7 @@ importers:
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
       vite-plugin-inspect: 0.7.15_vite@4.2.0
+      vite-plugin-mkcert: 1.13.4_vite@4.2.0
       vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
@@ -3916,10 +3926,12 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@types/lodash.isequal': ^4.5.0
+      '@types/lodash.isequalwith': ^4.4.0
       '@types/node': ^18.11.9
       base-x: ~3.0.9
       debug: ^4.3.3
       lodash.isequal: ^4.5.0
+      lodash.isequalwith: ^4.4.0
       source-map-support: ^0.5.12
     dependencies:
       '@dxos/async': link:../../common/async
@@ -3947,10 +3959,12 @@ importers:
       base-x: 3.0.9
       debug: 4.3.4
       lodash.isequal: 4.5.0
+      lodash.isequalwith: 4.4.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6
+      '@types/lodash.isequalwith': 4.4.7
       '@types/node': 18.11.9
       source-map-support: 0.5.21
 
@@ -10464,7 +10478,6 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       '@octokit/types': 8.0.0
-    dev: false
 
   /@octokit/auth-unauthenticated/3.0.4:
     resolution: {integrity: sha512-AT74XGBylcLr4lmUp1s6mjSUgphGdlse21Qjtv5DzpX1YOl5FXKwvNcZWESdhyBbpDT8VkVyLFqa/7a7eqpPNw==}
@@ -10501,7 +10514,6 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
-    dev: false
 
   /@octokit/endpoint/6.0.12:
     resolution: {integrity: sha512-lF3puPwkQWGfkMClXb4k/eUT/nZKQfxinRWJrdZaJO85Dqwo/G0yOC434Jr2ojwafWJMYqFGFa5ms4jJUgujdA==}
@@ -10518,7 +10530,6 @@ packages:
       '@octokit/types': 8.0.0
       is-plain-object: 5.0.0
       universal-user-agent: 6.0.0
-    dev: false
 
   /@octokit/graphql/4.8.0:
     resolution: {integrity: sha512-0gv+qLSBLKF0z8TKaSKTsS39scVKF9dbMxJpj3U0vC7wjNWFuIpL/z76Qe2fiuCbDRcJSavkXsVtMS6/dtQQsg==}
@@ -10539,7 +10550,6 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
-    dev: false
 
   /@octokit/oauth-app/4.2.0:
     resolution: {integrity: sha512-gyGclT77RQMkVUEW3YBeAKY+LBSc5u3eC9Wn/Uwt3WhuKuu9mrV18EnNpDqmeNll+mdV02yyBROU29Tlili6gg==}
@@ -10582,7 +10592,6 @@ packages:
 
   /@octokit/openapi-types/14.0.0:
     resolution: {integrity: sha512-HNWisMYlR8VCnNurDU6os2ikx0s0VyEjDYHNS/h4cgb8DeOxQ0n72HyinUtdDVxJhFy3FWLGl0DJhfEWk3P5Iw==}
-    dev: false
 
   /@octokit/openapi-types/16.0.0:
     resolution: {integrity: sha512-JbFWOqTJVLHZSUUoF4FzAZKYtqdxWu9Z5m2QQnOyEa04fOFljvyh7D3GYKbfuaSWisqehImiVIMG4eyJeP5VEA==}
@@ -10604,7 +10613,6 @@ packages:
     dependencies:
       '@octokit/core': 4.1.0
       '@octokit/types': 8.0.0
-    dev: false
 
   /@octokit/plugin-paginate-rest/6.0.0_@octokit+core@4.1.0:
     resolution: {integrity: sha512-Sq5VU1PfT6/JyuXPyt04KZNVsFOSBaYOAq2QRZUwzVlI10KFvcbUo8lR258AAQL1Et60b0WuVik+zOWKLuDZxw==}
@@ -10630,7 +10638,6 @@ packages:
       '@octokit/core': '>=3'
     dependencies:
       '@octokit/core': 4.1.0
-    dev: false
 
   /@octokit/plugin-rest-endpoint-methods/5.16.2_@octokit+core@3.6.0:
     resolution: {integrity: sha512-8QFz29Fg5jDuTPXVtey05BLm7OB+M8fnvE64RNegzX7U+5NUXcOcnpTIK0YfSHBg8gYd0oxIq3IZTe9SfPZiRw==}
@@ -10651,7 +10658,6 @@ packages:
       '@octokit/core': 4.1.0
       '@octokit/types': 8.0.0
       deprecation: 2.3.1
-    dev: false
 
   /@octokit/plugin-rest-endpoint-methods/7.0.1_@octokit+core@4.1.0:
     resolution: {integrity: sha512-pnCaLwZBudK5xCdrR823xHGNgqOzRnJ/mpC/76YPpNP7DybdsJtP7mdOwh+wYZxK5jqeQuhu59ogMI4NRlBUvA==}
@@ -10701,7 +10707,6 @@ packages:
       '@octokit/types': 8.0.0
       deprecation: 2.3.1
       once: 1.4.0
-    dev: false
 
   /@octokit/request-error/3.0.3:
     resolution: {integrity: sha512-crqw3V5Iy2uOU5Np+8M/YexTlT8zxCfI+qu+LxUB7SZpje4Qmx3mub5DfEKSO8Ylyk0aogi6TYdf6kxzh2BguQ==}
@@ -10710,7 +10715,6 @@ packages:
       '@octokit/types': 9.0.0
       deprecation: 2.3.1
       once: 1.4.0
-    dev: false
 
   /@octokit/request/5.6.3:
     resolution: {integrity: sha512-bFJl0I1KVc9jYTe9tdGGpAMPy32dLBXXo1dS/YwSCTL/2nd9XeHsY616RE3HPXDVk+a+dBuzyz5YdlXwcDTr2A==}
@@ -10737,7 +10741,6 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
-    dev: false
 
   /@octokit/request/6.2.3:
     resolution: {integrity: sha512-TNAodj5yNzrrZ/VxP+H5HiYaZep0H3GU0O7PaF+fhDrt8FPrnkei9Aal/txsN/1P7V3CPiThG0tIvpPDYUsyAA==}
@@ -10774,7 +10777,6 @@ packages:
       '@octokit/plugin-rest-endpoint-methods': 6.7.0_@octokit+core@4.1.0
     transitivePeerDependencies:
       - encoding
-    dev: false
 
   /@octokit/types/6.41.0:
     resolution: {integrity: sha512-eJ2jbzjdijiL3B4PrSQaSjuF2sPEQPVCPzBvTHJD9Nz+9dw2SGH4K4xeQJ77YfTq5bRQ+bD8wT11JbeDPmxmGg==}
@@ -10786,13 +10788,11 @@ packages:
     resolution: {integrity: sha512-65/TPpOJP1i3K4lBJMnWqPUJ6zuOtzhtagDvydAWbEXpbFYA0oMKKyLb95NFZZP0lSh/4b6K+DQlzvYQJQQePg==}
     dependencies:
       '@octokit/openapi-types': 14.0.0
-    dev: false
 
   /@octokit/types/9.0.0:
     resolution: {integrity: sha512-LUewfj94xCMH2rbD5YJ+6AQ4AVjFYTgpp6rboWM5T7N3IsIF65SBEOVcYMGAEzO/kKNiNaW4LoWtoThOhH06gw==}
     dependencies:
       '@octokit/openapi-types': 16.0.0
-    dev: false
 
   /@octokit/webhooks-methods/3.0.2:
     resolution: {integrity: sha512-Vlnv5WBscf07tyAvfDbp7pTkMZUwk7z7VwEF32x6HqI+55QRwBTcT+D7DDjZXtad/1dU9E32x0HmtDlF9VIRaQ==}
@@ -14774,6 +14774,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.isequalwith/4.4.7:
+    resolution: {integrity: sha512-GdI984QbZw+LGAd3jcFIIhaMwhlVasTMIT3nmE1rOcACjyzp9J9VjTENVkl9aJLOiPZt6RYSJFVEEsRHKbdh3w==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.matches/4.6.7:
     resolution: {integrity: sha512-vDGEUhua6fUpx86sr25/C77OscOJ6A2WJedCX+Nb0mXZny0wJXgVXSXFDgoSLVeoNLb1x/RYj8kj4loHpGtpmw==}
     dependencies:
@@ -17239,6 +17245,16 @@ packages:
       - debug
     dev: true
 
+  /axios/1.3.4_debug@4.3.4:
+    resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
+    dependencies:
+      follow-redirects: 1.15.2
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    dev: true
+
   /b4a/1.6.0:
     resolution: {integrity: sha512-fsTxXxj1081Yq5MOQ06gZ5+e2QcSyP2U6NofdOWyq+lrNI4IjkZ+fLVmoQ6uUCiNg1NWePMMVq93vOTdbJmErw==}
 
@@ -17556,7 +17572,6 @@ packages:
 
   /before-after-hook/2.2.3:
     resolution: {integrity: sha512-NzUnlZexiaH/46WDhANlyR2bXRopNg4F/zuSA3OpZnllCUgRaOF2znDioDWrmbNVsuZk6l9pMquQB38cfBZwkQ==}
-    dev: false
 
   /better-opn/2.1.1:
     resolution: {integrity: sha512-kIPXZS5qwyKiX/HcRvDYfmBQUa8XP17I0mYZZ0y4UhpYOSvtsLHDYqmomS+Mj20aDvD3knEiQ0ecQy2nhio3yA==}
@@ -20484,7 +20499,6 @@ packages:
 
   /deprecation/2.3.1:
     resolution: {integrity: sha512-xmHIy4F3scKVwMsQ4WnVaS8bHOx0DmVwRywosKhaILI0ywMDWPtBSku2HNxRvF7jtwDRsoEwYQSfbxj8b7RlJQ==}
-    dev: false
 
   /dequal/2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -27005,6 +27019,10 @@ packages:
 
   /lodash.isequal/4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+
+  /lodash.isequalwith/4.4.0:
+    resolution: {integrity: sha512-dcZON0IalGBpRmJBmMkaoV7d3I80R2O+FrzsZyHdNSFrANq/cgDqKQNmAHE8UEj4+QYWwwhkQOVdLHiAopzlsQ==}
+    dev: false
 
   /lodash.isfunction/3.0.9:
     resolution: {integrity: sha512-AirXNj15uRIMMPihnkInB4i3NHeb4iBtNg9WRWuK2o31S+ePwwNmDPaTL3o7dTJ+VXNZim7rFs4rxN4YU1oUJw==}
@@ -35850,7 +35868,6 @@ packages:
 
   /universal-user-agent/6.0.0:
     resolution: {integrity: sha512-isyNax3wXoKaulPDZWHQqbmIx1k2tb9fb3GGDBRxCscfYV2Ch7WxPArBsFEG8s/safwXTT7H4QGhaIkTp9447w==}
-    dev: false
 
   /universalify/0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
@@ -36338,6 +36355,22 @@ packages:
       vite: 4.2.0
     transitivePeerDependencies:
       - rollup
+      - supports-color
+    dev: true
+
+  /vite-plugin-mkcert/1.13.4_vite@4.2.0:
+    resolution: {integrity: sha512-sBk/VOoqJijXG0yBir4nqdwktGqhkl6sm260wJLh27KEHPi1wz+dAHs2OfcJszfMbFXKcVzMZKoXwRrKze+NYg==}
+    engines: {node: '>=v16.7.0'}
+    peerDependencies:
+      vite: '>=3'
+    dependencies:
+      '@octokit/rest': 19.0.5
+      axios: 1.3.4_debug@4.3.4
+      debug: 4.3.4
+      picocolors: 1.0.0
+      vite: 4.2.0
+    transitivePeerDependencies:
+      - encoding
       - supports-color
     dev: true
 
