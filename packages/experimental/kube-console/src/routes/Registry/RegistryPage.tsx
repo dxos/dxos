@@ -6,7 +6,7 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { useConfig } from '@dxos/react-client';
+import { ConfigProto } from '@dxos/config';
 import { Button, getSize, Table } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
@@ -25,19 +25,19 @@ type Service = {
 const columns: (host: string | undefined) => Column<Service>[] = (host) => {
   const columns: Column<Service>[] = [
     {
-      Header: 'type',
-      accessor: ({ type }) => type,
-      width: 100
-    },
-    {
       Header: 'module',
       accessor: ({ name }) => name,
       width: 100
     },
     {
+      Header: 'type',
+      accessor: ({ type }) => type,
+      width: 80
+    },
+    {
       Header: 'link',
       accessor: ({ name }) => name,
-      width: 80,
+      width: 40,
       Cell: ({ value }: { value: string[] }) => (
         <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
           <ArrowSquareOut className={getSize(6)} />
@@ -74,8 +74,8 @@ const columns: (host: string | undefined) => Column<Service>[] = (host) => {
 };
 
 export const RegistryPage = () => {
-  const config = useConfig();
   const kube = useKube();
+  const [config, setConfig] = useState<ConfigProto>({});
   const [results, setResults] = useState<any>();
   const modules = results?.modules.sort(alphabeticalByKey('name'));
 
@@ -84,7 +84,9 @@ export const RegistryPage = () => {
   }, []);
 
   const handleRefresh = async () => {
+    const config = await kube.fetch('/dx/config');
     const results = await kube.fetch('/dx/registry');
+    setConfig(config);
     setResults(results);
   };
 
@@ -97,7 +99,7 @@ export const RegistryPage = () => {
 
       {/* TODO(burdon): Theme. */}
       <Table
-        columns={columns(config.values.runtime?.kube?.host)}
+        columns={columns(config.runtime?.kube?.host)}
         data={modules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },

@@ -23,7 +23,7 @@ const columns: Column<Service>[] = [
   {
     Header: 'service',
     accessor: ({ name }) => name,
-    width: 80
+    width: 100
   },
   {
     Header: 'type',
