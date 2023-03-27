@@ -52,7 +52,6 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               if (listenerPeerRefs.current.has(member.identity.identityKey)) {
                 return;
               }
-              console.log('connecting...');
               const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
               const peer = new Peer({ stream, config: { iceServers }, initiator: false });
               peer.on('signal', (data) => {
@@ -70,7 +69,6 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               listenerPeerRefs.current.set(member.identity.identityKey, peer);
 
               const cleanup = () => {
-                console.log('Clean Up', member.identity.identityKey.toHex());
                 peer.destroy();
                 listenerPeerRefs.current.delete(member.identity.identityKey);
                 remoteVideoRef.current!.srcObject = null;
@@ -81,7 +79,6 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               });
               peer.on('close', () => {
                 cleanup();
-                console.log('Peer closed', member.identity.identityKey.toHex());
               });
               ctx.onDispose(cleanup);
 
@@ -141,10 +138,6 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
         }
       );
 
-      await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
-        command: 'connect'
-      });
-
       peer.on('signal', async (data) => {
         await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
           command: 'signal',
@@ -153,8 +146,12 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
         });
       });
 
+      // Initiate connection.
+      await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
+        command: 'connect'
+      });
+
       const cleanup = () => {
-        console.log('CleanUp', member.identity.identityKey.toHex());
         unsubscribe();
         peer.destroy();
         initiatorPeerRefs.current.delete(member.identity.identityKey);
@@ -167,7 +164,6 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
       });
       peer.on('close', () => {
         cleanup();
-        console.log('Peer closed', member.identity.identityKey.toHex());
       });
       ctx.current!.onDispose(cleanup);
     });
