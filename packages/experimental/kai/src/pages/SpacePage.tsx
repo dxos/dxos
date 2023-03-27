@@ -111,7 +111,7 @@ const SpaceLoading = ({ space }: { space: Space }) => {
   const targetProgress = (pipelineState.targetControlTimeframe?.totalMessages() ?? -1) + (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) + 2;
 
   const members = useMembers(space.key)
-  const onlinePeers = members.filter(member => member.presence === SpaceMember.PresenceState.ONLINE && (!identity?.identityKey || member.identity.identityKey.equals(identity?.identityKey))).length;
+  const onlinePeers = members.filter(member => member.presence === SpaceMember.PresenceState.ONLINE && (!identity?.identityKey || !member.identity.identityKey.equals(identity?.identityKey))).length;
 
   return (
     // center div vertically

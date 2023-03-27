@@ -51,6 +51,11 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
 /**
+ * Flag to disable automatic local snapshots.
+ */
+const DISABLE_SNAPSHOT_CACHE = false;
+
+/**
  * Controls data pipeline in the space.
  * Consumes the pipeline and updates the database.
  * Reacts to new epochs to restart the pipeline.
@@ -139,22 +144,24 @@ export class DataPipeline {
       await this._saveLatestTimeframe();
     });
 
-    // this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
-    //   const latestTimeframe = this._pipeline?.state.timeframe;
-    //   if (!latestTimeframe) {
-    //     return;
-    //   }
+    if(!DISABLE_SNAPSHOT_CACHE) {
+      this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
+        const latestTimeframe = this._pipeline?.state.timeframe;
+        if (!latestTimeframe) {
+          return;
+        }
 
-    //   // Save snapshot.
-    //   if (
-    //     latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
-    //     MESSAGES_PER_SNAPSHOT
-    //   ) {
-    //     const snapshot = await this._saveSnapshot();
-    //     this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-    //     log('save', { snapshot });
-    //   }
-    // });
+        // Save snapshot.
+        if (
+          latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
+          MESSAGES_PER_SNAPSHOT
+        ) {
+          const snapshot = await this._saveSnapshot();
+          this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+          log('save', { snapshot });
+        }
+      });
+    }
   }
 
   private async _saveSnapshot() {
