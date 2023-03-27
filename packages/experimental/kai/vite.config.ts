@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+import mkcert from 'vite-plugin-mkcert';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -23,18 +24,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   server: {
     host: true,
-    https:
-      process.env.HTTPS === 'true'
-        ? {
-            key: './key.pem',
-            cert: './cert.pem'
-          }
-        : false
-
-    // TODO(burdon): Disable HMR due to code size issues.
-    // TODO(burdon): If disabled then tailwind doesn't update.
-    // https://vitejs.dev/config/server-options.html#server-hmr
-    // hmr: false
+    https: process.env.HTTPS === 'true'
   },
 
   build: {
@@ -52,6 +42,8 @@ export default defineConfig({
   },
 
   plugins: [
+    mkcert(),
+
     // TODO(burdon): Document.
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']

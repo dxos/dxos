@@ -32,7 +32,8 @@ const initialState: AppState = {
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA)
+  pwa: bool(import.meta.env.VITE_PWA),
+  chat: true
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 
