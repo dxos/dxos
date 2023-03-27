@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Info, Sliders } from '@phosphor-icons/react';
+import { Database, Info, Sliders } from '@phosphor-icons/react';
 import { FC } from 'react';
 
-import { ConfigPage, StatusPage } from '../routes';
+import { ConfigPage, RegistryPage, StatusPage } from '../routes';
 
 export type Module = {
   id: string;
@@ -27,6 +27,12 @@ export const useModules = (): Module[] => {
       label: 'Status',
       Icon: Info,
       Component: StatusPage
+    },
+    {
+      id: 'registry',
+      label: 'Registry',
+      Icon: Database,
+      Component: RegistryPage
     }
   ];
 };
