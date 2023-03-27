@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { Button, Table } from '@dxos/react-components';
-import { alphabetical } from '@dxos/util';
+import { alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -52,7 +52,7 @@ const columns: Column<Service>[] = [
 export const StatusPage = () => {
   const kube = useKube();
   const [results, setResults] = useState<any>();
-  const services = results?.services.sort(alphabetical('name'));
+  const services = results?.services.sort(alphabeticalByKey('name'));
 
   useEffect(() => {
     void handleRefresh();
