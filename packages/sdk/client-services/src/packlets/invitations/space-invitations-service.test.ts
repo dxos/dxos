@@ -20,7 +20,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe.only('services/space-invitation-service', () => {
+describe('services/space-invitation-service', () => {
   test('creates space and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 

@@ -68,19 +68,17 @@ describe('service registry', () => {
     {
       const spaceInvitationsProxy = new SpaceInvitationsProxy(proxy.rpc.SpaceInvitationsService);
       const observer = spaceInvitationsProxy.createInvitation(space.key);
-      observer.subscribe({
-        onConnecting: (invitation: Invitation) => {
-          log('connecting', invitation);
-          void observer.cancel();
-        },
-        onCancelled: () => {
-          done.wake();
-        },
-        onSuccess: (_invitation: Invitation) => {
-          throw new Error('Not not implemented.');
-        },
-        onError: () => {
-          throw new Error('Not not implemented.');
+      observer.subscribe((invitation: Invitation) => {
+        switch (invitation.state) {
+          case Invitation.State.CONNECTING: {
+            log('connecting', invitation);
+            void observer.cancel();
+            break;
+          }
+
+          case Invitation.State.CANCELLED: {
+            done.wake();
+          }
         }
       });
     }

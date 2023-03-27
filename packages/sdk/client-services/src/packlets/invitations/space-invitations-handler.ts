@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, sleep, Trigger } from '@dxos/async';
 import {
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
@@ -21,7 +21,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -60,10 +60,11 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
   createInvitation(space: DataSpace, options?: InvitationsOptions): CancellableInvitationObservable {
-    let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     assert(space);
+
+    const stream = new PushStream<Invitation>();
 
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
@@ -75,163 +76,162 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH) // TODO(dmaretskyi): Don't generate if authMethod === NONE .
     };
 
-    let ctx: Context;
+    const ctx = new Context({
+      onError: (err) => {
+        void ctx.dispose();
+        stream.error(err);
+      }
+    });
+
+    let authenticationPassed = false;
+    let authenticationRetry = 0;
+
+    // Called for every connecting peer.
+    const createExtension = (): HostSpaceInvitationExtension => {
+      const complete = new Trigger<PublicKey>();
+      let guestProfile: ProfileDocument | undefined;
+
+      const hostInvitationExtension = new HostSpaceInvitationExtension({
+        introduce: async ({ profile }) => {
+          log('guest introduced itself', {
+            guestProfile: profile,
+            host: this._signingContext.deviceKey,
+            spaceKey: space.key
+          });
+
+          guestProfile = profile;
+
+          // TODO(burdon): Is this the right place to set this state?
+          // TODO(dmaretskyi): Should we expose guest's profile in this callback?
+          stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+
+          return {
+            spaceKey:
+              type === Invitation.Type.INTERACTIVE_TESTING || type === Invitation.Type.MULTIUSE_TESTING
+                ? space.key
+                : undefined,
+            authMethod: invitation.authMethod!
+          };
+        },
+
+        authenticate: async ({ authenticationCode: code }) => {
+          log('received authentication request', { authenticationCode: code });
+          let status = AuthenticationResponse.Status.OK;
+
+          switch (invitation.authMethod) {
+            case AuthMethod.NONE: {
+              log('authentication not required');
+              return { status: AuthenticationResponse.Status.OK };
+            }
+            case AuthMethod.SHARED_SECRET: {
+              if (invitation.authenticationCode) {
+                if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                } else if (code !== invitation.authenticationCode) {
+                  status = AuthenticationResponse.Status.INVALID_OTP;
+                } else {
+                  authenticationPassed = true;
+                }
+              }
+              break;
+            }
+            default: {
+              log.error('invalid authentication method', { authMethod: invitation.authMethod });
+              status = AuthenticationResponse.Status.INTERNAL_ERROR;
+              break;
+            }
+          }
+
+          return { status };
+        },
+
+        requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
+          try {
+            // Check authenticated.
+            if (isAuthenticationRequired(invitation) && !authenticationPassed) {
+              throw new Error('Not authenticated');
+            }
+
+            log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
+            // TODO(burdon): Check if already admitted.
+            const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
+              this._signingContext.credentialSigner,
+              identityKey,
+              space.key,
+              space.inner.genesisFeedKey,
+              guestProfile
+            );
+
+            // TODO(dmaretskyi): Refactor.
+            assert(credentials[0].credential);
+            const spaceMemberCredential = credentials[0].credential.credential;
+            assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+
+            await writeMessages(space.inner.controlPipeline.writer, credentials);
+
+            // Updating credentials complete.
+            complete.wake(deviceKey);
+
+            return {
+              credential: spaceMemberCredential,
+              controlTimeframe: space.inner.controlPipeline.state.timeframe,
+              dataTimeframe: space.dataPipeline.pipelineState?.timeframe
+            };
+          } catch (err: any) {
+            // TODO(burdon): Generic RPC callback to report error to client.
+            stream.error(err);
+            throw err; // Propagate error to guest.
+          }
+        },
+
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              log('connected', { host: this._signingContext.deviceKey });
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
+              const deviceKey = await complete.wait({ timeout });
+              log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
+              stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.error('failed', err);
+              stream.error(err);
+              // }
+            } finally {
+              if (type !== Invitation.Type.MULTIUSE_TESTING) {
+                await sleep(ON_CLOSE_DELAY);
+                await ctx.dispose();
+              }
+            }
+          });
+        }
+      });
+      return hostInvitationExtension;
+    };
+
+    scheduleTask(ctx, async () => {
+      const topic = invitation.swarmKey!;
+      const swarmConnection = await this._networkManager.joinSwarm({
+        topic,
+        peerId: topic,
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
+        topology: new StarTopology(topic)
+      });
+      ctx.onDispose(() => swarmConnection.close());
+
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+    });
 
     // TODO(burdon): Stop anything pending.
     const observable = new CancellableInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        ctx = new Context({
-          onError: (err) => {
-            void ctx.dispose();
-            observer.error(err);
-          }
-        });
-
-        let authenticationPassed = false;
-        let authenticationRetry = 0;
-
-        // Called for every connecting peer.
-        const createExtension = (): HostSpaceInvitationExtension => {
-          const complete = new Trigger<PublicKey>();
-          let guestProfile: ProfileDocument | undefined;
-
-          const hostInvitationExtension = new HostSpaceInvitationExtension({
-            introduce: async ({ profile }) => {
-              log('guest introduced itself', {
-                guestProfile: profile,
-                host: this._signingContext.deviceKey,
-                spaceKey: space.key
-              });
-
-              guestProfile = profile;
-
-              // TODO(burdon): Is this the right place to set this state?
-              // TODO(dmaretskyi): Should we expose guest's profile in this callback?
-              observer.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-
-              return {
-                spaceKey:
-                  type === Invitation.Type.INTERACTIVE_TESTING || type === Invitation.Type.MULTIUSE_TESTING
-                    ? space.key
-                    : undefined,
-                authMethod: invitation.authMethod!
-              };
-            },
-
-            authenticate: async ({ authenticationCode: code }) => {
-              log('received authentication request', { authenticationCode: code });
-              let status = AuthenticationResponse.Status.OK;
-
-              switch (invitation.authMethod) {
-                case AuthMethod.NONE: {
-                  log('authentication not required');
-                  return { status: AuthenticationResponse.Status.OK };
-                }
-                case AuthMethod.SHARED_SECRET: {
-                  if (invitation.authenticationCode) {
-                    if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-                      status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
-                    } else if (code !== invitation.authenticationCode) {
-                      status = AuthenticationResponse.Status.INVALID_OTP;
-                    } else {
-                      authenticationPassed = true;
-                    }
-                  }
-                  break;
-                }
-                default: {
-                  log.error('invalid authentication method', { authMethod: invitation.authMethod });
-                  status = AuthenticationResponse.Status.INTERNAL_ERROR;
-                  break;
-                }
-              }
-
-              return { status };
-            },
-
-            requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
-              try {
-                // Check authenticated.
-                if (isAuthenticationRequired(invitation) && !authenticationPassed) {
-                  throw new Error('Not authenticated');
-                }
-
-                log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
-                // TODO(burdon): Check if already admitted.
-                const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-                  this._signingContext.credentialSigner,
-                  identityKey,
-                  space.key,
-                  space.inner.genesisFeedKey,
-                  guestProfile
-                );
-
-                // TODO(dmaretskyi): Refactor.
-                assert(credentials[0].credential);
-                const spaceMemberCredential = credentials[0].credential.credential;
-                assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-
-                await writeMessages(space.inner.controlPipeline.writer, credentials);
-
-                // Updating credentials complete.
-                complete.wake(deviceKey);
-
-                return {
-                  credential: spaceMemberCredential,
-                  controlTimeframe: space.inner.controlPipeline.state.timeframe,
-                  dataTimeframe: space.dataPipeline.pipelineState?.timeframe
-                };
-              } catch (err) {
-                // TODO(burdon): Generic RPC callback to report error to client.
-                observer.error(err);
-                throw err; // Propagate error to guest.
-              }
-            },
-
-            onOpen: () => {
-              scheduleTask(ctx, async () => {
-                try {
-                  log('connected', { host: this._signingContext.deviceKey });
-                  observer.next({ ...invitation, state: Invitation.State.CONNECTED });
-                  const deviceKey = await complete.wait({ timeout });
-                  log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
-                  observer.next({ ...invitation, state: Invitation.State.SUCCESS });
-                } catch (err) {
-                  // TODO(wittjosiah): Is this an important check?
-                  // if (!observable.cancelled) {
-                  log.error('failed', err);
-                  observer.error(err);
-                  // }
-                } finally {
-                  if (type !== Invitation.Type.MULTIUSE_TESTING) {
-                    await sleep(ON_CLOSE_DELAY);
-                    await ctx.dispose();
-                  }
-                }
-              });
-            }
-          });
-          return hostInvitationExtension;
-        };
-
-        scheduleTask(ctx, async () => {
-          const topic = invitation.swarmKey!;
-          const swarmConnection = await this._networkManager.joinSwarm({
-            topic,
-            peerId: topic,
-            protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-              teleport.addExtension('dxos.halo.invitations', createExtension());
-            }),
-            topology: new StarTopology(topic)
-          });
-          ctx.onDispose(() => swarmConnection.close());
-
-          observer.next({ ...invitation, state: Invitation.State.CONNECTING });
-        });
-      },
+      subscriber: stream.observable,
       onCancel: async () => {
-        await swarmConnection?.close();
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
       }
     });
 
@@ -245,145 +245,144 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
    */
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = options ?? {};
+    const stream = new PushStream<Invitation>();
 
-    let ctx: Context;
+    const ctx = new Context({
+      onError: (err) => {
+        void ctx.dispose();
+        stream.error(err);
+      }
+    });
+
+    let connectionCount = 0;
+    const complete = new Trigger();
+
+    const createExtension = (): GuestSpaceInvitationExtension => {
+      const extension = new GuestSpaceInvitationExtension({
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              // TODO(burdon): Bug where guest may create multiple connections.
+              if (++connectionCount > 1) {
+                throw new Error(`multiple connections detected: ${connectionCount}`);
+              }
+
+              log('connected', { guest: this._signingContext.deviceKey });
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
+
+              // 1. Introduce guest to host.
+              log('introduce', { guest: this._signingContext.deviceKey });
+              const introductionResponse = await extension.rpc.SpaceHostService.introduce({
+                profile: this._signingContext.profile
+              });
+              log('introduce response', { guest: this._signingContext.deviceKey, response: introductionResponse });
+              invitation.authMethod = introductionResponse.authMethod;
+              if (introductionResponse.spaceKey) {
+                invitation.spaceKey = introductionResponse.spaceKey;
+              }
+
+              // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regradless of auth requirements).
+
+              // 2. Get authentication code.
+              // TODO(burdon): Test timeout (options for timeouts at different steps).
+              if (isAuthenticationRequired(invitation)) {
+                stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+
+                for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+                  log('guest waiting for authentication code...');
+                  stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+                  const authenticationCode = await authenticated.wait({ timeout });
+
+                  log('sending authentication request');
+                  const response = await extension.rpc.SpaceHostService.authenticate({ authenticationCode });
+                  if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+                    break;
+                  }
+
+                  if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+                    if (attempt === MAX_OTP_ATTEMPTS) {
+                      throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+                    } else {
+                      log('retrying invalid code', { attempt });
+                      authenticated.reset();
+                    }
+                  }
+                }
+              }
+              // 3. Generate a pair of keys for our feeds.
+              const controlFeedKey = await this._keyring.createKey();
+              const dataFeedKey = await this._keyring.createKey();
+
+              // 4. Send admission credentials to host (with local space keys).
+              log('request admission', { guest: this._signingContext.deviceKey });
+              const { credential, controlTimeframe, dataTimeframe } =
+                await extension.rpc.SpaceHostService.requestAdmission({
+                  identityKey: this._signingContext.identityKey,
+                  deviceKey: this._signingContext.deviceKey,
+                  controlFeedKey,
+                  dataFeedKey
+                });
+
+              // 4. Create local space.
+              const assertion = getCredentialAssertion(credential);
+              assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+              assert(credential.subject.id.equals(this._signingContext.identityKey));
+
+              const space = await this._spaceManager.acceptSpace({
+                spaceKey: assertion.spaceKey,
+                genesisFeedKey: assertion.genesisFeedKey,
+                controlTimeframe,
+                dataTimeframe
+              });
+
+              // Record credential in our HALO.
+              await this._signingContext.recordCredential(credential);
+
+              // 5. Success.
+              log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
+              complete.wake();
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.warn('auth failed', err);
+              stream.error(err);
+              // }
+            } finally {
+              await ctx.dispose();
+            }
+          });
+        }
+      });
+      return extension;
+    };
+
+    scheduleTask(ctx, async () => {
+      assert(invitation.swarmKey);
+      const topic = invitation.swarmKey;
+      const swarmConnection = await this._networkManager.joinSwarm({
+        topic,
+        peerId: PublicKey.random(),
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
+        topology: new StarTopology(topic)
+      });
+      ctx.onDispose(() => swarmConnection.close());
+
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+      await complete.wait();
+      stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+      await ctx.dispose();
+    });
 
     const authenticated = new Trigger<string>();
     const observable = new AuthenticatingInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        ctx = new Context({
-          onError: (err) => {
-            void ctx.dispose();
-            observer.error(err);
-          }
-        });
-
-        let connectionCount = 0;
-        const complete = new Trigger();
-
-        const createExtension = (): GuestSpaceInvitationExtension => {
-          const extension = new GuestSpaceInvitationExtension({
-            onOpen: () => {
-              scheduleTask(ctx, async () => {
-                try {
-                  // TODO(burdon): Bug where guest may create multiple connections.
-                  if (++connectionCount > 1) {
-                    throw new Error(`multiple connections detected: ${connectionCount}`);
-                  }
-
-                  log('connected', { guest: this._signingContext.deviceKey });
-                  observer.next({ ...invitation, state: Invitation.State.CONNECTED });
-
-                  // 1. Introduce guest to host.
-                  log('introduce', { guest: this._signingContext.deviceKey });
-                  const introductionResponse = await extension.rpc.SpaceHostService.introduce({
-                    profile: this._signingContext.profile
-                  });
-                  log('introduce response', { guest: this._signingContext.deviceKey, response: introductionResponse });
-                  invitation.authMethod = introductionResponse.authMethod;
-                  if (introductionResponse.spaceKey) {
-                    invitation.spaceKey = introductionResponse.spaceKey;
-                  }
-
-                  // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regradless of auth requirements).
-
-                  // 2. Get authentication code.
-                  // TODO(burdon): Test timeout (options for timeouts at different steps).
-                  if (isAuthenticationRequired(invitation)) {
-                    observer.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-
-                    for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
-                      log('guest waiting for authentication code...');
-                      observer.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-                      const authenticationCode = await authenticated.wait({ timeout });
-
-                      log('sending authentication request');
-                      const response = await extension.rpc.SpaceHostService.authenticate({ authenticationCode });
-                      if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
-                        break;
-                      }
-
-                      if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
-                        if (attempt === MAX_OTP_ATTEMPTS) {
-                          throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
-                        } else {
-                          log('retrying invalid code', { attempt });
-                          authenticated.reset();
-                        }
-                      }
-                    }
-                  }
-                  // 3. Generate a pair of keys for our feeds.
-                  const controlFeedKey = await this._keyring.createKey();
-                  const dataFeedKey = await this._keyring.createKey();
-
-                  // 4. Send admission credentials to host (with local space keys).
-                  log('request admission', { guest: this._signingContext.deviceKey });
-                  const { credential, controlTimeframe, dataTimeframe } =
-                    await extension.rpc.SpaceHostService.requestAdmission({
-                      identityKey: this._signingContext.identityKey,
-                      deviceKey: this._signingContext.deviceKey,
-                      controlFeedKey,
-                      dataFeedKey
-                    });
-
-                  // 4. Create local space.
-                  const assertion = getCredentialAssertion(credential);
-                  assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
-                  assert(credential.subject.id.equals(this._signingContext.identityKey));
-
-                  const space = await this._spaceManager.acceptSpace({
-                    spaceKey: assertion.spaceKey,
-                    genesisFeedKey: assertion.genesisFeedKey,
-                    controlTimeframe,
-                    dataTimeframe
-                  });
-
-                  // Record credential in our HALO.
-                  await this._signingContext.recordCredential(credential);
-
-                  // 5. Success.
-                  log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
-                  complete.wake();
-                } catch (err) {
-                  // TODO(wittjosiah): Is this an important check?
-                  // if (!observable.cancelled) {
-                  log.warn('auth failed', err);
-                  observer.error(err);
-                  // }
-                } finally {
-                  await ctx.dispose();
-                }
-              });
-            }
-          });
-          return extension;
-        };
-
-        scheduleTask(ctx, async () => {
-          assert(invitation.swarmKey);
-          const topic = invitation.swarmKey;
-          const swarmConnection = await this._networkManager.joinSwarm({
-            topic,
-            peerId: PublicKey.random(),
-            protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-              teleport.addExtension('dxos.halo.invitations', createExtension());
-            }),
-            topology: new StarTopology(topic)
-          });
-          ctx.onDispose(() => swarmConnection.close());
-
-          observer.next({ ...invitation, state: Invitation.State.CONNECTING });
-          await complete.wait();
-          observer.next({ ...invitation, state: Invitation.State.SUCCESS });
-          await ctx.dispose();
-        });
-      },
+      subscriber: stream.observable,
       onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
         await ctx.dispose();
       },
-
       onAuthenticate: async (code: string) => {
         // TODO(burdon): Reset creates a race condition? Event?
         authenticated.wake(code);

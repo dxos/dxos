@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, sleep, Trigger } from '@dxos/async';
 import {
   AbstractInvitationsHandler,
   AuthenticatingInvitationObservable,
@@ -69,112 +69,109 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
 
-    let ctx: Context;
+    const stream = new PushStream<Invitation>();
+
+    const ctx = new Context({
+      onError: (err) => {
+        void ctx.dispose();
+        stream.error(err);
+      }
+    });
+
+    let authenticationCode: string;
+    const complete = new Trigger<PublicKey>();
+
+    // Called for every connecting peer.
+    const createExtension = () =>
+      new HostHaloInvitationExtension({
+        requestAdmission: async () => {
+          log('responding with admission offer', {
+            host: identity.deviceKey
+          });
+
+          // TODO(burdon): Is this the right place to set this state?
+          stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+          return {
+            identityKey: identity.identityKey,
+            haloSpaceKey: identity.haloSpaceKey,
+            genesisFeedKey: identity.haloGenesisFeedKey,
+            controlTimeframe: identity.controlPipeline.state.timeframe
+          };
+        },
+
+        authenticate: async ({ authenticationCode: code }) => {
+          log('received authentication request', { authenticationCode: code });
+          authenticationCode = code;
+          return { status: AuthenticationResponse.Status.OK };
+        },
+
+        // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
+        presentAdmissionCredentials: async (credentials) => {
+          try {
+            // Check authenticated.
+            if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
+              if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
+                throw new Error(`invalid authentication code: ${authenticationCode}`);
+              }
+            }
+
+            log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
+            // TODO(burdon): Check if already admitted.
+            await identity.admitDevice(credentials);
+
+            // Updating credentials complete.
+            complete.wake(credentials.deviceKey);
+          } catch (err: any) {
+            // TODO(burdon): Generic RPC callback to report error to client.
+            stream.error(err);
+            throw err; // Propagate error to guest.
+          }
+        },
+
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              log('connected', { host: identity.deviceKey });
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
+              const deviceKey = await complete.wait({ timeout });
+              log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
+              stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.error('failed', err);
+              stream.error(err);
+              // }
+            } finally {
+              // NOTE: If we close immediately after `complete` trigger finishes, Guest won't receive the reply to the last RPC.
+              // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing.
+              await sleep(ON_CLOSE_DELAY);
+              await ctx.dispose();
+            }
+          });
+        }
+      });
+
+    scheduleTask(ctx, async () => {
+      const topic = invitation.swarmKey!;
+      const swarmConnection = await this._networkManager.joinSwarm({
+        topic,
+        peerId: topic,
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
+        topology: new StarTopology(topic)
+      });
+      ctx.onDispose(() => swarmConnection.close());
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+    });
 
     // TODO(burdon): Stop anything pending.
     const observable = new CancellableInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        ctx = new Context({
-          onError: (err) => {
-            void ctx.dispose();
-            observer.error(err);
-          }
-        });
-
-        let authenticationCode: string;
-        const complete = new Trigger<PublicKey>();
-
-        // Called for every connecting peer.
-        const createExtension = () =>
-          new HostHaloInvitationExtension({
-            requestAdmission: async () => {
-              log('responding with admission offer', {
-                host: identity.deviceKey
-              });
-
-              // TODO(burdon): Is this the right place to set this state?
-              observer.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-              return {
-                identityKey: identity.identityKey,
-                haloSpaceKey: identity.haloSpaceKey,
-                genesisFeedKey: identity.haloGenesisFeedKey,
-                controlTimeframe: identity.controlPipeline.state.timeframe
-              };
-            },
-
-            authenticate: async ({ authenticationCode: code }) => {
-              log('received authentication request', { authenticationCode: code });
-              authenticationCode = code;
-              return { status: AuthenticationResponse.Status.OK };
-            },
-
-            // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
-            presentAdmissionCredentials: async (credentials) => {
-              try {
-                // Check authenticated.
-                if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
-                  if (
-                    invitation.authenticationCode === undefined ||
-                    invitation.authenticationCode !== authenticationCode
-                  ) {
-                    throw new Error(`invalid authentication code: ${authenticationCode}`);
-                  }
-                }
-
-                log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
-                // TODO(burdon): Check if already admitted.
-                await identity.admitDevice(credentials);
-
-                // Updating credentials complete.
-                complete.wake(credentials.deviceKey);
-              } catch (err) {
-                // TODO(burdon): Generic RPC callback to report error to client.
-                observer.error(err);
-                throw err; // Propagate error to guest.
-              }
-            },
-
-            onOpen: () => {
-              scheduleTask(ctx, async () => {
-                try {
-                  log('connected', { host: identity.deviceKey });
-                  observer.next({ ...invitation, state: Invitation.State.CONNECTED });
-                  const deviceKey = await complete.wait({ timeout });
-                  log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
-                  observer.next({ ...invitation, state: Invitation.State.SUCCESS });
-                } catch (err) {
-                  // TODO(wittjosiah): Is this an important check?
-                  // if (!observable.cancelled) {
-                  log.error('failed', err);
-                  observer.error(err);
-                  // }
-                } finally {
-                  // NOTE: If we close immediately after `complete` trigger finishes, Guest won't receive the reply to the last RPC.
-                  // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing.
-                  await sleep(ON_CLOSE_DELAY);
-                  await ctx.dispose();
-                }
-              });
-            }
-          });
-
-        scheduleTask(ctx, async () => {
-          const topic = invitation.swarmKey!;
-          const swarmConnection = await this._networkManager.joinSwarm({
-            topic,
-            peerId: topic,
-            protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-              teleport.addExtension('dxos.halo.invitations', createExtension());
-            }),
-            topology: new StarTopology(topic)
-          });
-          ctx.onDispose(() => swarmConnection.close());
-          observer.next({ ...invitation, state: Invitation.State.CONNECTING });
-        });
-      },
+      subscriber: stream.observable,
       onCancel: async () => {
-        // TODO(wittjosiah): Fire cancelled state.
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
         await ctx?.dispose();
       }
     });
@@ -189,117 +186,115 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
    */
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = options ?? {};
+    const stream = new PushStream<Invitation>();
 
-    let ctx: Context;
+    const ctx = new Context({
+      onError: (err) => {
+        void ctx.dispose();
+        stream.error(err);
+      }
+    });
+
+    let connectionCount = 0;
+    const complete = new Trigger<PublicKey>();
+
+    const createExtension = (): GuestHaloInvitationExtension => {
+      const extension = new GuestHaloInvitationExtension({
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              // TODO(burdon): Bug where guest may create multiple connections.
+              if (++connectionCount > 1) {
+                throw new Error(`multiple connections detected: ${connectionCount}`);
+              }
+
+              log('connected');
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
+
+              // 1. Send request.
+              log('sending admission request');
+              const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } =
+                await extension.rpc.HaloHostService.requestAdmission();
+
+              // 2. Get authentication code.
+              // TODO(burdon): Test timeout (options for timeouts at different steps).
+              if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                log('guest waiting for authentication code...');
+                stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+                const authenticationCode = await authenticated.wait({ timeout });
+                log('sending authentication request');
+                await extension.rpc.HaloHostService.authenticate({ authenticationCode });
+              }
+
+              const deviceKey = await this._params.keyring.createKey();
+              const controlFeedKey = await this._params.keyring.createKey();
+              const dataFeedKey = await this._params.keyring.createKey();
+
+              // 3. Send admission credentials to host (with local identity keys).
+              log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
+              await extension.rpc.HaloHostService.presentAdmissionCredentials({
+                deviceKey,
+                controlFeedKey,
+                dataFeedKey
+              });
+
+              // 4. Create local identity.
+              // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
+              const identity = await this._params.acceptIdentity({
+                identityKey,
+                deviceKey,
+                haloSpaceKey,
+                haloGenesisFeedKey: genesisFeedKey,
+                controlFeedKey,
+                dataFeedKey,
+                controlTimeframe
+              });
+
+              // 5. Success.
+              log('admitted by host', { guest: identity.deviceKey, identityKey });
+              complete.wake(identityKey);
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.warn('auth failed', err);
+              stream.error(err);
+              // }
+            } finally {
+              await ctx.dispose();
+            }
+          });
+        }
+      });
+      return extension;
+    };
+
+    scheduleTask(ctx, async () => {
+      assert(invitation.swarmKey);
+      const topic = invitation.swarmKey;
+      const swarmConnection = await this._networkManager.joinSwarm({
+        topic,
+        peerId: PublicKey.random(),
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
+        topology: new StarTopology(topic)
+      });
+      ctx.onDispose(() => swarmConnection.close());
+
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+      invitation.identityKey = await complete.wait();
+      stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+      await ctx.dispose();
+    });
 
     const authenticated = new Trigger<string>();
     const observable = new AuthenticatingInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        ctx = new Context({
-          onError: (err) => {
-            void ctx.dispose();
-            observer.error(err);
-          }
-        });
-
-        let connectionCount = 0;
-        const complete = new Trigger<PublicKey>();
-
-        const createExtension = (): GuestHaloInvitationExtension => {
-          const extension = new GuestHaloInvitationExtension({
-            onOpen: () => {
-              scheduleTask(ctx, async () => {
-                try {
-                  // TODO(burdon): Bug where guest may create multiple connections.
-                  if (++connectionCount > 1) {
-                    throw new Error(`multiple connections detected: ${connectionCount}`);
-                  }
-
-                  log('connected');
-                  observer.next({ ...invitation, state: Invitation.State.CONNECTED });
-
-                  // 1. Send request.
-                  log('sending admission request');
-                  const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } =
-                    await extension.rpc.HaloHostService.requestAdmission();
-
-                  // 2. Get authentication code.
-                  // TODO(burdon): Test timeout (options for timeouts at different steps).
-                  if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-                    log('guest waiting for authentication code...');
-                    observer.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-                    const authenticationCode = await authenticated.wait({ timeout });
-                    log('sending authentication request');
-                    await extension.rpc.HaloHostService.authenticate({ authenticationCode });
-                  }
-
-                  const deviceKey = await this._params.keyring.createKey();
-                  const controlFeedKey = await this._params.keyring.createKey();
-                  const dataFeedKey = await this._params.keyring.createKey();
-
-                  // 3. Send admission credentials to host (with local identity keys).
-                  log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
-                  await extension.rpc.HaloHostService.presentAdmissionCredentials({
-                    deviceKey,
-                    controlFeedKey,
-                    dataFeedKey
-                  });
-
-                  // 4. Create local identity.
-                  // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
-                  const identity = await this._params.acceptIdentity({
-                    identityKey,
-                    deviceKey,
-                    haloSpaceKey,
-                    haloGenesisFeedKey: genesisFeedKey,
-                    controlFeedKey,
-                    dataFeedKey,
-                    controlTimeframe
-                  });
-
-                  // 5. Success.
-                  log('admitted by host', { guest: identity.deviceKey, identityKey });
-                  complete.wake(identityKey);
-                } catch (err) {
-                  // TODO(wittjosiah): Is this an important check?
-                  // if (!observable.cancelled) {
-                  log.warn('auth failed', err);
-                  observer.error(err);
-                  // }
-                } finally {
-                  await ctx.dispose();
-                }
-              });
-            }
-          });
-          return extension;
-        };
-
-        scheduleTask(ctx, async () => {
-          assert(invitation.swarmKey);
-          const topic = invitation.swarmKey;
-          const swarmConnection = await this._networkManager.joinSwarm({
-            topic,
-            peerId: PublicKey.random(),
-            protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-              teleport.addExtension('dxos.halo.invitations', createExtension());
-            }),
-            topology: new StarTopology(topic)
-          });
-          ctx.onDispose(() => swarmConnection.close());
-
-          observer.next({ ...invitation, state: Invitation.State.CONNECTING });
-          invitation.identityKey = await complete.wait();
-          observer.next({ ...invitation, state: Invitation.State.SUCCESS });
-          await ctx.dispose();
-        });
-      },
+      subscriber: stream.observable,
       onCancel: async () => {
-        // TODO(wittjosiah): Fire cancelled state.
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
         await ctx.dispose();
       },
-
       // TODO(burdon): Consider retry.
       onAuthenticate: async (code: string) => {
         authenticated.wake(code);

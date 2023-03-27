@@ -49,14 +49,12 @@ describe('services/device-invitation-service', () => {
       const observable1 = proxy1.createInvitation();
       observable1.subscribe(
         (invitation: Invitation) => {
-          console.log('[[host]]', invitation);
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
               const proxy2 = new DeviceInvitationsProxy(service2);
               const observable2 = proxy2.acceptInvitation(invitation);
               observable2.subscribe(
                 async (invitation) => {
-                  console.log('[[guest]]', invitation);
                   switch (invitation.state) {
                     case Invitation.State.AUTHENTICATING: {
                       await observable2.authenticate(await authenticationCode.wait());
