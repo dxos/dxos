@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { sleep, Trigger } from '@dxos/async';
+import { Context, rejectOnDispose } from '@dxos/context';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,13 +16,12 @@ import { Timeframe } from '@dxos/timeframe';
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
-import { Context, rejectOnDispose } from '@dxos/context';
 
 export type WaitUntilReachedTargetParams = {
   /**
    * For cancellation.
    */
-  ctx?: Context
+  ctx?: Context;
   timeout?: number;
 };
 

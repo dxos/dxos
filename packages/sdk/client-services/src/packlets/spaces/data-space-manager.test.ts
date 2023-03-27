@@ -99,7 +99,6 @@ describe('DataSpaceManager', () => {
     });
     await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
-
     log('', {
       peer1: {
         identity: identity1.identityKey,

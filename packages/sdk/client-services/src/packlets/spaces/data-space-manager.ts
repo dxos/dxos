@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
@@ -68,7 +68,7 @@ export class DataSpaceManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) { }
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -77,7 +77,7 @@ export class DataSpaceManager {
 
   @synchronized
   async open() {
-    log('open')
+    log('open');
     await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
@@ -93,7 +93,7 @@ export class DataSpaceManager {
 
   @synchronized
   async close() {
-    log('close')
+    log('close');
     this._isOpen = false;
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
@@ -221,14 +221,14 @@ export class DataSpaceManager {
       snapshotId: metadata.snapshot,
       callbacks: {
         beforeReady: async () => {
-          log('before space ready', { space: space.key })
+          log('before space ready', { space: space.key });
           this._dataServiceSubscriptions.registerSpace(
             space.key,
             dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
           );
         },
         afterReady: async () => {
-          log('after space ready', { space: space.key, open: this._isOpen })
+          log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
             this.updated.emit();
           }

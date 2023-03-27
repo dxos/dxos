@@ -158,7 +158,7 @@ export class SpaceProxy implements Space {
    */
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INACTIVE;
+      return SpaceState.INITIALIZING;
     } else {
       return this._data.state;
     }

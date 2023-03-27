@@ -32,20 +32,17 @@ import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
 
-// Maximum time to wait for the data pipeline to catch up to its desired timeframe.
-const DATA_PIPELINE_READY_TIMEOUT = 10_000;
-
 export type DataSpaceCallbacks = {
   /**
    * Called before transitioning to the ready state.
    */
   beforeReady?: () => Promise<void>;
-  
+
   /**
    * Called after transitioning to the ready state.
    */
   afterReady?: () => Promise<void>;
-}
+};
 
 export type DataSpaceParams = {
   inner: Space;
@@ -62,7 +59,6 @@ export type DataSpaceParams = {
   callbacks?: DataSpaceCallbacks;
 };
 
-const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
@@ -178,7 +174,7 @@ export class DataSpace {
       try {
         this.initializeDataPipeline();
       } catch (err) {
-        if(err instanceof CancelledError) {
+        if (err instanceof CancelledError) {
           log('Data pipeline initialization cancelled', err);
           return;
         }
@@ -189,14 +185,14 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
-    if(this._state !== SpaceState.INACTIVE) {
+    if (this._state !== SpaceState.INACTIVE) {
       throw new SystemError('Invalid operation');
     }
     this._state = SpaceState.INITIALIZING;
 
     // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
+      ctx: this._ctx
     });
 
     await this._createWritableFeeds();
@@ -218,11 +214,10 @@ export class DataSpace {
       }
     });
 
-
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
+      ctx: this._ctx
     });
 
     log('data pipeline ready');

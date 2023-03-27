@@ -26,7 +26,7 @@ export type NotarizeParams = {
   /**
    * For cancellation.
    */
-  ctx?: Context
+  ctx?: Context;
 
   /**
    * Credentials to notarize.
@@ -52,7 +52,7 @@ export type NotarizeParams = {
    * @default {@link DEFAULT_SUCCESS_DELAY}
    */
   successDelay?: number;
-}
+};
 
 /**
  * See NotarizationService proto.
@@ -66,7 +66,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
-  async open() { }
+  async open() {}
 
   async close() {
     await this._ctx.dispose();
@@ -75,7 +75,13 @@ export class NotarizationPlugin implements CredentialProcessor {
   /**
    * Request credentials to be notarized.
    */
-  async notarize({ ctx: opCtx, credentials, timeout = DEFAULT_NOTARIZE_TIMEOUT, retryTimeout = DEFAULT_RETRY_TIMEOUT, successDelay = DEFAULT_SUCCESS_DELAY }: NotarizeParams) {
+  async notarize({
+    ctx: opCtx,
+    credentials,
+    timeout = DEFAULT_NOTARIZE_TIMEOUT,
+    retryTimeout = DEFAULT_RETRY_TIMEOUT,
+    successDelay = DEFAULT_SUCCESS_DELAY
+  }: NotarizeParams) {
     log('notarize', { credentials });
     assert(
       credentials.every((credential) => credential.id),
@@ -145,11 +151,7 @@ export class NotarizationPlugin implements CredentialProcessor {
     this._extensionOpened.on(ctx, () => notarizeTask.schedule());
 
     try {
-      await Promise.race([
-        rejectOnDispose(ctx),
-        allNotarized,
-        errors.wait()
-      ]);
+      await Promise.race([rejectOnDispose(ctx), allNotarized, errors.wait()]);
       log('done');
     } finally {
       await ctx.dispose();

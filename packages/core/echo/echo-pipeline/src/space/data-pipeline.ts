@@ -96,7 +96,7 @@ export class DataPipeline {
 
   @synchronized
   async open(spaceContext: PipelineFactory) {
-    if(this._isOpen) {
+    if (this._isOpen) {
       return;
     }
 
@@ -174,7 +174,7 @@ export class DataPipeline {
 
   @synchronized
   async close() {
-    if(!this._isOpen) {
+    if (!this._isOpen) {
       return;
     }
     log('close');
