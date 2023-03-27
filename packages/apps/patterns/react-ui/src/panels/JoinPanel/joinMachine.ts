@@ -353,11 +353,29 @@ type JoinMachine = typeof joinMachine;
 type JoinState = StateFrom<JoinMachine>;
 type JoinSend = InterpreterFrom<JoinMachine>['send'];
 
+const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
+  try {
+    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    return (
+      searchParams.get(`${invitationType}InvitationCode`) ??
+      searchParams.get(`${invitationType}Invitation`) ??
+      searchParams.get('invitationCode') ??
+      searchParams.get('invitation') ??
+      text
+    );
+  } catch (err) {
+    log.catch(err);
+    return text;
+  }
+};
+
 const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<JoinMachine>>[1]) => {
   const redeemHaloInvitationCode = useCallback(
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
-        const invitationObservable = client.halo.acceptInvitation(InvitationEncoder.decode(halo.unredeemedCode));
+        const invitationObservable = client.halo.acceptInvitation(
+          InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode))
+        );
         return {
           ...halo,
           invitationObservable,
@@ -372,7 +390,9 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
-        const invitationObservable = client.acceptInvitation(InvitationEncoder.decode(space.unredeemedCode));
+        const invitationObservable = client.acceptInvitation(
+          InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode))
+        );
         return {
           ...space,
           invitationObservable,
