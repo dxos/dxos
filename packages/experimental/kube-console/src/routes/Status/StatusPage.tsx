@@ -51,16 +51,16 @@ const columns: Column<Service>[] = [
 
 export const StatusPage = () => {
   const kube = useKube();
-  const [results, setResults] = useState<any>();
-  const services = results?.services.sort(alphabeticalByKey('name'));
+  const [services, setServices] = useState<Service[]>([]);
+  const soredServices = services.sort(alphabeticalByKey('name'));
 
   useEffect(() => {
     void handleRefresh();
   }, []);
 
   const handleRefresh = async () => {
-    const results = await kube.fetch('/dx/status');
-    setResults(results);
+    const { services } = await kube.fetch<{ services: Service[] }>('/dx/status');
+    setServices(services);
   };
 
   return (
@@ -73,7 +73,7 @@ export const StatusPage = () => {
       {/* TODO(burdon): Theme. */}
       <Table
         columns={columns}
-        data={services}
+        data={soredServices}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
           cell: { className: 'align-start font-mono font-thin' }

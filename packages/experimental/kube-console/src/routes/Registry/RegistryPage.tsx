@@ -14,7 +14,7 @@ import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
 
 // TODO(burdon): Get from KUBE config proto.
-type Service = {
+type Module = {
   name: string;
   type: string;
   displayName: string;
@@ -22,8 +22,8 @@ type Service = {
   tags: string[];
 };
 
-const columns: (host: string | undefined) => Column<Service>[] = (host) => {
-  const columns: Column<Service>[] = [
+const columns: (host: string | undefined) => Column<Module>[] = (host) => {
+  const columns: Column<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,
@@ -76,8 +76,8 @@ const columns: (host: string | undefined) => Column<Service>[] = (host) => {
 export const RegistryPage = () => {
   const kube = useKube();
   const [config, setConfig] = useState<ConfigProto>({});
-  const [results, setResults] = useState<any>();
-  const modules = results?.modules.sort(alphabeticalByKey('name'));
+  const [modules, setModules] = useState<Module[]>([]);
+  const sortedModules = modules.sort(alphabeticalByKey('name'));
 
   useEffect(() => {
     void handleRefresh();
@@ -85,9 +85,9 @@ export const RegistryPage = () => {
 
   const handleRefresh = async () => {
     const config = await kube.fetch('/dx/config');
-    const results = await kube.fetch('/dx/registry');
+    const { modules } = await kube.fetch<{ modules: Module[] }>('/dx/registry');
     setConfig(config);
-    setResults(results);
+    setModules(modules);
   };
 
   return (
@@ -100,7 +100,7 @@ export const RegistryPage = () => {
       {/* TODO(burdon): Theme. */}
       <Table
         columns={columns(config.runtime?.kube?.host)}
-        data={modules}
+        data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
           cell: { className: 'align-start font-mono font-thin' }
