@@ -48,7 +48,7 @@ export interface Space {
    * Presence is available in `SpaceState.INACTIVE` state.
    */
   get state(): MulticastObservable<SpaceState>;
-  
+
   /**
    * Current state of space pipeline.
    */
@@ -241,7 +241,7 @@ export class SpaceProxy implements Space {
     if (emitEvent) {
       this._stateUpdate.emit(this._currentState);
     }
-    if(emitPipelineEvent) {
+    if (emitPipelineEvent) {
       this._pipelineUpdate.emit(space.pipeline ?? {});
     }
     if (emitMembersEvent) {
@@ -415,7 +415,7 @@ const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
 
 const shouldPipelineUpdate = (prev: SpaceData, next: SpaceData) => {
   return !isEqualWith(prev.pipeline, next.pipeline, loadashEqualityFn);
-}
+};
 
 const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {
   if (!next) {

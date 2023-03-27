@@ -193,13 +193,13 @@ export class DataSpace {
     // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
-      breakOnStall: false,
+      breakOnStall: false
     });
 
     await this._createWritableFeeds();
     log('Writable feeds created');
     this.stateUpdate.emit();
-    
+
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
@@ -221,7 +221,7 @@ export class DataSpace {
     // Wait for the data pipeline to catch up to its desired timeframe.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
-      breakOnStall: false,
+      breakOnStall: false
     });
 
     log('data pipeline ready');

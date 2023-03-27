@@ -23,7 +23,7 @@ export type WaitUntilReachedTargetParams = {
    */
   ctx?: Context;
   timeout?: number;
-  
+
   /**
    * @default true
    */
@@ -88,7 +88,11 @@ export class PipelineState {
    *
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
-  async waitUntilReachedTargetTimeframe({ ctx = new Context(), timeout, breakOnStall = true }: WaitUntilReachedTargetParams = {}) {
+  async waitUntilReachedTargetTimeframe({
+    ctx = new Context(),
+    timeout,
+    breakOnStall = true
+  }: WaitUntilReachedTargetParams = {}) {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,

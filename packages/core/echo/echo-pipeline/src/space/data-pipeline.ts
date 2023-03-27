@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -144,7 +144,7 @@ export class DataPipeline {
       await this._saveLatestTimeframe();
     });
 
-    if(!DISABLE_SNAPSHOT_CACHE) {
+    if (!DISABLE_SNAPSHOT_CACHE) {
       this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
         const latestTimeframe = this._pipeline?.state.timeframe;
         if (!latestTimeframe) {

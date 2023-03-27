@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export const equalsSymbol = Symbol.for('dxos.common.equals');
 
 export interface Equatable {
@@ -9,18 +13,18 @@ export interface Equatable {
 
 export const isEquatable = (value: any): value is Equatable => {
   return typeof value === 'object' && value !== null && typeof value[equalsSymbol] === 'function';
-}
+};
 
 export const isEqual = (value: Equatable, other: any) => {
   return value[equalsSymbol](other);
-}
+};
 
 /**
  * Feed this as a third argument to `_.isEqualWith` to compare objects with `Equatable` interface.
  */
 export const loadashEqualityFn = (value: any, other: any): boolean | undefined => {
-  if(!isEquatable(value)) {
+  if (!isEquatable(value)) {
     return undefined;
   }
   return isEqual(value, other);
-}
+};

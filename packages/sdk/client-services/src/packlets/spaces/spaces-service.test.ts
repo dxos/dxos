@@ -81,7 +81,7 @@ describe('SpacesService', () => {
 
       const spaces = await result.wait();
       expect(spaces).to.be.length(3);
-      expect(spaces?.map(s => s.spaceKey)).to.deep.equal(existingSpaces?.map(s => s.spaceKey));
+      expect(spaces?.map((s) => s.spaceKey)).to.deep.equal(existingSpaces?.map((s) => s.spaceKey));
     });
 
     test('updates when new space is added', async () => {

@@ -270,10 +270,10 @@ export class PublicKey implements Equatable {
   }
 
   [equalsSymbol](other: any) {
-    if(!PublicKey.isPublicKey(other)) {
+    if (!PublicKey.isPublicKey(other)) {
       return false;
     }
-    
+
     return this.equals(other);
   }
 }

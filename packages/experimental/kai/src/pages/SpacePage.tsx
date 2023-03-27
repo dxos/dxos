@@ -10,7 +10,7 @@ import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } fr
 import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppMenu, BotManager, FrameContainer, MemberList, Sidebar } from '../containers';
+import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
 import { ChatFrame } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
 
@@ -107,18 +107,32 @@ const SpaceLoading = ({ space }: { space: Space }) => {
   );
 
   // +1 for the pipeline itself being initialized
-  const currentProgress = (pipelineState.currentControlTimeframe?.totalMessages() ?? -1) + (pipelineState.currentDataTimeframe?.totalMessages() ?? -1) + 2;
-  const targetProgress = (pipelineState.targetControlTimeframe?.totalMessages() ?? -1) + (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) + 2;
+  const currentProgress =
+    (pipelineState.currentControlTimeframe?.totalMessages() ?? -1) +
+    (pipelineState.currentDataTimeframe?.totalMessages() ?? -1) +
+    2;
+  const targetProgress =
+    (pipelineState.targetControlTimeframe?.totalMessages() ?? -1) +
+    (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) +
+    2;
 
-  const members = useMembers(space.key)
-  const onlinePeers = members.filter(member => member.presence === SpaceMember.PresenceState.ONLINE && (!identity?.identityKey || !member.identity.identityKey.equals(identity?.identityKey))).length;
+  const members = useMembers(space.key);
+  const onlinePeers = members.filter(
+    (member) =>
+      member.presence === SpaceMember.PresenceState.ONLINE &&
+      (!identity?.identityKey || !member.identity.identityKey.equals(identity?.identityKey))
+  ).length;
 
   return (
     // center div vertically
     <div className='flex flex-col justify-center h-full'>
       <Loading label='Space loading' />
-      <div className='flex justify-center'>{currentProgress} / {targetProgress}</div>
-      <div className='flex justify-center'>{onlinePeers} / {members.length} peers online</div>
+      <div className='flex justify-center'>
+        {currentProgress} / {targetProgress}
+      </div>
+      <div className='flex justify-center'>
+        {onlinePeers} / {members.length} peers online
+      </div>
     </div>
   );
 };

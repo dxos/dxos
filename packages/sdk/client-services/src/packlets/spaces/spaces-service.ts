@@ -76,9 +76,15 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.presence.updated.on(ctx, onUpdate));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate.debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME).on(ctx, onUpdate);
-            if(space.dataPipeline.pipelineState) {
-              subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME).on(ctx, onUpdate));
+            space.inner.controlPipeline.state.timeframeUpdate
+              .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+              .on(ctx, onUpdate);
+            if (space.dataPipeline.pipelineState) {
+              subscriptions.add(
+                space.dataPipeline.pipelineState.timeframeUpdate
+                  .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+                  .on(ctx, onUpdate)
+              );
             }
           }
         };
@@ -139,7 +145,6 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   private _transformSpace(space: DataSpace): Space {
-    
     return {
       spaceKey: space.key,
       state: space.state,
@@ -147,7 +152,7 @@ export class SpacesServiceImpl implements SpacesService {
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
-        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
+        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
