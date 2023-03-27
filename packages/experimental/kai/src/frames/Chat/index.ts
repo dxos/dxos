@@ -5,3 +5,4 @@
 export * from './defs';
 
 export * from './ChatFrame';
+export * from './ChatPanel';
