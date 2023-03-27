@@ -3,3 +3,4 @@
 //
 
 export * from './invitationStatusValue';
+export * from './toEmoji';

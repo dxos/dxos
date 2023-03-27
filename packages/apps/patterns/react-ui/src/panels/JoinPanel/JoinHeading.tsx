@@ -4,26 +4,18 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
-import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useSpace } from '@dxos/react-client';
-import {
-  Avatar,
-  Button,
-  defaultDescription,
-  getSize,
-  Heading,
-  mx,
-  useId,
-  useTranslation
-} from '@dxos/react-components';
+import { Button, defaultDescription, getSize, Heading, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { defaultSurface } from '../../styles';
+import { toEmoji } from '../../util';
 import { JoinPanelMode } from './JoinPanelProps';
+import { JoinState } from './joinMachine';
 
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;
   titleId: string;
-  invitation?: AuthenticatingInvitationObservable;
+  joinState?: JoinState;
   onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
   preventExit?: boolean;
@@ -32,19 +24,17 @@ export interface JoinSpaceHeadingProps {
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   (
-    { mode, titleId, invitation, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
+    { mode, titleId, joinState, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>
   ) => {
     const { t } = useTranslation('os');
 
-    const space = useSpace(invitation?.invitation?.spaceKey);
+    const space = useSpace(joinState?.context.space.invitation?.spaceKey);
     const name = space?.properties.name;
     const nameId = useId(mode === 'halo-only' ? 'identityDisplayName' : 'spaceDisplayName');
 
-    const invitationKey =
-      mode === 'halo-only'
-        ? invitation?.invitation?.identityKey?.toHex()
-        : invitation?.invitation?.identityKey?.toHex();
+    const invitationKey = joinState?.context[mode === 'halo-only' ? 'halo' : 'space'].invitation?.invitationId;
+    const invitationEmoji = invitationKey && toEmoji(invitationKey);
 
     const exitButton = (
       <Button
@@ -68,18 +58,22 @@ export const JoinHeading = forwardRef(
           className={mx(
             defaultDescription,
             'font-body font-system-normal text-center text-sm grow pbe-2',
-            mode === 'halo-only' && preventExit ? 'sr-only' : 'opacity-0'
+            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0')
           )}
           id={titleId}
         >
           {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         </Heading>
         <div role='group' className='flex items-center justify-center gap-2'>
-          {invitationKey ? (
-            <Avatar fallbackValue={invitationKey} labelId={nameId} />
-          ) : (
-            <span role='none' className={mx(getSize(10), 'bg-neutral-300 dark:bg-neutral-700 rounded-full')} />
-          )}
+          <span
+            role='none'
+            className={mx(
+              getSize(12),
+              'bg-neutral-300 dark:bg-neutral-700 rounded-full text-center text-4xl leading-[3rem]'
+            )}
+          >
+            {invitationEmoji}
+          </span>
           {name && <p id={nameId}>{name}</p>}
         </div>
       </div>
