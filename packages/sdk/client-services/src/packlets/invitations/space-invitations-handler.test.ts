@@ -28,6 +28,17 @@ describe('services/space-invitations-handler', () => {
 
     const space = await peer.dataSpaceManager!.createSpace();
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
+
+    await space.close();
+  });
+
+  test('genesis & ready', async () => {
+    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+
+    const space = await peer.dataSpaceManager!.createSpace();
+    expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
+
+    await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
     await space.close();
   });
 

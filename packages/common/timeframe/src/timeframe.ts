@@ -4,13 +4,14 @@
 
 import { inspect } from 'node:util';
 
+import { equalsSymbol, Equatable } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 /**
  * A vector clock that implements ordering over a set of feed messages.
  */
-export class Timeframe {
+export class Timeframe implements Equatable {
   private readonly _frames = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
   constructor(frames: [PublicKey, number][] = []) {
@@ -85,6 +86,14 @@ export class Timeframe {
    */
   [inspect.custom]() {
     return `Timeframe${this.toString()}`;
+  }
+
+  [equalsSymbol](other: any) {
+    if (!(other instanceof Timeframe)) {
+      return false;
+    }
+
+    return this.size() === other.size() && this.frames().every(([key, seq]) => other.get(key) === seq);
   }
 
   /**
