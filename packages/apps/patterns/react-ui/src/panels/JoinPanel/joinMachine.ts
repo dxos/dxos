@@ -123,18 +123,19 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       [`unknown${Domain}`]: {
         always: [
           {
-            target: '#join.finishingJoiningHalo',
-            cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space'
+            cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space',
+            target: '#join.finishingJoiningHalo'
           },
           {
+            // cond: `no${Domain}Invitation`,
             target: `inputting${Domain}InvitationCode`,
-            cond: `no${Domain}Invitation`,
             actions: 'log'
-          },
-          {
-            target: `acceptingRedeemed${Domain}Invitation`,
-            actions: [`redeem${Domain}InvitationCode`, 'log']
           }
+          // todo(thure): Restore this transition that redeems the invitation code on init.
+          // {
+          //   target: `acceptingRedeemed${Domain}Invitation`,
+          //   actions: [`redeem${Domain}InvitationCode`, 'log']
+          // }
         ]
       },
       [`inputting${Domain}InvitationCode`]: {},
@@ -263,7 +264,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     states: {
       unknown: {
         always: [
-          { target: 'choosingIdentity', cond: 'noSelectedIdentity', actions: 'log' },
+          { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' }
         ]
       },

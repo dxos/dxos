@@ -60,6 +60,15 @@ const InvitationActions = ({
     default:
       return (
         <>
+          <ViewStateHeading className={defaultDescription}>
+            {t(
+              invitationState === Invitation.State.TIMEOUT
+                ? 'timeout status label'
+                : invitationState === Invitation.State.CANCELLED
+                ? 'cancelled status label'
+                : 'error status label'
+            )}
+          </ViewStateHeading>
           <div role='none' className='grow' />
           <Button
             disabled={disabled}
@@ -84,16 +93,20 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
   return (
     <ViewState {...viewStateProps}>
       {typeof invitationState === 'undefined' ? (
-        <Button
-          disabled={disabled}
-          className='grow flex items-center gap-2 pli-2'
-          data-autofocus={`inputting${Domain}InvitationCode`}
-          data-testid='invitation-rescuer-connect'
-        >
-          <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
-          <span className='grow'>{t('connect label')}</span>
-          <ArrowsClockwise className={getSize(5)} />
-        </Button>
+        <>
+          <div role='none' className='grow' />
+          <Button
+            disabled={disabled}
+            className='flex items-center gap-2 pli-2'
+            data-autofocus={`inputting${Domain}InvitationCode`}
+            data-testid='invitation-rescuer-reset'
+            onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
+          >
+            <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
+            <span className='grow'>{t('reset label')}</span>
+            <ArrowsClockwise className={getSize(5)} />
+          </Button>
+        </>
       ) : (
         <InvitationActions {...{ invitationState, disabled, joinSend, joinState, Domain }} />
       )}
