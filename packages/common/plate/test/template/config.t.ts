@@ -1,4 +1,4 @@
-import { z, defineConfig } from '../..';
+import { z, defineConfig } from '../../src';
 
 export default defineConfig({
   inputShape: z.object({

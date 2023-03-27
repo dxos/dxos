@@ -1,4 +1,4 @@
-import { defineTemplate, text } from '../..';
+import { defineTemplate, text } from '../../src';
 import config from './config.t';
 
 export default defineTemplate(
@@ -6,9 +6,9 @@ export default defineTemplate(
     const { name, bar } = input;
     return bar
       ? text`
-            # foo.md
-            bar is true. name is ${name}
-            `
+        # foo.md
+        bar is true. name is ${name}
+        `
       : null;
   },
   { config }
