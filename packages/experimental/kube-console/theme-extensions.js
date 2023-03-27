@@ -19,13 +19,16 @@ module.exports = {
   consoleThemeExtension: {
     colors: {
       paper: {
-        bg: colors.neutral[300]
+        bg: colors.neutral[200]
       },
       sidebar: {
         bg: colors.neutral[200]
       },
       highlight: {
-        bg: colors.neutral[100]
+        bg: colors.neutral[300]
+      },
+      secondary: {
+        bg: colors.green[300]
       },
 
       // Dark.
@@ -38,6 +41,9 @@ module.exports = {
         },
         highlight: {
           bg: colors.neutral[700]
+        },
+        secondary: {
+          bg: colors.green[700]
         }
       }
     }
