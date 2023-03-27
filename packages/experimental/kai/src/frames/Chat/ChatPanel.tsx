@@ -58,10 +58,10 @@ export const ChatPanel = ({ messages = [], onCreate, onSelect, onDelete }: ChatP
   );
 
   return (
-    <div className='flex flex-col flex-1 bg-zinc-200'>
+    <div className='flex flex-col flex-1 bg-zinc-200  overflow-hidden'>
       {/* Message list */}
-      <div className='flex flex-col-reverse flex-1 overflow-y-scroll'>
-        <div className='flex flex-col-reverse px-2'>
+      <div className='flex flex-col-reverse flex-1 overflow-hidden'>
+        <div className='flex flex-col-reverse px-2 overflow-y-scroll'>
           {blocks.map(({ start, messages }, i) => {
             if (!messages.length) {
               return null;

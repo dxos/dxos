@@ -59,9 +59,11 @@ export const ChatFrame = () => {
   };
 
   return (
-    <div>
-      {space && <Video space={space} />}
-      <ChatPanel messages={messages} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />;
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <div className='flex shrink-0 overflow-hidden'> {space && <Video space={space} />} </div>
+      <div className='flex flex-1 overflow-hidden'>
+        <ChatPanel messages={messages} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} />
+      </div>
     </div>
   );
 };
