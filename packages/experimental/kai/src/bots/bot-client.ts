@@ -187,6 +187,7 @@ export class BotClient {
     await this.inviteBotToSpace(botClient);
 
     this.onStatusUpdate.emit('Connected');
+    log('ok');
   }
 
   private async inviteBotToSpace(botClient: Client) {

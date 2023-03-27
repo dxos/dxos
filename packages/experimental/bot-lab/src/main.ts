@@ -21,7 +21,8 @@ const config = new Config({
     },
     services: {
       signal: {
-        server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        // server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        server: 'wss://kube.dx.ninja/.well-known/dx/signal'
       },
       ice: [
         {
