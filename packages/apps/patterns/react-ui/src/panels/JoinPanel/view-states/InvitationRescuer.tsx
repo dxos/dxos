@@ -99,7 +99,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
             disabled={disabled}
             className='flex items-center gap-2 pli-2'
             data-autofocus={`inputting${Domain}InvitationCode`}
-            data-testid='invitation-rescuer-reset'
+            data-testid='invitation-rescuer-blank-reset'
             onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
           >
             <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
