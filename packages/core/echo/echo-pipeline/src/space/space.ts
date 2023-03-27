@@ -188,6 +188,7 @@ export class Space {
 
     for (const feed of this._controlPipeline.spaceState.feeds.values()) {
       if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
+        // TODO(dmaretskyi): Seems like a race condition between this and onFeedAdmitted.
         await pipeline.addFeed(await this._feedProvider(feed.key));
       }
     }

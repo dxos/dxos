@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { sleep, Trigger } from '@dxos/async';
+import { Context, rejectOnDispose } from '@dxos/context';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,7 +18,16 @@ import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
 
 export type WaitUntilReachedTargetParams = {
+  /**
+   * For cancellation.
+   */
+  ctx?: Context;
   timeout?: number;
+
+  /**
+   * @default true
+   */
+  breakOnStall?: boolean;
 };
 
 /**
@@ -60,7 +70,7 @@ export class PipelineState {
   }
 
   get targetTimeframe() {
-    return this._targetTimeframe ? Timeframe.merge(this.endTimeframe, this._targetTimeframe) : this.endTimeframe;
+    return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
   }
 
   async waitUntilTimeframe(target: Timeframe) {
@@ -78,7 +88,11 @@ export class PipelineState {
    *
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
-  async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
+  async waitUntilReachedTargetTimeframe({
+    ctx = new Context(),
+    timeout,
+    breakOnStall = true
+  }: WaitUntilReachedTargetParams = {}) {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
@@ -89,13 +103,14 @@ export class PipelineState {
       this._timeframeClock.update.waitForCondition(() => {
         return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
       }),
-      this._iterator.stalled.discardParameter().waitForCount(1)
+      ...(breakOnStall ? [this._iterator.stalled.discardParameter().waitForCount(1)] : [])
     ]);
 
     let done = false;
 
     if (timeout) {
       return Promise.race([
+        rejectOnDispose(ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
         }),
