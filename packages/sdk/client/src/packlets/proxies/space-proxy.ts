@@ -380,7 +380,7 @@ export class SpaceProxy implements Space {
 }
 
 const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
-  return !isEqual(prev, next);
+  return prev.state !== next.state;
 };
 
 const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {
