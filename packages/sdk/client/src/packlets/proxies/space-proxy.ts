@@ -3,11 +3,12 @@
 //
 
 import isEqual from 'lodash.isequal';
+import isEqualWith from 'lodash.isequalwith';
 import assert from 'node:assert';
 
 import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
-import { todo } from '@dxos/debug';
+import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
@@ -47,6 +48,12 @@ export interface Space {
    * Presence is available in `SpaceState.INACTIVE` state.
    */
   get state(): MulticastObservable<SpaceState>;
+
+  /**
+   * Current state of space pipeline.
+   */
+  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
+
   get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
   get members(): MulticastObservable<SpaceMember[]>;
 
@@ -80,6 +87,8 @@ export class SpaceProxy implements Space {
   // TODO(wittjosiah): Remove this? Should be consistent w/ ECHO query.
   public readonly _stateUpdate = new Event<SpaceState>();
 
+  private readonly _pipelineUpdate = new Event<SpaceData.PipelineState>();
+
   // TODO(dmaretskyi): Reconcile initialization states.
 
   /**
@@ -111,6 +120,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
+  private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
@@ -158,7 +168,7 @@ export class SpaceProxy implements Space {
    */
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INACTIVE;
+      return SpaceState.INITIALIZING;
     } else {
       return this._data.state;
     }
@@ -181,14 +191,30 @@ export class SpaceProxy implements Space {
     return this._state;
   }
 
+  /**
+   * @inheritdoc
+   */
+  get pipeline() {
+    return this._pipeline;
+  }
+
+  /**
+   * @inheritdoc
+   */
   get invitations() {
     return this._invitations;
   }
 
+  /**
+   * @inheritdoc
+   */
   get members() {
     return this._members;
   }
 
+  /**
+   * @inheritdoc
+   */
   // TODO(burdon): Remove?
   get internal(): Internal {
     return this._internal;
@@ -202,6 +228,7 @@ export class SpaceProxy implements Space {
   @synchronized
   async _processSpaceUpdate(space: SpaceData) {
     const emitEvent = shouldUpdate(this._data, space);
+    const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
 
     this._data = space;
@@ -213,6 +240,9 @@ export class SpaceProxy implements Space {
 
     if (emitEvent) {
       this._stateUpdate.emit(this._currentState);
+    }
+    if (emitPipelineEvent) {
+      this._pipelineUpdate.emit(space.pipeline ?? {});
     }
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
@@ -381,6 +411,10 @@ export class SpaceProxy implements Space {
 
 const shouldUpdate = (prev: SpaceData, next: SpaceData) => {
   return prev.state !== next.state;
+};
+
+const shouldPipelineUpdate = (prev: SpaceData, next: SpaceData) => {
+  return !isEqualWith(prev.pipeline, next.pipeline, loadashEqualityFn);
 };
 
 const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[] | undefined) => {

@@ -148,13 +148,31 @@ enum SpaceState {
   /// Space is inactive. Database is not available.
   INACTIVE = 2;
 
+  /// Data pipeline is initializing.
+  INITIALIZING = 4;
+
   /// Data pipeline is ready.
   READY = 3;
 }
 
 message Space {
+  // TODO(dmaretskyi): Consider merging with space metadata records.
+  // TODO(dmaretskyi): ...or split into two separate pipeline messages.
+  message PipelineState {
+    optional dxos.keys.PublicKey control_feed_key = 1;
+    optional dxos.keys.PublicKey data_feed_key = 2;
+
+    optional timeframe.TimeframeVector current_control_timeframe = 10;
+    optional timeframe.TimeframeVector target_control_timeframe = 11;
+    optional timeframe.TimeframeVector current_data_timeframe = 12;
+    optional timeframe.TimeframeVector target_data_timeframe = 13;
+
+    // TODO(dmaretskyi): Snapshot & epoch info.
+  }
+
   dxos.keys.PublicKey space_key = 1;
   SpaceState state = 2;
+  optional PipelineState pipeline = 3;
 
   repeated SpaceMember members = 10;
 

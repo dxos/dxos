@@ -265,18 +265,27 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     };
   }
 
+  /**
+   * Triggers an event with at least `timeout` milliseconds between each event.
+   * If the event is triggered more often, the event is delayed until the timeout is reached.
+   * If event is emitted for the first time or event wasn't fired for `timeout` milliseconds, the event is emitted after `timeout / 8` ms.
+   */
   debounce(timeout = 0) {
     const debouncedEvent = new Event<void>();
 
     let firing: NodeJS.Timeout | undefined;
+    let lastFired: number | undefined;
 
     debouncedEvent.addEffect(() => {
       const unsubscribe = this.on(() => {
         if (!firing) {
+          const fireIn = !lastFired || lastFired > timeout ? timeout / 8 : timeout;
+
           firing = setTimeout(() => {
+            lastFired = Date.now();
             firing = undefined;
             debouncedEvent.emit();
-          }, timeout);
+          }, fireIn);
         }
       });
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, trackLeaks } from '@dxos/async';
 import { SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
@@ -15,9 +15,11 @@ import {
   SnapshotManager,
   DataPipeline
 } from '@dxos/echo-pipeline';
+import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -30,8 +32,17 @@ import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
 
-// Maximum time to wait for the data pipeline to catch up to its desired timeframe.
-const DATA_PIPELINE_READY_TIMEOUT = 10_000;
+export type DataSpaceCallbacks = {
+  /**
+   * Called before transitioning to the ready state.
+   */
+  beforeReady?: () => Promise<void>;
+
+  /**
+   * Called after transitioning to the ready state.
+   */
+  afterReady?: () => Promise<void>;
+};
 
 export type DataSpaceParams = {
   inner: Space;
@@ -45,10 +56,9 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
-  onDataPipelineReady?: () => Promise<void>;
+  callbacks?: DataSpaceCallbacks;
 };
 
-const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
@@ -61,7 +71,7 @@ export class DataSpace {
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
-  private readonly _onDataPipelineReady?: () => Promise<void>;
+  private readonly _callbacks: DataSpaceCallbacks;
 
   private _state = SpaceState.CLOSED;
 
@@ -78,7 +88,7 @@ export class DataSpace {
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
-    this._onDataPipelineReady = params.onDataPipelineReady;
+    this._callbacks = params.callbacks ?? {};
     this._dataPipeline = new DataPipeline({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
@@ -156,14 +166,40 @@ export class DataSpace {
     return this._gossip.listen(channel, callback);
   }
 
+  /**
+   * Initialize the data pipeline in a separate task.
+   */
+  initializeDataPipelineAsync() {
+    scheduleTask(this._ctx, async () => {
+      try {
+        await this.initializeDataPipeline();
+      } catch (err) {
+        if (err instanceof CancelledError) {
+          log('Data pipeline initialization cancelled', err);
+          return;
+        }
+
+        log.error('Error initializing data pipeline', err);
+      }
+    });
+  }
+
   async initializeDataPipeline() {
+    if (this._state !== SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+    this._state = SpaceState.INITIALIZING;
+
     // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      // TODO(dmaretskyi): Should it timeout?
-      timeout: CONTROL_PIPELINE_READY_TIMEFRAME
+      ctx: this._ctx,
+      breakOnStall: false
     });
 
     await this._createWritableFeeds();
+    log('Writable feeds created');
+    this.stateUpdate.emit();
+
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
@@ -181,17 +217,20 @@ export class DataSpace {
       }
     });
 
+    log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
-    // TODO(dmaretskyi): Cancel with context.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
-      // TODO(dmaretskyi): Shouldn't timeout.
-      timeout: DATA_PIPELINE_READY_TIMEOUT
+      ctx: this._ctx,
+      breakOnStall: false
     });
 
-    await this._onDataPipelineReady?.();
+    log('data pipeline ready');
+    await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.READY;
     this.stateUpdate.emit();
+
+    await this._callbacks.afterReady?.();
   }
 
   @timed(10_000)
@@ -233,8 +272,8 @@ export class DataSpace {
     }
 
     if (credentials.length > 0) {
-      // TODO(dmaretskyi): Should't timeout.
-      await this.notarizationPlugin.notarize(credentials);
+      // Never times out
+      await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
     }
 
     // Set this after credentials are notarized so that on failure we will retry.

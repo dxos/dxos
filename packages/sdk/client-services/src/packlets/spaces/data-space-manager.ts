@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
@@ -77,25 +77,14 @@ export class DataSpaceManager {
 
   @synchronized
   async open() {
+    log('open');
     await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-
-      // Asynchronously initialize the data pipeline.
-      scheduleTask(this._ctx, async () => {
-        try {
-          await space.initializeDataPipeline();
-
-          if (this._isOpen) {
-            this.updated.emit();
-          }
-        } catch (err) {
-          log.error('error initializing space data pipeline', err);
-        }
-      });
+      space.initializeDataPipelineAsync();
     }
 
     this._isOpen = true;
@@ -104,6 +93,7 @@ export class DataSpaceManager {
 
   @synchronized
   async close() {
+    log('close');
     this._isOpen = false;
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
@@ -116,6 +106,7 @@ export class DataSpaceManager {
    */
   @synchronized
   async createSpace() {
+    assert(this._isOpen, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -136,7 +127,6 @@ export class DataSpaceManager {
     assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
-    // For the new space this should complete without blocking on network.
     await space.initializeDataPipeline();
 
     this.updated.emit();
@@ -146,6 +136,8 @@ export class DataSpaceManager {
   // TODO(burdon): Rename join space.
   @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+    log('accept space', { opts });
+    assert(this._isOpen, 'Not open.');
     assert(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
     const metadata: SpaceMetadata = {
@@ -158,11 +150,7 @@ export class DataSpaceManager {
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
 
-    // Asynchronously initialize the data pipeline.
-    scheduleTask(this._ctx, async () => {
-      await space.initializeDataPipeline();
-      this.updated.emit();
-    });
+    space.initializeDataPipelineAsync();
 
     this.updated.emit();
     return space;
@@ -231,11 +219,20 @@ export class DataSpaceManager {
       feedStore: this._feedStore,
       signingContext: this._signingContext,
       snapshotId: metadata.snapshot,
-      onDataPipelineReady: async () => {
-        this._dataServiceSubscriptions.registerSpace(
-          space.key,
-          dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
-        );
+      callbacks: {
+        beforeReady: async () => {
+          log('before space ready', { space: space.key });
+          this._dataServiceSubscriptions.registerSpace(
+            space.key,
+            dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
+          );
+        },
+        afterReady: async () => {
+          log('after space ready', { space: space.key, open: this._isOpen });
+          if (this._isOpen) {
+            this.updated.emit();
+          }
+        }
       }
     });
 
