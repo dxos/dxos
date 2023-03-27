@@ -32,6 +32,7 @@ describe('DataSpaceManager', () => {
       peer.feedStore,
       peer.snapshotStore
     );
+    await dataSpaceManager.open();
     afterTest(() => dataSpaceManager.close());
     const space = await dataSpaceManager.createSpace();
 
@@ -44,7 +45,7 @@ describe('DataSpaceManager', () => {
     expect(space.inner.protocol.feeds.size).to.equal(2);
   });
 
-  test.only('sync between peers', async () => {
+  test('sync between peers', async () => {
     const builder = new HostTestBuilder();
 
     const peer1 = builder.createPeer();
@@ -59,6 +60,7 @@ describe('DataSpaceManager', () => {
       peer1.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager1.open();
     afterTest(() => dataSpaceManager1.close());
 
     const peer2 = builder.createPeer();
@@ -73,6 +75,7 @@ describe('DataSpaceManager', () => {
       peer2.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager2.open();
     afterTest(() => dataSpaceManager2.close());
 
     const space1 = await dataSpaceManager1.createSpace();
@@ -95,6 +98,7 @@ describe('DataSpaceManager', () => {
       genesisFeedKey: space1.inner.genesisFeedKey
     });
     await dataSpaceManager2.waitUntilSpaceReady(space2.key);
+
 
     log('', {
       peer1: {
@@ -149,6 +153,7 @@ describe('DataSpaceManager', () => {
       peer1.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager1.open();
     afterTest(() => dataSpaceManager1.close());
 
     const peer2 = builder.createPeer();
@@ -163,6 +168,7 @@ describe('DataSpaceManager', () => {
       peer2.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager2.open();
     afterTest(() => dataSpaceManager2.close());
 
     const space1 = await dataSpaceManager1.createSpace();

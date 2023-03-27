@@ -179,6 +179,7 @@ export class DataSpace {
         this.initializeDataPipeline();
       } catch (err) {
         if(err instanceof CancelledError) {
+          log('Data pipeline initialization cancelled', err);
           return;
         }
 
@@ -199,6 +200,7 @@ export class DataSpace {
     });
 
     await this._createWritableFeeds();
+    log('Writable feeds created');
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
@@ -216,12 +218,14 @@ export class DataSpace {
       }
     });
 
+
+    log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
-    // TODO(dmaretskyi): Cancel with context.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
     });
 
+    log('data pipeline ready');
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.READY;

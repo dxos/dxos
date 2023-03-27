@@ -77,6 +77,7 @@ export class DataSpaceManager {
 
   @synchronized
   async open() {
+    log('open')
     await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
@@ -92,6 +93,7 @@ export class DataSpaceManager {
 
   @synchronized
   async close() {
+    log('close')
     this._isOpen = false;
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
@@ -104,6 +106,7 @@ export class DataSpaceManager {
    */
   @synchronized
   async createSpace() {
+    assert(this._isOpen, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -133,6 +136,8 @@ export class DataSpaceManager {
   // TODO(burdon): Rename join space.
   @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+    log('accept space', { opts });
+    assert(this._isOpen, 'Not open.');
     assert(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
     const metadata: SpaceMetadata = {
@@ -216,16 +221,14 @@ export class DataSpaceManager {
       snapshotId: metadata.snapshot,
       callbacks: {
         beforeReady: async () => {
+          log('before space ready', { space: space.key })
           this._dataServiceSubscriptions.registerSpace(
             space.key,
             dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
           );
-
-          if (this._isOpen) {
-            this.updated.emit();
-          }
         },
         afterReady: async () => {
+          log('after space ready', { space: space.key, open: this._isOpen })
           if (this._isOpen) {
             this.updated.emit();
           }

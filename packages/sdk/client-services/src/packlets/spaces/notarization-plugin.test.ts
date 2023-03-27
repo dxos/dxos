@@ -70,7 +70,9 @@ describe('NotarizationPlugin', () => {
       AdmittedFeed.Designation.CONTROL
     );
 
-    const notarized = peer2.notarizationPlugin.notarize([credential]);
+    const notarized = peer2.notarizationPlugin.notarize({
+      credentials: [credential]
+    });
 
     await testBuilder.connect(peer1, peer2);
     await notarized;
