@@ -72,7 +72,7 @@ const getInvitationSubscribable = (
   Domain: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
-  log.info('[subscribing to invitation]', invitation);
+  log('[subscribing to invitation]', invitation);
   return {
     subscribe: (
       next: (value: InvitationEvent) => void,
@@ -81,7 +81,7 @@ const getInvitationSubscribable = (
     ): Subscription => {
       const unsubscribe = invitation.subscribe({
         onAuthenticating: (invitation: Invitation) => {
-          log.info('[invitation authenticating]', { Domain, invitation });
+          log('[invitation authenticating]', { Domain, invitation });
           return next({ type: `authenticate${Domain}Invitation`, invitation });
         },
         onCancelled: () => {
@@ -93,15 +93,15 @@ const getInvitationSubscribable = (
           return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
         },
         onConnecting: (invitation: Invitation) => {
-          log.info('[invitation connecting]', { Domain, invitation });
+          log('[invitation connecting]', { Domain, invitation });
           return next({ type: `connect${Domain}Invitation`, invitation });
         },
         onConnected: (invitation: Invitation) => {
-          log.info('[invitation connected]', { Domain, invitation });
+          log('[invitation connected]', { Domain, invitation });
           return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
         },
         onSuccess: () => {
-          log.info('[invitation success]', { Domain });
+          log('[invitation success]', { Domain });
           next({ type: `succeed${Domain}Invitation` });
           return complete?.();
         },
@@ -338,7 +338,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space
       }),
       log: (context, event) => {
-        log.info('transition', {
+        log('[transition]', {
           event,
           haloInvitation: context.halo.invitation,
           spaceInvitation: context.space.invitation

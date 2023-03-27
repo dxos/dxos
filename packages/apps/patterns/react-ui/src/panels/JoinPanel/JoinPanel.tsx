@@ -45,7 +45,7 @@ export const JoinPanel = ({
 
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
-      log.info('[state]', state);
+      log('[state]', state);
     });
 
     return subscription.unsubscribe;
