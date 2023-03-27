@@ -1609,6 +1609,7 @@ importers:
 
   packages/common/timeframe:
     specifiers:
+      '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -1616,6 +1617,7 @@ importers:
       '@types/debug': ^4.1.7
       debug: ^4.3.3
     dependencies:
+      '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
@@ -3918,10 +3920,12 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@types/lodash.isequal': ^4.5.0
+      '@types/lodash.isequalwith': ^4.4.0
       '@types/node': ^18.11.9
       base-x: ~3.0.9
       debug: ^4.3.3
       lodash.isequal: ^4.5.0
+      lodash.isequalwith: ^4.4.0
       source-map-support: ^0.5.12
     dependencies:
       '@dxos/async': link:../../common/async
@@ -3949,10 +3953,12 @@ importers:
       base-x: 3.0.9
       debug: 4.3.4
       lodash.isequal: 4.5.0
+      lodash.isequalwith: 4.4.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6
+      '@types/lodash.isequalwith': 4.4.7
       '@types/node': 18.11.9
       source-map-support: 0.5.21
 
@@ -14788,6 +14794,12 @@ packages:
     resolution: {integrity: sha512-Ww4UGSe3DmtvLLJm2F16hDwEQSv7U0Rr8SujLUA2wHI2D2dm8kPu6Et+/y303LfjTIwSBKXB/YTUcAKpem/XEg==}
     dependencies:
       '@types/lodash': 4.14.186
+    dev: true
+
+  /@types/lodash.isequalwith/4.4.7:
+    resolution: {integrity: sha512-GdI984QbZw+LGAd3jcFIIhaMwhlVasTMIT3nmE1rOcACjyzp9J9VjTENVkl9aJLOiPZt6RYSJFVEEsRHKbdh3w==}
+    dependencies:
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.matches/4.6.7:
@@ -27023,6 +27035,10 @@ packages:
 
   /lodash.isequal/4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+
+  /lodash.isequalwith/4.4.0:
+    resolution: {integrity: sha512-dcZON0IalGBpRmJBmMkaoV7d3I80R2O+FrzsZyHdNSFrANq/cgDqKQNmAHE8UEj4+QYWwwhkQOVdLHiAopzlsQ==}
+    dev: false
 
   /lodash.isfunction/3.0.9:
     resolution: {integrity: sha512-AirXNj15uRIMMPihnkInB4i3NHeb4iBtNg9WRWuK2o31S+ePwwNmDPaTL3o7dTJ+VXNZim7rFs4rxN4YU1oUJw==}
