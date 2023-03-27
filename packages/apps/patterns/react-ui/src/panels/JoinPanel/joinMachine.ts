@@ -311,9 +311,9 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       unsetIdentity: assign<JoinMachineContext>({
         identity: () => null
       }),
-      resetInvitation: assign<JoinMachineContext, SetInvitationCodeEvent>({
+      resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
         halo: (context, event) =>
-          event.type === 'setHaloInvitationCode'
+          event.type === 'resetHaloInvitation'
             ? {
                 ...context.halo,
                 invitation: undefined,
@@ -322,7 +322,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
               }
             : context.halo,
         space: (context, event) =>
-          event.type === 'setSpaceInvitationCode'
+          event.type === 'resetSpaceInvitation'
             ? {
                 ...context.space,
                 invitation: undefined,

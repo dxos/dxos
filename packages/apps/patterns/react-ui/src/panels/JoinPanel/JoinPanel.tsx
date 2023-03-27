@@ -62,11 +62,9 @@ export const JoinPanel = ({
     }
   }, [joinState.value]);
 
-  const spaceInvitation = joinState.context.space.invitationObservable;
-
   return (
     <DensityProvider density='fine'>
-      <JoinHeading {...{ mode, titleId, invitation: spaceInvitation, onExit, exitActionParent, preventExit }} />
+      <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1200%]' aria-live='polite'>
           <AdditionMethodSelector

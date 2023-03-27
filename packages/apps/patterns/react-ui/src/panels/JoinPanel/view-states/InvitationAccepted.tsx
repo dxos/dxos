@@ -32,7 +32,7 @@ const PureInvitationAcceptedContent = ({
       {...(onDone && { onClick: () => onDone(result) })}
       disabled={disabled}
       className='flex items-center gap-2 pli-2'
-      data-autofocus={`success${Domain}Invitation`}
+      data-autofocus={`success${Domain}Invitation finishingJoining${Domain}`}
       data-testid={`${Domain.toLowerCase()}-invitation-accepted-done`}
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />

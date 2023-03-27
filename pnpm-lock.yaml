@@ -748,11 +748,13 @@ importers:
       '@radix-ui/react-radio-group': ^1.1.2
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
+      '@types/lodash.toarray': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       '@xstate/react': ^3.2.1
       debug: ^4.3.3
+      lodash.toarray: ^4.4.0
       qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -775,6 +777,7 @@ importers:
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
       debug: 4.3.4
+      lodash.toarray: 4.4.0
       qrcode.react: 3.1.0_react@18.2.0
       url-join: 5.0.0
       xstate: 4.37.1
@@ -786,6 +789,7 @@ importers:
       '@faker-js/faker': 7.6.0
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/debug': 4.1.7
+      '@types/lodash.toarray': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
@@ -14848,6 +14852,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.toarray/4.4.7:
+    resolution: {integrity: sha512-8cMZKAuMyngqE0ffoPXRg0pEVn660Mklzb13iVYoyfexWKTzDnscsTmivMF+Y5l0EzpQZsNt0yK/S1kg4sxdTw==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -15609,7 +15619,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -27107,6 +27117,10 @@ packages:
 
   /lodash.throttle/4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+    dev: false
+
+  /lodash.toarray/4.4.0:
+    resolution: {integrity: sha512-QyffEA3i5dma5q2490+SgCvDN0pXLmRGSyAANuVi0HQ01Pkfr9fuoKQW8wm1wGBnJITs/mS7wQvS6VshUEBFCw==}
     dev: false
 
   /lodash.topairs/4.3.0:
