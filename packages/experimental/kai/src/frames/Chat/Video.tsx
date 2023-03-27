@@ -32,6 +32,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
   assert(identity);
 
   const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
+  // TODO(mykola): Merge initiatorPeerRefs and listenerPeerRefs into one map to use N webRTC connections instead of 2N.
   const initiatorPeerRefs = useRef<ComplexMap<PublicKey, any>>(new ComplexMap<PublicKey, any>(PublicKey.hash));
   const listenerPeerRefs = useRef<ComplexMap<PublicKey, any>>(new ComplexMap<PublicKey, any>(PublicKey.hash));
 
