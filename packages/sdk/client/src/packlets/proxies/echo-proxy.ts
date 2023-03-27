@@ -132,7 +132,6 @@ export class EchoProxy implements Echo {
         // Process space update in a separate task, also initializing the space if necessary.
         scheduleTask(this._ctx, async () => {
           await spaceProxy!._processSpaceUpdate(space);
-          this._updateSpaceList();
         });
       }
 
