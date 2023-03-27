@@ -19,11 +19,7 @@ const getStyles = (props: any, align = 'left') => [
     style: {
       display: 'flex',
       alignItems: 'start',
-<<<<<<< HEAD
-      justifyContent: align === 'right' ? 'flex-end' : 'flex-start'
-=======
       justifyContent: align === 'right' ? 'flex-end' : 'flex-start' // TODO(burdon): items-center row.
->>>>>>> main
     }
   }
 ];
