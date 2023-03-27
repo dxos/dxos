@@ -10,9 +10,9 @@ export const alphabetical = (direction = 1) => {
   };
 };
 
-// TODO(burdon): Specify array of keys.
-export const alphabeticalByKey = <T extends { [key: string]: string }>(key: string, direction = 1) => {
-  return (v1: T, v2: T) => {
+// TODO(burdon): Specify array of [key, direction] tuples (different types).
+export const alphabeticalByKey = (key: string, direction = 1) => {
+  return (v1: any, v2: any) => {
     const a = v1[key]?.toLowerCase();
     const b = v2[key]?.toLowerCase();
     return a < b ? direction * -1 : a > b ? direction : 0;

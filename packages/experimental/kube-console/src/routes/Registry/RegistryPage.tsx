@@ -6,7 +6,7 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { useConfig } from '@dxos/react-client';
+import { ConfigProto } from '@dxos/config';
 import { Button, getSize, Table } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
@@ -14,7 +14,7 @@ import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
 
 // TODO(burdon): Get from KUBE config proto.
-type Service = {
+type Module = {
   name: string;
   type: string;
   displayName: string;
@@ -22,22 +22,22 @@ type Service = {
   tags: string[];
 };
 
-const columns: (host: string | undefined) => Column<Service>[] = (host) => {
-  const columns: Column<Service>[] = [
-    {
-      Header: 'type',
-      accessor: ({ type }) => type,
-      width: 100
-    },
+const columns: (host: string | undefined) => Column<Module>[] = (host) => {
+  const columns: Column<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,
       width: 100
     },
     {
+      Header: 'type',
+      accessor: ({ type }) => type,
+      width: 80
+    },
+    {
       Header: 'link',
       accessor: ({ name }) => name,
-      width: 80,
+      width: 40,
       Cell: ({ value }: { value: string[] }) => (
         <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
           <ArrowSquareOut className={getSize(6)} />
@@ -74,18 +74,20 @@ const columns: (host: string | undefined) => Column<Service>[] = (host) => {
 };
 
 export const RegistryPage = () => {
-  const config = useConfig();
   const kube = useKube();
-  const [results, setResults] = useState<any>();
-  const modules = results?.modules.sort(alphabeticalByKey('name'));
+  const [config, setConfig] = useState<ConfigProto>({});
+  const [modules, setModules] = useState<Module[]>([]);
+  const sortedModules = modules.sort(alphabeticalByKey('name'));
 
   useEffect(() => {
     void handleRefresh();
   }, []);
 
   const handleRefresh = async () => {
-    const results = await kube.fetch('/dx/registry');
-    setResults(results);
+    const config = await kube.fetch('/dx/config');
+    const { modules } = await kube.fetch<{ modules: Module[] }>('/dx/registry');
+    setConfig(config);
+    setModules(modules);
   };
 
   return (
@@ -97,8 +99,8 @@ export const RegistryPage = () => {
 
       {/* TODO(burdon): Theme. */}
       <Table
-        columns={columns(config.values.runtime?.kube?.host)}
-        data={modules}
+        columns={columns(config.runtime?.kube?.host)}
+        data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
           cell: { className: 'align-start font-mono font-thin' }
