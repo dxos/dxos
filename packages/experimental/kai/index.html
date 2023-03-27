@@ -9,13 +9,14 @@
     <link rel="apple-touch-icon" href="/icons/apple-icon-256.png">
     <meta name="theme-color" content="#333333">
     <script>
-      function setTheme(darkMode) {
-        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
-      }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
-        setTheme(event.matches)
-      });
+      // TODO(burdon): Fix theme.
+      // function setTheme(darkMode) {
+      //   document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      // }
+      // setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+      //   setTheme(event.matches)
+      // });
     </script>
   </head>
   <body>
