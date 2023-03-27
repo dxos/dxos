@@ -52,7 +52,7 @@ export class MemberStateMachine {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
     assert(assertion.spaceKey.equals(this._spaceKey));
-    assert(!this._members.has(credential.subject.id));
+    assert(!this._members.has(credential.subject.id), `Duplicate SpaceMember credential: ${credential.subject.id}`);
 
     const info: MemberInfo = {
       key: credential.subject.id,
