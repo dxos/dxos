@@ -172,7 +172,7 @@ export class DataSpace {
   initializeDataPipelineAsync() {
     scheduleTask(this._ctx, async () => {
       try {
-        this.initializeDataPipeline();
+        await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError) {
           log('Data pipeline initialization cancelled', err);
