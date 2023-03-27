@@ -20,7 +20,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/space-invitation-service', () => {
+describe.only('services/space-invitation-service', () => {
   test('creates space and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
@@ -50,31 +50,47 @@ describe('services/space-invitation-service', () => {
     {
       const proxy1 = new SpaceInvitationsProxy(service1);
       const observable1 = proxy1.createInvitation(space1.key);
-      observable1.subscribe({
-        onConnecting: (invitation: Invitation) => {
-          const proxy2 = new SpaceInvitationsProxy(service2);
-          const observable2 = proxy2.acceptInvitation(invitation);
-          observable2.subscribe({
-            onAuthenticating: async (invitation2: Invitation) => {
-              await observable2.authenticate(await authenticationCode.wait());
-            },
-            onSuccess: (invitation: Invitation) => {
-              success2.wake(invitation);
-            },
-            onError: (err: Error) => raise(new Error(err.message))
-          });
+      observable1.subscribe(
+        (invitation1: Invitation) => {
+          switch (invitation1.state) {
+            case Invitation.State.CONNECTING: {
+              const proxy2 = new SpaceInvitationsProxy(service2);
+              const observable2 = proxy2.acceptInvitation(invitation1);
+              observable2.subscribe(
+                async (invitation2: Invitation) => {
+                  switch (invitation2.state) {
+                    case Invitation.State.AUTHENTICATING: {
+                      await observable2.authenticate(await authenticationCode.wait());
+                      break;
+                    }
+
+                    case Invitation.State.SUCCESS: {
+                      success2.wake(invitation2);
+                      break;
+                    }
+                  }
+                },
+                (err) => raise(err)
+              );
+              break;
+            }
+
+            case Invitation.State.CONNECTED: {
+              assert(invitation1.authenticationCode);
+              authenticationCode.wake(invitation1.authenticationCode);
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              success1.wake(invitation1);
+              break;
+            }
+          }
         },
-        onConnected: (invitation: Invitation) => {
-          assert(invitation.authenticationCode);
-          authenticationCode.wake(invitation.authenticationCode);
-        },
-        onSuccess: (invitation: Invitation) => {
-          success1.wake(invitation);
-        },
-        onCancelled: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
+        (err) => {
+          raise(err);
+        }
+      );
     }
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
@@ -107,21 +123,29 @@ describe('services/space-invitation-service', () => {
     {
       const proxy = new SpaceInvitationsProxy(service1);
       const observable = proxy.createInvitation(space1.key);
-      observable.subscribe({
-        onConnecting: (invitation: Invitation) => {
-          const proxy2 = new SpaceInvitationsProxy(service2);
-          proxy2.acceptInvitation(invitation);
+      observable.subscribe(
+        (invitation: Invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              const proxy2 = new SpaceInvitationsProxy(service2);
+              proxy2.acceptInvitation(invitation);
+              break;
+            }
+            case Invitation.State.CONNECTED: {
+              void observable.cancel();
+              break;
+            }
+            case Invitation.State.CANCELLED: {
+              cancelled.wake();
+              break;
+            }
+            case Invitation.State.SUCCESS: {
+              raise(new Error());
+            }
+          }
         },
-        onConnected: (invitation: Invitation) => {
-          void observable.cancel();
-        },
-        onCancelled: () => {
-          cancelled.wake();
-        },
-        onSuccess: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
+        (err) => raise(err)
+      );
     }
 
     await cancelled.wait();

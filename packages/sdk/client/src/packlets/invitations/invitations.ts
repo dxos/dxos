@@ -4,12 +4,7 @@
 
 import assert from 'node:assert';
 
-import {
-  AsyncEvents,
-  CancellableObservable,
-  CancellableObservableEvents,
-  CancellableObservableProvider
-} from '@dxos/async';
+import { AsyncEvents, CancellableObservableEvents, MulticastObservable, Observable, Subscriber } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf';
 import { AuthenticationRequest, CancelInvitationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -40,54 +35,51 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
 
 /**
  * Base class for all invitation observables and providers.
- * Observable that supports inspection of the current value.
  */
-// TODO(wittjosiah): Use `MulticastObservable`.
-export interface CancellableInvitationObservable extends CancellableObservable<InvitationEvents> {
-  get invitation(): Invitation | undefined;
-}
+export class CancellableInvitationObservable extends MulticastObservable<Invitation> {
+  private readonly _onCancel: () => Promise<void>;
 
-// TODO(wittjosiah): Update with Observable.value.
-export class InvitationObservableProvider
-  extends CancellableObservableProvider<InvitationEvents>
-  implements CancellableInvitationObservable
-{
-  private _invitation?: Invitation;
-
-  get invitation(): Invitation | undefined {
-    return this._invitation;
+  constructor({
+    subscriber,
+    initialInvitation,
+    onCancel
+  }: {
+    subscriber: Observable<Invitation> | Subscriber<Invitation>;
+    initialInvitation: Invitation;
+    onCancel: () => Promise<void>;
+  }) {
+    super(subscriber, initialInvitation);
+    this._onCancel = onCancel;
   }
 
-  setInvitation(invitation: Invitation) {
-    this._invitation = invitation;
+  cancel(): Promise<void> {
+    return this._onCancel();
   }
 }
 
 /**
  * Cancelable observer that relays authentication requests.
  */
-export interface AuthenticatingInvitationObservable extends CancellableInvitationObservable {
-  authenticate(code: string): Promise<void>;
-}
+export class AuthenticatingInvitationObservable extends CancellableInvitationObservable {
+  private readonly _onAuthenticate: (authenticationCode: string) => Promise<void>;
 
-export interface AuthenticatingInvitationProviderActions {
-  onCancel(): Promise<void>;
-  onAuthenticate(code: string): Promise<void>;
-}
-
-export class AuthenticatingInvitationProvider
-  extends InvitationObservableProvider
-  implements AuthenticatingInvitationObservable
-{
-  // prettier-ignore
-  constructor(
-    private readonly _actions: AuthenticatingInvitationProviderActions
-  ) {
-    super(() => this._actions.onCancel());
+  constructor({
+    subscriber,
+    initialInvitation,
+    onCancel,
+    onAuthenticate
+  }: {
+    subscriber: Observable<Invitation> | Subscriber<Invitation>;
+    initialInvitation: Invitation;
+    onCancel: () => Promise<void>;
+    onAuthenticate: (authenticationCode: string) => Promise<void>;
+  }) {
+    super({ subscriber, initialInvitation, onCancel });
+    this._onAuthenticate = onAuthenticate;
   }
 
   async authenticate(authenticationCode: string): Promise<void> {
-    return this._actions.onAuthenticate(authenticationCode);
+    return this._onAuthenticate(authenticationCode);
   }
 }
 
@@ -96,19 +88,20 @@ export class AuthenticatingInvitationProvider
  * Don't use this in production code.
  * @deprecated
  */
-// TODO(burdon): Throw error if auth requested.
+// TODO(wittjosiah): Move to testing.
 export const wrapObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
-    const unsubscribe = observable.subscribe({
-      onSuccess: (invitation: Invitation) => {
-        assert(invitation.state === Invitation.State.SUCCESS);
-        unsubscribe();
+    const subscription = observable.subscribe(
+      (invitation: Invitation | undefined) => {
+        // TODO(burdon): Throw error if auth requested.
+        assert(invitation?.state === Invitation.State.SUCCESS);
+        subscription.unsubscribe();
         resolve(invitation);
       },
-      onError: (err: Error) => {
-        unsubscribe();
+      (err: Error) => {
+        subscription.unsubscribe();
         reject(err);
       }
-    });
+    );
   });
 };

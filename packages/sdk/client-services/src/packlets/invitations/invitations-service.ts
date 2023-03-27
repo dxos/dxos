@@ -50,46 +50,57 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
       let invitationId: string;
       const { type, swarmKey, authMethod } = invitation;
       const observable = invitationsHandler.createInvitation(context, { type, swarmKey, authMethod });
-      observable.subscribe({
-        onConnecting: (invitation) => {
-          assert(invitation.invitationId);
-          invitationId = invitation.invitationId;
-          this._createInvitations.set(invitation.invitationId, observable);
-          invitation.state = Invitation.State.CONNECTING;
-          next(invitation);
+      observable.subscribe(
+        (invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              assert(invitation.invitationId);
+              invitationId = invitation.invitationId;
+              this._createInvitations.set(invitation.invitationId, observable);
+              invitation.state = Invitation.State.CONNECTING;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.CONNECTED: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.CONNECTED;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.AUTHENTICATING: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.AUTHENTICATING;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.SUCCESS: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.SUCCESS;
+              next(invitation);
+              close();
+              break;
+            }
+            case Invitation.State.CANCELLED: {
+              assert(invitationId);
+              invitation.invitationId = invitationId;
+              invitation.state = Invitation.State.CANCELLED;
+              next(invitation);
+              close();
+              break;
+            }
+          }
         },
-        onConnected: (invitation) => {
-          assert(invitation.invitationId);
-          invitation.state = Invitation.State.CONNECTED;
-          next(invitation);
-        },
-        onAuthenticating: (invitation) => {
-          assert(invitation.invitationId);
-          invitation.state = Invitation.State.AUTHENTICATING;
-          next(invitation);
-        },
-        onSuccess: (invitation) => {
-          assert(invitation.invitationId);
-          invitation.state = Invitation.State.SUCCESS;
-          next(invitation);
-          close();
-        },
-        onCancelled: () => {
-          assert(invitationId);
-          invitation.invitationId = invitationId;
-          invitation.state = Invitation.State.CANCELLED;
-          next(invitation);
-          close();
-        },
-        onTimeout: (err: TimeoutError) => {
-          invitation.state = Invitation.State.TIMEOUT;
-          close(err);
-        },
-        onError: (err: any) => {
-          invitation.state = Invitation.State.ERROR;
-          close(err);
+        (err: Error) => {
+          if (err instanceof TimeoutError) {
+            invitation.state = Invitation.State.TIMEOUT;
+            // TODO(wittjosiah): Fire an event here.
+            close(err);
+          } else {
+            invitation.state = Invitation.State.ERROR;
+            close(err);
+          }
         }
-      });
+      );
 
       return (err?: Error) => {
         const context = this.getLoggingContext();
@@ -111,45 +122,55 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
 
       let invitationId: string;
       const observable = invitationsHandler.acceptInvitation(invitation, options);
-      observable.subscribe({
-        onConnecting: (invitation) => {
-          assert(invitation.invitationId);
-          invitationId = invitation.invitationId;
-          this._acceptInvitations.set(invitation.invitationId, observable);
-          invitation.state = Invitation.State.CONNECTING;
-          next(invitation);
+      observable.subscribe(
+        (invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              assert(invitation.invitationId);
+              invitationId = invitation.invitationId;
+              this._acceptInvitations.set(invitation.invitationId, observable);
+              invitation.state = Invitation.State.CONNECTING;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.CONNECTED: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.CONNECTED;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.AUTHENTICATING: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.AUTHENTICATING;
+              next(invitation);
+              break;
+            }
+            case Invitation.State.SUCCESS: {
+              invitation.state = Invitation.State.SUCCESS;
+              next(invitation);
+              close();
+              break;
+            }
+            case Invitation.State.CANCELLED: {
+              assert(invitationId);
+              invitation.invitationId = invitationId;
+              invitation.state = Invitation.State.CANCELLED;
+              next(invitation);
+              close();
+            }
+          }
         },
-        onConnected: (invitation) => {
-          assert(invitation.invitationId);
-          invitation.state = Invitation.State.CONNECTED;
-          next(invitation);
-        },
-        onAuthenticating: (invitation) => {
-          assert(invitation.invitationId);
-          invitation.state = Invitation.State.AUTHENTICATING;
-          next(invitation);
-        },
-        onSuccess: (invitation) => {
-          invitation.state = Invitation.State.SUCCESS;
-          next(invitation);
-          close();
-        },
-        onCancelled: () => {
-          assert(invitationId);
-          invitation.invitationId = invitationId;
-          invitation.state = Invitation.State.CANCELLED;
-          next(invitation);
-          close();
-        },
-        onTimeout: (err: TimeoutError) => {
-          invitation.state = Invitation.State.TIMEOUT;
-          close(err);
-        },
-        onError: (err: any) => {
-          invitation.state = Invitation.State.ERROR;
-          close(err);
+        (err: Error) => {
+          if (err instanceof TimeoutError) {
+            invitation.state = Invitation.State.TIMEOUT;
+            // TODO(wittjosiah): Fire an event here.
+            close(err);
+          } else {
+            invitation.state = Invitation.State.ERROR;
+            close(err);
+          }
         }
-      });
+      );
 
       return (err?: Error) => {
         const context = this.getLoggingContext();

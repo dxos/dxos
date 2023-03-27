@@ -7,7 +7,7 @@ import type { ObservableLike, Observer, Subscriber, Subscription } from 'zen-obs
 
 import { Event } from './events';
 
-export { Observable };
+export { Observable, Subscriber };
 
 /**
  * Observable which supports multiple subscribers and stores the current value.
