@@ -68,7 +68,7 @@ export class DataSpaceManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) {}
+  ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -83,19 +83,7 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-
-      // Asynchronously initialize the data pipeline.
-      scheduleTask(this._ctx, async () => {
-        try {
-          await space.initializeDataPipeline();
-
-          if (this._isOpen) {
-            this.updated.emit();
-          }
-        } catch (err) {
-          log.error('error initializing space data pipeline', err);
-        }
-      });
+      space.initializeDataPipelineAsync();
     }
 
     this._isOpen = true;
@@ -136,7 +124,6 @@ export class DataSpaceManager {
     assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
-    // For the new space this should complete without blocking on network.
     await space.initializeDataPipeline();
 
     this.updated.emit();
@@ -158,11 +145,7 @@ export class DataSpaceManager {
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
 
-    // Asynchronously initialize the data pipeline.
-    scheduleTask(this._ctx, async () => {
-      await space.initializeDataPipeline();
-      this.updated.emit();
-    });
+    space.initializeDataPipelineAsync();
 
     this.updated.emit();
     return space;
@@ -231,11 +214,22 @@ export class DataSpaceManager {
       feedStore: this._feedStore,
       signingContext: this._signingContext,
       snapshotId: metadata.snapshot,
-      onDataPipelineReady: async () => {
-        this._dataServiceSubscriptions.registerSpace(
-          space.key,
-          dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
-        );
+      callbacks: {
+        beforeReady: async () => {
+          this._dataServiceSubscriptions.registerSpace(
+            space.key,
+            dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
+          );
+
+          if (this._isOpen) {
+            this.updated.emit();
+          }
+        },
+        afterReady: async () => {
+          if (this._isOpen) {
+            this.updated.emit();
+          }
+        }
       }
     });
 

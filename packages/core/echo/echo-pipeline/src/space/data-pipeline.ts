@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -94,7 +94,12 @@ export class DataPipeline {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
+  @synchronized
   async open(spaceContext: PipelineFactory) {
+    if(this._isOpen) {
+      return;
+    }
+
     this._spaceContext = spaceContext;
     if (this._params.snapshotId) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
@@ -167,7 +172,11 @@ export class DataPipeline {
     }
   }
 
+  @synchronized
   async close() {
+    if(!this._isOpen) {
+      return;
+    }
     log('close');
     this._isOpen = false;
 
@@ -185,6 +194,7 @@ export class DataPipeline {
   }
 
   createSnapshot(): SpaceSnapshot {
+    assert(this.databaseBackend, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe: this._pipeline?.state.timeframe ?? new Timeframe(),

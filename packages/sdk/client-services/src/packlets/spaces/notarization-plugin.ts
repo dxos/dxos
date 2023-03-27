@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, rejectOnDispose } from '@dxos/context';
 import { CredentialProcessor } from '@dxos/credentials';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -16,14 +16,43 @@ import { NotarizationService, NotarizeRequest } from '@dxos/protocols/proto/dxos
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
-// Timeout for retrying notarization.
-const RETRY_TIMEOUT = 1_000;
+const DEFAULT_RETRY_TIMEOUT = 1_000;
 
-// Minimum wait time after a peer confirms successful notarization before attempting with a new peer.
-const SUCCESS_DELAY = 1_000;
+const DEFAULT_SUCCESS_DELAY = 1_000;
 
-// Timeout for the whole notarization process.
-const NOTARIZE_TIMEOUT = 10_000;
+const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
+
+export type NotarizeParams = {
+  /**
+   * For cancellation.
+   */
+  ctx?: Context
+
+  /**
+   * Credentials to notarize.
+   */
+  credentials: Credential[];
+
+  /**
+   * Timeout for the whole notarization process.
+   * Set to 0 to disable.
+   * @default {@link DEFAULT_NOTARIZE_TIMEOUT}
+   */
+  timeout?: number;
+
+  /**
+   * Retry timeout.
+   * @default {@link DEFAULT_RETRY_TIMEOUT}
+   */
+  retryTimeout?: number;
+
+  /**
+   * Minimum wait time after a peer confirms successful notarization before attempting with a new peer.
+   * This is to avoid spamming peers with notarization requests.
+   * @default {@link DEFAULT_SUCCESS_DELAY}
+   */
+  successDelay?: number;
+}
 
 /**
  * See NotarizationService proto.
@@ -37,7 +66,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
-  async open() {}
+  async open() { }
 
   async close() {
     await this._ctx.dispose();
@@ -46,7 +75,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   /**
    * Request credentials to be notarized.
    */
-  async notarize(credentials: Credential[]) {
+  async notarize({ ctx: opCtx, credentials, timeout = DEFAULT_NOTARIZE_TIMEOUT, retryTimeout = DEFAULT_RETRY_TIMEOUT, successDelay = DEFAULT_SUCCESS_DELAY }: NotarizeParams) {
     log('notarize', { credentials });
     assert(
       credentials.every((credential) => credential.id),
@@ -61,18 +90,23 @@ export class NotarizationPlugin implements CredentialProcessor {
         errors.throw(err);
       }
     });
-    scheduleTask(
-      ctx,
-      () => {
-        log.warn('Notarization timeout', {
-          timeout: NOTARIZE_TIMEOUT,
-          peers: Array.from(this._extensions).map((extension) => extension.remotePeerId)
-        });
-        void ctx.dispose();
-        errors.throw(new TimeoutError(NOTARIZE_TIMEOUT, 'Notarization timed out'));
-      },
-      NOTARIZE_TIMEOUT
-    );
+    opCtx?.onDispose(() => ctx.dispose());
+
+    // Timeout/
+    if (timeout !== 0) {
+      scheduleTask(
+        ctx,
+        () => {
+          log.warn('Notarization timeout', {
+            timeout,
+            peers: Array.from(this._extensions).map((extension) => extension.remotePeerId)
+          });
+          void ctx.dispose();
+          errors.throw(new TimeoutError(timeout, 'Notarization timed out'));
+        },
+        timeout
+      );
+    }
 
     const allNotarized = Promise.all(credentials.map((credential) => this._waitUntilProcessed(credential.id!)));
 
@@ -88,9 +122,9 @@ export class NotarizationPlugin implements CredentialProcessor {
         // Pick a peer that we haven't tried yet.
         const peer = [...this._extensions].find((peer) => !peersTried.has(peer));
         if (!peer) {
-          log.warn('Exhausted all peers to notarize with', { retryIn: RETRY_TIMEOUT });
+          log.warn('Exhausted all peers to notarize with', { retryIn: retryTimeout });
           peersTried.clear();
-          scheduleTask(ctx, () => notarizeTask.schedule(), RETRY_TIMEOUT); // retry with all peers again
+          scheduleTask(ctx, () => notarizeTask.schedule(), retryTimeout); // retry with all peers again
           return;
         }
 
@@ -100,7 +134,7 @@ export class NotarizationPlugin implements CredentialProcessor {
           credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!))
         });
         log('success');
-        await sleep(SUCCESS_DELAY); // wait before trying with a new peer
+        await sleep(successDelay); // wait before trying with a new peer
       } catch (err) {
         log.warn('error notarizing (recoverable)', err);
         notarizeTask.schedule(); // retry immediately with next peer
@@ -111,8 +145,11 @@ export class NotarizationPlugin implements CredentialProcessor {
     this._extensionOpened.on(ctx, () => notarizeTask.schedule());
 
     try {
-      // TODO(dmaretskyi): Abort (context) & timeout.
-      await Promise.race([allNotarized, errors.wait()]);
+      await Promise.race([
+        rejectOnDispose(ctx),
+        allNotarized,
+        errors.wait()
+      ]);
       log('done');
     } finally {
       await ctx.dispose();

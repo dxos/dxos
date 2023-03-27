@@ -6,7 +6,7 @@ formatter:
 filter:
   - warn
   - info
-  - debug
+  # - debug
   # - test.ts:debug
   # - database:debug
   # - notarization:debug
@@ -15,6 +15,7 @@ filter:
   # - state-manager:debug
   - feed-store:debug
   - client-services:debug
+  - space:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

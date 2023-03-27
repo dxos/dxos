@@ -15,8 +15,13 @@ import { Timeframe } from '@dxos/timeframe';
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
+import { Context, rejectOnDispose } from '@dxos/context';
 
 export type WaitUntilReachedTargetParams = {
+  /**
+   * For cancellation.
+   */
+  ctx?: Context
   timeout?: number;
 };
 
@@ -78,7 +83,7 @@ export class PipelineState {
    *
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
-  async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
+  async waitUntilReachedTargetTimeframe({ ctx = new Context(), timeout }: WaitUntilReachedTargetParams = {}) {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
@@ -96,6 +101,7 @@ export class PipelineState {
 
     if (timeout) {
       return Promise.race([
+        rejectOnDispose(ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
         }),
