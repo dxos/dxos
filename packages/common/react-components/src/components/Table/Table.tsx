@@ -11,7 +11,6 @@ import { mx } from '../../util';
 
 // TODO(burdon): Adapter for Project type.
 // TODO(burdon): Object to represent properties (e.g., width, bindings) for table.
-
 // TODO(burdon): Re-export Column.
 
 const getStyles = (props: any, align = 'left') => [
@@ -20,7 +19,11 @@ const getStyles = (props: any, align = 'left') => [
     style: {
       display: 'flex',
       alignItems: 'start',
+<<<<<<< HEAD
       justifyContent: align === 'right' ? 'flex-end' : 'flex-start'
+=======
+      justifyContent: align === 'right' ? 'flex-end' : 'flex-start' // TODO(burdon): items-center row.
+>>>>>>> main
     }
   }
 ];

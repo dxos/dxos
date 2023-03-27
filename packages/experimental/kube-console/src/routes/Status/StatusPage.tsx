@@ -6,7 +6,11 @@ import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { Button, Table } from '@dxos/react-components';
+<<<<<<< HEAD
 import { alphabetical } from '@dxos/util';
+=======
+import { alphabeticalByKey } from '@dxos/util';
+>>>>>>> main
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -23,7 +27,11 @@ const columns: Column<Service>[] = [
   {
     Header: 'service',
     accessor: ({ name }) => name,
+<<<<<<< HEAD
     width: 80
+=======
+    width: 100
+>>>>>>> main
   },
   {
     Header: 'type',
@@ -51,16 +59,21 @@ const columns: Column<Service>[] = [
 
 export const StatusPage = () => {
   const kube = useKube();
+<<<<<<< HEAD
   const [results, setResults] = useState<any>();
   const services = results?.services.sort(alphabetical('name'));
+=======
+  const [services, setServices] = useState<Service[]>([]);
+  const soredServices = services.sort(alphabeticalByKey('name'));
+>>>>>>> main
 
   useEffect(() => {
     void handleRefresh();
   }, []);
 
   const handleRefresh = async () => {
-    const results = await kube.fetch('/dx/status');
-    setResults(results);
+    const { services } = await kube.fetch<{ services: Service[] }>('/dx/status');
+    setServices(services);
   };
 
   return (
@@ -73,7 +86,11 @@ export const StatusPage = () => {
       {/* TODO(burdon): Theme. */}
       <Table
         columns={columns}
+<<<<<<< HEAD
         data={services}
+=======
+        data={soredServices}
+>>>>>>> main
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
           cell: { className: 'align-start font-mono font-thin' }

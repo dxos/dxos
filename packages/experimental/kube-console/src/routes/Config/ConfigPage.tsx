@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { ConfigProto } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 import { JsonTree } from '@dxos/react-components';
 
@@ -13,7 +14,11 @@ import { useKube } from '../../hooks';
 export const ConfigPage = () => {
   const config = useConfig();
   const kube = useKube();
+<<<<<<< HEAD
   const [results, setResults] = useState<any>({});
+=======
+  const [results, setResults] = useState<ConfigProto>({});
+>>>>>>> main
 
   useEffect(() => {
     void handleRefresh();
