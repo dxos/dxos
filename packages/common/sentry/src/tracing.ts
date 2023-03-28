@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getCurrentHub } from '@sentry/browser';
+import { getCurrentHub } from '@sentry/node';
 import { Transaction, Span } from '@sentry/types';
 
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
