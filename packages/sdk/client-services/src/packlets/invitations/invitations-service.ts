@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { GenericInvitationsHandler, InvitationsHandler } from './space-invitations-handler';
+import { InvitationsHandler, InvitationOperations } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -20,8 +20,8 @@ export class InvitationsServiceImpl implements InvitationsService {
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
 
   constructor(
-    private readonly _invitationsHandler: GenericInvitationsHandler,
-    private readonly _getHandler: (invitation: Invitation) => InvitationsHandler
+    private readonly _invitationsHandler: InvitationsHandler,
+    private readonly _getHandler: (invitation: Invitation) => InvitationOperations
   ) {}
 
   // TODO(burdon): Guest/host label.

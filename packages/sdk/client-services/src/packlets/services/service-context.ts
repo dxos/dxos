@@ -29,10 +29,10 @@ import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
-  DeviceInvitationsHandler,
-  GenericInvitationsHandler,
+  DeviceInvitationOperations,
   InvitationsHandler,
-  SpaceInvitationsHandler
+  InvitationOperations,
+  SpaceInvitationOperations
 } from '../invitations';
 import { DataSpaceManager } from '../spaces';
 
@@ -49,14 +49,14 @@ export class ServiceContext {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
-  public readonly invitations: GenericInvitationsHandler;
+  public readonly invitations: InvitationsHandler;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
 
   private readonly _handlerFactories = new Map<
     Invitation.Kind,
-    (invitation: Partial<Invitation>) => InvitationsHandler
+    (invitation: Partial<Invitation>) => InvitationOperations
   >();
 
   private _deviceSpaceSync?: CredentialConsumer<any>;
@@ -96,11 +96,11 @@ export class ServiceContext {
       this.spaceManager
     );
 
-    this.invitations = new GenericInvitationsHandler(this.networkManager);
+    this.invitations = new InvitationsHandler(this.networkManager);
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationsHandler(
+    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationOperations(
       this.keyring,
       () => this.identityManager.identity ?? failUndefined(),
       this._acceptIdentity.bind(this)
@@ -148,7 +148,7 @@ export class ServiceContext {
     return identity;
   }
 
-  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationsHandler {
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationOperations {
     const factory = this._handlerFactories.get(invitation.kind);
     assert(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);
@@ -189,7 +189,7 @@ export class ServiceContext {
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
       assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
-      return new SpaceInvitationsHandler(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+      return new SpaceInvitationOperations(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
     });
     this.initialized.wake();
 

@@ -13,16 +13,12 @@ import {
   AuthenticatingInvitationObservable
 } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
-import { SigningContext } from '@dxos/echo-pipeline';
-import { writeMessages } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AuthenticationRequest,
@@ -35,13 +31,9 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { Identity, JoinIdentityParams } from '../identity';
-import { DataSpaceManager } from '../spaces';
-
 const MAX_OTP_ATTEMPTS = 3;
 
-// TODO(wittjosiah): Rename.
-export interface InvitationsHandler {
+export interface InvitationOperations {
   // Host
   getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind };
   admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
@@ -53,176 +45,6 @@ export interface InvitationsHandler {
 
   // Debugging
   toJSON(): object;
-}
-
-export class SpaceInvitationsHandler implements InvitationsHandler {
-  constructor(
-    private readonly _spaceManager: DataSpaceManager,
-    private readonly _signingContext: SigningContext,
-    private readonly _keyring: Keyring,
-    private readonly _spaceKey?: PublicKey
-  ) {}
-
-  getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind } {
-    return {
-      kind: Invitation.Kind.SPACE,
-      spaceKey: this._spaceKey
-    };
-  }
-
-  async admit(request: AdmissionRequest, guestProfile?: ProfileDocument | undefined): Promise<AdmissionResponse> {
-    assert(this._spaceKey);
-    const space = await this._spaceManager.spaces.get(this._spaceKey);
-    assert(space);
-
-    assert(request.space);
-    const { identityKey, deviceKey } = request.space;
-
-    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
-    // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this._signingContext.credentialSigner,
-      identityKey,
-      space.key,
-      space.inner.genesisFeedKey,
-      guestProfile
-    );
-
-    // TODO(dmaretskyi): Refactor.
-    assert(credentials[0].credential);
-    const spaceMemberCredential = credentials[0].credential.credential;
-    assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-
-    await writeMessages(space.inner.controlPipeline.writer, credentials);
-
-    return {
-      space: {
-        credential: spaceMemberCredential,
-        controlTimeframe: space.inner.controlPipeline.state.timeframe,
-        dataTimeframe: space.dataPipeline.pipelineState?.timeframe
-      }
-    };
-  }
-
-  createIntroduction(): IntroductionRequest {
-    return {
-      profile: this._signingContext.profile
-    };
-  }
-
-  async createAdmissionRequest(): Promise<AdmissionRequest> {
-    // Generate a pair of keys for our feeds.
-    const controlFeedKey = await this._keyring.createKey();
-    const dataFeedKey = await this._keyring.createKey();
-
-    return {
-      space: {
-        identityKey: this._signingContext.identityKey,
-        deviceKey: this._signingContext.deviceKey,
-        controlFeedKey,
-        dataFeedKey
-      }
-    };
-  }
-
-  async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
-    assert(response.space);
-    const { credential, controlTimeframe, dataTimeframe } = response.space;
-    const assertion = getCredentialAssertion(credential);
-    assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
-    assert(credential.subject.id.equals(this._signingContext.identityKey));
-
-    // Create local space.
-    await this._spaceManager.acceptSpace({
-      spaceKey: assertion.spaceKey,
-      genesisFeedKey: assertion.genesisFeedKey,
-      controlTimeframe,
-      dataTimeframe
-    });
-
-    await this._signingContext.recordCredential(credential);
-
-    return { spaceKey: assertion.spaceKey };
-  }
-
-  toJSON(): object {
-    return {
-      deviceKey: this._signingContext.deviceKey,
-      spaceKey: this._spaceKey
-    };
-  }
-}
-
-export class DeviceInvitationsHandler implements InvitationsHandler {
-  constructor(
-    private readonly _keyring: Keyring,
-    private readonly _getIdentity: () => Identity,
-    private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
-  ) {}
-
-  getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind } {
-    return {
-      kind: Invitation.Kind.DEVICE
-    };
-  }
-
-  async admit(request: AdmissionRequest): Promise<AdmissionResponse> {
-    assert(request.device);
-    const identity = this._getIdentity();
-    await identity.admitDevice(request.device);
-
-    return {
-      device: {
-        identityKey: identity.identityKey,
-        haloSpaceKey: identity.haloSpaceKey,
-        genesisFeedKey: identity.haloGenesisFeedKey,
-        controlTimeframe: identity.controlPipeline.state.timeframe
-      }
-    };
-  }
-
-  createIntroduction(): IntroductionRequest {
-    return {};
-  }
-
-  async createAdmissionRequest(): Promise<AdmissionRequest> {
-    const deviceKey = await this._keyring.createKey();
-    const controlFeedKey = await this._keyring.createKey();
-    const dataFeedKey = await this._keyring.createKey();
-
-    return {
-      device: {
-        deviceKey,
-        controlFeedKey,
-        dataFeedKey
-      }
-    };
-  }
-
-  async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
-    assert(response.device);
-    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
-
-    assert(request.device);
-    const { deviceKey, controlFeedKey, dataFeedKey } = request.device;
-
-    await this._acceptIdentity({
-      identityKey,
-      deviceKey,
-      haloSpaceKey,
-      haloGenesisFeedKey: genesisFeedKey,
-      controlFeedKey,
-      dataFeedKey,
-      controlTimeframe
-    });
-
-    return { identityKey };
-  }
-
-  toJSON(): object {
-    // TODO(wittjosiah): What is helpful to include here?
-    return {};
-  }
 }
 
 /**
@@ -252,11 +74,10 @@ export class DeviceInvitationsHandler implements InvitationsHandler {
  *   |----------------------------------------Admit-->|
  *  ```
  */
-// TODO(wittjosiah): Rename to InvitationsHandler.
-export class GenericInvitationsHandler {
+export class InvitationsHandler {
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(handler: InvitationsHandler, options?: Partial<Invitation>): CancellableInvitationObservable {
+  createInvitation(operations: InvitationOperations, options?: Partial<Invitation>): CancellableInvitationObservable {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -268,7 +89,7 @@ export class GenericInvitationsHandler {
     const authenticationCode =
       options?.authenticationCode ??
       (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
-    assert(handler);
+    assert(operations);
 
     const invitation: Invitation = {
       invitationId,
@@ -277,7 +98,7 @@ export class GenericInvitationsHandler {
       state,
       swarmKey,
       authenticationCode,
-      ...handler.getInvitationContext()
+      ...operations.getInvitationContext()
     };
 
     // TODO(wittjosiah): Fire complete event?
@@ -300,7 +121,7 @@ export class GenericInvitationsHandler {
         introduce: async ({ profile }) => {
           log('guest introduced itself', {
             guestProfile: profile,
-            handler: handler.toString()
+            handler: operations.toString()
           });
 
           guestProfile = profile;
@@ -310,7 +131,8 @@ export class GenericInvitationsHandler {
           stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
 
           return {
-            spaceKey: authMethod === Invitation.AuthMethod.NONE ? handler.getInvitationContext().spaceKey : undefined,
+            spaceKey:
+              authMethod === Invitation.AuthMethod.NONE ? operations.getInvitationContext().spaceKey : undefined,
             authMethod
           };
         },
@@ -357,7 +179,7 @@ export class GenericInvitationsHandler {
 
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             assert(deviceKey);
-            const admissionResponse = await handler.admit(admissionRequest, guestProfile);
+            const admissionResponse = await operations.admit(admissionRequest, guestProfile);
 
             // Updating credentials complete.
             complete.wake(deviceKey);
@@ -373,10 +195,10 @@ export class GenericInvitationsHandler {
         onOpen: () => {
           scheduleTask(ctx, async () => {
             try {
-              log('connected', { ...handler.toJSON() });
+              log('connected', { ...operations.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await complete.wait({ timeout });
-              log('admitted guest', { guest: deviceKey, ...handler.toJSON() });
+              log('admitted guest', { guest: deviceKey, ...operations.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
             } catch (err: any) {
               log.error('failed', err);
@@ -422,9 +244,9 @@ export class GenericInvitationsHandler {
     return observable;
   }
 
-  acceptInvitation(handler: InvitationsHandler, invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(operations: InvitationOperations, invitation: Invitation): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = invitation;
-    assert(handler);
+    assert(operations);
 
     const complete = new Trigger<Partial<Invitation>>();
     const authenticated = new Trigger<string>();
@@ -449,15 +271,15 @@ export class GenericInvitationsHandler {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
               }
 
-              log('connected', { ...handler.toJSON() });
+              log('connected', { ...operations.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
 
               // 1. Introduce guest to host.
-              log('introduce', { ...handler.toJSON() });
+              log('introduce', { ...operations.toJSON() });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce(
-                handler.createIntroduction()
+                operations.createIntroduction()
               );
-              log('introduce response', { ...handler.toJSON(), response: introductionResponse });
+              log('introduce response', { ...operations.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
               if (introductionResponse.spaceKey) {
                 invitation.spaceKey = introductionResponse.spaceKey;
@@ -493,15 +315,15 @@ export class GenericInvitationsHandler {
               }
 
               // 3. Send admission credentials to host (with local space keys).
-              log('request admission', { ...handler.toJSON() });
-              const admissionRequest = await handler.createAdmissionRequest();
+              log('request admission', { ...operations.toJSON() });
+              const admissionRequest = await operations.createAdmissionRequest();
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // 4. Record credential in our HALO.
-              const result = await handler.accept(admissionResponse, admissionRequest);
+              const result = await operations.accept(admissionResponse, admissionRequest);
 
               // 5. Success.
-              log('admitted by host', { ...handler.toJSON() });
+              log('admitted by host', { ...operations.toJSON() });
               complete.wake(result);
             } catch (err: any) {
               log.warn('auth failed', err);
