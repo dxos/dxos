@@ -2,6 +2,7 @@
 dir:
   text: Platform Overview
   order: 2.5
+prev: ../getting-started
 ---
 
 # ECHO Database

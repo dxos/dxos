@@ -23,7 +23,7 @@ const main = async () => {
       input: { ...config, monorepo: false, name: `${packageJson.name}-${config.name}` },
       interactive: true
     });
-    return Promise.all(results.map((r) => r.save()));
+    await results.save();
   });
   await Promise.all(promises);
   console.log('done');

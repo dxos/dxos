@@ -12,11 +12,25 @@
     ]
   },
   "include": [
-    "src"
+    "package.json",
+    "src",
+    "test"
   ],
   "references": [
     {
       "path": "../../../common/plate"
+    },
+    {
+      "path": "../../../common/react-components"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../patterns/react-appkit"
     },
     {
       "path": "../bare-template"
