@@ -216,6 +216,10 @@ export class Pipeline implements PipelineAccessor {
     await this._feedSetIterator.addFeed(feed);
   }
 
+  hasFeed(feedKey: PublicKey) {
+    return this._feedSetIterator.hasFeed(feedKey);
+  }
+
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
     assert(!this._writer, 'Writer already set.');
     assert(feed.properties.writable, 'Feed must be writable.');

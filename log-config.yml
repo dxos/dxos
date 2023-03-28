@@ -16,7 +16,7 @@ filter:
   # - feed-store:debug
   # - client-services:debug
   # - space.ts:debug
-  - data-space-manager.ts:debug
+  - space.ts:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug
