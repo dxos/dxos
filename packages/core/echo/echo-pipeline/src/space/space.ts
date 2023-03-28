@@ -68,9 +68,13 @@ export class Space {
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
-        if(this._dataPipeline) {
-          await this._addFeedToPipeline(this._dataPipeline, info.key)
-        }
+        await this._addFeedLock.executeSynchronized(async () => {
+          if (this._dataPipeline) {
+            if (!this._dataPipeline.hasFeed(info.key)) {
+              return this._dataPipeline.addFeed(await this._feedProvider(info.key));
+            }
+          }
+        })
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -190,19 +194,15 @@ export class Space {
 
     this._dataPipeline = pipeline;
 
-
     // Add existing feeds.
-    for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-      await this._addFeedToPipeline(pipeline, feed.key)
-    }
+    await this._addFeedLock.executeSynchronized(async () => {
+      for (const feed of this._controlPipeline.spaceState.feeds.values()) {
+        if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
+          pipeline.addFeed(await this._feedProvider(feed.key));
+        }
+      }
+    });
 
     return pipeline;
-  }
-
-  @synchronized
-  private async _addFeedToPipeline(pipeline: Pipeline, feedKey: PublicKey) {
-    if(!pipeline.hasFeed(feedKey)) {
-      return pipeline.addFeed(await this._feedProvider(feedKey));
-    }
   }
 }
