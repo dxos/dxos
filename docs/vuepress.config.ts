@@ -17,7 +17,7 @@ const env = (value?: string) => (value ? `'${value}'` : undefined);
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
-  title: 'DXOS',
+  title: ' ',
   description: 'The Operating System for Decentralized Software',
   pagePatterns: [
     // Defaults
@@ -38,8 +38,9 @@ const config: UserConfig = defineUserConfig({
   },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
-    logo: '/images/dxos.svg',
-    logoDark: '/images/dxos-white.svg',
+    // Header logotype.
+    logo: '/images/logotype/dxos-horizontal.svg',
+    logoDark: '/images/logotype/dxos-horizontal-white.svg',
     repo: 'dxos/dxos',
     // TODO(wittjosiah): Use release tag?
     docsBranch: 'main',
