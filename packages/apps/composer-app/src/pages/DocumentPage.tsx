@@ -84,7 +84,7 @@ const DocumentPageContent = observer(
     const { t } = useTranslation('composer');
     return (
       <>
-        <div role='none' className='mli-auto max-is-[50rem] min-bs-screen border border-neutral-500/20'>
+        <div role='none' className='mli-auto max-is-[50rem] min-bs-[80vh] border border-neutral-500/20 flex flex-col'>
           <Input
             key={document.id}
             variant='subdued'
@@ -93,7 +93,7 @@ const DocumentPageContent = observer(
             placeholder={t('untitled document title')}
             value={document.title ?? ''}
             onChange={({ target: { value } }) => (document.title = value)}
-            slots={{ root: { className: 'pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
+            slots={{ root: { className: 'shrink-0 pli-6 plb-1 mbe-3 bg-neutral-500/20' } }}
           />
           {children}
         </div>
@@ -402,10 +402,12 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
           slots={{
             root: {
               role: 'none',
-              className: 'pli-6 mbs-4'
+              className: 'shrink-0 grow flex flex-col pbe-3'
             },
             editor: {
               markdownTheme: {
+                '&, & .cm-scroller': { display: 'flex', flexDirection: 'column', flex: '1 0 auto' },
+                '& .cm-content': { flex: '1 0 auto' },
                 '& .cm-line': {
                   paddingInline: '1.5rem'
                 }

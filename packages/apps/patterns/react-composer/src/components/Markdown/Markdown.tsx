@@ -175,6 +175,6 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       };
     }, [parent, content, provider?.awareness]);
 
-    return <div key={id} ref={setParent} />;
+    return <div key={id} {...slots.root} ref={setParent} />;
   }
 );
