@@ -823,7 +823,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-pwa: ^0.14.1
@@ -938,7 +938,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
     dependencies:
@@ -998,7 +998,7 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/plate': workspace:*
       postcss: ^8.4.21
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
     dependencies:
       '@dxos/bare-template': link:../bare-template
@@ -1531,7 +1531,7 @@ importers:
       react-i18next: ^11.18.6
       react-table: ^7.8.0
       tailwind-merge: ^1.10.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
       vite: ^4.2.0
@@ -2545,7 +2545,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       react-vis: ^1.11.12
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -2650,7 +2650,7 @@ importers:
       react-router-dom: ^6.4.0
       rmdir: ~1.2.0
       safe-compare: ~1.1.4
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
       webextension-polyfill: ^0.8.0
@@ -3115,7 +3115,7 @@ importers:
       simple-peer: 9.11.0
       storybook-addon-react-router-v6: ^0.3.2
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       url-join: ^5.0.0
       vite: ^4.2.0
@@ -3511,7 +3511,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       three: ^0.150.1
       typescript: ^4.8.4
       url-join: ^5.0.0
@@ -3646,7 +3646,7 @@ importers:
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -3719,7 +3719,7 @@ importers:
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -4507,7 +4507,7 @@ importers:
       remark-parse-frontmatter: ^1.0.3
       remark-unwrap-texts: ^1.0.3
       rollup: ^3.9.1
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
       typescript: ^4.8.4
