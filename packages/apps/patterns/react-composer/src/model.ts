@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { ComponentProps, useMemo, useRef, useState } from 'react';
 import * as awarenessProtocol from 'y-protocols/awareness';
 
@@ -17,6 +18,7 @@ export type ComposerSlots = {
     className?: string;
     spellCheck?: boolean;
     tabIndex?: number;
+    markdownTheme?: Parameters<typeof EditorView.theme>[0];
   };
 };
 
