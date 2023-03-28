@@ -3,3 +3,4 @@
 //
 
 export * from './icons';
+export * from './logotypes';
