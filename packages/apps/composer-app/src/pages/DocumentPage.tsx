@@ -351,7 +351,13 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
               role: 'none',
               className: 'pli-6 mbs-4'
             },
-            editor: { className: 'pbe-20' }
+            editor: {
+              markdownTheme: {
+                '& .cm-line': {
+                  paddingInline: '1.5rem'
+                }
+              }
+            }
           }}
         />
       </DocumentPageContent>
