@@ -36,7 +36,7 @@ describe('Agent', () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
-    const space = await agent.client!.echo.createSpace();
+    const space = await agent.client!.createSpace();
     expect(space.key).to.exist;
     expect(space.properties).to.exist;
     await agent.destroy();
@@ -125,10 +125,10 @@ describe('Agent', () => {
     const space2 = new Trigger<Space>();
 
     agent1.sequenceComplete.once(() => {
-      space1.wake(agent1.client.echo.getSpaces()[0]!);
+      space1.wake(agent1.client.spaces.get()[0]!);
     });
     agent2.sequenceComplete.once(() => {
-      space2.wake(agent2.client.echo.getSpaces()[0]!);
+      space2.wake(agent2.client.spaces.get()[0]!);
     });
 
     // Test invitation happened.
@@ -175,7 +175,7 @@ class HostAgentStateMachine extends AgentStateMachine {
       await this.agent.client.halo.createIdentity();
     } else if (command.createSpace) {
       const id = command.createSpace.id;
-      const space = await this.agent.client.echo.createSpace();
+      const space = await this.agent.client.createSpace();
       if (id) {
         this.spaces.set(id, space);
       }
@@ -212,7 +212,7 @@ class GuestAgentStateMachine extends AgentStateMachine {
     if (command.createProfile) {
       await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
-      const observable = await this.agent.client.echo.acceptInvitation({
+      const observable = await this.agent.client.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
       });

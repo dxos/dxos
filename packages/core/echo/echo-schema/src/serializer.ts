@@ -4,12 +4,12 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
+import { stripKeys } from '@dxos/util';
 
 import { EchoDatabase } from './database';
 import { base } from './defs';
-import { Document } from './document';
 import { Text } from './text-object';
-import { strip } from './util';
+import { TypedObject } from './typed-object';
 
 export type SerializedObject = {
   '@id': string;
@@ -33,7 +33,7 @@ export class Serializer {
     const { objects } = database.query();
     const data = {
       objects: objects.map((object) => {
-        return strip({
+        return stripKeys({
           ...object[base].toJSON() // TODO(burdon): Not working unless schema.
         });
       })
@@ -63,7 +63,7 @@ export class Serializer {
 
       switch (model) {
         case DocumentModel.meta.type: {
-          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
+          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? TypedObject;
           const echoSchema = type ? database.router.schema?.getType(type) : undefined;
 
           const obj = new Prototype(

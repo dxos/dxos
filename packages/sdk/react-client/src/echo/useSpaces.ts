@@ -4,8 +4,9 @@
 
 import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 
-import { Space } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { useClient } from '../client';
 
@@ -21,7 +22,7 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
 };
 
 /**
- * Returns the first space in the current spaces array. If none exist, `null`
+ * Returns the first space in the current spaces array. If none exist, `undefined`
  * will be returned at first, then the hook will re-run and return a space once
  * it has been created. Requires a ClientProvider somewhere in the parent tree.
  * @returns a Space
@@ -36,11 +37,10 @@ export const useOrCreateFirstSpace = () => {
       if (!space && !isCreatingSpace.current) {
         isCreatingSpace.current = true;
         try {
-          const newSpace = await client.echo.createSpace();
+          const newSpace = await client.createSpace();
           setSpace(newSpace);
         } catch (err) {
-          console.error('Failed to create space');
-          console.error(err);
+          log.error('Failed to create space', err);
         } finally {
           isCreatingSpace.current = false;
         }
@@ -52,17 +52,29 @@ export const useOrCreateFirstSpace = () => {
   return space;
 };
 
+export type UseSpacesParams = {
+  /**
+   * Return uninitialized spaces as well.
+   */
+  all?: boolean;
+};
+
 /**
  * Get all Spaces available to current user.
  * Requires a ClientProvider somewhere in the parent tree.
+ * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = (): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
   const spaces = useSyncExternalStore(
-    (listener) => client.echo.subscribeSpaces(listener),
-    () => client.echo.getSpaces()
+    (listener) => {
+      const subscription = client.spaces.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
+    () => client.spaces.get()
   );
 
-  return spaces;
+  // TODO(dmaretskyi): Array reference equality.
+  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
 };

@@ -1,6 +1,7 @@
 ---
 order: 2
 title: Getting started
+next: ./platform
 ---
 
 # Getting started
@@ -30,7 +31,7 @@ This guide will walk you through creating and deploying a `react` app.
 Initialize an empty folder with `npm init` like this:
 
 ```bash
-npm init @dxos
+npm init @dxos@latest
 ```
 
 Then:
@@ -116,12 +117,26 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
-```ts
-const objects = useQuery(space, {});
+```tsx{13-15} file=./snippets/react-mutate.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
 
-const object = objects[0];
-object.counter = 0;
-object.name = 'example';
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  const objects = useQuery(space, {});
+
+  return (
+    <div
+      onClick={() => {
+        // mutate objects directly and they will be replicated to all peers
+        const object = objects[0];
+        object.counter = 0;
+        object.name = 'example';
+      }}
+    ></div>
+  );
+};
 ```
 
 The above writes will start propagating to connected peers in the space on the next tick.
@@ -130,13 +145,27 @@ The changes will also cause any subscribed UI components in the app to re-render
 
 Creating new objects:
 
-```ts
-import { Document } from '@dxos/react-client';
+```tsx{12,13,16} file=./snippets/react-create.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client';
 
-const newThing = new Document();
-newThing.someProperty = 'example';
-
-space.experimental.db.save(newThing);
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  return (
+    <div
+      onClick={() => {
+        // create an Expando object for storing arbitrary JavaScript objects
+        const note = new Expando({ title: 'example' });
+        note.description = 'Expandos can have any additional properties.';
+        // call this once per object
+        // subsequent mutations will be replicated to all peers
+        space!.db.add(note);
+      }}
+    ></div>
+  );
+};
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.

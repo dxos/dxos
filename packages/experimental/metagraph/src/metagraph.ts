@@ -4,7 +4,7 @@
 
 import fetch from 'cross-fetch';
 
-import { Observable, ObservableProvider } from '@dxos/async';
+import { ObservableValue, ObservableProvider } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
@@ -15,7 +15,7 @@ export interface QueryEvents<T> {
 }
 
 // TODO(burdon): Observable pattern?
-export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
+export interface QueryObservable<T> extends ObservableValue<QueryEvents<T>> {
   get results(): T[];
   fetch(): void;
 }

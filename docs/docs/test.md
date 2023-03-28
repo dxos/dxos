@@ -16,7 +16,7 @@ This is an unlisted page which may be useful for testing new docs functionality.
 
   return (
     <div>
-      <input ref={setInput} onKeyDown={handleKeyDown} />
+      <input ref={(e: HTMLInputElement) => setInput(e)} onKeyDown={handleKeyDown} />
       {tasks.map((task) => (
         <div key={task.id}>
           <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />

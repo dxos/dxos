@@ -14,10 +14,22 @@
         "{options.outputFile}"
       ]
     },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "docs/src/index.ts",
+        "outputPath": "docs/dist",
+        "tsConfig": "docs/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "bundle": {
       "dependsOn": [
         "^build",
         "^bundle",
+        "build",
         "prebuild"
       ],
       "executor": "nx:run-script",

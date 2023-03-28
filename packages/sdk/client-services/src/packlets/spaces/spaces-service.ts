@@ -14,7 +14,6 @@ import {
   Space,
   SpaceMember,
   SpacesService,
-  SpaceStatus,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
   WriteCredentialsRequest
@@ -26,6 +25,8 @@ import { humanize, Provider } from '@dxos/util';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
+
+const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
 
 /**
  *
@@ -55,29 +56,36 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
       const onUpdate = async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values())
-          // Skip spaces without data service available.
-          .filter((space) => this._dataServiceSubscriptions.getDataService(space.key))
-          .map((space) => this._transformSpace(space));
+        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._transformSpace(space));
         log('update', { spaces });
         next({ spaces });
       };
 
-      setTimeout(async () => {
+      scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
+
         const subscriptions = new EventSubscriptions();
+        ctx.onDispose(() => subscriptions.clear());
+
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
         const subscribeSpaces = () => {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            if (!this._dataServiceSubscriptions.getDataService(space.key)) {
-              // Skip spaces without data service available.
-              continue;
-            }
-
             subscriptions.add(space.stateUpdate.on(ctx, onUpdate));
             subscriptions.add(space.presence.updated.on(ctx, onUpdate));
+
+            // Pipeline progress.
+            space.inner.controlPipeline.state.timeframeUpdate
+              .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+              .on(ctx, onUpdate);
+            if (space.dataPipeline.pipelineState) {
+              subscriptions.add(
+                space.dataPipeline.pipelineState.timeframeUpdate
+                  .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+                  .on(ctx, onUpdate)
+              );
+            }
           }
         };
 
@@ -85,12 +93,9 @@ export class SpacesServiceImpl implements SpacesService {
           subscribeSpaces();
           void onUpdate();
         });
+        subscribeSpaces();
 
-        ctx.onDispose(() => subscriptions.clear());
-        scheduleTask(ctx, () => {
-          subscribeSpaces();
-          void onUpdate();
-        });
+        void onUpdate();
       });
 
       if (!this._identityManager.identity) {
@@ -142,7 +147,13 @@ export class SpacesServiceImpl implements SpacesService {
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      status: space.isOpen ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      state: space.state,
+      pipeline: {
+        targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
+        currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
+        currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
+        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe
+      },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,

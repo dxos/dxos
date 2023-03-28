@@ -9,15 +9,15 @@ const client = new Client();
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get all items
-  const allObjects = space.experimental.db.query();
+  const allObjects = space.db.query();
   // get items that match a filter
-  const tasks = space.experimental.db.query({ type: 'task' });
+  const tasks = space.db.query({ type: 'task' });
   // get items that match a predicate
-  const finishedTasks = space.experimental.db.query(
+  const finishedTasks = space.db.query(
     (doc) => doc.type == 'task' && doc.isCompleted
   );
 };

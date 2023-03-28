@@ -11,7 +11,7 @@ import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { test, describe } from '@dxos/test';
+import { test, describe, afterTest } from '@dxos/test';
 
 import { createSigningContext, HostTestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
@@ -32,6 +32,8 @@ describe('DataSpaceManager', () => {
       peer.feedStore,
       peer.snapshotStore
     );
+    await dataSpaceManager.open();
+    afterTest(() => dataSpaceManager.close());
     const space = await dataSpaceManager.createSpace();
 
     // Process all written mutations.
@@ -58,6 +60,8 @@ describe('DataSpaceManager', () => {
       peer1.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager1.open();
+    afterTest(() => dataSpaceManager1.close());
 
     const peer2 = builder.createPeer();
     const identity2 = await createSigningContext(peer2.keyring);
@@ -71,6 +75,8 @@ describe('DataSpaceManager', () => {
       peer2.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager2.open();
+    afterTest(() => dataSpaceManager2.close());
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -91,6 +97,7 @@ describe('DataSpaceManager', () => {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey
     });
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
     log('', {
       peer1: {
@@ -122,7 +129,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
+    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
@@ -145,6 +152,8 @@ describe('DataSpaceManager', () => {
       peer1.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager1.open();
+    afterTest(() => dataSpaceManager1.close());
 
     const peer2 = builder.createPeer();
     const identity2 = await createSigningContext(peer2.keyring);
@@ -158,6 +167,8 @@ describe('DataSpaceManager', () => {
       peer2.feedStore,
       peer1.snapshotStore
     );
+    await dataSpaceManager2.open();
+    afterTest(() => dataSpaceManager2.close());
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -178,6 +189,10 @@ describe('DataSpaceManager', () => {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey
     });
+
+    // Coincidentally, this also waits until a P2P connection is established between peers.
+    // TODO(dmaretskyi): Refine this to wait for connection specifically.
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
     const [receivedMessage, inc] = latch({ count: 1 });
     space2.listen('test', (message) => {

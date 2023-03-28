@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,12 +45,14 @@
     "@dxos/util": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.3.3",
-    "lodash.isequal": "^4.5.0"
+    "lodash.isequal": "^4.5.0",
+    "lodash.isequalwith": "^4.4.0"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
+    "@types/lodash.isequalwith": "^4.4.0",
     "@types/node": "^18.11.9",
     "source-map-support": "^0.5.12"
   },

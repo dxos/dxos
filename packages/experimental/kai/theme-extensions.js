@@ -86,8 +86,8 @@ module.exports = {
       },
 
       selection: {
-        bg: secondary[200],
-        text: secondary[700],
+        bg: neutral[100],
+        text: neutral[700],
         marker: secondary[400],
         border: secondary[300]
       },

@@ -80,7 +80,7 @@ describe('Client hook', function () {
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
     expect(result.current).toEqual(client);
   });
 });
@@ -102,7 +102,7 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
 
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
@@ -114,7 +114,7 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();
     expect(() => screen.getByText('Client is NOT there')).toThrow();
@@ -127,7 +127,7 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
     expect(() => screen.getByText('Identity is defined')).not.toThrow();
 
     const newClient = new Client({ services: fromHost() });
@@ -138,7 +138,7 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
-    await act(() => waitForCondition(() => newClient.getStatus() === SystemStatus.ACTIVE && !client.initialized));
+    await act(() => waitForCondition(() => newClient.status.get() === SystemStatus.ACTIVE && !client.initialized));
     expect(client.initialized).toBe(false);
     expect(() => screen.getByText('Identity is NOT there')).not.toThrow();
   });

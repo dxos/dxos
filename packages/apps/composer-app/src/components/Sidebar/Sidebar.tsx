@@ -186,6 +186,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 });
 
 const DocumentTree = observer(() => {
+  // TODO(wittjosiah): Fetch all spaces and render pending spaces differently.
   const spaces = useSpaces();
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
@@ -222,7 +223,7 @@ const SidebarContent = () => {
   }, [pat]);
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace();
+    const space = await client.createSpace();
     const document = await space.db.add(new ComposerDocument());
     return navigate(getPath(space, document));
   };

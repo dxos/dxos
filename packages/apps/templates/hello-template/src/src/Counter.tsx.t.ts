@@ -9,7 +9,7 @@ export default defineTemplate(
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-components';
-    import { useQuery, Document, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
+    import { useQuery, Expando, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
 
     export const Counter = () => {
       const identity = useIdentity({ login: true });
@@ -17,7 +17,7 @@ export default defineTemplate(
       const [counter] = useQuery(space, { type: 'counter' });
       useEffect(() => {
         if (!counter && space) {
-          const c = new Document({ type: 'counter' });
+          const c = new Expando({ type: 'counter' });
           void space.db.add(c);
         }
       }, [counter, space]);

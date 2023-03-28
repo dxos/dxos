@@ -42,40 +42,29 @@ const sizes: any[] = [
 const dimensions = { width: 900, height: 600 };
 
 export const SketchFrame = observer(() => {
+  const ipfsClient = useIpfsClient();
   const download = useFileDownload();
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
-  const ipfsClient = useIpfsClient();
 
-  const { space } = useAppRouter();
-  const [sketch, setSketch] = useState<Sketch>();
+  // const { space } = useAppRouter();
+  // const [sketch, setSketch] = useState<Sketch>();
 
-  // TODO(burdon): Show list of sketch objects and auto-select/create one if missing.
+  const { space, objectId } = useAppRouter();
+  const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
   useEffect(() => {
-    let sketch: Sketch;
-    const result = space?.db.query(Sketch.filter());
-    const objects = result?.objects;
-    if (objects?.length) {
-      sketch = objects[0];
-      setSketch(sketch);
-    } else {
-      sketch = new Sketch();
+    if (sketch) {
       setTimeout(async () => {
-        await space?.db.add(sketch);
-        setSketch(sketch);
+        await canvasRef.current.resetCanvas();
+        void handleUpdate(sketch);
       });
     }
-
-    void handleUpdate(sketch);
-
-    return result?.subscribe(() => {
-      if (sketch && !active.current) {
-        void handleUpdate(sketch);
-      }
-    });
-  }, []);
+  }, [sketch]);
+  if (!sketch) {
+    return null;
+  }
 
   // TODO(burdon): Pseudo CRDT using timestamp on each path.
   const handleUpdate = async (sketch: Sketch) => {
@@ -140,8 +129,8 @@ export const SketchFrame = observer(() => {
       <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
         <ReactSketchCanvas
           ref={canvasRef}
-          style={{}}
           className='shadow-1'
+          style={{}} // Replace defaults.
           width={`${dimensions.width}px`}
           height={`${dimensions.height}px`}
           strokeWidth={strokeWidth}
@@ -177,7 +166,7 @@ export const SketchFrame = observer(() => {
           <Button variant='ghost' title='Download' onClick={handleDownload}>
             <DownloadSimple className={getSize(6)} />
           </Button>
-          <Button variant='ghost' title='Upload' onClick={handleUpload}>
+          <Button variant='ghost' title='Upload to IPFS' onClick={handleUpload}>
             <UploadSimple className={getSize(6)} />
           </Button>
         </div>
@@ -185,3 +174,5 @@ export const SketchFrame = observer(() => {
     </div>
   );
 });
+
+export default SketchFrame;

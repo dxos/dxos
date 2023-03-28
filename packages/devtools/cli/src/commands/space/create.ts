@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Args } from '@oclif/core';
 import faker from 'faker';
 
 import { Client } from '@dxos/client';
@@ -11,11 +12,7 @@ import { BaseCommand } from '../../base-command';
 export default class Create extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Create space.';
-  static override args = [
-    {
-      name: 'name'
-    }
-  ];
+  static override args = { name: Args.string() };
 
   async run(): Promise<any> {
     const { args } = await this.parse(Create);
@@ -26,7 +23,7 @@ export default class Create extends BaseCommand {
     }
 
     return await this.execWithClient(async (client: Client) => {
-      const space = await client.echo.createSpace();
+      const space = await client.createSpace();
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),

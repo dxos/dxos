@@ -39,18 +39,18 @@ export const useClientProvider = (dev: boolean) => {
     // TODO(burdon): Different modes (testing). ENV/Config?
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });
-    if (dev && !client.halo.identity) {
+    if (dev && !client.halo.identity.get()) {
       // TODO(burdon): Causes race condition.
       await client.halo.createIdentity();
     }
 
     // TODO(burdon): Document.
-    client.echo.addSchema(schema);
-    client.echo.addSchema(chessSchema);
-    client.echo.addSchema(frameboxSchema);
+    client.addSchema(schema);
+    client.addSchema(chessSchema);
+    client.addSchema(frameboxSchema);
 
-    if (dev && client.halo.identity && client.echo.getSpaces().length === 0) {
-      const space = await client.echo.createSpace();
+    if (dev && client.halo.identity.get() && client.spaces.get().length === 0) {
+      const space = await client.createSpace();
       space.properties.name = 'My Space';
 
       // TODO(burdon): Create context.

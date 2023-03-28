@@ -18,6 +18,7 @@ export {
   type SchemaRef
 } from '@dxos/echo-db';
 
+// TODO(burdon): Tighten export.
 export * from '@dxos/echo-schema';
 
 export { PublicKey } from '@dxos/keys';
@@ -31,7 +32,7 @@ export {
   type Identity,
   Invitation,
   SpaceMember,
-  SpaceStatus,
+  SpaceState,
   SystemStatus
 } from '@dxos/protocols/proto/dxos/client/services';
 export type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

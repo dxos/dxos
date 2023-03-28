@@ -21,6 +21,9 @@ export type AppState = {
   // Fullscreen.
   fullscreen?: boolean;
 
+  // Chat panel.
+  chat?: boolean;
+
   // Active frames.
   frames?: string[];
 
@@ -29,7 +32,7 @@ export type AppState = {
 };
 
 type Action = {
-  type: 'set-active-bot' | 'set-active-frame' | 'set-fullscreen';
+  type: 'set-active-bot' | 'set-active-frame' | 'set-fullscreen' | 'set-chat';
 };
 
 type SetBotAction = Action & {
@@ -47,7 +50,11 @@ type SetFullscreenAction = Action & {
   fullscreen: boolean;
 };
 
-type ActionType = SetBotAction | SetFrameAction | SetFullscreenAction;
+type SetChatAction = Action & {
+  chat: boolean;
+};
+
+type ActionType = SetBotAction | SetFrameAction | SetFullscreenAction | SetChatAction;
 
 const reducer =
   (config: Config) =>
@@ -67,11 +74,6 @@ const reducer =
         return { ...state, bots };
       }
 
-      case 'set-fullscreen': {
-        const { fullscreen } = action as SetFullscreenAction;
-        return { ...state, fullscreen };
-      }
-
       case 'set-active-frame': {
         const { frameId, active } = action as SetFrameAction;
         const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
@@ -82,6 +84,16 @@ const reducer =
         return { ...state, frames };
       }
 
+      case 'set-fullscreen': {
+        const { fullscreen } = action as SetFullscreenAction;
+        return { ...state, fullscreen };
+      }
+
+      case 'set-chat': {
+        const { chat } = action as SetChatAction;
+        return { ...state, chat };
+      }
+
       default: {
         throw new Error(`Invalid action: ${JSON.stringify(action)}`);
       }
@@ -90,9 +102,10 @@ const reducer =
 
 export type AppReducer = {
   state: AppState;
-  setActiveBot: (id: string, active: boolean, space?: Space) => void;
-  setActiveFrame: (id: string, active: boolean) => void;
   setFullscreen: (fullscreen: boolean) => void;
+  setChat: (chat: boolean) => void;
+  setActiveBot: (id: string, active: boolean, space?: Space) => void; // TODO(burdon): Remove.
+  setActiveFrame: (id: string, active: boolean) => void;
 };
 
 export const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
@@ -105,14 +118,17 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
 
   const value: AppReducer = {
     state,
+    setFullscreen: (fullscreen: boolean) => {
+      dispatch({ type: 'set-fullscreen', fullscreen });
+    },
+    setChat: (chat: boolean) => {
+      dispatch({ type: 'set-chat', chat });
+    },
     setActiveBot: (id: string, active: boolean, space?: Space) => {
       dispatch({ type: 'set-active-bot', botId: id, active, space });
     },
     setActiveFrame: (id: string, active: boolean) => {
       dispatch({ type: 'set-active-frame', frameId: id, active });
-    },
-    setFullscreen: (fullscreen: boolean) => {
-      dispatch({ type: 'set-fullscreen', fullscreen });
     }
   };
 

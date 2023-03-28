@@ -6,8 +6,11 @@ import React, { ReactNode, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
+import highlight from 'rehype-highlight';
 
 import { mx } from '@dxos/react-components';
+
+import { defaultClasses, defaultStyles } from './styles';
 
 /**
  * Compute CSS properties to transform DIV to be full screen.
@@ -46,18 +49,6 @@ const createProps = ({ width, height }: { width: number; height: number }) => {
   };
 };
 
-// TODO(burdon): Compute styles/sizes.
-export const defaultClasses = {
-  h1: 'text-[120px] text-blue-600',
-  h2: 'text-[100px] text-blue-600',
-  h3: 'text-[80px] text-blue-600',
-  ul: 'list-dash ml-12',
-  li: 'text-[60px] pl-6',
-  p: 'text-[60px]'
-};
-
-export const defaultStyles = 'px-32 py-20 bg-white leading-relaxed font-mono';
-
 export type PresenterProps = {
   content?: string;
   className?: string;
@@ -95,6 +86,7 @@ export const Presenter = ({
     }
   });
 
+  // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
     <div
@@ -103,7 +95,7 @@ export const Presenter = ({
     >
       {width && height && (
         <div className={mx('flex flex-col absolute transition', defaultStyles)} style={props}>
-          <ReactMarkdown rehypePlugins={[[addClasses, classes]]}>{content}</ReactMarkdown>
+          <ReactMarkdown rehypePlugins={[[highlight], [addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}
       <div className='absolute top-0 left-0'>{topLeft}</div>

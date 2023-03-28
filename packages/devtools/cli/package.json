@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -46,9 +46,9 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
-    "@oclif/core": "^1.14.1",
-    "@oclif/plugin-help": "^5.1.12",
-    "@oclif/plugin-plugins": "^2.1.0",
+    "@oclif/core": "^2.6.5",
+    "@oclif/plugin-help": "^5.2.8",
+    "@oclif/plugin-plugins": "^2.4.3",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -63,14 +63,14 @@
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
-    "oclif": "^3.1.2",
+    "oclif": "^3.7.0",
     "react": "^18.2.0",
     "tempy": "^1.0.1",
     "uuid": "^8.3.2",
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.1.1",
+    "@oclif/test": "^2.3.11",
     "@types/cli-progress": "^3.11.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
@@ -80,7 +80,8 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "globby": "^11.1.0",
-    "shx": "^0.3.3"
+    "shx": "^0.3.3",
+    "typescript": "^4.8.4"
   },
   "engines": {
     "node": ">=12.0.0"

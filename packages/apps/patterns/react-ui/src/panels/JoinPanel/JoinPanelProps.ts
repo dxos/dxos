@@ -59,7 +59,7 @@ export interface AdditionMethodAction {
 
 export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction | InvitationAction;
 
-export type JoinDispatch = Dispatch<JoinAction>;
+export type JoinSend = Dispatch<JoinAction>;
 
 export type InvitationView =
   | 'invitation input'

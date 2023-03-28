@@ -16,6 +16,7 @@ import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
+const MAX_RECONNECT_TIMEOUT = 10000;
 
 export enum SignalState {
   /** Connection is being established. */
@@ -278,6 +279,11 @@ export class SignalClient implements SignalMethods {
       return;
     }
     if (this._state === SignalState.CLOSED) {
+      return;
+    }
+
+    if (this._reconnectAfter > MAX_RECONNECT_TIMEOUT) {
+      log.error('Signal api reconnect timeout exceeded.');
       return;
     }
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CliUx, Flags } from '@oclif/core';
+import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -32,11 +32,15 @@ export default class Join extends BaseCommand {
         return {};
       } else {
         if (!encoded) {
-          encoded = await CliUx.ux.prompt('Invitation');
+          encoded = await ux.prompt('Invitation');
         }
 
+        if (encoded.startsWith('http')) {
+          const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+          encoded = searchParams.get('invitation') ?? searchParams.get('haloInvitationCode') ?? encoded;
+        }
         const invitation = InvitationEncoder.decode(encoded!);
-        const observable = await client.halo.acceptInvitation(invitation);
+        const observable = client.halo.acceptInvitation(invitation);
 
         const connecting = new Trigger<Invitation>();
         const done = new Trigger<Invitation>();
@@ -46,7 +50,7 @@ export default class Join extends BaseCommand {
             connecting.wake(invitation);
           },
           async onAuthenticating() {
-            const code = await CliUx.ux.prompt('Invitation code');
+            const code = invitation.authenticationCode ?? (await ux.prompt('Invitation code'));
             await observable.authenticate(code);
           },
           onSuccess: (invitation) => {
@@ -57,14 +61,14 @@ export default class Join extends BaseCommand {
           }
         });
 
-        CliUx.ux.action.start('Waiting for peer to connect');
+        ux.action.start('Waiting for peer to connect');
         await connecting.wait();
-        CliUx.ux.action.stop();
+        ux.action.stop();
 
         await done.wait();
 
         // TODO(egorgripasov): Wait to replicate?
-        await sleep(15_000);
+        await sleep(5_000);
       }
     });
   }

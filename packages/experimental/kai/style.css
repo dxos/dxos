@@ -15,6 +15,32 @@ body {
 }
 
 /**
+ * Highlight
+ */
+.hljs-title {}
+.hljs-title.class_ {
+  @apply text-blue-500;
+}
+.hljs-title.function_ {
+  @apply text-blue-500;
+}
+.hljs-keyword {
+  @apply text-orange-400;
+}
+.hljs-params {
+  @apply text-black;
+}
+.hljs-string {
+  @apply text-green-500;
+}
+.hljs-number {
+  @apply text-blue-500;
+}
+.hljs-tag {
+  @apply text-teal-500;
+}
+
+/**
  * TODO(burdon): Custom RBC style.
  * TODO(burdon): Tailwind colors.
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-custom-styling--page

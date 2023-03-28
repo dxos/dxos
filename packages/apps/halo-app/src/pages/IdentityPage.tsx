@@ -3,25 +3,39 @@
 //
 
 import { Activity, Eraser } from '@phosphor-icons/react';
-import React, { ChangeEvent, useCallback } from 'react';
+import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit/telemetry';
+import {
+  BASE_TELEMETRY_PROPERTIES,
+  getTelemetryIdentifier,
+  isTelemetryDisabled,
+  storeTelemetryDisabled
+} from '@dxos/react-appkit/telemetry';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
-import { namespace } from '../App';
 import { AlertDialog } from '../components';
+import { namespace } from '../util';
 
 const IdentityPage = () => {
   const client = useClient();
   const identity = useIdentity();
   const identityHex = identity!.identityKey.toHex();
-  const telemetryDisabled = isTelemetryDisabled(namespace);
+  // TODO(wittjosiah): Loading state.
+  const [telemetryDisabled, setTelemetryDisabled] = useState(false);
   const { t } = useTranslation('halo');
 
   const confirmString = humanize(identity!.identityKey.toHex());
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      setTelemetryDisabled(await isTelemetryDisabled(namespace));
+    });
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   const onChangeDisplayName = useCallback(
     ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +93,7 @@ const IdentityPage = () => {
                   value: !telemetryDisabled
                 }
               });
-              localStorage.setItem('halo-app:telemetry-disabled', String(!telemetryDisabled));
+              storeTelemetryDisabled(namespace, String(!telemetryDisabled));
               window.location.reload();
             }}
             className='text-error-700 dark:text-error-400'

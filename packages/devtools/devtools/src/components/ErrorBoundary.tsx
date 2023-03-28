@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { log } from '@dxos/log';
 import { Tooltip } from '@dxos/react-appkit';
 import { Alert, Button } from '@dxos/react-components';
+import { captureException } from '@dxos/sentry';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
   let insideRouter = false;
@@ -66,6 +67,7 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    captureException(error);
     return { hasError: true, error };
   }
 
