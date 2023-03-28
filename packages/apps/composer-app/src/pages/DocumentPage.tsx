@@ -2,7 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FileArrowDown, FileArrowUp, FilePlus, Link, LinkBreak } from '@phosphor-icons/react';
+import {
+  DotsThreeVertical,
+  DownloadSimple,
+  FileArrowDown,
+  FileArrowUp,
+  FilePlus,
+  Link,
+  LinkBreak,
+  UploadSimple
+} from '@phosphor-icons/react';
 import React, {
   Dispatch,
   PropsWithChildren,
@@ -186,6 +195,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const { t } = useTranslation('composer');
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
   const [ghBindOpen, setGhBindOpen] = useState(false);
   const [ghFileValue, setGhFileValue] = useState('');
@@ -194,6 +204,29 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const [ghPrValue, setGhPrValue] = useState<string | null>(null);
 
   const content = document?.content.content;
+
+  const download = useFileDownload();
+
+  const handleExport = useCallback(() => {
+    if (content) {
+      download(new Blob([content.toString()], { type: 'text/plain' }), `${document.title}.md`);
+    }
+  }, [document, content]);
+
+  const handleImport = useCallback(async (file: File) => {
+    if (content && editorRef.current?.view) {
+      try {
+        const data = new Uint8Array(await file.arrayBuffer());
+        const md = new TextDecoder('utf-8').decode(data);
+        editorRef.current.view.dispatch({
+          changes: { from: 0, to: content.toString().length, insert: md }
+        });
+      } catch (error) {
+        log.catch(error);
+      }
+      setImportDialogOpen(false);
+    }
+  }, []);
 
   const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
     try {
@@ -303,33 +336,50 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     [octokit, docGhFileId, content]
   );
 
-  const dropdownMenuContent = docGhFileId ? (
+  const dropdownMenuContent = (
     <>
-      <DropdownMenuItem
-        className='flex items-center gap-2'
-        onClick={() => {
-          document.github = '';
-          setGhFileValue('');
-        }}
-      >
-        <LinkBreak className={getSize(4)} />
-        <span>{t('unbind to file in github label')}</span>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={handleExport}>
+        <DownloadSimple className={getSize(4)} />
+        <span>{t('export to file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
-        <FileArrowDown className={getSize(4)} />
-        <span>{t('import from github label')}</span>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportDialogOpen(true)}>
+        <UploadSimple className={getSize(4)} />
+        <span>{t('import from file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setExportViewState('init')}>
-        <FileArrowUp className={getSize(4)} />
-        <span>{t('export to github label')}</span>
-      </DropdownMenuItem>
-    </>
-  ) : (
-    <>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
-        <Link className={getSize(4)} />
-        <span>{t('bind to file in github label')}</span>
-      </DropdownMenuItem>
+      {octokit && (
+        <>
+          <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
+          {docGhFileId ? (
+            <>
+              <DropdownMenuItem
+                className='flex items-center gap-2'
+                onClick={() => {
+                  document.github = '';
+                  setGhFileValue('');
+                }}
+              >
+                <LinkBreak className={getSize(4)} />
+                <span>{t('unbind to file in github label')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
+                <FileArrowDown className={getSize(4)} />
+                <span>{t('import from github label')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setExportViewState('init')}>
+                <FileArrowUp className={getSize(4)} />
+                <span>{t('export to github label')}</span>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
+                <Link className={getSize(4)} />
+                <span>{t('bind to file in github label')}</span>
+              </DropdownMenuItem>
+            </>
+          )}
+        </>
+      )}
     </>
   );
 
@@ -338,7 +388,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
       <DocumentPageContent
         {...{
           document,
-          ...(octokit && { dropdownMenuContent })
+          handleImport,
+          importDialogOpen,
+          setImportDialogOpen,
+          dropdownMenuContent
         }}
       >
         <Composer
