@@ -141,7 +141,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ...completionKeymap,
             ...lintKeymap
           ]),
-
+          EditorView.lineWrapping,
           // Theme
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
           EditorView.theme({ ...markdownDarktheme, ...slots.editor?.markdownTheme }),
@@ -175,6 +175,6 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       };
     }, [parent, content, provider?.awareness]);
 
-    return <div key={id} ref={setParent} />;
+    return <div key={id} {...slots.root} ref={setParent} />;
   }
 );
