@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx, Flags } from '@oclif/core';
+import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Client, InvitationEncoder, wrapObservable } from '@dxos/client';
@@ -27,21 +27,21 @@ export default class Join extends BaseCommand {
     const { flags } = await this.parse(Join);
     let { invitation: encoded, secret, json } = flags;
     if (!encoded) {
-      encoded = await CliUx.ux.prompt(chalk`\n{blue Invitation}`);
+      encoded = await ux.prompt(chalk`\n{blue Invitation}`);
     }
     if (!secret) {
-      secret = await CliUx.ux.prompt(chalk`\n{red Secret}`);
+      secret = await ux.prompt(chalk`\n{red Secret}`);
     }
 
     return await this.execWithClient(async (client: Client) => {
-      CliUx.ux.action.start('Waiting for peer to connect');
-      const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
+      ux.action.start('Waiting for peer to connect');
+      const observable = await client.acceptInvitation(InvitationEncoder.decode(encoded!));
       // TODO(burdon): Don't use wrapper since doesn't handle auth.
       const invitation = await wrapObservable(observable);
-      const space = client.echo.getSpace(invitation.spaceKey!)!;
-      CliUx.ux.action.stop();
+      const space = client.getSpace(invitation.spaceKey!)!;
+      ux.action.stop();
 
-      const members = space.getMembers();
+      const members = space.members.get();
       if (!json) {
         printMembers(members);
       }

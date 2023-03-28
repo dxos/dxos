@@ -1,5 +1,5 @@
 # Class `InvitationObservableProvider`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:50](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L50)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:51](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L51)</sub>
 
 
 Base class for all invitation observables and providers.
@@ -30,7 +30,7 @@ Proxy used to dispatch callbacks to each subscription.
 ### [cancelled]()
 Type: <code>boolean</code>
 
-### [invitation](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L56)
+### [invitation](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L57)
 Type: <code>undefined | [Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 ### [value]()
@@ -46,7 +46,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [setInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L60)
+### [setInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L61)
 
 
 

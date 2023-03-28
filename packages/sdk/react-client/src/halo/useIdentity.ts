@@ -14,8 +14,11 @@ export const useIdentity = (options?: { login?: boolean }) => {
   const { login } = { login: false, ...options };
   const client = useClient();
   const identity = useSyncExternalStore(
-    (listener) => client.halo.subscribeIdentity(listener),
-    () => client.halo.identity
+    (listener) => {
+      const subscription = client.halo.identity.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
+    () => client.halo.identity.get()
   );
 
   if (login && !identity) {

@@ -120,7 +120,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
 
-    swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
+    void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
 
     // Wait until both peers are disconnected.
     await Promise.all([

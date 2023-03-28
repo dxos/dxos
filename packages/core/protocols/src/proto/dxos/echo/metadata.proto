@@ -7,7 +7,6 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.echo.metadata;
@@ -24,7 +23,7 @@ message EchoMetadata {
   google.protobuf.Timestamp updated = 3;
 
   // TODO(dmaretskyi): Store the device key associated with the identity.
-  optional dxos.halo.credentials.IdentityRecord identity = 10;
+  optional IdentityRecord identity = 10;
 
   /// List of the data spaces.
   repeated SpaceMetadata spaces = 11;
@@ -54,4 +53,19 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional string snapshot = 7;
+}
+
+/// Information needed to bootstrap an Identity.
+message IdentityRecord {
+  dxos.keys.PublicKey identity_key = 1;
+  dxos.keys.PublicKey device_key = 2;
+
+  SpaceMetadata halo_space = 3;
+
+  /// Public profile information.
+  /// TODO(burdon): Not yet implemented. Must be null.
+  optional SpaceMetadata profile_space = 4;
+
+  /// Cached profile.
+  optional ProfileDocument profile = 5;
 }

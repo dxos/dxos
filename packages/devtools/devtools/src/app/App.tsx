@@ -4,11 +4,16 @@
 
 import React from 'react';
 
-import { useRemoteClient } from '../hooks';
+import { Config, Defaults } from '@dxos/config';
+import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+
+import { namespace, useRemoteClient } from '../hooks';
 import { Devtools } from './Devtools';
+
+void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 
 export const App = () => {
   const client = useRemoteClient();
 
-  return <Devtools context={client} />;
+  return <Devtools context={client} namespace={namespace} />;
 };

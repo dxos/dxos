@@ -70,7 +70,7 @@ Arguments:
 
 
 
-Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[Document](/api/@dxos/react-client/values#Document)&lt;object&gt;&gt;</code>
+Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;&gt;</code>
 
 Arguments: 
 

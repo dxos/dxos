@@ -3,11 +3,11 @@
 //
 
 import { Space } from '@dxos/client';
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 
 /**
  * General data resolver.
  */
-export interface Resolver<T extends Document> {
+export interface Resolver<T extends TypedObject> {
   update(space: Space, object: T): Promise<void>;
 }

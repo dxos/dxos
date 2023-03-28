@@ -32,6 +32,7 @@ export type ConfigDeclaration<
   exclude?: Filter<z.infer<TShape>>;
   inputShape?: TShape;
   inputQuestions?: QuestionOptions<z.infer<TShape>>;
+  defaults?: Partial<z.infer<TShape>>;
   message?: (
     context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
       results: Files;

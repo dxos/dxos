@@ -26,7 +26,7 @@ export const Join: FC<{
 
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
-    const observable = await client.echo.acceptInvitation(invitation);
+    const observable = await client.acceptInvitation(invitation);
     observable.subscribe({
       onSuccess: (invitation: Invitation) => {
         setSpaceKey(invitation.spaceKey);

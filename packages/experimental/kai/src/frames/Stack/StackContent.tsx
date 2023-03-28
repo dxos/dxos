@@ -5,36 +5,15 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { Document, Text } from '@dxos/echo-schema';
-import { Document as DocumentType, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
+import { TypedObject } from '@dxos/echo-schema';
+import { Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { Table as TableComponent } from '@dxos/react-components';
-import { MarkdownComposer, RichTextComposer, useTextModel, YText, YXmlFragment } from '@dxos/react-composer';
+import { Composer } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
 import { getColumnType } from '../Table';
-
-const Composer: FC<{ space: Space; content: Text; spellCheck: boolean }> = ({ space, content, spellCheck }) => {
-  const identity = useIdentity();
-  const model = useTextModel({ identity, space, text: content });
-  if (model?.content instanceof YText) {
-    return <MarkdownComposer model={model} />;
-  } else if (model?.content instanceof YXmlFragment) {
-    return (
-      <RichTextComposer
-        model={model}
-        slots={{
-          editor: {
-            spellCheck
-          }
-        }}
-      />
-    );
-  } else {
-    return null;
-  }
-};
 
 export const StackContent: FC<{
   config: Config;
@@ -42,26 +21,31 @@ export const StackContent: FC<{
   section: DocumentStack.Section;
   spellCheck: boolean;
 }> = ({ config, space, section, spellCheck }) => {
+  const identity = useIdentity();
   const object = section.object;
 
-  // TODO(burdon): Type?
+  // TODO(burdon): Instance of check fails.
   switch (object.__typename) {
-    case DocumentType.type.name: {
-      // TODO(burdon): This fails if the document is created by the KaiBot!
-      // if (!(object instanceof DocumentType)) {
-      //   throw new Error(`Invalid object type: ${object.__typename}`);
-      // }
-      return <Composer space={space} content={object.content} spellCheck={spellCheck} />;
+    case Document.type.name: {
+      return (
+        <Composer
+          identity={identity}
+          space={space}
+          text={object.content}
+          slots={{
+            editor: {
+              className: 'p-0', // TODO(burdon): Not passed through.
+              spellCheck
+            }
+          }}
+        />
+      );
     }
 
     case Table.type.name: {
-      if (!(object instanceof Table)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <div className='flex w-full h-[400px]'>
-          <TableContainer space={space!} table={object} />
+          <TableContainer space={space!} table={object as Table} />
         </div>
       );
     }
@@ -69,10 +53,6 @@ export const StackContent: FC<{
     // TODO(burdon): Add/delete/sort.
     // TODO(burdon): Hide controls if not highlighted.
     case TaskList.type.name: {
-      if (!(object instanceof TaskList)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <TaskListComponent
           id='tasks'
@@ -83,10 +63,6 @@ export const StackContent: FC<{
     }
 
     case File.type.name: {
-      if (!(object instanceof File)) {
-        throw new Error(`Invalid object type: ${object.__typename}`);
-      }
-
       return (
         <div className='flex w-full h-[400px]'>
           <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid)} image />
@@ -106,7 +82,7 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
   const objects = useQuery(space, type.filter);
 
   return (
-    <TableComponent<Document>
+    <TableComponent<TypedObject>
       columns={type.columns.filter((column) => column.Header === 'name' || column.Header === 'email')}
       data={objects}
       slots={{

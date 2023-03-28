@@ -19,6 +19,8 @@ import {
   SwarmPanel
 } from '../panels';
 
+export const namespace = 'devtools';
+
 /**
  * Main app routes.
  * https://reactrouter.com/en/main

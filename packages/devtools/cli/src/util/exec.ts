@@ -21,19 +21,19 @@ export const exec = (command: string, options?: Partial<ExecOptions>): Promise<s
       shell: true,
       cwd
     });
-    const stdout = Buffer.from([]);
-    const stderr = Buffer.from([]);
+    const stdout: string[] = [];
+    const stderr: string[] = [];
     subprocess.stdout.on('data', (chunk) => {
-      stdout.write(chunk.toString());
+      stdout.push(chunk.toString('utf8'));
     });
     subprocess.stderr.on('data', (chunk) => {
-      stderr.write(chunk.toString());
+      stderr.push(chunk.toString('utf8'));
     });
-    subprocess.on('close', (code) => {
+    subprocess.on('exit', (code) => {
       if (code === 0) {
-        resolve(stdout.toString());
+        resolve(stdout.join());
       } else {
-        reject(stderr.length ? stderr.toString() : stdout.length ? stdout.toString() : (code ?? '').toString());
+        reject(new Error(`exit code: ${code} ${stderr.join()} ${stdout.join()}`));
       }
     });
     subprocess.on('error', (error) => {

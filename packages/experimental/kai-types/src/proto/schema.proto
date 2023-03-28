@@ -147,7 +147,7 @@ message DocumentStack {
   message Section {
     option (object) = true; // TODO(burdon): REMOVE (but requires id property).
     Source source = 1; // TODO(burdon): Metadata from resolver.
-    dxos.schema.Document object = 2;
+    dxos.schema.TypedObject object = 2;
   }
 
   string title = 1;
@@ -190,6 +190,7 @@ message Message {
   repeated Recipient to = 4;
   string subject = 5;
   string body = 6;
+  string ref = 7; // TODO(burdon): Implement as link.
 }
 
 message Event {
@@ -253,6 +254,7 @@ message Note {
 }
 
 //
+// Travel
 // TODO(burdon): Different namespace/files.
 //
 
@@ -304,10 +306,6 @@ message Booking {
   Transaction transaction = 3;
 
   string trip_updated = 10;
-}
-
-message Offer { // TODO(burdon): Response?
-
 }
 
 message TravelProfile {
@@ -363,4 +361,23 @@ message Transaction {
   string date = 2;
   string currency = 3;
   string total = 4;
+}
+
+//
+// Code Notebook
+//
+
+message CodeNotebook {
+  option (object) = true;
+
+  // TODO(burdon): Output.
+  message Result {
+    option (object) = true;
+
+    dxos.schema.TypedObject result = 1;
+  }
+
+  string title = 1;
+  DocumentStack source = 2;
+  repeated Result results = 3;
 }

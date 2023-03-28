@@ -6,14 +6,24 @@ import { useSyncExternalStore } from 'react';
 
 import { PublicKey, SpaceMember } from '@dxos/client';
 
-import { useSpace } from './useSpaces';
+import { useSpaces } from './useSpaces';
 
 export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
-  const space = useSpace(spaceKey);
+  // TODO(dmaretskyi): useSpace hook for spaces that are not ready.
+  const spaces = useSpaces({ all: true });
+  const space = spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
+
   const members =
     useSyncExternalStore(
-      (listener) => (space ? space.subscribeMembers(listener) : () => {}),
-      () => space?.getMembers()
+      (listener) => {
+        if (!space) {
+          return () => {};
+        }
+
+        const subscription = space.members.subscribe(listener);
+        return () => subscription.unsubscribe();
+      },
+      () => space?.members.get()
     ) ?? [];
 
   return members;

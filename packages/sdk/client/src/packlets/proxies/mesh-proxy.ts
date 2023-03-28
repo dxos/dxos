@@ -4,9 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, MulticastObservable } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ResultSet } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -16,34 +15,43 @@ import { ClientServicesProvider } from '../client';
  * Public API for MESH services.
  */
 export class MeshProxy {
-  private readonly _networkStatusUpdated = new Event<void>();
+  private readonly _networkStatusUpdated = new Event<NetworkStatus>();
+  private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
+    state: ConnectionState.OFFLINE
+  });
 
   private _ctx?: Context;
-  private _networkStatus: NetworkStatus = { state: ConnectionState.OFFLINE };
 
   // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider
   ) {}
 
-  getNetworkStatus() {
-    return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus]);
-  }
-
   toJSON() {
     return {
-      networkStatus: this._networkStatus
+      networkStatus: this._networkStatus.get()
     };
   }
 
-  async open() {
+  get networkStatus() {
+    return this._networkStatus;
+  }
+
+  async setConnectionState(state: ConnectionState) {
+    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
+    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
+  }
+
+  /**
+   * @internal
+   */
+  async _open() {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
-      this._networkStatus = networkStatus;
-      this._networkStatusUpdated.emit();
+      this._networkStatusUpdated.emit(networkStatus);
     });
 
     this._ctx.onDispose(() => {
@@ -51,12 +59,10 @@ export class MeshProxy {
     });
   }
 
-  async close() {
+  /**
+   * @internal
+   */
+  async _close() {
     await this._ctx?.dispose();
-  }
-
-  async setConnectionState(state: ConnectionState) {
-    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
   }
 }

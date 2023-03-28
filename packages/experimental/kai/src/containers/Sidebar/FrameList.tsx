@@ -5,11 +5,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, List, ListItem, ListItemEndcap, mx } from '@dxos/react-components';
 
 import { createPath, useAppRouter, useFrames } from '../../hooks';
 
-// TODO(burdon): Collapse to selector if > 8.
 export const FrameList = () => {
   const { space } = useAppRouter();
   const { frames, active: activeFrames } = useFrames();
@@ -18,23 +17,35 @@ export const FrameList = () => {
     return null;
   }
 
+  // TODO(burdon): Remove unnecessary classes.
   return (
-    <div className='flex flex-col'>
-      <div className='flex flex-col'>
+    <div className='is-full'>
+      <List labelId='objects'>
         {Array.from(activeFrames)
           .map((frameId) => frames.get(frameId)!)
           .filter(Boolean)
           .map(({ module: { id, displayName }, runtime: { Icon } }) => (
-            <Link
+            <ListItem
+              id={id}
               key={id}
-              className={mx('flex w-full px-4 py-1 items-center', id === currentFrame?.module.id && 'bg-zinc-200')}
-              to={createPath({ spaceKey: space.key, frame: id })}
+              slots={{
+                root: { className: mx(id === currentFrame?.module.id && 'bg-zinc-200') },
+                // TODO(burdon): Rename slot "main"?
+                mainContent: { className: 'flex w-full px-3 items-center' }
+              }}
             >
-              <Icon className={getSize(6)} />
-              <div className='flex w-full pl-2'>{displayName}</div>
-            </Link>
+              <Link key={id} className='flex w-full items-center' to={createPath({ spaceKey: space.key, frame: id })}>
+                <ListItemEndcap asChild>
+                  {/* TODO(burdon): Why is div needed? */}
+                  <div className='flex items-center'>
+                    <Icon className={getSize(6)} />
+                  </div>
+                </ListItemEndcap>
+                <div className='pl-1'>{displayName}</div>
+              </Link>
+            </ListItem>
           ))}
-      </div>
+      </List>
     </div>
   );
 };

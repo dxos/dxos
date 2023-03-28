@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Args } from '@oclif/core';
+
 import { Client } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
@@ -11,18 +13,14 @@ import { selectSpace } from '../../util';
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
   static override description = 'Create space invitation.';
-  static override args = [
-    {
-      name: 'key'
-    }
-  ];
+  static override args = { key: Args.string({ required: true }) };
 
   async run(): Promise<any> {
     const { args } = await this.parse(Invite);
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.echo.getSpaces();
+      const spaces = client.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }

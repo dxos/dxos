@@ -4,7 +4,7 @@
 
 import React, { FC, useState } from 'react';
 
-import { Document, TypeFilter } from '@dxos/echo-schema';
+import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Contact, Project } from '@dxos/kai-types';
 import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
@@ -19,7 +19,7 @@ type Type = {
   name: string;
   label: string;
   filter: TypeFilter<any>;
-  getTitle: (object: Document) => string;
+  getTitle: (object: TypedObject) => string;
   Card: FC<any>;
 };
 
@@ -44,7 +44,6 @@ const types: Type[] = [
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
   const { space } = useAppRouter();
-
   const [typeName, setTypeName] = useState<string>(types[0].name);
   const type = types.find(({ name }) => name === typeName)!;
   const [text] = useState<string>();
@@ -52,7 +51,7 @@ export const KanbanFrame: FC = () => {
   // TODO(burdon): Chain filters.
   const objects = useQuery(space, type.filter).filter(
     // TODO(burdon): Generalize search (by default all text; use schema annotations).
-    (object: Document) => !text?.length || type.getTitle(object).toLowerCase().indexOf(text) !== -1
+    (object: TypedObject) => !text?.length || type.getTitle(object).toLowerCase().indexOf(text) !== -1
   );
 
   // TODO(burdon): Pass in filter.

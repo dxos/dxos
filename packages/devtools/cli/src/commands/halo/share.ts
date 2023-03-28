@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -45,9 +45,9 @@ export default class Share extends BaseCommand {
         this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
         this.log(chalk`\n{red Secret}: ${observable.invitation!.authenticationCode}\n`);
 
-        CliUx.ux.action.start('Waiting for peer to connect');
+        ux.action.start('Waiting for peer to connect');
         await done.wait();
-        CliUx.ux.action.stop();
+        ux.action.stop();
 
         // TODO(egorgripasov): Wait to replicate?
         await sleep(15_000);

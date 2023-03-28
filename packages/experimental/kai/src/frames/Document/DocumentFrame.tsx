@@ -2,34 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
 import { Document } from '@dxos/kai-types';
-import { useQuery, observer, useIdentity } from '@dxos/react-client';
+import { observer, useIdentity } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
-import { RichTextComposer, useTextModel } from '@dxos/react-composer';
+import { Composer } from '@dxos/react-composer';
 
-import { createPath, useAppRouter } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 
 export const DocumentFrame = observer(() => {
-  const navigate = useNavigate();
-  const { space, frame, objectId } = useAppRouter();
+  const { space, objectId } = useAppRouter();
   const identity = useIdentity();
-  const documents = useQuery(space, Document.filter());
-
-  // Default to first.
-  // TODO(burdon): Factor out pattern.
-  const document = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
-  useEffect(() => {
-    if (frame && !document && documents.length) {
-      navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: documents[0].id }));
-    }
-  }, [frame, document, documents]);
-
-  const model = useTextModel({ identity, space, text: document?.content });
-
-  if (!model) {
+  const document = objectId ? space!.db.getObjectById<Document>(objectId) : undefined;
+  if (!document?.content) {
     return null;
   }
 
@@ -64,8 +50,10 @@ export const DocumentFrame = observer(() => {
             }}
           />
 
-          <RichTextComposer
-            model={model}
+          <Composer
+            identity={identity}
+            space={space}
+            text={document?.content}
             slots={{
               editor: {
                 className: 'kai-composer',

@@ -39,9 +39,9 @@ export namespace Features {
 
   export const tailwind = (): Partial<PackageJson> => ({
     devDependencies: {
-      tailwindcss: '^3.2.7',
+      tailwindcss: '~3.2.7',
       autoprefixer: '^10.4.12',
-      postcss: '^8.4.17'
+      postcss: '^8.4.21'
     }
   });
 
@@ -90,7 +90,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^4.8.4',
-      vite: '4.0.4'
+      vite: '^4.2.0'
     }
   };
 };
@@ -120,14 +120,7 @@ export default defineTemplate(
       pwa && Features.pwa(),
       dxosUi && Features.dxosUi(context),
       tailwind && Features.tailwind(),
-      storybook && Features.storybook(),
-      !monorepo && {
-        pnpm: {
-          patchedDependencies: {
-            'vite@4.0.4': 'patches/vite@4.0.4.patch'
-          }
-        }
-      }
+      storybook && Features.storybook()
     ].filter(Boolean);
 
     const packageJson = merge(first, ...rest);

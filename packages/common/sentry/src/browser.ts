@@ -9,7 +9,7 @@ import {
   Replay,
   setTag
 } from '@sentry/browser';
-import { CaptureConsole } from '@sentry/integrations';
+import { CaptureConsole, HttpClient } from '@sentry/integrations';
 import { BrowserTracing } from '@sentry/tracing';
 
 import { log } from '@dxos/log';
@@ -31,6 +31,7 @@ export const init = (options: InitOptions) => {
     environment: options.environment,
     integrations: [
       new CaptureConsole({ levels: ['error', 'warn'] }),
+      new HttpClient({ failedRequestStatusCodes: [[400, 599]] }),
       ...(options.tracing ? [new BrowserTracing()] : []),
       ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
     ],

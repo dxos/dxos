@@ -3,7 +3,7 @@
 @import './palette.scss';
 
 .page {
-  transition: none;
+  transition: none !important;
 }
 
 html[data-theme=light] {
@@ -22,9 +22,13 @@ html[data-theme=dark] tr:nth-child(2n) {
   background-color: transparent;
 }
 
-.home.project .feature:hover {
+.home.project .feature-item:hover {
   transform: none;
   box-shadow: none;
+  background-color: transparent;
+  &:before {
+    display: none;
+  }
 }
 
 div[class^="language-"] {
@@ -58,7 +62,7 @@ div[class^="language-error"] code {
   font-weight: 500;
 }
 
-.home.project .hero {
+.home.project .hero-info-wrapper {
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -87,7 +91,7 @@ html[data-theme=light] {
     background-color: $zinc-300;
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
-      background-color: map.get($theme-color, 'light');
+      background-color: $theme-color; // map.get($theme-color, 'light');
     }
   }
 }
@@ -100,7 +104,7 @@ html[data-theme=dark] {
     }
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
-      background-color: map.get($theme-color, 'dark');
+      background-color: $theme-color; // map.get($theme-color, 'dark');
       .copy-icon {
         color: $zinc-800;
       }
@@ -112,9 +116,9 @@ html[data-theme=dark] {
   bottom: -16px;
 }
 
-html[data-theme=dark] .home.project .hero {
+html[data-theme=dark] .home.project .hero-info-wrapper {
   img.dark {
-    // opacity: 0.8 !important;
+    opacity: 0.6 !important;
   }
   h1 {
     color: white;
@@ -130,8 +134,11 @@ html[data-theme=light] .home.project .hero {
   }
 }
 
-html[data-theme=dark] .custom-container.note {
-  background-color: darken($zinc-800, 3%);
+html[data-theme=dark] {
+  .custom-container.note,
+  .hint-container.note {
+    background-color: darken($zinc-800, 3%);
+  }
 }
 
 .peer-a {

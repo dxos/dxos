@@ -92,7 +92,7 @@ export const executeDirectoryTemplate = async <TInput>(
   let input = mergedOptions.input;
   if (inputShape && executeFileTemplates) {
     if (interactive) {
-      input = await acquireInput<TInput>(inputShape, input, inputQuestions, verbose);
+      input = await acquireInput<TInput>(inputShape, { ...mergedOptions.defaults, ...input }, inputQuestions, verbose);
     } else {
       const parse = inputShape.safeParse(input);
       if (!parse.success) {
@@ -204,7 +204,12 @@ export const executeDirectoryTemplate = async <TInput>(
     files: results,
     message: outputMessage,
     save: async (opts) => {
-      const { dry, printMessage, printFiles } = { printMessage: true, printFiles: true, dry: false, ...opts };
+      const { dry, printMessage, printFiles } = {
+        printMessage: true,
+        printFiles: verbose,
+        dry: false,
+        ...opts
+      };
       const errors: Error[] = [];
       let filesWritten = 0;
       await Promise.all(

@@ -7,7 +7,7 @@ import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import {
   SnapshotStore,
-  DataPipelineControllerImpl,
+  DataPipeline,
   MetadataStore,
   SigningContext,
   SpaceManager,
@@ -73,7 +73,7 @@ export const createIdentity = async (peer: ServiceContext) => {
 
 // TODO(burdon): Remove @dxos/client-testing.
 // TODO(burdon): Create builder and make configurable.
-export const syncItemsLocal = async (db1: DataPipelineControllerImpl, db2: DataPipelineControllerImpl) => {
+export const syncItemsLocal = async (db1: DataPipeline, db2: DataPipeline) => {
   await testLocalDatabase(db1, db2);
   await testLocalDatabase(db2, db1);
 };

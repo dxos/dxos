@@ -15,7 +15,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
@@ -47,6 +48,9 @@
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/client-services"
     },
     {
       "path": "../../../sdk/config"
