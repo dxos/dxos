@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { Copy, ProhibitInset, QrCode, X } from '@phosphor-icons/react';
+import { ProhibitInset, QrCode, X } from '@phosphor-icons/react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
@@ -11,6 +11,7 @@ import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { invitationStatusValue } from '../../util';
+import { CopyButton } from '../Clipboard';
 import { SharedInvitationListProps } from './InvitationListProps';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 
@@ -39,11 +40,6 @@ export const InvitationListItem = ({
   const handleClickRemove = useCallback(() => onClickRemove(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
-  const handleClickCopy = useCallback(() => {
-    if (invitationUrl) {
-      void navigator.clipboard.writeText(invitationUrl);
-    }
-  }, [invitationUrl]);
 
   return (
     <AccordionPrimitive.Item value={value}>
@@ -59,10 +55,7 @@ export const InvitationListItem = ({
                 <QrCode className={getSize(4)} weight='bold' />
               </Button>
             </AccordionPrimitive.Trigger>
-            <Button className='flex gap-1' onClick={handleClickCopy} data-testid='copy-invitation'>
-              <span className='pli-1'>{t('copy invitation code label')}</span>
-              <Copy className={getSize(4)} weight='bold' />
-            </Button>
+            <CopyButton value={invitationUrl} />
           </>
         ) : showAuthCode ? (
           <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>
