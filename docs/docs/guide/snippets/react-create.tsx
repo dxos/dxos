@@ -15,7 +15,8 @@ export const Component = () => {
         // create an Expando object for storing arbitrary JavaScript objects
         const note = new Expando({ title: 'example' });
         note.description = 'Expandos can have any additional properties.';
-        // call this once per object and it will be tracked and replicated forever
+        // call this once per object
+        // subsequent mutations will be replicated to all peers
         space!.db.add(note);
       }}
     ></div>

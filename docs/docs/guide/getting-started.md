@@ -118,6 +118,25 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
 ```tsx file=./snippets/react-mutate.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
+
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  const objects = useQuery(space, {});
+
+  return (
+    <div
+      onClick={() => {
+        // mutate objects directly and they will be replicated to all peers
+        const object = objects[0];
+        object.counter = 0;
+        object.name = 'example';
+      }}
+    ></div>
+  );
+};
 ```
 
 The above writes will start propagating to connected peers in the space on the next tick.
@@ -127,6 +146,25 @@ The changes will also cause any subscribed UI components in the app to re-render
 Creating new objects:
 
 ```tsx file=./snippets/react-create.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client';
+
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  return (
+    <div
+      onClick={() => {
+        // create an Expando object for storing arbitrary JavaScript objects
+        const note = new Expando({ title: 'example' });
+        note.description = 'Expandos can have any additional properties.';
+        // call this once per object and it will be tracked and replicated forever
+        space!.db.add(note);
+      }}
+    ></div>
+  );
+};
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.
