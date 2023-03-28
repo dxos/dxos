@@ -5,7 +5,7 @@
 import { Action, Cancel } from '@radix-ui/react-alert-dialog';
 import React from 'react';
 
-import { ThemeContext, useId } from '@dxos/react-components';
+import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
 
 import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
 import { JoinPanel, JoinPanelProps } from '../../panels';
@@ -16,9 +16,11 @@ export interface JoinDialogProps
 
 export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
+  const themeContextValue = useThemeContext();
+
   return (
     <PanelAlertDialog {...{ slots, titleId }}>
-      <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
         <JoinPanel
           {...{
             ...joinPanelProps,
