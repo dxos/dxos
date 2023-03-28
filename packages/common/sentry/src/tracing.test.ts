@@ -1,0 +1,61 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+// @dxos/test platform=browser
+
+import { expect } from 'chai';
+
+import { log } from '@dxos/log';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
+
+import { sentryTestkit } from '../testing';
+import * as Sentry from './node';
+import * as Tracing from './tracing';
+
+const { testkit, sentryTransport } = sentryTestkit();
+
+// TODO(burdon): https://example.com?
+const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
+
+describe('Logger tracing', () => {
+  beforeAll(() => {
+    Sentry.init({
+      destination: MOCK_DESTINATION,
+      release: 'test',
+      scrubFilenames: true,
+      tracing: true,
+      transport: sentryTransport,
+      user: {
+        id: 'test'
+      }
+    });
+
+    Tracing.configureTracing();
+  });
+
+  afterAll(() => {
+    Tracing.finish();
+  });
+
+  test.only('begin and end span', async () => {
+    log.trace('test.trace', {
+      span: {
+        op: 'begin',
+        id: 'test'
+      }
+    });
+
+    log.trace('test.trace', {
+      span: {
+        op: 'end',
+        id: 'test'
+      }
+    });
+    Tracing.finish();
+
+    expect(testkit.transactions().length).to.eq(1);
+
+    expect(testkit.transactions()[0].spans[0].op).to.eq('test.trace');
+  });
+});

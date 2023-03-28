@@ -2,50 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getCurrentHub } from '@sentry/node';
+import { startTransaction } from '@sentry/node';
 import { Transaction, Span } from '@sentry/types';
+import assert from 'node:assert';
 
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 
+let TX!: Transaction;
+const SPAN_MAP = new Map<string, Span>();
+
 export const configureTracing = () => {
   // Configure root transaction.
-  TX = getCurrentHub().startTransaction({
+  TX = startTransaction({
     name: 'DXOS Core Tracing',
     op: 'dxos'
   });
+  assert(TX);
   if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', () => {
-      for (const span of SPAN_MAP.values()) {
-        span.finish();
-      }
-      TX.finish();
-    });
+    window.addEventListener('beforeunload', finish);
   }
   if (typeof process !== 'undefined') {
-    process.on('exit', () => {
-      for (const span of SPAN_MAP.values()) {
-        span.finish();
-      }
-      TX.finish();
-    });
+    process.on('exit', finish);
   }
 
   log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
 };
 
-let TX!: Transaction;
-const SPAN_MAP = new Map<string, Span>();
+export const finish = () => {
+  for (const span of SPAN_MAP.values()) {
+    span.finish();
+  }
+  TX.finish();
+};
 
 export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.level !== LogLevel.TRACE) {
     return;
   }
   const context = getContextFromEntry(entry);
-
-  console.log({
-    ...entry,
-    context
-  });
 
   if (context?.span) {
     switch (context.span.op) {

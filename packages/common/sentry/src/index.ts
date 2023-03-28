@@ -4,4 +4,4 @@
 
 export * from './node';
 export * from './types';
-export * from './tracing';
+export { configureTracing } from './tracing';
