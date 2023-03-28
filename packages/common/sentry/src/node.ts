@@ -7,7 +7,8 @@ import {
   init as naturalInit,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
-  setTag
+  setTag,
+  setUser
 } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
@@ -42,6 +43,10 @@ export const init = (options: InitOptions) => {
       return event;
     }
   });
+
+  if (options.user) {
+    setUser(options.user);
+  }
 
   Object.entries(options.properties ?? {}).forEach(([key, value]) => {
     setTag(key, value);

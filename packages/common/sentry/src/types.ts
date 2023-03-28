@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Event, Transport } from '@sentry/types';
+import type { Event, Transport, User } from '@sentry/types';
 
 export type InitOptions = {
+  user?: User;
   enable?: boolean;
   destination?: string;
   installationId?: string;
