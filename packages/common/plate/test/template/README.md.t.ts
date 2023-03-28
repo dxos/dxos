@@ -9,7 +9,7 @@ export default defineTemplate(
     // # Package
     ${JSON.stringify(input, null, 2)}
     // slot content
-    ${render.content()}
+    ${render.content?.()}
     `;
   },
   { config, slots: { content: 'content-to-be-replaced' } }

@@ -2,9 +2,17 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
-    "types": ["@dxos/test"]
+    "types": [
+      "@dxos/test"
+    ]
   },
-  "exclude": ["dist", "node_modules"],
-  "include": ["src", "test"],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "src",
+    "test"
+  ],
   "references": []
 }

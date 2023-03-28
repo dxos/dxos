@@ -7,14 +7,10 @@ export default defineTemplate(
     return appTsx({
       ...context,
       slots: {
-        extraImports: text`
-          import { Routes } from './Routes';
-          import { Main } from './components/Main';
-          `,
-        content: text`
-          <Main >
-            <HashRouter>
-              <Routes />
+        content: ({ imports }) => text`
+          <${imports.use('Main', './components/Main')} >
+            <${imports.use('HashRouter', 'react-router-dom')}>
+              <${imports.use('Routes', './Routes')} />
             </HashRouter>
           </Main>
           `
