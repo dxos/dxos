@@ -86,6 +86,7 @@ importers:
       esbuild: ^0.16.14
       esbuild-node-externals: ^1.6.0
       esbuild-plugin-raw: ^0.1.7
+      esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.24.0
       execa: ^5.1.0
       expect: ^27.0.2
@@ -188,6 +189,7 @@ importers:
       esbuild: 0.16.14
       esbuild-node-externals: 1.6.0_esbuild@0.16.14
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
+      esbuild-plugin-yaml: 0.0.1
       eslint: 8.25.0
       expect: 27.5.1
       fast-xml-parser: 4.0.11
@@ -21347,6 +21349,13 @@ packages:
       esbuild: ^0.16.0
     dependencies:
       esbuild: 0.16.14
+    dev: true
+
+  /esbuild-plugin-yaml/0.0.1:
+    resolution: {integrity: sha512-s3jqOeeCd+dUuUsuBqLRgN2SeQjPF2ppIglvV3B//txgQpTDThGvxu6sqiOUOJ0NOzegitmpWCXoCONdRbUS7w==}
+    dependencies:
+      fs-extra: 9.1.0
+      js-yaml: 4.1.0
     dev: true
 
   /esbuild-register/3.4.2_esbuild@0.16.17:

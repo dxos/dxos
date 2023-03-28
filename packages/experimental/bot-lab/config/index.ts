@@ -1,0 +1,42 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Config } from '@dxos/client';
+
+// TODO(burdon): Compiles but fails build.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+// import defaults from './dx.yml';
+
+const defaults = {
+  runtime: {
+    client: {
+      storage: {
+        persistent: true,
+        path: './dxos_client_storage'
+      }
+    },
+    services: {
+      signal: {
+        // server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        server: 'wss://kube.dx.ninja/.well-known/dx/signal'
+      },
+      ice: [
+        {
+          urls: 'stun:kube.dxos.org:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        },
+        {
+          urls: 'turn:kube.dxos.org:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        }
+      ]
+    }
+  }
+};
+
+// TODO(burdon): Allow overrides.
+export const getConfig = () => new Config(defaults);
