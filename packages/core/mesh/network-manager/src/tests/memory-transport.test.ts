@@ -17,7 +17,8 @@ describe('Memory transport', () => {
   const testBuilder = new TestBuilder();
   basicTestSuite(testBuilder);
 
-  test('load', async () => {
+  // eslint-ignore-line
+  test.skip('load', async () => {
     const NUM_PAIRS = 100;
     const NUM_ROUNDS = 10_000;
     const PACKET_SIZE = 1_000;

@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 describe('Node WebRTC and simple-peer', () => {
   // Simplest test that reproduces SIGABRT (mac) and SIGSEGV (linux) in wrtc.
-  test('open and close', async () => {
+  test.skip('open and close', async () => {
     const peer = new SimplePeerConstructor({
       initiator: true,
       wrtc
