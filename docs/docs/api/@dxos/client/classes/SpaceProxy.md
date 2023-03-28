@@ -1,12 +1,12 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/space-proxy.ts:72](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L72)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/space-proxy.ts:81](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L81)</sub>
 
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _data, databaseRouter)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L118)
+### [constructor(_clientServices, _modelFactory, _data, databaseRouter)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L135)
 
 
 
@@ -24,32 +24,37 @@ Arguments:
 
 
 ## Properties
-### [db](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L160)
+### [db](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L177)
 Type: <code>[EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</code>
 
-Current state of the space.
-The database is ready to be used in  `SpaceState.READY`  state.
-Presence is available in  `SpaceState.INACTIVE`  state.
+Echo database.
 
-### [internal](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L182)
+### [internal](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L219)
 Type: <code>Internal</code>
 
-### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L173)
+### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L204)
 Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]&gt;</code>
 
-### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L143)
+### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L160)
 Type: <code>boolean</code>
 
-### [key](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L139)
+### [key](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L156)
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-### [members](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L177)
+### [members](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L211)
 Type: <code>MulticastObservable&lt;[SpaceMember](/api/@dxos/client/interfaces/SpaceMember)[]&gt;</code>
 
-### [properties](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L164)
+### [pipeline](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L197)
+Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
+
+Current state of space pipeline.
+
+### [properties](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L181)
 Type: <code>[TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;</code>
 
-### [state](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L169)
+Properties object.
+
+### [state](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L190)
 Type: <code>MulticastObservable&lt;[SpaceState](/api/@dxos/client/enums#SpaceState)&gt;</code>
 
 Current state of the space.
@@ -58,7 +63,7 @@ Presence is available in  `SpaceState.INACTIVE`  state.
 
 
 ## Methods
-### [_setOpen(open)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L359)
+### [_setOpen(open)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L401)
 
 
 
@@ -68,7 +73,7 @@ Arguments:
 
 `open`: <code>boolean</code>
 
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L280)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L322)
 
 
 
@@ -79,7 +84,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L317)
+### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L359)
 
 
 
@@ -92,7 +97,7 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/client/types/InvitationsOptions)</code>
 
-### [createSnapshot()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L354)
+### [createSnapshot()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L396)
 
 
 
@@ -103,7 +108,7 @@ Returns: <code>Promise&lt;SpaceSnapshot&gt;</code>
 
 Arguments: none
 
-### [listen(channel, callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L307)
+### [listen(channel, callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L349)
 
 
 
@@ -118,7 +123,7 @@ Arguments:
 
 `callback`: <code>function</code>
 
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L273)
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L315)
 
 
 
@@ -129,7 +134,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [postMessage(channel, message)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L295)
+### [postMessage(channel, message)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L337)
 
 
 
@@ -144,7 +149,7 @@ Arguments:
 
 `message`: <code>any</code>
 
-### [removeInvitation(id)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L343)
+### [removeInvitation(id)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L385)
 
 
 
@@ -157,7 +162,7 @@ Arguments:
 
 `id`: <code>string</code>
 
-### [waitUntilReady()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L287)
+### [waitUntilReady()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L329)
 
 
 
