@@ -1,6 +1,7 @@
 ---
 order: 2
 title: Getting started
+next: ./platform
 ---
 
 # Getting started
@@ -30,7 +31,7 @@ This guide will walk you through creating and deploying a `react` app.
 Initialize an empty folder with `npm init` like this:
 
 ```bash
-npm init @dxos
+npm init @dxos@latest
 ```
 
 Then:
@@ -116,12 +117,7 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
-```ts
-const objects = useQuery(space, {});
-
-const object = objects[0];
-object.counter = 0;
-object.name = 'example';
+```ts file=./snippets/react-mutate.tsx#L5-
 ```
 
 The above writes will start propagating to connected peers in the space on the next tick.
@@ -130,13 +126,7 @@ The changes will also cause any subscribed UI components in the app to re-render
 
 Creating new objects:
 
-```ts
-import { Expando } from '@dxos/react-client';
-
-const note = new Expando({ title: 'example' });
-note.description = 'Expandos can have any additional properties.';
-
-space.db.add(note);
+```ts file=./snippets/react-crate.tsx#L5-
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.
