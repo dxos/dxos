@@ -1,8 +1,8 @@
 ---
 home: true
 title: Documentation
-heroImage: /images/dxos.svg
-heroImageDark: /images/dxos-white.svg
+heroImage: /images/logotype/dxos-hero.svg
+heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
   - text: Get started
     link: /guide/getting-started
@@ -11,8 +11,8 @@ actions:
     link: /guide/
     type: secondary
 features:
-  - title: ECHO Database
-    details: Peer-to-peer state synchronization for real time collaborative and offline first applications.
+  - title: 'ECHO Database'
+    details: Peer-to-peer data synchronization for real time and offline-first applications.
   - title: 'HALO Identity'
     details: Private, secure, and simple decentralized identity and verifiable credentials.
   - title: 'MESH Networking'
@@ -20,8 +20,8 @@ features:
   - title: 'KUBE Network'
     details: Peer-to-peer infrastructure that supports the operation of the DXOS network.
   - title: 'Devtools'
-    details: Command line and browser tools to create and publish applications, and manage KUBE infrastructure.
+    details: Command line and browser tools to create and publish applications, and manage KUBE network infrastructure.
   - title: 'Apps and Components'
-    details: PWA project templates and UI components for react.
+    details: PWA project templates and React UI components.
 footer: MIT Licensed | Copyright © DXOS.org
 ---

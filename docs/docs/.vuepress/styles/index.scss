@@ -70,16 +70,28 @@ div[class^="language-error"] code {
   margin-top: 2rem;
 }
 
-.home.project .hero img {
-  opacity: 0.8 !important;
-}
-
 .home.project .hero .description {
   max-width: 40rem;
 }
 
+.hero-info .description {
+  max-width: 25rem;
+}
+
+.hero-info .actions {
+  margin: 3rem 0;
+}
+
+.site-name {
+  display: none;
+}
+
 .navbar nav.nav-links {
   margin-left: 2rem !important;
+}
+
+.navbar .logo {
+  opacity: 0.9;
 }
 
 code {
@@ -118,16 +130,16 @@ html[data-theme=dark] {
 
 html[data-theme=dark] .home.project .hero-info-wrapper {
   img.dark {
-    opacity: 0.6 !important;
+    opacity: 0.9 !important;
   }
   h1 {
     color: white;
   }
 }
 
-html[data-theme=light] .home.project .hero {
-  img.dark {
-    // opacity: 0.8 !important;
+html[data-theme=light] .home.project .hero-info-wrapper {
+  img.light {
+    opacity: 0.9 !important;
   }
   h1 {
     color: black;
