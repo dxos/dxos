@@ -80,7 +80,7 @@ export type TemplateContext<TInput = {}, TSlots extends TemplateSlotMap = {}> = 
   input: TInput;
   defaultOutputFile: string;
   outputDirectory: string;
-  slots?: { [key in keyof TSlots]: TemplateSlotContent };
+  slots?: { [key in keyof TSlots]?: TemplateSlotContent };
 };
 
 // export type TemplateResultMetadata = {

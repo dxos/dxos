@@ -28,8 +28,8 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
   return spaces.length ? (
     <>
       {spaces.map((space) => {
-        const keyHex = space.key.toHex();
-        const title = space.properties.get('title') ?? humanize(keyHex);
+        const keyHex = space?.key.toHex();
+        const title = space?.properties?.title ?? humanize(keyHex);
 
         return (
           <Link
