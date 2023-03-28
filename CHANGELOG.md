@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.1.32](https://github.com/dxos/dxos/compare/v0.1.31...v0.1.32) (2023-03-28)
+
+
+### Features
+
+* Add Sentry telemetry in Devtools-Extension ([#2749](https://github.com/dxos/dxos/issues/2749)) ([dfd7644](https://github.com/dxos/dxos/commit/dfd76443cd5913d4e01a8fe1be4b0e232b098402))
+* Basic console layout. ([#2790](https://github.com/dxos/dxos/issues/2790)) ([0840ede](https://github.com/dxos/dxos/commit/0840ede76680f830437e4d3a182c70b3f2280956))
+* bot manager ([#2776](https://github.com/dxos/dxos/issues/2776)) ([9942bf8](https://github.com/dxos/dxos/commit/9942bf85449f6fefdc87b88e8a75aac4065aea06))
+* Chat ([#2808](https://github.com/dxos/dxos/issues/2808)) ([51860ee](https://github.com/dxos/dxos/commit/51860ee2efe2223fc3bff7d4edb1c3d5a447d434))
+* Chat experiment ([#2811](https://github.com/dxos/dxos/issues/2811)) ([c265777](https://github.com/dxos/dxos/commit/c265777ebd366b6d8b3288e1f5c781c76588b3bc))
+* Console config table ([#2833](https://github.com/dxos/dxos/issues/2833)) ([c22bd54](https://github.com/dxos/dxos/commit/c22bd54e2ce3f97e33b8da4969586b44a605e3d6))
+* Don't block UI on pending spaces ([#2829](https://github.com/dxos/dxos/issues/2829)) ([40b8f65](https://github.com/dxos/dxos/commit/40b8f6580366e198a33a54ef717d84a2561ae674))
+* DXOS React icons ([#2832](https://github.com/dxos/dxos/issues/2832)) ([6cf9cf7](https://github.com/dxos/dxos/commit/6cf9cf74b33ed115e8292a80907864e9e8ef9756))
+* Join CLI as device in HALO ([#2795](https://github.com/dxos/dxos/issues/2795)) ([526cd38](https://github.com/dxos/dxos/commit/526cd3882d7d56e1c6199119731d0fc8eb7fce7e))
+* Kai vchat demo ([#2820](https://github.com/dxos/dxos/issues/2820)) ([09407df](https://github.com/dxos/dxos/commit/09407df524f414a23e76125ad7bad4dca723875a))
+* KUBE console ([#2784](https://github.com/dxos/dxos/issues/2784)) ([2a50620](https://github.com/dxos/dxos/commit/2a50620ffd1025a0c300051020ddc348d4c37960))
+* Make Identity wait for timeframe from invitation ([#2813](https://github.com/dxos/dxos/issues/2813)) ([17478da](https://github.com/dxos/dxos/commit/17478daa36ee58aaf9edde5724bb0b8e65e005c8))
+* Only re-create state-machines when needed ([#2787](https://github.com/dxos/dxos/issues/2787)) ([dedd920](https://github.com/dxos/dxos/commit/dedd9205d29d5f24e4f56eb0589bfd4e3c99a6b5))
+* Rename Document to TypedObject (and Expando) ([#2789](https://github.com/dxos/dxos/issues/2789)) ([0d2f2d5](https://github.com/dxos/dxos/commit/0d2f2d5030c02902ccc8d2bc6a2b5a6dcba4acea))
+* Represent inactive spaces in the API ([#2800](https://github.com/dxos/dxos/issues/2800)) ([df33c30](https://github.com/dxos/dxos/commit/df33c30681bd60aba7767ee9399e0353f0a8a578))
+* Restructuring frame registration ([#2778](https://github.com/dxos/dxos/issues/2778)) ([eae4a04](https://github.com/dxos/dxos/commit/eae4a04d5871713730baf2b956e7680aa3308cad))
+* Retryable space intialization ([#2839](https://github.com/dxos/dxos/issues/2839)) ([34d5a40](https://github.com/dxos/dxos/commit/34d5a408e09e8f453f1fd9d3f9fa8b684407da3d))
+* tasks app template ([#2848](https://github.com/dxos/dxos/issues/2848)) ([86f5578](https://github.com/dxos/dxos/commit/86f5578d65834ad31a9312c38b323d80033fad06))
+* Update menubar UX. ([#2781](https://github.com/dxos/dxos/issues/2781)) ([04dcfac](https://github.com/dxos/dxos/commit/04dcfac4806fde416e51dae3a4f02433c10cf6fb))
+
+
+### Bug Fixes
+
+* **client-services:** break infinite loop when starting with resource lock ([#2815](https://github.com/dxos/dxos/issues/2815)) ([f6818ed](https://github.com/dxos/dxos/commit/f6818edbf7491ed49ba3de1ed030f7253e35dc77))
+* **client:** stop over-emitting spaces changes ([#2841](https://github.com/dxos/dxos/issues/2841)) ([70f9b77](https://github.com/dxos/dxos/commit/70f9b775ab15bd048027186fd4d04289678d8230))
+* Console styles ([#2785](https://github.com/dxos/dxos/issues/2785)) ([77dfb46](https://github.com/dxos/dxos/commit/77dfb46b01b6c80227168eafc69c7c7ed7248160))
+* Don’t redeem an invitation code on initial transitions (for now) ([#2842](https://github.com/dxos/dxos/issues/2842)) ([8115a8b](https://github.com/dxos/dxos/commit/8115a8bead7fde318e9fe5775b5aad6d790ad848))
+* **halo-app:** sentry in shared worker ([#2799](https://github.com/dxos/dxos/issues/2799)) ([64e2fff](https://github.com/dxos/dxos/commit/64e2fff44911dbdfcf7ad4234d8442c63aa48eed))
+* include docs snippets in build ([#2809](https://github.com/dxos/dxos/issues/2809)) ([d07133e](https://github.com/dxos/dxos/commit/d07133e282c11bb8ea974b017500b939cf584b34))
+* Kai focus on member at inactive frame ([#2773](https://github.com/dxos/dxos/issues/2773)) ([8581573](https://github.com/dxos/dxos/commit/8581573fcaf603b2402d6e94c4997597153ef2d2))
+* **kai:** dev mode identity creation ([#2810](https://github.com/dxos/dxos/issues/2810)) ([a4cb2f3](https://github.com/dxos/dxos/commit/a4cb2f3a1e1faae285245aa841537a58f660d4ab))
+* **kube-console:** publishing ([#2807](https://github.com/dxos/dxos/issues/2807)) ([f904dba](https://github.com/dxos/dxos/commit/f904dbad222cd57a6158184fda93715a9a475f1d))
+* **react-composer:** Cursor color & size ([#2775](https://github.com/dxos/dxos/issues/2775)) ([73086c9](https://github.com/dxos/dxos/commit/73086c90225085a06998b94459e83c20cd1f9ada))
+* **react-composer:** re-rendering and selection reset issues ([#2805](https://github.com/dxos/dxos/issues/2805)) ([eac005e](https://github.com/dxos/dxos/commit/eac005ee33f53090960711b368b25e66b48d2c7a))
+* **react-composer:** scope cursors to a specific object ([#2816](https://github.com/dxos/dxos/issues/2816)) ([27dde1c](https://github.com/dxos/dxos/commit/27dde1c5f1055358b4135c98f6f96112bb21221c))
+* **react-ui:** Don’t autofocus in iOS on elements that result from a remote event ([#2856](https://github.com/dxos/dxos/issues/2856)) ([d7dc55f](https://github.com/dxos/dxos/commit/d7dc55f3460ccee3769b9467a903e64955b2150a))
+* **react-ui:** Join flow tests ([#2831](https://github.com/dxos/dxos/issues/2831)) ([eae65ea](https://github.com/dxos/dxos/commit/eae65ea76e381912ed0497b65c06ff094585f855))
+* **react-ui:** Usability, tests, and QOL increment ([#2844](https://github.com/dxos/dxos/issues/2844)) ([be99680](https://github.com/dxos/dxos/commit/be99680ff595b4da38692eca241b2e15fd74edd5))
+* Restore missing root `fontFamily` rule. ([#2814](https://github.com/dxos/dxos/issues/2814)) ([47cd260](https://github.com/dxos/dxos/commit/47cd2609b17343dab1e6b6a1d5f9e71d19f31e34))
+* Rework space init sequence ([#2794](https://github.com/dxos/dxos/issues/2794)) ([6897a42](https://github.com/dxos/dxos/commit/6897a42add51931a2cc201905f05019aac5265a2))
+* tailwind ~3.2.7 ([#2860](https://github.com/dxos/dxos/issues/2860)) ([d5a920c](https://github.com/dxos/dxos/commit/d5a920cf3cdf1d7d628f387327db8b670d2cbd33))
+* upgrade to Vite 4.2.0 ([#2752](https://github.com/dxos/dxos/issues/2752)) ([04e7478](https://github.com/dxos/dxos/commit/04e7478904f5255908a905184162b71e491e732a))
+
 ## [0.1.31](https://github.com/dxos/dxos/compare/v0.1.30...v0.1.31) (2023-03-17)
 
 
