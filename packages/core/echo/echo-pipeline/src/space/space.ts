@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
 import { FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -39,6 +39,8 @@ export type CreatePipelineParams = {
 // TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
 export class Space {
+  private readonly _addFeedLock = new Lock();
+
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
   public readonly protocol: SpaceProtocol;
@@ -61,11 +63,13 @@ export class Space {
 
     // TODO(dmaretskyi): Maybe reuse createPipeline method.
     this._controlPipeline = new ControlPipeline({ spaceKey, genesisFeed, feedProvider });
+
+    // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
-        if (this._dataPipeline) {
-          await this._dataPipeline.addFeed(await feedProvider(info.key));
+        if(this._dataPipeline) {
+          await this._addFeedToPipeline(this._dataPipeline, info.key)
         }
       }
 
@@ -186,13 +190,19 @@ export class Space {
 
     this._dataPipeline = pipeline;
 
+
+    // Add existing feeds.
     for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-      if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
-        // TODO(dmaretskyi): Seems like a race condition between this and onFeedAdmitted.
-        await pipeline.addFeed(await this._feedProvider(feed.key));
-      }
+      await this._addFeedToPipeline(pipeline, feed.key)
     }
 
     return pipeline;
+  }
+
+  @synchronized
+  private async _addFeedToPipeline(pipeline: Pipeline, feedKey: PublicKey) {
+    if(!pipeline.hasFeed(feedKey)) {
+      return pipeline.addFeed(await this._feedProvider(feedKey));
+    }
   }
 }
