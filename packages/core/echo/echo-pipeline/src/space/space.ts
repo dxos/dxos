@@ -74,7 +74,7 @@ export class Space {
               return this._dataPipeline.addFeed(await this._feedProvider(info.key));
             }
           }
-        })
+        });
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -198,7 +198,7 @@ export class Space {
     await this._addFeedLock.executeSynchronized(async () => {
       for (const feed of this._controlPipeline.spaceState.feeds.values()) {
         if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-          pipeline.addFeed(await this._feedProvider(feed.key));
+          await pipeline.addFeed(await this._feedProvider(feed.key));
         }
       }
     });

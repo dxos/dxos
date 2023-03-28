@@ -25,7 +25,9 @@ export class Lock {
 
   private _tag: string | null = null;
 
-  get tag() { return this._tag; }
+  get tag() {
+    return this._tag;
+  }
 
   /**
    * Acquires the lock.
@@ -42,12 +44,12 @@ export class Lock {
       release = () => {
         this._tag = null;
         resolve();
-      }
+      };
     });
 
     await prev;
 
-    if(tag !== undefined) {
+    if (tag !== undefined) {
       this._tag = tag;
     }
     return release;
@@ -91,9 +93,7 @@ export const synchronized = (
     const lock: Lock = (this[classLockSymbol] ??= new Lock());
 
     const tag = `${target.constructor.name}.${propertyName}`;
-    const release = await warnAfterTimeout(500, `lock on ${tag} (taken by ${lock.tag})`, () =>
-      lock.acquire(tag)
-    );
+    const release = await warnAfterTimeout(500, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
 
     try {
       return await method.apply(this, args);
