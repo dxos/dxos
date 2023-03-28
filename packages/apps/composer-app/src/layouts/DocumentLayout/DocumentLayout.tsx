@@ -5,7 +5,7 @@ import React from 'react';
 import { Outlet, useParams, useSearchParams } from 'react-router-dom';
 
 import { useTelemetry } from '@dxos/react-appkit';
-import { useSpaces } from '@dxos/react-client';
+import { SpaceState, useSpaces } from '@dxos/react-client';
 import { defaultOsButtonColors, mx, useButtonShadow } from '@dxos/react-components';
 import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
 
@@ -19,8 +19,8 @@ export const DocumentLayout = () => {
   const shadow = useButtonShadow('base');
 
   const { spaceKey } = useParams();
-  const spaces = useSpaces();
-  const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey);
+  const spaces = useSpaces({ all: true });
+  const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY);
 
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');

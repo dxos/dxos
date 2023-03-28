@@ -142,7 +142,7 @@ export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendP
 };
 
 export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
-  const rootSpace = spaceKey ? initialPeer.echo.getSpace(spaceKey) : await initialPeer.echo.createSpace();
+  const rootSpace = spaceKey ? initialPeer.getSpace(spaceKey) : await initialPeer.createSpace();
   assert(rootSpace, 'Space not found.');
 
   await Promise.all(
@@ -154,7 +154,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       log('invitation created');
       hostObservabli.subscribe({
         onConnecting: (invitation) => {
-          const guestObservable = peer.echo.acceptInvitation(invitation);
+          const guestObservable = peer.acceptInvitation(invitation);
           log('invitation accepted');
 
           guestObservable.subscribe({

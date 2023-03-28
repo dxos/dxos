@@ -28,6 +28,17 @@ describe('services/space-invitations-handler', () => {
 
     const space = await peer.dataSpaceManager!.createSpace();
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
+
+    await space.close();
+  });
+
+  test('genesis & ready', async () => {
+    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+
+    const space = await peer.dataSpaceManager!.createSpace();
+    expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
+
+    await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
     await space.close();
   });
 
@@ -36,7 +47,7 @@ describe('services/space-invitations-handler', () => {
     const space = await peer.dataSpaceManager!.createSpace();
     afterTest(() => space.close());
 
-    await testLocalDatabase(space.dataPipelineController);
+    await testLocalDatabase(space.dataPipeline);
   });
 
   test('invitation with no auth', async () => {
@@ -53,7 +64,10 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+
+      await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
       await space1.close();
       await space2.close();
@@ -116,7 +130,10 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItemsLocal(space1.dataPipelineController, space2.dataPipelineController);
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+
+      await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
       await space1.close();
       await space2.close();

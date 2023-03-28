@@ -21,7 +21,10 @@ export const MessageFrame = () => {
   const { space, frame, objectId } = useAppRouter();
 
   // TODO(burdon): Add sort to filter.
-  const messages = useQuery(space, Message.filter()).sort(sortMessage);
+  // TODO(burdon): Sort by source type.
+  const messages = useQuery(space, Message.filter())
+    .filter((message) => message.from.email)
+    .sort(sortMessage);
   useEffect(() => {
     if (frame && messages.length && !objectId) {
       navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: messages[0].id }));
@@ -72,7 +75,7 @@ export const MessageFrame = () => {
                     <Button variant='ghost'>
                       <Circle
                         weight={selected?.id === message.id ? 'fill' : 'regular'}
-                        className={mx(getSize(5), 'text-zinc-300', selected?.id === message.id && 'text-sky-500')}
+                        className={mx(getSize(4), 'text-zinc-300', selected?.id === message.id && 'text-sky-500')}
                       />
                     </Button>
                   }
@@ -90,7 +93,7 @@ export const MessageFrame = () => {
 
                 {/* Body */}
                 <Row>
-                  <div className='mt-1 truncate text-zinc-500'>{body.slice(0, 60)}</div>
+                  <div className='mt-1 truncate text-zinc-500'>{body?.slice(0, 60)}</div>
                 </Row>
               </div>
             );

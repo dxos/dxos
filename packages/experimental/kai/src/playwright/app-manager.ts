@@ -41,10 +41,14 @@ export class AppManager {
   }
 
   async kaiIsVisible() {
-    return await this.page.getByTestId('space-icon').isVisible();
+    return await this.page.getByTestId('sidebar.spaceIcon').isVisible();
   }
 
   // Actions
+
+  async showSpaceList() {
+    await this.page.getByTestId('sidebar.showSpaceList').click();
+  }
 
   async createSpace() {
     await this.page.getByTestId('sidebar.createSpace').click();

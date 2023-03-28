@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/client';
+import { Client, Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -19,6 +19,19 @@ import { syncItems, TestBuilder } from '../testing';
 // TODO(burdon): Timeouts and progress callback/events.
 
 describe('Client services', () => {
+  test('creates client with local host', async () => {
+    const testBuilder = new TestBuilder();
+
+    const servicesProvider = testBuilder.createLocal();
+    await servicesProvider.open();
+    afterTest(() => servicesProvider.close());
+
+    const client = new Client({ services: servicesProvider });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    expect(client.initialized).to.be.true;
+  });
+
   test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
 
@@ -141,16 +154,16 @@ describe('Client services', () => {
     // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      expect(client1.halo.getDevices()).to.have.lengthOf(2);
-      expect(client2.halo.getDevices()).to.have.lengthOf(2);
+      expect(client1.halo.devices.get()).to.have.lengthOf(2);
+      expect(client2.halo.devices.get()).to.have.lengthOf(2);
     });
   });
 
@@ -184,13 +197,13 @@ describe('Client services', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const space1 = await client1.echo.createSpace();
+    const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
     const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
 
     observable1.subscribe({
       onConnecting: (invitation) => {
-        const observable2 = client2.echo.acceptInvitation(invitation);
+        const observable2 = client2.acceptInvitation(invitation);
         observable2.subscribe({
           onSuccess: (invitation: Invitation) => {
             success2.wake(invitation);
@@ -214,7 +227,7 @@ describe('Client services', () => {
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const space2 = client2.echo.getSpace(invitation2.spaceKey!);
+      const space2 = client2.getSpace(invitation2.spaceKey!);
       assert(space2);
       expect(space2).to.exist;
       trigger.wake(space2);
@@ -224,10 +237,10 @@ describe('Client services', () => {
 
     for (const space of [space1, space2]) {
       await waitForExpect(() => {
-        expect(space.getMembers()).to.deep.equal([
+        expect(space.members.get()).to.deep.equal([
           {
             identity: {
-              identityKey: client1.halo.identity!.identityKey,
+              identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 1'
               }
@@ -236,7 +249,7 @@ describe('Client services', () => {
           },
           {
             identity: {
-              identityKey: client2.halo.identity!.identityKey,
+              identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 2'
               }

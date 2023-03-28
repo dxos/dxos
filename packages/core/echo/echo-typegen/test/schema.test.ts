@@ -106,7 +106,7 @@ describe('schema', () => {
   });
 
   test('enums', () => {
-    const container = new Container({ objects: [{ type: Container.Record.Type.BRAINFRAME }] });
-    expect(container.objects[0].type).to.eq(Container.Record.Type.BRAINFRAME);
+    const container = new Container({ records: [{ type: Container.Record.Type.PERSONAL }] });
+    expect(container.records[0].type).to.eq(Container.Record.Type.PERSONAL);
   });
 });

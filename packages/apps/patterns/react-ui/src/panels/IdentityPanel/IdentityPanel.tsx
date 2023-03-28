@@ -5,7 +5,7 @@ import React from 'react';
 
 import type { Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Avatar, Button, DensityProvider, ThemeContext, useTranslation } from '@dxos/react-components';
+import { Avatar, Button, DensityProvider, ThemeContext, useThemeContext, useTranslation } from '@dxos/react-components';
 
 export const IdentityPanel = ({
   identity,
@@ -16,13 +16,15 @@ export const IdentityPanel = ({
 }) => {
   const { t } = useTranslation('os');
   const client = useClient();
+  const themeContextValue = useThemeContext();
+
   const defaultManageProfile = () => {
     const remoteSource = new URL(client?.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
     const tab = window.open(remoteSource.origin, '_blank');
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
       <DensityProvider density='fine'>
         <div className='flex flex-col gap-2 justify-center items-center'>
           <Avatar

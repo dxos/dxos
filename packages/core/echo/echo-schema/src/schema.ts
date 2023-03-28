@@ -7,9 +7,9 @@ import * as pb from 'protobufjs';
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
+import { stripKeys } from '@dxos/util';
 
 import { TypeFilter } from './query';
-import { strip } from './util';
 
 export type EchoType =
   | {
@@ -68,7 +68,7 @@ export class EchoSchemaType {
 
   createFilter(opts?: any): TypeFilter<any> {
     return {
-      ...strip(opts),
+      ...stripKeys(opts),
       '@type': this.name
     };
   }

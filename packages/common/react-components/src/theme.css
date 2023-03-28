@@ -78,4 +78,5 @@
 html {
   background-color: var(--surface-bg);
   color: var(--surface-text);
+  @apply font-body;
 }

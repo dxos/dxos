@@ -6,16 +6,16 @@ import { PlusCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { getSize, Button } from '@dxos/react-components';
 
-export type KanbanCard = FC<{ space: Space; object: Document }>;
+export type KanbanCard = FC<{ space: Space; object: TypedObject }>;
 
 export type KanbanColumnDef = {
   id?: string;
   header: string;
-  title: (object: Document) => string;
-  filter: (object: Document) => boolean;
+  title: (object: TypedObject) => string;
+  filter: (object: TypedObject) => boolean;
   Card: KanbanCard;
 };
 
@@ -25,7 +25,7 @@ export type KanbanColumnDef = {
 
 export type KanbanProps = {
   space: Space;
-  objects: Document[];
+  objects: TypedObject[];
   columns: KanbanColumnDef[];
   onCreate?: (column: KanbanColumnDef) => void;
 };

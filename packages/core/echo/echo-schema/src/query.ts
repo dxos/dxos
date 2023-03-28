@@ -5,20 +5,20 @@
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 
-import { Document, isDocument } from './document';
 import { EchoObject } from './object';
+import { TypedObject, isTypedObject } from './typed-object';
 
 export type PropertiesFilter = Record<string, any>;
-export type OperatorFilter<T extends Document> = (document: T) => boolean;
-export type Filter<T extends Document> = PropertiesFilter | OperatorFilter<T>;
+export type OperatorFilter<T extends TypedObject> = (document: T) => boolean;
+export type Filter<T extends TypedObject> = PropertiesFilter | OperatorFilter<T>;
 
 // NOTE: `__phantom` property forces type.
-export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
+export type TypeFilter<T extends TypedObject> = { __phantom: T } & Filter<T>;
 
 export type Subscription = () => void;
 
 // TODO(burdon): Create general base class for this.
-export class Query<T extends Document = Document> {
+export class Query<T extends TypedObject = TypedObject> {
   constructor(
     private readonly _dbObjects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
@@ -57,8 +57,8 @@ export class Query<T extends Document = Document> {
 }
 
 // TODO(burdon): Create separate test.
-const filterMatcher = (filter: Filter<any>, object: EchoObject): object is Document => {
-  if (!isDocument(object)) {
+const filterMatcher = (filter: Filter<any>, object: EchoObject): object is TypedObject => {
+  if (!isTypedObject(object)) {
     return false;
   }
   if (object.__deleted) {

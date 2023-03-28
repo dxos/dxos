@@ -2,21 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  DataPipelineControllerImpl,
   MetadataStore,
   Space,
   SigningContext,
   createMappedFeedWriter,
-  SnapshotManager
+  SnapshotManager,
+  DataPipeline
 } from '@dxos/echo-pipeline';
+import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -28,6 +31,18 @@ import { TrustedKeySetAuthVerifier } from '../identity';
 import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
+
+export type DataSpaceCallbacks = {
+  /**
+   * Called before transitioning to the ready state.
+   */
+  beforeReady?: () => Promise<void>;
+
+  /**
+   * Called after transitioning to the ready state.
+   */
+  afterReady?: () => Promise<void>;
+};
 
 export type DataSpaceParams = {
   inner: Space;
@@ -41,13 +56,13 @@ export type DataSpaceParams = {
   signingContext: SigningContext;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
+  callbacks?: DataSpaceCallbacks;
 };
 
-const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipelineController: DataPipelineControllerImpl;
+  private readonly _dataPipeline: DataPipeline;
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -56,18 +71,25 @@ export class DataSpace {
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _callbacks: DataSpaceCallbacks;
+
+  private _state = SpaceState.CLOSED;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly stateUpdate = new Event();
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
+
     this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
-    this._dataPipelineController = new DataPipelineControllerImpl({
+    this._callbacks = params.callbacks ?? {};
+    this._dataPipeline = new DataPipeline({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
       snapshotManager: params.snapshotManager,
@@ -94,17 +116,17 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  get state(): SpaceState {
+    return this._state;
+  }
+
   // TODO(burdon): Can we mark this for debugging only?
   get inner() {
     return this._inner;
   }
 
-  get dataPipelineController(): DataPipelineControllerImpl {
-    return this._dataPipelineController;
-  }
-
-  get stateUpdate() {
-    return this._inner.stateUpdate;
+  get dataPipeline(): DataPipeline {
+    return this._dataPipeline;
   }
 
   get presence() {
@@ -119,11 +141,14 @@ export class DataSpace {
     await this.notarizationPlugin.open();
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
+    this._state = SpaceState.INACTIVE;
   }
 
   async close() {
+    this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
 
+    await this._dataPipeline.close();
     await this.authVerifier.close();
 
     await this._inner.close();
@@ -141,12 +166,40 @@ export class DataSpace {
     return this._gossip.listen(channel, callback);
   }
 
+  /**
+   * Initialize the data pipeline in a separate task.
+   */
+  initializeDataPipelineAsync() {
+    scheduleTask(this._ctx, async () => {
+      try {
+        await this.initializeDataPipeline();
+      } catch (err) {
+        if (err instanceof CancelledError) {
+          log('Data pipeline initialization cancelled', err);
+          return;
+        }
+
+        log.error('Error initializing data pipeline', err);
+      }
+    });
+  }
+
   async initializeDataPipeline() {
+    if (this._state !== SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+    this._state = SpaceState.INITIALIZING;
+
+    // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      timeout: CONTROL_PIPELINE_READY_TIMEFRAME
+      ctx: this._ctx,
+      breakOnStall: false
     });
 
     await this._createWritableFeeds();
+    log('Writable feeds created');
+    this.stateUpdate.emit();
+
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
@@ -156,7 +209,28 @@ export class DataSpace {
       )
     );
 
-    await this._inner.initDataPipeline(this._dataPipelineController);
+    await this._dataPipeline.open({
+      openPipeline: async (start) => {
+        const pipeline = await this._inner.createDataPipeline({ start });
+        await pipeline.start();
+        return pipeline;
+      }
+    });
+
+    log('waiting for data pipeline to reach target timeframe');
+    // Wait for the data pipeline to catch up to its desired timeframe.
+    await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
+      ctx: this._ctx,
+      breakOnStall: false
+    });
+
+    log('data pipeline ready');
+    await this._callbacks.beforeReady?.();
+
+    this._state = SpaceState.READY;
+    this.stateUpdate.emit();
+
+    await this._callbacks.afterReady?.();
   }
 
   @timed(10_000)
@@ -198,7 +272,8 @@ export class DataSpace {
     }
 
     if (credentials.length > 0) {
-      await this.notarizationPlugin.notarize(credentials);
+      // Never times out
+      await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
     }
 
     // Set this after credentials are notarized so that on failure we will retry.

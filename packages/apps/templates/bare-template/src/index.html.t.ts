@@ -14,11 +14,11 @@ export default defineTemplate(
           <meta name="viewport" content="width=device-width,initial-scale=1">
           <title>${name}</title>
           <link rel="icon" href="/favicon.ico">
-          ${render.head()}
+          ${render.head?.()}
         </head>
         <body>
           ${react && '<div id="root"></div>'}
-          ${render.body()}
+          ${render.body?.()}
           <script type="module" src="/src/main.ts${react ? 'x' : ''}"></script>
         </body>
       </html>

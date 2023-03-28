@@ -110,14 +110,35 @@ export const markdownDarktheme = {
     borderLeftColor: cursor
   },
   '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(',')
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
+    padding: '4px'
   },
   '& .cm-activeLine': {
     backgroundColor: 'transparent'
   },
   '.dark & .cm-activeLine': {
     backgroundColor: 'transparent'
-  }
+  },
+  '& .cm-ySelectionInfo': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+    padding: '2px 4px',
+    marginBlockStart: '-4px'
+  },
+  '& .cm-ySelection': {
+    display: 'inline-block'
+  },
+  '& .cm-ySelectionCaret': {
+    display: 'inline-block',
+    verticalAlign: 'top'
+  },
+  ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
+    const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
+    // todo (thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
+    acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
+    acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
+    acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
+    return acc;
+  }, {})
 };
 
 export const markdownDarkHighlighting = HighlightStyle.define(

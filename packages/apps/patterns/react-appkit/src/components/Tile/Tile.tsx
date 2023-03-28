@@ -4,19 +4,19 @@
 
 import React from 'react';
 
-import { Document } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
 
-export type Tile<T = Document> = {
-  canRender: (data: Document) => boolean;
+export type Tile<T = TypedObject> = {
+  canRender: (data: TypedObject) => boolean;
   render: (props: { data: T }) => JSX.Element;
 };
 
 export const BaseTile = Group;
 
-export const DefaultTile: Tile<Document> = {
+export const DefaultTile: Tile<TypedObject> = {
   canRender: (_data) => true,
   render: ({ data }) => (
     <BaseTile label={{ children: data ? data.title : 'Unknown object' }}>
@@ -65,7 +65,7 @@ export const ALL_CARDS = [
   DefaultTile
 ];
 
-export const GenericTile: Tile<Document>['render'] = ({ data }) => {
+export const GenericTile: Tile<TypedObject>['render'] = ({ data }) => {
   const card = ALL_CARDS.find((card) => card.canRender(data));
 
   // TODO(wittjosiah): Infer type of data from `canRender`?

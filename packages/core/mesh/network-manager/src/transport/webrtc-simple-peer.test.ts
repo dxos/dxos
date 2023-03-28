@@ -20,7 +20,6 @@ describe('Node WebRTC and simple-peer', () => {
       });
 
       await sleep(1);
-
       await peer.destroy();
     })
     .timeout(3_000);

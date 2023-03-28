@@ -18,33 +18,11 @@ Arguments:
 
 
 ## Properties
+### [networkStatus]()
+Type: <code>MulticastObservable&lt;object&gt;</code>
 
 
 ## Methods
-### [close()]()
-
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-
-### [getNetworkStatus()]()
-
-
-
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;NetworkStatus&gt;</code>
-
-Arguments: none
-
-### [open()]()
-
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-
 ### [setConnectionState(state)]()
 
 

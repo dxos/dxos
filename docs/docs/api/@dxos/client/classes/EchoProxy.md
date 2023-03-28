@@ -6,7 +6,7 @@ TODO(burdon): Public API (move comments here).
 
 
 ## Constructors
-### [constructor(_serviceProvider, _modelFactory, _haloProxy)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L55)
+### [constructor(_serviceProvider, _modelFactory)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L56)
 
 
 
@@ -18,21 +18,22 @@ Arguments:
 
 `_modelFactory`: <code>ModelFactory</code>
 
-`_haloProxy`: <code>[HaloProxy](/api/@dxos/client/classes/HaloProxy)</code>
-
 
 ## Properties
-### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L48)
+### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L50)
 Type: <code>[DatabaseRouter](/api/@dxos/client/classes/DatabaseRouter)</code>
 
-### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L75)
+### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L74)
 Type: <code>ModelFactory</code>
 
-### [networkManager](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L82)
+### [networkManager](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L81)
 Type: <code>any</code>
 
-### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L92)
+### [opened](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L91)
 Type: <code>boolean</code>
+
+### [spaces](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L95)
+Type: <code>MulticastObservable&lt;[Space](/api/@dxos/client/interfaces/Space)[]&gt;</code>
 
 
 ## Methods
@@ -44,7 +45,7 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L224)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L225)
 
 
 
@@ -59,7 +60,7 @@ Arguments:
 
 `options`: <code>[InvitationsOptions](/api/@dxos/client/types/InvitationsOptions)</code>
 
-### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L148)
+### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L161)
 
 
 
@@ -69,7 +70,7 @@ Arguments:
 
 `schema`: <code>[EchoSchema](/api/@dxos/client/classes/EchoSchema)</code>
 
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L138)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L148)
 
 
 
@@ -77,7 +78,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L159)
+### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L176)
 
 
 
@@ -90,7 +91,7 @@ Arguments:
 
 `meta`: <code>[PropertiesProps](/api/@dxos/client/types/PropertiesProps)</code>
 
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L201)
+### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L218)
 
 
 
@@ -103,18 +104,7 @@ Arguments:
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-### [getSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L208)
-
-
-
-Gets a list of all spaces.
-
-
-Returns: <code>[Space](/api/@dxos/client/interfaces/Space)[]</code>
-
-Arguments: none
-
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L96)
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L99)
 
 
 
@@ -122,20 +112,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [subscribeSpaces(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L217)
-
-
-
-Subscribes to spaces changes.
-
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
-
-`callback`: <code>function</code>
-
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L66)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L65)
 
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "A low-level design system for DXOS, comprising React components and plugins for Vite and ESBuild.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,13 +48,13 @@
     "i18next": "^21.10.0",
     "jdenticon": "^3.2.0",
     "lodash.merge": "^4.6.2",
-    "postcss": "^8.4.17",
+    "postcss": "^8.4.21",
     "qrcode.react": "^3.1.0",
     "rci": "^0.0.3",
     "react-i18next": "^11.18.6",
     "react-table": "^7.8.0",
     "tailwind-merge": "^1.10.0",
-    "tailwindcss": "^3.2.7",
+    "tailwindcss": "~3.2.7",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.8.0"
   },
@@ -69,7 +69,7 @@
     "esbuild-style-plugin": "^1.6.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "4.0.4"
+    "vite": "^4.2.0"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",

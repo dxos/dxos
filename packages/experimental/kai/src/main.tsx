@@ -20,7 +20,7 @@ import { createRouter } from './router';
 import '@dxos/client/shell.css';
 import '../style.css';
 
-void initializeAppTelemetry('kai', new Config(Defaults()));
+void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
@@ -32,7 +32,9 @@ const initialState: AppState = {
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA)
+  pwa: bool(import.meta.env.VITE_PWA),
+  chat: false,
+  fullscreen: false
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 

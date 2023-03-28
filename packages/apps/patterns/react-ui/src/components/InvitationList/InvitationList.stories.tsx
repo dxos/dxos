@@ -37,7 +37,7 @@ export const Default = {
 
         await clients[0].halo.createIdentity({ displayName: 'Os Mutantes' });
 
-        const space = await clients[0].echo.createSpace();
+        const space = await clients[0].createSpace();
         log.info('[space created]', space);
         space.properties.name = 'Q3 2022 Planning';
         log.info('[space title set]', space?.properties.name);

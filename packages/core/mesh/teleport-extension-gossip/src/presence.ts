@@ -64,6 +64,7 @@ export class Presence {
       this._receiveAnnounces(message);
     });
 
+    // Send announce to all connected peers.
     scheduleTaskInterval(
       this._ctx,
       async () => {
@@ -76,6 +77,21 @@ export class Presence {
       },
       _params.announceInterval
     );
+
+    // Emit updated event in case some peers went offline.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this.updated.emit();
+      },
+      _params.offlineTimeout
+    );
+
+    // Remove peer state when connection is closed.
+    this._params.gossip.connectionClosed.on((peerId) => {
+      this._peerStates.delete(peerId);
+      this.updated.emit();
+    });
   }
 
   getPeers(): PeerState[] {

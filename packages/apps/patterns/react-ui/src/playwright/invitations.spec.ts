@@ -104,9 +104,10 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'device', invitation);
       await manager.cancelInvitation(1, 'device', 'guest');
       await manager.resetInvitation(1);
+      await manager.invitationInputContinue(1, 'device');
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'device')
+        manager.clearAuthenticationCode(1, 'device')
       ]);
       await manager.authenticateInvitation(1, 'device', authenticationCode);
       await manager.doneInvitation(1, 'device');
@@ -126,9 +127,10 @@ test.describe('Invitations', () => {
       await sleep(100);
       await manager.setConnectionState(0, ConnectionState.ONLINE);
       await manager.resetInvitation(1);
+      await manager.invitationInputContinue(1, 'device');
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'device')
+        manager.clearAuthenticationCode(1, 'device')
       ]);
       await manager.authenticateInvitation(1, 'device', authenticationCode);
       await manager.doneInvitation(1, 'device');
@@ -243,10 +245,13 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(1)).to.be.true;
 
       await manager.resetInvitation(1);
+      await manager.invitationInputContinue(1, 'space');
+
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
+
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');
 
@@ -292,10 +297,13 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
       await manager.cancelInvitation(1, 'space', 'guest');
       await manager.resetInvitation(1);
+      await manager.invitationInputContinue(1, 'space');
+
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
+
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');
 
@@ -317,9 +325,10 @@ test.describe('Invitations', () => {
       await sleep(100);
       await manager.setConnectionState(0, ConnectionState.ONLINE);
       await manager.resetInvitation(1);
+      await manager.invitationInputContinue(1, 'space');
       const [authenticationCode] = await Promise.all([
         manager.getAuthenticationCode(),
-        manager.invitationInputContinue(1, 'space')
+        manager.clearAuthenticationCode(1, 'space')
       ]);
       await manager.authenticateInvitation(1, 'space', authenticationCode);
       await manager.doneInvitation(1, 'space');

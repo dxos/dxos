@@ -3,17 +3,16 @@
 //
 
 import { execSync } from 'child_process';
-import debug from 'debug';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
 import set from 'lodash.set';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { log } from '@dxos/log';
+
 import { mapFromKeyValues } from '../config';
 import { ConfigPluginOpts } from './types';
-
-const log = debug('dxos:config:plugin');
 
 const CWD = process.cwd();
 
@@ -55,6 +54,11 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
         }
       } catch (err: any) {
         log(`Failed to load file ${value}:`, err);
+
+        if (key === '__CONFIG_DEFAULTS__') {
+          // Default config is required.
+          throw new Error(`Failed to load default config file from ${value}`);
+        }
       }
 
       return {
