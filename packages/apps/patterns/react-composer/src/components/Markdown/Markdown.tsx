@@ -141,7 +141,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ...completionKeymap,
             ...lintKeymap
           ]),
-
+          EditorView.lineWrapping,
           // Theme
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
           EditorView.theme({ ...markdownDarktheme, ...slots.editor?.markdownTheme }),
