@@ -11,7 +11,6 @@ import {
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY,
   AbstractInvitationsHandler,
-  InvitationsOptions,
   AuthenticatingInvitationObservable
 } from '@dxos/client';
 import { Context } from '@dxos/context';
@@ -59,24 +58,35 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: DataSpace, options?: InvitationsOptions): CancellableInvitationObservable {
-    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
+  createInvitation(space: DataSpace, options?: Partial<Invitation>): CancellableInvitationObservable {
+    const {
+      invitationId = PublicKey.random().toHex(),
+      type = Invitation.Type.INTERACTIVE,
+      authMethod = AuthMethod.SHARED_SECRET,
+      state = Invitation.State.INIT,
+      timeout = INVITATION_TIMEOUT,
+      swarmKey = PublicKey.random()
+    } = options ?? {};
+    const authenticationCode =
+      options?.authenticationCode ??
+      (authMethod === AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
+    // TODO(wittjosiah): Remove.
     assert(type !== Invitation.Type.OFFLINE);
     assert(space);
 
-    const stream = new PushStream<Invitation>();
-
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
+      invitationId,
       type,
-      state: Invitation.State.INIT,
-      invitationId: PublicKey.random().toHex(),
-      swarmKey: swarmKey ?? PublicKey.random(),
+      authMethod,
+      state,
+      swarmKey,
       spaceKey: space.key,
-      authMethod: options?.authMethod ?? AuthMethod.SHARED_SECRET,
-      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH) // TODO(dmaretskyi): Don't generate if authMethod === NONE .
+      authenticationCode
     };
 
+    // TODO(wittjosiah): Fire complete event?
+    const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
@@ -244,8 +254,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
    * The local guest peer (invitee) then sends the local space invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
-    const { timeout = INVITATION_TIMEOUT } = options ?? {};
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+    const { timeout = INVITATION_TIMEOUT } = invitation;
     const stream = new PushStream<Invitation>();
 
     const ctx = new Context({

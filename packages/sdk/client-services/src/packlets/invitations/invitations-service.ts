@@ -9,8 +9,7 @@ import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   InvitationsService,
-  InvitationsHandler,
-  InvitationsOptions
+  InvitationsHandler
 } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
@@ -48,8 +47,7 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
       log('stream opened', this.getLoggingContext());
 
       let invitationId: string;
-      const { type, swarmKey, authMethod } = invitation;
-      const observable = invitationsHandler.createInvitation(context, { type, swarmKey, authMethod });
+      const observable = invitationsHandler.createInvitation(context, invitation);
       observable.subscribe(
         (invitation) => {
           switch (invitation.state) {
@@ -115,13 +113,13 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
     });
   }
 
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Stream<Invitation> {
+  acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       log('stream opened', this.getLoggingContext());
       const invitationsHandler = this._getInvitationsHandler();
 
       let invitationId: string;
-      const observable = invitationsHandler.acceptInvitation(invitation, options);
+      const observable = invitationsHandler.acceptInvitation(invitation);
       observable.subscribe(
         (invitation) => {
           switch (invitation.state) {
@@ -196,13 +194,12 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
     }
   }
 
-  async cancelInvitation(invitation: Invitation): Promise<void> {
+  async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
     log('cancelling...');
-    assert(invitation.invitationId);
-    const observable =
-      this._createInvitations.get(invitation.invitationId) ?? this._acceptInvitations.get(invitation.invitationId);
+    assert(invitationId);
+    const observable = this._createInvitations.get(invitationId) ?? this._acceptInvitations.get(invitationId);
     if (!observable) {
-      log.warn('invalid invitation', { invitationId: invitation.invitationId });
+      log.warn('invalid invitation', { invitationId });
     } else {
       await observable?.cancel();
     }

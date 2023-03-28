@@ -18,7 +18,7 @@ export const performInvitation = async <T>(host: InvitationsHandler<T>, guest: I
     async (invitation1: Invitation) => {
       switch (invitation1.state) {
         case Invitation.State.CONNECTING: {
-          const observable2 = await guest.acceptInvitation(invitation1, { type: Invitation.Type.INTERACTIVE_TESTING });
+          const observable2 = await guest.acceptInvitation(invitation1);
           observable2.subscribe(
             (invitation2: Invitation) => {
               switch (invitation2.state) {

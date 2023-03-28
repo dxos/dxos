@@ -41,28 +41,28 @@ enum AuthMethod {
 // HALO device invitations.
 //
 
-message HaloAdmissionOffer {
+message DeviceAdmissionOffer {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey halo_space_key = 2;
   dxos.keys.PublicKey genesis_feed_key = 3;
   optional dxos.echo.timeframe.TimeframeVector control_timeframe = 4;
 }
 
-message HaloAdmissionCredentials {
+message DeviceAdmissionCredentials {
   dxos.keys.PublicKey device_key = 1;
   dxos.keys.PublicKey control_feed_key = 2;
   dxos.keys.PublicKey data_feed_key = 3;
 }
 
-service HaloHostService {
+service DeviceHostService {
   /// Process admission offer from host.
-  rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
+  rpc RequestAdmission(google.protobuf.Empty) returns (DeviceAdmissionOffer);
 
   /// Authenticate request.
   rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
   /// Process admission request from guest.
-  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
+  rpc PresentAdmissionCredentials(DeviceAdmissionCredentials) returns (google.protobuf.Empty);
 }
 
 //

@@ -25,9 +25,10 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   AuthenticationRequest,
   AuthenticationResponse,
-  HaloAdmissionCredentials,
-  HaloAdmissionOffer,
-  HaloHostService
+  AuthMethod,
+  DeviceAdmissionCredentials,
+  DeviceAdmissionOffer,
+  DeviceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -56,22 +57,33 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
-    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
+  createInvitation(context: void, options?: Partial<Invitation>): CancellableInvitationObservable {
+    const {
+      invitationId = PublicKey.random().toHex(),
+      type = Invitation.Type.INTERACTIVE,
+      authMethod = AuthMethod.SHARED_SECRET,
+      state = Invitation.State.INIT,
+      timeout = INVITATION_TIMEOUT,
+      swarmKey = PublicKey.random()
+    } = options ?? {};
+    const authenticationCode =
+      options?.authenticationCode ??
+      (authMethod === AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._params.getIdentity();
 
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
+      invitationId,
       type,
-      state: Invitation.State.INIT,
-      invitationId: PublicKey.random().toHex(),
-      swarmKey: swarmKey ?? PublicKey.random(),
-      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
+      authMethod,
+      state,
+      swarmKey,
+      authenticationCode
     };
 
+    // TODO(wittjosiah): Fire complete event?
     const stream = new PushStream<Invitation>();
-
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
@@ -79,7 +91,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
       }
     });
 
-    let authenticationCode: string;
+    let presentedAuthenticationCode: string;
     const complete = new Trigger<PublicKey>();
 
     // Called for every connecting peer.
@@ -102,7 +114,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
         authenticate: async ({ authenticationCode: code }) => {
           log('received authentication request', { authenticationCode: code });
-          authenticationCode = code;
+          presentedAuthenticationCode = code;
           return { status: AuthenticationResponse.Status.OK };
         },
 
@@ -111,8 +123,11 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
           try {
             // Check authenticated.
             if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
-              if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
-                throw new Error(`invalid authentication code: ${authenticationCode}`);
+              if (
+                invitation.authenticationCode === undefined ||
+                invitation.authenticationCode !== presentedAuthenticationCode
+              ) {
+                throw new Error(`invalid authentication code: ${presentedAuthenticationCode}`);
               }
             }
 
@@ -215,7 +230,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
               // 1. Send request.
               log('sending admission request');
               const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } =
-                await extension.rpc.HaloHostService.requestAdmission();
+                await extension.rpc.DeviceHostService.requestAdmission();
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
@@ -224,7 +239,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
                 stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
                 const authenticationCode = await authenticated.wait({ timeout });
                 log('sending authentication request');
-                await extension.rpc.HaloHostService.authenticate({ authenticationCode });
+                await extension.rpc.DeviceHostService.authenticate({ authenticationCode });
               }
 
               const deviceKey = await this._params.keyring.createKey();
@@ -233,7 +248,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
               // 3. Send admission credentials to host (with local identity keys).
               log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
-              await extension.rpc.HaloHostService.presentAdmissionCredentials({
+              await extension.rpc.DeviceHostService.presentAdmissionCredentials({
                 deviceKey,
                 controlFeedKey,
                 dataFeedKey
@@ -307,9 +322,9 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 }
 
 type HostHaloInvitationExtensionCallbacks = {
-  requestAdmission: () => Promise<HaloAdmissionOffer>;
+  requestAdmission: () => Promise<DeviceAdmissionOffer>;
   authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
-  presentAdmissionCredentials: (request: HaloAdmissionCredentials) => Promise<void>;
+  presentAdmissionCredentials: (request: DeviceAdmissionCredentials) => Promise<void>;
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
 };
@@ -317,20 +332,20 @@ type HostHaloInvitationExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
-class HostHaloInvitationExtension extends RpcExtension<{}, { HaloHostService: HaloHostService }> {
+class HostHaloInvitationExtension extends RpcExtension<{}, { DeviceHostService: DeviceHostService }> {
   constructor(private readonly _callbacks: HostHaloInvitationExtensionCallbacks) {
     super({
       exposed: {
-        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+        DeviceHostService: schema.getService('dxos.halo.invitations.DeviceHostService')
       }
     });
   }
 
-  protected override async getHandlers(): Promise<{ HaloHostService: HaloHostService }> {
+  protected override async getHandlers(): Promise<{ DeviceHostService: DeviceHostService }> {
     return {
       // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
       // Perhaps in the future we will have more complex logic here.
-      HaloHostService: {
+      DeviceHostService: {
         requestAdmission: async () => {
           return this._callbacks.requestAdmission();
         },
@@ -361,11 +376,11 @@ type GuestHaloInvitationExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-class GuestHaloInvitationExtension extends RpcExtension<{ HaloHostService: HaloHostService }, {}> {
+class GuestHaloInvitationExtension extends RpcExtension<{ DeviceHostService: DeviceHostService }, {}> {
   constructor(private readonly _callbacks: GuestHaloInvitationExtensionCallbacks) {
     super({
       requested: {
-        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+        DeviceHostService: schema.getService('dxos.halo.invitations.DeviceHostService')
       }
     });
   }

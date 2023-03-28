@@ -5,7 +5,9 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsService } from './invitations';
 import { InvitationsOptions, InvitationsHandler } from './invitations-handler';
@@ -24,7 +26,15 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
     private readonly _invitationsService: InvitationsService
   ) {}
 
-  abstract getInvitationOptions(context: T): Invitation;
+  getInvitationOptions(context: T): Invitation {
+    return {
+      invitationId: PublicKey.random().toHex(),
+      type: Invitation.Type.INTERACTIVE,
+      authMethod: AuthMethod.SHARED_SECRET,
+      state: Invitation.State.INIT,
+      swarmKey: PublicKey.random()
+    };
+  }
 
   createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable {
     const invitation: Invitation = { ...this.getInvitationOptions(context), ...options };
