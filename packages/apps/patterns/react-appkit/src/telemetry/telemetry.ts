@@ -5,7 +5,7 @@
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
-import type { Client, Config } from '@dxos/client';
+import { Client, Config, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
@@ -27,16 +27,15 @@ if (navigator.storage?.estimate) {
 
 // TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
 // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
-export const getTelemetryIdentifier = (client: Client) => {
-  if (!client?.initialized) {
-    return undefined;
-  }
-  const identity = client.halo.identity.get();
-  if (identity) {
-    humanize(identity.identityKey);
+export const getTelemetryIdentifier = async () => {
+  const existingIdentifier = await localForage.getItem('dxosTelemetryIdentifier');
+  if (existingIdentifier) {
+    return existingIdentifier;
   }
 
-  return undefined;
+  const identifier = PublicKey.random().toHex();
+  await localForage.setItem('dxosTelemetryIdentifier', identifier);
+  return identifier;
 };
 
 export const isTelemetryDisabled = async (namespace: string) =>
