@@ -7,14 +7,14 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, Trigger } from '@dxos/async';
-import { DeviceInvitationsProxy } from '@dxos/client';
+import { InvitationsProxy } from '@dxos/client';
 import { raise } from '@dxos/debug';
-import { Invitation, DeviceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers } from '../testing';
-import { DeviceInvitationsServiceImpl } from './device-invitations-service';
+import { InvitationsServiceImpl } from './invitations-service';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -28,15 +28,11 @@ describe('services/device-invitation-service', () => {
     await host.identityManager.createIdentity();
     expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
 
-    // prettier-ignore
-    const service1: DeviceInvitationsService = new DeviceInvitationsServiceImpl(
-      host.identityManager,
-      host.deviceInvitations
+    const service1 = new InvitationsServiceImpl(host.invitations, (invitation) =>
+      host.getInvitationHandler(invitation)
     );
-    // prettier-ignore
-    const service2: DeviceInvitationsService = new DeviceInvitationsServiceImpl(
-      guest.identityManager,
-      guest.deviceInvitations
+    const service2 = new InvitationsServiceImpl(guest.invitations, (invitation) =>
+      guest.getInvitationHandler(invitation)
     );
 
     const success1 = new Trigger<Invitation>();
@@ -45,13 +41,13 @@ describe('services/device-invitation-service', () => {
     const authenticationCode = new Trigger<string>();
 
     {
-      const proxy1 = new DeviceInvitationsProxy(service1);
+      const proxy1 = new InvitationsProxy(service1, () => ({ kind: Invitation.Kind.DEVICE }));
       const observable1 = proxy1.createInvitation();
       observable1.subscribe(
         (invitation: Invitation) => {
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
-              const proxy2 = new DeviceInvitationsProxy(service2);
+              const proxy2 = new InvitationsProxy(service2, () => ({ kind: Invitation.Kind.DEVICE }));
               const observable2 = proxy2.acceptInvitation(invitation);
               observable2.subscribe(
                 async (invitation) => {

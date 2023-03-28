@@ -45,14 +45,12 @@ describe('Halo', () => {
 
     const done1 = new Trigger();
     const done2 = new Trigger();
-    const observable1 = client1.halo.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    const observable1 = client1.halo.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
     observable1.subscribe(
       (invitation1) => {
         switch (invitation1.state) {
           case Invitation.State.CONNECTING: {
-            const observable2 = client2.halo.acceptInvitation(invitation1, {
-              type: Invitation.Type.INTERACTIVE_TESTING
-            });
+            const observable2 = client2.halo.acceptInvitation(invitation1);
             observable2.subscribe(
               (invitation2) => {
                 switch (invitation2.state) {

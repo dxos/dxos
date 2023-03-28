@@ -21,7 +21,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { AuthenticatingInvitationObservable, InvitationsOptions } from '../invitations';
+import { AuthenticatingInvitationObservable } from '../invitations';
 import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy, Space } from '../proxies';
 import { SpaceSerializer } from './serializer';
@@ -192,8 +192,8 @@ export class Client {
   /**
    * Accept an invitation to a space.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
-    return this._echo.acceptInvitation(invitation, options);
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+    return this._echo.acceptInvitation(invitation);
   }
 
   /**

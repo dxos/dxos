@@ -33,7 +33,7 @@ describe('Spaces/invitations', () => {
 
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    const observable1 = space1.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
     observable1.subscribe(
       (invitation1) => {
         switch (invitation1.state) {

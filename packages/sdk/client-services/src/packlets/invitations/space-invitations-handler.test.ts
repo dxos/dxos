@@ -55,7 +55,7 @@ describe('services/space-invitations-handler', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await performInvitation(host.spaceInvitations!, guest.spaceInvitations!, space1);
+    await performInvitation(host, guest, { kind: Invitation.Kind.SPACE, spaceKey });
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -83,12 +83,14 @@ describe('services/space-invitations-handler', () => {
     const authenticationCode = new Trigger<string>();
 
     const space1 = await host.dataSpaceManager!.createSpace();
-    const observable1 = host.spaceInvitations!.createInvitation(space1);
+    const handler1 = host.getInvitationHandler({ kind: Invitation.Kind.SPACE, spaceKey: space1.key });
+    const observable1 = host.invitations.createInvitation(handler1);
     observable1.subscribe(
       (invitation1) => {
         switch (invitation1.state) {
           case Invitation.State.CONNECTING: {
-            const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
+            const handler2 = guest.getInvitationHandler({ kind: Invitation.Kind.SPACE });
+            const observable2 = guest.invitations!.acceptInvitation(handler2, invitation1);
             observable2.subscribe(
               async (invitation2) => {
                 switch (invitation2.state) {
@@ -168,14 +170,16 @@ describe('services/space-invitations-handler', () => {
     const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
 
     const space1 = await host.dataSpaceManager!.createSpace();
-    const observable1 = await host.spaceInvitations!.createInvitation(space1);
+    const handler1 = host.getInvitationHandler({ kind: Invitation.Kind.SPACE, spaceKey: space1.key });
+    const observable1 = await host.invitations.createInvitation(handler1);
     observable1.subscribe(
       (invitation1) => {
         switch (invitation1.state) {
           case Invitation.State.CONNECTING: {
             connecting1.wake(invitation1);
 
-            const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
+            const handler2 = guest.getInvitationHandler({ kind: Invitation.Kind.SPACE });
+            const observable2 = guest.invitations.acceptInvitation(handler2, invitation1);
             observable2.subscribe(async (invitation2) => {
               switch (invitation2.state) {
                 case Invitation.State.CONNECTING: {

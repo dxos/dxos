@@ -5,20 +5,30 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { InvitationsHandler } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export const performInvitation = async <T>(host: InvitationsHandler<T>, guest: InvitationsHandler<T>, context: T) => {
+import { ServiceContext } from '../services';
+
+export const performInvitation = async (
+  host: ServiceContext,
+  guest: ServiceContext,
+  options: Parameters<ServiceContext['getInvitationHandler']>[0]
+) => {
   const done1 = new Trigger<Invitation>(); // peer 1 connected.
   const done2 = new Trigger<Invitation>(); // peer 2 connected.
 
-  const observable1 = await host.createInvitation(context, { type: Invitation.Type.INTERACTIVE_TESTING });
+  const hostHandler = host.getInvitationHandler(options);
+  const observable1 = await host.invitations.createInvitation(hostHandler, { authMethod: Invitation.AuthMethod.NONE });
   observable1.subscribe(
     async (invitation1: Invitation) => {
       switch (invitation1.state) {
         case Invitation.State.CONNECTING: {
-          const observable2 = await guest.acceptInvitation(invitation1);
+          const guestHandler = guest.getInvitationHandler({ kind: options.kind });
+          const observable2 = await guest.invitations.acceptInvitation(guestHandler, {
+            ...invitation1,
+            spaceKey: undefined
+          });
           observable2.subscribe(
             (invitation2: Invitation) => {
               switch (invitation2.state) {

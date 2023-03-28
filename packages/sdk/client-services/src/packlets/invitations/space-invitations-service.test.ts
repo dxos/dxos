@@ -6,14 +6,14 @@ import { expect } from 'chai';
 import assert from 'node:assert';
 
 import { asyncChain, Trigger } from '@dxos/async';
-import { SpaceInvitationsProxy } from '@dxos/client';
+import { InvitationsProxy } from '@dxos/client';
 import { raise } from '@dxos/debug';
-import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
-import { SpaceInvitationsServiceImpl } from './space-invitations-service';
+import { InvitationsServiceImpl } from './invitations-service';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -23,21 +23,15 @@ const closeAfterTest = async (peer: ServiceContext) => {
 describe('services/space-invitation-service', () => {
   test('creates space and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
-
     assert(host.dataSpaceManager);
-    assert(host.spaceInvitations);
-    const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
-      host.identityManager,
-      () => host.spaceInvitations!,
-      () => host.dataSpaceManager!
+    assert(guest.dataSpaceManager);
+
+    const service1 = new InvitationsServiceImpl(host.invitations, (invitation) =>
+      host.getInvitationHandler(invitation)
     );
 
-    assert(guest.dataSpaceManager);
-    assert(guest.spaceInvitations);
-    const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
-      guest.identityManager,
-      () => guest.spaceInvitations!,
-      () => guest.dataSpaceManager!
+    const service2 = new InvitationsServiceImpl(guest.invitations, (invitation) =>
+      guest.getInvitationHandler(invitation)
     );
 
     const space1 = await host.dataSpaceManager.createSpace();
@@ -48,14 +42,14 @@ describe('services/space-invitation-service', () => {
     const authenticationCode = new Trigger<string>();
 
     {
-      const proxy1 = new SpaceInvitationsProxy(service1);
-      const observable1 = proxy1.createInvitation(space1.key);
+      const proxy1 = new InvitationsProxy(service1, () => ({ kind: Invitation.Kind.SPACE, spaceKey: space1.key }));
+      const observable1 = proxy1.createInvitation();
       observable1.subscribe(
         (invitation1: Invitation) => {
           switch (invitation1.state) {
             case Invitation.State.CONNECTING: {
-              const proxy2 = new SpaceInvitationsProxy(service2);
-              const observable2 = proxy2.acceptInvitation(invitation1);
+              const proxy2 = new InvitationsProxy(service2, () => ({ kind: Invitation.Kind.SPACE }));
+              const observable2 = proxy2.acceptInvitation({ ...invitation1, spaceKey: undefined });
               observable2.subscribe(
                 async (invitation2: Invitation) => {
                   switch (invitation2.state) {
@@ -70,7 +64,7 @@ describe('services/space-invitation-service', () => {
                     }
                   }
                 },
-                (err) => raise(err)
+                (err: any) => raise(err)
               );
               break;
             }
@@ -87,7 +81,7 @@ describe('services/space-invitation-service', () => {
             }
           }
         },
-        (err) => {
+        (err: any) => {
           raise(err);
         }
       );
@@ -100,34 +94,28 @@ describe('services/space-invitation-service', () => {
 
   test('creates space and cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
-
     assert(host.dataSpaceManager);
-    assert(host.spaceInvitations);
-    const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
-      host.identityManager,
-      () => host.spaceInvitations!,
-      () => host.dataSpaceManager!
+    assert(guest.dataSpaceManager);
+
+    const service1 = new InvitationsServiceImpl(host.invitations, (invitation) =>
+      host.getInvitationHandler(invitation)
     );
 
-    assert(guest.dataSpaceManager);
-    assert(guest.spaceInvitations);
-    const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
-      guest.identityManager,
-      () => guest.spaceInvitations!,
-      () => guest.dataSpaceManager!
+    const service2 = new InvitationsServiceImpl(guest.invitations, (invitation) =>
+      guest.getInvitationHandler(invitation)
     );
 
     const space1 = await host.dataSpaceManager.createSpace();
     const cancelled = new Trigger();
 
     {
-      const proxy = new SpaceInvitationsProxy(service1);
-      const observable = proxy.createInvitation(space1.key);
+      const proxy1 = new InvitationsProxy(service1, () => ({ kind: Invitation.Kind.SPACE, spaceKey: space1.key }));
+      const observable = proxy1.createInvitation();
       observable.subscribe(
         (invitation: Invitation) => {
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
-              const proxy2 = new SpaceInvitationsProxy(service2);
+              const proxy2 = new InvitationsProxy(service2, () => ({ kind: Invitation.Kind.SPACE }));
               proxy2.acceptInvitation(invitation);
               break;
             }
@@ -144,7 +132,7 @@ describe('services/space-invitation-service', () => {
             }
           }
         },
-        (err) => raise(err)
+        (err: any) => raise(err)
       );
     }
 

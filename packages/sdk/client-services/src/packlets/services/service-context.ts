@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Trigger } from '@dxos/async';
+import { Invitation } from '@dxos/client';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -25,7 +28,12 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
-import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
+import {
+  DeviceInvitationsHandler,
+  GenericInvitationsHandler,
+  InvitationsHandler,
+  SpaceInvitationsHandler
+} from '../invitations';
 import { DataSpaceManager } from '../spaces';
 
 /**
@@ -41,13 +49,17 @@ export class ServiceContext {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
-  public readonly deviceInvitations: DeviceInvitationsHandler;
-
-  private _deviceSpaceSync?: CredentialConsumer<any>;
+  public readonly invitations: GenericInvitationsHandler;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
-  public spaceInvitations?: SpaceInvitationsHandler;
+
+  private readonly _handlerFactories = new Map<
+    Invitation.Kind,
+    (invitation: Partial<Invitation>) => InvitationsHandler
+  >();
+
+  private _deviceSpaceSync?: CredentialConsumer<any>;
 
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -84,14 +96,15 @@ export class ServiceContext {
       this.spaceManager
     );
 
+    this.invitations = new GenericInvitationsHandler(this.networkManager);
+
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.deviceInvitations = new DeviceInvitationsHandler({
-      networkManager: this.networkManager,
-      getIdentity: () => this.identityManager.identity ?? failUndefined(),
-      acceptIdentity: this._acceptIdentity.bind(this),
-      keyring: this.keyring
-    });
+    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationsHandler(
+      this.keyring,
+      () => this.identityManager.identity ?? failUndefined(),
+      this._acceptIdentity.bind(this)
+    ));
   }
 
   async open() {
@@ -135,6 +148,12 @@ export class ServiceContext {
     return identity;
   }
 
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationsHandler {
+    const factory = this._handlerFactories.get(invitation.kind);
+    assert(factory, `Unknown invitation kind: ${invitation.kind}`);
+    return factory(invitation);
+  }
+
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
 
@@ -168,12 +187,10 @@ export class ServiceContext {
     );
     await this.dataSpaceManager.open();
 
-    this.spaceInvitations = new SpaceInvitationsHandler(
-      this.networkManager,
-      this.dataSpaceManager,
-      signingContext,
-      this.keyring
-    );
+    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
+      assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
+      return new SpaceInvitationsHandler(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+    });
     this.initialized.wake();
 
     this._deviceSpaceSync = identity.space.spaceState.registerProcessor({

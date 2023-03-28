@@ -20,7 +20,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { ClientServicesProvider, ClientServicesProxy } from '../client';
-import { AuthenticatingInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
+import { AuthenticatingInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -51,7 +51,7 @@ export class EchoProxy implements Echo {
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
 
-  private _invitationProxy?: SpaceInvitationsProxy;
+  private _invitationProxy?: InvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -104,8 +104,10 @@ export class EchoProxy implements Echo {
     this._ctx = new Context();
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
-    this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
+    assert(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
+    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
+      kind: Invitation.Kind.SPACE
+    }));
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
@@ -227,12 +229,13 @@ export class EchoProxy implements Echo {
   /**
    * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions) {
+  // TODO(wittjosiah): Make idempotent.
+  acceptInvitation(invitation: Invitation) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
-    log('accept invitation', options);
-    return this._invitationProxy!.acceptInvitation(invitation, options);
+    log('accept invitation', invitation);
+    return this._invitationProxy!.acceptInvitation(invitation);
   }
 }
