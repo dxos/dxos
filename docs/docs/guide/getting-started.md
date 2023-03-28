@@ -117,7 +117,7 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
-```ts file=./snippets/react-mutate.tsx#L5-
+```tsx file=./snippets/react-mutate.tsx#L5-
 ```
 
 The above writes will start propagating to connected peers in the space on the next tick.
@@ -126,7 +126,7 @@ The changes will also cause any subscribed UI components in the app to re-render
 
 Creating new objects:
 
-```ts file=./snippets/react-crate.tsx#L5-
+```tsx file=./snippets/react-create.tsx#L5-
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.
