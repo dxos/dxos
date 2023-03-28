@@ -7,8 +7,13 @@ export default defineTemplate(
     return appTsx({
       ...context,
       slots: {
-        content: '{/* tasks template */}',
-        extraImports: ''
+        content: ({ imports }) => text`
+          <${imports.use('Main', './components/Main')} >
+            <${imports.use('HashRouter', 'react-router-dom')}>
+              <${imports.use('Routes', './Routes')} />
+            </HashRouter>
+          </Main>
+          `
       }
     });
   },

@@ -1,4 +1,4 @@
-import { z, defineConfig } from '../../index';
+import { z, defineConfig } from '../../src';
 import inherits from '../template/config.t';
 
 export default defineConfig({

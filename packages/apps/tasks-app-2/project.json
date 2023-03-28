@@ -14,6 +14,23 @@
         "{options.outputFile}"
       ]
     },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve tasks-app-2"
+          }
+        ],
+        "parallel": true
+      }
+    },
     "storybook": {
       "configurations": {
         "ci": {

@@ -1,5 +1,6 @@
 {
   "sourceRoot": "packages/common/plate/src",
+  "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
@@ -48,9 +49,34 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/common/plate",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/common/plate",
+        "resultsPath": "test-results/packages/common/plate",
+        "testPatterns": [
+          "packages/common/plate/test/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/plate/test/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

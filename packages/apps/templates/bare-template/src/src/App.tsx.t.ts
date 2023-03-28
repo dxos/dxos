@@ -19,7 +19,7 @@ export default defineTemplate(
     
     const coreContent = text`
     <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
-      ${render.content()}
+      ${render?.content?.()}
       ${dxosUi && pwa && swToast()}
     </${ClientProvider()}>`;
 
@@ -35,7 +35,7 @@ export default defineTemplate(
       import React from 'react';
       ${() => imports.render(defaultOutputFile)}
       
-      ${render.extraImports()}
+      ${render?.extraImports?.()}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE
       const config = async () => new ${Config()}(await ${Dynamics()}(), ${Defaults()}());
