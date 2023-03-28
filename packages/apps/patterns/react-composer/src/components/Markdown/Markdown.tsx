@@ -89,10 +89,6 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       view
     }));
 
-    console.log('[slots]', slots);
-    console.log('[slots.editor.markdownTheme]', slots.editor?.markdownTheme);
-    console.log('[editor theme]', { ...markdownDarktheme, ...slots.editor?.markdownTheme });
-
     useEffect(() => {
       if (provider && peer) {
         let peerColorDigit = Math.floor(16 * Math.random());
