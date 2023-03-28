@@ -117,7 +117,7 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
-```tsx file=./snippets/react-mutate.tsx#L5-
+```tsx{13-15} file=./snippets/react-mutate.tsx#L5-
 import React from 'react';
 import { useQuery, useSpace } from '@dxos/react-client';
 
@@ -145,7 +145,7 @@ The changes will also cause any subscribed UI components in the app to re-render
 
 Creating new objects:
 
-```tsx file=./snippets/react-create.tsx#L5-
+```tsx{12,13,16} file=./snippets/react-create.tsx#L5-
 import React from 'react';
 import { useQuery, useSpace } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client';
@@ -159,7 +159,8 @@ export const Component = () => {
         // create an Expando object for storing arbitrary JavaScript objects
         const note = new Expando({ title: 'example' });
         note.description = 'Expandos can have any additional properties.';
-        // call this once per object and it will be tracked and replicated forever
+        // call this once per object
+        // subsequent mutations will be replicated to all peers
         space!.db.add(note);
       }}
     ></div>
