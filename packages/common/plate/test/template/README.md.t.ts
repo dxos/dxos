@@ -1,7 +1,7 @@
 import { defineTemplate, renderSlots, text, Imports } from '../../src';
 import config from './config.t';
 
-export default config.defineTemplate(
+export default defineTemplate(
   ({ input, slots, ...rest }) => {
     const imports = new Imports();
     const render = renderSlots(slots)({ input, imports, ...rest })
@@ -12,5 +12,5 @@ export default config.defineTemplate(
     ${render.content()}
     `;
   },
-  { slots: { content: 'content-to-be-replaced' } }
+  { config, slots: { content: 'content-to-be-replaced' } }
 );
