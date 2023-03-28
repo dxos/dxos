@@ -11,7 +11,7 @@ import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { invitationStatusValue } from '../../util';
-import { CopyButton } from '../Clipboard/CopyButton';
+import { CopyButton } from '../Clipboard';
 import { SharedInvitationListProps } from './InvitationListProps';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 

@@ -7,7 +7,7 @@ import React from 'react';
 import type { CancellableInvitationObservable } from '@dxos/client';
 import { defaultDescription, DensityProvider, mx, useTranslation } from '@dxos/react-components';
 
-import { ClipboardProvider } from '../Clipboard/ClipboardProvider';
+import { ClipboardProvider } from '../Clipboard';
 import { InvitationListItem, InvitationListItemProps } from './InvitationListItem';
 
 export interface InvitationListProps extends Omit<InvitationListItemProps, 'invitation' | 'value'> {
