@@ -9,6 +9,7 @@ import { getSize, mx, Size } from '@dxos/react-components';
 
 import { inactiveStrokeColor, activeStrokeColor, resolvedStrokeColor } from '../../styles';
 import { invitationStatusValue } from '../../util';
+import { InvitationEmoji } from '../InvitationEmoji';
 
 export interface InvitationStatusAvatarSlots {
   svg?: ComponentPropsWithoutRef<'svg'>;
@@ -19,6 +20,7 @@ export interface InvitationStatusAvatarProps {
   status: Invitation.State;
   haltedAt?: Invitation.State;
   slots?: InvitationStatusAvatarSlots;
+  invitationId?: string;
 }
 
 const svgSize = 32;
@@ -40,41 +42,50 @@ const circleProps: ComponentPropsWithoutRef<'circle'> = {
   strokeDasharray: `${segment - gap} ${2 * segment + gap}`
 };
 
-export const InvitationStatusAvatar = ({ size = 10, status, haltedAt, slots = {} }: InvitationStatusAvatarProps) => {
+export const InvitationStatusAvatar = ({
+  size = 10,
+  status,
+  haltedAt,
+  slots = {},
+  invitationId
+}: InvitationStatusAvatarProps) => {
   const resolvedColor = resolvedStrokeColor(status);
   const halted =
     status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
   const cursor = invitationStatusValue.get(halted ? haltedAt! : status)!;
   return (
-    <svg {...slots.svg} viewBox={`0 0 ${svgSize} ${svgSize}`} className={mx(getSize(size), slots.svg?.className)}>
-      {[...Array(nSegments)].map((_, index) => (
-        <circle
-          key={index}
-          {...circleProps}
-          strokeDashoffset={index * segment + baseOffset}
-          className={
-            index === 0
-              ? cursor === 1
-                ? halted
+    <div className='inline-block relative'>
+      <InvitationEmoji {...{ invitationId }} size='sm' className='absolute inset-0 text-base' />
+      <svg {...slots.svg} viewBox={`0 0 ${svgSize} ${svgSize}`} className={mx(getSize(size), slots.svg?.className)}>
+        {[...Array(nSegments)].map((_, index) => (
+          <circle
+            key={index}
+            {...circleProps}
+            strokeDashoffset={index * segment + baseOffset}
+            className={
+              index === 0
+                ? cursor === 1
+                  ? halted
+                    ? resolvedColor
+                    : activeStrokeColor
+                  : cursor > 1
                   ? resolvedColor
-                  : activeStrokeColor
-                : cursor > 1
-                ? resolvedColor
-                : inactiveStrokeColor
-              : index === 1
-              ? cursor === 3
-                ? halted
+                  : inactiveStrokeColor
+                : index === 1
+                ? cursor === 3
+                  ? halted
+                    ? resolvedColor
+                    : activeStrokeColor
+                  : cursor > 3
                   ? resolvedColor
-                  : activeStrokeColor
+                  : inactiveStrokeColor
                 : cursor > 3
                 ? resolvedColor
                 : inactiveStrokeColor
-              : cursor > 3
-              ? resolvedColor
-              : inactiveStrokeColor
-          }
-        />
-      ))}
-    </svg>
+            }
+          />
+        ))}
+      </svg>
+    </div>
   );
 };

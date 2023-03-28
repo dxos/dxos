@@ -11,6 +11,8 @@ export const composer = {
   'first run message': 'Choose a document or create one to get started',
   'loading document message': 'Loading document…',
   'no spaces message': 'Create or join a space to start creating documents',
+  'export to file label': 'Download',
+  'import from file label': 'Upload',
   'export to markdown label': 'Export to Markdown',
   'import from markdown label': 'Import from Markdown',
   'export to github label': 'Export to Github',
