@@ -69,6 +69,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
       type,
+      state: Invitation.State.INIT,
       invitationId: PublicKey.random().toHex(),
       swarmKey: swarmKey ?? PublicKey.random(),
       spaceKey: space.key,

@@ -64,6 +64,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
       type,
+      state: Invitation.State.INIT,
       invitationId: PublicKey.random().toHex(),
       swarmKey: swarmKey ?? PublicKey.random(),
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)

@@ -252,6 +252,7 @@ message Invitation {
     ERROR = 7;
   }
 
+  // TODO(wittjosiah): Unused?
   enum Error {
     OK = 0;
     TIMEOUT = 1;

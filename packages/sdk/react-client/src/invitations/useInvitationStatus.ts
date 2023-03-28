@@ -55,7 +55,7 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.ERROR;
-      error?: number;
+      error?: Error;
       haltedAt: Invitation.State;
     };
 
@@ -106,58 +106,56 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     }
   );
 
-  // Observed event callbacks
-
-  const onConnected = useCallback((invitation: Invitation) => {
-    dispatch({
-      status: Invitation.State.CONNECTED,
-      id: invitation.invitationId!,
-      invitationCode: InvitationEncoder.encode(invitation),
-      authenticationCode: invitation.authenticationCode
-    });
-  }, []);
-
-  const onSuccess = useCallback(({ spaceKey, identityKey, swarmKey }: Invitation) => {
-    dispatch({
-      status: Invitation.State.SUCCESS,
-      result: { spaceKey: spaceKey || null, identityKey: identityKey || null, swarmKey: swarmKey || null }
-    });
-  }, []);
-
-  const onError = useCallback(
-    (invitation: Invitation) => {
-      dispatch({ status: Invitation.State.ERROR, error: invitation.error, haltedAt: state.status });
-    },
-    [state.status]
-  );
-
-  const onCancelled = useCallback(() => {
-    dispatch({ status: Invitation.State.CANCELLED, haltedAt: state.status });
-  }, [state.status]);
-
-  const onAuthenticating = useCallback(() => {
-    dispatch({ status: Invitation.State.AUTHENTICATING });
-  }, [state.status]);
-
-  const onTimeout = useCallback(
-    (_err: TimeoutError) => {
-      dispatch({ status: Invitation.State.TIMEOUT, haltedAt: state.status });
-    },
-    [state.status]
-  );
-
   // Handle unmount
 
   useEffect(() => {
-    return state.observable?.subscribe({
-      onConnected,
-      onSuccess,
-      onError,
-      onCancelled,
-      onAuthenticating,
-      onTimeout
-    });
-  }, [state.observable, onConnected, onSuccess, onError, onCancelled, onAuthenticating, onTimeout]);
+    const subscription = state.observable?.subscribe(
+      (invitation: Invitation) => {
+        switch (invitation.state) {
+          case Invitation.State.CONNECTED: {
+            dispatch({
+              status: invitation.state,
+              id: invitation.invitationId!,
+              invitationCode: InvitationEncoder.encode(invitation),
+              authenticationCode: invitation.authenticationCode
+            });
+            break;
+          }
+
+          case Invitation.State.AUTHENTICATING: {
+            dispatch({ status: invitation.state });
+            break;
+          }
+
+          case Invitation.State.SUCCESS: {
+            dispatch({
+              status: invitation.state,
+              result: {
+                spaceKey: invitation.spaceKey || null,
+                identityKey: invitation.identityKey || null,
+                swarmKey: invitation.swarmKey || null
+              }
+            });
+            break;
+          }
+
+          case Invitation.State.CANCELLED: {
+            dispatch({ status: invitation.state, haltedAt: state.status });
+            break;
+          }
+        }
+      },
+      (err: Error) => {
+        if (err instanceof TimeoutError) {
+          dispatch({ status: Invitation.State.TIMEOUT, haltedAt: state.status });
+        } else {
+          dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
+        }
+      }
+    );
+
+    return () => subscription?.unsubscribe();
+  }, [state.observable, state.status]);
 
   // Return memoized callbacks & values
 
@@ -176,6 +174,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   const cancel = useCallback(async () => state.observable?.cancel(), [state.observable]);
 
   return useMemo(() => {
+    const invitation = state.observable?.get();
     const result = {
       status: state.status,
       haltedAt: state.haltedAt,
@@ -184,10 +183,10 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       cancel,
       connect,
       authenticate,
-      id: state.observable?.invitation?.invitationId,
-      invitationCode: state.observable?.invitation ? InvitationEncoder.encode(state.observable?.invitation) : undefined,
-      authenticationCode: state.observable?.invitation?.authenticationCode,
-      authMethod: state.observable?.invitation?.authMethod
+      id: invitation?.invitationId,
+      invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
+      authenticationCode: invitation?.authenticationCode,
+      authMethod: invitation?.authMethod
     };
 
     // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.
