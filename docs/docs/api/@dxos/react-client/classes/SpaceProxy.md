@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:45]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:50]()</sub>
 
 
 
@@ -27,9 +27,7 @@ Arguments:
 ### [db]()
 Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 
-Current state of the space.
-The database is ready to be used in  `SpaceState.READY`  state.
-Presence is available in  `SpaceState.INACTIVE`  state.
+Echo database.
 
 ### [internal]()
 Type: <code>Internal</code>
@@ -46,8 +44,15 @@ Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [members]()
 Type: <code>MulticastObservable&lt;[SpaceMember](/api/@dxos/react-client/interfaces/SpaceMember)[]&gt;</code>
 
+### [pipeline]()
+Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
+
+Current state of space pipeline.
+
 ### [properties]()
 Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+
+Properties object.
 
 ### [state]()
 Type: <code>MulticastObservable&lt;[SpaceState](/api/@dxos/react-client/enums#SpaceState)&gt;</code>

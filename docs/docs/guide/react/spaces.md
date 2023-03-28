@@ -66,14 +66,17 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L60)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L68)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
+By default, only ready spaces are returned.
 
 Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)\[]</code>
 
-Arguments: none
+Arguments:
+
+`options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
 :::
 
 :::apidoc[@dxos/react-client.useOrCreateFirstSpace]

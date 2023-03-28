@@ -40,6 +40,16 @@ Arguments:
 
 `options`: <code>InspectOptionsStylized</code>
 
+### [\[equalsSymbol\](other)]()
+
+
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`other`: <code>any</code>
+
 ### [asBuffer()]()
 
 

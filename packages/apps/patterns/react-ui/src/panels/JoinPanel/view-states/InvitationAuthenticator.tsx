@@ -55,6 +55,7 @@ const PureInvitationAuthenticatorContent = ({
             autoComplete: 'off',
             pattern: '\\d*',
             'data-autofocus': `connecting${Domain}Invitation inputting${Domain}VerificationCode authenticationFailing${Domain}VerificationCode authenticating${Domain}VerificationCode`,
+            'data-prevent-ios-autofocus': true,
             'data-testid': `${invitationType}-auth-code-input`,
             'data-1p-ignore': true
           } as ComponentPropsWithoutRef<'input'>

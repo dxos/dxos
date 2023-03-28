@@ -121,6 +121,8 @@ Values:
 
 - `INACTIVE`
 
+- `INITIALIZING`
+
 - `READY`
 
 ### [`SystemStatus`]()
