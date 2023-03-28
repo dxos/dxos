@@ -1,32 +1,37 @@
-import { getContextFromEntry, log, LogLevel, LogProcessor } from "@dxos/log"
-import { getCurrentHub } from "@sentry/browser";
-import { Transaction, Span } from "@sentry/types";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { getCurrentHub } from '@sentry/browser';
+import { Transaction, Span } from '@sentry/types';
+
+import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 
 export const configureTracing = () => {
   // Configure root transaction.
   TX = getCurrentHub().startTransaction({
     name: 'DXOS Core Tracing',
-    op: 'dxos',
+    op: 'dxos'
   });
-  if(typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-      for(const span of SPAN_MAP.values()) {
+      for (const span of SPAN_MAP.values()) {
         span.finish();
       }
       TX.finish();
-    })
+    });
   }
-  if(typeof process !== 'undefined') {
+  if (typeof process !== 'undefined') {
     process.on('exit', () => {
-      for(const span of SPAN_MAP.values()) {
+      for (const span of SPAN_MAP.values()) {
         span.finish();
       }
       TX.finish();
-    })
+    });
   }
 
   log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
-}
+};
 
 let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
@@ -40,18 +45,18 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   console.log({
     ...entry,
     context
-  })
+  });
 
-  if(context?.span) {
-    switch(context.span.op) {
+  if (context?.span) {
+    switch (context.span.op) {
       case 'begin': {
         const id = context.span.id;
-        if(!id || SPAN_MAP.has(id)) {
+        if (!id || SPAN_MAP.has(id)) {
           return;
         }
 
         let parentSpan: Span = TX;
-        if(context.span.parent) {
+        if (context.span.parent) {
           parentSpan = SPAN_MAP.get(context.span.parent) || TX;
         }
 
@@ -60,14 +65,14 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
           data: {
             ...entry,
             context
-          },
-        })
+          }
+        });
         SPAN_MAP.set(context.span.id, span);
-        break
+        break;
       }
       case 'end': {
         const span = SPAN_MAP.get(context.span.id);
-        if(span) {
+        if (span) {
           span.finish();
           SPAN_MAP.delete(context.span.id);
         }
@@ -75,4 +80,4 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
       }
     }
   }
-}
+};

@@ -101,9 +101,9 @@ export class Swarm {
     log.trace('dxos.mesh.swarm', {
       span: {
         id: this._instanceId,
-        op: 'begin',
+        op: 'begin'
       }
-    })
+    });
   }
 
   get connections() {
@@ -134,9 +134,9 @@ export class Swarm {
     log.trace('dxos.mesh.swarm', {
       span: {
         id: this._instanceId,
-        op: 'end',
+        op: 'end'
       }
-    })
+    });
 
     log('destroying...');
     await this._ctx.dispose();

@@ -29,7 +29,7 @@ interface LogMethods {
  */
 interface Log extends LogMethods, LogFunction {
   config: (options: LogOptions) => void;
-  runtimeConfig: LogConfig
+  runtimeConfig: LogConfig;
 }
 
 interface LogImp extends Log {
@@ -66,7 +66,7 @@ const createLog = (): LogImp => {
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    log._config.processors.forEach(processor => processor(log._config, { level, message, context, meta, error }));
+    log._config.processors.forEach((processor) => processor(log._config, { level, message, context, meta, error }));
   };
 
   return log;

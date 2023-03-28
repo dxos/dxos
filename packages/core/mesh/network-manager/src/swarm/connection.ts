@@ -90,11 +90,11 @@ export class Connection {
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(ConnectionState.CONNECTING);
-    log.trace('dxos.trace.connection', { 
+    log.trace('dxos.trace.connection', {
       span: {
         op: 'begin',
         id: this._instanceId,
-        parent: this._traceParent,
+        parent: this._traceParent
       }
     });
 
@@ -153,11 +153,11 @@ export class Connection {
       return;
     }
     this._changeState(ConnectionState.CLOSING);
-    log.trace('dxos.trace.connection', { 
+    log.trace('dxos.trace.connection', {
       span: {
         op: 'end',
         id: this._instanceId,
-        parent: this._traceParent,
+        parent: this._traceParent
       }
     });
 

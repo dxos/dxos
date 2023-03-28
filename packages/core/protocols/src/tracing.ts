@@ -1,3 +1,7 @@
 // TODO(dmaretskyi): Trace helpers go here.
 
-export {}
+//
+// Copyright 2023 DXOS.org
+//
+
+export {};
