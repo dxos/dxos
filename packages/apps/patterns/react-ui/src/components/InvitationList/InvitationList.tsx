@@ -7,6 +7,7 @@ import React from 'react';
 import type { CancellableInvitationObservable } from '@dxos/client';
 import { defaultDescription, DensityProvider, mx, useTranslation } from '@dxos/react-components';
 
+import { ClipboardProvider } from '../Clipboard/ClipboardProvider';
 import { InvitationListItem, InvitationListItemProps } from './InvitationListItem';
 
 export interface InvitationListProps extends Omit<InvitationListItemProps, 'invitation' | 'value'> {
@@ -18,10 +19,12 @@ export const InvitationList = ({ invitations, ...invitationProps }: InvitationLi
   return invitations.length ? (
     <AccordionRoot type='single' collapsible className='flex flex-col gap-1'>
       <DensityProvider density='fine'>
-        {invitations.map((invitation, index) => {
-          const value = invitation.invitation?.invitationId ?? `inv_${index}`;
-          return <InvitationListItem key={value} value={value} invitation={invitation} {...invitationProps} />;
-        })}
+        <ClipboardProvider>
+          {invitations.map((invitation, index) => {
+            const value = invitation.invitation?.invitationId ?? `inv_${index}`;
+            return <InvitationListItem key={value} value={value} invitation={invitation} {...invitationProps} />;
+          })}
+        </ClipboardProvider>
       </DensityProvider>
     </AccordionRoot>
   ) : (
