@@ -48,7 +48,9 @@ export const InvitationListItem = ({
   return (
     <AccordionPrimitive.Item value={value}>
       <AccordionPrimitive.Header className='flex gap-2 items-center'>
-        <InvitationStatusAvatar {...{ status, haltedAt, size: 8 }} />
+        <InvitationStatusAvatar
+          {...{ status, haltedAt, size: 8, invitationId: invitation?.invitation?.invitationId }}
+        />
         {showShare && invitationUrl ? (
           <>
             <AccordionPrimitive.Trigger asChild>
