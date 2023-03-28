@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L57)
-Type: <code>"0.1.31"</code>
+Type: <code>"0.1.32"</code>
 
 The version of this client API
 
