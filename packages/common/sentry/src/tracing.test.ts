@@ -38,7 +38,7 @@ describe('Logger tracing', () => {
     Tracing.finish();
   });
 
-  test.only('begin and end span', async () => {
+  test('begin and end span', async () => {
     log.trace('test.trace', {
       span: {
         op: 'begin',
