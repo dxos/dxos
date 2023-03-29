@@ -5,14 +5,13 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client, Invitation, Space } from '@dxos/client';
+import { Client, Space, SpaceProxy } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestBuilder, testSpace } from '../testing';
+import { performInvitation, TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -92,43 +91,10 @@ describe('Spaces', () => {
     afterTest(() => Promise.all([client1.destroy()]));
     afterTest(() => Promise.all([client2.destroy()]));
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
-
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
-    observable1.subscribe(
-      (invitation1) => {
-        switch (invitation1.state) {
-          case Invitation.State.CONNECTING: {
-            const observable2 = client2.acceptInvitation(invitation1);
-            observable2.subscribe(
-              (invitation2) => {
-                switch (invitation2.state) {
-                  case Invitation.State.SUCCESS: {
-                    success2.wake(invitation2);
-                  }
-                }
-              },
-              (err) => raise(err)
-            );
-            break;
-          }
-
-          case Invitation.State.SUCCESS: {
-            log('onSuccess');
-            success1.wake(invitation1);
-            break;
-          }
-        }
-      },
-      (err) => raise(err)
-    );
-
-    const [_, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-
-    const space2 = await client2.getSpace(invitation2.spaceKey!)!.waitUntilReady();
+    const [, { invitation: guestInvitation }] = await performInvitation({ host: space1 as SpaceProxy, guest: client2 });
+    const space2 = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
 
     const hello = new Trigger();
     {

@@ -7,13 +7,12 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Client, Space } from '@dxos/client';
-import { raise } from '@dxos/debug';
+import { Client, Space, SpaceProxy } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { syncItems, TestBuilder } from '../testing';
+import { performInvitation, syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -116,62 +115,18 @@ describe('Client services', () => {
       await client1.halo.createIdentity();
     }
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
-
-    const authCode = new Trigger<string>();
-
-    {
-      const observable1 = client1.halo.createInvitation();
-      observable1.subscribe(
-        (invitation1) => {
-          switch (invitation1.state) {
-            case Invitation.State.CONNECTING: {
-              const observable2 = client2.halo.acceptInvitation(invitation1);
-              observable2.subscribe(
-                async (invitation2) => {
-                  switch (invitation2.state) {
-                    case Invitation.State.AUTHENTICATING: {
-                      await observable2.authenticate(await authCode.wait());
-                      break;
-                    }
-
-                    case Invitation.State.SUCCESS: {
-                      // TODO(burdon): No device.
-                      // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
-                      success2.wake(invitation2);
-                      break;
-                    }
-                  }
-                },
-                (err) => raise(err)
-              );
-              break;
-            }
-
-            case Invitation.State.CONNECTED: {
-              assert(invitation1.authCode);
-              authCode.wake(invitation1.authCode);
-              break;
-            }
-
-            case Invitation.State.SUCCESS: {
-              success1.wake(invitation1);
-              break;
-            }
-          }
-        },
-        (err) => raise(err)
-      );
-    }
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation({
+      host: client1.halo,
+      guest: client2.halo,
+      options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
+    });
 
     // Check same identity.
-    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-    expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
-    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
-    expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation!.identityKey).not.to.exist;
+    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
+    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
@@ -208,57 +163,32 @@ describe('Client services', () => {
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
+    const hostSpace = await client1.createSpace();
+    log('createSpace', { key: hostSpace.key });
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation({
+      host: hostSpace as SpaceProxy,
+      guest: client2,
+      options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
+    });
 
-    const space1 = await client1.createSpace();
-    log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
-    observable1.subscribe(
-      (invitation1) => {
-        switch (invitation1.state) {
-          case Invitation.State.CONNECTING: {
-            const observable2 = client2.acceptInvitation(invitation1);
-            observable2.subscribe(
-              (invitation2) => {
-                switch (invitation2.state) {
-                  case Invitation.State.SUCCESS: {
-                    success2.wake(invitation2);
-                  }
-                }
-              },
-              (err) => raise(err)
-            );
-            break;
-          }
-
-          case Invitation.State.SUCCESS: {
-            log('onSuccess');
-            success1.wake(invitation1);
-            break;
-          }
-        }
-      },
-      (err) => raise(err)
-    );
-    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-    expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
-    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
+    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
+    expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     log('Invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const space2 = client2.getSpace(invitation2.spaceKey!);
-      assert(space2);
-      expect(space2).to.exist;
-      trigger.wake(space2);
+      const guestSpace = client2.getSpace(guestInvitation!.spaceKey!);
+      assert(guestSpace);
+      expect(guestSpace).to.exist;
+      trigger.wake(guestSpace);
     });
 
-    const space2 = await trigger.wait();
+    const guestSpace = await trigger.wait();
 
-    for (const space of [space1, space2]) {
+    for (const space of [hostSpace, guestSpace]) {
       await waitForExpect(() => {
         expect(space.members.get()).to.deep.equal([
           {
@@ -283,6 +213,6 @@ describe('Client services', () => {
       }, 3_000);
     }
 
-    await syncItems(space1.internal.db, space2.internal.db);
+    await syncItems(hostSpace.internal.db, guestSpace.internal.db);
   });
 });

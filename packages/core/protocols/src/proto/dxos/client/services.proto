@@ -210,7 +210,9 @@ service SpacesService {
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
+  /// Broadcast an emphemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
+  /// Subscribe to messages from the space swarm.
   rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
 
   /// Write credentials to the space control feed.
@@ -257,6 +259,7 @@ message Invitation {
     SUCCESS = 4;
     CANCELLED = 5;
     TIMEOUT = 6;
+    // TODO(wittjosiah): Remove.
     ERROR = 7;
   }
 
@@ -316,7 +319,6 @@ enum ConnectionState {
   ONLINE = 1;
 }
 
-// TODO(mykola): Broden API.
 message NetworkStatus {
   ConnectionState state = 1;
 }
