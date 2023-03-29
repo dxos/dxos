@@ -18,7 +18,7 @@ export class DeviceInvitationOperations implements InvitationOperations {
     private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
   ) {}
 
-  getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind } {
+  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.DEVICE
     };

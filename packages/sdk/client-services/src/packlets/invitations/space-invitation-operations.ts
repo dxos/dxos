@@ -26,7 +26,7 @@ export class SpaceInvitationOperations implements InvitationOperations {
     private readonly _spaceKey?: PublicKey
   ) {}
 
-  getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind } {
+  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.SPACE,
       spaceKey: this._spaceKey

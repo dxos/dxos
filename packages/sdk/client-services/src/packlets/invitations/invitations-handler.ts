@@ -35,7 +35,7 @@ const MAX_OTP_ATTEMPTS = 3;
 
 export interface InvitationOperations {
   // Host
-  getInvitationContext(): Partial<Invitation> & { kind: Invitation.Kind };
+  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;
   admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
 
   // Guest

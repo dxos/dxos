@@ -38,7 +38,7 @@ export class InvitationsProxy {
   // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService,
-    private readonly _getContext: () => Partial<Invitation> & { kind: Invitation.Kind }
+    private readonly _getContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>
   ) {}
 
   getInvitationOptions(): Invitation {
