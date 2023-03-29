@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client';
+import { clientServiceBundle, ClientServices, createDefaultModelFactory, PublicKey } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
@@ -64,6 +64,8 @@ export class ClientServicesHost {
   _serviceContext!: ServiceContext;
   private _opening = false;
   private _open = false;
+
+  private readonly _instanceId = PublicKey.random().toHex();
 
   constructor({
     config,
@@ -162,6 +164,13 @@ export class ClientServicesHost {
       return;
     }
 
+    log.trace(`dxos.trace.${ClientServicesHost.constructor.name}`, {
+      span: {
+        command: 'begin',
+        id: this._instanceId
+      }
+    });
+
     assert(this._config, 'config not set');
     assert(this._storage, 'storage not set');
     assert(this._networkManager, 'network manager not set');
@@ -236,5 +245,12 @@ export class ClientServicesHost {
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
+
+    log.trace(`dxos.trace.${ClientServicesHost.constructor.name}`, {
+      span: {
+        command: 'end',
+        id: this._instanceId
+      }
+    });
   }
 }
