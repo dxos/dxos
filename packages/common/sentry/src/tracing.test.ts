@@ -25,10 +25,7 @@ describe('Logger tracing', () => {
       release: 'test',
       scrubFilenames: true,
       tracing: true,
-      transport: sentryTransport,
-      user: {
-        id: 'test'
-      }
+      transport: sentryTransport
     });
 
     Tracing.configureTracing();
@@ -48,6 +45,7 @@ describe('Logger tracing', () => {
 
     log.trace('test.trace', {
       span: {
+        command: 'end',
         id: 'test',
         status: 'error'
       },

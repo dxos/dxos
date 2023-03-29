@@ -54,6 +54,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
         const id = context.span.id;
 
         if (!id || SPAN_MAP.has(id)) {
+          log.warn('Cannot begin span', id);
           return;
         }
 
@@ -80,6 +81,8 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
           context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
           span.finish();
           SPAN_MAP.delete(context.span.id);
+        } else {
+          log.warn('Cannot end span', context.span.id);
         }
         break;
       }
@@ -88,8 +91,14 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
         const span = SPAN_MAP.get(context.span.id);
         if (span) {
           context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
+        } else {
+          log.warn('Cannot update span', context.span.id);
         }
         break;
+      }
+
+      default: {
+        log.warn('Unknown span command', context.span.command);
       }
     }
   }
