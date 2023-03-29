@@ -41,16 +41,17 @@ describe('Logger tracing', () => {
   test('begin and end span', async () => {
     log.trace('test.trace', {
       span: {
-        op: 'begin',
+        command: 'begin',
         id: 'test'
       }
     });
 
     log.trace('test.trace', {
       span: {
-        op: 'end',
-        id: 'test'
-      }
+        id: 'test',
+        status: 'error'
+      },
+      error: new Error('test')
     });
     Tracing.finish();
 
