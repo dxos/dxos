@@ -11,7 +11,6 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Agent } from './agent';
@@ -184,7 +183,7 @@ class HostAgentStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
       });
 
@@ -217,8 +216,9 @@ class GuestAgentStateMachine extends AgentStateMachine {
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.acceptInvitation({
         invitationId: PublicKey.random().toHex(),
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        authMethod: AuthMethod.NONE,
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey),
         state: Invitation.State.INIT
       });

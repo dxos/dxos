@@ -24,7 +24,6 @@ import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, Sh
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -162,8 +161,8 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
           const swarmKey = PublicKey.random();
           const observable = space.createInvitation({
             swarmKey,
-            authMethod: AuthMethod.NONE,
-            type: Invitation.Type.MULTIUSE_TESTING
+            type: Invitation.Type.MULTIUSE,
+            authMethod: Invitation.AuthMethod.NONE
           });
 
           const subscription = observable.subscribe(

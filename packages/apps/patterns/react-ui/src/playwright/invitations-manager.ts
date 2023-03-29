@@ -7,8 +7,7 @@ import type { Browser, ConsoleMessage } from 'playwright';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import type { InvitationsOptions } from '@dxos/client';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { setupPage } from '@dxos/test/playwright';
 
 import { ShellManager } from '../testing';
@@ -106,7 +105,7 @@ export class InvitationsManager extends ShellManager {
     await this.peer(id).getByTestId('invitations.create-space').click();
   }
 
-  async createInvitation(id: number, type: 'device' | 'space', options?: InvitationsOptions): Promise<string> {
+  async createInvitation(id: number, type: 'device' | 'space', options?: Partial<Invitation>): Promise<string> {
     if (!options) {
       const peer = this.peer(id);
       this._invitationCode = new Trigger<string>();

@@ -8,7 +8,6 @@ import assert from 'node:assert';
 import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { processSyncClient, processSyncServer } from './process';
 
@@ -70,7 +69,7 @@ export class GenericStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
     }
@@ -78,8 +77,9 @@ export class GenericStateMachine extends AgentStateMachine {
     else if (command.acceptSpaceInvitation) {
       await this.agent.client.acceptInvitation({
         invitationId: PublicKey.random().toHex(),
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        authMethod: AuthMethod.NONE,
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey),
         state: Invitation.State.INIT
       });
