@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { Observable, PushStream } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -11,6 +12,29 @@ import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsService } from './invitations';
 import { InvitationsOptions, InvitationsHandler } from './invitations-handler';
+
+/**
+ * Create an observable from an RPC stream.
+ */
+// TODO(wittjosiah): Factor out.
+const createObservable = <T>(rpcStream: Stream<T>): Observable<T> => {
+  const pushStream = new PushStream<T>();
+
+  rpcStream.subscribe(
+    (value: T) => {
+      pushStream.next(value);
+    },
+    (err?: Error) => {
+      if (err) {
+        pushStream.error(err);
+      } else {
+        pushStream.complete();
+      }
+    }
+  );
+
+  return pushStream.observable;
+};
 
 /**
  * Adapts invitations service observable to client/service stream.
@@ -38,19 +62,9 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
 
   createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable {
     const invitation: Invitation = { ...this.getInvitationOptions(context), ...options };
-    const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
     const observable = new CancellableInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        stream.subscribe(
-          (invitation: Invitation) => {
-            observer.next(invitation);
-          },
-          (err) => {
-            err && observer.error(err);
-          }
-        );
-      },
+      subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         assert(invitationId, 'Invitation missing identifier');
@@ -63,20 +77,9 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
 
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     assert(invitation && invitation.swarmKey);
-
-    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation({ ...invitation, ...options });
     const observable = new AuthenticatingInvitationObservable({
       initialInvitation: invitation,
-      subscriber: (observer) => {
-        stream.subscribe(
-          (invitation: Invitation) => {
-            observer.next(invitation);
-          },
-          (err) => {
-            err && observer.error(err);
-          }
-        );
-      },
+      subscriber: createObservable(this._invitationsService.acceptInvitation({ ...invitation, ...options })),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
         assert(invitationId, 'Invitation missing identifier');
