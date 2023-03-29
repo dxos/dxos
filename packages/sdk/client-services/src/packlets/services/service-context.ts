@@ -15,9 +15,11 @@ import {
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
@@ -46,6 +48,8 @@ export class ServiceContext {
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
   public spaceInvitations?: SpaceInvitationsHandler;
+
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor(
@@ -91,6 +95,8 @@ export class ServiceContext {
   }
 
   async open() {
+    log.trace('dxos.sdk.client-services', trace.begin({ id: this._instanceId }));
+
     log('opening...');
     await this.networkManager.open();
     await this.spaceManager.open();
@@ -111,6 +117,8 @@ export class ServiceContext {
     await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
+
+    log.trace('dxos.sdk.client-services', trace.end({ id: this._instanceId }));
   }
 
   async reset() {
