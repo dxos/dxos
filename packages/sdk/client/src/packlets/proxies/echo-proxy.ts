@@ -13,6 +13,7 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
@@ -78,7 +79,7 @@ export class EchoProxy implements Echo {
   /**
    * @deprecated
    */
-  get networkManager() {
+  get networkManager(): NetworkManager {
     if (this._serviceProvider instanceof ClientServicesProxy) {
       throw new SystemError('Network manager not available in service proxy.');
     }
