@@ -205,7 +205,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.trace.Client', {
+    log.trace(`dxos.trace.${Client.constructor.name}`, {
       span: {
         command: 'begin',
         id: this._instanceId
@@ -273,7 +273,7 @@ export class Client {
 
     this._initialized = false;
 
-    log.trace('dxos.trace.Client', {
+    log.trace(`dxos.trace.${Client.constructor.name}`, {
       span: {
         command: 'end',
         id: this._instanceId

@@ -81,7 +81,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   async open() {
-    log.trace('dxos.trace.IFrameClientServicesProxy', {
+    log.trace(`dxos.trace.${IFrameClientServicesProxy.constructor.name}`, {
       span: {
         command: 'begin',
         id: this._instanceId
@@ -150,7 +150,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._iframe.remove();
       this._iframe = undefined;
     }
-    log.trace('dxos.trace.IFrameClientServicesProxy', {
+    log.trace(`dxos.trace.${IFrameClientServicesProxy.constructor.name}`, {
       span: {
         command: 'end',
         id: this._instanceId
