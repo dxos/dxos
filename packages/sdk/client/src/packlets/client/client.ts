@@ -15,6 +15,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { TextModel } from '@dxos/text-model';
 
@@ -69,6 +70,11 @@ export class Client {
   private _statusStream?: Stream<SystemStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
+
+  /**
+   * Unique id of the Client, local to the current peer.
+   */
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor({
@@ -200,6 +206,8 @@ export class Client {
       return;
     }
 
+    log.trace('dxos.sdk.client', trace.begin({ id: this._instanceId }));
+
     await this._services.open();
 
     // TODO(burdon): Remove?
@@ -260,6 +268,8 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
+
+    log.trace('dxos.sdk.client', trace.end({ id: this._instanceId }));
   }
 
   /**

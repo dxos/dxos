@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
+import { trace } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
@@ -80,6 +81,8 @@ export class NetworkManager {
 
   public readonly topicsUpdated = new Event<void>();
 
+  private readonly _instanceId = PublicKey.random().toHex();
+
   constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
@@ -87,6 +90,7 @@ export class NetworkManager {
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
+    this._messenger._traceParent = this._instanceId;
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts)
@@ -126,6 +130,7 @@ export class NetworkManager {
   }
 
   async open() {
+    log.trace('dxos.mesh.network-manager', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
   }
@@ -139,6 +144,7 @@ export class NetworkManager {
 
     await this._messenger.close();
     await this._signalManager.close();
+    log.trace('dxos.mesh.network-manager', trace.end({ id: this._instanceId }));
   }
 
   /**
