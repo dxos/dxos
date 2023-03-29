@@ -11,6 +11,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -51,6 +52,8 @@ export class IdentityManager {
 
   private _identity?: Identity;
 
+  private readonly _instanceId = PublicKey.random().toHex();
+
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(
@@ -65,6 +68,7 @@ export class IdentityManager {
   }
 
   async open() {
+    log.trace('dxos.halo.identity-manager', trace.begin({ id: this._instanceId }));
     await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
@@ -83,6 +87,7 @@ export class IdentityManager {
 
   async close() {
     await this._identity?.close();
+    log.trace('dxos.halo.identity-manager', trace.end({ id: this._instanceId }));
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
