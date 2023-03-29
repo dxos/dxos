@@ -4,7 +4,7 @@
 
 import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 
 import { PublicKey, Space } from '@dxos/client';
