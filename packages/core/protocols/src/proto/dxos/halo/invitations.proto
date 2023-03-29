@@ -19,10 +19,10 @@ message IntroductionRequest {
 }
 
 message IntroductionResponse {
-  /// Only present for testing invitation types.
-  optional dxos.keys.PublicKey space_key = 1;
+  dxos.client.services.Invitation.AuthMethod auth_method = 1;
 
-  dxos.client.services.Invitation.AuthMethod auth_method = 2;
+  /// Only present for testing invitation types.
+  optional dxos.keys.PublicKey space_key = 100;
 }
 
 message AuthenticationRequest {

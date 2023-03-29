@@ -130,6 +130,8 @@ export class InvitationsHandler {
           // TODO(dmaretskyi): Should we expose guest's profile in this callback?
           stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
 
+          // TODO(wittjosiah): Make when the space details are revealed configurable.
+          //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
           return {
             spaceKey:
               authMethod === Invitation.AuthMethod.NONE ? operations.getInvitationContext().spaceKey : undefined,
