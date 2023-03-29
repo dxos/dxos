@@ -58,7 +58,8 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalClient(host, async (message) => this.onMessage.emit(message), this._instanceId);
+      const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
+      server._traceParent = this._instanceId;
       // TODO(mykola): Add subscription group
       server.swarmEvent.on((data) => this.swarmEvent.emit(data));
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));

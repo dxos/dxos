@@ -97,6 +97,7 @@ export class SignalClient implements SignalMethods {
 
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
   private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   private readonly _performance = {
     sentMessages: 0,
@@ -112,14 +113,13 @@ export class SignalClient implements SignalMethods {
    */
   constructor(
     private readonly _host: string,
-    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
-    private readonly _tracingParentId?: string
+    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
   ) {
     this.open();
   }
 
   open() {
-    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._tracingParentId }));
+    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;

@@ -90,6 +90,7 @@ export class NetworkManager {
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
+    this._messenger._traceParent = this._instanceId;
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts)
