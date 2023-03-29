@@ -85,8 +85,6 @@ export const initializeAppTelemetry = async ({
     ...sentryOptions
   });
 
-  Sentry;
-
   Sentry.configureTracing();
 
   const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
