@@ -99,7 +99,10 @@ export class Swarm {
       })
       .catch((error) => log.catch(error));
 
-    log.trace('dxos.mesh.swarm', trace.begin({ id: this._instanceId }));
+    log.trace(
+      'dxos.mesh.swarm',
+      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } })
+    );
   }
 
   get connections() {
@@ -127,13 +130,12 @@ export class Swarm {
 
   // TODO(burdon): async open?
   async destroy() {
-    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
-
     log('destroying...');
     await this._ctx.dispose();
     await this._topology.destroy();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
     log('destroyed');
+    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
   }
 
   async setTopology(topology: Topology) {

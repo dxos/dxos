@@ -60,6 +60,9 @@ export class Connection {
 
   public _instanceId = PublicKey.random().toHex();
   public _traceParent?: string;
+  public _performance = {
+    signalsSent: 0
+  };
 
   constructor(
     public readonly topic: PublicKey,
@@ -109,6 +112,7 @@ export class Connection {
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => {
+        this._performance.signalsSent++;
         await this._signalMessaging.signal({
           author: this.ownId,
           recipient: this.remoteId,
@@ -167,7 +171,10 @@ export class Connection {
 
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
-    log.trace('dxos.mesh.connection', trace.end({ id: this._instanceId, status: 'ok' }));
+    log.trace(
+      'dxos.mesh.connection',
+      trace.end({ id: this._instanceId, status: 'ok', data: { performance: this._performance } })
+    );
   }
 
   async signal(msg: SignalMessage) {

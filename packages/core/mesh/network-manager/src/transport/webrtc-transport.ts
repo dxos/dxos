@@ -7,7 +7,9 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -31,12 +33,27 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
+  private readonly _instanceId = PublicKey.random().toHex();
+  private readonly _performance = {
+    bytesSent: 0,
+    bytesReceived: 0
+  };
+
   constructor(private readonly params: WebRTCTransportParams) {
+    log.trace('dxos.mesh.webrtc-transport', trace.begin({ id: this._instanceId }));
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
       config: this.params.webrtcConfig
+    });
+
+    params.stream.on('data', (data: Buffer) => {
+      this._performance.bytesSent += data.length;
+    });
+
+    this._peer.on('data', (data: Buffer) => {
+      this._performance.bytesReceived += data.length;
     });
 
     this._peer.on('signal', async (data) => {
@@ -82,6 +99,10 @@ export class WebRTCTransport implements Transport {
     this._peer!.destroy();
     this.closed.emit();
     log('closed');
+    log.trace(
+      'dxos.mesh.webrtc-transport',
+      trace.end({ id: this._instanceId, data: { performance: this._performance } })
+    );
   }
 
   signal(signal: Signal) {
