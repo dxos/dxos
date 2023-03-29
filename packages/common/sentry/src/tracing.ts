@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { setUser, startTransaction } from '@sentry/node';
+import { setUser, startTransaction } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
@@ -42,7 +42,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
     setUser({
       id: context.identityKey,
-      username: context.profileName
+      username: context.displayName
     });
   }
 
@@ -65,7 +65,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
           op: entry.message,
           data: {
             ...context.span.data,
-            '@dxos/log': { ...entry, context }
+            '@dxos/log': JSON.stringify({ ...entry, context }, null, 2)
           }
         });
         SPAN_MAP.set(context.span.id, span);
