@@ -15,6 +15,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { TextModel } from '@dxos/text-model';
 
@@ -205,12 +206,7 @@ export class Client {
       return;
     }
 
-    log.trace(`dxos.trace.${Client.constructor.name}`, {
-      span: {
-        command: 'begin',
-        id: this._instanceId
-      }
-    });
+    log.trace('dxos.sdk.client', trace.begin({ id: this._instanceId }));
 
     await this._services.open();
 
@@ -273,12 +269,7 @@ export class Client {
 
     this._initialized = false;
 
-    log.trace(`dxos.trace.${Client.constructor.name}`, {
-      span: {
-        command: 'end',
-        id: this._instanceId
-      }
-    });
+    log.trace('dxos.sdk.client', trace.end({ id: this._instanceId }));
   }
 
   /**

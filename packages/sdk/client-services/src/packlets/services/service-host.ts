@@ -12,6 +12,7 @@ import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 
@@ -164,12 +165,7 @@ export class ClientServicesHost {
       return;
     }
 
-    log.trace(`dxos.trace.${ClientServicesHost.constructor.name}`, {
-      span: {
-        command: 'begin',
-        id: this._instanceId
-      }
-    });
+    log.trace('dxos.sdk.client-services-host', trace.begin({ id: this._instanceId }));
 
     assert(this._config, 'config not set');
     assert(this._storage, 'storage not set');
@@ -246,11 +242,6 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     log('closed', { deviceKey });
 
-    log.trace(`dxos.trace.${ClientServicesHost.constructor.name}`, {
-      span: {
-        command: 'end',
-        id: this._instanceId
-      }
-    });
+    log.trace('dxos.sdk.client-services-host', trace.end({ id: this._instanceId }));
   }
 }

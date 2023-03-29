@@ -10,6 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { Messenger } from '@dxos/messaging';
+import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -98,12 +99,7 @@ export class Swarm {
       })
       .catch((error) => log.catch(error));
 
-    log.trace('dxos.mesh.swarm', {
-      span: {
-        id: this._instanceId,
-        command: 'begin'
-      }
-    });
+    log.trace('dxos.mesh.swarm', trace.begin({ id: this._instanceId }));
   }
 
   get connections() {
@@ -131,12 +127,7 @@ export class Swarm {
 
   // TODO(burdon): async open?
   async destroy() {
-    log.trace('dxos.mesh.swarm', {
-      span: {
-        id: this._instanceId,
-        command: 'end'
-      }
-    });
+    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
 
     log('destroying...');
     await this._ctx.dispose();

@@ -19,7 +19,7 @@ export type TracingContext = {
 };
 
 export type Trace = {
-  begin: (opts: { id: string; parentId: string; data?: DataType }) => TracingContext;
+  begin: (opts: { id: string; parentId?: string; data?: DataType }) => TracingContext;
   end: (opts: { id: string; status?: 'ok' | 'error'; data?: DataType }) => TracingContext;
   update: (opts: { id: string; data: Record<string, string> }) => TracingContext;
   error: (opts: { id: string; error: Error; data?: DataType }) => TracingContext;
