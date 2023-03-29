@@ -18,6 +18,7 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -62,6 +63,7 @@ export class HaloProxy implements Halo {
   private _devices = MulticastObservable.from(this._devicesChanged, []);
   private _contacts = MulticastObservable.from(this._contactsChanged, []);
   private _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor(
@@ -113,6 +115,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open() {
+    log.trace('dxos.sdk.halo-proxy', trace.begin({ id: this._instanceId }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -158,6 +161,7 @@ export class HaloProxy implements Halo {
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
     this._invitationsUpdate.emit([]);
+    log.trace('dxos.sdk.halo-proxy', trace.end({ id: this._instanceId }));
   }
 
   /**
