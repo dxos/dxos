@@ -7,7 +7,7 @@ import {
   init as naturalInit,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
-  setTag,
+  setTag
 } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
