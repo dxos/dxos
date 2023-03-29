@@ -48,14 +48,6 @@ export class WebRTCTransport implements Transport {
       config: this.params.webrtcConfig
     });
 
-    params.stream.on('data', (data: Buffer) => {
-      this._performance.bytesSent += data.length;
-    });
-
-    this._peer.on('data', (data: Buffer) => {
-      this._performance.bytesReceived += data.length;
-    });
-
     this._peer.on('signal', async (data) => {
       log('signal', data);
       await this.params.sendSignal({ payload: { data } });

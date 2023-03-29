@@ -4,7 +4,6 @@
 
 import { setUser, startTransaction } from '@sentry/node';
 import { Transaction, Span } from '@sentry/types';
-import assert from 'node:assert';
 
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 
@@ -17,7 +16,6 @@ export const configureTracing = () => {
     name: 'DXOS Core Tracing',
     op: 'dxos'
   });
-  assert(TX);
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', finish);
   }
