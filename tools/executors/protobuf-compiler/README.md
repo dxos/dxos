@@ -11,7 +11,7 @@ pnpm i @dxos/protobuf-compiler
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
 - Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
-- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
+- Tag us on Twitter [`@dxos_org`](https://twitter.com/dxos_org)
 
 ## Contributions
 
