@@ -81,9 +81,6 @@ export const initializeAppTelemetry = async ({
     sampleRate: 1.0,
     replaySampleRate: 0.1,
     replaySampleRateOnError: 1.0,
-    user: {
-      id: await getTelemetryIdentifier()
-    },
     ...sentryOptions
   });
 
