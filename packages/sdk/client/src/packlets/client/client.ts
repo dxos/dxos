@@ -70,6 +70,11 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
+  /**
+   * Unique id of the Client, local to the current peer.
+   */
+  private readonly _instanceId = PublicKey.random().toHex();
+
   // prettier-ignore
   constructor({
     config,
@@ -196,6 +201,13 @@ export class Client {
    */
   @synchronized
   async initialize() {
+    log.trace('dxos.trace.client', {
+      span: {
+        command: 'begin',
+        id: this._instanceId
+      }
+    });
+
     if (this._initialized) {
       return;
     }
@@ -260,6 +272,13 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
+
+    log.trace('dxos.trace.client', {
+      span: {
+        command: 'end',
+        id: this._instanceId
+      }
+    });
   }
 
   /**
