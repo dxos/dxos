@@ -201,16 +201,16 @@ export class Client {
    */
   @synchronized
   async initialize() {
+    if (this._initialized) {
+      return;
+    }
+
     log.trace('dxos.trace.Client', {
       span: {
         command: 'begin',
         id: this._instanceId
       }
     });
-
-    if (this._initialized) {
-      return;
-    }
 
     await this._services.open();
 
