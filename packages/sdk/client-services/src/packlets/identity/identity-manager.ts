@@ -73,6 +73,10 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();
       await this._identity.ready();
+      log.trace('dxos.halo.identity', {
+        identityKey: identityRecord.identityKey,
+        displayName: this._identity.profileDocument?.displayName
+      });
       this.stateUpdate.emit();
     }
   }
@@ -138,6 +142,10 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    log.trace('dxos.halo.identity', {
+      identityKey: identityRecord.identityKey,
+      displayName: this._identity.profileDocument?.displayName
+    });
     this.stateUpdate.emit();
 
     log('created identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
@@ -168,6 +176,11 @@ export class IdentityManager {
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
     await this._identity.ready();
+    log.trace('dxos.halo.identity', {
+      identityKey: identityRecord.identityKey,
+      displayName: this._identity.profileDocument?.displayName
+    });
+
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
