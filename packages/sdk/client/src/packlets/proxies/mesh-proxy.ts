@@ -6,7 +6,9 @@ import assert from 'node:assert';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientServicesProvider } from '../client';
@@ -21,6 +23,8 @@ export class MeshProxy {
   });
 
   private _ctx?: Context;
+
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor(
@@ -46,6 +50,7 @@ export class MeshProxy {
    * @internal
    */
   async _open() {
+    log.trace('dxos.sdk.mesh-proxy', trace.begin({ id: this._instanceId }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
@@ -64,5 +69,6 @@ export class MeshProxy {
    */
   async _close() {
     await this._ctx?.dispose();
+    log.trace('dxos.sdk.mesh-proxy', trace.end({ id: this._instanceId }));
   }
 }

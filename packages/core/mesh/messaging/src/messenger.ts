@@ -8,7 +8,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, trace } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet, exponentialBackoffInterval } from '@dxos/util';
 
@@ -44,6 +44,8 @@ export class Messenger {
   private _closed = true;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
+  private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -57,6 +59,7 @@ export class Messenger {
     if (!this._closed) {
       return;
     }
+    log.trace('dxos.mesh.messenger', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (err) => log.catch(err)
     });
@@ -75,6 +78,7 @@ export class Messenger {
     }
     this._closed = true;
     await this._ctx.dispose();
+    log.trace('dxos.mesh.messenger', trace.end({ id: this._instanceId }));
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
