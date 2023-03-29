@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
@@ -34,6 +35,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   private _clientServicesProxy?: ClientServicesProxy;
   private _shellController?: ShellController;
   private _spaceProvider?: Provider<PublicKey | undefined>;
+
+  /**
+   * Unique id.
+   */
+  private readonly _instanceId = PublicKey.random().toHex();
 
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
@@ -75,6 +81,13 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   async open() {
+    log.trace('dxos.trace.IFrameClientServicesProxy', {
+      span: {
+        command: 'begin',
+        id: this._instanceId
+      }
+    });
+
     if (!this._clientServicesProxy) {
       this._clientServicesProxy = new ClientServicesProxy(await this._getIFramePort(this._options.channel));
     }
@@ -137,6 +150,12 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._iframe.remove();
       this._iframe = undefined;
     }
+    log.trace('dxos.trace.IFrameClientServicesProxy', {
+      span: {
+        command: 'end',
+        id: this._instanceId
+      }
+    });
   }
 
   private async _getIFramePort(channel: string): Promise<RpcPort> {

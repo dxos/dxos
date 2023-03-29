@@ -201,7 +201,7 @@ export class Client {
    */
   @synchronized
   async initialize() {
-    log.trace('dxos.trace.client', {
+    log.trace('dxos.trace.Client', {
       span: {
         command: 'begin',
         id: this._instanceId
@@ -273,7 +273,7 @@ export class Client {
 
     this._initialized = false;
 
-    log.trace('dxos.trace.client', {
+    log.trace('dxos.trace.Client', {
       span: {
         command: 'end',
         id: this._instanceId
