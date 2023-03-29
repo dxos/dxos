@@ -65,17 +65,15 @@
     }
   }
 
-  .feature h2 {
-    font-weight: 500;
-  }
+  .feature-panel {
+    .feature-item:hover {
+      transform: none;
+      box-shadow: none;
+      background-color: transparent;
 
-  .feature-item:hover {
-    transform: none;
-    box-shadow: none;
-    background-color: transparent;
-
-    &:before {
-      display: none;
+      &:before {
+        display: none;
+      }
     }
   }
 }
