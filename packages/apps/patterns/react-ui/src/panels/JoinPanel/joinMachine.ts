@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
 import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
+import { TimeoutError } from '@dxos/async';
 import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -79,39 +80,49 @@ const getInvitationSubscribable = (
       onError?: (error: any) => void,
       complete?: () => void
     ): Subscription => {
-      const unsubscribe = invitation.subscribe({
-        onAuthenticating: (invitation: Invitation) => {
-          log('[invitation authenticating]', { Domain, invitation });
-          return next({ type: `authenticate${Domain}Invitation`, invitation });
+      const subscription = invitation.subscribe(
+        (invitation: Invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              log('[invitation connecting]', { Domain, invitation });
+              return next({ type: `connect${Domain}Invitation`, invitation });
+            }
+
+            case Invitation.State.CONNECTED: {
+              log('[invitation connected]', { Domain, invitation });
+              return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
+            }
+
+            case Invitation.State.AUTHENTICATING: {
+              log('[invitation authenticating]', { Domain, invitation });
+              return next({ type: `authenticate${Domain}Invitation`, invitation });
+            }
+
+            case Invitation.State.SUCCESS: {
+              log('[invitation success]', { Domain });
+              next({ type: `succeed${Domain}Invitation` });
+              return complete?.();
+            }
+
+            case Invitation.State.CANCELLED: {
+              log.warn('[invitation cancelled]', { Domain });
+              return next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
+            }
+          }
         },
-        onCancelled: () => {
-          log.warn('[invitation cancelled]', { Domain });
-          return next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
-        },
-        onTimeout: () => {
-          log.error('[invitation timeout]', { Domain });
-          return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
-        },
-        onConnecting: (invitation: Invitation) => {
-          log('[invitation connecting]', { Domain, invitation });
-          return next({ type: `connect${Domain}Invitation`, invitation });
-        },
-        onConnected: (invitation: Invitation) => {
-          log('[invitation connected]', { Domain, invitation });
-          return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
-        },
-        onSuccess: () => {
-          log('[invitation success]', { Domain });
-          next({ type: `succeed${Domain}Invitation` });
-          return complete?.();
-        },
-        onError: (error: any) => {
-          log.error('[invitation errored]', { Domain, error });
-          next({ type: `fail${Domain}Invitation`, reason: 'error' });
-          return onError?.(error);
+        (error: any) => {
+          if (error instanceof TimeoutError) {
+            log.error('[invitation timeout]', { Domain });
+            return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
+          } else {
+            log.error('[invitation errored]', { Domain, error });
+            next({ type: `fail${Domain}Invitation`, reason: 'error' });
+            return onError?.(error);
+          }
         }
-      });
-      return { unsubscribe };
+      );
+
+      return subscription;
     }
   } as Subscribable<InvitationEvent>;
 };

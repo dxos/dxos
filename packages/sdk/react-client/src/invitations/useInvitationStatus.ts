@@ -63,7 +63,7 @@ export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
   authenticationCode?: string;
-  authMethod: Invitation['authMethod'];
+  authMethod?: Invitation['authMethod'];
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
