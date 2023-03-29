@@ -9,6 +9,7 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
@@ -95,6 +96,15 @@ export class SignalClient implements SignalMethods {
   );
 
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
+  private readonly _instanceId = PublicKey.random().toHex();
+
+  private readonly _performance = {
+    sentMessages: 0,
+    receivedMessages: 0,
+    reconnectCounter: 0,
+    joinCounter: 0,
+    leaveCounter: 0
+  };
 
   /**
    * @param _host Signal server websocket URL.
@@ -102,12 +112,15 @@ export class SignalClient implements SignalMethods {
    */
   constructor(
     private readonly _host: string,
-    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
+    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
+    private readonly _tracingParentId?: string
   ) {
     this.open();
   }
 
   open() {
+    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._tracingParentId }));
+
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;
     }
@@ -129,6 +142,7 @@ export class SignalClient implements SignalMethods {
     await this._client.close();
     this._setState(SignalState.CLOSED);
     log('closed');
+    log.trace('dxos.mesh.signal-client', trace.end({ id: this._instanceId, data: { performance: this._performance } }));
   }
 
   getStatus(): SignalStatus {
@@ -143,6 +157,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    this._performance.joinCounter++;
     log('joining', { topic, peerId });
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
@@ -151,6 +166,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    this._performance.leaveCounter++;
     log('leaving', { topic, peerId });
 
     this._swarmStreams.get({ topic, peerId })?.close();
@@ -158,6 +174,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async sendMessage(msg: Message): Promise<void> {
+    this._performance.sentMessages++;
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
     await this._client.sendMessage(msg);
@@ -181,6 +198,7 @@ export class SignalClient implements SignalMethods {
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
     messageStream.subscribe(async (message: SignalMessage) => {
+      this._performance.receivedMessages++;
       await this._onMessage({
         author: PublicKey.from(message.author),
         recipient: PublicKey.from(message.recipient),
@@ -273,6 +291,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private _reconnect() {
+    this._performance.reconnectCounter++;
     log(`reconnecting in ${this._reconnectAfter}ms`);
     if (this._state === SignalState.RE_CONNECTING) {
       console.error('Signal api already reconnecting.');

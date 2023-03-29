@@ -9,6 +9,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -48,6 +49,8 @@ export class WebsocketSignalManager implements SignalManager {
     payload: Any;
   }>();
 
+  private readonly _instanceId = PublicKey.random().toHex();
+
   // prettier-ignore
   constructor(
     private readonly _hosts: string[]
@@ -55,7 +58,7 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
+      const server = new SignalClient(host, async (message) => this.onMessage.emit(message), this._instanceId);
       // TODO(mykola): Add subscription group
       server.swarmEvent.on((data) => this.swarmEvent.emit(data));
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
@@ -73,6 +76,7 @@ export class WebsocketSignalManager implements SignalManager {
     if (!this._closed) {
       return;
     }
+    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId }));
 
     this._initContext();
 
@@ -98,6 +102,7 @@ export class WebsocketSignalManager implements SignalManager {
 
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
     [...this._topicsJoinedPerSignal.values()].map((value) => value.clear());
+    log.trace('dxos.mesh.websocket-signal-manager', trace.end({ id: this._instanceId }));
   }
 
   getStatus(): SignalStatus[] {
