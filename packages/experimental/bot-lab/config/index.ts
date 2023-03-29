@@ -7,7 +7,7 @@ import { Config } from '@dxos/client';
 // TODO(burdon): Compiles but fails build.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-// import defaults from './dx.yml';
+// import defaults from './dx-defaults.yml';
 
 const defaults = {
   runtime: {
@@ -38,4 +38,5 @@ const defaults = {
 };
 
 // TODO(burdon): Allow overrides.
+// TODO(burdon): Import settings via ENV.
 export const getConfig = () => new Config(defaults);

@@ -7,7 +7,7 @@ import urljoin from 'url-join';
 import { Config } from '@dxos/client';
 import { useConfig } from '@dxos/react-client';
 
-// TODO(burdon): Config?
+// TODO(burdon): Config.
 const endpoint = 'https://dev.kube.dxos.org/.well-known';
 
 export class KubeClient {
