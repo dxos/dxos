@@ -92,7 +92,7 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
     log.trace('dxos.trace.connection', {
       span: {
-        op: 'begin',
+        command: 'begin',
         id: this._instanceId,
         parent: this._traceParent
       }
@@ -155,9 +155,8 @@ export class Connection {
     this._changeState(ConnectionState.CLOSING);
     log.trace('dxos.trace.connection', {
       span: {
-        op: 'end',
-        id: this._instanceId,
-        parent: this._traceParent
+        command: 'end',
+        id: this._instanceId
       }
     });
 

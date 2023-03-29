@@ -101,7 +101,7 @@ export class Swarm {
     log.trace('dxos.mesh.swarm', {
       span: {
         id: this._instanceId,
-        op: 'begin'
+        command: 'begin'
       }
     });
   }
@@ -134,7 +134,7 @@ export class Swarm {
     log.trace('dxos.mesh.swarm', {
       span: {
         id: this._instanceId,
-        op: 'end'
+        command: 'end'
       }
     });
 
