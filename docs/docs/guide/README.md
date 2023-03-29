@@ -8,7 +8,8 @@ prev: ../
 DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
 
 :::note
-DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome. [GitHub](https://github.com/dxos/dxos/issues), [`@dxos_org` on Twitter](https://twitter.com/dxos_org). <br/>See [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome: [GitHub](https://github.com/dxos/dxos/issues); [Twitter](https://twitter.com/dxos_org). 
+<br/>See our [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
 :::
 
 DXOS is a group of technologies that work together:
