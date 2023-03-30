@@ -270,8 +270,10 @@ const increaseInterval = (interval: number) => {
     return 1000;
   } else if (interval < 5_000) {
     return 5_000;
+  } else if (interval < 10_000) {
+    return 10_000;
   } else if (interval < 30_000) {
     return 30_000;
   }
-  return Infinity;
+  return 60_000;
 };
