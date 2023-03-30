@@ -9,6 +9,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager } from '@dxos/network-manager';
+import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -46,6 +47,7 @@ export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
+  private readonly _instanceId = PublicKey.random().toHex();
 
   constructor({ feedStore, networkManager }: SpaceManagerParams) {
     // TODO(burdon): Assert.
@@ -59,11 +61,14 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open() {}
+  async open() {
+    log.trace('dxos.echo.space-manager', trace.begin({ id: this._instanceId }));
+  }
 
   @synchronized
   async close() {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
+    log.trace('dxos.echo.space-manager', trace.end({ id: this._instanceId }));
   }
 
   async constructSpace({ metadata, swarmIdentity, onNetworkConnection }: ConstructSpaceParams) {

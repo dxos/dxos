@@ -16,6 +16,8 @@ import { log } from '@dxos/log';
 
 import { InitOptions } from './types';
 
+export * from './tracing';
+
 /**
  * To use this SDK, call the init function as early as possible when loading the web page.
  * To set context information or send manual events, use the provided methods.
