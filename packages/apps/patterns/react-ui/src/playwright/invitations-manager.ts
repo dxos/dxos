@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import type { Browser, ConsoleMessage, Page } from 'playwright';
+import type { Browser, ConsoleMessage } from 'playwright';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
@@ -11,20 +11,22 @@ import type { InvitationsOptions } from '@dxos/client';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { setupPage } from '@dxos/test/playwright';
 
+import { ShellManager } from '../testing';
+
 // TODO(wittjosiah): Factor out.
 // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
 const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 export type PanelType = number | 'identity' | 'devices' | 'spaces' | 'join';
 
-export class InvitationsManager {
-  page!: Page;
-
+export class InvitationsManager extends ShellManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
   private _authenticationCode = new Trigger<string>();
 
-  constructor(private readonly _browser: Browser) {}
+  constructor(private readonly _browser: Browser) {
+    super();
+  }
 
   async init() {
     if (this._initialized) {
@@ -45,24 +47,12 @@ export class InvitationsManager {
 
   async getDisplayName(id: number) {
     // TODO(wittjosiah): Update id.
-    return this._peer(id).getByTestId('identity-list-item').nth(0).textContent();
+    return this.peer(id).getByTestId('identity-list-item').nth(0).textContent();
   }
 
   async getSpaceName(id: number, nth: number) {
     // TODO(wittjosiah): Update id.
-    return this._peer(id).getByTestId('space-list-item').nth(nth).textContent();
-  }
-
-  authenticatorIsVisible(id: number, type: 'device' | 'space') {
-    // TODO(wittjosiah): Update id.
-    return this._peer(id)
-      .getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`)
-      .isVisible();
-  }
-
-  invitationFailed(id: number) {
-    // TODO(wittjosiah): Update id.
-    return this._peer(id).getByTestId('invitation-rescuer-reset').isVisible();
+    return this.peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
   // Actions
@@ -77,7 +67,7 @@ export class InvitationsManager {
   }
 
   async openPanel(id: number, panel: PanelType) {
-    const peer = this._peer(id);
+    const peer = this.peer(id);
 
     if (typeof panel === 'number') {
       // TODO(wittjosiah): Update id.
@@ -104,7 +94,7 @@ export class InvitationsManager {
   }
 
   async createIdentity(id: number) {
-    const createIdentity = this._peer(id).getByTestId('invitations.create-identity');
+    const createIdentity = this.peer(id).getByTestId('invitations.create-identity');
     // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
     await createIdentity.click();
     await waitForExpect(async () => {
@@ -113,12 +103,12 @@ export class InvitationsManager {
   }
 
   async createSpace(id: number) {
-    await this._peer(id).getByTestId('invitations.create-space').click();
+    await this.peer(id).getByTestId('invitations.create-space').click();
   }
 
   async createInvitation(id: number, type: 'device' | 'space', options?: InvitationsOptions): Promise<string> {
     if (!options) {
-      const peer = this._peer(id);
+      const peer = this.peer(id);
       this._invitationCode = new Trigger<string>();
       await peer.getByTestId(`${type}s-panel.create-invitation`).click();
       return this._invitationCode.wait();
@@ -139,7 +129,7 @@ export class InvitationsManager {
   }
 
   async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {
-    const peer = this._peer(id);
+    const peer = this.peer(id);
     // TODO(wittjosiah): Update ids.
     if (type === 'device') {
       await peer.getByTestId('join-identity').click();
@@ -148,56 +138,12 @@ export class InvitationsManager {
     await this.page.keyboard.press('Enter');
   }
 
-  async cancelInvitation(id: number, type: 'device' | 'space', kind: 'host' | 'guest') {
-    const peer = this._peer(id);
-    if (kind === 'guest') {
-      await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-cancel`).click();
-    }
-  }
-
-  async invitationInputContinue(id: number, type: 'device' | 'space') {
-    // TODO(wittjosiah): Update ids.
-    await this._peer(id)
-      .getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`)
-      .click();
-  }
-
   async getAuthenticationCode(): Promise<string> {
     this._authenticationCode = new Trigger<string>();
     return await this._authenticationCode.wait();
   }
 
-  async authenticateInvitation(id: number, type: 'device' | 'space', authenticationCode: string) {
-    const peer = this._peer(id);
-    // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).type(authenticationCode);
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
-  }
-
-  async clearAuthenticationCode(id: number, type: 'device' | 'space') {
-    const peer = this._peer(id);
-    // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill('');
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).focus();
-  }
-
-  async resetInvitation(id: number) {
-    const peer = this._peer(id);
-    // TODO(wittjosiah): Update ids.
-    await peer.getByTestId('invitation-rescuer-reset').click();
-  }
-
-  // TODO(wittjosiah): Remove.
-  async doneInvitation(id: number, type: 'device' | 'space') {
-    const peer = this._peer(id);
-    // TODO(wittjosiah): Update ids.
-    await peer
-      .getByTestId(type === 'device' ? 'halo-invitation-accepted-done' : 'space-invitation-accepted-done')
-      .click();
-  }
-
-  // TODO(wittjosiah): Peer manager?
-  private _peer(id: number) {
+  peer(id: number) {
     return this.page.getByTestId(`peer-${id}`);
   }
 

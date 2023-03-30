@@ -332,7 +332,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 variant='ghost'
                 className='flex p-0 justify-start'
                 title='Close settings'
-                data-testid='sidebar.joinSpace'
+                data-testid='sidebar.closeSettings'
                 onClick={() => setShowSpaceList(false)}
               >
                 <X className={getSize(6)} />
