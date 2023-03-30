@@ -1,5 +1,5 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:22]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:23]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -27,7 +27,7 @@ Type: <code>[DatabaseRouter](/api/@dxos/react-client/classes/DatabaseRouter)</co
 Type: <code>ModelFactory</code>
 
 ### [networkManager]()
-Type: <code>any</code>
+Type: <code>NetworkManager</code>
 
 ### [opened]()
 Type: <code>boolean</code>
