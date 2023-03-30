@@ -39,7 +39,7 @@ export namespace Features {
 
   export const tailwind = (): Partial<PackageJson> => ({
     devDependencies: {
-      tailwindcss: '^3.2.7',
+      tailwindcss: '~3.2.7',
       autoprefixer: '^10.4.12',
       postcss: '^8.4.21'
     }

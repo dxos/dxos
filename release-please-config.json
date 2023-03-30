@@ -313,12 +313,17 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/bare/package.json",
+          "path": "packages/devtools/initializers/create/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create/package.json",
+          "path": "packages/devtools/initializers/create-bare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create-tasks/package.json",
           "jsonpath": "$.version"
         },
         {

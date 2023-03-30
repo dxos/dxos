@@ -13,6 +13,8 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { NetworkManager } from '@dxos/network-manager';
+import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
@@ -51,6 +53,7 @@ export class EchoProxy implements Echo {
 
   private _invitationProxy?: SpaceInvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor(
@@ -78,7 +81,7 @@ export class EchoProxy implements Echo {
   /**
    * @deprecated
    */
-  get networkManager() {
+  get networkManager(): NetworkManager {
     if (this._serviceProvider instanceof ClientServicesProxy) {
       throw new SystemError('Network manager not available in service proxy.');
     }
@@ -97,6 +100,7 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
+    log.trace('dxos.sdk.echo-proxy', trace.begin({ id: this._instanceId }));
     this._ctx = new Context();
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
@@ -156,6 +160,7 @@ export class EchoProxy implements Echo {
     this._spacesChanged.emit([]);
 
     this._invitationProxy = undefined;
+    log.trace('dxos.sdk.echo-proxy', trace.end({ id: this._instanceId }));
   }
 
   addSchema(schema: EchoSchema) {

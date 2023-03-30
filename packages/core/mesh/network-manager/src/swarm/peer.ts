@@ -60,6 +60,8 @@ export class Peer {
 
   public initiating = false;
 
+  public _traceParent?: string;
+
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -182,6 +184,7 @@ export class Peer {
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory
     );
+    connection._traceParent = this._traceParent;
     this._callbacks.onInitiated(connection);
     connection.stateChanged.on((state) => {
       switch (state) {

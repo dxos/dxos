@@ -5,7 +5,7 @@
 import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
-import { ThemeContext, useId } from '@dxos/react-components';
+import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
 
 import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
@@ -16,6 +16,7 @@ export interface DevicesDialogProps
 
 export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogProps) => {
   const titleId = useId('spaceDialog__title');
+  const themeContextValue = useThemeContext();
 
   return (
     <PanelDialog
@@ -24,7 +25,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
         titleId
       }}
     >
-      <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
         <DevicesPanel
           {...{
             ...devicesDialogProps,

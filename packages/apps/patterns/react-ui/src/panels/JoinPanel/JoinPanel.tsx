@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { DensityProvider, useId } from '@dxos/react-components';
+import { DensityProvider, useId, useThemeContext } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';
@@ -32,6 +32,7 @@ export const JoinPanel = ({
   const client = useClient();
   const identity = useIdentity();
   const titleId = useId('joinPanel__title');
+  const { hasIosKeyboard } = useThemeContext();
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
@@ -45,7 +46,7 @@ export const JoinPanel = ({
 
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
-      log.info('[state]', state);
+      log('[state]', state);
     });
 
     return subscription.unsubscribe;
@@ -57,16 +58,14 @@ export const JoinPanel = ({
     const innermostState = stateStack[stateStack.length - 1];
     const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus~="${autoFocusValue}"]`);
-    if ($nextAutofocus) {
+    if ($nextAutofocus && !(hasIosKeyboard && $nextAutofocus.hasAttribute('data-prevent-ios-autofocus'))) {
       $nextAutofocus.focus();
     }
-  }, [joinState.value]);
-
-  const spaceInvitation = joinState.context.space.invitationObservable;
+  }, [joinState.value, hasIosKeyboard]);
 
   return (
     <DensityProvider density='fine'>
-      <JoinHeading {...{ mode, titleId, invitation: spaceInvitation, onExit, exitActionParent, preventExit }} />
+      <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1200%]' aria-live='polite'>
           <AdditionMethodSelector

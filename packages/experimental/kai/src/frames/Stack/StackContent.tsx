@@ -28,13 +28,13 @@ export const StackContent: FC<{
   switch (object.__typename) {
     case Document.type.name: {
       return (
+        // TODO(burdon): Placeholder.
         <Composer
           identity={identity}
           space={space}
           text={object.content}
           slots={{
             editor: {
-              className: 'p-0', // TODO(burdon): Not passed through.
               spellCheck
             }
           }}

@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Target } from '@phosphor-icons/react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { DXOS } from '@dxos/react-icons';
+import { getSize, mx } from '@dxos/react-components';
+import { DXOSHorizontalType } from '@dxos/react-icons';
 
 import { Kube } from '../../components';
 
@@ -18,14 +20,17 @@ export const LandingPage = () => {
 
       <div className='flex flex-col shrink-0 h-[200px] m-8 select-none' style={{ fontFamily: 'Sharp Sans' }}>
         <div className='flex justify-center items-center text-white font-light opacity-60'>
-          <DXOS className='w-[80px] h-[80px]' />
-          <span className='ml-4 text-[60px]'>DXOS</span>
+          <DXOSHorizontalType className='h-[128px] fill-white' />
         </div>
-        <div className='flex justify-center items-center text-zinc-500 font-light mt-2'>
-          <Link to='/module/status'>
-            <span className='text-2xl'>KUBE Console</span>
-          </Link>
+        <div className='flex justify-center items-center text-zinc-500 font-light'>
+          <span className='text-2xl'>KUBE Console</span>
         </div>
+      </div>
+
+      <div className='absolute right-4 top-4'>
+        <Link to='/module/config'>
+          <Target weight='thin' className={mx(getSize(10), 'opacity-30')} />
+        </Link>
       </div>
     </div>
   );

@@ -77,7 +77,7 @@ export type Theme = {
   id: string;
   classes: {
     header: string;
-    toolbar: string;
+    border: string;
   };
   panel?: 'normal' | 'flat';
 };
@@ -88,84 +88,84 @@ export const themes: Theme[] = [
     id: 'slate',
     classes: {
       header: 'bg-slate-400',
-      toolbar: 'bg-slate-300'
+      border: 'border-slate-300'
     }
   },
   {
     id: 'zinc',
     classes: {
       header: 'bg-zinc-400',
-      toolbar: 'bg-zinc-300'
+      border: 'border-zinc-300'
     }
   },
   {
     id: 'red',
     classes: {
       header: 'bg-red-400',
-      toolbar: 'bg-red-300'
+      border: 'border-red-300'
     }
   },
   {
     id: 'orange',
     classes: {
       header: 'bg-orange-400',
-      toolbar: 'bg-orange-300'
+      border: 'border-orange-300'
     }
   },
   {
     id: 'emerald',
     classes: {
       header: 'bg-emerald-400',
-      toolbar: 'bg-emerald-300'
+      border: 'border-emerald-300'
     }
   },
   {
     id: 'cyan',
     classes: {
       header: 'bg-cyan-400',
-      toolbar: 'bg-cyan-300'
+      border: 'border-cyan-300'
     }
   },
   {
     id: 'sky',
     classes: {
       header: 'bg-sky-400',
-      toolbar: 'bg-sky-300'
+      border: 'border-sky-300'
     }
   },
   {
     id: 'blue',
     classes: {
       header: 'bg-blue-400',
-      toolbar: 'bg-blue-300'
+      border: 'border-blue-300'
     }
   },
   {
     id: 'indigo',
     classes: {
       header: 'bg-indigo-400',
-      toolbar: 'bg-indigo-300'
+      border: 'border-indigo-300'
     }
   },
   {
     id: 'fuchsia',
     classes: {
       header: 'bg-fuchsia-400',
-      toolbar: 'bg-fuchsia-300'
+      border: 'border-fuchsia-300'
     }
   },
   {
     id: 'violet',
     classes: {
       header: 'bg-violet-400',
-      toolbar: 'bg-violet-300'
+      border: 'border-violet-300'
     }
   },
   {
     id: 'pink',
     classes: {
       header: 'bg-pink-400',
-      toolbar: 'bg-pink-300'
+      border: 'border-pink-300'
     }
   }
 ];

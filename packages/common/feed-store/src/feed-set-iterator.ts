@@ -106,6 +106,10 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._trigger.wake();
   }
 
+  hasFeed(feedKey: PublicKey) {
+    return this._feedQueues.has(feedKey);
+  }
+
   override async _onOpen(): Promise<void> {
     for (const queue of this._feedQueues.values()) {
       await queue.open();
