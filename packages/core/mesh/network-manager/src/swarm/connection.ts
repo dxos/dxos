@@ -8,6 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessenger } from '../signal';
@@ -57,6 +58,12 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
+  public _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
+  public _performance = {
+    signalsSent: 0
+  };
+
   constructor(
     public readonly topic: PublicKey,
     public readonly ownId: PublicKey, // TODO(burdon): peerID?
@@ -87,6 +94,7 @@ export class Connection {
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(ConnectionState.CONNECTING);
+    log.trace('dxos.mesh.connection', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
     this._protocol.initialize().catch((err) => {
@@ -104,6 +112,7 @@ export class Connection {
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => {
+        this._performance.signalsSent++;
         await this._signalMessaging.signal({
           author: this.ownId,
           recipient: this.remoteId,
@@ -142,7 +151,6 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-
     this._changeState(ConnectionState.CLOSING);
 
     log('closing...', { peerId: this.ownId });
@@ -163,6 +171,10 @@ export class Connection {
 
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
+    log.trace(
+      'dxos.mesh.connection',
+      trace.end({ id: this._instanceId, status: 'ok', data: { performance: this._performance } })
+    );
   }
 
   async signal(msg: SignalMessage) {

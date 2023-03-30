@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L34)
+### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L35)
 
 
 

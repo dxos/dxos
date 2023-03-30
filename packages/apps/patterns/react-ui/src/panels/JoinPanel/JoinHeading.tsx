@@ -7,8 +7,8 @@ import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 import { useSpace } from '@dxos/react-client';
 import { Button, defaultDescription, getSize, Heading, mx, useId, useTranslation } from '@dxos/react-components';
 
+import { InvitationEmoji } from '../../components';
 import { defaultSurface } from '../../styles';
-import { toEmoji } from '../../util';
 import { JoinPanelMode } from './JoinPanelProps';
 import { JoinState } from './joinMachine';
 
@@ -33,8 +33,7 @@ export const JoinHeading = forwardRef(
     const name = space?.properties.name;
     const nameId = useId(mode === 'halo-only' ? 'identityDisplayName' : 'spaceDisplayName');
 
-    const invitationKey = joinState?.context[mode === 'halo-only' ? 'halo' : 'space'].invitation?.invitationId;
-    const invitationEmoji = invitationKey && toEmoji(invitationKey);
+    const invitationId = joinState?.context[mode === 'halo-only' ? 'halo' : 'space'].invitation?.invitationId;
 
     const exitButton = (
       <Button
@@ -65,15 +64,7 @@ export const JoinHeading = forwardRef(
           {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         </Heading>
         <div role='group' className='flex items-center justify-center gap-2'>
-          <span
-            role='none'
-            className={mx(
-              getSize(12),
-              'bg-neutral-300 dark:bg-neutral-700 rounded-full text-center text-4xl leading-[3rem]'
-            )}
-          >
-            {invitationEmoji}
-          </span>
+          <InvitationEmoji {...{ invitationId }} />
           {name && <p id={nameId}>{name}</p>}
         </div>
       </div>
