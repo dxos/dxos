@@ -264,9 +264,6 @@ class KubeRenderer {
       this._group.rotation[this._axes[this._axisIndex]] = rad;
     }
 
-    // TODO(burdon): In/out.
-    // this._camera.position.z += 1;
-
     this._renderer.render(this._scene, this._camera);
     return this;
   }
