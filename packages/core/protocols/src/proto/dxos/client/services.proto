@@ -288,12 +288,12 @@ message Invitation {
   optional dxos.keys.PublicKey space_key = 9;
 
   /// Authentication code created by host (only present if auth_method is SHARED_SECRET).
-  optional string authentication_code = 10;
+  optional string auth_code = 10;
 }
 
 message AuthenticationRequest {
   string invitation_id = 1;
-  string authentication_code = 2;
+  string auth_code = 2;
 }
 
 message CancelInvitationRequest {

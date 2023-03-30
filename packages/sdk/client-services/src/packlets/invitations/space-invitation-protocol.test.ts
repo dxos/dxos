@@ -21,7 +21,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/space-invitations-handler', () => {
+describe('services/space-invitations-protocol', () => {
   test('genesis', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
@@ -80,7 +80,7 @@ describe('services/space-invitations-handler', () => {
     const complete2 = new Trigger<PublicKey>();
 
     let attempt = 0;
-    const authenticationCode = new Trigger<string>();
+    const authCode = new Trigger<string>();
 
     const space1 = await host.dataSpaceManager!.createSpace();
     const handler1 = host.getInvitationHandler({ kind: Invitation.Kind.SPACE, spaceKey: space1.key });
@@ -104,7 +104,7 @@ describe('services/space-invitations-handler', () => {
                       // Force retry.
                       await observable2.authenticate('000000');
                     } else {
-                      await observable2.authenticate(await authenticationCode.wait());
+                      await observable2.authenticate(await authCode.wait());
                     }
                     break;
                   }
@@ -123,8 +123,8 @@ describe('services/space-invitations-handler', () => {
           }
 
           case Invitation.State.CONNECTED: {
-            assert(invitation1.authenticationCode);
-            authenticationCode.wake(invitation1.authenticationCode);
+            assert(invitation1.authCode);
+            authCode.wake(invitation1.authCode);
             break;
           }
 

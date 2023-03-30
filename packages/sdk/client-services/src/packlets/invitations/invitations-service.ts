@@ -10,7 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationsHandler, InvitationOperations } from './invitations-handler';
+import { InvitationProtocol } from './invitation-protocol';
+import { InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -21,7 +22,7 @@ export class InvitationsServiceImpl implements InvitationsService {
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
-    private readonly _getHandler: (invitation: Invitation) => InvitationOperations
+    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol
   ) {}
 
   // TODO(burdon): Guest/host label.
@@ -173,14 +174,14 @@ export class InvitationsServiceImpl implements InvitationsService {
     });
   }
 
-  async authenticate({ invitationId, authenticationCode }: AuthenticationRequest): Promise<void> {
+  async authenticate({ invitationId, authCode }: AuthenticationRequest): Promise<void> {
     log('authenticating...');
     assert(invitationId);
     const observable = this._acceptInvitations.get(invitationId);
     if (!observable) {
       log.warn('invalid invitation', { invitationId });
     } else {
-      await observable.authenticate(authenticationCode);
+      await observable.authenticate(authCode);
     }
   }
 

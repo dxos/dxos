@@ -9,14 +9,18 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { Identity, JoinIdentityParams } from '../identity';
-import { InvitationOperations } from './invitations-handler';
+import { InvitationProtocol } from './invitation-protocol';
 
-export class DeviceInvitationOperations implements InvitationOperations {
+export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(
     private readonly _keyring: Keyring,
     private readonly _getIdentity: () => Identity,
     private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
   ) {}
+
+  toJSON(): object {
+    return {};
+  }
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
@@ -75,10 +79,5 @@ export class DeviceInvitationOperations implements InvitationOperations {
     });
 
     return { identityKey };
-  }
-
-  toJSON(): object {
-    // TODO(wittjosiah): What is helpful to include here?
-    return {};
   }
 }

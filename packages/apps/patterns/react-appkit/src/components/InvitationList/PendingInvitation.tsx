@@ -34,7 +34,7 @@ const PendingInvitationSkeleton = ({ message }: { message: string }) => {
 
 export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove }: PendingInvitationProps) => {
   const { t } = useTranslation('appkit');
-  const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
+  const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
 
   const handleRemove = useCallback(() => {
     const id = wrapper.get().invitationId;
@@ -62,7 +62,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
             actions={
               <>
                 {status === Invitation.State.AUTHENTICATING ? (
-                  <p className='text-xl text-center text-success-500 dark:text-success-300'>{authenticationCode}</p>
+                  <p className='text-xl text-center text-success-500 dark:text-success-300'>{authCode}</p>
                 ) : (
                   <CompactQrCode
                     {...{

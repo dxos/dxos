@@ -38,12 +38,12 @@ describe('Invitation utils', () => {
 
     const encoded = InvitationEncoder.encode({
       ...invitation,
-      authenticationCode: 'example',
+      authCode: 'example',
       identityKey: PublicKey.random(),
       spaceKey: PublicKey.random()
     });
     const decoded = InvitationEncoder.decode(encoded);
-    expect(decoded.authenticationCode).to.not.exist;
+    expect(decoded.authCode).to.not.exist;
     expect(decoded.identityKey).to.not.exist;
     expect(decoded.spaceKey).to.not.exist;
     expect(decoded).to.deep.eq(invitation);

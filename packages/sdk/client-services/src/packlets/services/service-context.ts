@@ -29,10 +29,10 @@ import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
-  DeviceInvitationOperations,
+  DeviceInvitationProtocol,
   InvitationsHandler,
-  InvitationOperations,
-  SpaceInvitationOperations
+  InvitationProtocol,
+  SpaceInvitationProtocol
 } from '../invitations';
 import { DataSpaceManager } from '../spaces';
 
@@ -56,7 +56,7 @@ export class ServiceContext {
 
   private readonly _handlerFactories = new Map<
     Invitation.Kind,
-    (invitation: Partial<Invitation>) => InvitationOperations
+    (invitation: Partial<Invitation>) => InvitationProtocol
   >();
 
   private _deviceSpaceSync?: CredentialConsumer<any>;
@@ -100,7 +100,7 @@ export class ServiceContext {
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationOperations(
+    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
       this.keyring,
       () => this.identityManager.identity ?? failUndefined(),
       this._acceptIdentity.bind(this)
@@ -148,7 +148,7 @@ export class ServiceContext {
     return identity;
   }
 
-  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationOperations {
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     const factory = this._handlerFactories.get(invitation.kind);
     assert(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);
@@ -189,7 +189,7 @@ export class ServiceContext {
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
       assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
-      return new SpaceInvitationOperations(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+      return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
     });
     this.initialized.wake();
 

@@ -26,7 +26,7 @@ message IntroductionResponse {
 }
 
 message AuthenticationRequest {
-  string authentication_code = 1;
+  string auth_code = 1;
 }
 
 message AuthenticationResponse {

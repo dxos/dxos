@@ -40,7 +40,7 @@ describe('services/space-invitation-service', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const authenticationCode = new Trigger<string>();
+    const authCode = new Trigger<string>();
 
     {
       const proxy1 = new InvitationsProxy(service1, () => ({ kind: Invitation.Kind.SPACE, spaceKey: space1.key }));
@@ -55,7 +55,7 @@ describe('services/space-invitation-service', () => {
                 async (invitation2: Invitation) => {
                   switch (invitation2.state) {
                     case Invitation.State.AUTHENTICATING: {
-                      await observable2.authenticate(await authenticationCode.wait());
+                      await observable2.authenticate(await authCode.wait());
                       break;
                     }
 
@@ -71,8 +71,8 @@ describe('services/space-invitation-service', () => {
             }
 
             case Invitation.State.CONNECTED: {
-              assert(invitation1.authenticationCode);
-              authenticationCode.wake(invitation1.authenticationCode);
+              assert(invitation1.authCode);
+              authCode.wake(invitation1.authCode);
               break;
             }
 
@@ -158,7 +158,7 @@ describe('services/device-invitation-service', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const authenticationCode = new Trigger<string>();
+    const authCode = new Trigger<string>();
 
     {
       const proxy1 = new InvitationsProxy(service1, () => ({ kind: Invitation.Kind.DEVICE }));
@@ -173,7 +173,7 @@ describe('services/device-invitation-service', () => {
                 async (invitation) => {
                   switch (invitation.state) {
                     case Invitation.State.AUTHENTICATING: {
-                      await observable2.authenticate(await authenticationCode.wait());
+                      await observable2.authenticate(await authCode.wait());
                       break;
                     }
 
@@ -191,8 +191,8 @@ describe('services/device-invitation-service', () => {
             }
 
             case Invitation.State.CONNECTED: {
-              assert(invitation.authenticationCode);
-              authenticationCode.wake(invitation.authenticationCode);
+              assert(invitation.authCode);
+              authCode.wake(invitation.authCode);
               break;
             }
 

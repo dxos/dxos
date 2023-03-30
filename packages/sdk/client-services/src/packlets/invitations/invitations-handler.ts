@@ -31,21 +31,9 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { InvitationProtocol } from './invitation-protocol';
+
 const MAX_OTP_ATTEMPTS = 3;
-
-export interface InvitationOperations {
-  // Host
-  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;
-  admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
-
-  // Guest
-  createIntroduction(): IntroductionRequest;
-  createAdmissionRequest(): Promise<AdmissionRequest>;
-  accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>>;
-
-  // Debugging
-  toJSON(): object;
-}
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -77,7 +65,7 @@ export interface InvitationOperations {
 export class InvitationsHandler {
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(operations: InvitationOperations, options?: Partial<Invitation>): CancellableInvitationObservable {
+  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -86,10 +74,10 @@ export class InvitationsHandler {
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random()
     } = options ?? {};
-    const authenticationCode =
-      options?.authenticationCode ??
+    const authCode =
+      options?.authCode ??
       (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
-    assert(operations);
+    assert(protocol);
 
     const invitation: Invitation = {
       invitationId,
@@ -97,8 +85,8 @@ export class InvitationsHandler {
       authMethod,
       state,
       swarmKey,
-      authenticationCode,
-      ...operations.getInvitationContext()
+      authCode,
+      ...protocol.getInvitationContext()
     };
 
     // TODO(wittjosiah): Fire complete event?
@@ -121,7 +109,7 @@ export class InvitationsHandler {
         introduce: async ({ profile }) => {
           log('guest introduced itself', {
             guestProfile: profile,
-            handler: operations.toString()
+            handler: protocol.toString()
           });
 
           guestProfile = profile;
@@ -133,14 +121,13 @@ export class InvitationsHandler {
           // TODO(wittjosiah): Make when the space details are revealed configurable.
           //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
           return {
-            spaceKey:
-              authMethod === Invitation.AuthMethod.NONE ? operations.getInvitationContext().spaceKey : undefined,
+            spaceKey: authMethod === Invitation.AuthMethod.NONE ? protocol.getInvitationContext().spaceKey : undefined,
             authMethod
           };
         },
 
-        authenticate: async ({ authenticationCode: code }) => {
-          log('received authentication request', { authenticationCode: code });
+        authenticate: async ({ authCode: code }) => {
+          log('received authentication request', { authCode: code });
           let status = AuthenticationResponse.Status.OK;
 
           switch (invitation.authMethod) {
@@ -150,10 +137,10 @@ export class InvitationsHandler {
             }
 
             case Invitation.AuthMethod.SHARED_SECRET: {
-              if (invitation.authenticationCode) {
+              if (invitation.authCode) {
                 if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
                   status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
-                } else if (code !== invitation.authenticationCode) {
+                } else if (code !== invitation.authCode) {
                   status = AuthenticationResponse.Status.INVALID_OTP;
                 } else {
                   authenticationPassed = true;
@@ -181,7 +168,7 @@ export class InvitationsHandler {
 
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             assert(deviceKey);
-            const admissionResponse = await operations.admit(admissionRequest, guestProfile);
+            const admissionResponse = await protocol.admit(admissionRequest, guestProfile);
 
             // Updating credentials complete.
             complete.wake(deviceKey);
@@ -197,10 +184,10 @@ export class InvitationsHandler {
         onOpen: () => {
           scheduleTask(ctx, async () => {
             try {
-              log('connected', { ...operations.toJSON() });
+              log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await complete.wait({ timeout });
-              log('admitted guest', { guest: deviceKey, ...operations.toJSON() });
+              log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
             } catch (err: any) {
               log.error('failed', err);
@@ -246,9 +233,9 @@ export class InvitationsHandler {
     return observable;
   }
 
-  acceptInvitation(operations: InvitationOperations, invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = invitation;
-    assert(operations);
+    assert(protocol);
 
     const complete = new Trigger<Partial<Invitation>>();
     const authenticated = new Trigger<string>();
@@ -273,15 +260,15 @@ export class InvitationsHandler {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
               }
 
-              log('connected', { ...operations.toJSON() });
+              log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
 
               // 1. Introduce guest to host.
-              log('introduce', { ...operations.toJSON() });
+              log('introduce', { ...protocol.toJSON() });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce(
-                operations.createIntroduction()
+                protocol.createIntroduction()
               );
-              log('introduce response', { ...operations.toJSON(), response: introductionResponse });
+              log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
               if (introductionResponse.spaceKey) {
                 invitation.spaceKey = introductionResponse.spaceKey;
@@ -297,10 +284,10 @@ export class InvitationsHandler {
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
                   stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-                  const authenticationCode = await authenticated.wait({ timeout });
+                  const authCode = await authenticated.wait({ timeout });
 
                   log('sending authentication request');
-                  const response = await extension.rpc.InvitationHostService.authenticate({ authenticationCode });
+                  const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
                   if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
                     break;
                   }
@@ -317,15 +304,15 @@ export class InvitationsHandler {
               }
 
               // 3. Send admission credentials to host (with local space keys).
-              log('request admission', { ...operations.toJSON() });
-              const admissionRequest = await operations.createAdmissionRequest();
+              log('request admission', { ...protocol.toJSON() });
+              const admissionRequest = await protocol.createAdmissionRequest();
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // 4. Record credential in our HALO.
-              const result = await operations.accept(admissionResponse, admissionRequest);
+              const result = await protocol.accept(admissionResponse, admissionRequest);
 
               // 5. Success.
-              log('admitted by host', { ...operations.toJSON() });
+              log('admitted by host', { ...protocol.toJSON() });
               complete.wake(result);
             } catch (err: any) {
               log.warn('auth failed', err);

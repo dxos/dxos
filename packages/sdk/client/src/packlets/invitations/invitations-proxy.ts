@@ -77,10 +77,10 @@ export class InvitationsProxy {
         assert(invitationId, 'Invitation missing identifier');
         await this._invitationsService.cancelInvitation({ invitationId });
       },
-      onAuthenticate: async (authenticationCode: string) => {
+      onAuthenticate: async (authCode: string) => {
         const invitationId = observable.get().invitationId;
         assert(invitationId, 'Invitation missing identifier');
-        await this._invitationsService.authenticate({ invitationId, authenticationCode });
+        await this._invitationsService.authenticate({ invitationId, authCode });
       }
     });
 
