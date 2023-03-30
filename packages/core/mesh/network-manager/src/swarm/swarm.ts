@@ -267,9 +267,7 @@ export class Swarm {
             scheduleTask(
               this._ctx,
               () => {
-                if (peer!.advertizing) {
-                  peer!.availableToConnect = true;
-                }
+                peer!.availableToConnect = true;
                 this._topology.update();
               },
               peer?.reconnectAfter
