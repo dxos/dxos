@@ -84,7 +84,7 @@ describe('services/space-invitations-protocol', () => {
       options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
       hooks: {
         guest: {
-          onAuthenticating: (invitation) => {
+          onReady: (invitation) => {
             if (attempt === 0) {
               // Force retry.
               void invitation.authenticate('000000');

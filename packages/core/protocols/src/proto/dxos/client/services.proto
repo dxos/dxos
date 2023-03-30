@@ -255,12 +255,11 @@ message Invitation {
     INIT = 0;
     CONNECTING = 1;
     CONNECTED = 2;
-    AUTHENTICATING = 3;
-    SUCCESS = 4;
-    CANCELLED = 5;
-    TIMEOUT = 6;
-    // TODO(wittjosiah): Remove.
-    ERROR = 7;
+    READY_FOR_AUTHENTICATION = 3;
+    AUTHENTICATING = 4;
+    SUCCESS = 5;
+    CANCELLED = 6;
+    TIMEOUT = 7;
   }
 
   /// Local identifier (random).

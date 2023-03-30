@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { PushStream, scheduleTask, sleep, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import {
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
@@ -89,7 +89,6 @@ export class InvitationsHandler {
       ...protocol.getInvitationContext()
     };
 
-    // TODO(wittjosiah): Fire complete event?
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
@@ -98,9 +97,14 @@ export class InvitationsHandler {
       }
     });
 
+    ctx.onDispose(() => {
+      log('complete', { ...operations.toJSON() });
+      stream.complete();
+    });
+
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
-      const complete = new Trigger<PublicKey>();
+      const success = new Trigger<PublicKey>();
       let guestProfile: ProfileDocument | undefined;
       let authenticationPassed = false;
       let authenticationRetry = 0;
@@ -109,14 +113,13 @@ export class InvitationsHandler {
         introduce: async ({ profile }) => {
           log('guest introduced itself', {
             guestProfile: profile,
-            handler: protocol.toString()
+            ...protocol.toJSON()
           });
 
           guestProfile = profile;
 
-          // TODO(burdon): Is this the right place to set this state?
           // TODO(dmaretskyi): Should we expose guest's profile in this callback?
-          stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+          stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
 
           // TODO(wittjosiah): Make when the space details are revealed configurable.
           //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
@@ -171,7 +174,7 @@ export class InvitationsHandler {
             const admissionResponse = await protocol.admit(admissionRequest, guestProfile);
 
             // Updating credentials complete.
-            complete.wake(deviceKey);
+            success.wake(deviceKey);
 
             return admissionResponse;
           } catch (err: any) {
@@ -186,12 +189,17 @@ export class InvitationsHandler {
             try {
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
-              const deviceKey = await complete.wait({ timeout });
+              const deviceKey = await success.wait({ timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
             } catch (err: any) {
-              log.error('failed', err);
-              stream.error(err);
+              if (err instanceof TimeoutError) {
+                log('timeout', { ...operations.toJSON() });
+                stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+              } else {
+                log.error('failed', err);
+                stream.error(err);
+              }
             } finally {
               if (type !== Invitation.Type.MULTIUSE) {
                 await sleep(ON_CLOSE_DELAY);
@@ -237,7 +245,6 @@ export class InvitationsHandler {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     assert(protocol);
 
-    const complete = new Trigger<Partial<Invitation>>();
     const authenticated = new Trigger<string>();
 
     const stream = new PushStream<Invitation>();
@@ -246,6 +253,11 @@ export class InvitationsHandler {
         void ctx.dispose();
         stream.error(err);
       }
+    });
+
+    ctx.onDispose(() => {
+      log('complete', { ...operations.toJSON() });
+      stream.complete();
     });
 
     const createExtension = (): InvitationGuestExtension => {
@@ -279,14 +291,13 @@ export class InvitationsHandler {
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
               if (isAuthenticationRequired(invitation)) {
-                stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
-
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
-                  stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+                  stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
                   const authCode = await authenticated.wait({ timeout });
 
                   log('sending authentication request');
+                  stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
                   const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
                   if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
                     break;
@@ -313,10 +324,15 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              complete.wake(result);
+              stream.next({ ...invitation, ...result, state: Invitation.State.SUCCESS });
             } catch (err: any) {
-              log.warn('auth failed', err);
-              stream.error(err);
+              if (err instanceof TimeoutError) {
+                log('timeout', { ...operations.toJSON() });
+                stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+              } else {
+                log.warn('auth failed', err);
+                stream.error(err);
+              }
             } finally {
               await ctx.dispose();
             }
@@ -341,9 +357,6 @@ export class InvitationsHandler {
       ctx.onDispose(() => swarmConnection.close());
 
       stream.next({ ...invitation, state: Invitation.State.CONNECTING });
-      const result = await complete.wait();
-      stream.next({ ...invitation, ...result, state: Invitation.State.SUCCESS });
-      await ctx.dispose();
     });
 
     const observable = new AuthenticatingInvitationObservable({

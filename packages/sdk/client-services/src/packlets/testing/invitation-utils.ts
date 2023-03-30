@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { TimeoutError, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -35,6 +35,7 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
 export type PerformInvitationHooks<T> = {
   onConnecting?: (value: T) => boolean | void;
   onConnected?: (value: T) => boolean | void;
+  onReady?: (value: T) => boolean | void;
   onAuthenticating?: (value: T) => boolean | void;
   onSuccess?: (value: T) => boolean | void;
   onCancelled?: (value: T) => boolean | void;
@@ -89,11 +90,16 @@ export const performInvitation = async ({
                   break;
                 }
 
-                case Invitation.State.AUTHENTICATING: {
-                  if (hooks?.guest?.onAuthenticating?.(guestObservable)) {
+                case Invitation.State.READY_FOR_AUTHENTICATION: {
+                  if (hooks?.guest?.onReady?.(guestObservable)) {
                     break;
                   }
                   await guestObservable.authenticate(await authCode.wait());
+                  break;
+                }
+
+                case Invitation.State.AUTHENTICATING: {
+                  hooks?.guest?.onAuthenticating?.(guestObservable);
                   break;
                 }
 
@@ -112,27 +118,32 @@ export const performInvitation = async ({
                   guestComplete.wake({ invitation: guestInvitation });
                   break;
                 }
+
+                case Invitation.State.TIMEOUT: {
+                  if (hooks?.guest?.onTimeout?.(guestObservable)) {
+                    return;
+                  }
+                  guestComplete.wake({ invitation: guestInvitation });
+                }
               }
             },
             (error: Error) => {
-              if (error instanceof TimeoutError) {
-                if (hooks?.guest?.onTimeout?.(guestObservable)) {
-                  return;
-                }
-                guestComplete.wake({ error });
-              } else {
-                if (hooks?.guest?.onError?.(guestObservable)) {
-                  return;
-                }
-                guestComplete.wake({ error });
+              if (hooks?.guest?.onError?.(guestObservable)) {
+                return;
               }
+              guestComplete.wake({ error });
             }
           );
           break;
         }
 
         case Invitation.State.CONNECTED: {
-          if (hooks?.host?.onConnected?.(hostObservable)) {
+          hooks?.host?.onConnected?.(hostObservable);
+          break;
+        }
+
+        case Invitation.State.READY_FOR_AUTHENTICATION: {
+          if (hooks?.host?.onReady?.(hostObservable)) {
             break;
           }
           if (hostInvitation.authCode) {
@@ -161,21 +172,21 @@ export const performInvitation = async ({
           hostComplete.wake({ invitation: hostInvitation });
           break;
         }
+
+        case Invitation.State.TIMEOUT: {
+          if (hooks?.host?.onTimeout?.(hostObservable)) {
+            break;
+          }
+          hostComplete.wake({ invitation: hostInvitation });
+          break;
+        }
       }
     },
     (error: Error) => {
-      // TODO(wittjosiah): This shouldn't fire error.
-      if (error instanceof TimeoutError) {
-        if (hooks?.host?.onTimeout?.(hostObservable)) {
-          return;
-        }
-        hostComplete.wake({ error });
-      } else {
-        if (hooks?.host?.onError?.(hostObservable)) {
-          return;
-        }
-        hostComplete.wake({ error });
+      if (hooks?.host?.onError?.(hostObservable)) {
+        return;
       }
+      hostComplete.wake({ error });
     }
   );
 
