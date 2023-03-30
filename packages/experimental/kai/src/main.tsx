@@ -19,7 +19,7 @@ import { createRouter } from './router';
 
 import '../style.css';
 
-void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
+await initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
