@@ -13,63 +13,132 @@ import { afterTest, describe, test } from '@dxos/test';
 import { InvitationsServiceImpl } from '../invitations';
 import { LocalClientServices, ServiceContext } from '../services';
 import { DataSpace } from '../spaces';
-import { createIdentity, createPeers, performInvitation, PerformInvitationParams, TestBuilder } from '../testing';
+import {
+  createIdentity,
+  createPeers,
+  performInvitation,
+  PerformInvitationParams,
+  Result,
+  TestBuilder
+} from '../testing';
+
+// Suppress invitation warning logs as they are expected.
+// log.config({ filter: 'invitation:error,warn' });
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
   return peer;
 };
 
-const testSuite = (
-  kind: Invitation.Kind,
-  getParams: () => PerformInvitationParams,
-  getPeers: () => [ServiceContext, ServiceContext]
-) => {
+const successfulInvitation = ({
+  host,
+  guest,
+  hostResult: { invitation: hostInvitation, error: hostError },
+  guestResult: { invitation: guestInvitation, error: guestError }
+}: {
+  host: ServiceContext;
+  guest: ServiceContext;
+  hostResult: Result;
+  guestResult: Result;
+}) => {
+  expect(hostError).to.be.undefined;
+  expect(guestError).to.be.undefined;
+  expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+  expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+
+  switch (hostInvitation!.kind) {
+    case Invitation.Kind.SPACE:
+      expect(guestInvitation!.spaceKey).to.exist;
+      expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
+      break;
+
+    case Invitation.Kind.DEVICE:
+      expect(hostInvitation!.identityKey).not.to.exist;
+      expect(guestInvitation!.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
+      expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
+      break;
+  }
+};
+
+const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [ServiceContext, ServiceContext]) => {
   test('no auth', async () => {
     const [host, guest] = getPeers();
-    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation(getParams());
-
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
-
-    switch (kind) {
-      case Invitation.Kind.SPACE:
-        expect(guestInvitation?.spaceKey).to.exist;
-        expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-        break;
-
-      case Invitation.Kind.DEVICE:
-        expect(hostInvitation!.identityKey).not.to.exist;
-        expect(guestInvitation?.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
-        expect(guestInvitation?.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
-        break;
-    }
+    const [hostResult, guestResult] = await performInvitation(getParams());
+    successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('with shared secret', async () => {
     const [host, guest] = getPeers();
     const params = getParams();
-    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation({
+    const [hostResult, guestResult] = await performInvitation({
       ...params,
       options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET }
     });
-
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
-
-    switch (kind) {
-      case Invitation.Kind.SPACE:
-        expect(guestInvitation?.spaceKey).to.exist;
-        expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-        break;
-
-      case Invitation.Kind.DEVICE:
-        expect(hostInvitation!.identityKey).not.to.exist;
-        expect(guestInvitation?.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
-        expect(guestInvitation?.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
-        break;
-    }
+    successfulInvitation({ host, guest, hostResult, guestResult });
   });
+
+  test('invalid auth code', async () => {
+    const [host, guest] = getPeers();
+    const params = getParams();
+    let attempt = 1;
+    const [hostResult, guestResult] = await performInvitation({
+      ...params,
+      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      hooks: {
+        guest: {
+          onReady: (invitation) => {
+            if (attempt === 0) {
+              // Force retry.
+              void invitation.authenticate('000000');
+              attempt++;
+              return true;
+            }
+
+            return false;
+          }
+        }
+      }
+    });
+    expect(attempt).to.eq(1);
+    successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('max auth code retries', async () => {
+    const params = getParams();
+    let attempt = 0;
+    const [hostResult, guestResult] = await performInvitation({
+      ...params,
+      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      hooks: {
+        guest: {
+          onReady: (invitation) => {
+            // Force retry.
+            void invitation.authenticate('000000');
+            attempt++;
+            return true;
+          }
+        }
+      }
+    });
+    expect(attempt).to.eq(3);
+    expect(hostResult.invitation?.state).to.eq(Invitation.State.READY_FOR_AUTHENTICATION);
+    expect(guestResult.error).to.exist;
+  });
+
+  test('invitation timeout', async () => {
+    const params = getParams();
+    const [hostResult, guestResult] = await performInvitation({
+      ...params,
+      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 }
+    });
+    expect(hostResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
+    expect(guestResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
+  });
+
+  test('host cancels invitation', async () => {});
+  test('guest cancels invitation', async () => {});
+  test('network error', async () => {});
+  test('multiple concurrent invitations', async () => {});
 };
 
 describe('Invitations', () => {
@@ -87,7 +156,6 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        Invitation.Kind.SPACE,
         () => ({
           host,
           guest,
@@ -109,7 +177,6 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        Invitation.Kind.DEVICE,
         () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
         () => [host, guest]
       );
@@ -146,7 +213,6 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        Invitation.Kind.SPACE,
         () => ({ host, guest }),
         () => [hostContext, guestContext]
       );
@@ -178,7 +244,6 @@ describe('Invitations', () => {
       });
 
       testSuite(
-        Invitation.Kind.DEVICE,
         () => ({ host, guest }),
         () => [hostContext, guestContext]
       );
@@ -204,7 +269,6 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      Invitation.Kind.DEVICE,
       () => ({ host: host.halo, guest: guest.halo }),
       () => [
         (host.services as LocalClientServices).host._serviceContext,
@@ -234,7 +298,6 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      Invitation.Kind.SPACE,
       () => ({ host: space as SpaceProxy, guest }),
       () => [
         (host.services as LocalClientServices).host._serviceContext,

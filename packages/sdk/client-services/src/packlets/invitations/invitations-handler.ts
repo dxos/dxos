@@ -86,6 +86,7 @@ export class InvitationsHandler {
       state,
       swarmKey,
       authCode,
+      timeout,
       ...protocol.getInvitationContext()
     };
 
@@ -250,8 +251,14 @@ export class InvitationsHandler {
     const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
+        if (err instanceof TimeoutError) {
+          log('timeout', { ...operations.toJSON() });
+          stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+        } else {
+          log.warn('auth failed', err);
+          stream.error(err);
+        }
         void ctx.dispose();
-        stream.error(err);
       }
     });
 
@@ -272,6 +279,8 @@ export class InvitationsHandler {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
               }
 
+              scheduleTask(ctx, () => ctx.raise(new TimeoutError(timeout)), timeout);
+
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
 
@@ -286,10 +295,7 @@ export class InvitationsHandler {
                 invitation.spaceKey = introductionResponse.spaceKey;
               }
 
-              // TODO(dmaretskyi): Add a callback here to notify that we have introduced ourselves to the host (regardless of auth requirements).
-
               // 2. Get authentication code.
-              // TODO(burdon): Test timeout (options for timeouts at different steps).
               if (isAuthenticationRequired(invitation)) {
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
@@ -312,6 +318,9 @@ export class InvitationsHandler {
                     }
                   }
                 }
+              } else {
+                // Notify that introduction is complete even if auth is not required.
+                stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
               }
 
               // 3. Send admission credentials to host (with local space keys).

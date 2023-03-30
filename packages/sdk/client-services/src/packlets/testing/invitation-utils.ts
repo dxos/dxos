@@ -28,7 +28,8 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
     kind: invitation.kind,
     authMethod: invitation.authMethod,
     swarmKey: invitation.swarmKey,
-    state: invitation.state
+    state: invitation.state,
+    timeout: invitation.timeout
   };
 };
 
@@ -65,9 +66,12 @@ export const performInvitation = async ({
   const guestComplete = new Trigger<Result>();
   const authCode = new Trigger<string>();
 
+  let latestHostInvitation: Invitation | undefined;
+
   const hostObservable = createInvitation(host, options);
   hostObservable.subscribe(
     async (hostInvitation: Invitation) => {
+      latestHostInvitation = hostInvitation;
       switch (hostInvitation.state) {
         case Invitation.State.CONNECTING: {
           if (hooks?.host?.onConnecting?.(hostObservable)) {
@@ -132,6 +136,7 @@ export const performInvitation = async ({
                 return;
               }
               guestComplete.wake({ error });
+              hostComplete.wake({ invitation: latestHostInvitation });
             }
           );
           break;
