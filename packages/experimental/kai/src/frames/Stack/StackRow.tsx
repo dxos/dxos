@@ -18,6 +18,7 @@ export type StackRowProps = {
   children?: ReactNode;
   Handle?: JSX.Element;
   className?: string;
+  showAlways?: boolean;
   showMenu?: boolean;
   items?: ContextMenuItem[];
 } & Pick<ContextMenuProps, 'onInsert' | 'onDelete'>;
@@ -30,6 +31,7 @@ export const StackRow = forwardRef(
       dragging,
       style,
       dragAttributes,
+      showAlways,
       showMenu,
       className,
       items,
@@ -46,18 +48,22 @@ export const StackRow = forwardRef(
         style={style}
         className={mx('group flex overflow-hidden mx-6 md:mx-0', dragging && 'relative z-10 bg-zinc-100', className)}
       >
-        <div className='md:flex shink-0 w-24 text-gray-400'>
+        <div className={mx('md:flex shrink-0 w-24 text-gray-400')}>
           {showMenu && items && items.length > 0 && (
-            <>
-              <div className={mx('flex invisible group-hover:visible ml-6 -mt-0.5', menuOpen && 'visible')}>
-                <div className='w-8'>
-                  {!dragging && (
-                    <ContextMenu items={items} onOpenChange={setMenuOpen} onInsert={onInsert} onDelete={onDelete} />
-                  )}
-                </div>
-                {Handle}
+            <div
+              className={mx(
+                showAlways ? 'visible' : 'invisible',
+                'flex group-hover:visible ml-6 -mt-0.5',
+                menuOpen && 'visible'
+              )}
+            >
+              <div className='w-8'>
+                {!dragging && (
+                  <ContextMenu items={items} onOpenChange={setMenuOpen} onInsert={onInsert} onDelete={onDelete} />
+                )}
               </div>
-            </>
+              {Handle}
+            </div>
           )}
         </div>
 
