@@ -7,6 +7,7 @@ export const os = {
   'identity offline description': 'Offline',
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy',
+  'copy invitation code success label': 'Copied',
   'open share panel label': 'Share',
   'joining space heading': 'Joining space',
   'join space heading': 'Join a space',

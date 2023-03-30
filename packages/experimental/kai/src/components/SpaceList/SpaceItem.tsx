@@ -29,6 +29,8 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
     <div
       className={mx(
         'flex flex-col overflow-hidden first:mt-0 px-2 hover:bg-hover-bg',
+        // TODO(burdon): Border based on space properties.
+        // 'border-l-[0.25rem]', theme.classes.border,
         selected && 'z-10 hover:bg-selection-bg bg-selection-bg'
       )}
     >

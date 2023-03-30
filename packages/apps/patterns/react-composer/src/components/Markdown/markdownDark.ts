@@ -110,8 +110,7 @@ export const markdownDarktheme = {
     borderLeftColor: cursor
   },
   '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
-    padding: '4px'
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(',')
   },
   '& .cm-activeLine': {
     backgroundColor: 'transparent'

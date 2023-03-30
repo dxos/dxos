@@ -10,6 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { Messenger } from '@dxos/messaging';
+import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -46,7 +47,7 @@ export class Swarm {
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
    */
   @logInfo
-  readonly instanceId = PublicKey.random();
+  readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * New connection to a peer is started.
@@ -97,6 +98,11 @@ export class Swarm {
         onMessage: async (message) => await this._swarmMessenger.receiveMessage(message)
       })
       .catch((error) => log.catch(error));
+
+    log.trace(
+      'dxos.mesh.swarm',
+      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } })
+    );
   }
 
   get connections() {
@@ -129,6 +135,7 @@ export class Swarm {
     await this._topology.destroy();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
     log('destroyed');
+    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
   }
 
   async setTopology(topology: Topology) {
@@ -273,6 +280,7 @@ export class Swarm {
           }
         }
       );
+      peer._traceParent = this._instanceId;
       this._peers.set(peerId, peer);
     }
 

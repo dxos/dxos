@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretCircleDown, Trash } from '@phosphor-icons/react';
+import { PlusCircle, Trash } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { Button, Dialog, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, getSize } from '@dxos/react-components';
@@ -41,7 +41,7 @@ export const ContextMenu = ({ items, onOpenChange, onInsert, onDelete }: Context
         slots={{ root: { onOpenChange }, content: { className: 'z-50' } }}
         trigger={
           <Button variant='ghost' className='p-1'>
-            <CaretCircleDown className={getSize(6)} />
+            <PlusCircle className={getSize(6)} />
           </Button>
         }
       >

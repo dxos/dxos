@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
+import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -52,6 +53,7 @@ export abstract class BaseCommand extends Command {
   private _failing = false;
   protected _telemetryContext?: TelemetryContext;
 
+  private _stdin?: string;
   public static override enableJsonFlag = true;
   static override flags = {
     config: Flags.string({
@@ -73,11 +75,21 @@ export abstract class BaseCommand extends Command {
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
 
+    try {
+      this._stdin = fs.readFileSync(0, 'utf8');
+    } catch (err) {
+      this._stdin = undefined;
+    }
+
     this._startTime = new Date();
   }
 
   get clientConfig() {
     return this._clientConfig;
+  }
+
+  get stdin() {
+    return this._stdin;
   }
 
   ok() {
