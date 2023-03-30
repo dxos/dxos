@@ -34,7 +34,7 @@ export class WebsocketSignalManager implements SignalManager {
   private _ctx!: Context;
   private _reconcileTask!: DeferredTask;
   private _reconcilingLater = false;
-  private _closed = false;
+  private _opened = false;
 
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -55,6 +55,7 @@ export class WebsocketSignalManager implements SignalManager {
   constructor(
     private readonly _hosts: string[]
   ) {
+    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId }));
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
@@ -74,30 +75,29 @@ export class WebsocketSignalManager implements SignalManager {
 
   @synchronized
   async open() {
-    if (!this._closed) {
+    if (this._opened) {
       return;
     }
     log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId }));
 
     this._initContext();
 
-    await Promise.all([...this._servers.values()].map((server) => server.open()));
-    this._closed = false;
+    [...this._servers.values()].forEach((server) => server.open());
 
     await Promise.all(
       [...this._servers.values()].map((server) =>
         Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
       )
     );
-    this._closed = false;
+    this._opened = true;
     this._reconcileTask.schedule();
   }
 
   async close() {
-    if (this._closed) {
+    if (!this._opened) {
       return;
     }
-    this._closed = true;
+    this._opened = false;
 
     await this._ctx.dispose();
 
@@ -114,7 +114,7 @@ export class WebsocketSignalManager implements SignalManager {
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log(`Join ${topic} ${peerId}`);
     assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
-    assert(!this._closed, 'Closed');
+    assert(this._opened, 'Closed');
 
     this._topicsJoined.set(topic, peerId);
     this._reconcileTask.schedule();
@@ -124,7 +124,7 @@ export class WebsocketSignalManager implements SignalManager {
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('leaving', { topic, peerId });
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
-    assert(!this._closed, 'Closed');
+    assert(this._opened, 'Closed');
 
     this._topicsJoined.delete(topic);
     this._reconcileTask.schedule();
@@ -140,7 +140,7 @@ export class WebsocketSignalManager implements SignalManager {
     payload: Any;
   }): Promise<void> {
     log(`Signal ${recipient}`);
-    assert(!this._closed, 'Closed');
+    assert(this._opened, 'Closed');
 
     await Promise.all(
       [...this._servers.values()].map((server: SignalClient) =>
@@ -151,7 +151,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   async subscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
-    assert(!this._closed, 'Closed');
+    assert(this._opened, 'Closed');
     this._subscribedMessages.add(peerId);
 
     const unsubscribeHandles = await Promise.all(
