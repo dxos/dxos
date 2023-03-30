@@ -22,12 +22,13 @@ type Module = {
   tags: string[];
 };
 
+// TODO(burdon): App versions.
 const columns: (host: string | undefined) => Column<Module>[] = (host) => {
   const columns: Column<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,
-      width: 100
+      width: 120
     },
     {
       Header: 'type',
@@ -88,6 +89,7 @@ export const RegistryPage = () => {
     const { modules } = await kube.fetch<{ modules: Module[] }>('/dx/registry');
     setConfig(config);
     setModules(modules);
+    console.log(JSON.stringify(modules, undefined, 2));
   };
 
   return (
