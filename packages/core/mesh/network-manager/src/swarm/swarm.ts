@@ -25,7 +25,7 @@ import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
 
-const RECONNECT_TIMEOUT = 10_000;
+const RECONNECT_TIMEOUT = 30_000;
 
 // TODO(burdon): Factor out.
 const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
@@ -270,7 +270,7 @@ export class Swarm {
                 peer!.availableToConnect = true;
                 this._topology.update();
               },
-              peer?.reconnectAfter
+              peer!.reconnectAfter
             );
 
             if (!peer!.advertizing) {

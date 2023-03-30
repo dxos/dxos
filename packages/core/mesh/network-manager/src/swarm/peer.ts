@@ -209,7 +209,7 @@ export class Peer {
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
-          this.reconnectAfter = this.reconnectAfter === 0 ? 1000 : this.reconnectAfter * 2;
+          this.reconnectAfter = increaseInterval(this.reconnectAfter);
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
@@ -260,3 +260,18 @@ export class Peer {
     await this?.connection?.close();
   }
 }
+
+const increaseInterval = (interval: number) => {
+  if (interval === 0) {
+    return 1;
+  } else if (interval < 5) {
+    return 5;
+  } else if (interval < 1000) {
+    return 1000;
+  } else if (interval < 5_000) {
+    return 5_000;
+  } else if (interval < 30_000) {
+    return 30_000;
+  }
+  return Infinity;
+};
