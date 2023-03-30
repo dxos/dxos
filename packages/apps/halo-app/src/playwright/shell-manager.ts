@@ -36,7 +36,7 @@ export class HaloShellManager extends ShellManager {
     await this.shell.getByTestId('create-identity').click();
     await this.page.keyboard.type(name);
     await this.shell.getByTestId('create-identity-input-continue').click();
-    await this.shell.getByTestId('identity-added-done').click();
+    await this.shell.getByTestId('halo-invitation-accepted-done').click();
   }
 
   async closeShell() {
@@ -67,9 +67,6 @@ export class HaloShellManager extends ShellManager {
   }
 
   async acceptSpaceInvitation(invitationCode: string) {
-    await this.shell.getByTestId('select-identity').click();
-    // Wait for focus to shift before typing.
-    await sleep(10);
     await this.inputInvitation('space', invitationCode, this.shell);
   }
 
