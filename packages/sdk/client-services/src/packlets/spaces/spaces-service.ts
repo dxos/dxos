@@ -149,15 +149,15 @@ export class SpacesServiceImpl implements SpacesService {
       spaceKey: space.key,
       state: space.state,
       pipeline: {
-        controlFeeds: space.inner.controlPipeline.state.feeds.map(feed => feed.key),
+        controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
-        dataFeeds: space.dataPipeline.pipelineState?.feeds.map(feed => feed.key) ?? [],
+        dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
         currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
-        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
+        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {

@@ -75,7 +75,7 @@ export class PipelineState {
   }
 
   get feeds() {
-    return this._iterator.feeds
+    return this._iterator.feeds;
   }
 
   async waitUntilTimeframe(target: Timeframe) {

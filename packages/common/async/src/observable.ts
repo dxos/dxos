@@ -46,7 +46,7 @@ export class MulticastObservable<T> extends Observable<T> {
   static override of<T>(...items: T[]) {
     return new MulticastObservable(super.of(...items.slice(1)), items[0]);
   }
-  
+
   /**
    * @returns Stable reference to an observable that always returns `undefined`.
    */
