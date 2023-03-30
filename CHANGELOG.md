@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.33](https://github.com/dxos/dxos/compare/v0.1.32...v0.1.33) (2023-03-30)
+
+
+### Features
+
+* **composer-app:** Layout adjustments ([#2870](https://github.com/dxos/dxos/issues/2870)) ([3184290](https://github.com/dxos/dxos/commit/3184290f7885d687576e7932aeb009ce984d69ba))
+* **composer-app:** Restore file I/O for Markdown ([#2869](https://github.com/dxos/dxos/issues/2869)) ([a00cf6d](https://github.com/dxos/dxos/commit/a00cf6dca7f224fd8993e5841717068ba4b24983))
+* Docs and SVG logos, logotypes. ([#2867](https://github.com/dxos/dxos/issues/2867)) ([1f5332d](https://github.com/dxos/dxos/commit/1f5332d318f7978bd743565404a2069bcf29e1d6))
+* Invitation list emoji ([#2864](https://github.com/dxos/dxos/issues/2864)) ([5620fb6](https://github.com/dxos/dxos/commit/5620fb6a0bf3d07881182c325aa0e31414f22770))
+* **react-composer:** Allow Markdown theme to be extended ([#2866](https://github.com/dxos/dxos/issues/2866)) ([159a7d4](https://github.com/dxos/dxos/commit/159a7d40fc3f796931b249cdd2d7a512912252e5))
+* **react-ui:** Copy-Copied button ([#2865](https://github.com/dxos/dxos/issues/2865)) ([b54fe55](https://github.com/dxos/dxos/commit/b54fe55dba1a2a91df765f4593b638b976c8dbb7))
+* Tracing into sentry ([#2837](https://github.com/dxos/dxos/issues/2837)) ([3efe7bf](https://github.com/dxos/dxos/commit/3efe7bfc744711daf8cde1024a7190f724c3d02d))
+
+
+### Bug Fixes
+
+* dx halo credential ([#2753](https://github.com/dxos/dxos/issues/2753)) ([fd22d93](https://github.com/dxos/dxos/commit/fd22d93941742881993e31e29ed9004baddb91e4))
+* Race condition adding data feeds ([#2863](https://github.com/dxos/dxos/issues/2863)) ([21c7c65](https://github.com/dxos/dxos/commit/21c7c65a79fdc3c84cae8c798a631d51006b38fe))
+
 ## [0.1.32](https://github.com/dxos/dxos/compare/v0.1.31...v0.1.32) (2023-03-28)
 
 
