@@ -4,7 +4,8 @@
 
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { scheduleTask, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -51,6 +52,11 @@ interface PeerCallbacks {
  * Can open and close multiple connections to the remote peer.
  */
 export class Peer {
+  public reconnectAfter = 0;
+  public availableToConnect = true;
+
+  private readonly _ctx = new Context();
+
   public connection?: Connection;
 
   /**
@@ -189,6 +195,13 @@ export class Peer {
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
+          scheduleTask(
+            this._ctx,
+            () => {
+              this.reconnectAfter = 0;
+            },
+            30_000
+          );
           this._callbacks.onConnected();
           break;
         }
@@ -196,6 +209,7 @@ export class Peer {
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
+          this.reconnectAfter = this.reconnectAfter === 0 ? 1000 : this.reconnectAfter * 2;
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
@@ -239,6 +253,7 @@ export class Peer {
 
   @synchronized
   async destroy() {
+    await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
     // Won't throw.

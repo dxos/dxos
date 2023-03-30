@@ -25,6 +25,8 @@ import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
 
+const RECONNECT_TIMEOUT = 10_000;
+
 // TODO(burdon): Factor out.
 const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
 
@@ -258,6 +260,21 @@ export class Swarm {
             this.connected.emit(peerId);
           },
           onDisconnected: async () => {
+            peer!.availableToConnect = false;
+            if (peer!.reconnectAfter > RECONNECT_TIMEOUT) {
+              await this._destroyPeer(peer!.id).catch((err) => log.catch(err));
+            }
+            scheduleTask(
+              this._ctx,
+              () => {
+                if (peer!.advertizing) {
+                  peer!.availableToConnect = true;
+                }
+                this._topology.update();
+              },
+              peer?.reconnectAfter
+            );
+
             if (!peer!.advertizing) {
               await this._destroyPeer(peer!.id);
             }
@@ -301,7 +318,7 @@ export class Swarm {
           .filter((peer) => peer.connection)
           .map((peer) => peer.id),
         candidates: Array.from(this._peers.values())
-          .filter((peer) => !peer.connection && peer.advertizing)
+          .filter((peer) => !peer.connection && peer.advertizing && peer.availableToConnect)
           .map((peer) => peer.id)
       }),
       connect: (peer) => {
