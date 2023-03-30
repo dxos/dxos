@@ -6,6 +6,7 @@ import { CaretRight } from '@phosphor-icons/react';
 import React, { Suspense, useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
+import { useMulticastObservable } from '@dxos/react-async';
 import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
 import { Button, getSize, Loading, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -13,7 +14,6 @@ import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
 import { ChatFrameRuntime } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
-import { useMulticastObservable } from '@dxos/react-async';
 
 /**
  * Home page with current space.
