@@ -99,7 +99,7 @@ export class InvitationsHandler {
     });
 
     ctx.onDispose(() => {
-      log('complete', { ...operations.toJSON() });
+      log('complete', { ...protocol.toJSON() });
       stream.complete();
     });
 
@@ -195,7 +195,7 @@ export class InvitationsHandler {
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
             } catch (err: any) {
               if (err instanceof TimeoutError) {
-                log('timeout', { ...operations.toJSON() });
+                log('timeout', { ...protocol.toJSON() });
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
               } else {
                 log.error('failed', err);
@@ -252,7 +252,7 @@ export class InvitationsHandler {
     const ctx = new Context({
       onError: (err) => {
         if (err instanceof TimeoutError) {
-          log('timeout', { ...operations.toJSON() });
+          log('timeout', { ...protocol.toJSON() });
           stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
         } else {
           log.warn('auth failed', err);
@@ -263,7 +263,7 @@ export class InvitationsHandler {
     });
 
     ctx.onDispose(() => {
-      log('complete', { ...operations.toJSON() });
+      log('complete', { ...protocol.toJSON() });
       stream.complete();
     });
 
@@ -336,7 +336,7 @@ export class InvitationsHandler {
               stream.next({ ...invitation, ...result, state: Invitation.State.SUCCESS });
             } catch (err: any) {
               if (err instanceof TimeoutError) {
-                log('timeout', { ...operations.toJSON() });
+                log('timeout', { ...protocol.toJSON() });
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
               } else {
                 log.warn('auth failed', err);

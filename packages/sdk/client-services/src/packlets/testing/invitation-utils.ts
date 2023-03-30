@@ -33,7 +33,7 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
   };
 };
 
-export type PerformInvitationHooks<T> = {
+export type PerformInvitationCallbacks<T> = {
   onConnecting?: (value: T) => boolean | void;
   onConnected?: (value: T) => boolean | void;
   onReady?: (value: T) => boolean | void;
@@ -49,8 +49,8 @@ export type PerformInvitationParams = {
   guest: ServiceContext | InvitationsProxy | HaloProxy | EchoProxy | Client;
   options?: Partial<Invitation>;
   hooks?: {
-    host?: PerformInvitationHooks<CancellableInvitationObservable>;
-    guest?: PerformInvitationHooks<AuthenticatingInvitationObservable>;
+    host?: PerformInvitationCallbacks<CancellableInvitationObservable>;
+    guest?: PerformInvitationCallbacks<AuthenticatingInvitationObservable>;
   };
 };
 

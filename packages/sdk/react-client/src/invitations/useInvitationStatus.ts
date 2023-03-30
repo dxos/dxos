@@ -4,7 +4,6 @@
 
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { TimeoutError } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -33,17 +32,15 @@ interface InvitationReducerState {
 
 export type InvitationAction =
   | {
-      status: Invitation.State.INIT | Invitation.State.AUTHENTICATING;
+      status:
+        | Invitation.State.INIT
+        | Invitation.State.CONNECTED
+        | Invitation.State.READY_FOR_AUTHENTICATION
+        | Invitation.State.AUTHENTICATING;
     }
   | {
       status: Invitation.State.CONNECTING;
       observable: CancellableInvitationObservable;
-    }
-  | {
-      status: Invitation.State.CONNECTED;
-      id: string;
-      invitationCode: string;
-      authCode?: string;
     }
   | {
       status: Invitation.State.SUCCESS;
@@ -69,6 +66,7 @@ export type InvitationStatus = {
   result: InvitationResult;
   error?: number;
   cancel(): void;
+  // TODO(wittjosiah): Remove?
   connect(observable: CancellableInvitationObservable): void;
   authenticate(authCode: string): Promise<void>;
 };
@@ -78,13 +76,10 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     (prev, action) => {
       log('useInvitationStatus', { action });
       return {
+        ...prev,
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
-        observable: action.status === Invitation.State.CONNECTING ? action.observable : prev.observable,
-        id: action.status === Invitation.State.CONNECTED ? action.id : prev.id,
-        invitationCode: action.status === Invitation.State.CONNECTED ? action.invitationCode : prev.invitationCode,
-        authCode: action.status === Invitation.State.CONNECTED ? action.authCode : prev.authCode,
         // `error` gets set each time we enter the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
@@ -111,18 +106,12 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     const subscription = state.observable?.subscribe(
       (invitation: Invitation) => {
         switch (invitation.state) {
-          case Invitation.State.CONNECTED: {
-            dispatch({
-              status: invitation.state,
-              id: invitation.invitationId!,
-              invitationCode: InvitationEncoder.encode(invitation),
-              authCode: invitation.authCode
-            });
-            break;
-          }
-
+          case Invitation.State.CONNECTED:
+          case Invitation.State.READY_FOR_AUTHENTICATION:
           case Invitation.State.AUTHENTICATING: {
-            dispatch({ status: invitation.state });
+            dispatch({
+              status: invitation.state
+            });
             break;
           }
 
@@ -138,18 +127,15 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
             break;
           }
 
-          case Invitation.State.CANCELLED: {
+          case Invitation.State.CANCELLED:
+          case Invitation.State.TIMEOUT: {
             dispatch({ status: invitation.state, haltedAt: state.status });
             break;
           }
         }
       },
       (err: Error) => {
-        if (err instanceof TimeoutError) {
-          dispatch({ status: Invitation.State.TIMEOUT, haltedAt: state.status });
-        } else {
-          dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
-        }
+        dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
       }
     );
 
@@ -197,5 +183,5 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     }
 
     return result;
-  }, [state, connect, authenticate]);
+  }, [state, cancel, connect, authenticate]);
 };
