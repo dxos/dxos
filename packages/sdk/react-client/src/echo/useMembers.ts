@@ -1,16 +1,14 @@
 //
-// Copyright 2020 DXOS.org
+
+//
+// Copyright 2023 DXOS.org
 //
 
-import { useSyncExternalStore } from 'react';
-
-import { PublicKey, SpaceMember } from '@dxos/client';
-
-import { useSpaces } from './useSpaces';
 import { MulticastObservable } from '@dxos/async';
+import { PublicKey, SpaceMember } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-async';
 
-const EMPTY_OBSERVABLE = new MulticastObservable(() => {}, undefined)
+import { useSpaces } from './useSpaces';
 
 export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   // TODO(dmaretskyi): useSpace hook for spaces that are not ready.
@@ -18,7 +16,7 @@ export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   const space = spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
 
   // EMPTY_OBSERVABLE needs to be a stable reference to avoid re-subscribing on every render.
-  const members = useMulticastObservable(space?.members ?? EMPTY_OBSERVABLE) ?? [];
+  const members = useMulticastObservable(space?.members ?? MulticastObservable.empty()) ?? [];
 
   return members;
 };

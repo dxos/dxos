@@ -7,8 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Space, SpaceState } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 import { log } from '@dxos/log';
-
 import { useMulticastObservable } from '@dxos/react-async';
+
 import { useClient } from '../client';
 
 /**
