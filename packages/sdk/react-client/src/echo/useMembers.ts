@@ -17,6 +17,7 @@ export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   const spaces = useSpaces({ all: true });
   const space = spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
 
+  // EMPTY_OBSERVABLE needs to be a stable reference to avoid re-subscribing on every render.
   const members = useMulticastObservable(space?.members ?? EMPTY_OBSERVABLE) ?? [];
 
   return members;
