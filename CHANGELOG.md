@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.35](https://github.com/dxos/dxos/compare/v0.1.34...v0.1.35) (2023-03-30)
+
+
+### Bug Fixes
+
+* **devtools-extension:** Disable sentry release plugin ([#2894](https://github.com/dxos/dxos/issues/2894)) ([3d278cf](https://github.com/dxos/dxos/commit/3d278cf168facfdeb95fb3eaf72c53509f48f405))
+
 ## [0.1.34](https://github.com/dxos/dxos/compare/v0.1.33...v0.1.34) (2023-03-30)
 
 
