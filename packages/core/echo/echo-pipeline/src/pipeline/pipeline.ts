@@ -54,6 +54,7 @@ export class PipelineState {
    * Latest theoretical timeframe based on the last mutation in each feed.
    * NOTE: This might never be reached if the mutation dependencies
    */
+  // TODO(dmaretskyi): Rename `totalTimeframe`?.
   get endTimeframe() {
     return mapFeedIndexesToTimeframe(
       this._iterator.feeds
@@ -71,6 +72,10 @@ export class PipelineState {
 
   get targetTimeframe() {
     return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
+  }
+
+  get feeds() {
+    return this._iterator.feeds
   }
 
   async waitUntilTimeframe(target: Timeframe) {

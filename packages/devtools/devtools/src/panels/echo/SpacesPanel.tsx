@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { humanize, range } from '@dxos/util';
+import { ComplexSet, humanize, range } from '@dxos/util';
 
 import { DetailsTable } from '../../components';
 import { SpaceToolbar } from '../../containers';
@@ -98,32 +98,40 @@ const columns: Column<PipelineTableRow>[] = [
 ];
 
 const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
-  const controlKeys = Timeframe.merge(
-    state.currentControlTimeframe ?? new Timeframe(),
-    state.targetControlTimeframe ?? new Timeframe(),
-    // state.totalControlTimeframe ?? new Timeframe(),
-    // state.knownControlTimeframe ?? new Timeframe(),
-  ).frames().map(([key]) => key)
+  const controlKeys = Array.from(new ComplexSet(PublicKey.hash, [
+    ...(state.controlFeeds ?? []),
+    ...Timeframe.merge(
+      state.currentControlTimeframe ?? new Timeframe(),
+      state.targetControlTimeframe ?? new Timeframe(),
+      state.totalControlTimeframe ?? new Timeframe(),
+      state.knownControlTimeframe ?? new Timeframe(),
+    ).frames().map(([key]) => key)
+  ]))
 
-  const dataKeys = Timeframe.merge(
-    state.currentDataTimeframe ?? new Timeframe(),
-    state.targetDataTimeframe ?? new Timeframe(),
-    // state.totalDataTimeframe ?? new Timeframe(),
-    // state.knownDataTimeframe ?? new Timeframe(),
-  ).frames().map(([key]) => key)
+  const dataKeys = Array.from(new ComplexSet(PublicKey.hash, [
+    ...(state.dataFeeds ?? []),
+    ...Timeframe.merge(
+      state.currentDataTimeframe ?? new Timeframe(),
+      state.targetDataTimeframe ?? new Timeframe(),
+      state.totalDataTimeframe ?? new Timeframe(),
+      state.knownDataTimeframe ?? new Timeframe(),
+    ).frames().map(([key]) => key)
+  ]))
 
   const data: PipelineTableRow[] = [
     ...controlKeys.map((feedKey): PipelineTableRow => ({
       feedKey,
       type: 'control',
       processed: state.currentControlTimeframe?.get(feedKey),
-      target: state.targetControlTimeframe?.get(feedKey)
+      target: state.targetControlTimeframe?.get(feedKey),
+      total: state.totalControlTimeframe?.get(feedKey),
     })),
     ...dataKeys.map((feedKey): PipelineTableRow => ({
       feedKey,
       type: 'data',
       processed: state.currentDataTimeframe?.get(feedKey),
-      target: state.targetDataTimeframe?.get(feedKey)
+      target: state.targetDataTimeframe?.get(feedKey),
+      total: state.totalDataTimeframe?.get(feedKey),
     })),
   ]
 
@@ -136,15 +144,15 @@ const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
   const controlKeys = Timeframe.merge(
     state.currentControlTimeframe ?? new Timeframe(),
     state.targetControlTimeframe ?? new Timeframe(),
-    // state.totalControlTimeframe ?? new Timeframe(),
-    // state.knownControlTimeframe ?? new Timeframe(),
+    state.totalControlTimeframe ?? new Timeframe(),
+    state.knownControlTimeframe ?? new Timeframe(),
   ).frames().map(([key]) => key)
 
   const dataKeys = Timeframe.merge(
     state.currentDataTimeframe ?? new Timeframe(),
     state.targetDataTimeframe ?? new Timeframe(),
-    // state.totalDataTimeframe ?? new Timeframe(),
-    // state.knownDataTimeframe ?? new Timeframe(),
+    state.totalDataTimeframe ?? new Timeframe(),
+    state.knownDataTimeframe ?? new Timeframe(),
   ).frames().map(([key]) => key)
 
   return (
