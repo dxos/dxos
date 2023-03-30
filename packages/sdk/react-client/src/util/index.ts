@@ -5,4 +5,3 @@
 export * from './useKeyStore';
 export * from './useResultSet';
 export * from './useStream';
-export * from './useMulticastObservable';

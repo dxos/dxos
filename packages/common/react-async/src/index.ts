@@ -10,3 +10,4 @@ export * from './useStateRef';
 export * from './useStateUpdater';
 export * from './useStateWithRef';
 export * from './useTimestamp';
+export * from './useMulticastObservable';

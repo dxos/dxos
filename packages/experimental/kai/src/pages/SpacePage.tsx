@@ -3,7 +3,7 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { Suspense, useContext, useSyncExternalStore } from 'react';
+import React, { Suspense, useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
@@ -13,6 +13,7 @@ import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
 import { ChatFrameRuntime } from '../frames/Chat';
 import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
+import { useMulticastObservable } from '@dxos/react-async';
 
 /**
  * Home page with current space.
@@ -97,14 +98,8 @@ const Content = () => {
 
 const SpaceLoading = ({ space }: { space: Space }) => {
   const identity = useIdentity();
-  // TODO(dmaretskyi): const pipelineState = useObservable(space.pipeline)
-  const pipelineState = useSyncExternalStore(
-    (listener) => {
-      const subscription = space.pipeline.subscribe(listener);
-      return () => subscription.unsubscribe();
-    },
-    () => space.pipeline.get()
-  );
+  const members = useMembers(space.key);
+  const pipelineState = useMulticastObservable(space.pipeline);
 
   // +1 for the pipeline itself being initialized
   const currentProgress =
@@ -116,7 +111,6 @@ const SpaceLoading = ({ space }: { space: Space }) => {
     (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) +
     2;
 
-  const members = useMembers(space.key);
   const onlinePeers = members.filter(
     (member) =>
       member.presence === SpaceMember.PresenceState.ONLINE &&
