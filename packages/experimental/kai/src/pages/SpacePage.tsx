@@ -51,7 +51,7 @@ const SpacePage = () => {
 
 const Content = () => {
   const theme = useTheme();
-  const { chat } = useAppState();
+  const { chat, dev } = useAppState();
   const { space, frame } = useAppRouter();
   const { section } = useParams();
   const toggleSidebar = useTogglePanelSidebar();
@@ -89,7 +89,7 @@ const Content = () => {
           )}
         </div>
       ) : (
-        space && <SpaceLoading space={space} />
+        space && dev && <SpaceLoading space={space} />
       )}
     </main>
   );
