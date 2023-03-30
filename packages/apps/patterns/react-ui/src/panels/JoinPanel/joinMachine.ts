@@ -7,7 +7,6 @@ import { useCallback } from 'react';
 import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
 import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
-import { TimeoutError } from '@dxos/async';
 import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -16,7 +15,7 @@ import { JoinPanelMode } from './JoinPanelProps';
 
 type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 
-type InvitationDomainContext = Partial<{
+type InvitationKindContext = Partial<{
   failReason: FailReason | null;
   unredeemedCode: string;
   invitationObservable: AuthenticatingInvitationObservable;
@@ -27,8 +26,8 @@ type InvitationDomainContext = Partial<{
 type JoinMachineContext = {
   mode: JoinPanelMode;
   identity: Identity | null;
-  halo: InvitationDomainContext;
-  space: InvitationDomainContext;
+  halo: InvitationKindContext;
+  space: InvitationKindContext;
 };
 
 type SelectIdentityEvent = {
@@ -43,12 +42,16 @@ type SetInvitationCodeEvent = {
 
 type SetInvitationEvent = {
   type:
-    | 'authenticateHaloInvitation'
-    | 'authenticateSpaceInvitation'
-    | 'connectHaloInvitation'
-    | 'connectSpaceInvitation'
-    | 'connectionSuccessHaloInvitation'
-    | 'connectionSuccessSpaceInvitation';
+    | 'authenticatingHaloInvitation'
+    | 'authenticatingSpaceInvitation'
+    | 'readyForAuthenticationHaloInvitation'
+    | 'readyForAuthenticationSpaceInvitation'
+    | 'connectingHaloInvitation'
+    | 'connectingSpaceInvitation'
+    | 'connectedHaloInvitation'
+    | 'connectedSpaceInvitation'
+    | 'successHaloInvitation'
+    | 'successSpaceInvitation';
   invitation: Invitation;
 };
 
@@ -62,15 +65,13 @@ type EmptyInvitationEvent = {
     | 'authenticateHaloVerificationCode'
     | 'authenticateSpaceVerificationCode'
     | 'resetHaloInvitation'
-    | 'resetSpaceInvitation'
-    | 'succeedHaloInvitation'
-    | 'succeedSpaceInvitation';
+    | 'resetSpaceInvitation';
 };
 
 type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitationEvent | EmptyInvitationEvent;
 
 const getInvitationSubscribable = (
-  Domain: 'Space' | 'Halo',
+  Kind: 'Space' | 'Halo',
   invitation: AuthenticatingInvitationObservable
 ): Subscribable<InvitationEvent> => {
   log('[subscribing to invitation]', invitation);
@@ -79,145 +80,146 @@ const getInvitationSubscribable = (
       next: (value: InvitationEvent) => void,
       onError?: (error: any) => void,
       complete?: () => void
-    ): Subscription => {
-      const subscription = invitation.subscribe(
+    ): Subscription =>
+      invitation.subscribe(
         (invitation: Invitation) => {
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
-              log('[invitation connecting]', { Domain, invitation });
-              return next({ type: `connect${Domain}Invitation`, invitation });
+              log('[invitation connecting]', { Kind, invitation });
+              return next({ type: `connecting${Kind}Invitation`, invitation });
             }
 
             case Invitation.State.CONNECTED: {
-              log('[invitation connected]', { Domain, invitation });
-              return next({ type: `connectionSuccess${Domain}Invitation`, invitation });
+              log('[invitation connected]', { Kind, invitation });
+              return next({ type: `connected${Kind}Invitation`, invitation });
+            }
+
+            case Invitation.State.READY_FOR_AUTHENTICATION: {
+              log('[invitation ready for authentication]', { Kind, invitation });
+              return next({ type: `readyForAuthentication${Kind}Invitation`, invitation });
             }
 
             case Invitation.State.AUTHENTICATING: {
-              log('[invitation authenticating]', { Domain, invitation });
-              return next({ type: `authenticate${Domain}Invitation`, invitation });
+              log('[invitation authenticating]', { Kind, invitation });
+              return next({ type: `authenticating${Kind}Invitation`, invitation });
             }
 
             case Invitation.State.SUCCESS: {
-              log('[invitation success]', { Domain });
-              next({ type: `succeed${Domain}Invitation` });
+              log('[invitation success]', { Kind, invitation });
+              next({ type: `success${Kind}Invitation`, invitation });
               return complete?.();
             }
 
             case Invitation.State.CANCELLED: {
-              log.warn('[invitation cancelled]', { Domain });
-              return next({ type: `fail${Domain}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
+              log.warn('[invitation cancelled]', { Kind });
+              return next({ type: `fail${Kind}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
+            }
+
+            case Invitation.State.TIMEOUT: {
+              log.error('[invitation timeout]', { Kind });
+              return next({ type: `fail${Kind}Invitation`, reason: 'timeout' } as FailInvitationEvent);
             }
           }
         },
         (error: any) => {
-          if (error instanceof TimeoutError) {
-            log.error('[invitation timeout]', { Domain });
-            return next({ type: `fail${Domain}Invitation`, reason: 'timeout' } as FailInvitationEvent);
-          } else {
-            log.error('[invitation errored]', { Domain, error });
-            next({ type: `fail${Domain}Invitation`, reason: 'error' });
-            return onError?.(error);
-          }
+          log.error('[invitation errored]', { Kind, error });
+          next({ type: `fail${Kind}Invitation`, reason: 'error' });
+          return onError?.(error);
         }
-      );
-
-      return subscription;
-    }
+      )
   } as Subscribable<InvitationEvent>;
 };
 
-const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: string) => {
+const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: string) => {
   const config: StateNodeConfig<JoinMachineContext, any, InvitationEvent> = {
-    initial: `unknown${Domain}`,
+    initial: `unknown${Kind}`,
     states: {
-      [`unknown${Domain}`]: {
+      [`unknown${Kind}`]: {
         always: [
           {
-            cond: ({ mode }) => mode === 'halo-only' && Domain === 'Space',
+            cond: ({ mode }) => mode === 'halo-only' && Kind === 'Space',
             target: '#join.finishingJoiningHalo'
           },
           {
-            // cond: `no${Domain}Invitation`,
-            target: `inputting${Domain}InvitationCode`,
+            // cond: `no${Kind}Invitation`,
+            target: `inputting${Kind}InvitationCode`,
             actions: 'log'
           }
           // todo(thure): Restore this transition that redeems the invitation code on init.
           // {
-          //   target: `acceptingRedeemed${Domain}Invitation`,
-          //   actions: [`redeem${Domain}InvitationCode`, 'log']
+          //   target: `acceptingRedeemed${Kind}Invitation`,
+          //   actions: [`redeem${Kind}InvitationCode`, 'log']
           // }
         ]
       },
-      [`inputting${Domain}InvitationCode`]: {},
-      [`acceptingRedeemed${Domain}Invitation`]: {
+      [`inputting${Kind}InvitationCode`]: {},
+      [`acceptingRedeemed${Kind}Invitation`]: {
         invoke: {
-          src: (context) => context[Domain.toLowerCase() as 'space' | 'halo'].invitationSubscribable!
+          src: (context) => context[Kind.toLowerCase() as 'space' | 'halo'].invitationSubscribable!
         },
-        initial: `unknown${Domain}Invitation`,
+        initial: `unknown${Kind}Invitation`,
         states: {
-          [`unknown${Domain}Invitation`]: {
+          [`unknown${Kind}Invitation`]: {
             always: [
               {
                 cond: (context) => {
-                  const invitation = context[Domain.toLowerCase() as 'space' | 'halo'].invitation;
+                  const invitation = context[Kind.toLowerCase() as 'space' | 'halo'].invitation;
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
-                target: `connecting${Domain}Invitation`,
+                target: `connecting${Kind}Invitation`,
                 actions: 'log'
               },
               {
-                target: `inputting${Domain}VerificationCode`,
+                target: `inputting${Kind}VerificationCode`,
                 actions: 'log'
               }
             ]
           },
-          [`connecting${Domain}Invitation`]: {},
-          [`inputting${Domain}VerificationCode`]: {
+          [`connecting${Kind}Invitation`]: {},
+          [`inputting${Kind}VerificationCode`]: {},
+          [`authenticating${Kind}VerificationCode`]: {
             on: {
-              [`authenticate${Domain}VerificationCode`]: {
-                target: `authenticating${Domain}VerificationCode`,
-                actions: 'log'
+              [`readyForAuthentication${Kind}Invitation`]: {
+                target: `.authenticationFailing${Kind}VerificationCode`,
+                actions: ['setInvitation', 'log']
               }
             }
           },
-          [`authenticating${Domain}VerificationCode`]: {
-            on: {
-              [`authenticate${Domain}Invitation`]: {
-                target: `authenticationFailing${Domain}VerificationCode`,
-                actions: 'log'
-              }
-            }
-          },
-          [`authenticationFailing${Domain}VerificationCode`]: {},
-          [`failing${Domain}Invitation`]: {},
-          [`success${Domain}Invitation`]: {}
+          [`authenticationFailing${Kind}VerificationCode`]: {},
+          [`failing${Kind}Invitation`]: {},
+          [`success${Kind}Invitation`]: {}
         },
         on: {
-          [`reset${Domain}Invitation`]: {
-            target: `#join${
-              Domain === 'Halo' ? '.choosingIdentity' : ''
-            }.accepting${Domain}Invitation.unknown${Domain}`,
+          [`reset${Kind}Invitation`]: {
+            target: `#join${Kind === 'Halo' ? '.choosingIdentity' : ''}.accepting${Kind}Invitation.unknown${Kind}`,
             actions: ['resetInvitation', 'log']
           },
-          [`connect${Domain}Invitation`]: {
-            target: `.connecting${Domain}Invitation`,
+          [`connecting${Kind}Invitation`]: {
+            target: `.connecting${Kind}Invitation`,
             actions: ['setInvitation', 'log']
           },
-          [`connectionSuccess${Domain}Invitation`]: {
-            target: `.inputting${Domain}VerificationCode`,
+          [`connected${Kind}Invitation`]: {
+            target: `.connecting${Kind}Invitation`,
             actions: ['setInvitation', 'log']
           },
-          [`succeed${Domain}Invitation`]: { target: successTarget, actions: 'log' },
-          [`fail${Domain}Invitation`]: {
-            target: `.failing${Domain}Invitation`,
+          [`readyForAuthentication${Kind}Invitation`]: {
+            target: `.inputting${Kind}VerificationCode`,
+            actions: ['setInvitation', 'log']
+          },
+          [`authenticating${Kind}Invitation`]: {
+            target: `.authenticating${Kind}VerificationCode`,
+            actions: ['setInvitation', 'log']
+          },
+          [`success${Kind}Invitation`]: { target: successTarget, actions: ['setInvitation', 'log'] },
+          [`fail${Kind}Invitation`]: {
+            target: `.failing${Kind}Invitation`,
             actions: [
               assign({
-                [Domain.toLowerCase() as 'space' | 'halo']: (
+                [Kind.toLowerCase() as 'space' | 'halo']: (
                   context: JoinMachineContext,
                   event: FailInvitationEvent
                 ) => ({
-                  ...context[Domain.toLowerCase() as 'space' | 'halo'],
+                  ...context[Kind.toLowerCase() as 'space' | 'halo'],
                   failReason: event.reason
                 })
               }),
@@ -228,19 +230,16 @@ const acceptingInvitationTemplate = (Domain: 'Space' | 'Halo', successTarget: st
       }
     },
     on: {
-      [`set${Domain}InvitationCode`]: {
-        target: `.acceptingRedeemed${Domain}Invitation`,
+      [`set${Kind}InvitationCode`]: {
+        target: `.acceptingRedeemed${Kind}Invitation`,
         actions: [
           assign({
-            [Domain.toLowerCase() as 'space' | 'halo']: (
-              context: JoinMachineContext,
-              event: SetInvitationCodeEvent
-            ) => ({
-              ...context[Domain.toLowerCase() as 'space' | 'halo'],
+            [Kind.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
+              ...context[Kind.toLowerCase() as 'space' | 'halo'],
               unredeemedCode: event.code
             })
           }),
-          `redeem${Domain}InvitationCode`,
+          `redeem${Kind}InvitationCode`,
           'log'
         ]
       }
