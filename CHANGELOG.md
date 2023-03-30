@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.34](https://github.com/dxos/dxos/compare/v0.1.33...v0.1.34) (2023-03-30)
+
+
+### Bug Fixes
+
+* Add SENTRY_RELEASE_AUTH_TOKEN env for bundle target ([#2887](https://github.com/dxos/dxos/issues/2887)) ([85c2cd0](https://github.com/dxos/dxos/commit/85c2cd0222b4a3586992ca56d3c6e14bfcd4f513))
+* Fix trace cyclic JSON error ([#2884](https://github.com/dxos/dxos/issues/2884)) ([0f6df47](https://github.com/dxos/dxos/commit/0f6df474f0235392137a15e98fa53f4954c60812))
+
 ## [0.1.33](https://github.com/dxos/dxos/compare/v0.1.32...v0.1.33) (2023-03-30)
 
 
