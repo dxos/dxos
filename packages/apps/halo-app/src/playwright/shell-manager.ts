@@ -5,12 +5,14 @@
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
+import { ShellManager } from '@dxos/react-ui/testing';
 
-export class ShellManager {
+export class HaloShellManager extends ShellManager {
   private _invitationCode = new Trigger<string>();
   private _authenticationCode = new Trigger<string>();
 
-  constructor(readonly page: Page, readonly inIFrame = true) {
+  constructor(override readonly page: Page, readonly inIFrame = true) {
+    super();
     this.page.on('console', (message) => this._onConsoleMessage(message));
   }
 
@@ -34,7 +36,7 @@ export class ShellManager {
     await this.shell.getByTestId('create-identity').click();
     await this.page.keyboard.type(name);
     await this.shell.getByTestId('create-identity-input-continue').click();
-    await this.shell.getByTestId('identity-added-done').click();
+    await this.shell.getByTestId('halo-invitation-accepted-done').click();
   }
 
   async closeShell() {
@@ -65,11 +67,7 @@ export class ShellManager {
   }
 
   async acceptSpaceInvitation(invitationCode: string) {
-    await this.shell.getByTestId('select-identity').click();
-    // Wait for focus to shift before typing.
-    await sleep(10);
-    await this.page.keyboard.type(invitationCode);
-    await this.shell.getByTestId('space-invitation-input-continue').click();
+    await this.inputInvitation('space', invitationCode, this.shell);
   }
 
   async getAuthenticationCode(): Promise<string> {
@@ -80,9 +78,8 @@ export class ShellManager {
   async authenticate(authenticationCode: string) {
     // Wait for focus to shift before typing.
     await sleep(10);
-    await this.page.keyboard.type(authenticationCode);
-    await this.shell.getByTestId('space-invitation-authenticator-next').click();
-    await this.shell.getByTestId('space-invitation-accepted-done').click();
+    await this.authenticateInvitation('space', authenticationCode, this.shell);
+    await this.doneInvitation('space', this.shell);
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {
