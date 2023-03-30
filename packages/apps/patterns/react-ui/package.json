@@ -8,7 +8,8 @@
   "author": "DXOS.org",
   "exports": {
     ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/lib/browser/testing/index.mjs"
+    "./testing": "./dist/lib/browser/testing/index.mjs",
+    "./theme-extensions": "./theme-extensions.js"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
