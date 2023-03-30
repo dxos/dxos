@@ -5,12 +5,12 @@
 import type { Browser, ConsoleMessage, Page } from 'playwright';
 
 import { Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/halo-app/testing';
+import { HaloShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test/playwright';
 
 export class AppManager {
   page!: Page;
-  shell!: ShellManager;
+  shell!: HaloShellManager;
 
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
@@ -29,7 +29,7 @@ export class AppManager {
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-    this.shell = new ShellManager(this.page, false);
+    this.shell = new HaloShellManager(this.page, false);
     this._initialized = true;
   }
 
