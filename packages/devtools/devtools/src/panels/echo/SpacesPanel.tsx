@@ -12,7 +12,8 @@ import { useDevtoolsState } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
 const SpacesPanel = () => {
-  const { spaceInfo: metadata } = useDevtoolsState();
+  const { spaceInfo: metadata, space } = useDevtoolsState();
+
   const object = useMemo(() => {
     if (!metadata) {
       return undefined;
@@ -24,6 +25,7 @@ const SpacesPanel = () => {
       name: humanize(metadata?.key),
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
       timeframe: JSON.stringify(metadata?.timeframe?.frames), // TODO(mykola): Display in a better way.
+      pipeline: JSON.stringify(space?.pipeline.get(), null, 4),
       genesisFeed: humanize(metadata?.genesisFeed),
       controlFeed: humanize(metadata?.controlFeed),
       dataFeed: humanize(metadata?.dataFeed)
