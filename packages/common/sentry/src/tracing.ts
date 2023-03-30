@@ -63,13 +63,21 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
 
           let parentSpan: Span = TX;
           if (context.span.parent) {
-            parentSpan = SPAN_MAP.get(context.span.parent) || TX;
+            parentSpan = SPAN_MAP.get(context.span.parent) ?? TX;
+          }
+
+          let logContext: string;
+          try {
+            logContext = JSON.stringify({ ...context, ...entry }, null, 2);
+          } catch (err) {
+            logContext = JSON.stringify(context, null, 2);
           }
 
           const span = parentSpan.startChild({
             op: entry.message,
             data: {
-              ...context.span.data
+              ...context.span.data,
+              '@dxso/log': logContext
             }
           });
           SPAN_MAP.set(context.span.id, span);
