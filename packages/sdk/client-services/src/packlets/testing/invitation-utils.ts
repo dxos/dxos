@@ -56,22 +56,19 @@ export type PerformInvitationParams = {
 
 export type Result = { invitation?: Invitation; error?: Error };
 
-export const performInvitation = async ({
+export const performInvitation = ({
   host,
   guest,
   options,
   hooks
-}: PerformInvitationParams): Promise<[Result, Result]> => {
+}: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
   const hostComplete = new Trigger<Result>();
   const guestComplete = new Trigger<Result>();
   const authCode = new Trigger<string>();
 
-  let latestHostInvitation: Invitation | undefined;
-
   const hostObservable = createInvitation(host, options);
   hostObservable.subscribe(
     async (hostInvitation: Invitation) => {
-      latestHostInvitation = hostInvitation;
       switch (hostInvitation.state) {
         case Invitation.State.CONNECTING: {
           if (hooks?.host?.onConnecting?.(hostObservable)) {
@@ -136,7 +133,6 @@ export const performInvitation = async ({
                 return;
               }
               guestComplete.wake({ error });
-              hostComplete.wake({ invitation: latestHostInvitation });
             }
           );
           break;
@@ -195,7 +191,7 @@ export const performInvitation = async ({
     }
   );
 
-  return [await hostComplete.wait(), await guestComplete.wait()];
+  return [hostComplete.wait(), guestComplete.wait()];
 };
 
 const createInvitation = (

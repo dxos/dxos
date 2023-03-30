@@ -93,7 +93,9 @@ describe('Spaces', () => {
 
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const [, { invitation: guestInvitation }] = await performInvitation({ host: space1 as SpaceProxy, guest: client2 });
+    const [, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({ host: space1 as SpaceProxy, guest: client2 })
+    );
     const space2 = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
 
     const hello = new Trigger();

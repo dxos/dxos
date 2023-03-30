@@ -40,7 +40,7 @@ describe('Halo', () => {
     afterTest(() => client2.destroy());
     await client2.initialize();
 
-    await performInvitation({ host: client1.halo, guest: client2.halo });
+    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);

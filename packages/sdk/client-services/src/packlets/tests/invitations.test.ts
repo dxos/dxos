@@ -2,12 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
+import waitForExpect from 'wait-for-expect';
 
-import { asyncChain } from '@dxos/async';
+import { asyncChain, asyncTimeout } from '@dxos/async';
 import { Client, InvitationsProxy, Space, SpaceProxy } from '@dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { InvitationsServiceImpl } from '../invitations';
@@ -22,15 +24,14 @@ import {
   TestBuilder
 } from '../testing';
 
-// Suppress invitation warning logs as they are expected.
-// log.config({ filter: 'invitation:error,warn' });
+chai.use(chaiAsPromised);
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
   return peer;
 };
 
-const successfulInvitation = ({
+const successfulInvitation = async ({
   host,
   guest,
   hostResult: { invitation: hostInvitation, error: hostError },
@@ -56,6 +57,15 @@ const successfulInvitation = ({
       expect(hostInvitation!.identityKey).not.to.exist;
       expect(guestInvitation!.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
       expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
+
+      // Check devices.
+      // TODO(burdon): Incorrect number of devices.
+      await waitForExpect(() => {
+        expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
+        expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
+      });
+      // console.log(host.identityManager.identity!.authorizedDeviceKeys.size);
+      // console.log(guest.identityManager.identity!.authorizedDeviceKeys.size);
       break;
   }
 };
@@ -63,50 +73,56 @@ const successfulInvitation = ({
 const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [ServiceContext, ServiceContext]) => {
   test('no auth', async () => {
     const [host, guest] = getPeers();
-    const [hostResult, guestResult] = await performInvitation(getParams());
-    successfulInvitation({ host, guest, hostResult, guestResult });
+    const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
+    await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('with shared secret', async () => {
     const [host, guest] = getPeers();
     const params = getParams();
-    const [hostResult, guestResult] = await performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET }
-    });
-    successfulInvitation({ host, guest, hostResult, guestResult });
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET }
+      })
+    );
+
+    await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('invalid auth code', async () => {
     const [host, guest] = getPeers();
     const params = getParams();
     let attempt = 1;
-    const [hostResult, guestResult] = await performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onReady: (invitation) => {
-            if (attempt === 0) {
-              // Force retry.
-              void invitation.authenticate('000000');
-              attempt++;
-              return true;
-            }
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          guest: {
+            onReady: (invitation) => {
+              if (attempt === 0) {
+                // Force retry.
+                void invitation.authenticate('000000');
+                attempt++;
+                return true;
+              }
 
-            return false;
+              return false;
+            }
           }
         }
-      }
-    });
+      })
+    );
+
     expect(attempt).to.eq(1);
-    successfulInvitation({ host, guest, hostResult, guestResult });
+    await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('max auth code retries', async () => {
     const params = getParams();
     let attempt = 0;
-    const [hostResult, guestResult] = await performInvitation({
+    const [hostPromise, guestPromise] = performInvitation({
       ...params,
       options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
       hooks: {
@@ -120,25 +136,90 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
         }
       }
     });
+    const guestResult = await guestPromise;
+
     expect(attempt).to.eq(3);
-    expect(hostResult.invitation?.state).to.eq(Invitation.State.READY_FOR_AUTHENTICATION);
     expect(guestResult.error).to.exist;
+    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
   });
 
   test('invitation timeout', async () => {
     const params = getParams();
-    const [hostResult, guestResult] = await performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 }
-    });
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 }
+      })
+    );
+
     expect(hostResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
     expect(guestResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
   });
 
-  test('host cancels invitation', async () => {});
-  test('guest cancels invitation', async () => {});
-  test('network error', async () => {});
-  test('multiple concurrent invitations', async () => {});
+  test('host cancels invitation', async () => {
+    const params = getParams();
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        hooks: {
+          host: {
+            onConnected: (invitation) => {
+              void invitation.cancel();
+              return true;
+            }
+          }
+        }
+      })
+    );
+
+    expect(hostResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
+    expect(guestResult.error).to.exist;
+  });
+
+  test('guest cancels invitation', async () => {
+    const params = getParams();
+    const [hostPromise, guestPromise] = performInvitation({
+      ...params,
+      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      hooks: {
+        guest: {
+          onConnected: (invitation) => {
+            void invitation.cancel();
+            return true;
+          }
+        }
+      }
+    });
+    const guestResult = await guestPromise;
+
+    expect(guestResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
+    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
+  });
+
+  test('network error', async () => {
+    const [, guest] = getPeers();
+    const params = getParams();
+    const [hostPromise, guestPromise] = performInvitation({
+      ...params,
+      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      hooks: {
+        guest: {
+          onConnected: () => {
+            void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
+            return true;
+          }
+        }
+      }
+    });
+    const guestResult = await guestPromise;
+
+    expect(guestResult.error).to.exist;
+    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
+
+    // Test cleanup fails if the guest is offline.
+    await guest.networkManager.setConnectionState(ConnectionState.ONLINE);
+  });
 };
 
 describe('Invitations', () => {

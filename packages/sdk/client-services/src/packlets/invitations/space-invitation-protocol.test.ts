@@ -53,7 +53,7 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } });
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -78,25 +78,27 @@ describe('services/space-invitations-protocol', () => {
 
     const space1 = await host.dataSpaceManager!.createSpace();
 
-    const [{ invitation: invitation1 }, { invitation: invitation2 }] = await performInvitation({
-      host,
-      guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
-      hooks: {
-        guest: {
-          onReady: (invitation) => {
-            if (attempt === 0) {
-              // Force retry.
-              void invitation.authenticate('000000');
-              attempt++;
-              return true;
-            }
+    const [{ invitation: invitation1 }, { invitation: invitation2 }] = await Promise.all(
+      performInvitation({
+        host,
+        guest,
+        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        hooks: {
+          guest: {
+            onReady: (invitation) => {
+              if (attempt === 0) {
+                // Force retry.
+                void invitation.authenticate('000000');
+                attempt++;
+                return true;
+              }
 
-            return false;
+              return false;
+            }
           }
         }
-      }
-    });
+      })
+    );
 
     expect(attempt).to.eq(1);
     expect(invitation1?.spaceKey).to.exist;
@@ -131,7 +133,7 @@ describe('services/space-invitations-protocol', () => {
 
     const space1 = await host.dataSpaceManager!.createSpace();
 
-    const invitationPromise = performInvitation({
+    const invitationPromises = performInvitation({
       host,
       guest,
       options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
@@ -158,7 +160,7 @@ describe('services/space-invitations-protocol', () => {
     const { swarmKey: swarmKey2 } = await guestConnected.wait();
     expect(swarmKey1).to.deep.eq(swarmKey2);
 
-    const [{ invitation: invitation1 }, { error }] = await invitationPromise;
+    const [{ invitation: invitation1 }, { error }] = await Promise.all(invitationPromises);
     expect(invitation1?.state).to.eq(Invitation.State.CANCELLED);
     expect(error).to.exist;
 

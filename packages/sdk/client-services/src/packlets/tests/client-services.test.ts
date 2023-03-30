@@ -115,11 +115,13 @@ describe('Client services', () => {
       await client1.halo.createIdentity();
     }
 
-    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation({
-      host: client1.halo,
-      guest: client2.halo,
-      options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-    });
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({
+        host: client1.halo,
+        guest: client2.halo,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
+      })
+    );
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
@@ -165,11 +167,13 @@ describe('Client services', () => {
 
     const hostSpace = await client1.createSpace();
     log('createSpace', { key: hostSpace.key });
-    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await performInvitation({
-      host: hostSpace as SpaceProxy,
-      guest: client2,
-      options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-    });
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({
+        host: hostSpace as SpaceProxy,
+        guest: client2,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
+      })
+    );
 
     expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
