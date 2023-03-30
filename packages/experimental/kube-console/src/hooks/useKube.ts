@@ -7,14 +7,17 @@ import urljoin from 'url-join';
 import { Config } from '@dxos/client';
 import { useConfig } from '@dxos/react-client';
 
-// TODO(burdon): Config?
-const endpoint = 'https://dev.kube.dxos.org/.well-known';
-
 export class KubeClient {
-  constructor(private readonly _config: Config) {}
+  private readonly _endpoint: string;
+
+  constructor(private readonly _config: Config) {
+    // TODO(burdon): Is the proto config correct?
+    this._endpoint =
+      this._config.values.runtime?.services?.kube?.endpoints?.services ?? `${window.location.origin}/.well-known`;
+  }
 
   async fetch<T extends {}>(url: string): Promise<T> {
-    const res = await fetch(urljoin(endpoint, url));
+    const res = await fetch(urljoin(this._endpoint, url));
     return await res.json();
   }
 }
