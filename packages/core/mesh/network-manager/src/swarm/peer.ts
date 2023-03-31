@@ -52,7 +52,11 @@ interface PeerCallbacks {
   onPeerAvailable: () => void;
 }
 
-const CONNECTION_COUNTS_STABLE_AFTER = 30_000;
+/**
+ * Minimum time the connection needs to be open to not incur a cool-down timer for this peer after the connection closes.
+ */
+const CONNECTION_COUNTS_STABLE_AFTER = 5_000;
+
 /**
  * State of remote peer during the lifetime of a swarm connection.
  * Can open and close multiple connections to the remote peer.
