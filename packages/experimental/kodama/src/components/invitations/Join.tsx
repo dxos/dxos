@@ -27,14 +27,16 @@ export const Join: FC<{
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
     const observable = await client.acceptInvitation(invitation);
-    observable.subscribe({
-      onSuccess: (invitation: Invitation) => {
-        setSpaceKey(invitation.spaceKey);
+    observable.subscribe(
+      (invitation: Invitation) => {
+        if (invitation.state === Invitation.State.SUCCESS) {
+          setSpaceKey(invitation.spaceKey);
+        }
       },
-      onError: (err: Error) => {
+      (err: Error) => {
         setStatus({ error: err as Error });
       }
-    });
+    );
   };
 
   const handleSubmit = async (invitation: Invitation, secret: string) => {

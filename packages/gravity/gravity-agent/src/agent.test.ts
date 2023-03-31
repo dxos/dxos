@@ -11,6 +11,7 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Agent } from './agent';
@@ -188,14 +189,16 @@ class HostAgentStateMachine extends AgentStateMachine {
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
         }
-      });
+      );
 
       await trigger.wait();
     } else {
@@ -213,19 +216,24 @@ class GuestAgentStateMachine extends AgentStateMachine {
       await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.acceptInvitation({
+        invitationId: PublicKey.random().toHex(),
         type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
+        authMethod: AuthMethod.NONE,
+        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
         }
-      });
+      );
 
       await trigger.wait();
     } else {

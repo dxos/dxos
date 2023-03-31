@@ -49,8 +49,8 @@ export type InvitationsOptions = {
  *  ```
  */
 export interface InvitationsHandler<T = void> {
-  createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable;
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
+  createInvitation(context: T, options?: Partial<Invitation>): CancellableInvitationObservable;
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
 
 /**
@@ -63,6 +63,6 @@ export abstract class AbstractInvitationsHandler<T = void> implements Invitation
     protected readonly _networkManager: NetworkManager
   ) {}
 
-  abstract createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable;
-  abstract acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
+  abstract createInvitation(context: T, options?: Partial<Invitation>): CancellableInvitationObservable;
+  abstract acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }

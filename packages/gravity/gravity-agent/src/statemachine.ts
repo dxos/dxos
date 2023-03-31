@@ -8,6 +8,7 @@ import assert from 'node:assert';
 import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { processSyncClient, processSyncServer } from './process';
 
@@ -76,8 +77,11 @@ export class GenericStateMachine extends AgentStateMachine {
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
       await this.agent.client.acceptInvitation({
+        invitationId: PublicKey.random().toHex(),
         type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
+        authMethod: AuthMethod.NONE,
+        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT
       });
     }
     // --- SYNC CHANNEL: SRV ---

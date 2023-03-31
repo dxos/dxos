@@ -123,32 +123,46 @@ describe('Client services', () => {
 
     {
       const observable1 = client1.halo.createInvitation();
-      observable1.subscribe({
-        onConnecting: (invitation) => {
-          const observable2 = client2.halo.acceptInvitation(invitation);
-          observable2.subscribe({
-            onAuthenticating: async () => {
-              await observable2.authenticate(await authenticationCode.wait());
-            },
-            onSuccess: (invitation: Invitation) => {
-              // TODO(burdon): No device.
-              // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
-              success2.wake(invitation);
-            },
-            onError: (err: Error) => raise(new Error(err.message))
-          });
+      observable1.subscribe(
+        (invitation1) => {
+          switch (invitation1.state) {
+            case Invitation.State.CONNECTING: {
+              const observable2 = client2.halo.acceptInvitation(invitation1);
+              observable2.subscribe(
+                async (invitation2) => {
+                  switch (invitation2.state) {
+                    case Invitation.State.AUTHENTICATING: {
+                      await observable2.authenticate(await authenticationCode.wait());
+                      break;
+                    }
+
+                    case Invitation.State.SUCCESS: {
+                      // TODO(burdon): No device.
+                      // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
+                      success2.wake(invitation2);
+                      break;
+                    }
+                  }
+                },
+                (err) => raise(err)
+              );
+              break;
+            }
+
+            case Invitation.State.CONNECTED: {
+              assert(invitation1.authenticationCode);
+              authenticationCode.wake(invitation1.authenticationCode);
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              success1.wake(invitation1);
+              break;
+            }
+          }
         },
-        onConnected: (invitation: Invitation) => {
-          assert(invitation.authenticationCode);
-          authenticationCode.wake(invitation.authenticationCode);
-        },
-        onSuccess: (invitation: Invitation) => {
-          success1.wake(invitation);
-        },
-        onCancelled: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
+        (err) => raise(err)
+      );
     }
 
     // Check same identity.
@@ -200,24 +214,33 @@ describe('Client services', () => {
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
     const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    observable1.subscribe(
+      (invitation1) => {
+        switch (invitation1.state) {
+          case Invitation.State.CONNECTING: {
+            const observable2 = client2.acceptInvitation(invitation1);
+            observable2.subscribe(
+              (invitation2) => {
+                switch (invitation2.state) {
+                  case Invitation.State.SUCCESS: {
+                    success2.wake(invitation2);
+                  }
+                }
+              },
+              (err) => raise(err)
+            );
+            break;
+          }
 
-    observable1.subscribe({
-      onConnecting: (invitation) => {
-        const observable2 = client2.acceptInvitation(invitation);
-        observable2.subscribe({
-          onSuccess: (invitation: Invitation) => {
-            success2.wake(invitation);
-          },
-          onError: (err: Error) => raise(err)
-        });
+          case Invitation.State.SUCCESS: {
+            log('onSuccess');
+            success1.wake(invitation1);
+            break;
+          }
+        }
       },
-      onSuccess: (invitation) => {
-        log('onSuccess');
-        success1.wake(invitation);
-      },
-      onError: (err) => raise(err)
-    });
-
+      (err) => raise(err)
+    );
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);

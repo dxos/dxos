@@ -104,7 +104,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
   useEffect(() => {
     if (observable) {
-      const href = createInvitationPath(observable.invitation!);
+      const href = createInvitationPath(observable.get());
       const url = new URL(href, window.origin);
       console.log(url);
       void clipboardCopy(url.toString());
@@ -166,18 +166,18 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             type: Invitation.Type.MULTIUSE_TESTING
           });
 
-          const unsubscribe = observable.subscribe({
-            onConnecting: () => {
-              setObservable(observable);
-              unsubscribe();
+          const subscription = observable.subscribe(
+            (invitation: Invitation) => {
+              if (invitation.state === Invitation.State.CONNECTING) {
+                setObservable(observable);
+                subscription.unsubscribe();
+              }
             },
-            onConnected: () => {},
-            onSuccess: () => {},
-            onError: (error) => {
+            (error) => {
               log.error(error);
-              unsubscribe();
+              subscription.unsubscribe();
             }
-          });
+          );
         } else {
           void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
         }

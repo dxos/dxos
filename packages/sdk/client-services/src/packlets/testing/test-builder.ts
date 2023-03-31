@@ -150,27 +150,38 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservabli = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      const hostObservable = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
       log('invitation created');
-      hostObservabli.subscribe({
-        onConnecting: (invitation) => {
-          const guestObservable = peer.acceptInvitation(invitation);
-          log('invitation accepted');
+      hostObservable.subscribe(
+        (hostInvitation) => {
+          switch (hostInvitation.state) {
+            case Invitation.State.CONNECTING: {
+              const guestObservable = peer.acceptInvitation(hostInvitation);
+              log('invitation accepted');
 
-          guestObservable.subscribe({
-            onSuccess: (invitation: Invitation) => {
-              guestDone.wake(invitation);
-              log('invitation guestDone');
-            },
-            onError: (err: Error) => raise(err)
-          });
+              guestObservable.subscribe(
+                (guestInvitation) => {
+                  switch (guestInvitation.state) {
+                    case Invitation.State.SUCCESS: {
+                      guestDone.wake(guestInvitation);
+                      log('invitation guestDone');
+                      break;
+                    }
+                  }
+                },
+                (err) => raise(err)
+              );
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              hostDone.wake(hostInvitation);
+              log('invitation hostDone');
+            }
+          }
         },
-        onSuccess: (invitation) => {
-          hostDone.wake(invitation);
-          log('invitation hostDone');
-        },
-        onError: (err) => raise(err)
-      });
+        (err) => raise(err)
+      );
 
       await Promise.all([hostDone.wait(), guestDone.wait()]);
     })

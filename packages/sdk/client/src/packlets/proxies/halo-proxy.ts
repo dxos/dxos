@@ -252,22 +252,7 @@ export class HaloProxy implements Halo {
 
     log('create invitation', options);
     const invitation = this._invitationProxy!.createInvitation(undefined, options);
-
-    const unsubscribe = invitation.subscribe({
-      onConnecting: () => {
-        this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
-        unsubscribe();
-      },
-      onCancelled: () => {
-        unsubscribe();
-      },
-      onSuccess: () => {
-        unsubscribe();
-      },
-      onError: function (err: any): void {
-        unsubscribe();
-      }
-    });
+    this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
 
     return invitation;
   }
@@ -278,7 +263,7 @@ export class HaloProxy implements Halo {
   removeInvitation(id: string) {
     log('remove invitation', { id });
     const invitations = this._invitations.get();
-    const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    const index = invitations.findIndex((invitation) => invitation.get().invitationId === id);
     void invitations[index]?.cancel();
     this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
   }

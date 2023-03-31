@@ -4,16 +4,14 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, sleep, Trigger } from '@dxos/async';
 import {
-  AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
-  InvitationObservableProvider,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY,
   AbstractInvitationsHandler,
-  InvitationsOptions
+  AuthenticatingInvitationObservable
 } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
@@ -22,7 +20,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -60,32 +58,40 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: DataSpace, options?: InvitationsOptions): CancellableInvitationObservable {
-    let swarmConnection: SwarmConnection | undefined;
-    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
+  createInvitation(space: DataSpace, options?: Partial<Invitation>): CancellableInvitationObservable {
+    const {
+      invitationId = PublicKey.random().toHex(),
+      type = Invitation.Type.INTERACTIVE,
+      authMethod = AuthMethod.SHARED_SECRET,
+      state = Invitation.State.INIT,
+      timeout = INVITATION_TIMEOUT,
+      swarmKey = PublicKey.random()
+    } = options ?? {};
+    const authenticationCode =
+      options?.authenticationCode ??
+      (authMethod === AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
+    // TODO(wittjosiah): Remove.
     assert(type !== Invitation.Type.OFFLINE);
     assert(space);
 
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
+      invitationId,
       type,
-      invitationId: PublicKey.random().toHex(),
-      swarmKey: swarmKey ?? PublicKey.random(),
+      authMethod,
+      state,
+      swarmKey,
       spaceKey: space.key,
-      authMethod: options?.authMethod ?? AuthMethod.SHARED_SECRET,
-      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH) // TODO(dmaretskyi): Don't generate if authMethod === NONE .
+      authenticationCode
     };
 
+    // TODO(wittjosiah): Fire complete event?
+    const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
-        observable.callback.onError(err);
+        stream.error(err);
       }
-    });
-
-    // TODO(burdon): Stop anything pending.
-    const observable = new InvitationObservableProvider(async () => {
-      await swarmConnection?.close();
     });
 
     let authenticationPassed = false;
@@ -108,7 +114,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
           // TODO(burdon): Is this the right place to set this state?
           // TODO(dmaretskyi): Should we expose guest's profile in this callback?
-          observable.callback.onAuthenticating?.(invitation);
+          stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
 
           return {
             spaceKey:
@@ -182,9 +188,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               controlTimeframe: space.inner.controlPipeline.state.timeframe,
               dataTimeframe: space.dataPipeline.pipelineState?.timeframe
             };
-          } catch (err) {
+          } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            observable.callback.onError(err);
+            stream.error(err);
             throw err; // Propagate error to guest.
           }
         },
@@ -193,15 +199,16 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
           scheduleTask(ctx, async () => {
             try {
               log('connected', { host: this._signingContext.deviceKey });
-              observable.callback.onConnected?.(invitation);
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await complete.wait({ timeout });
               log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
-              observable.callback.onSuccess(invitation);
-            } catch (err) {
-              if (!observable.cancelled) {
-                log.error('failed', err);
-                observable.callback.onError(err);
-              }
+              stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.error('failed', err);
+              stream.error(err);
+              // }
             } finally {
               if (type !== Invitation.Type.MULTIUSE_TESTING) {
                 await sleep(ON_CLOSE_DELAY);
@@ -226,7 +233,17 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
       });
       ctx.onDispose(() => swarmConnection.close());
 
-      observable.callback.onConnecting?.(invitation);
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+    });
+
+    // TODO(burdon): Stop anything pending.
+    const observable = new CancellableInvitationObservable({
+      initialInvitation: invitation,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      }
     });
 
     return observable;
@@ -237,25 +254,14 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
    * The local guest peer (invitee) then sends the local space invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationProvider {
-    const { timeout = INVITATION_TIMEOUT } = options ?? {};
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+    const { timeout = INVITATION_TIMEOUT } = invitation;
+    const stream = new PushStream<Invitation>();
 
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
-        observable.callback.onError(err);
-      }
-    });
-
-    const authenticated = new Trigger<string>();
-    const observable = new AuthenticatingInvitationProvider({
-      onCancel: async () => {
-        await ctx.dispose();
-      },
-
-      onAuthenticate: async (code: string) => {
-        // TODO(burdon): Reset creates a race condition? Event?
-        authenticated.wake(code);
+        stream.error(err);
       }
     });
 
@@ -273,7 +279,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               }
 
               log('connected', { guest: this._signingContext.deviceKey });
-              observable.callback.onConnected?.(invitation);
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
 
               // 1. Introduce guest to host.
               log('introduce', { guest: this._signingContext.deviceKey });
@@ -291,11 +297,11 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
               if (isAuthenticationRequired(invitation)) {
-                observable.callback.onAuthenticating?.(invitation);
+                stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
 
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
-                  observable.callback.onAuthenticating?.(invitation);
+                  stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
                   const authenticationCode = await authenticated.wait({ timeout });
 
                   log('sending authentication request');
@@ -346,11 +352,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
               complete.wake();
-            } catch (err) {
-              if (!observable.cancelled) {
-                log.warn('auth failed', err);
-                observable.callback.onError(err);
-              }
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.warn('auth failed', err);
+              stream.error(err);
+              // }
             } finally {
               await ctx.dispose();
             }
@@ -373,10 +380,24 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
       });
       ctx.onDispose(() => swarmConnection.close());
 
-      observable.callback.onConnecting?.(invitation);
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
       await complete.wait();
-      observable.callback.onSuccess(invitation);
+      stream.next({ ...invitation, state: Invitation.State.SUCCESS });
       await ctx.dispose();
+    });
+
+    const authenticated = new Trigger<string>();
+    const observable = new AuthenticatingInvitationObservable({
+      initialInvitation: invitation,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      },
+      onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
+        authenticated.wake(code);
+      }
     });
 
     return observable;

@@ -4,13 +4,12 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, sleep, Trigger } from '@dxos/async';
 import {
   AbstractInvitationsHandler,
-  AuthenticatingInvitationProvider,
+  AuthenticatingInvitationObservable,
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
-  InvitationObservableProvider,
   InvitationsOptions,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
@@ -26,9 +25,10 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   AuthenticationRequest,
   AuthenticationResponse,
-  HaloAdmissionCredentials,
-  HaloAdmissionOffer,
-  HaloHostService
+  AuthMethod,
+  DeviceAdmissionCredentials,
+  DeviceAdmissionOffer,
+  DeviceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -57,32 +57,41 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
-    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
+  createInvitation(context: void, options?: Partial<Invitation>): CancellableInvitationObservable {
+    const {
+      invitationId = PublicKey.random().toHex(),
+      type = Invitation.Type.INTERACTIVE,
+      authMethod = AuthMethod.SHARED_SECRET,
+      state = Invitation.State.INIT,
+      timeout = INVITATION_TIMEOUT,
+      swarmKey = PublicKey.random()
+    } = options ?? {};
+    const authenticationCode =
+      options?.authenticationCode ??
+      (authMethod === AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._params.getIdentity();
 
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
+      invitationId,
       type,
-      invitationId: PublicKey.random().toHex(),
-      swarmKey: swarmKey ?? PublicKey.random(),
-      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
+      authMethod,
+      state,
+      swarmKey,
+      authenticationCode
     };
 
+    // TODO(wittjosiah): Fire complete event?
+    const stream = new PushStream<Invitation>();
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
-        observable.callback.onError(err);
+        stream.error(err);
       }
     });
 
-    // TODO(burdon): Stop anything pending.
-    const observable = new InvitationObservableProvider(async () => {
-      await ctx.dispose();
-    });
-
-    let authenticationCode: string;
+    let presentedAuthenticationCode: string;
     const complete = new Trigger<PublicKey>();
 
     // Called for every connecting peer.
@@ -94,7 +103,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
           });
 
           // TODO(burdon): Is this the right place to set this state?
-          observable.callback.onAuthenticating?.(invitation);
+          stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
           return {
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
@@ -105,7 +114,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
         authenticate: async ({ authenticationCode: code }) => {
           log('received authentication request', { authenticationCode: code });
-          authenticationCode = code;
+          presentedAuthenticationCode = code;
           return { status: AuthenticationResponse.Status.OK };
         },
 
@@ -114,8 +123,11 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
           try {
             // Check authenticated.
             if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
-              if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
-                throw new Error(`invalid authentication code: ${authenticationCode}`);
+              if (
+                invitation.authenticationCode === undefined ||
+                invitation.authenticationCode !== presentedAuthenticationCode
+              ) {
+                throw new Error(`invalid authentication code: ${presentedAuthenticationCode}`);
               }
             }
 
@@ -125,9 +137,9 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
             // Updating credentials complete.
             complete.wake(credentials.deviceKey);
-          } catch (err) {
+          } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            observable.callback.onError(err);
+            stream.error(err);
             throw err; // Propagate error to guest.
           }
         },
@@ -136,15 +148,16 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
           scheduleTask(ctx, async () => {
             try {
               log('connected', { host: identity.deviceKey });
-              observable.callback.onConnected?.(invitation);
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await complete.wait({ timeout });
               log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
-              observable.callback.onSuccess(invitation);
-            } catch (err) {
-              if (!observable.cancelled) {
-                log.error('failed', err);
-                observable.callback.onError(err);
-              }
+              stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.error('failed', err);
+              stream.error(err);
+              // }
             } finally {
               // NOTE: If we close immediately after `complete` trigger finishes, Guest won't receive the reply to the last RPC.
               // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing.
@@ -166,8 +179,17 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
         topology: new StarTopology(topic)
       });
       ctx.onDispose(() => swarmConnection.close());
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+    });
 
-      observable.callback.onConnecting?.(invitation);
+    // TODO(burdon): Stop anything pending.
+    const observable = new CancellableInvitationObservable({
+      initialInvitation: invitation,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx?.dispose();
+      }
     });
 
     return observable;
@@ -178,25 +200,14 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
    * The local guest peer (invitee) then sends the local halo invitation to the host,
    * which then writes the guest's credentials to the halo.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationProvider {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = options ?? {};
+    const stream = new PushStream<Invitation>();
 
     const ctx = new Context({
       onError: (err) => {
         void ctx.dispose();
-        observable.callback.onError(err);
-      }
-    });
-
-    const authenticated = new Trigger<string>();
-    const observable = new AuthenticatingInvitationProvider({
-      onCancel: async () => {
-        await ctx.dispose();
-      },
-
-      // TODO(burdon): Consider retry.
-      onAuthenticate: async (code: string) => {
-        authenticated.wake(code);
+        stream.error(err);
       }
     });
 
@@ -214,21 +225,21 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
               }
 
               log('connected');
-              observable.callback.onConnected?.(invitation);
+              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
 
               // 1. Send request.
               log('sending admission request');
               const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } =
-                await extension.rpc.HaloHostService.requestAdmission();
+                await extension.rpc.DeviceHostService.requestAdmission();
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
               if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
                 log('guest waiting for authentication code...');
-                observable.callback.onAuthenticating?.(invitation);
+                stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
                 const authenticationCode = await authenticated.wait({ timeout });
                 log('sending authentication request');
-                await extension.rpc.HaloHostService.authenticate({ authenticationCode });
+                await extension.rpc.DeviceHostService.authenticate({ authenticationCode });
               }
 
               const deviceKey = await this._params.keyring.createKey();
@@ -237,7 +248,7 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 
               // 3. Send admission credentials to host (with local identity keys).
               log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
-              await extension.rpc.HaloHostService.presentAdmissionCredentials({
+              await extension.rpc.DeviceHostService.presentAdmissionCredentials({
                 deviceKey,
                 controlFeedKey,
                 dataFeedKey
@@ -258,11 +269,12 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
               // 5. Success.
               log('admitted by host', { guest: identity.deviceKey, identityKey });
               complete.wake(identityKey);
-            } catch (err) {
-              if (!observable.cancelled) {
-                log.warn('auth failed', err);
-                observable.callback.onError(err);
-              }
+            } catch (err: any) {
+              // TODO(wittjosiah): Is this an important check?
+              // if (!observable.cancelled) {
+              log.warn('auth failed', err);
+              stream.error(err);
+              // }
             } finally {
               await ctx.dispose();
             }
@@ -285,10 +297,24 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
       });
       ctx.onDispose(() => swarmConnection.close());
 
-      observable.callback.onConnecting?.(invitation);
+      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
       invitation.identityKey = await complete.wait();
-      observable.callback.onSuccess(invitation);
+      stream.next({ ...invitation, state: Invitation.State.SUCCESS });
       await ctx.dispose();
+    });
+
+    const authenticated = new Trigger<string>();
+    const observable = new AuthenticatingInvitationObservable({
+      initialInvitation: invitation,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      },
+      // TODO(burdon): Consider retry.
+      onAuthenticate: async (code: string) => {
+        authenticated.wake(code);
+      }
     });
 
     return observable;
@@ -296,9 +322,9 @@ export class DeviceInvitationsHandler extends AbstractInvitationsHandler {
 }
 
 type HostHaloInvitationExtensionCallbacks = {
-  requestAdmission: () => Promise<HaloAdmissionOffer>;
+  requestAdmission: () => Promise<DeviceAdmissionOffer>;
   authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
-  presentAdmissionCredentials: (request: HaloAdmissionCredentials) => Promise<void>;
+  presentAdmissionCredentials: (request: DeviceAdmissionCredentials) => Promise<void>;
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
 };
@@ -306,20 +332,20 @@ type HostHaloInvitationExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
-class HostHaloInvitationExtension extends RpcExtension<{}, { HaloHostService: HaloHostService }> {
+class HostHaloInvitationExtension extends RpcExtension<{}, { DeviceHostService: DeviceHostService }> {
   constructor(private readonly _callbacks: HostHaloInvitationExtensionCallbacks) {
     super({
       exposed: {
-        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+        DeviceHostService: schema.getService('dxos.halo.invitations.DeviceHostService')
       }
     });
   }
 
-  protected override async getHandlers(): Promise<{ HaloHostService: HaloHostService }> {
+  protected override async getHandlers(): Promise<{ DeviceHostService: DeviceHostService }> {
     return {
       // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
       // Perhaps in the future we will have more complex logic here.
-      HaloHostService: {
+      DeviceHostService: {
         requestAdmission: async () => {
           return this._callbacks.requestAdmission();
         },
@@ -350,11 +376,11 @@ type GuestHaloInvitationExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-class GuestHaloInvitationExtension extends RpcExtension<{ HaloHostService: HaloHostService }, {}> {
+class GuestHaloInvitationExtension extends RpcExtension<{ DeviceHostService: DeviceHostService }, {}> {
   constructor(private readonly _callbacks: GuestHaloInvitationExtensionCallbacks) {
     super({
       requested: {
-        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+        DeviceHostService: schema.getService('dxos.halo.invitations.DeviceHostService')
       }
     });
   }
