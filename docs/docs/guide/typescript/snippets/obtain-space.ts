@@ -23,7 +23,7 @@ const code = InvitationEncoder.encode(invitation.get());
 // later we will pass this second authentication code to our friend over a
 // side-channel and they'll send it to us over the new secure connection which
 // will verify that it's secure.
-const authCode = invitation.get().authenticationCode!;
+const authCode = invitation.get().authCode!;
 
 // ===== on the receiver's side:
 

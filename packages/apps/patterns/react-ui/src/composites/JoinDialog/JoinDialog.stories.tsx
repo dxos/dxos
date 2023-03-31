@@ -35,8 +35,8 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
       log.info('[next invitation code]', { nextInvitationCode });
       setInvitationCode(nextInvitationCode);
     }
-    if (invitation.authenticationCode) {
-      log.info('[verification code]', invitation.authenticationCode);
+    if (invitation.authCode) {
+      log.info('[verification code]', invitation.authCode);
     }
   }, []);
 

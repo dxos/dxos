@@ -119,7 +119,7 @@ describe('Client services', () => {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const authenticationCode = new Trigger<string>();
+    const authCode = new Trigger<string>();
 
     {
       const observable1 = client1.halo.createInvitation();
@@ -132,7 +132,7 @@ describe('Client services', () => {
                 async (invitation2) => {
                   switch (invitation2.state) {
                     case Invitation.State.AUTHENTICATING: {
-                      await observable2.authenticate(await authenticationCode.wait());
+                      await observable2.authenticate(await authCode.wait());
                       break;
                     }
 
@@ -150,8 +150,8 @@ describe('Client services', () => {
             }
 
             case Invitation.State.CONNECTED: {
-              assert(invitation1.authenticationCode);
-              authenticationCode.wake(invitation1.authenticationCode);
+              assert(invitation1.authCode);
+              authCode.wake(invitation1.authCode);
               break;
             }
 
@@ -213,7 +213,7 @@ describe('Client services', () => {
 
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    const observable1 = space1.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
     observable1.subscribe(
       (invitation1) => {
         switch (invitation1.state) {

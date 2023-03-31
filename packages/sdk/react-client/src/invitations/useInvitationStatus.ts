@@ -28,7 +28,7 @@ interface InvitationReducerState {
   observable?: CancellableInvitationObservable | AuthenticatingInvitationObservable;
   id?: string;
   invitationCode?: string;
-  authenticationCode?: string;
+  authCode?: string;
 }
 
 export type InvitationAction =
@@ -43,7 +43,7 @@ export type InvitationAction =
       status: Invitation.State.CONNECTED;
       id: string;
       invitationCode: string;
-      authenticationCode?: string;
+      authCode?: string;
     }
   | {
       status: Invitation.State.SUCCESS;
@@ -62,7 +62,7 @@ export type InvitationAction =
 export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
-  authenticationCode?: string;
+  authCode?: string;
   authMethod?: Invitation['authMethod'];
   status: Invitation.State;
   haltedAt?: Invitation.State;
@@ -70,7 +70,7 @@ export type InvitationStatus = {
   error?: number;
   cancel(): void;
   connect(observable: CancellableInvitationObservable): void;
-  authenticate(authenticationCode: string): Promise<void>;
+  authenticate(authCode: string): Promise<void>;
 };
 
 export const useInvitationStatus = (initialObservable?: CancellableInvitationObservable): InvitationStatus => {
@@ -84,8 +84,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
         observable: action.status === Invitation.State.CONNECTING ? action.observable : prev.observable,
         id: action.status === Invitation.State.CONNECTED ? action.id : prev.id,
         invitationCode: action.status === Invitation.State.CONNECTED ? action.invitationCode : prev.invitationCode,
-        authenticationCode:
-          action.status === Invitation.State.CONNECTED ? action.authenticationCode : prev.authenticationCode,
+        authCode: action.status === Invitation.State.CONNECTED ? action.authCode : prev.authCode,
         // `error` gets set each time we enter the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
@@ -117,7 +116,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
               status: invitation.state,
               id: invitation.invitationId!,
               invitationCode: InvitationEncoder.encode(invitation),
-              authenticationCode: invitation.authenticationCode
+              authCode: invitation.authCode
             });
             break;
           }
@@ -164,9 +163,9 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   }, []);
 
   const authenticate = useCallback(
-    (authenticationCode: string) => {
-      log('authenticating...', { authenticationCode });
-      return (state.observable as AuthenticatingInvitationObservable).authenticate(authenticationCode);
+    (authCode: string) => {
+      log('authenticating...', { authCode });
+      return (state.observable as AuthenticatingInvitationObservable).authenticate(authCode);
     },
     [state.observable]
   );
@@ -185,14 +184,14 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       authenticate,
       id: invitation?.invitationId,
       invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
-      authenticationCode: invitation?.authenticationCode,
+      authCode: invitation?.authCode,
       authMethod: invitation?.authMethod
     };
 
     // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.
     //   https://github.com/microsoft/playwright/issues/13037
     if (result.status === Invitation.State.CONNECTED) {
-      log.info(JSON.stringify({ authenticationCode: result.authenticationCode, authMethod: result.authMethod }));
+      log.info(JSON.stringify({ authCode: result.authCode, authMethod: result.authMethod }));
     } else if (result.status === Invitation.State.INIT) {
       log.info(JSON.stringify({ invitationCode: result.invitationCode, authMethod: result.authMethod }));
     }

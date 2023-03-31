@@ -21,6 +21,15 @@ export class InvitationEncoder {
   }
 
   static encode(invitation: Invitation): string {
-    return base62.encode(codec.encode({ ...invitation, authenticationCode: undefined }));
+    return base62.encode(
+      codec.encode({
+        invitationId: invitation.invitationId,
+        type: invitation.type,
+        kind: invitation.kind,
+        authMethod: invitation.authMethod,
+        swarmKey: invitation.swarmKey,
+        state: invitation.state
+      })
+    );
   }
 }

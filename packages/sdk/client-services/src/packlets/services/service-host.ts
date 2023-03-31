@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { clientServiceBundle, ClientServices, createDefaultModelFactory, PublicKey } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { raise } from '@dxos/debug';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -20,7 +19,7 @@ import { TracingServiceImpl } from '../deprecated';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
-import { DeviceInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { InvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
@@ -185,18 +184,11 @@ export class ClientServicesHost {
 
       IdentityService: new IdentityServiceImpl(this._serviceContext),
 
+      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
+        this._serviceContext.getInvitationHandler(invitation)
+      ),
+
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
-
-      DeviceInvitationsService: new DeviceInvitationsServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.deviceInvitations
-      ),
-
-      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
-        this._serviceContext.identityManager,
-        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
-        () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
-      ),
 
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,

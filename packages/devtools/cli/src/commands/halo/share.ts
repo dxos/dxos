@@ -50,7 +50,7 @@ export default class Share extends BaseCommand {
         const invitationCode = InvitationEncoder.encode(observable.get());
 
         this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-        this.log(chalk`\n{red Secret}: ${observable.get().authenticationCode}\n`);
+        this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
 
         ux.action.start('Waiting for peer to connect');
         await done.wait();

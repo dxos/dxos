@@ -54,7 +54,7 @@ export default class Join extends BaseCommand {
               }
 
               case Invitation.State.AUTHENTICATING: {
-                const code = invitation.authenticationCode ?? (await ux.prompt('Invitation code'));
+                const code = invitation.authCode ?? (await ux.prompt('Invitation code'));
                 await observable.authenticate(code);
                 break;
               }

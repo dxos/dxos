@@ -7,7 +7,6 @@ import { Client, clientServiceBundle, ClientServicesProvider, Invitation, Space 
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -193,7 +192,7 @@ export class BotClient {
   private async inviteBotToSpace(botClient: Client) {
     const connected = new Trigger();
     const invitation = this._space.createInvitation({
-      authMethod: AuthMethod.NONE
+      authMethod: Invitation.AuthMethod.NONE
     });
 
     invitation.subscribe(
