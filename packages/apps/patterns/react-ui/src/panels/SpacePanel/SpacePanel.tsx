@@ -53,7 +53,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
         <InvitationList
           invitations={invitations}
-          onClickRemove={({ invitation }) => invitation && space?.removeInvitation(invitation.invitationId!)}
+          onClickRemove={(invitation) => invitation.get() && space?.removeInvitation(invitation.get().invitationId)}
           createInvitationUrl={createInvitationUrl}
         />
         <Button
@@ -61,13 +61,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {
-              invitation.subscribe({
-                onAuthenticating: onInvitationEvent,
-                onConnected: onInvitationEvent,
-                onConnecting: onInvitationEvent,
-                onError: onInvitationEvent,
-                onSuccess: onInvitationEvent
-              });
+              invitation.subscribe(onInvitationEvent);
             }
           }}
           data-testid='spaces-panel.create-invitation'

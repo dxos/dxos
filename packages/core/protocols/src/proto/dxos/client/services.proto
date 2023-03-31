@@ -230,14 +230,15 @@ service SpacesService {
  */
 message Invitation {
   enum Type {
-    /// Requires both to be online with OTP to complete key exchange.
+    /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
     /// Interactive without OTP.
     /// @deprecated Use authMethod.
+    // TODO(wittjosiah): Remove.
     INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
     OFFLINE = 2;
-    /// Multiple-use invitation with OTP.
+    /// Multiple-use interactive invitation. Testing until fully functional.
     MULTIUSE_TESTING = 3;
   }
 
@@ -252,30 +253,19 @@ message Invitation {
     ERROR = 7;
   }
 
-  enum Error {
-    OK = 0;
-    TIMEOUT = 1;
-    INVALID_OTP = 2;
-    INVALID_OPT_ATTEMPTS = 3;
-    INVALID_CREDENTIALS = 4;
-  }
-
   /// Local identifier.
-  optional string invitation_id = 1;
+  string invitation_id = 1;
 
   /// Determined when created.
-  optional Type type = 2;
+  Type type = 2;
 
-  optional dxos.halo.invitations.AuthMethod auth_method = 10; // TODO: Fix numbering.
+  dxos.halo.invitations.AuthMethod auth_method = 3;
 
   /// Local state.
-  optional State state = 3;
-
-  /// Error.
-  optional Error error = 4;
+  State state = 4;
 
   /// Swarm rendezvous (random).
-  optional dxos.keys.PublicKey swarm_key = 5;
+  dxos.keys.PublicKey swarm_key = 5;
 
   /// Guest's identity (only present if OFFLINE).
   optional dxos.keys.PublicKey identity_key = 6;

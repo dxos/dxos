@@ -20,8 +20,8 @@ export const InvitationList = ({ invitations, ...invitationProps }: InvitationLi
     <AccordionRoot type='single' collapsible className='flex flex-col gap-1'>
       <DensityProvider density='fine'>
         <ClipboardProvider>
-          {invitations.map((invitation, index) => {
-            const value = invitation.invitation?.invitationId ?? `inv_${index}`;
+          {invitations.map((invitation) => {
+            const value = invitation.get().invitationId;
             return <InvitationListItem key={value} value={value} invitation={invitation} {...invitationProps} />;
           })}
         </ClipboardProvider>

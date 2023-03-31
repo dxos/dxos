@@ -21,6 +21,6 @@ export class InvitationEncoder {
   }
 
   static encode(invitation: Invitation): string {
-    return base62.encode(codec.encode(invitation));
+    return base62.encode(codec.encode({ ...invitation, authenticationCode: undefined }));
   }
 }
