@@ -77,6 +77,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': ~8.3.3
+      '@types/zen-observable': ^0.8.3
       '@typescript-eslint/eslint-plugin': ^5.44.0
       '@typescript-eslint/parser': ^5.44.0
       '@vuepress/client': 2.0.0-beta.61
@@ -179,6 +180,7 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
+      '@types/zen-observable': 0.8.3
       '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
       '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@vuepress/client': 2.0.0-beta.61
@@ -1094,12 +1096,14 @@ importers:
       '@dxos/util': workspace:*
       '@types/zen-observable': ^0.8.3
       zen-observable: ^0.10.0
+      zen-push: ^0.3.1
     dependencies:
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       zen-observable: 0.10.0
+      zen-push: 0.3.1
     devDependencies:
       '@types/zen-observable': 0.8.3
 
@@ -38429,6 +38433,16 @@ packages:
 
   /zen-observable/0.10.0:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
+    dev: false
+
+  /zen-observable/0.9.0:
+    resolution: {integrity: sha512-xBrvSw1htnb2VEYpgjG7etqztHSZ4KyKzJgFh/rucI7QzkbxD0rVNmIni6lia6KhWs7RBbBBLZksGKrCSaDAMQ==}
+    dev: false
+
+  /zen-push/0.3.1:
+    resolution: {integrity: sha512-6XNTSVz8Z/5+8BzOQFQr+HOr/j7K+ZJfc4tdCCmuiq8y2Ph+aODqagZnXKbKIFZrQ3nSIcdek9gAuEe+p3zJUg==}
+    dependencies:
+      zen-observable: 0.9.0
     dev: false
 
   /zip-stream/2.1.3:

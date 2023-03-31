@@ -3,7 +3,7 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { Client, clientServiceBundle, ClientServicesProvider, Space } from '@dxos/client';
+import { Client, clientServiceBundle, ClientServicesProvider, Invitation, Space } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -196,29 +196,49 @@ export class BotClient {
       authMethod: AuthMethod.NONE
     });
 
-    invitation.subscribe({
-      onConnecting: async (invitation1) => {
-        log('invitation1', invitation1);
-        const observable2 = botClient.acceptInvitation(invitation1);
-        observable2.subscribe({
-          onSuccess: async () => {
-            connected.wake();
-          },
-          onCancelled: () => console.error(new Error('cancelled')),
-          onTimeout: (err: Error) => console.error(new Error(err.message)),
-          onError: (err: Error) => console.error(new Error(err.message))
-        });
+    invitation.subscribe(
+      (invitation1) => {
+        switch (invitation1.state) {
+          case Invitation.State.CONNECTING: {
+            log('invitation1', invitation1);
+            const observable2 = botClient.acceptInvitation(invitation1);
+            observable2.subscribe(
+              (invitation2) => {
+                switch (invitation2.state) {
+                  case Invitation.State.SUCCESS: {
+                    connected.wake();
+                    break;
+                  }
+
+                  case Invitation.State.CANCELLED: {
+                    console.error(new Error('cancelled'));
+                    break;
+                  }
+                }
+              },
+              (err: Error) => console.error(new Error(err.message))
+            );
+            break;
+          }
+
+          case Invitation.State.CONNECTED: {
+            log('connected');
+            break;
+          }
+
+          case Invitation.State.SUCCESS: {
+            log('success');
+            break;
+          }
+
+          case Invitation.State.CANCELLED: {
+            console.error(new Error('cancelled'));
+            break;
+          }
+        }
       },
-      onConnected: async () => {
-        log('connected');
-      },
-      onSuccess: async () => {
-        log('success');
-      },
-      onCancelled: () => console.error(new Error('cancelled')),
-      onTimeout: (err: Error) => console.error(new Error(err.message)),
-      onError: (err: Error) => console.error(new Error(err.message))
-    });
+      (err: Error) => console.error(new Error(err.message))
+    );
 
     await connected.wait();
   }

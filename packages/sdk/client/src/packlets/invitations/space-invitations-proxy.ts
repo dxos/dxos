@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { AbstractInvitationsProxy } from './invitations-proxy';
 
@@ -10,7 +11,10 @@ import { AbstractInvitationsProxy } from './invitations-proxy';
  * Adapts invitation service observable to client/service stream.
  */
 export class SpaceInvitationsProxy extends AbstractInvitationsProxy<PublicKey> {
-  getInvitationOptions(context: PublicKey) {
-    return { spaceKey: context };
+  override getInvitationOptions(context: PublicKey): Invitation {
+    return {
+      ...super.getInvitationOptions(context),
+      spaceKey: context
+    };
   }
 }

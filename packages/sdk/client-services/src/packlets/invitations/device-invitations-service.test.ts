@@ -47,33 +47,47 @@ describe('services/device-invitation-service', () => {
     {
       const proxy1 = new DeviceInvitationsProxy(service1);
       const observable1 = proxy1.createInvitation();
-      observable1.subscribe({
-        onConnecting: (invitation: Invitation) => {
-          const proxy2 = new DeviceInvitationsProxy(service2);
-          const observable2 = proxy2.acceptInvitation(invitation);
-          observable2.subscribe({
-            onAuthenticating: async () => {
-              await observable2.authenticate(await authenticationCode.wait());
-            },
-            onSuccess: (invitation: Invitation) => {
-              // TODO(burdon): No device.
-              // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
-              success2.wake(invitation);
-            },
-            onError: (err: Error) => raise(new Error(err.message))
-          });
+      observable1.subscribe(
+        (invitation: Invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              const proxy2 = new DeviceInvitationsProxy(service2);
+              const observable2 = proxy2.acceptInvitation(invitation);
+              observable2.subscribe(
+                async (invitation) => {
+                  switch (invitation.state) {
+                    case Invitation.State.AUTHENTICATING: {
+                      await observable2.authenticate(await authenticationCode.wait());
+                      break;
+                    }
+
+                    case Invitation.State.SUCCESS: {
+                      // TODO(burdon): No device.
+                      // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
+                      success2.wake(invitation);
+                      break;
+                    }
+                  }
+                },
+                (err: Error) => raise(new Error(err.message))
+              );
+              break;
+            }
+
+            case Invitation.State.CONNECTED: {
+              assert(invitation.authenticationCode);
+              authenticationCode.wake(invitation.authenticationCode);
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              success1.wake(invitation);
+              break;
+            }
+          }
         },
-        onConnected: (invitation: Invitation) => {
-          assert(invitation.authenticationCode);
-          authenticationCode.wake(invitation.authenticationCode);
-        },
-        onSuccess: (invitation: Invitation) => {
-          success1.wake(invitation);
-        },
-        onCancelled: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
+        (err: Error) => raise(new Error(err.message))
+      );
     }
 
     // Check same identity.
