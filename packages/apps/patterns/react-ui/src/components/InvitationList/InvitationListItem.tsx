@@ -33,7 +33,7 @@ export const InvitationListItem = ({
   const { cancel, status, haltedAt, invitationCode, authCode } = useInvitationStatus(invitation);
   const statusValue = invitationStatusValue.get(status) ?? 0;
 
-  const isCancellable = statusValue < 4 && statusValue >= 0;
+  const isCancellable = statusValue < 5 && statusValue >= 0;
   const showShare = statusValue < 3 && statusValue >= 0;
   const showAuthCode = statusValue === 3;
 

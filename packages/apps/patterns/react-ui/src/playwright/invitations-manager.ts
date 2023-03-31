@@ -21,7 +21,7 @@ export type PanelType = number | 'identity' | 'devices' | 'spaces' | 'join';
 export class InvitationsManager extends ShellManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
-  private _authenticationCode = new Trigger<string>();
+  private _authCode = new Trigger<string>();
 
   constructor(private readonly _browser: Browser) {
     super();
@@ -137,9 +137,9 @@ export class InvitationsManager extends ShellManager {
     await this.page.keyboard.press('Enter');
   }
 
-  async getAuthenticationCode(): Promise<string> {
-    this._authenticationCode = new Trigger<string>();
-    return await this._authenticationCode.wait();
+  async getAuthCode(): Promise<string> {
+    this._authCode = new Trigger<string>();
+    return await this._authCode.wait();
   }
 
   peer(id: number) {
@@ -151,8 +151,8 @@ export class InvitationsManager extends ShellManager {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
-      } else if (json.authenticationCode) {
-        this._authenticationCode.wake(json.authenticationCode);
+      } else if (json.authCode) {
+        this._authCode.wake(json.authCode);
       }
     } catch {}
   }

@@ -32,7 +32,7 @@ describe('services/device', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await performInvitation(host, guest, { kind: Invitation.Kind.DEVICE });
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 });
