@@ -5,49 +5,40 @@
 import assert from 'node:assert';
 
 import { TimeoutError } from '@dxos/async';
-import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
-  InvitationsService,
-  InvitationsHandler
-} from '@dxos/client';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { AuthenticationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Provider } from '@dxos/util';
+import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { IdentityManager } from '../identity';
+import { InvitationProtocol } from './invitation-protocol';
+import { InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
-export abstract class AbstractInvitationsService<T = void> implements InvitationsService {
+export class InvitationsServiceImpl implements InvitationsService {
   private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
 
-  // prettier-ignore
-  protected constructor (
-    private readonly _identityManager: IdentityManager,
-    private readonly _getInvitationsHandler: Provider<InvitationsHandler<T>>
+  constructor(
+    private readonly _invitationsHandler: InvitationsHandler,
+    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol
   ) {}
 
   // TODO(burdon): Guest/host label.
   getLoggingContext() {
     return {
-      deviceKey: this._identityManager.identity?.deviceKey
+      // deviceKey: this._identityManager.identity?.deviceKey
     };
   }
 
-  abstract getContext(invitation: Invitation): T;
-
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
-      const invitationsHandler: InvitationsHandler<T> = this._getInvitationsHandler();
-      const context = this.getContext(invitation);
+      const handler = this._getHandler(invitation);
       log('stream opened', this.getLoggingContext());
 
       let invitationId: string;
-      const observable = invitationsHandler.createInvitation(context, invitation);
+      const observable = this._invitationsHandler.createInvitation(handler, invitation);
       observable.subscribe(
         (invitation) => {
           switch (invitation.state) {
@@ -116,10 +107,10 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       log('stream opened', this.getLoggingContext());
-      const invitationsHandler = this._getInvitationsHandler();
+      const handler = this._getHandler(invitation);
 
       let invitationId: string;
-      const observable = invitationsHandler.acceptInvitation(invitation);
+      const observable = this._invitationsHandler.acceptInvitation(handler, invitation);
       observable.subscribe(
         (invitation) => {
           switch (invitation.state) {
@@ -183,14 +174,14 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
     });
   }
 
-  async authenticate({ invitationId, authenticationCode }: AuthenticationRequest): Promise<void> {
+  async authenticate({ invitationId, authCode }: AuthenticationRequest): Promise<void> {
     log('authenticating...');
     assert(invitationId);
     const observable = this._acceptInvitations.get(invitationId);
     if (!observable) {
       log.warn('invalid invitation', { invitationId });
     } else {
-      await observable.authenticate(authenticationCode);
+      await observable.authenticate(authCode);
     }
   }
 

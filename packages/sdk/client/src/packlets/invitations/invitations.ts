@@ -4,9 +4,8 @@
 
 import assert from 'node:assert';
 
-import { AsyncEvents, CancellableObservableEvents, MulticastObservable, Observable, Subscriber } from '@dxos/async';
-import type { Stream } from '@dxos/codec-protobuf';
-import { AuthenticationRequest, CancelInvitationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
@@ -14,24 +13,6 @@ export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 
 // TODO(burdon): Don't close until RPC has complete (bug).
 export const ON_CLOSE_DELAY = 1000;
-
-export interface InvitationsService {
-  createInvitation(invitation: Invitation): Stream<Invitation>;
-  authenticate(request: AuthenticationRequest): Promise<void>;
-  acceptInvitation(invitation: Invitation): Stream<Invitation>;
-  cancelInvitation(request: CancelInvitationRequest): Promise<void>;
-}
-
-/**
- * Common invitation events (callbacks) for creating and accepting invitations.
- */
-// TODO(burdon): Remove optionals.
-export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnecting?(invitation: Invitation): void;
-  onConnected?(invitation: Invitation): void;
-  onAuthenticating?(invitation: Invitation): void;
-  onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
-}
 
 /**
  * Base class for all invitation observables and providers.

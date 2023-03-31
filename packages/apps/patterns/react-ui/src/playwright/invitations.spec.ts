@@ -6,8 +6,7 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationsManager } from './invitations-manager';
 
@@ -40,7 +39,7 @@ test.describe('Invitations', () => {
     test.skip('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
-      const invitation = await manager.createInvitation(0, 'device', { authMethod: AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'device', { authMethod: Invitation.AuthMethod.NONE });
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
@@ -191,7 +190,7 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
-      const invitation = await manager.createInvitation(0, 'space', { authMethod: AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
