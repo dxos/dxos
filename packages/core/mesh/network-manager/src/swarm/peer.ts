@@ -225,7 +225,6 @@ export class Peer {
           if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
             // If we're closing the connection, and it has been connected for a while, reset the backoff.
             this._availableAfter = 0;
-            this.availableToConnect = true;
           } else {
             this.availableToConnect = false;
             this._availableAfter = increaseInterval(this._availableAfter);
