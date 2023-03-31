@@ -238,7 +238,6 @@ export class Peer {
           scheduleTask(
             this._connectionCtx!,
             () => {
-              console.log('available to connect', this._availableAfter);
               this.availableToConnect = true;
               this._callbacks.onPeerAvailable();
             },
