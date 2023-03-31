@@ -217,7 +217,8 @@ export class Pipeline implements PipelineAccessor {
     return this._feedSetIterator.feeds;
   }
 
-  @synchronized
+  // NOTE: This cannot be synchronized with `stop` because stop waits for the mutation processing to complete,
+  // which might be opening feeds during the mutation processing, which w
   async addFeed(feed: FeedWrapper<FeedMessage>) {
     await this._feedSetIterator.addFeed(feed);
   }
