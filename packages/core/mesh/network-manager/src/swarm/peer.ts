@@ -214,8 +214,8 @@ export class Peer {
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
+          this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
-          void this._connectionCtx!.dispose();
           this._callbacks.onConnected();
           break;
         }
@@ -235,16 +235,15 @@ export class Peer {
           this.connection = undefined;
           this._callbacks.onDisconnected();
 
-          if (!this._connectionCtx!.disposed) {
-            scheduleTask(
-              this._connectionCtx!,
-              () => {
-                this.availableToConnect = true;
-                this._callbacks.onPeerAvailable();
-              },
-              this._availableAfter
-            );
-          }
+          scheduleTask(
+            this._connectionCtx!,
+            () => {
+              console.log('available to connect', this._availableAfter);
+              this.availableToConnect = true;
+              this._callbacks.onPeerAvailable();
+            },
+            this._availableAfter
+          );
 
           break;
         }
