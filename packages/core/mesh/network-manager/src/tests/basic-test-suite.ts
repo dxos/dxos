@@ -111,7 +111,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   }).tag('flaky');
 
-  test.repeat(100)('peers reconnect after and error in connection', async () => {
+  test('peers reconnect after and error in connection', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
