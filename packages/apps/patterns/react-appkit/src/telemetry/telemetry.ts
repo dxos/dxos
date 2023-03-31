@@ -31,6 +31,7 @@ export const getTelemetryIdentifier = (client: Client) => {
   if (!client?.initialized) {
     return undefined;
   }
+
   const identity = client.halo.identity.get();
   if (identity) {
     humanize(identity.identityKey);
@@ -39,11 +40,30 @@ export const getTelemetryIdentifier = (client: Client) => {
   return undefined;
 };
 
-export const isTelemetryDisabled = async (namespace: string) =>
-  (await localForage.getItem(`${namespace}:telemetry-disabled`)) === 'true';
+export const isTelemetryDisabled = async (namespace: string): Promise<boolean> => {
+  try {
+    return (await localForage.getItem(`${namespace}:telemetry-disabled`)) === 'true';
+  } catch (err) {
+    log.catch('Failed to check if telemetry disabled, assuming it is', err);
+    return true;
+  }
+};
 
-export const storeTelemetryDisabled = async (namespace: string, value: string) =>
-  localForage.setItem(`${namespace}:telemetry-disabled`, value);
+export const storeTelemetryDisabled = async (namespace: string, value: string) => {
+  try {
+    await localForage.setItem(`${namespace}:telemetry-disabled`, value);
+  } catch (err) {
+    log.catch('Failed to store telemetry disabled', err);
+  }
+};
+
+export const getTelemetryGroup = async (namespace: string): Promise<string | null | undefined> => {
+  try {
+    return localForage.getItem(`${namespace}:telemetry-group`);
+  } catch (err) {
+    log.catch('Failed to get telemetry group', err);
+  }
+};
 
 export type AppTelemetryOptions = {
   namespace: string;
@@ -61,50 +81,54 @@ export const initializeAppTelemetry = async ({
   sentryOptions,
   telemetryOptions
 }: AppTelemetryOptions) => {
-  const group = await localForage.getItem(`${namespace}:telemetry-group`);
-  const release = `${namespace}@${config.get('runtime.app.build.version')}`;
-  const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
-  BASE_TELEMETRY_PROPERTIES.group = group;
-  BASE_TELEMETRY_PROPERTIES.release = release;
-  BASE_TELEMETRY_PROPERTIES.environment = environment;
-  const telemetryDisabled = await isTelemetryDisabled(namespace);
+  try {
+    const group = await getTelemetryGroup(namespace);
+    const release = `${namespace}@${config.get('runtime.app.build.version')}`;
+    const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
+    BASE_TELEMETRY_PROPERTIES.group = group;
+    BASE_TELEMETRY_PROPERTIES.release = release;
+    BASE_TELEMETRY_PROPERTIES.environment = environment;
+    const telemetryDisabled = await isTelemetryDisabled(namespace);
 
-  const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
-  log.info('sentry init', { SENTRY_DESTINATION, telemetryDisabled });
-  Sentry.init({
-    enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
-    destination: SENTRY_DESTINATION,
-    environment,
-    release,
-    tracing: true,
-    replay: true,
-    // TODO(wittjosiah): Configure these.
-    sampleRate: 1.0,
-    replaySampleRate: 0.1,
-    replaySampleRateOnError: 1.0,
-    ...sentryOptions
-  });
+    const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
+    log.info('sentry init', { SENTRY_DESTINATION, telemetryDisabled });
+    Sentry.init({
+      enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,
+      destination: SENTRY_DESTINATION,
+      environment,
+      release,
+      tracing: true,
+      replay: true,
+      // TODO(wittjosiah): Configure these.
+      sampleRate: 1.0,
+      replaySampleRate: 0.1,
+      replaySampleRateOnError: 1.0,
+      ...sentryOptions
+    });
 
-  Sentry.configureTracing();
+    Sentry.configureTracing();
 
-  const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
-  Telemetry.init({
-    apiKey: TELEMETRY_API_KEY,
-    enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled,
-    ...telemetryOptions
-  });
+    const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
+    Telemetry.init({
+      apiKey: TELEMETRY_API_KEY,
+      enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled,
+      ...telemetryOptions
+    });
 
-  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
-  if (IPDATA_API_KEY) {
-    await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
-      .then((res) => res.json())
-      .then((data) => {
-        BASE_TELEMETRY_PROPERTIES.city = data.city;
-        BASE_TELEMETRY_PROPERTIES.region = data.region;
-        BASE_TELEMETRY_PROPERTIES.country = data.country;
-        BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
-        BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
-      })
-      .catch((err) => Sentry.captureException(err));
+    const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
+    if (IPDATA_API_KEY) {
+      await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
+        .then((res) => res.json())
+        .then((data) => {
+          BASE_TELEMETRY_PROPERTIES.city = data.city;
+          BASE_TELEMETRY_PROPERTIES.region = data.region;
+          BASE_TELEMETRY_PROPERTIES.country = data.country;
+          BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
+          BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
+        })
+        .catch((err) => Sentry.captureException(err));
+    }
+  } catch (err) {
+    log.error('Failed to initialize app telemetry', err);
   }
 };
