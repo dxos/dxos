@@ -1467,6 +1467,7 @@ importers:
 
   packages/common/react-async:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
       '@types/react': ^18.0.21
@@ -1475,6 +1476,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
+      '@dxos/async': link:../async
       immutability-helper: 3.1.1
     devDependencies:
       '@dxos/esbuild-plugins': link:../esbuild-plugins
