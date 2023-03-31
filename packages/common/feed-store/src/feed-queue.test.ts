@@ -11,6 +11,7 @@ import { describe, test } from '@dxos/test';
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
+import { range } from '@dxos/util';
 
 describe('FeedQueue', () => {
   const builder = new TestItemBuilder();
@@ -195,4 +196,39 @@ describe('FeedQueue', () => {
     await done();
     await queue.close();
   });
+
+  test('set a start sequence', async () => {
+    const numBlocks = 10;
+    const start = 2;
+
+    const key = await builder.keyring.createKey();
+    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+    await feed.open();
+
+      // Write blocks.
+    await builder.generator.writeBlocks(feed.createFeedWriter(), {
+      count: numBlocks
+    });
+    expect(feed.properties.length).to.eq(numBlocks);
+
+    const queue = new FeedQueue<any>(feed);
+    await queue.open({ start });
+    expect(queue.isOpen).to.be.true;
+
+    let collectedIndexes = []
+    while(true) {
+      const next = await queue.pop();
+      expect(next).not.to.be.undefined;
+      collectedIndexes.push(next.seq)
+      if (next.seq === feed.length - 1) {
+        break;
+      }
+    }
+
+    expect(collectedIndexes).to.deep.eq(range(numBlocks).slice(2))
+
+    expect(queue.isOpen).to.be.true;
+    await queue.close();
+    expect(queue.isOpen).to.be.false;
+  }).timeout(1000);
 });

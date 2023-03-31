@@ -15,6 +15,9 @@ export const mapTimeframeToFeedIndexes = (timeframe: Timeframe): FeedIndex[] =>
 export const mapFeedIndexesToTimeframe = (indexes: FeedIndex[]): Timeframe =>
   new Timeframe(indexes.map(({ feedKey, index }) => [feedKey, index]));
 
+export const startAfter = (timeframe: Timeframe): FeedIndex[] =>
+  timeframe.frames().map(([feedKey, index]) => ({ feedKey, index: index + 1 }));
+
 /**
  * Keeps state of the last timeframe that was processed by ECHO.
  */
@@ -42,7 +45,7 @@ export class TimeframeClock {
 
   @timed(5_000)
   async waitUntilReached(target: Timeframe) {
-    log.debug('waitUntilReached', { target, current: this._timeframe });
+    log.info('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => {
       log('check if reached', {
         target,
