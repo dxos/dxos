@@ -296,7 +296,7 @@ export class Peer {
 
 const increaseInterval = (interval: number) => {
   if (interval === 0) {
-    return 500;
+    return 50;
   } else if (interval < 500) {
     return 500;
   } else if (interval < 1000) {
