@@ -52,7 +52,7 @@ interface PeerCallbacks {
   onPeerAvailable: () => void;
 }
 
-const CONNECTION_COUNTS_STABLE_AFTER = 30000;
+const CONNECTION_COUNTS_STABLE_AFTER = 30_000;
 /**
  * State of remote peer during the lifetime of a swarm connection.
  * Can open and close multiple connections to the remote peer.
@@ -63,7 +63,7 @@ export class Peer {
    */
   private _availableAfter = 0;
   public availableToConnect = true;
-  private _lastConnectionTime?: Date;
+  private _lastConnectionTime?: number;
 
   private readonly _ctx = new Context();
 
@@ -206,7 +206,8 @@ export class Peer {
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
-          this._lastConnectionTime = new Date();
+          this._lastConnectionTime = Date.now();
+          //
           connectionCtx.dispose().catch((err) => {
             log.catch(err);
           });
@@ -217,8 +218,18 @@ export class Peer {
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
-          this.availableToConnect = false;
-          this._availableAfter = increaseInterval(this._availableAfter);
+
+          if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
+            // If we're closing the connection, and it has been connected for a while, reset the backoff.
+            this._availableAfter = 0;
+          } else {
+            this.availableToConnect = false;
+            this._availableAfter = increaseInterval(this._availableAfter);
+          }
+
+          this.connection = undefined;
+          this._callbacks.onDisconnected();
+
           scheduleTask(
             connectionCtx,
             () => {
@@ -228,8 +239,6 @@ export class Peer {
             this._availableAfter
           );
 
-          this.connection = undefined;
-          this._callbacks.onDisconnected();
           break;
         }
       }
@@ -255,9 +264,6 @@ export class Peer {
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    if (this._lastConnectionTime && this._lastConnectionTime.getTime() + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
-      this._availableAfter = 0;
-    }
     await connection.close();
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
