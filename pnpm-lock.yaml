@@ -750,11 +750,13 @@ importers:
       '@radix-ui/react-radio-group': ^1.1.2
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
+      '@types/lodash.toarray': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       '@xstate/react': ^3.2.1
       debug: ^4.3.3
+      lodash.toarray: ^4.4.0
       qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -777,6 +779,7 @@ importers:
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
       debug: 4.3.4
+      lodash.toarray: 4.4.0
       qrcode.react: 3.1.0_react@18.2.0
       url-join: 5.0.0
       xstate: 4.37.1
@@ -788,6 +791,7 @@ importers:
       '@faker-js/faker': 7.6.0
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/debug': 4.1.7
+      '@types/lodash.toarray': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
@@ -821,7 +825,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-pwa: ^0.14.1
@@ -936,7 +940,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
     dependencies:
@@ -996,7 +1000,7 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/plate': workspace:*
       postcss: ^8.4.21
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
     dependencies:
       '@dxos/bare-template': link:../bare-template
@@ -1009,12 +1013,28 @@ importers:
   packages/apps/templates/tasks-template:
     specifiers:
       '@dxos/bare-template': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/plate': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.4.0
       typescript: ^4.8.4
     dependencies:
       '@dxos/bare-template': link:../bare-template
       '@dxos/plate': link:../../../common/plate
     devDependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/react-appkit': link:../../patterns/react-appkit
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../../common/react-components
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
 
   packages/apps/todomvc:
@@ -1513,7 +1533,7 @@ importers:
       react-i18next: ^11.18.6
       react-table: ^7.8.0
       tailwind-merge: ^1.10.0
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
       vite: ^4.2.0
@@ -2527,7 +2547,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       react-vis: ^1.11.12
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -2632,7 +2652,7 @@ importers:
       react-router-dom: ^6.4.0
       rmdir: ~1.2.0
       safe-compare: ~1.1.4
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
       webextension-polyfill: ^0.8.0
@@ -2687,19 +2707,6 @@ importers:
       vite: 4.2.0
       vite-plugin-fonts: 0.7.0_vite@4.2.0
 
-  packages/devtools/initializers/bare:
-    specifiers:
-      '@dxos/bare-template': workspace:*
-      '@types/minimist': ^1.2.2
-      minimist: ^1.2.7
-      typescript: ^4.8.4
-    dependencies:
-      '@dxos/bare-template': link:../../../apps/templates/bare-template
-      minimist: 1.2.7
-    devDependencies:
-      '@types/minimist': 1.2.2
-      typescript: 4.8.4
-
   packages/devtools/initializers/create:
     specifiers:
       '@dxos/hello-template': workspace:*
@@ -2709,6 +2716,32 @@ importers:
     dependencies:
       '@dxos/hello-template': link:../../../apps/templates/hello-template
       minimist: 1.2.7
+    devDependencies:
+      '@types/minimist': 1.2.2
+      typescript: 4.8.4
+
+  packages/devtools/initializers/create-bare:
+    specifiers:
+      '@dxos/bare-template': workspace:*
+      '@types/minimist': ^1.2.2
+      minimist: ^1.2.7
+      typescript: ^4.8.4
+    dependencies:
+      '@dxos/bare-template': link:../../../apps/templates/bare-template
+      minimist: 1.2.8
+    devDependencies:
+      '@types/minimist': 1.2.2
+      typescript: 4.8.4
+
+  packages/devtools/initializers/create-tasks:
+    specifiers:
+      '@dxos/tasks-template': workspace:*
+      '@types/minimist': ^1.2.2
+      minimist: ^1.2.7
+      typescript: ^4.8.4
+    dependencies:
+      '@dxos/tasks-template': link:../../../apps/templates/tasks-template
+      minimist: 1.2.8
     devDependencies:
       '@types/minimist': 1.2.2
       typescript: 4.8.4
@@ -3084,7 +3117,7 @@ importers:
       simple-peer: 9.11.0
       storybook-addon-react-router-v6: ^0.3.2
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       url-join: ^5.0.0
       vite: ^4.2.0
@@ -3480,7 +3513,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       three: ^0.150.1
       typescript: ^4.8.4
       url-join: ^5.0.0
@@ -3615,7 +3648,7 @@ importers:
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -3688,7 +3721,7 @@ importers:
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
       string-hash: ~1.1.3
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       typescript: ^4.8.4
       vite: ^4.2.0
       vite-plugin-fonts: ^0.7.0
@@ -4476,7 +4509,7 @@ importers:
       remark-parse-frontmatter: ^1.0.3
       remark-unwrap-texts: ^1.0.3
       rollup: ^3.9.1
-      tailwindcss: ^3.2.7
+      tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
       typescript: ^4.8.4
@@ -14836,6 +14869,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.toarray/4.4.7:
+    resolution: {integrity: sha512-8cMZKAuMyngqE0ffoPXRg0pEVn660Mklzb13iVYoyfexWKTzDnscsTmivMF+Y5l0EzpQZsNt0yK/S1kg4sxdTw==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -15612,7 +15651,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -27100,6 +27139,10 @@ packages:
 
   /lodash.throttle/4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+    dev: false
+
+  /lodash.toarray/4.4.0:
+    resolution: {integrity: sha512-QyffEA3i5dma5q2490+SgCvDN0pXLmRGSyAANuVi0HQ01Pkfr9fuoKQW8wm1wGBnJITs/mS7wQvS6VshUEBFCw==}
     dev: false
 
   /lodash.topairs/4.3.0:
