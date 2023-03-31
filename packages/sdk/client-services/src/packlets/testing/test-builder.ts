@@ -150,7 +150,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservable = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      const hostObservable = rootSpace.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
       log('invitation created');
       hostObservable.subscribe(
         (hostInvitation) => {
