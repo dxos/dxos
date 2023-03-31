@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Lock, synchronized, Trigger } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -136,7 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
-        log('selected', { idx, blocks })
+        log('selected', { idx, blocks });
         if (idx === undefined) {
           // Timeout if all candidates are rejected.
           if (t === undefined) {

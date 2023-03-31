@@ -15,7 +15,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
-import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, startAfter, TimeframeClock } from './timeframe-clock';
+import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
 
 export type WaitUntilReachedTargetParams = {
   /**

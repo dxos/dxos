@@ -7,11 +7,11 @@ import { expect } from 'chai';
 import { latch, asyncTimeout, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
-import { range } from '@dxos/util';
 
 describe('FeedQueue', () => {
   const builder = new TestItemBuilder();
@@ -205,7 +205,7 @@ describe('FeedQueue', () => {
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
-      // Write blocks.
+    // Write blocks.
     await builder.generator.writeBlocks(feed.createFeedWriter(), {
       count: numBlocks
     });
@@ -215,17 +215,17 @@ describe('FeedQueue', () => {
     await queue.open({ start });
     expect(queue.isOpen).to.be.true;
 
-    let collectedIndexes = []
-    while(true) {
+    const collectedIndexes = [];
+    while (true) {
       const next = await queue.pop();
       expect(next).not.to.be.undefined;
-      collectedIndexes.push(next.seq)
+      collectedIndexes.push(next.seq);
       if (next.seq === feed.length - 1) {
         break;
       }
     }
 
-    expect(collectedIndexes).to.deep.eq(range(numBlocks).slice(2))
+    expect(collectedIndexes).to.deep.eq(range(numBlocks).slice(2));
 
     expect(queue.isOpen).to.be.true;
     await queue.close();
