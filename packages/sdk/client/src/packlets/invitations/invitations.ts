@@ -42,7 +42,7 @@ export class CancellableInvitationObservable extends MulticastObservable<Invitat
  * Cancelable observer that relays authentication requests.
  */
 export class AuthenticatingInvitationObservable extends CancellableInvitationObservable {
-  private readonly _onAuthenticate: (authenticationCode: string) => Promise<void>;
+  private readonly _onAuthenticate: (authCode: string) => Promise<void>;
 
   constructor({
     subscriber,
@@ -53,14 +53,14 @@ export class AuthenticatingInvitationObservable extends CancellableInvitationObs
     subscriber: Observable<Invitation> | Subscriber<Invitation>;
     initialInvitation: Invitation;
     onCancel: () => Promise<void>;
-    onAuthenticate: (authenticationCode: string) => Promise<void>;
+    onAuthenticate: (authCode: string) => Promise<void>;
   }) {
     super({ subscriber, initialInvitation, onCancel });
     this._onAuthenticate = onAuthenticate;
   }
 
-  async authenticate(authenticationCode: string): Promise<void> {
-    return this._onAuthenticate(authenticationCode);
+  async authenticate(authCode: string): Promise<void> {
+    return this._onAuthenticate(authCode);
   }
 }
 

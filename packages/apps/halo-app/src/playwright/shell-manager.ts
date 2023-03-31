@@ -9,7 +9,7 @@ import { ShellManager } from '@dxos/react-ui/testing';
 
 export class HaloShellManager extends ShellManager {
   private _invitationCode = new Trigger<string>();
-  private _authenticationCode = new Trigger<string>();
+  private _authCode = new Trigger<string>();
 
   constructor(override readonly page: Page, readonly inIFrame = true) {
     super();
@@ -70,15 +70,15 @@ export class HaloShellManager extends ShellManager {
     await this.inputInvitation('space', invitationCode, this.shell);
   }
 
-  async getAuthenticationCode(): Promise<string> {
-    this._authenticationCode = new Trigger<string>();
-    return await this._authenticationCode.wait();
+  async getAuthCode(): Promise<string> {
+    this._authCode = new Trigger<string>();
+    return await this._authCode.wait();
   }
 
-  async authenticate(authenticationCode: string) {
+  async authenticate(authCode: string) {
     // Wait for focus to shift before typing.
     await sleep(10);
-    await this.authenticateInvitation('space', authenticationCode, this.shell);
+    await this.authenticateInvitation('space', authCode, this.shell);
     await this.doneInvitation('space', this.shell);
   }
 
@@ -88,8 +88,8 @@ export class HaloShellManager extends ShellManager {
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
       }
-      if (json.authenticationCode) {
-        this._authenticationCode.wake(json.authenticationCode);
+      if (json.authCode) {
+        this._authCode.wake(json.authCode);
       }
     } catch {}
   }
