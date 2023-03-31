@@ -180,7 +180,7 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
           [`authenticating${Kind}VerificationCode`]: {
             on: {
               [`readyForAuthentication${Kind}Invitation`]: {
-                target: `.authenticationFailing${Kind}VerificationCode`,
+                target: `authenticationFailing${Kind}VerificationCode`,
                 actions: ['setInvitation', 'log']
               }
             }
