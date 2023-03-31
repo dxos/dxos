@@ -211,7 +211,6 @@ export class Peer {
       switch (state) {
         case ConnectionState.CONNECTED: {
           this._lastConnectionTime = Date.now();
-          //
           this._connectionCtx!.dispose().catch((err) => {
             log.catch(err);
           });
