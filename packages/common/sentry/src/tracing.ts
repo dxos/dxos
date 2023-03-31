@@ -64,8 +64,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
         const span = parentSpan.startChild({
           op: entry.message,
           data: {
-            ...context.span.data,
-            '@dxos/log': JSON.stringify({ ...entry, context }, null, 2)
+            ...context.span.data
           }
         });
         SPAN_MAP.set(context.span.id, span);
