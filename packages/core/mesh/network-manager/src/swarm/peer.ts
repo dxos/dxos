@@ -61,7 +61,7 @@ export class Peer {
   /**
    * Will be available to connect after this time.
    */
-  private _reconnectAfter = 0;
+  private _availableAfter = 0;
   public availableToConnect = true;
   private _lastConnectionTime?: Date;
 
@@ -218,14 +218,14 @@ export class Peer {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
           this.availableToConnect = false;
-          this._reconnectAfter = increaseInterval(this._reconnectAfter);
+          this._availableAfter = increaseInterval(this._availableAfter);
           scheduleTask(
             connectionCtx,
             () => {
               this.availableToConnect = true;
               this._callbacks.onPeerAvailable();
             },
-            this._reconnectAfter
+            this._availableAfter
           );
 
           this.connection = undefined;
@@ -256,7 +256,7 @@ export class Peer {
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
     if (this._lastConnectionTime && this._lastConnectionTime.getTime() + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
-      this._reconnectAfter = 0;
+      this._availableAfter = 0;
     }
     await connection.close();
 
