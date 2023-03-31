@@ -204,16 +204,14 @@ export class Peer {
     connection._traceParent = this._traceParent;
     this._callbacks.onInitiated(connection);
 
-    void this._connectionCtx?.dispose().catch((err) => log.catch(err));
+    void this._connectionCtx?.dispose();
     this._connectionCtx = this._ctx.derive();
 
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
           this._lastConnectionTime = Date.now();
-          this._connectionCtx!.dispose().catch((err) => {
-            log.catch(err);
-          });
+          void this._connectionCtx!.dispose();
           this._callbacks.onConnected();
           break;
         }
@@ -294,9 +292,9 @@ export class Peer {
 
 const increaseInterval = (interval: number) => {
   if (interval === 0) {
-    return 1;
-  } else if (interval < 5) {
-    return 5;
+    return 50;
+  } else if (interval < 50) {
+    return 500;
   } else if (interval < 1000) {
     return 1000;
   } else if (interval < 5_000) {
