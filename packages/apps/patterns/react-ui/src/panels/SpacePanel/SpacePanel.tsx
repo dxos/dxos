@@ -61,13 +61,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {
-              invitation.subscribe({
-                onAuthenticating: onInvitationEvent,
-                onConnected: onInvitationEvent,
-                onConnecting: onInvitationEvent,
-                onError: onInvitationEvent,
-                onSuccess: onInvitationEvent
-              });
+              invitation.subscribe(onInvitationEvent);
             }
           }}
           data-testid='spaces-panel.create-invitation'
