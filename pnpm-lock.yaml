@@ -1768,6 +1768,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
+      fast-check: ~3.3.0
       hypercore-protocol: ^8.0.7
       source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
@@ -1803,6 +1804,7 @@ importers:
     devDependencies:
       '@dxos/text-model': link:../text-model
       '@types/debug': 4.1.7
+      fast-check: 3.3.0
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
