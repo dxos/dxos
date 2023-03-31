@@ -6,8 +6,15 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/descriptor.proto";
 
 package dxos.config;
+
+option go_package = "github.com/dxos/kube/proto/def/dxos/config";
+
+extend google.protobuf.FieldOptions {
+    optional string env = 65000;
+}
 
 message Config {
   optional int32 version = 1;
@@ -123,7 +130,8 @@ message Runtime {
     optional string public_url = 4 [(env) = "PUBLIC_URL"];
 
     optional BuildInfo build = 100;
-    optional google.protobuf.Struct env = 101;
+    // TODO: fix - is clashing with field option "env"
+    // optional google.protobuf.Struct env = 101;
   }
 
   // CLI configuration
@@ -167,23 +175,24 @@ message Runtime {
   //
   message Kube {
     message Autoupdate {
-      optional bool enabled = 1;
+      bool enabled = 1;
       /// Seconds
-      optional int64 interval = 2;
+      int32 interval = 2;
     }
 
     message Https {
-      optional bool enabled = 1;
-      optional string port = 2;
-      optional string email = 3;
-      optional string certfile = 4;
-      optional string keyfile = 5;
-      optional string dnsprovider = 6; // TODO(burdon): dns_provider.
+      bool enabled = 1;
+      string port = 2;
+      string email = 3;
+      string certfile = 4;
+      string keyfile = 5;
+      string dnsprovider = 6; // TODO(burdon): dns_provider.
     }
 
     message P2P {
-      optional string private_key = 1;
-      optional string port = 2;
+      // TODO(egorgripasov): private_key
+      string privatekey = 1;
+      string port = 2;
       repeated string bootstrap = 3;
     }
 
@@ -191,7 +200,7 @@ message Runtime {
       bool enabled = 1;
       string endpoint = 2;
       /// Seconds
-      int64 interval = 3;
+      int32 interval = 3;
     }
 
     message Trace {
@@ -209,26 +218,33 @@ message Runtime {
     }
 
     message AppTunneling {
-      optional bool enabled = 1;
-      optional string command_template = 2;
-      optional string output_re = 3;
-      optional string port = 4;
+      bool enabled = 1;
+      string command_template = 2;
+      string output_re = 3;
+      string port = 4;
+    }
+
+    message Bots {
+      bool enabled = 1;
+      /// Refresh interval - Seconds
+      int32 interval = 2;
     }
 
     // TODO(burdon): Needs documentation/
-    optional string host = 1;
-    optional string port = 2;
-    optional Autoupdate autoupdate = 3;
-    optional Https https = 4;
-    optional P2P p2p = 5;
-    optional string confhost = 6; // TODO(burdon): ?
+    string host = 1;
+    string port = 2;
+    Autoupdate autoupdate = 3;
+    Https https = 4;
+    P2P p2p = 5;
+    string confhost = 6; // TODO(burdon): ?
     repeated string env = 7;
     repeated string alias = 8;
-    optional Monitoring monitoring = 9;
-    optional Trace trace = 10;
-    optional Telemetry telemetry = 11;
-    optional Gravity gravity = 12;
-    optional AppTunneling app_tunneling = 13;
+    Monitoring monitoring = 9;
+    Trace trace = 10;
+    Telemetry telemetry = 11;
+    Gravity gravity = 12;
+    AppTunneling app_tunneling = 13;
+    Bots bots = 14;
   }
 
   //
