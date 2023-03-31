@@ -4,13 +4,10 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { raise } from '@dxos/debug';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestBuilder } from '../testing';
+import { performInvitation, TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('creates a identity', async () => {
@@ -43,38 +40,7 @@ describe('Halo', () => {
     afterTest(() => client2.destroy());
     await client2.initialize();
 
-    const done1 = new Trigger();
-    const done2 = new Trigger();
-    const observable1 = client1.halo.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
-    observable1.subscribe(
-      (invitation1) => {
-        switch (invitation1.state) {
-          case Invitation.State.CONNECTING: {
-            const observable2 = client2.halo.acceptInvitation(invitation1);
-            observable2.subscribe(
-              (invitation2) => {
-                switch (invitation2.state) {
-                  case Invitation.State.SUCCESS: {
-                    done2.wake();
-                  }
-                }
-              },
-              (err) => raise(err)
-            );
-            break;
-          }
-
-          case Invitation.State.SUCCESS: {
-            done1.wake();
-            break;
-          }
-        }
-      },
-      (err) => raise(err)
-    );
-
-    await done1.wait();
-    await done2.wait();
+    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);

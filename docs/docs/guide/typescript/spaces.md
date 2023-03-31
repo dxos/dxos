@@ -67,7 +67,7 @@ const client = new Client();
     // later we will pass this second authentication code to our friend over a
     // side-channel and they'll send it to us over the new connection which
     // will verify that it's secure.
-    const authCode = invitation.authenticationCode;
+    const authCode = invitation.authCode;
   }
 })()
 ```
