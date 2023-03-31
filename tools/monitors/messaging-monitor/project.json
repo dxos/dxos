@@ -1,0 +1,13 @@
+{
+  "sourceRoot": "tools/monitors/messaging-monitor/src",
+  "projectType": "library",
+  "targets": {
+    "monitor": {
+      "dependsOn": [],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "test"
+      }
+    }
+  }
+}

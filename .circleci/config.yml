@@ -147,6 +147,20 @@ jobs:
           environment:
             NODE_ENV: production
 
+  messaging-monitor:
+    docker:
+      - *docker_image
+    parameters:
+      signal-server:
+        type: string
+    steps:
+      - checkout
+      - run:
+          command: npm run start
+          working_directory: ./tools/monitors/messaging-monitor
+          environment:
+            SIGNAL_SERVER: << parameters.signal-server >>
+
 workflows:
   default:
     jobs:
@@ -171,5 +185,17 @@ workflows:
                 - staging
           context:
             - Github
+
+  daily:
+    jobs:
+      - messaging-monitor:
+          context:
+            - Github
+          matrix:
+            parameters:
+              signal-server:
+                - wss://kube.dxos.org/.well-known/dx/signal
+                - wss://dev.kube.dxos.org/.well-known/dx/signal
+                - wss://staging.kube.dxos.org/.well-known/dx/signal
 
 # VS Code Extension Version: 1.5.1
