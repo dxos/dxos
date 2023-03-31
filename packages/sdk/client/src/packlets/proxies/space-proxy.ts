@@ -232,7 +232,6 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async _processSpaceUpdate(space: SpaceData) {
-    console.log(space);
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
