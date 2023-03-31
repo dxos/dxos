@@ -233,14 +233,16 @@ export class Peer {
           this.connection = undefined;
           this._callbacks.onDisconnected();
 
-          scheduleTask(
-            this._connectionCtx!,
-            () => {
-              this.availableToConnect = true;
-              this._callbacks.onPeerAvailable();
-            },
-            this._availableAfter
-          );
+          if (!this._connectionCtx!.disposed) {
+            scheduleTask(
+              this._connectionCtx!,
+              () => {
+                this.availableToConnect = true;
+                this._callbacks.onPeerAvailable();
+              },
+              this._availableAfter
+            );
+          }
 
           break;
         }
