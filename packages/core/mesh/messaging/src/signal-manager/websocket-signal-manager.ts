@@ -55,7 +55,6 @@ export class WebsocketSignalManager implements SignalManager {
   constructor(
     private readonly _hosts: string[]
   ) {
-    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId }));
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
