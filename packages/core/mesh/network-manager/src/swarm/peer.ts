@@ -66,6 +66,7 @@ export class Peer {
   private _lastConnectionTime?: number;
 
   private readonly _ctx = new Context();
+  private _connectionCtx?: Context;
 
   public connection?: Connection;
 
@@ -202,13 +203,16 @@ export class Peer {
     );
     connection._traceParent = this._traceParent;
     this._callbacks.onInitiated(connection);
-    const connectionCtx = this._ctx.derive();
+
+    void this._connectionCtx?.dispose().catch((err) => log.catch(err));
+    this._connectionCtx = this._ctx.derive();
+
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
           this._lastConnectionTime = Date.now();
           //
-          connectionCtx.dispose().catch((err) => {
+          this._connectionCtx!.dispose().catch((err) => {
             log.catch(err);
           });
           this._callbacks.onConnected();
@@ -222,6 +226,8 @@ export class Peer {
           if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
             // If we're closing the connection, and it has been connected for a while, reset the backoff.
             this._availableAfter = 0;
+            this.availableToConnect = true;
+            this._callbacks.onPeerAvailable();
           } else {
             this.availableToConnect = false;
             this._availableAfter = increaseInterval(this._availableAfter);
@@ -231,7 +237,7 @@ export class Peer {
           this._callbacks.onDisconnected();
 
           scheduleTask(
-            connectionCtx,
+            this._connectionCtx!,
             () => {
               this.availableToConnect = true;
               this._callbacks.onPeerAvailable();
