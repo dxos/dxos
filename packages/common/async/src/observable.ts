@@ -4,10 +4,11 @@
 
 import Observable from 'zen-observable';
 import type { ObservableLike, Observer, Subscriber, Subscription } from 'zen-observable/esm';
+import PushStream from 'zen-push';
 
 import { Event } from './events';
 
-export { Observable };
+export { Observable, PushStream, Subscriber };
 
 /**
  * Observable which supports multiple subscribers and stores the current value.

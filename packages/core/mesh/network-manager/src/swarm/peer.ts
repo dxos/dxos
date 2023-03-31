@@ -4,7 +4,8 @@
 
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { scheduleTask, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -44,13 +45,33 @@ interface PeerCallbacks {
    * Returns true if the remote peer's offer should be accepted.
    */
   onOffer: (remoteId: PublicKey) => Promise<boolean>;
+
+  /**
+   * Peer is available to connect.
+   */
+  onPeerAvailable: () => void;
 }
+
+/**
+ * Minimum time the connection needs to be open to not incur a cool-down timer for this peer after the connection closes.
+ */
+const CONNECTION_COUNTS_STABLE_AFTER = 5_000;
 
 /**
  * State of remote peer during the lifetime of a swarm connection.
  * Can open and close multiple connections to the remote peer.
  */
 export class Peer {
+  /**
+   * Will be available to connect after this time.
+   */
+  private _availableAfter = 0;
+  public availableToConnect = true;
+  private _lastConnectionTime?: number;
+
+  private readonly _ctx = new Context();
+  private _connectionCtx?: Context;
+
   public connection?: Connection;
 
   /**
@@ -186,9 +207,15 @@ export class Peer {
     );
     connection._traceParent = this._traceParent;
     this._callbacks.onInitiated(connection);
+
+    void this._connectionCtx?.dispose();
+    this._connectionCtx = this._ctx.derive();
+
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {
+          this.availableToConnect = true;
+          this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
           break;
         }
@@ -197,8 +224,26 @@ export class Peer {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
 
+          if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
+            // If we're closing the connection, and it has been connected for a while, reset the backoff.
+            this._availableAfter = 0;
+          } else {
+            this.availableToConnect = false;
+            this._availableAfter = increaseInterval(this._availableAfter);
+          }
+
           this.connection = undefined;
           this._callbacks.onDisconnected();
+
+          scheduleTask(
+            this._connectionCtx!,
+            () => {
+              this.availableToConnect = true;
+              this._callbacks.onPeerAvailable();
+            },
+            this._availableAfter
+          );
+
           break;
         }
       }
@@ -239,9 +284,23 @@ export class Peer {
 
   @synchronized
   async destroy() {
+    await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
     // Won't throw.
     await this?.connection?.close();
   }
 }
+
+const increaseInterval = (interval: number) => {
+  if (interval === 0) {
+    return 50;
+  } else if (interval < 500) {
+    return 500;
+  } else if (interval < 1000) {
+    return 1000;
+  } else if (interval < 5_000) {
+    return 5_000;
+  }
+  return 10_000;
+};

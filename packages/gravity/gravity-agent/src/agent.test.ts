@@ -183,19 +183,21 @@ class HostAgentStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
         }
-      });
+      );
 
       await trigger.wait();
     } else {
@@ -213,19 +215,25 @@ class GuestAgentStateMachine extends AgentStateMachine {
       await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.acceptInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
+        invitationId: PublicKey.random().toHex(),
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
         }
-      });
+      );
 
       await trigger.wait();
     } else {

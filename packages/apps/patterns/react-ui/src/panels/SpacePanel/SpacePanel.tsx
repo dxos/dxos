@@ -3,9 +3,9 @@
 //
 
 import { UserPlus } from '@phosphor-icons/react';
-import React, { cloneElement, useReducer } from 'react';
+import React, { cloneElement, useCallback, useReducer } from 'react';
 
-import { Space } from '@dxos/client';
+import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -27,9 +27,20 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
   const invitations = useSpaceInvitations(space?.key);
   const name = space?.properties.name;
 
+  console.log('[space panel]', process.env.NODE_ENV);
+
   if (!space) {
     return null;
   }
+
+  const onInvitationEvent = useCallback((invitation: Invitation) => {
+    console.log('[invitation event]');
+    const invitationCode = InvitationEncoder.encode(invitation);
+    console.log(JSON.stringify({ invitationCode }));
+    if (invitation.authCode) {
+      console.log(JSON.stringify({ authenticationCode: invitation.authCode }));
+    }
+  }, []);
 
   return (
     <div role='none' className='flex flex-col'>
@@ -42,12 +53,17 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
         <InvitationList
           invitations={invitations}
-          onClickRemove={({ invitation }) => invitation && space?.removeInvitation(invitation.invitationId!)}
+          onClickRemove={(invitation) => invitation.get() && space?.removeInvitation(invitation.get().invitationId)}
           createInvitationUrl={createInvitationUrl}
         />
         <Button
           className='is-full flex gap-2 mbs-2'
-          onClick={() => space?.createInvitation()}
+          onClick={() => {
+            const invitation = space?.createInvitation();
+            if (process.env.NODE_ENV !== 'production') {
+              invitation.subscribe(onInvitationEvent);
+            }
+          }}
           data-testid='spaces-panel.create-invitation'
         >
           <span>{t('create space invitation label')}</span>

@@ -30,7 +30,7 @@ export const InvitationListItem = ({
   const { t } = useTranslation('os');
   const qrLabel = useId('qrLabel');
 
-  const { cancel, status, haltedAt, invitationCode, authenticationCode } = useInvitationStatus(invitation);
+  const { cancel, status, haltedAt, invitationCode, authCode } = useInvitationStatus(invitation);
   const statusValue = invitationStatusValue.get(status) ?? 0;
 
   const isCancellable = statusValue < 4 && statusValue >= 0;
@@ -44,9 +44,7 @@ export const InvitationListItem = ({
   return (
     <AccordionPrimitive.Item value={value}>
       <AccordionPrimitive.Header className='flex gap-2 items-center'>
-        <InvitationStatusAvatar
-          {...{ status, haltedAt, size: 8, invitationId: invitation?.invitation?.invitationId }}
-        />
+        <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} />
         {showShare && invitationUrl ? (
           <>
             <AccordionPrimitive.Trigger asChild>
@@ -58,9 +56,7 @@ export const InvitationListItem = ({
             <CopyButton value={invitationUrl} />
           </>
         ) : showAuthCode ? (
-          <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>
-            {authenticationCode}
-          </p>
+          <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
         ) : (
           <span role='none' className='grow' />
         )}

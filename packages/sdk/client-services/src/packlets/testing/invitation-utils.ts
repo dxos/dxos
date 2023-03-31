@@ -5,38 +5,61 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { InvitationsHandler } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export const performInvitation = async <T>(host: InvitationsHandler<T>, guest: InvitationsHandler<T>, context: T) => {
+import { ServiceContext } from '../services';
+
+export const performInvitation = async (
+  host: ServiceContext,
+  guest: ServiceContext,
+  options: Parameters<ServiceContext['getInvitationHandler']>[0]
+) => {
   const done1 = new Trigger<Invitation>(); // peer 1 connected.
   const done2 = new Trigger<Invitation>(); // peer 2 connected.
-  const observable1 = await host.createInvitation(context, { type: Invitation.Type.INTERACTIVE_TESTING });
-  observable1.subscribe({
-    onConnecting: async (invitation1: Invitation) => {
-      const observable2 = await guest.acceptInvitation(invitation1, { type: Invitation.Type.INTERACTIVE_TESTING });
-      observable2.subscribe({
-        onConnecting: async (invitation2: Invitation) => {
-          assert(invitation1.swarmKey!.equals(invitation2.swarmKey!));
-        },
-        onConnected: async (invitation2: Invitation) => {},
-        onSuccess: (invitation) => {
-          done2.wake(invitation);
-        },
-        onCancelled: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(err),
-        onError: (err: Error) => raise(err)
-      });
+
+  const hostHandler = host.getInvitationHandler(options);
+  const observable1 = await host.invitations.createInvitation(hostHandler, { authMethod: Invitation.AuthMethod.NONE });
+  observable1.subscribe(
+    async (invitation1: Invitation) => {
+      switch (invitation1.state) {
+        case Invitation.State.CONNECTING: {
+          const guestHandler = guest.getInvitationHandler({ kind: options.kind });
+          const observable2 = await guest.invitations.acceptInvitation(guestHandler, {
+            ...invitation1,
+            spaceKey: undefined
+          });
+          observable2.subscribe(
+            (invitation2: Invitation) => {
+              switch (invitation2.state) {
+                case Invitation.State.CONNECTING: {
+                  assert(invitation1.swarmKey!.equals(invitation2.swarmKey!));
+                  break;
+                }
+
+                case Invitation.State.SUCCESS: {
+                  done2.wake(invitation2);
+                  break;
+                }
+              }
+            },
+            (error) => {
+              raise(error);
+            }
+          );
+          break;
+        }
+
+        case Invitation.State.SUCCESS: {
+          done1.wake(invitation1);
+          break;
+        }
+      }
     },
-    onConnected: async (invitation1: Invitation) => {},
-    onCancelled: () => raise(new Error('cancelled')),
-    onSuccess: (invitation) => {
-      done1.wake(invitation);
-    },
-    onTimeout: (err: Error) => raise(err),
-    onError: (err: Error) => raise(err)
-  });
+    (error) => {
+      raise(error);
+    }
+  );
 
   await done1.wait();
   await done2.wait();

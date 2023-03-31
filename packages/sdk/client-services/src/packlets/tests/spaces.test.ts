@@ -97,24 +97,34 @@ describe('Spaces', () => {
 
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    const observable1 = space1.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+    observable1.subscribe(
+      (invitation1) => {
+        switch (invitation1.state) {
+          case Invitation.State.CONNECTING: {
+            const observable2 = client2.acceptInvitation(invitation1);
+            observable2.subscribe(
+              (invitation2) => {
+                switch (invitation2.state) {
+                  case Invitation.State.SUCCESS: {
+                    success2.wake(invitation2);
+                  }
+                }
+              },
+              (err) => raise(err)
+            );
+            break;
+          }
 
-    observable1.subscribe({
-      onConnecting: (invitation) => {
-        const observable2 = client2.acceptInvitation(invitation);
-        observable2.subscribe({
-          onSuccess: (invitation: Invitation) => {
-            success2.wake(invitation);
-          },
-          onError: (err: Error) => raise(err)
-        });
+          case Invitation.State.SUCCESS: {
+            log('onSuccess');
+            success1.wake(invitation1);
+            break;
+          }
+        }
       },
-      onSuccess: (invitation) => {
-        log('onSuccess');
-        success1.wake(invitation);
-      },
-      onError: (err) => raise(err)
-    });
+      (err) => raise(err)
+    );
 
     const [_, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
 
