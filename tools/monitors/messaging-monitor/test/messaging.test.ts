@@ -28,7 +28,7 @@ const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
   value: Buffer.from('3')
 };
 
-const SIGNAL_SERVER = 'wss://kube.dxos.org/.well-known/dx/signal';
+const SIGNAL_SERVER = process.env.SIGNAL_SERVER ?? 'wss://kube.dxos.org/.well-known/dx/signal';
 
 const createPeer = async (params: Parameters<Messenger['listen']>[0]) => {
   const signalManager = new WebsocketSignalManager([SIGNAL_SERVER]);

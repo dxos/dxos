@@ -161,8 +161,14 @@ jobs:
           environment:
             SIGNAL_SERVER: << parameters.signal-server >>
 
+parameters:
+  run_daily_workflow:
+    type: boolean
+    default: false
+
 workflows:
   default:
+    unless: << pipeline.parameters.run_daily_workflow >>
     jobs:
       - check:
           context:
@@ -175,6 +181,7 @@ workflows:
             - Github
 
   deploy:
+    unless: << pipeline.parameters.run_daily_workflow >>
     jobs:
       - publish:
           filters:
@@ -187,6 +194,7 @@ workflows:
             - Github
 
   daily:
+    when: << pipeline.parameters.run_daily_workflow >>
     jobs:
       - messaging-monitor:
           context:
