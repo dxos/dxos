@@ -108,6 +108,7 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
               >
                 {row.cells.map((cell) => {
                   return (
+                    // TODO(burdon): Factor out defaults.
                     // eslint-disable-next-line react/jsx-key
                     <div {...cell.getCellProps(cellProps)} className={mx('td px-4 py-2', slots?.cell?.className)}>
                       <div className='truncate'>{cell.render('Cell')}</div>
