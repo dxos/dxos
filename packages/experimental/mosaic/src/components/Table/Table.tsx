@@ -7,6 +7,8 @@ import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
 import { mx } from '@dxos/react-components';
 
+export type TableColumn<T extends object = {}> = Column<T>;
+
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
 // TODO(burdon): Adapter for Project type.
@@ -37,7 +39,7 @@ export type TableSlots = {
 };
 
 export type TableProps<T extends {}> = {
-  columns: Column<T>[];
+  columns: TableColumn<T>[];
   data?: T[];
   slots?: TableSlots;
   selected?: T;
