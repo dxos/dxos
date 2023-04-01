@@ -13,7 +13,7 @@ package dxos.config;
 option go_package = "github.com/dxos/kube/proto/def/dxos/config";
 
 extend google.protobuf.FieldOptions {
-    optional string env = 65000;
+    optional string env_var = 1000;
 }
 
 message Config {
@@ -95,8 +95,8 @@ message Runtime {
     }
 
     message Log {
-      optional string filter = 1 [(env) = "LOG_FILTER"];
-      optional string prefix = 2 [(env) = "LOG_PREFIX"];
+      optional string filter = 1 [(env_var) = "LOG_FILTER"];
+      optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
     }
 
     optional Log log = 1;
@@ -127,7 +127,7 @@ message Runtime {
     optional string org = 1;
     optional string theme = 2;
     optional string website = 3;
-    optional string public_url = 4 [(env) = "PUBLIC_URL"];
+    optional string public_url = 4 [(env_var) = "PUBLIC_URL"];
 
     optional BuildInfo build = 100;
     // TODO: fix - is clashing with field option "env"
