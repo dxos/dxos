@@ -131,7 +131,7 @@ message Runtime {
 
     optional BuildInfo build = 100;
     // TODO: fix - is clashing with field option "env"
-    // optional google.protobuf.Struct env = 101;
+    optional google.protobuf.Struct env = 101;
   }
 
   // CLI configuration
