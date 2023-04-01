@@ -12,7 +12,7 @@ import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export interface InvitationAcceptedProps extends ViewStateProps {
-  Domain: 'Space' | 'Halo';
+  Kind: 'Space' | 'Halo';
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: InvitationResult | null) => void;
 }
@@ -20,7 +20,7 @@ export interface InvitationAcceptedProps extends ViewStateProps {
 const PureInvitationAcceptedContent = ({
   onDone,
   result,
-  Domain,
+  Kind,
   doneActionParent,
   active
 }: InvitationAcceptedProps & { result: InvitationResult | null }) => {
@@ -32,8 +32,8 @@ const PureInvitationAcceptedContent = ({
       {...(onDone && { onClick: () => onDone(result) })}
       disabled={disabled}
       className='flex items-center gap-2 pli-2'
-      data-autofocus={`success${Domain}Invitation finishingJoining${Domain}`}
-      data-testid={`${Domain.toLowerCase()}-invitation-accepted-done`}
+      data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
+      data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
@@ -58,9 +58,9 @@ const InvitationAcceptedContent = (
 };
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { Domain, doneActionParent: _doneActionParent, onDone: _onDone, ...viewStateProps } = props;
+  const { Kind, doneActionParent: _doneActionParent, onDone: _onDone, ...viewStateProps } = props;
   const activeInvitation =
-    viewStateProps.joinState?.context[Domain.toLowerCase() as 'halo' | 'space'].invitationObservable;
+    viewStateProps.joinState?.context[Kind.toLowerCase() as 'halo' | 'space'].invitationObservable;
 
   return (
     <ViewState {...viewStateProps}>

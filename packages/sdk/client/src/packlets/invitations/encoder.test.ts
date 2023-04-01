@@ -13,11 +13,39 @@ import { InvitationEncoder } from './encoder';
 describe('Invitation utils', () => {
   test('encodes and decodes an invitation', () => {
     const invitation: Invitation = {
+      invitationId: PublicKey.random().toHex(),
+      type: Invitation.Type.INTERACTIVE,
+      kind: Invitation.Kind.SPACE,
+      authMethod: Invitation.AuthMethod.NONE,
+      state: Invitation.State.INIT,
       swarmKey: PublicKey.random()
     };
 
     const encoded = InvitationEncoder.encode(invitation);
     const decoded = InvitationEncoder.decode(encoded);
-    expect(decoded.swarmKey).to.deep.eq(invitation.swarmKey);
+    expect(decoded).to.deep.eq(invitation);
+  });
+
+  test('secrets are never encoded into invitation code', () => {
+    const invitation: Invitation = {
+      invitationId: PublicKey.random().toHex(),
+      type: Invitation.Type.INTERACTIVE,
+      kind: Invitation.Kind.SPACE,
+      authMethod: Invitation.AuthMethod.NONE,
+      state: Invitation.State.INIT,
+      swarmKey: PublicKey.random()
+    };
+
+    const encoded = InvitationEncoder.encode({
+      ...invitation,
+      authCode: 'example',
+      identityKey: PublicKey.random(),
+      spaceKey: PublicKey.random()
+    });
+    const decoded = InvitationEncoder.decode(encoded);
+    expect(decoded.authCode).to.not.exist;
+    expect(decoded.identityKey).to.not.exist;
+    expect(decoded.spaceKey).to.not.exist;
+    expect(decoded).to.deep.eq(invitation);
   });
 });

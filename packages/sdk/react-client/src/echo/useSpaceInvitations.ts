@@ -31,7 +31,7 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
 export const useSpaceInvitation = (spaceKey?: PublicKey, invitationId?: string) => {
   const invitations = useSpaceInvitations(spaceKey);
   const invitation = useMemo(
-    () => invitations.find(({ invitation }) => invitation?.invitationId === invitationId),
+    () => invitations.find((invitation) => invitation.get().invitationId === invitationId),
     [invitations]
   );
   return useInvitationStatus(invitation);

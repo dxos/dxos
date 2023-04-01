@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/patterns/react-ui/src/index.ts"
+          "packages/apps/patterns/react-ui/src/index.ts",
+          "packages/apps/patterns/react-ui/src/testing/index.ts"
         ],
         "outputPath": "packages/apps/patterns/react-ui/dist/lib",
         "platforms": [

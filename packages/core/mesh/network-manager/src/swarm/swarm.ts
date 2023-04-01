@@ -277,6 +277,9 @@ export class Swarm {
           },
           onOffer: (remoteId) => {
             return this._topology.onOffer(remoteId);
+          },
+          onPeerAvailable: () => {
+            this._topology.update();
           }
         }
       );
@@ -301,7 +304,7 @@ export class Swarm {
           .filter((peer) => peer.connection)
           .map((peer) => peer.id),
         candidates: Array.from(this._peers.values())
-          .filter((peer) => !peer.connection && peer.advertizing)
+          .filter((peer) => !peer.connection && peer.advertizing && peer.availableToConnect)
           .map((peer) => peer.id)
       }),
       connect: (peer) => {

@@ -23,12 +23,7 @@ import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protoco
 import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientServicesProvider } from '../client';
-import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
-  DeviceInvitationsProxy,
-  InvitationsOptions
-} from '../invitations';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsProxy } from '../invitations';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -57,7 +52,7 @@ export class HaloProxy implements Halo {
   private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
 
-  private _invitationProxy?: DeviceInvitationsProxy;
+  private _invitationProxy?: InvitationsProxy;
 
   private _identity = MulticastObservable.from(this._identityChanged, null);
   private _devices = MulticastObservable.from(this._devicesChanged, []);
@@ -119,8 +114,10 @@ export class HaloProxy implements Halo {
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
-    assert(this._serviceProvider.services.DeviceInvitationsService, 'DeviceInvitationsService not available');
-    this._invitationProxy = new DeviceInvitationsProxy(this._serviceProvider.services.DeviceInvitationsService);
+    assert(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
+    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
+      kind: Invitation.Kind.DEVICE
+    }));
 
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
@@ -245,29 +242,14 @@ export class HaloProxy implements Halo {
   /**
    * Initiates device invitation.
    */
-  createInvitation(options?: InvitationsOptions) {
+  createInvitation(options?: Partial<Invitation>) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('create invitation', options);
-    const invitation = this._invitationProxy!.createInvitation(undefined, options);
-
-    const unsubscribe = invitation.subscribe({
-      onConnecting: () => {
-        this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
-        unsubscribe();
-      },
-      onCancelled: () => {
-        unsubscribe();
-      },
-      onSuccess: () => {
-        unsubscribe();
-      },
-      onError: function (err: any): void {
-        unsubscribe();
-      }
-    });
+    const invitation = this._invitationProxy!.createInvitation(options);
+    this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
 
     return invitation;
   }
@@ -278,7 +260,7 @@ export class HaloProxy implements Halo {
   removeInvitation(id: string) {
     log('remove invitation', { id });
     const invitations = this._invitations.get();
-    const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    const index = invitations.findIndex((invitation) => invitation.get().invitationId === id);
     void invitations[index]?.cancel();
     this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
   }
@@ -286,13 +268,13 @@ export class HaloProxy implements Halo {
   /**
    * Initiates accepting invitation.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions) {
+  acceptInvitation(invitation: Invitation) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
-    log('accept invitation', options);
-    return this._invitationProxy!.acceptInvitation(invitation, options);
+    log('accept invitation', invitation);
+    return this._invitationProxy!.acceptInvitation(invitation);
   }
 
   /**

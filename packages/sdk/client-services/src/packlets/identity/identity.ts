@@ -21,7 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
@@ -128,7 +128,7 @@ export class Identity {
     return this._deviceStateMachine.processor.deviceCredentialChain;
   }
 
-  getAdmissionCredentials(): HaloAdmissionCredentials {
+  getAdmissionCredentials(): DeviceAdmissionRequest {
     return {
       deviceKey: this.deviceKey,
       controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
@@ -156,7 +156,7 @@ export class Identity {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: HaloAdmissionCredentials) {
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest) {
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,

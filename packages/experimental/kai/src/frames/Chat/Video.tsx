@@ -4,7 +4,7 @@
 
 import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { FC, useRef } from 'react';
+import React, { FC, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 
 import { PublicKey, Space } from '@dxos/client';
@@ -29,6 +29,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
+  const [_, render] = useState({});
   assert(identity);
 
   const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
@@ -65,12 +66,14 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               peer.on('stream', (stream) => {
                 // TODO(burdon): Support multiple streams.
                 remoteVideoRef.current!.srcObject = stream;
+                render({});
               });
 
               const cleanup = (err?: Error) => {
                 peer.destroy();
                 listenerPeerRefs.current.delete(member.identity.identityKey);
                 remoteVideoRef.current!.srcObject = null;
+                render({});
                 if (err) {
                   throw err;
                 }
@@ -111,7 +114,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
     // Get video stream.
     const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
     localVideoRef.current!.srcObject = stream;
-
+    render({});
     members.forEach(async (member) => {
       if (member.identity.identityKey.equals(identity.identityKey)) {
         // Skip self.
@@ -153,6 +156,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
         peer.destroy();
         initiatorPeerRefs.current.delete(member.identity.identityKey);
         localVideoRef.current!.srcObject = null;
+        render({});
         if (err) {
           throw err;
         }

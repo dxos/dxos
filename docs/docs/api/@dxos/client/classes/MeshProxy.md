@@ -1,12 +1,12 @@
 # Class `MeshProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/mesh-proxy.ts:17](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L17)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/mesh-proxy.ts:19](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L19)</sub>
 
 
 Public API for MESH services.
 
 
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L26)
+### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L30)
 
 
 
@@ -18,12 +18,12 @@ Arguments:
 
 
 ## Properties
-### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L36)
+### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L40)
 Type: <code>MulticastObservable&lt;object&gt;</code>
 
 
 ## Methods
-### [setConnectionState(state)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L40)
+### [setConnectionState(state)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L44)
 
 
 
@@ -33,7 +33,7 @@ Arguments:
 
 `state`: <code>ConnectionState</code>
 
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L30)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L34)
 
 
 
