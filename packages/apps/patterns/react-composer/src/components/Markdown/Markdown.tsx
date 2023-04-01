@@ -162,9 +162,9 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
         // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
         // Ideally this should not be hit except when changing between text objects.
         view.setState(state);
-      } else {
-        setView(new EditorView({ state, parent }));
       }
+
+      setView(new EditorView({ state, parent }));
 
       return () => {
         if (view) {
