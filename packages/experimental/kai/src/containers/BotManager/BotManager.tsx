@@ -5,11 +5,10 @@
 import { Robot, Ghost } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { Table } from '@dxos/mosaic';
+import { TableColumn, Table } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select } from '@dxos/react-components';
 
@@ -28,7 +27,7 @@ type BotRecord = {
 };
 
 // running | exited
-const columns: Column<BotRecord>[] = [
+const columns: TableColumn<BotRecord>[] = [
   {
     Header: 'state',
     accessor: (record) =>
