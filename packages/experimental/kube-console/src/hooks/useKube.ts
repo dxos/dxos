@@ -12,8 +12,8 @@ export class KubeClient {
 
   constructor(private readonly _config: Config) {
     // TODO(burdon): Is the proto config correct?
-    this._endpoint =
-      this._config.values.runtime?.services?.kube?.endpoints?.services ?? `${window.location.origin}/.well-known`;
+    this._endpoint = 'https://kube.dxos.org/.well-known';
+    //   this._config.values.runtime?.services?.kube?.endpoints?.services ?? `${window.location.origin}/.well-known`;
   }
 
   async fetch<T extends {}>(url: string): Promise<T> {
