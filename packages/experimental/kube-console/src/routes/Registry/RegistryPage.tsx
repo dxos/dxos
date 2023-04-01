@@ -35,7 +35,6 @@ const columns: (host: string | undefined) => Column<Module>[] = (host) => {
     {
       Header: 'version',
       accessor: ({ build }) => build?.version,
-      align: 'right',
       width: 80
     },
     {
