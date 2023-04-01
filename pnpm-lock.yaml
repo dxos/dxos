@@ -77,6 +77,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': ~8.3.3
+      '@types/zen-observable': ^0.8.3
       '@typescript-eslint/eslint-plugin': ^5.44.0
       '@typescript-eslint/parser': ^5.44.0
       '@vuepress/client': 2.0.0-beta.61
@@ -180,6 +181,7 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
+      '@types/zen-observable': 0.8.3
       '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
       '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@vuepress/client': 2.0.0-beta.61
@@ -1096,12 +1098,14 @@ importers:
       '@dxos/util': workspace:*
       '@types/zen-observable': ^0.8.3
       zen-observable: ^0.10.0
+      zen-push: ^0.3.1
     dependencies:
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       zen-observable: 0.10.0
+      zen-push: 0.3.1
     devDependencies:
       '@types/zen-observable': 0.8.3
 
@@ -12415,7 +12419,7 @@ packages:
       '@storybook/csf-plugin': 7.0.0-beta.48
       '@storybook/csf-tools': 7.0.0-beta.48
       '@storybook/global': 5.0.0
-      '@storybook/mdx2-csf': 1.0.0-next.6
+      '@storybook/mdx2-csf': 1.0.0-next.7
       '@storybook/node-logger': 7.0.0-beta.48
       '@storybook/postinstall': 7.0.0-beta.48
       '@storybook/preview-api': 7.0.0-beta.48
@@ -12511,7 +12515,7 @@ packages:
     dependencies:
       '@storybook/client-logger': 7.0.0-beta.48
       '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/global': 5.0.0
       '@storybook/manager-api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/preview-api': 7.0.0-beta.48
@@ -12656,7 +12660,7 @@ packages:
       '@storybook/client-logger': 7.0.0-beta.48
       '@storybook/components': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/docs-tools': 7.0.0-beta.48
       '@storybook/global': 5.0.0
       '@storybook/manager-api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -12727,7 +12731,7 @@ packages:
       '@storybook/client-logger': 7.0.0-beta.48
       '@storybook/core-common': 7.0.0-beta.48
       '@storybook/csf-plugin': 7.0.0-beta.48
-      '@storybook/mdx2-csf': 1.0.0-next.6
+      '@storybook/mdx2-csf': 1.0.0-next.7
       '@storybook/node-logger': 7.0.0-beta.48
       '@storybook/preview': 7.0.0-beta.48
       '@storybook/preview-api': 7.0.0-beta.48
@@ -12793,7 +12797,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       '@storybook/client-logger': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/global': 5.0.0
       '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/types': 7.0.0-beta.48
@@ -12852,7 +12856,7 @@ packages:
       '@storybook/builder-manager': 7.0.0-beta.48
       '@storybook/core-common': 7.0.0-beta.48
       '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/csf-tools': 7.0.0-beta.48
       '@storybook/docs-mdx': 0.0.1-next.6
       '@storybook/global': 5.0.0
@@ -12910,7 +12914,7 @@ packages:
     resolution: {integrity: sha512-NL8SWlzAYHG2kLtC6l+jRt3tYQU06yzuwGVA+oZm7yrnelHgKyg2Er35zEZafustcm0lKCUwirITN+KdujYDvQ==}
     dependencies:
       '@babel/types': 7.21.3
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/types': 7.0.0-beta.48
       fs-extra: 11.1.0
       recast: 0.23.1
@@ -12919,8 +12923,8 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/csf/0.0.2-next.10:
-    resolution: {integrity: sha512-m2PFgBP/xRIF85VrDhvesn9ktaD2pN3VUjvMqkAL/cINp/3qXsCyI81uw7N5VEOkQAbWrY2FcydnvEPDEdE8fA==}
+  /@storybook/csf/0.0.2-next.11:
+    resolution: {integrity: sha512-xGt0YSVxZb43sKmEf1GIQD8xEbo+c+S6khDEL7Qu/pYA0gh5z3WUuhOlovnelYj/YJod+XRsfVvk23AaRfUJ4Q==}
     dependencies:
       type-fest: 2.19.0
 
@@ -13008,7 +13012,7 @@ packages:
       '@storybook/channels': 7.0.0-beta.48
       '@storybook/client-logger': 7.0.0-beta.48
       '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/global': 5.0.0
       '@storybook/router': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -13044,8 +13048,8 @@ packages:
       - supports-color
     dev: true
 
-  /@storybook/mdx2-csf/1.0.0-next.6:
-    resolution: {integrity: sha512-m6plojocU/rmrqWd26yvm8D+oHZPZ6PtSSFmZIgpNDEPVmc8s4fBD6LXOAB5MiPI5f8KLUr2HVhOMZ97o5pDTw==}
+  /@storybook/mdx2-csf/1.0.0-next.7:
+    resolution: {integrity: sha512-xcQ8w4IecABAjsakaZTGiUEnEgFZzVKsMjqECjd+qdkwgD3R/kwrBdfyC15CLM5Ye1miPwYBIwJGeBXB9qxsZg==}
     dev: true
 
   /@storybook/node-logger/7.0.0-beta.48:
@@ -13068,7 +13072,7 @@ packages:
       '@storybook/channels': 7.0.0-beta.48
       '@storybook/client-logger': 7.0.0-beta.48
       '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/global': 5.0.0
       '@storybook/types': 7.0.0-beta.48
       '@types/qs': 6.9.7
@@ -13179,7 +13183,7 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@storybook/csf': 0.0.2-next.10
+      '@storybook/csf': 0.0.2-next.11
       '@storybook/types': 7.0.0-beta.48
       estraverse: 5.3.0
       lodash: 4.17.21
@@ -38394,6 +38398,16 @@ packages:
 
   /zen-observable/0.10.0:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
+    dev: false
+
+  /zen-observable/0.9.0:
+    resolution: {integrity: sha512-xBrvSw1htnb2VEYpgjG7etqztHSZ4KyKzJgFh/rucI7QzkbxD0rVNmIni6lia6KhWs7RBbBBLZksGKrCSaDAMQ==}
+    dev: false
+
+  /zen-push/0.3.1:
+    resolution: {integrity: sha512-6XNTSVz8Z/5+8BzOQFQr+HOr/j7K+ZJfc4tdCCmuiq8y2Ph+aODqagZnXKbKIFZrQ3nSIcdek9gAuEe+p3zJUg==}
+    dependencies:
+      zen-observable: 0.9.0
     dev: false
 
   /zip-stream/2.1.3:
