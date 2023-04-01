@@ -4,12 +4,10 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestBuilder } from '../testing';
+import { performInvitation, TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('creates a identity', async () => {
@@ -42,31 +40,7 @@ describe('Halo', () => {
     afterTest(() => client2.destroy());
     await client2.initialize();
 
-    const done1 = new Trigger();
-    const done2 = new Trigger();
-    const invitation = client1.halo.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-    invitation.subscribe({
-      onConnecting: (invitation) => {
-        const invitation2 = client2.halo.acceptInvitation(invitation, { type: Invitation.Type.INTERACTIVE_TESTING });
-        invitation2.subscribe({
-          onSuccess: () => {
-            done2.wake();
-          },
-          onError: (error) => {
-            throw error;
-          }
-        });
-      },
-      onSuccess: async (invitation) => {
-        done1.wake();
-      },
-      onError: (error) => {
-        throw error;
-      }
-    });
-
-    await done1.wait();
-    await done2.wait();
+    await Promise.all(performInvitation({ host: client1.halo, guest: client2.halo }));
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(2);
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);

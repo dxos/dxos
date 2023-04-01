@@ -34,14 +34,14 @@ export class ShellManager {
     }
   }
 
-  async authenticateInvitation(type: 'device' | 'space', authenticationCode: string, scope?: Scope) {
+  async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope) {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).type(authenticationCode);
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).type(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
 
-  async clearAuthenticationCode(type: 'device' | 'space', scope?: Scope) {
+  async clearAuthCode(type: 'device' | 'space', scope?: Scope) {
     const peer = scope || this.page;
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill('');
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).focus();

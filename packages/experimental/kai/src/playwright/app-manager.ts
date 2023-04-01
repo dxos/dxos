@@ -14,7 +14,7 @@ export class AppManager {
 
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
-  private _authenticationCode = new Trigger<string>();
+  private _authCode = new Trigger<string>();
 
   constructor(private readonly _browser: Browser) {}
 
@@ -63,8 +63,8 @@ export class AppManager {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
-      } else if (json.authenticationCode) {
-        this._authenticationCode.wake(json.authenticationCode);
+      } else if (json.authCode) {
+        this._authCode.wake(json.authCode);
       }
     } catch {}
   }

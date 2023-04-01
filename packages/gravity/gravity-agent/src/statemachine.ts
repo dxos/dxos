@@ -69,15 +69,19 @@ export class GenericStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
+        authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
       await this.agent.client.acceptInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
+        invitationId: PublicKey.random().toHex(),
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT
       });
     }
     // --- SYNC CHANNEL: SRV ---

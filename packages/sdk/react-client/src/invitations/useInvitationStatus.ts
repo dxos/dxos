@@ -4,7 +4,6 @@
 
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { TimeoutError } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -28,22 +27,20 @@ interface InvitationReducerState {
   observable?: CancellableInvitationObservable | AuthenticatingInvitationObservable;
   id?: string;
   invitationCode?: string;
-  authenticationCode?: string;
+  authCode?: string;
 }
 
 export type InvitationAction =
   | {
-      status: Invitation.State.INIT | Invitation.State.AUTHENTICATING;
+      status:
+        | Invitation.State.INIT
+        | Invitation.State.CONNECTED
+        | Invitation.State.READY_FOR_AUTHENTICATION
+        | Invitation.State.AUTHENTICATING;
     }
   | {
       status: Invitation.State.CONNECTING;
       observable: CancellableInvitationObservable;
-    }
-  | {
-      status: Invitation.State.CONNECTED;
-      id: string;
-      invitationCode: string;
-      authenticationCode?: string;
     }
   | {
       status: Invitation.State.SUCCESS;
@@ -55,22 +52,23 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.ERROR;
-      error?: number;
+      error?: Error;
       haltedAt: Invitation.State;
     };
 
 export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
-  authenticationCode?: string;
-  authMethod: Invitation['authMethod'];
+  authCode?: string;
+  authMethod?: Invitation['authMethod'];
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
   cancel(): void;
+  // TODO(wittjosiah): Remove?
   connect(observable: CancellableInvitationObservable): void;
-  authenticate(authenticationCode: string): Promise<void>;
+  authenticate(authCode: string): Promise<void>;
 };
 
 export const useInvitationStatus = (initialObservable?: CancellableInvitationObservable): InvitationStatus => {
@@ -78,14 +76,10 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     (prev, action) => {
       log('useInvitationStatus', { action });
       return {
+        ...prev,
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
-        observable: action.status === Invitation.State.CONNECTING ? action.observable : prev.observable,
-        id: action.status === Invitation.State.CONNECTED ? action.id : prev.id,
-        invitationCode: action.status === Invitation.State.CONNECTED ? action.invitationCode : prev.invitationCode,
-        authenticationCode:
-          action.status === Invitation.State.CONNECTED ? action.authenticationCode : prev.authenticationCode,
         // `error` gets set each time we enter the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
@@ -106,58 +100,47 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     }
   );
 
-  // Observed event callbacks
-
-  const onConnected = useCallback((invitation: Invitation) => {
-    dispatch({
-      status: Invitation.State.CONNECTED,
-      id: invitation.invitationId!,
-      invitationCode: InvitationEncoder.encode(invitation),
-      authenticationCode: invitation.authenticationCode
-    });
-  }, []);
-
-  const onSuccess = useCallback(({ spaceKey, identityKey, swarmKey }: Invitation) => {
-    dispatch({
-      status: Invitation.State.SUCCESS,
-      result: { spaceKey: spaceKey || null, identityKey: identityKey || null, swarmKey: swarmKey || null }
-    });
-  }, []);
-
-  const onError = useCallback(
-    (invitation: Invitation) => {
-      dispatch({ status: Invitation.State.ERROR, error: invitation.error, haltedAt: state.status });
-    },
-    [state.status]
-  );
-
-  const onCancelled = useCallback(() => {
-    dispatch({ status: Invitation.State.CANCELLED, haltedAt: state.status });
-  }, [state.status]);
-
-  const onAuthenticating = useCallback(() => {
-    dispatch({ status: Invitation.State.AUTHENTICATING });
-  }, [state.status]);
-
-  const onTimeout = useCallback(
-    (_err: TimeoutError) => {
-      dispatch({ status: Invitation.State.TIMEOUT, haltedAt: state.status });
-    },
-    [state.status]
-  );
-
   // Handle unmount
 
   useEffect(() => {
-    return state.observable?.subscribe({
-      onConnected,
-      onSuccess,
-      onError,
-      onCancelled,
-      onAuthenticating,
-      onTimeout
-    });
-  }, [state.observable, onConnected, onSuccess, onError, onCancelled, onAuthenticating, onTimeout]);
+    const subscription = state.observable?.subscribe(
+      (invitation: Invitation) => {
+        switch (invitation.state) {
+          case Invitation.State.CONNECTED:
+          case Invitation.State.READY_FOR_AUTHENTICATION:
+          case Invitation.State.AUTHENTICATING: {
+            dispatch({
+              status: invitation.state
+            });
+            break;
+          }
+
+          case Invitation.State.SUCCESS: {
+            dispatch({
+              status: invitation.state,
+              result: {
+                spaceKey: invitation.spaceKey || null,
+                identityKey: invitation.identityKey || null,
+                swarmKey: invitation.swarmKey || null
+              }
+            });
+            break;
+          }
+
+          case Invitation.State.CANCELLED:
+          case Invitation.State.TIMEOUT: {
+            dispatch({ status: invitation.state, haltedAt: state.status });
+            break;
+          }
+        }
+      },
+      (err: Error) => {
+        dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
+      }
+    );
+
+    return () => subscription?.unsubscribe();
+  }, [state.observable, state.status]);
 
   // Return memoized callbacks & values
 
@@ -166,9 +149,9 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   }, []);
 
   const authenticate = useCallback(
-    (authenticationCode: string) => {
-      log('authenticating...', { authenticationCode });
-      return (state.observable as AuthenticatingInvitationObservable).authenticate(authenticationCode);
+    (authCode: string) => {
+      log('authenticating...', { authCode });
+      return (state.observable as AuthenticatingInvitationObservable).authenticate(authCode);
     },
     [state.observable]
   );
@@ -176,6 +159,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   const cancel = useCallback(async () => state.observable?.cancel(), [state.observable]);
 
   return useMemo(() => {
+    const invitation = state.observable?.get();
     const result = {
       status: state.status,
       haltedAt: state.haltedAt,
@@ -184,20 +168,20 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       cancel,
       connect,
       authenticate,
-      id: state.observable?.invitation?.invitationId,
-      invitationCode: state.observable?.invitation ? InvitationEncoder.encode(state.observable?.invitation) : undefined,
-      authenticationCode: state.observable?.invitation?.authenticationCode,
-      authMethod: state.observable?.invitation?.authMethod
+      id: invitation?.invitationId,
+      invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
+      authCode: invitation?.authCode,
+      authMethod: invitation?.authMethod
     };
 
     // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.
     //   https://github.com/microsoft/playwright/issues/13037
-    if (result.status === Invitation.State.CONNECTED) {
-      log.info(JSON.stringify({ authenticationCode: result.authenticationCode, authMethod: result.authMethod }));
-    } else if (result.status === Invitation.State.INIT) {
-      log.info(JSON.stringify({ invitationCode: result.invitationCode, authMethod: result.authMethod }));
+    if (result.status === Invitation.State.READY_FOR_AUTHENTICATION && result.authCode) {
+      log.info(JSON.stringify({ authCode: result.authCode }));
+    } else if (result.status === Invitation.State.INIT && result.invitationCode) {
+      log.info(JSON.stringify({ invitationCode: result.invitationCode }));
     }
 
     return result;
-  }, [state, connect, authenticate]);
+  }, [state, cancel, connect, authenticate]);
 };

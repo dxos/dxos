@@ -4,14 +4,8 @@
 
 import assert from 'node:assert';
 
-import {
-  AsyncEvents,
-  CancellableObservable,
-  CancellableObservableEvents,
-  CancellableObservableProvider
-} from '@dxos/async';
-import type { Stream } from '@dxos/codec-protobuf';
-import { AuthenticationRequest, CancelInvitationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
@@ -20,74 +14,53 @@ export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 // TODO(burdon): Don't close until RPC has complete (bug).
 export const ON_CLOSE_DELAY = 1000;
 
-export interface InvitationsService {
-  createInvitation(invitation: Invitation): Stream<Invitation>;
-  authenticate(request: AuthenticationRequest): Promise<void>;
-  acceptInvitation(invitation: Invitation): Stream<Invitation>;
-  cancelInvitation(request: CancelInvitationRequest): Promise<void>;
-}
-
-/**
- * Common invitation events (callbacks) for creating and accepting invitations.
- */
-// TODO(burdon): Remove optionals.
-export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnecting?(invitation: Invitation): void;
-  onConnected?(invitation: Invitation): void;
-  onAuthenticating?(invitation: Invitation): void;
-  onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
-}
-
 /**
  * Base class for all invitation observables and providers.
- * Observable that supports inspection of the current value.
  */
-// TODO(wittjosiah): Use `MulticastObservable`.
-export interface CancellableInvitationObservable extends CancellableObservable<InvitationEvents> {
-  get invitation(): Invitation | undefined;
-}
+export class CancellableInvitationObservable extends MulticastObservable<Invitation> {
+  private readonly _onCancel: () => Promise<void>;
 
-// TODO(wittjosiah): Update with Observable.value.
-export class InvitationObservableProvider
-  extends CancellableObservableProvider<InvitationEvents>
-  implements CancellableInvitationObservable
-{
-  private _invitation?: Invitation;
-
-  get invitation(): Invitation | undefined {
-    return this._invitation;
+  constructor({
+    subscriber,
+    initialInvitation,
+    onCancel
+  }: {
+    subscriber: Observable<Invitation> | Subscriber<Invitation>;
+    initialInvitation: Invitation;
+    onCancel: () => Promise<void>;
+  }) {
+    super(subscriber, initialInvitation);
+    this._onCancel = onCancel;
   }
 
-  setInvitation(invitation: Invitation) {
-    this._invitation = invitation;
+  cancel(): Promise<void> {
+    return this._onCancel();
   }
 }
 
 /**
  * Cancelable observer that relays authentication requests.
  */
-export interface AuthenticatingInvitationObservable extends CancellableInvitationObservable {
-  authenticate(code: string): Promise<void>;
-}
+export class AuthenticatingInvitationObservable extends CancellableInvitationObservable {
+  private readonly _onAuthenticate: (authCode: string) => Promise<void>;
 
-export interface AuthenticatingInvitationProviderActions {
-  onCancel(): Promise<void>;
-  onAuthenticate(code: string): Promise<void>;
-}
-
-export class AuthenticatingInvitationProvider
-  extends InvitationObservableProvider
-  implements AuthenticatingInvitationObservable
-{
-  // prettier-ignore
-  constructor(
-    private readonly _actions: AuthenticatingInvitationProviderActions
-  ) {
-    super(() => this._actions.onCancel());
+  constructor({
+    subscriber,
+    initialInvitation,
+    onCancel,
+    onAuthenticate
+  }: {
+    subscriber: Observable<Invitation> | Subscriber<Invitation>;
+    initialInvitation: Invitation;
+    onCancel: () => Promise<void>;
+    onAuthenticate: (authCode: string) => Promise<void>;
+  }) {
+    super({ subscriber, initialInvitation, onCancel });
+    this._onAuthenticate = onAuthenticate;
   }
 
-  async authenticate(authenticationCode: string): Promise<void> {
-    return this._actions.onAuthenticate(authenticationCode);
+  async authenticate(authCode: string): Promise<void> {
+    return this._onAuthenticate(authCode);
   }
 }
 
@@ -96,19 +69,20 @@ export class AuthenticatingInvitationProvider
  * Don't use this in production code.
  * @deprecated
  */
-// TODO(burdon): Throw error if auth requested.
+// TODO(wittjosiah): Move to testing.
 export const wrapObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
-    const unsubscribe = observable.subscribe({
-      onSuccess: (invitation: Invitation) => {
-        assert(invitation.state === Invitation.State.SUCCESS);
-        unsubscribe();
+    const subscription = observable.subscribe(
+      (invitation: Invitation | undefined) => {
+        // TODO(burdon): Throw error if auth requested.
+        assert(invitation?.state === Invitation.State.SUCCESS);
+        subscription.unsubscribe();
         resolve(invitation);
       },
-      onError: (err: Error) => {
-        unsubscribe();
+      (err: Error) => {
+        subscription.unsubscribe();
         reject(err);
       }
-    });
+    );
   });
 };
