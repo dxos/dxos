@@ -94,15 +94,13 @@ export class BotClient {
 
     const env: { [key: string]: string } = {
       BOT_NAME: botId,
-      LOG_FILTER: 'info',
-      COM_PROTONMAIL_HOST: 'host.docker.internal'
+      LOG_FILTER: 'info'
+      // TODO(burdon): Testing with bridge running outside of Docker.
+      // COM_PROTONMAIL_HOST: 'host.docker.internal'
     };
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
 
-    /**
-     * {@see DX_BOT_RPC_PORT_MIN}
-     */
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
     const request = {
       Image: BOT_IMAGE_URL,
