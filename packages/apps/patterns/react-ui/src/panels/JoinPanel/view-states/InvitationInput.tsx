@@ -61,7 +61,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
           <CaretRight weight='bold' className={getSize(4)} />
         </Button>
         <Button
-          disabled={Kind === 'Space'}
+          disabled={disabled || Kind === 'Space'}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
           className='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
