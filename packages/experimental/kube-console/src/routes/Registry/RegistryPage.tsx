@@ -16,19 +16,27 @@ import { useKube } from '../../hooks';
 // TODO(burdon): Get from KUBE config proto.
 type Module = {
   name: string;
+  build?: {
+    version: string;
+  };
   type: string;
   displayName: string;
   description: string;
   tags: string[];
 };
 
-// TODO(burdon): App versions.
 const columns: (host: string | undefined) => Column<Module>[] = (host) => {
   const columns: Column<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,
       width: 120
+    },
+    {
+      Header: 'version',
+      accessor: ({ build }) => build?.version,
+      align: 'right',
+      width: 80
     },
     {
       Header: 'type',
@@ -52,9 +60,9 @@ const columns: (host: string | undefined) => Column<Module>[] = (host) => {
       Cell: ({ value }: { value: string[] }) => (
         <div>
           {value.sort(alphabetical()).map((tag, i) => (
-            <span key={i} className='rounded-lg p-1 mr-2 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>
-              {tag}
-            </span>
+            <div key={i} className='pr-1'>
+              <span className='rounded-md p-1 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>{tag}</span>
+            </div>
           ))}
         </div>
       )
@@ -105,7 +113,7 @@ export const RegistryPage = () => {
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin' }
+          cell: { className: 'align-start font-mono font-thin p-0 m-1' }
         }}
       />
     </div>
