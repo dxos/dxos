@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Table } from '@dxos/react-components';
+import { Table } from '@dxos/mosaic';
 
 import { JsonView } from './JsonView';
 

@@ -9,8 +9,9 @@ import { Column } from 'react-table';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { Table } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
-import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
+import { Button, getSize, mx, Select } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';

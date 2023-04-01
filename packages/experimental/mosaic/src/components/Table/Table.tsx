@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '../../util';
+import { mx } from '@dxos/react-components';
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 

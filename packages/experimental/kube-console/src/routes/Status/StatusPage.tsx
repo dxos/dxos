@@ -5,7 +5,8 @@
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { Button, Table } from '@dxos/react-components';
+import { Table } from '@dxos/mosaic';
+import { Button } from '@dxos/react-components';
 import { alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';

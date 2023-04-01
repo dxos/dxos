@@ -26,6 +26,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/mosaic": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",

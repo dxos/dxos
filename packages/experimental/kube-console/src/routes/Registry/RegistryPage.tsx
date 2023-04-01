@@ -7,7 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { ConfigProto } from '@dxos/config';
-import { Button, getSize, Table } from '@dxos/react-components';
+import { Table } from '@dxos/mosaic';
+import { Button, getSize } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';

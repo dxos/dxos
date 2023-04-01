@@ -7,8 +7,8 @@ import urlJoin from 'url-join';
 
 import { TypedObject } from '@dxos/echo-schema';
 import { Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
+import { Table as TableComponent } from '@dxos/mosaic';
 import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
-import { Table as TableComponent } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';

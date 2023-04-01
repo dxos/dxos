@@ -2571,6 +2571,7 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/messenger-model': link:../../core/echo/messenger-model
       '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
@@ -2591,7 +2592,6 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/gem-spore': link:../../experimental/gem-spore
-      '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/plexus': link:../../experimental/plexus
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-ui': link:../../apps/patterns/react-ui
@@ -15655,7 +15655,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
