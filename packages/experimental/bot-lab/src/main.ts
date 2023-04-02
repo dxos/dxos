@@ -67,7 +67,7 @@ const start = async () => {
   });
 
   await server.open();
-  log.info('listening ', { rpcPort });
+  log.info('listening', { rpcPort });
 
   let bot: Bot | undefined;
   // TODO(burdon): Reconcile this subscription with the ECHO db.query.
@@ -76,7 +76,7 @@ const start = async () => {
       const space = spaces[0];
       log.info('joined', { space: space.key });
       if (!bot) {
-        bot = createBot(process.env.BOT_NAME);
+        bot = createBot(process.env.DX_BOT_NAME);
         try {
           await bot.init(config, space);
           await bot.start();
@@ -99,7 +99,7 @@ const start = async () => {
       identity: client.halo.identity.get(),
       spaces: client.spaces.get().map((space) => ({
         key: space.key,
-        title: space.properties.title,
+        title: space.properties.name,
         members: space.members.get()
       }))
     });

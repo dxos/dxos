@@ -33,9 +33,16 @@ Type `login` to link a Protonmail account, then `info` to get the local IMAP ser
 
 Then, start the container:
 
-TODO(burdon): Check security configuration.
+```bash
+docker run -d --name=protonmail-bridge -v protonmail:/root --restart=unless-stopped shenxn/protonmail-bridge
+```
+
+NOTE: Rather than exposing ports, containers configure direct connections to the container's IP address.
+
+[Test](https://www.bram.us/2020/01/16/test-an-imap-connection-with-curl) the IMAP server (using `-k` to skip CA check):
 
 ```bash
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp \
-  --restart=unless-stopped shenxn/protonmail-bridge
+curl -k -v imaps://USERNAME:PASSWORD@127.0.0.1:1143/INBOX?NEW
 ```
+
+(NOTE: Use `urlencode` to encode the username: e.g., `rich%40dxos.org`).
