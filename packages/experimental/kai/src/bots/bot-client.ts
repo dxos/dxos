@@ -46,6 +46,7 @@ export class BotClient {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
+  // TODO(burdon): Access control.
   // TODO(burdon): Error handling.
 
   get active() {

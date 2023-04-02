@@ -2,21 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FrameCorners, Robot } from '@phosphor-icons/react';
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ScrollContainer } from '@dxos/mosaic';
-import { getSize, mx, Searchbar, Button, ButtonGroup, Dialog } from '@dxos/react-components';
+import { getSize, mx, Dialog } from '@dxos/react-components';
 
-import { useBots, useFrames, BotDef, useAppReducer, createPath, useAppRouter } from '../../hooks';
+import { useFrames, useAppReducer, createPath, useAppRouter } from '../../hooks';
 import { FrameDef } from '../../registry';
-
-// TODO(burdon): Move to DMG?
-enum ExtensionType {
-  FRAME,
-  BOT
-}
 
 // TODO(burdon): Inject generic classes for slots from themecontext.
 
@@ -63,66 +56,29 @@ const Tile: FC<{
 // TODO(burdon): Create sections (e.g., Community).
 const len = (array?: any[]) => array?.length ?? 0;
 const sorter = (
-  { module: { displayName: a, tags: t1 } }: FrameDef<any> | BotDef,
-  { module: { displayName: b, tags: t2 } }: FrameDef<any> | BotDef
+  { module: { displayName: a, tags: t1 } }: FrameDef<any>,
+  { module: { displayName: b, tags: t2 } }: FrameDef<any>
 ) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
 
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
   const { space } = useAppRouter();
   const navigate = useNavigate();
-  const [type, setType] = useState<ExtensionType>(ExtensionType.FRAME);
-
   const { frames, active: activeFrames } = useFrames();
-  const { bots, active: activeBots } = useBots();
-  const { setActiveFrame, setActiveBot } = useAppReducer();
+  const { setActiveFrame } = useAppReducer();
 
   const handleSelect = (id: string) => {
-    switch (type) {
-      case ExtensionType.FRAME: {
-        const active = !activeFrames.find((frameId) => frameId === id);
-        setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
-        if (active) {
-          navigate(createPath({ spaceKey: space!.key, frame: id }));
-        }
-        break;
-      }
-
-      case ExtensionType.BOT: {
-        const active = !activeBots.find((botId) => botId === id);
-        setActiveBot(id, active, space);
-        break;
-      }
+    const active = !activeFrames.find((frameId) => frameId === id);
+    setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
+    if (active) {
+      navigate(createPath({ spaceKey: space!.key, frame: id }));
     }
   };
 
-  // TODO(burdon): Remove bots.
-  const modules: Map<string, FrameDef<any> | BotDef> = type === ExtensionType.FRAME ? frames : bots;
-
   return (
     <div className='flex flex-col flex-1 overflow-hidden py-4'>
-      {false && (
-        <div className='flex py-8 justify-center'>
-          <ButtonGroup className='flex gap-2 w-column p-2 px-4 bg-white items-center'>
-            <Searchbar />
-            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
-              <FrameCorners
-                weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
-              />
-            </Button>
-            <Button variant='ghost' className='pli-1' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
-              <Robot
-                weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
-              />
-            </Button>
-          </ButtonGroup>
-        </div>
-      )}
-
       <ScrollContainer vertical>
         <div className='flex flex-wrap gap-3'>
-          {Array.from(modules.values())
+          {Array.from(frames.values())
             .sort(sorter)
             .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
               <Tile
@@ -133,11 +89,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
                 slots={slots}
                 Icon={Icon}
                 onSelect={handleSelect}
-                active={
-                  !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
-                    (active) => active === id
-                  )
-                }
+                active={!!activeFrames.find((active) => active === id)}
               />
             ))}
         </div>

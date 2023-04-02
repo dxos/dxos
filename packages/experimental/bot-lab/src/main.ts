@@ -78,7 +78,7 @@ const start = async () => {
 
   const printStatus = () => {
     log.info('status', {
-      bot: bot?.constructor.name,
+      bot: bot?.toString(),
       identity: client.halo.identity.get(),
       spaces: client.spaces.get().map((space) => ({
         key: space.key,
