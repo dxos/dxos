@@ -5,8 +5,8 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types",
-    "module": "ESNext"
+    "module": "ESNext",
+    "outDir": "dist/types"
   },
   "include": [
     "src"
