@@ -68,9 +68,9 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
 
           let logContext: string;
           try {
-            logContext = JSON.stringify({ ...context, ...entry }, null, 2);
+            logContext = JSON.stringify({ ...context, ...entry });
           } catch (err) {
-            logContext = JSON.stringify(context, null, 2);
+            logContext = JSON.stringify(context);
           }
 
           const span = parentSpan.startChild({
