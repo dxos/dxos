@@ -94,11 +94,11 @@ export class BotClient {
   /**
    * Start bot container.
    */
-  async startBot(botId: string, envMap?: Map<string, string>) {
-    log('starting bot', { bot: botId });
+  async startBot(botName: string, envMap?: Map<string, string>) {
+    log('starting bot', { bot: botName });
     this.onStatusUpdate.emit('Connecting...');
 
-    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
+    const botInstanceId = botName.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
     // TODO(burdon): Select free port (may clash with other clients).
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
@@ -110,8 +110,8 @@ export class BotClient {
         return envs;
       },
       {
-        BOT_ID: botId,
         LOG_FILTER: 'info',
+        BOT_NAME: botName,
         // TODO(burdon): Testing with bridge running outside of Docker.
         COM_PROTONMAIL_HOST: 'protonmail-bridge'
       }
@@ -129,7 +129,8 @@ export class BotClient {
             }
           ]
         },
-        // TODO(burdon): Protonmail bridge.
+        // Maps the named container's name to the container IP address.
+        // TODO(burdon): Generalize links to other containers (e.g., Protonmail bridge.)
         Links: ['protonmail-bridge:protonmail-bridge']
       },
       ExposedPorts: {
@@ -137,7 +138,7 @@ export class BotClient {
       },
       Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
-        'dxos.bot.name': botId,
+        'dxos.bot.name': botName,
         'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
       }
     };

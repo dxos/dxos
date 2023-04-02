@@ -35,12 +35,47 @@ docker logs -f <BOT_CONTAINER_ID>
 
 ## Running bots on a hosted KUBE
 
-1. Login to github container registry: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
-  - Create a personal access token with `read:packages`, `write:packages`, and `delete:packages` permissions.
-  - `export GITHUB_PAT=YOUR_TOKEN`
-  - `echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin`
-2. Configure kai `dxos.services.bot.proxy` to `https://bots.kube.dxos.org/.well-known/dx/bot` (must be https).
-3. Build bot with `pnpm run build:remote` (in `bot-lab`).
+The Github [Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+is used to store Docker images.
+
+1. Create a Github "classic" personal access token with the following permissions: `read:packages`, `write:packages`, `delete:packages`.
+2. Login to the registry.
+
+```bash
+export GITHUB_PAT=YOUR_TOKEN
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+3. Build and publish the image:
+
+```bash
+pnpm run build:remote
+```
+
+NOTE: Configure kai `dxos.services.bot.proxy` to point to the appropriate KUBE `https://bots.kube.dxos.org/.well-known/dx/bot` (must be https).
+
+## Docker
+
+TODO(burdon): Move to `@dxos/kube` docs.
+
+To get the IP address of a Docker container:
+
+```bash
+hostname -I
+docker inspect --format '{{ .NetworkSettings.IPAddress }}' protonmail-bridge
+```
+
+Inspect container config:
+
+```bash
+docker inspect protonmail-bridge
+```
+
+Remove stopped containers:
+
+```bash
+docker container ls -q -f "status=exited" | xargs docker rm
+```
 
 ## Installation
 
