@@ -43,7 +43,7 @@ and use the internal port (e.g., `143`).
 
 ## Adding Protonmail User Accounts
 
-1. SSH to the Droplet.
+1. Open the [bots.kube.dxos.org](https://cloud.digitalocean.com/droplets/343613259) Droplet Console.
 2. Stop the Protonmail Docker container.
 
 ```bash
@@ -56,20 +56,22 @@ docker container stop protonmail-bridge
 docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
 ```
 
-4. Login using your Protonmail credentials and get the IMAP password (then CTRL-C to exit):
+4. Login using your Protonmail credentials and get the IMAP password using the prompts:
 
 ```bash
 >>> login
 >>> info
+>>> exit
 ```
 
 5. Restart the container:
 
 ```bash
 docker container restart protonmail-bridge
+docker ps
 ```
 
-6. Configure the client with your username and IMAP password and launch the bot.
+6. Configure the client (e.g., Kai) with your username and IMAP password, then launch the bot.
 
 
 ## Testing the IMAP server
