@@ -79,7 +79,7 @@ const start = async () => {
   const printStatus = () => {
     log.info('status', {
       bot: bot?.constructor.name,
-      identity: client.halo.identity,
+      identity: client.halo.identity.get(),
       spaces: client.spaces.get().map((space) => ({
         key: space.key,
         title: space.properties.title,
