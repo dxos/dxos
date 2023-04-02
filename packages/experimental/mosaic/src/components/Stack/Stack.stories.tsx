@@ -9,6 +9,8 @@ import React, { FC, useState } from 'react';
 import { getSize } from '@dxos/react-components';
 import { range } from '@dxos/util';
 
+import '@dxosTheme';
+
 import { Item } from '../../layout';
 import { createItem, TestData } from '../../testing';
 import { ScrollContainer } from '../ScrollContainer';

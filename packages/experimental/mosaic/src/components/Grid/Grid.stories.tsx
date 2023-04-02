@@ -68,10 +68,10 @@ const Test = () => {
       slots={{
         tile: {
           root: {
-            className: 'bg-yellow-100 select-none cursor-pointer text-black shadow'
+            className: 'bg-green-50 select-none cursor-pointer text-black shadow'
           },
           selected: {
-            className: 'shadow-lg ring-1 ring-orange-400'
+            className: 'shadow-lg ring-1 ring-orange-200'
           }
         },
         cell: {

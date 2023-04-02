@@ -5,6 +5,7 @@
 export * from './Card';
 export * from './Cell';
 export * from './Grid';
+export * from './List';
 export * from './ScrollContainer';
 export * from './Stack';
 export * from './Table';
