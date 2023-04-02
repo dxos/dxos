@@ -33,6 +33,8 @@ Type `login` to link a Protonmail account, then `info` to get the local IMAP ser
 
 Then, start the container:
 
+TODO(burdon): Check security configuration.
+
 ```bash
 docker run -d --name=protonmail-bridge -v protonmail:/root --restart=unless-stopped shenxn/protonmail-bridge
 ```
