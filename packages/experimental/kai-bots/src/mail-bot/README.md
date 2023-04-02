@@ -16,7 +16,7 @@ Deploy the [shenxn/protonmail-bridge](https://hub.docker.com/r/shenxn/protonmail
 
 Open the Digital Ocean [bots.kube.dxos.org](https://cloud.digitalocean.com/droplets/343613259) Droplet Console.
 
-Initialize the bridge:
+Configure the bridge (NOTE: the container must be stopped).
 
 ```bash
 docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
@@ -25,8 +25,8 @@ docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
 Change the access settings (from STARTTLS to SSL):
 
 ```bash
-ch imap-ssl
-ch smtp-ssl
+ch ssl-imap
+ch ssl-smtp
 ```
 
 Type `login` to link a Protonmail account, then `info` to get the local IMAP server credentials, then CTRL-C to exit.
