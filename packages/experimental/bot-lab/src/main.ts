@@ -64,7 +64,7 @@ const start = async () => {
       const space = spaces[0];
       log.info('joined', { space: space.key });
       if (!bot) {
-        bot = createBot(process.env.BOT_NAME);
+        bot = createBot(process.env.BOT_ID);
         await bot.init(config, space);
         await bot.start();
       }
