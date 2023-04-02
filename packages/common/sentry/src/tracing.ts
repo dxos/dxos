@@ -11,19 +11,23 @@ let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
 
 export const configureTracing = () => {
-  // Configure root transaction.
-  TX = startTransaction({
-    name: 'DXOS Core Tracing',
-    op: 'dxos'
-  });
-  if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', finish);
-  }
-  if (typeof process !== 'undefined') {
-    process.on('exit', finish);
-  }
+  try {
+    // Configure root transaction.
+    TX = startTransaction({
+      name: 'DXOS Core Tracing',
+      op: 'dxos'
+    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', finish);
+    }
+    if (typeof process !== 'undefined') {
+      process.on('exit', finish);
+    }
 
-  log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
+    log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
+  } catch (err) {
+    log.catch('Failed to configure tracing', err);
+  }
 };
 
 export const finish = () => {
@@ -37,67 +41,71 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.level !== LogLevel.TRACE) {
     return;
   }
-  const context = getContextFromEntry(entry);
+  try {
+    const context = getContextFromEntry(entry);
 
-  if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
-    setUser({
-      id: context.identityKey,
-      username: context.displayName
-    });
-  }
+    if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
+      setUser({
+        id: context.identityKey,
+        username: context.displayName
+      });
+    }
 
-  if (context?.span) {
-    switch (context.span.command) {
-      case 'begin': {
-        const id = context.span.id;
+    if (context?.span) {
+      switch (context.span.command) {
+        case 'begin': {
+          const id = context.span.id;
 
-        if (!id || SPAN_MAP.has(id)) {
-          log.warn('Cannot begin span', id);
-          return;
-        }
-
-        let parentSpan: Span = TX;
-        if (context.span.parent) {
-          parentSpan = SPAN_MAP.get(context.span.parent) || TX;
-        }
-
-        const span = parentSpan.startChild({
-          op: entry.message,
-          data: {
-            ...context.span.data
+          if (!id || SPAN_MAP.has(id)) {
+            log.warn('Cannot begin span', id);
+            return;
           }
-        });
-        SPAN_MAP.set(context.span.id, span);
-        break;
-      }
 
-      case 'end': {
-        const span = SPAN_MAP.get(context.span.id);
-        if (span) {
-          span.setStatus(getSpanStatus(context.span.status));
-          context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
-          span.finish();
-          SPAN_MAP.delete(context.span.id);
-        } else {
-          log.warn('Cannot end span', context.span.id);
+          let parentSpan: Span = TX;
+          if (context.span.parent) {
+            parentSpan = SPAN_MAP.get(context.span.parent) || TX;
+          }
+
+          const span = parentSpan.startChild({
+            op: entry.message,
+            data: {
+              ...context.span.data
+            }
+          });
+          SPAN_MAP.set(context.span.id, span);
+          break;
         }
-        break;
-      }
 
-      case 'update': {
-        const span = SPAN_MAP.get(context.span.id);
-        if (span) {
-          context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
-        } else {
-          log.warn('Cannot update span', context.span.id);
+        case 'end': {
+          const span = SPAN_MAP.get(context.span.id);
+          if (span) {
+            span.setStatus(getSpanStatus(context.span.status));
+            context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
+            span.finish();
+            SPAN_MAP.delete(context.span.id);
+          } else {
+            log.warn('Cannot end span', context.span.id);
+          }
+          break;
         }
-        break;
-      }
 
-      default: {
-        log.warn('Unknown span command', context.span.command);
+        case 'update': {
+          const span = SPAN_MAP.get(context.span.id);
+          if (span) {
+            context.span.data && Object.entries(context.span.data).forEach(([key, value]) => span.setData(key, value));
+          } else {
+            log.warn('Cannot update span', context.span.id);
+          }
+          break;
+        }
+
+        default: {
+          log.warn('Unknown span command', context.span.command);
+        }
       }
     }
+  } catch (err) {
+    log.catch('Failed to process trace log', err);
   }
 };
 
