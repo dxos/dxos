@@ -54,8 +54,11 @@ export class BotClient {
 
   async getBots(): Promise<any[]> {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerList
-    return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
-      return response.json();
+    return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then(async (response) => {
+      const records = (await response.json()) as any[];
+      return records.filter((record) => {
+        return record.Image === BOT_IMAGE_URL;
+      });
     });
   }
 
