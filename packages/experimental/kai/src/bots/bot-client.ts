@@ -95,7 +95,7 @@ export class BotClient {
 
     const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
-    // TODO(burdon): Select free port.
+    // TODO(burdon): Select free port (may clash with other clients).
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
 
     // ENV variables passed to container.
