@@ -97,8 +97,8 @@ export class BotClient {
 
     const env: { [key: string]: string } = {
       BOT_NAME: botId,
-      LOG_FILTER: 'info',
-      COM_PROTONMAIL_HOST: 'host.docker.internal'
+      LOG_FILTER: 'info'
+      // COM_PROTONMAIL_HOST: 'host.docker.internal'
     };
 
     Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
@@ -116,7 +116,7 @@ export class BotClient {
         PortBindings: {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
-              HostAddr: '127.0.0.1', // only expose on loopback interface.
+              HostAddr: '127.0.0.1', // Only expose on loop-back interface.
               HostPort: `${proxyPort}`
             }
           ]
