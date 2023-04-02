@@ -77,7 +77,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
             op: entry.message,
             data: {
               ...context.span.data,
-              '@dxso/log': logContext
+              '@dxos/log': logContext
             }
           });
           SPAN_MAP.set(context.span.id, span);
