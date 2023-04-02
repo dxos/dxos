@@ -55,7 +55,7 @@ export abstract class Bot {
       log('initializing...');
       return await this.onInit();
     } catch (err) {
-      log.catch(err);
+      log.catch('initializing', err);
       throw err;
     }
   }
@@ -65,7 +65,7 @@ export abstract class Bot {
       log('starting...');
       return await this.onStart();
     } catch (err) {
-      log.catch(err);
+      log.catch('starting', err);
       throw err;
     }
   }
@@ -75,7 +75,7 @@ export abstract class Bot {
       log('stopping...');
       return await this.onStop();
     } catch (err) {
-      log.catch(err);
+      log.catch('stopping', err);
       throw err;
     }
   }
