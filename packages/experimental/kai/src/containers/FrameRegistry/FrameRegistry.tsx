@@ -60,7 +60,10 @@ const sorter = (
   { module: { displayName: b, tags: t2 } }: FrameDef<any>
 ) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
 
-export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
+export const FrameRegistry: FC<{ slots?: FrameRegistrySlots; onSelect?: (frameId: string) => void }> = ({
+  slots = {},
+  onSelect
+}) => {
   const { space } = useAppRouter();
   const navigate = useNavigate();
   const { frames, active: activeFrames } = useFrames();
@@ -71,6 +74,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
     setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
     if (active) {
       navigate(createPath({ spaceKey: space!.key, frame: id }));
+      onSelect?.(id);
     }
   };
 
@@ -112,7 +116,7 @@ export const FrameRegistryDialog = ({ open, onClose }: FrameRegistryDialogProps)
       closeLabel='Close'
       slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[620px] md:max-h-[640px]' } }}
     >
-      <FrameRegistry />
+      <FrameRegistry onSelect={() => onClose()} />
     </Dialog>
   );
 };
