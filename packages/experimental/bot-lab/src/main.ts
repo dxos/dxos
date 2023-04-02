@@ -64,7 +64,7 @@ const start = async () => {
       const space = spaces[0];
       log.info('joined', { space: space.key });
       if (!bot) {
-        bot = createBot(process.env.BOT_NAME);
+        bot = createBot(process.env.BOT_ID);
         await bot.init(config, space);
         await bot.start();
       }
@@ -78,7 +78,7 @@ const start = async () => {
 
   const printStatus = () => {
     log.info('status', {
-      bot: bot?.constructor.name,
+      bot: bot?.toString(),
       identity: client.halo.identity.get(),
       spaces: client.spaces.get().map((space) => ({
         key: space.key,

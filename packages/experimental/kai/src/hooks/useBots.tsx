@@ -3,16 +3,13 @@
 //
 
 import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
-import assert from 'assert';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig, useKeyStore } from '@dxos/react-client';
-import { useModules } from '@dxos/react-metagraph';
 
 import { BotClient } from '../bots';
-import { useAppState } from './useAppState';
 
 export type BotDef = {
   module: Module;
@@ -103,24 +100,4 @@ export const useBotClient = (space: Space) => {
   const [keys] = useKeyStore(['dxos.services.bot.proxy']);
   const proxy = keys.get('dxos.services.bot.proxy');
   return useMemo(() => new BotClient(config, space, { proxy }), [config, space, proxy]);
-};
-
-/**
- * @deprecated
- */
-export const useBots = (): { bots: BotMap; active: string[] } => {
-  const { modules } = useModules({ type: 'dxos:type/bot' });
-  const { bots: active = [] } = useAppState()!;
-  const bots = useMemo(
-    () =>
-      modules.reduce((map, module) => {
-        const def = botDefs.find((def) => def.module.id === module.id);
-        assert(def);
-        map.set(module.id!, def);
-        return map;
-      }, new Map<string, BotDef>()),
-    [modules]
-  );
-
-  return { bots, active };
 };

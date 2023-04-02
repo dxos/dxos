@@ -4,7 +4,7 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
-import { Config, Space } from '@dxos/client';
+import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { useConfig } from '@dxos/react-client';
 
@@ -26,19 +26,10 @@ export type AppState = {
 
   // Active frames.
   frames?: string[];
-
-  // Active bots.
-  bots?: string[];
 };
 
 type Action = {
-  type: 'set-active-bot' | 'set-active-frame' | 'set-fullscreen' | 'set-chat';
-};
-
-type SetBotAction = Action & {
-  botId: string;
-  active: boolean;
-  space?: Space;
+  type: 'set-active-frame' | 'set-fullscreen' | 'set-chat';
 };
 
 type SetFrameAction = Action & {
@@ -54,26 +45,12 @@ type SetChatAction = Action & {
   chat: boolean;
 };
 
-type ActionType = SetBotAction | SetFrameAction | SetFullscreenAction | SetChatAction;
+type ActionType = SetFrameAction | SetFullscreenAction | SetChatAction;
 
 const reducer =
   (config: Config) =>
   (state: AppState, action: ActionType): AppState => {
     switch (action.type) {
-      // TODO(burdon): Stop bot.
-      case 'set-active-bot': {
-        const { botId, active } = action as SetBotAction;
-        const bots = (state.bots ?? []).filter((bot) => bot !== botId);
-        if (active) {
-          bots.push(botId);
-          setTimeout(async () => {
-            // TODO(burdon): Call bot client.
-          });
-        }
-
-        return { ...state, bots };
-      }
-
       case 'set-active-frame': {
         const { frameId, active } = action as SetFrameAction;
         const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
@@ -104,7 +81,6 @@ export type AppReducer = {
   state: AppState;
   setFullscreen: (fullscreen: boolean) => void;
   setChat: (chat: boolean) => void;
-  setActiveBot: (id: string, active: boolean, space?: Space) => void; // TODO(burdon): Remove.
   setActiveFrame: (id: string, active: boolean) => void;
 };
 
@@ -123,9 +99,6 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
     },
     setChat: (chat: boolean) => {
       dispatch({ type: 'set-chat', chat });
-    },
-    setActiveBot: (id: string, active: boolean, space?: Space) => {
-      dispatch({ type: 'set-active-bot', botId: id, active, space });
     },
     setActiveFrame: (id: string, active: boolean) => {
       dispatch({ type: 'set-active-frame', frameId: id, active });
