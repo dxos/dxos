@@ -23,6 +23,16 @@ NOTES
 
 To check your KUBE is running, enter `kube status` and/or `curl http://localhost:9002/.well-known/dx/status`
 
+## Running bots on Docker
+
+See the [Digital Ocean Guide](https://github.com/dxos/kube/docs/guides/digitalocean.md).
+
+```bash
+doctl compute ssh bots.kube.dxos.org
+docker ps
+docker logs -f <BOT_CONTAINER_ID>
+```
+
 ## Running bots on a hosted KUBE
 
 1. Login to github container registry: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry

@@ -10,6 +10,8 @@ import { log } from '@dxos/log';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+// TODO(burdon): Factor out to separate package.
+
 // TODO(burdon): Copied from @dxos/bot-lab.
 export const DX_BOT_SERVICE_PORT = 7100;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
@@ -109,17 +111,15 @@ export class BotClient {
       },
       {
         BOT_ID: botId,
-        LOG_FILTER: 'info'
+        LOG_FILTER: 'info',
         // TODO(burdon): Testing with bridge running outside of Docker.
-        // COM_PROTONMAIL_HOST: 'host.docker.internal'
+        COM_PROTONMAIL_HOST: 'protonmail-bridge'
       }
     );
 
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     const request = {
       Image: BOT_IMAGE_URL,
-      ExposedPorts: {
-        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
-      },
       HostConfig: {
         PortBindings: {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
@@ -128,7 +128,12 @@ export class BotClient {
               HostPort: `${proxyPort}`
             }
           ]
-        }
+        },
+        // TODO(burdon): Protonmail bridge.
+        Links: ['protonmail-bridge:protonmail-bridge']
+      },
+      ExposedPorts: {
+        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
       },
       Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
@@ -137,7 +142,6 @@ export class BotClient {
       }
     };
 
-    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     log('creating bot', { request, botInstanceId });
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
