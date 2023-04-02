@@ -13,11 +13,55 @@ import { ImapProcessor } from './imap-processor';
 // TODO(burdon): Configure.
 const POLLING_INTERVAL = 10_000;
 
+// TODO(burdon): Factor out.
+// TODO(burdon): Propagate error.
+// TODO(burdon): Back-off if return false (see debounce).
+class Poller {
+  _timeout?: ReturnType<typeof setTimeout>;
+
+  // prettier-ignore
+  constructor(
+    private readonly _callback: () => Promise<void>,
+    private readonly _interval: number
+  ) {}
+
+  async start() {
+    await this.stop();
+
+    const run = async () => {
+      this._timeout = undefined;
+      try {
+        log.info('running...');
+        await this._callback();
+      } catch (err) {
+        log.catch(err);
+        await this.stop();
+        return;
+      }
+
+      log.info('sleeping...', { delay: this._interval });
+      this._timeout = setTimeout(run, this._interval);
+    };
+
+    void run();
+  }
+
+  async stop() {
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = undefined;
+    }
+  }
+}
+
 export class MailBot extends Bot {
   private _processor?: ImapProcessor;
-  private _interval?: ReturnType<typeof setTimeout>;
+  private readonly _poller = new Poller(async () => {
+    await this.syncMessages();
+  }, POLLING_INTERVAL);
 
   override async onInit() {
+    // Test with curl: `curl -k -v imaps://USERNAME:PASSWORD@127.0.0.1:1143/INBOX?NEW` (Use `urlencode` to encode the username).
     this._processor = new ImapProcessor(this.id, {
       user: process.env.COM_PROTONMAIL_USERNAME!,
       password: process.env.COM_PROTONMAIL_PASSWORD!,
@@ -34,35 +78,27 @@ export class MailBot extends Bot {
   async onStart() {
     await this.onStop();
     await this._processor?.connect();
-
-    // TODO(burdon): Back off.
-    void this.pollRequest();
-    this._interval = setInterval(() => {
-      void this.pollRequest();
-    }, POLLING_INTERVAL);
+    await this._poller.start();
   }
 
   async onStop() {
-    if (this._interval) {
-      clearInterval(this._interval);
-      this._interval = undefined;
-      await this._processor?.disconnect();
-    }
+    await this._poller.stop();
+    await this._processor?.disconnect();
   }
 
   /**
    * Poll messages and merge into inbox.
    */
-  async pollRequest(): Promise<number> {
-    assert(this._processor);
+  async syncMessages(): Promise<number> {
     const { objects: currentMessages } = this.space.db.query(Message.filter());
     const findCurrent = (id: string) => currentMessages.find((message) => message.source.guid === id);
 
     // TODO(burdon): Deleted messages (e.g., if no longer exists in time range); updated properties.
+    assert(this._processor);
     const messages = await this._processor.requestMessages();
+    log.info('messages', { current: currentMessages.length, messages: messages.length });
 
     // TODO(burdon): Annotate source of message (in GUID?)
-    log.info('processed', { current: currentMessages.length, messages: messages.length });
     for (const message of messages) {
       // TODO(burdon): Check resolver id.
       if (!message.source?.guid || !findCurrent(message.source?.guid)) {

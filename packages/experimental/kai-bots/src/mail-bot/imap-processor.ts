@@ -51,28 +51,27 @@ export class ImapProcessor {
   /**
    * Make IMAP request.
    */
+  // TODO(burdon): Request since timestamp.
   async requestMessages({ days }: { days: number } = { days: 28 }): Promise<Message[]> {
-    try {
-      await this.connect();
+    log.info('requesting...');
 
-      // https://github.com/mscdex/node-imap
-      const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
-        bodies: [''],
-        markSeen: false
-      });
+    // https://github.com/mscdex/node-imap
+    const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
+      bodies: [''],
+      markSeen: false
+    });
 
-      log.info('received', { messages: messages.length });
-
-      return this.parseMessages(messages);
-    } finally {
-      await this.disconnect();
-    }
+    const parsedMessage = await this.parseMessages(messages);
+    log.info('parsed', { messages: parsedMessage.length });
+    return parsedMessage;
   }
 
   /**
    * Parse raw IMAP messages.
    */
   private async parseMessages(rawMessages: ImapMessage[]): Promise<Message[]> {
+    log.info('parsing', { messages: rawMessages.length });
+
     const messages = await Promise.all(
       rawMessages.map(async (raw): Promise<Message | undefined> => {
         // https://nodemailer.com/extras/mailparser
@@ -142,8 +141,6 @@ export class ImapProcessor {
       })
     );
 
-    const filteredMessages: Message[] = messages.filter(Boolean) as Message[];
-    log.info('processed', { messages: filteredMessages.length });
-    return filteredMessages;
+    return messages.filter(Boolean) as Message[];
   }
 }
