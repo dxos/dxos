@@ -23,7 +23,7 @@ export const DX_BOT_RPC_PORT_MAX = 7300;
 export const BOT_STARTUP_CHECK_INTERVAL = 250;
 export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
-const BOT_IMAGE_URL = 'ghcr.io/dxos/bot:latest';
+const BOT_IMAGE = 'ghcr.io/dxos/bot:latest';
 
 export type BotClientOptions = {
   proxy?: string;
@@ -60,7 +60,7 @@ export class BotClient {
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then(async (response) => {
       const records = (await response.json()) as any[];
       return records.filter((record) => {
-        return record.Image === BOT_IMAGE_URL;
+        return record.Image === BOT_IMAGE;
       });
     });
   }
@@ -85,7 +85,7 @@ export class BotClient {
    * Fetch latest image.
    */
   async fetchImage() {
-    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
+    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE}`, {
       method: 'POST',
       body: JSON.stringify({}) // Empty body required.
     });
@@ -119,7 +119,7 @@ export class BotClient {
 
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     const request = {
-      Image: BOT_IMAGE_URL,
+      Image: BOT_IMAGE,
       HostConfig: {
         PortBindings: {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [

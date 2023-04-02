@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import sortKeys from 'sort-keys';
+
 import { Client, ClientServices, PublicKey, Space } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-bots';
@@ -20,7 +22,17 @@ const rpcPort = process.env.DX_BOT_CONTAINER_RPC_PORT
  * Starts a websocket server implementing remote DXOS client services.
  */
 const start = async () => {
-  log.info('env', process.env);
+  // TODO(burdon): Factor out.
+  log.info(
+    'env',
+    sortKeys(
+      Object.entries(process.env).reduce<any>((result, [key, value]) => {
+        result[key] = value;
+        return result;
+      }, {}),
+      { deep: true }
+    )
+  );
 
   // TODO(burdon): Set logging from client.
   // TODO(burdon): Update via ENV from client.

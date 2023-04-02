@@ -37,8 +37,8 @@ docker logs -f <BOT_CONTAINER_ID>
 
 1. Login to github container registry: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
   - Create a personal access token with `read:packages`, `write:packages`, and `delete:packages` permissions.
-  - `export CR_PAT=YOUR_TOKEN`
-  - `echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin`
+  - `export GITHUB_PAT=YOUR_TOKEN`
+  - `echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin`
 2. Configure kai `dxos.services.bot.proxy` to `https://bots.kube.dxos.org/.well-known/dx/bot` (must be https).
 3. Build bot with `pnpm run build:remote` (in `bot-lab`).
 

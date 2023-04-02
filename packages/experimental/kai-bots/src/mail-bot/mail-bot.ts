@@ -8,11 +8,10 @@ import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
 import { Bot } from '../bot';
-import { getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
 
 // TODO(burdon): Configure.
-const POLLING_INTERVAL = 5_000;
+const POLLING_INTERVAL = 10_000;
 
 export class MailBot extends Bot {
   private _processor?: ImapProcessor;
@@ -24,11 +23,11 @@ export class MailBot extends Bot {
       password: process.env.COM_PROTONMAIL_PASSWORD!,
       host: process.env.COM_PROTONMAIL_HOST ?? '127.0.0.1',
       port: process.env.COM_PROTONMAIL_PORT ? parseInt(process.env.COM_PROTONMAIL_PORT) : 1143,
-      tls: process.env.COM_PROTONMAIL_TLS ? process.env.COM_PROTONMAIL_TLS === 'true' : true,
-      tlsOptions: {
-        ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
-        rejectUnauthorized: false
-      }
+      tls: process.env.COM_PROTONMAIL_TLS ? process.env.COM_PROTONMAIL_TLS === 'true' : true
+      // tlsOptions: {
+      //   ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
+      //   rejectUnauthorized: false
+      // }
     });
   }
 
