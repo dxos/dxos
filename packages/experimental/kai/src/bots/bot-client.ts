@@ -46,6 +46,7 @@ export class BotClient {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
+  // TODO(burdon): Access control.
   // TODO(burdon): Error handling.
 
   get active() {
@@ -92,16 +93,26 @@ export class BotClient {
     log('starting bot', { bot: botId });
     this.onStatusUpdate.emit('Connecting...');
 
-    const env: { [key: string]: string } = {
-      BOT_NAME: botId,
-      LOG_FILTER: 'info'
-      // TODO(burdon): Testing with bridge running outside of Docker.
-      // COM_PROTONMAIL_HOST: 'host.docker.internal'
-    };
+    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
-    Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
-
+    // TODO(burdon): Select free port.
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
+
+    // ENV variables passed to container.
+    const envs = Array.from(envMap?.entries() ?? []).reduce<{ [key: string]: string }>(
+      (envs, [key, value]) => {
+        envs[key] = value;
+        return envs;
+      },
+      {
+        // TODO(burdon): Bot id/name?
+        BOT_NAME: botId,
+        LOG_FILTER: 'info'
+        // TODO(burdon): Testing with bridge running outside of Docker.
+        // COM_PROTONMAIL_HOST: 'host.docker.internal'
+      }
+    );
+
     const request = {
       Image: BOT_IMAGE_URL,
       ExposedPorts: {
@@ -111,20 +122,18 @@ export class BotClient {
         PortBindings: {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
-              HostAddr: '127.0.0.1', // only expose on loopback interface.
+              HostAddr: '127.0.0.1', // Only expose on loopback interface.
               HostPort: `${proxyPort}`
             }
           ]
         }
       },
-      Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
+      Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
-        'dxos.bot.name': botId,
+        'dxos.bot.id': botId,
         'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
       }
     };
-
-    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     log('creating bot', { request, botInstanceId });
@@ -135,6 +144,7 @@ export class BotClient {
       },
       body: JSON.stringify(request)
     });
+
     const { Id: containerId } = await response.json();
 
     this.onStatusUpdate.emit('starting container...');
