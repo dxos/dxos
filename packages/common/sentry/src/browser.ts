@@ -25,31 +25,35 @@ export * from './tracing';
  * @param options {InitOptions}
  */
 export const init = (options: InitOptions) => {
-  log('sentry init', options);
-  naturalInit({
-    enabled: options.enable ?? true,
-    dsn: options.destination,
-    release: options.release,
-    environment: options.environment,
-    integrations: [
-      new CaptureConsole({ levels: ['error', 'warn'] }),
-      new HttpClient({ failedRequestStatusCodes: [[400, 599]] }),
-      ...(options.tracing ? [new BrowserTracing()] : []),
-      ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
-    ],
-    replaysSessionSampleRate: options.replaySampleRate,
-    replaysOnErrorSampleRate: options.replaySampleRateOnError,
-    tracesSampleRate: options.sampleRate,
-    transport: options.transport,
-    beforeSend: (event) => {
-      options.onError?.(event);
-      return event;
-    }
-  });
+  try {
+    log('sentry init', options);
+    naturalInit({
+      enabled: options.enable ?? true,
+      dsn: options.destination,
+      release: options.release,
+      environment: options.environment,
+      integrations: [
+        new CaptureConsole({ levels: ['error', 'warn'] }),
+        new HttpClient({ failedRequestStatusCodes: [[400, 599]] }),
+        ...(options.tracing ? [new BrowserTracing()] : []),
+        ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
+      ],
+      replaysSessionSampleRate: options.replaySampleRate,
+      replaysOnErrorSampleRate: options.replaySampleRateOnError,
+      tracesSampleRate: options.sampleRate,
+      transport: options.transport,
+      beforeSend: (event) => {
+        options.onError?.(event);
+        return event;
+      }
+    });
 
-  Object.entries(options.properties ?? {}).forEach(([key, value]) => {
-    setTag(key, value);
-  });
+    Object.entries(options.properties ?? {}).forEach(([key, value]) => {
+      setTag(key, value);
+    });
+  } catch (err) {
+    log.catch('Failed to initialize sentry', err);
+  }
 };
 
 /**
@@ -62,8 +66,12 @@ export const init = (options: InitOptions) => {
  * @param breadcrumb — The breadcrumb to record.
  */
 export const addBreadcrumb: typeof naturalAddBreadcrumb = (breadcrumb) => {
-  naturalAddBreadcrumb(breadcrumb);
-  log('add breadcrumb', breadcrumb);
+  try {
+    naturalAddBreadcrumb(breadcrumb);
+    log('add breadcrumb', breadcrumb);
+  } catch (err) {
+    log.catch('Failed to add breadcrumb', err);
+  }
 };
 
 /**
@@ -74,7 +82,12 @@ export const addBreadcrumb: typeof naturalAddBreadcrumb = (breadcrumb) => {
  * @returns — The generated eventId.
  */
 export const captureException: typeof naturalCaptureException = (exception, captureContext) => {
-  const eventId = naturalCaptureException(exception, captureContext);
-  log('capture exception', { exception, eventId, ...captureContext });
-  return eventId;
+  try {
+    const eventId = naturalCaptureException(exception, captureContext);
+    log('capture exception', { exception, eventId, ...captureContext });
+    return eventId;
+  } catch (err) {
+    log.catch('Failed to capture exception', err);
+    return 'unknown';
+  }
 };
