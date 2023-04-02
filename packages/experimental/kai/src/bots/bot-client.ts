@@ -23,6 +23,7 @@ export const DX_BOT_RPC_PORT_MAX = 7300;
 export const BOT_STARTUP_CHECK_INTERVAL = 250;
 export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
+// TODO(burdon): Registry.
 const BOT_IMAGE = 'ghcr.io/dxos/bot:latest';
 
 export type BotClientOptions = {
@@ -81,6 +82,11 @@ export class BotClient {
     }
   }
 
+  async stopBot(id: string) {
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStop
+    await fetch(`${this._botServiceEndpoint}/docker/containers/${id}/stop`, { method: 'POST' });
+  }
+
   /**
    * Fetch latest image.
    */
@@ -111,9 +117,11 @@ export class BotClient {
       },
       {
         LOG_FILTER: 'info',
-        BOT_NAME: botName,
-        // TODO(burdon): Testing with bridge running outside of Docker.
-        COM_PROTONMAIL_HOST: 'protonmail-bridge'
+        DX_BOT_NAME: botName,
+        // Access container directly.
+        COM_PROTONMAIL_HOST: 'protonmail-bridge',
+        COM_PROTONMAIL_PORT: '143'
+        // COM_PROTONMAIL_HOST: 'host.docker.internal' // NOTE: Docker Desktop only (for development).
       }
     );
 
@@ -122,6 +130,7 @@ export class BotClient {
       Image: BOT_IMAGE,
       HostConfig: {
         PortBindings: {
+          // Allows client to initiate connection.
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
               HostAddr: '127.0.0.1', // Only expose on loop-back interface.
@@ -129,6 +138,11 @@ export class BotClient {
             }
           ]
         },
+
+        // Use host's network
+        // https://docs.docker.com/network/host
+        // NetworkMode: 'host'
+
         // Maps the named container's name to the container IP address.
         // TODO(burdon): Generalize links to other containers (e.g., Protonmail bridge.)
         Links: ['protonmail-bridge:protonmail-bridge']

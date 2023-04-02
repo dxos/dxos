@@ -58,11 +58,23 @@ NOTE: Configure kai `dxos.services.bot.proxy` to point to the appropriate KUBE `
 
 TODO(burdon): Move to `@dxos/kube` docs.
 
+Pull the latest image:
+
+```bash
+docker pull ghcr.io/dxos/bot:latest
+```
+
 To get the IP address of a Docker container:
 
 ```bash
 hostname -I
 docker inspect --format '{{ .NetworkSettings.IPAddress }}' protonmail-bridge
+```
+
+To get open ports on the host:
+
+```bash
+netstat -lntu
 ```
 
 Inspect container config:
@@ -74,7 +86,7 @@ docker inspect protonmail-bridge
 Remove stopped containers:
 
 ```bash
-docker container ls -q -f "status=exited" | xargs docker rm
+docker container ls -q -f "status=exited" | xargs -r docker rm
 ```
 
 ## Installation
