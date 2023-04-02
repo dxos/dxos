@@ -26,24 +26,31 @@ export default class Share extends BaseCommand {
         const connecting = new Trigger<Invitation>();
         const done = new Trigger<Invitation>();
 
-        observable.subscribe({
-          onConnecting: (invitation) => {
-            connecting.wake(invitation);
+        observable.subscribe(
+          (invitation) => {
+            switch (invitation.state) {
+              case Invitation.State.CONNECTING: {
+                connecting.wake(invitation);
+                break;
+              }
+
+              case Invitation.State.SUCCESS: {
+                done.wake(invitation);
+                break;
+              }
+            }
           },
-          onSuccess: (invitation) => {
-            done.wake(invitation);
-          },
-          onError: (err) => {
+          (err) => {
             throw err;
           }
-        });
+        );
 
         await connecting.wait();
 
-        const invitationCode = InvitationEncoder.encode(observable.invitation!);
+        const invitationCode = InvitationEncoder.encode(observable.get());
 
         this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-        this.log(chalk`\n{red Secret}: ${observable.invitation!.authenticationCode}\n`);
+        this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
 
         ux.action.start('Waiting for peer to connect');
         await done.wait();

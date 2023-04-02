@@ -6,8 +6,7 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationsManager } from './invitations-manager';
 
@@ -26,11 +25,8 @@ test.describe('Invitations', () => {
       const invitation = await manager.createInvitation(0, 'device');
 
       await manager.openPanel(1, 'identity');
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'device', invitation)
-      ]);
-      await manager.authenticateInvitation('device', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'device', invitation)]);
+      await manager.authenticateInvitation('device', authCode, manager.peer(1));
       await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
@@ -40,7 +36,7 @@ test.describe('Invitations', () => {
     test.skip('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
-      const invitation = await manager.createInvitation(0, 'device', { authMethod: AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'device', { authMethod: Invitation.AuthMethod.NONE });
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
@@ -56,13 +52,10 @@ test.describe('Invitations', () => {
       const invitation = await manager.createInvitation(0, 'device');
 
       await manager.openPanel(1, 'identity');
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'device', invitation)
-      ]);
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'device', invitation)]);
       await manager.authenticateInvitation('device', '000000', manager.peer(1));
-      await manager.clearAuthenticationCode('device', manager.peer(1));
-      await manager.authenticateInvitation('device', authenticationCode, manager.peer(1));
+      await manager.clearAuthCode('device', manager.peer(1));
+      await manager.authenticateInvitation('device', authCode, manager.peer(1));
       await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
@@ -82,11 +75,8 @@ test.describe('Invitations', () => {
 
       // TODO(wittjosiah): Retry here.
 
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'device', invitation)
-      ]);
-      await manager.authenticateInvitation('device', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'device', invitation)]);
+      await manager.authenticateInvitation('device', authCode, manager.peer(1));
       await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
@@ -105,11 +95,8 @@ test.describe('Invitations', () => {
       await manager.cancelInvitation('device', 'guest', manager.peer(1));
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.clearAuthenticationCode('device', manager.peer(1))
-      ]);
-      await manager.authenticateInvitation('device', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('device', manager.peer(1))]);
+      await manager.authenticateInvitation('device', authCode, manager.peer(1));
       await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
@@ -128,11 +115,8 @@ test.describe('Invitations', () => {
       await manager.setConnectionState(0, ConnectionState.ONLINE);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.clearAuthenticationCode('device', manager.peer(1))
-      ]);
-      await manager.authenticateInvitation('device', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('device', manager.peer(1))]);
+      await manager.authenticateInvitation('device', authCode, manager.peer(1));
       await manager.doneInvitation('device', manager.peer(1));
 
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
@@ -146,18 +130,18 @@ test.describe('Invitations', () => {
 
       await manager.openPanel(1, 'identity');
       await manager.openPanel(2, 'identity');
-      const [authenticationCode1] = await Promise.all([
-        manager.getAuthenticationCode(),
+      const [authCode1] = await Promise.all([
+        manager.getAuthCode(),
         manager.acceptInvitation(1, 'device', invitation1)
       ]);
       // Prevent auth code from being reused.
       await sleep(100);
-      const [authenticationCode2] = await Promise.all([
-        manager.getAuthenticationCode(),
+      const [authCode2] = await Promise.all([
+        manager.getAuthCode(),
         manager.acceptInvitation(2, 'device', invitation2)
       ]);
-      await manager.authenticateInvitation('device', authenticationCode1, manager.peer(1));
-      await manager.authenticateInvitation('device', authenticationCode2, manager.peer(2));
+      await manager.authenticateInvitation('device', authCode1, manager.peer(1));
+      await manager.authenticateInvitation('device', authCode2, manager.peer(2));
       await manager.doneInvitation('device', manager.peer(1));
       await manager.doneInvitation('device', manager.peer(2));
 
@@ -176,11 +160,8 @@ test.describe('Invitations', () => {
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'space', invitation)
-      ]);
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'space', invitation)]);
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -191,7 +172,7 @@ test.describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
-      const invitation = await manager.createInvitation(0, 'space', { authMethod: AuthMethod.NONE });
+      const invitation = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
@@ -210,16 +191,13 @@ test.describe('Invitations', () => {
 
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'space', invitation)
-      ]);
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'space', invitation)]);
       await manager.authenticateInvitation('space', '000000', manager.peer(1));
 
       expect(await manager.authenticatorIsVisible('space', manager.peer(1))).to.be.true;
 
-      await manager.clearAuthenticationCode('space', manager.peer(1));
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      await manager.clearAuthCode('space', manager.peer(1));
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -237,9 +215,9 @@ test.describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
 
       await manager.authenticateInvitation('space', '000001', manager.peer(1));
-      await manager.clearAuthenticationCode('space', manager.peer(1));
+      await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', '000002', manager.peer(1));
-      await manager.clearAuthenticationCode('space', manager.peer(1));
+      await manager.clearAuthCode('space', manager.peer(1));
       await manager.authenticateInvitation('space', '000003', manager.peer(1));
 
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
@@ -247,12 +225,9 @@ test.describe('Invitations', () => {
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
 
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.clearAuthenticationCode('space', manager.peer(1))
-      ]);
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('space', manager.peer(1))]);
 
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -272,11 +247,8 @@ test.describe('Invitations', () => {
 
       // TODO(wittjosiah): Retry here.
 
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'space', invitation)
-      ]);
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'space', invitation)]);
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -299,12 +271,9 @@ test.describe('Invitations', () => {
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
 
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.clearAuthenticationCode('space', manager.peer(1))
-      ]);
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('space', manager.peer(1))]);
 
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -326,11 +295,8 @@ test.describe('Invitations', () => {
       await manager.setConnectionState(0, ConnectionState.ONLINE);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
-      const [authenticationCode] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.clearAuthenticationCode('space', manager.peer(1))
-      ]);
-      await manager.authenticateInvitation('space', authenticationCode, manager.peer(1));
+      const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('space', manager.peer(1))]);
+      await manager.authenticateInvitation('space', authCode, manager.peer(1));
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
@@ -348,18 +314,12 @@ test.describe('Invitations', () => {
       await manager.createIdentity(2);
       await manager.openPanel(1, 'join');
       await manager.openPanel(2, 'join');
-      const [authenticationCode1] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(1, 'space', invitation1)
-      ]);
+      const [authCode1] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'space', invitation1)]);
       // Prevent auth code from being reused.
       await sleep(100);
-      const [authenticationCode2] = await Promise.all([
-        manager.getAuthenticationCode(),
-        manager.acceptInvitation(2, 'space', invitation2)
-      ]);
-      await manager.authenticateInvitation('space', authenticationCode1, manager.peer(1));
-      await manager.authenticateInvitation('space', authenticationCode2, manager.peer(2));
+      const [authCode2] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(2, 'space', invitation2)]);
+      await manager.authenticateInvitation('space', authCode1, manager.peer(1));
+      await manager.authenticateInvitation('space', authCode2, manager.peer(2));
       await manager.doneInvitation('space', manager.peer(1));
       await manager.doneInvitation('space', manager.peer(2));
 

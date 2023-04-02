@@ -3,11 +3,10 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { Client, clientServiceBundle, ClientServicesProvider, Space } from '@dxos/client';
+import { Client, clientServiceBundle, ClientServicesProvider, Invitation, Space } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -47,6 +46,7 @@ export class BotClient {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
+  // TODO(burdon): Access control.
   // TODO(burdon): Error handling.
 
   get active() {
@@ -55,8 +55,11 @@ export class BotClient {
 
   async getBots(): Promise<any[]> {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerList
-    return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then((response) => {
-      return response.json();
+    return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then(async (response) => {
+      const records = (await response.json()) as any[];
+      return records.filter((record) => {
+        return record.Image === BOT_IMAGE_URL;
+      });
     });
   }
 
@@ -93,18 +96,25 @@ export class BotClient {
     log('starting bot', { bot: botId });
     this.onStatusUpdate.emit('Connecting...');
 
-    const env: { [key: string]: string } = {
-      BOT_NAME: botId,
-      LOG_FILTER: 'info',
-      COM_PROTONMAIL_HOST: 'host.docker.internal'
-    };
+    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
-    Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
-
-    /**
-     * {@see DX_BOT_RPC_PORT_MIN}
-     */
+    // TODO(burdon): Select free port (may clash with other clients).
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
+
+    // ENV variables passed to container.
+    const envs = Array.from(envMap?.entries() ?? []).reduce<{ [key: string]: string }>(
+      (envs, [key, value]) => {
+        envs[key] = value;
+        return envs;
+      },
+      {
+        BOT_ID: botId,
+        LOG_FILTER: 'info'
+        // TODO(burdon): Testing with bridge running outside of Docker.
+        // COM_PROTONMAIL_HOST: 'host.docker.internal'
+      }
+    );
+
     const request = {
       Image: BOT_IMAGE_URL,
       ExposedPorts: {
@@ -114,20 +124,18 @@ export class BotClient {
         PortBindings: {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
-              HostAddr: '127.0.0.1', // only expose on loopback interface.
+              HostAddr: '127.0.0.1', // Only expose on loop-back interface.
               HostPort: `${proxyPort}`
             }
           ]
         }
       },
-      Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
+      Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot.name': botId,
         'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
       }
     };
-
-    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     log('creating bot', { request, botInstanceId });
@@ -193,32 +201,52 @@ export class BotClient {
   private async inviteBotToSpace(botClient: Client) {
     const connected = new Trigger();
     const invitation = this._space.createInvitation({
-      authMethod: AuthMethod.NONE
+      authMethod: Invitation.AuthMethod.NONE
     });
 
-    invitation.subscribe({
-      onConnecting: async (invitation1) => {
-        log('invitation1', invitation1);
-        const observable2 = botClient.acceptInvitation(invitation1);
-        observable2.subscribe({
-          onSuccess: async () => {
-            connected.wake();
-          },
-          onCancelled: () => console.error(new Error('cancelled')),
-          onTimeout: (err: Error) => console.error(new Error(err.message)),
-          onError: (err: Error) => console.error(new Error(err.message))
-        });
+    invitation.subscribe(
+      (invitation1) => {
+        switch (invitation1.state) {
+          case Invitation.State.CONNECTING: {
+            log('invitation1', invitation1);
+            const observable2 = botClient.acceptInvitation(invitation1);
+            observable2.subscribe(
+              (invitation2) => {
+                switch (invitation2.state) {
+                  case Invitation.State.SUCCESS: {
+                    connected.wake();
+                    break;
+                  }
+
+                  case Invitation.State.CANCELLED: {
+                    console.error(new Error('cancelled'));
+                    break;
+                  }
+                }
+              },
+              (err: Error) => console.error(new Error(err.message))
+            );
+            break;
+          }
+
+          case Invitation.State.CONNECTED: {
+            log('connected');
+            break;
+          }
+
+          case Invitation.State.SUCCESS: {
+            log('success');
+            break;
+          }
+
+          case Invitation.State.CANCELLED: {
+            console.error(new Error('cancelled'));
+            break;
+          }
+        }
       },
-      onConnected: async () => {
-        log('connected');
-      },
-      onSuccess: async () => {
-        log('success');
-      },
-      onCancelled: () => console.error(new Error('cancelled')),
-      onTimeout: (err: Error) => console.error(new Error(err.message)),
-      onError: (err: Error) => console.error(new Error(err.message))
-    });
+      (err: Error) => console.error(new Error(err.message))
+    );
 
     await connected.wait();
   }

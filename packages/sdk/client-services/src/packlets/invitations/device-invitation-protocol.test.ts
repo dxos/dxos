@@ -5,11 +5,11 @@
 import { expect } from 'chai';
 
 import { asyncChain } from '@dxos/async';
+import { Invitation } from '@dxos/client';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
-import { createPeers, createServiceContext } from '../testing';
-import { performInvitation } from '../testing/invitation-utils';
+import { createPeers, createServiceContext, performInvitation } from '../testing';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -32,7 +32,7 @@ describe('services/device', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await performInvitation(host.deviceInvitations, guest.deviceInvitations, undefined);
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 });

@@ -20,7 +20,8 @@
     "@dxos/debug": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "zen-observable": "^0.10.0"
+    "zen-observable": "^0.10.0",
+    "zen-push": "^0.3.1"
   },
   "devDependencies": {
     "@types/zen-observable": "^0.8.3"
