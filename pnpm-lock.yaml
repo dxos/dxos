@@ -2813,6 +2813,7 @@ importers:
       express: 4.17.1
       http-proxy: ^1.18.1
       node-http-proxy: ^0.2.4
+      sort-keys: ^5.0.0
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
@@ -2828,6 +2829,7 @@ importers:
       express: 4.17.1
       http-proxy: 1.18.1
       node-http-proxy: 0.2.4
+      sort-keys: 5.0.0
 
   packages/experimental/chess-app:
     specifiers:
@@ -15655,7 +15657,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -33881,6 +33883,13 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-plain-obj: 2.1.0
+    dev: false
+
+  /sort-keys/5.0.0:
+    resolution: {integrity: sha512-Pdz01AvCAottHTPQGzndktFNdbRA75BgOfeT1hH+AMnJFv8lynkPi42rfeEhpx1saTEI3YNMWxfqu0sFD1G8pw==}
+    engines: {node: '>=12'}
+    dependencies:
+      is-plain-obj: 4.1.0
     dev: false
 
   /sort-object-keys/1.1.3:

@@ -48,7 +48,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className='flex flex-1 flex-col overflow-y-scroll text-sm w-full md:w-[600px] md:max-w-[600px] shadow-1'>
+        <div className='flex flex-1 flex-col overflow-y-scroll text-sm w-full md:w-[800px] md:max-w-[800px] shadow-1'>
           <div className='flex flex-col'>
             <h2 className='p-2 bg-paper-3-bg'>KEYS</h2>
             <div className='py-4 bg-white'>

@@ -35,6 +35,7 @@
     "esbuild": "^0.16.14",
     "express": "4.17.1",
     "http-proxy": "^1.18.1",
-    "node-http-proxy": "^0.2.4"
+    "node-http-proxy": "^0.2.4",
+    "sort-keys": "^5.0.0"
   }
 }
