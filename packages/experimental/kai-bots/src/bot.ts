@@ -50,22 +50,37 @@ export abstract class Bot {
     assert(space);
     this._config = config;
     this._space = space;
-    log('initializing...');
-    await this.onInit();
+
+    try {
+      log('initializing...');
+      return await this.onInit();
+    } catch (err) {
+      log.catch(err);
+      throw err;
+    }
   }
 
   async start() {
-    log('starting...');
-    return this.onStart();
+    try {
+      log('starting...');
+      return await this.onStart();
+    } catch (err) {
+      log.catch(err);
+      throw err;
+    }
   }
 
   async stop() {
-    log('stopping...');
-    return this.onStop();
+    try {
+      log('stopping...');
+      return await this.onStop();
+    } catch (err) {
+      log.catch(err);
+      throw err;
+    }
   }
 
   async onInit(): Promise<void> {}
-
   abstract onStart(): Promise<void>;
   abstract onStop(): Promise<void>;
 }
