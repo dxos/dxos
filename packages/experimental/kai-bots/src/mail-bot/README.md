@@ -1,22 +1,20 @@
-# Bots
+# Mail Bot
 
-## Testing
+The [Protonmail Bridge](https://proton.me/mail/bridge) is a local IMAP server that connects securely to the Protonmail servers.
+This allows local clients (and bots) to connect to the local IMAP server using SSL (or StartTLS) connections.
 
-- Configure Protonmail Bridge to use SSL (this isn't required).
-- Export the Cert (PEM) file from the Bridge.
-- Get the local password.
+This guide demonstrates how to install and configure the Protonmail Bridge Docker container on a KUBE. 
 
-```bash
-COM_PROTONMAIL_USERNAME=rich@dxos.org COM_PROTONMAIL_PASSWORD=xxx pc test
-```
+Completion time: 20 mins.
 
-## Deployment
+
+## Deploying the Protonmail Docker Bridge
 
 Deploy the [shenxn/protonmail-bridge](https://hub.docker.com/r/shenxn/protonmail-bridge) Docker container.
 
 Open the Digital Ocean [bots.kube.dxos.org](https://cloud.digitalocean.com/droplets/343613259) Droplet Console.
 
-Configure the bridge (NOTE: the container must be stopped).
+Start the configuration process:
 
 ```bash
 docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
@@ -25,26 +23,75 @@ docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
 Change the access settings (from STARTTLS to SSL):
 
 ```bash
-ch ssl-imap
-ch ssl-smtp
+>>> ch ssl-imap
+>>> ch ssl-smtp
 ```
-
-Type `login` to link a Protonmail account, then `info` to get the local IMAP server credentials, then CTRL-C to exit.
 
 Then, start the container:
 
-TODO(burdon): Check security configuration.
-
 ```bash
-docker run -d --name=protonmail-bridge -v protonmail:/root --restart=unless-stopped shenxn/protonmail-bridge
+docker run -d --name=protonmail-bridge -v protonmail:/root \
+  -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp \
+  --restart=unless-stopped \
+  shenxn/protonmail-bridge
 ```
 
-NOTE: Rather than exposing ports, containers configure direct connections to the container's IP address.
+NOTE: This command exposes IMAP and SMTP ports to the host for testing,
+however, bot containers should configure direct connections to the bridge container's IP address (using `HostConfig.Links`) 
+and use the internal port (e.g., `143`).
 
-[Test](https://www.bram.us/2020/01/16/test-an-imap-connection-with-curl) the IMAP server (using `-k` to skip CA check):
+
+## Adding Protonmail User Accounts
+
+1. SSH to the Droplet.
+2. Stop the Protonmail Docker container.
+
+```bash
+docker container stop protonmail-bridge
+```
+
+3. Run the configuration process.
+
+```bash
+docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
+```
+
+4. Login using your Protonmail credentials and get the IMAP password (then CTRL-C to exit):
+
+```bash
+>>> login
+>>> info
+```
+
+5. Restart the container:
+
+```bash
+docker container restart protonmail-bridge
+```
+
+6. Configure the client with your username and IMAP password and launch the bot.
+
+
+## Testing the IMAP server
+
+TEst the IMAP server directly using [curl](https://www.bram.us/2020/01/16/test-an-imap-connection-with-curl):
 
 ```bash
 curl -k -v imaps://USERNAME:PASSWORD@127.0.0.1:1143/INBOX?NEW
 ```
 
-(NOTE: Use `urlencode` to encode the username: e.g., `rich%40dxos.org`).
+Note:
+- Use `urlencode` to encode the username (e.g., `rich%40dxos.org`).
+- Use `-k` to skip the CA check.
+
+## Local development and testing with Docker Desktop
+
+Install the Protonmail Bridge desktop app (e.g., Mac OS/X). 
+
+Set the following env variables:
+
+```bash
+COM_PROTONMAIL_HOST=host.docker.internal
+COM_PROTONMAIL_USERNAME=username@dxos.org 
+COM_PROTONMAIL_PASSWORD=xxx
+```
