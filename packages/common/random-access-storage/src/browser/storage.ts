@@ -9,7 +9,7 @@ import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    return (globalThis as any).IDBMutableFile ? new FirefoxStorage(root) : new IDbStorage(root);
+    return new WebFS(root);
   }
 
   switch (type) {

@@ -82,6 +82,7 @@ message Runtime {
         CHROME = 2;
         FIREFOX = 3;
         NODE = 4;
+        WEBFS = 5;
 
         // Key storage only
         LEVELJS = 11;
