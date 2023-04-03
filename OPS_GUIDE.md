@@ -1,4 +1,4 @@
-# DXOS Repository Guide
+# DXOS Operations Guide
 
 Documentation about the runtime components of DXOS.
 
