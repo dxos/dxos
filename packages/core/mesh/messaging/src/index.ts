@@ -5,3 +5,4 @@
 export * from './messenger';
 export * from './signal-client';
 export * from './signal-manager';
+export * from './signal-methods';
