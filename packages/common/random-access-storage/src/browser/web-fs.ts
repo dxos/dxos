@@ -3,6 +3,7 @@
 //
 
 import assert from 'node:assert';
+import { RandomAccessStorage } from 'random-access-storage';
 
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -53,16 +54,18 @@ export class WebFS implements Storage {
 
   getOrCreateFile(path: string, filename: string, opts?: any): File {
     const fullPath = getFullPath(path, filename);
+    // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
+    const fullFilename = fullPath.split('/').join('_');
     const existingFile = this._files.get(fullPath);
     if (existingFile) {
       return existingFile;
     }
     const file = new WebFile({
-      file: this._initialize().then((root) => root.getFileHandle(filename, { create: true })),
+      file: this._initialize().then((root) => root.getFileHandle(fullFilename, { create: true })),
       destroy: async () => {
-        this._files.delete(path);
+        this._files.delete(fullPath);
         const root = await this._initialize();
-        return root.removeEntry(filename);
+        return root.removeEntry(fullFilename);
       }
     });
     this._files.set(fullPath, file);
@@ -97,14 +100,21 @@ export class WebFile implements File {
   readonly statable: boolean = true;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
-  private readonly _destroy: () => Promise<Error>;
+  private readonly _destroy: () => Promise<void>;
 
-  constructor({ file, destroy }: { file: Promise<FileSystemFileHandle>; destroy: () => Promise<Error> }) {
+  constructor({ file, destroy }: { file: Promise<FileSystemFileHandle>; destroy: () => Promise<void> }) {
     this._fileHandle = file;
     this._destroy = destroy;
   }
 
+  destroyed = false;
+  directory = '';
+  filename = '';
+  type: StorageType = StorageType.WEBFS;
+  native: RandomAccessStorage = {} as RandomAccessStorage;
+
   async write(offset: number, data: Buffer) {
+    // TODO(mykola): Fix types.
     const fileHandle: any = await this._fileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: true });
     await writable.write({ type: 'write', data, position: offset });
@@ -132,13 +142,77 @@ export class WebFile implements File {
     };
   }
 
-  async close(): Promise<Error> {}
+  async close(): Promise<void> {}
 
   async destroy() {
     return await this._destroy();
   }
 
   async truncate?(offset: number) {
+    throw new Error('Method not implemented.');
+  }
+
+  //
+  // EventEmitter methods.
+  //
+
+  addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  once(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  off(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  removeAllListeners(event?: string | symbol | undefined): this {
+    throw new Error('Method not implemented.');
+  }
+
+  setMaxListeners(n: number): this {
+    throw new Error('Method not implemented.');
+  }
+
+  getMaxListeners(): number {
+    throw new Error('Method not implemented.');
+  }
+
+  listeners(eventName: string | symbol): Function[] {
+    throw new Error('Method not implemented.');
+  }
+
+  rawListeners(eventName: string | symbol): Function[] {
+    throw new Error('Method not implemented.');
+  }
+
+  emit(eventName: string | symbol, ...args: any[]): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  listenerCount(eventName: string | symbol): number {
+    throw new Error('Method not implemented.');
+  }
+
+  prependListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  prependOnceListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    throw new Error('Method not implemented.');
+  }
+
+  eventNames(): (string | symbol)[] {
     throw new Error('Method not implemented.');
   }
 }

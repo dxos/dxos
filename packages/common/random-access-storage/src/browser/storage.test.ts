@@ -16,7 +16,7 @@ import { createStorage } from './storage';
 const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
-  for (const storageType of [StorageType.RAM, StorageType.IDB] as StorageType[]) {
+  for (const storageType of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
