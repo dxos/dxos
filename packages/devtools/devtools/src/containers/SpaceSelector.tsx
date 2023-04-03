@@ -11,7 +11,7 @@ import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
 
 export const SpaceSelector = () => {
-  const spaces = useSpaces();
+  const spaces = useSpaces({ all: true });
   const spacesInfo = useSpacesInfo();
   const { space } = useDevtoolsState();
   const setState = useDevtoolsDispatch();
@@ -24,6 +24,8 @@ export const SpaceSelector = () => {
       feedKey: undefined
     }));
   };
+
+  console.log(spaces)
 
   return (
     <PublicKeySelector

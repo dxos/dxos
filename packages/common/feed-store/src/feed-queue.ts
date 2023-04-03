@@ -75,6 +75,7 @@ export class FeedQueue<T extends {}> {
 
   /**
    * Opens (or reopens) the queue.
+   * @param options.start Starting index. First mutation to be read would have `seq == options.start`.
    */
   async open(options: ReadStreamOptions = {}) {
     if (this.isOpen) {

@@ -160,10 +160,32 @@ message Space {
     optional dxos.keys.PublicKey control_feed_key = 1;
     optional dxos.keys.PublicKey data_feed_key = 2;
 
+    repeated dxos.keys.PublicKey control_feeds = 18;
+    repeated dxos.keys.PublicKey data_feeds = 19;
+
+    /// Mutations alredy processed.
     optional timeframe.TimeframeVector current_control_timeframe = 10;
+
+    /// Minimum timeframe to consider the state to be up-to-date.
     optional timeframe.TimeframeVector target_control_timeframe = 11;
+
+    /// All mutations stored in feeds.
+    optional timeframe.TimeframeVector total_control_timeframe = 14;
+
+    /// All mutations known to exist on the network.
+    optional timeframe.TimeframeVector known_control_timeframe = 15;
+    
+    /// Mutations alredy processed.
     optional timeframe.TimeframeVector current_data_timeframe = 12;
+
+    /// Minimum timeframe to consider the state to be up-to-date.
     optional timeframe.TimeframeVector target_data_timeframe = 13;
+
+    /// All mutations stored in feeds.
+    optional timeframe.TimeframeVector total_data_timeframe = 16;
+
+    /// All mutations known to exist on the network.
+    optional timeframe.TimeframeVector known_data_timeframe = 17;
 
     // TODO(dmaretskyi): Snapshot & epoch info.
   }
