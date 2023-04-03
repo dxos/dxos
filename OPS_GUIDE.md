@@ -41,7 +41,7 @@ These are all deployed from `dxos` repo via CircleCI. See [.circleci/scripts/pub
 | Kube Console                          |                                                                                    |                                                                                                            |
 | Dev Tools                             |                                                                                    |                                                                                                            |
 #### Infrastructure
-See [kube ops documentation](https://github.com/dxos/kube/docs/ops).
+See [kube ops documentation](https://github.com/dxos/kube/tree/main/docs/ops).
 
 
 
