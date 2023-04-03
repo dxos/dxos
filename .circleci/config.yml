@@ -43,6 +43,11 @@ aliases:
   - &store_test_results
     store_test_results:
       path: test-results
+  # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
+  - &install_datadog
+    run:
+      name: Install Datadog
+      command: npm install -g @datadog/datadog-ci 
 
 jobs:
   #
@@ -147,11 +152,11 @@ jobs:
           environment:
             NODE_ENV: production
 
-  messaging-monitor:
+  messaging_monitor:
     docker:
       - *docker_image
     parameters:
-      signal-server:
+      dx_environment:
         type: string
     steps:
       - checkout
@@ -159,7 +164,13 @@ jobs:
           command: npm run start
           working_directory: ./tools/monitors/messaging-monitor
           environment:
-            SIGNAL_SERVER: << parameters.signal-server >>
+            DX_ENVIRONMENT: << parameters.dx_environment >>
+      - *install_datadog
+      - run:
+          name: Upload results to Datadog
+          command: datadog-ci junit upload --service dxos ./tools/monitors/messaging-monitor/test-results.xml
+          environment:
+            DD_TAGS: env:<< parameters.dx_environment >>
 
 parameters:
   run_daily_workflow:
@@ -196,14 +207,15 @@ workflows:
   daily:
     when: << pipeline.parameters.run_daily_workflow >>
     jobs:
-      - messaging-monitor:
+      - messaging_monitor:
           context:
+            - Datadog
             - Github
           matrix:
             parameters:
-              signal-server:
-                - wss://kube.dxos.org/.well-known/dx/signal
-                - wss://dev.kube.dxos.org/.well-known/dx/signal
-                - wss://staging.kube.dxos.org/.well-known/dx/signal
+              dx_environment:
+                - development
+                - production
+                - staging
 
 # VS Code Extension Version: 1.5.1

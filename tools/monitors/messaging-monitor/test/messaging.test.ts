@@ -10,6 +10,13 @@ import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { TYPES } from '@dxos/protocols';
 
+const SIGNAL_SERVER =
+  process.env.DX_ENVIRONMENT === 'development'
+    ? 'wss://dev.kube.dxos.org/.well-known/dx/signal'
+    : process.env.DX_ENVIRONMENT === 'staging'
+    ? 'wss://staging.kube.dxos.org/.well-known/dx/signal'
+    : 'wss://kube.dxos.org/.well-known/dx/signal';
+
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example1',
@@ -27,8 +34,6 @@ const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
   type_url: 'dxos.Example3',
   value: Buffer.from('3')
 };
-
-const SIGNAL_SERVER = process.env.SIGNAL_SERVER ?? 'wss://kube.dxos.org/.well-known/dx/signal';
 
 const createPeer = async (params: Parameters<Messenger['listen']>[0]) => {
   const signalManager = new WebsocketSignalManager([SIGNAL_SERVER]);
