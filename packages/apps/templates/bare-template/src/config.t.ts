@@ -7,12 +7,14 @@ export * from './utils.t/getDxosRepoInfo';
 export * from './utils.t/nodePackage';
 
 import appTsx from './src/App.tsx.t';
+import packageJson from './package.json.t';
 import indexHtml from './index.html.t';
 import path from 'path';
-export { appTsx, indexHtml };
+
+export { appTsx, packageJson, indexHtml };
 
 export default defineConfig({
-  exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
+  exclude: () => ['project.json', 'tsconfig.plate.json'],
   inputShape: z
     .object({
       name: z.string().describe('Name the new package').default(path.basename(process.cwd())),

@@ -3,7 +3,7 @@
 //
 import path from 'path';
 import { promises as fs } from 'fs';
-import { defineTemplate, ExtractInput } from '@dxos/plate';
+import { defineTemplate, ExtractInput, Imports, renderSlots } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import { PackageJson } from './utils.t/packageJson';
 
@@ -89,6 +89,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     devDependencies: {
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
+      '@dxos/vault': depVersion,
       typescript: '^4.8.4',
       vite: '^4.2.0'
     }
@@ -101,8 +102,10 @@ const loadJson = async (moduleRelativePath: string) => {
 };
 
 export default defineTemplate(
-  async ({ input }) => {
+  async ({ input, slots, ...args }) => {
     const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
+    const imports = new Imports();
+    const render = renderSlots(slots)({ ...args, input, imports });
     const ownPackageJson = await loadJson('../../package.json'); // relative to dist/src
     const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
     const version = monorepo ? packageVersion : '0.1.0';
@@ -123,10 +126,20 @@ export default defineTemplate(
       storybook && Features.storybook()
     ].filter(Boolean);
 
-    const packageJson = merge(first, ...rest);
+    let extra = {};
+    try {
+      extra = JSON.parse(render.extra as unknown as string);
+    } catch {}
+
+    const packageJson = merge(first, ...rest, extra);
 
     const result = JSON.stringify(packageJson, null, 2);
     return result;
   },
-  { config }
+  {
+    config,
+    slots: {
+      extra: ''
+    }
+  }
 );
