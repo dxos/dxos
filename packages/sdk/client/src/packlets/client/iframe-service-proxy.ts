@@ -17,6 +17,16 @@ import { DEFAULT_CLIENT_CHANNEL, DEFAULT_CLIENT_ORIGIN, DEFAULT_SHELL_CHANNEL } 
 import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
 
+const shellStyles = Object.entries({
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  border: 0,
+  'z-index': 1000000
+}).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
+
 export type IFrameClientServicesProxyOptions = {
   source: string;
   channel: string;
@@ -88,7 +98,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     if (!this._shellController && typeof this._options.shell === 'string') {
       this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
-      this._iframe!.classList.add('__DXOS_SHELL');
+      this._iframe!.setAttribute('style', shellStyles);
       this._iframe!.setAttribute('data-testid', 'dxos-shell');
       this._shellController.contextUpdate.on(({ display, spaceKey }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';

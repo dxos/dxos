@@ -20,9 +20,6 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     import '@dxosTheme';`
     }
 
-    // Include css styles for displaying the shell iframe.
-    import '@dxos/client/shell.css';
-
     ${
       !dxosUi &&
       text`
