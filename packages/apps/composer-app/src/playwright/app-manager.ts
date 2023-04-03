@@ -35,10 +35,12 @@ export class AppManager {
     return await this.page.getByTestId('composer.firstRunMessage').isVisible();
   }
 
-  // Actions
-
   async createSpace() {
     return await this.page.getByTestId('composer.createSpace').click();
+  }
+
+  async createDocument() {
+    return await this.page.getByTestId('composer.createDocument').last().click();
   }
 
   async getNSpaceItems() {
@@ -47,5 +49,13 @@ export class AppManager {
 
   async getNDocumentItems() {
     return await this.page.getByTestId('composer.documentTreeItemHeading').count();
+  }
+
+  async getMarkdownTextbox() {
+    return await this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
+  }
+
+  async getDocumentTitleInput() {
+    return await this.page.getByTestId('composer.documentTitle');
   }
 }

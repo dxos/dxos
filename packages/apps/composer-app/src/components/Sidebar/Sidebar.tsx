@@ -143,7 +143,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           <DropdownMenu
             trigger={
               <TooltipTrigger asChild>
-                <Button variant='ghost' className='shrink-0 pli-1'>
+                <Button variant='ghost' data-testid='composer.openSpaceMenu' className='shrink-0 pli-1'>
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
               </TooltipTrigger>
@@ -170,7 +170,12 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           </DropdownMenu>
         </TooltipRoot>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
-          <Button variant='ghost' className='shrink-0 pli-1' onClick={handleCreate}>
+          <Button
+            variant='ghost'
+            data-testid='composer.createDocument'
+            className='shrink-0 pli-1'
+            onClick={handleCreate}
+          >
             <span className='sr-only'>{t('create document label')}</span>
             <Plus className={getSize(4)} />
           </Button>

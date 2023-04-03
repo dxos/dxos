@@ -27,20 +27,32 @@ test.describe('Basic test', () => {
   });
 
   test.describe('Solo tests', () => {
-    test('create identity', async () => {
+    test('create identity, space is created by default', async () => {
       await host.shell.createIdentity('host');
 
       // Wait for app to load identity.
       await waitForExpect(async () => {
         expect(await host.isAuthenticated()).to.be.true;
+        expect(await host.getNSpaceItems()).to.equal(1);
       }, 1000);
     });
 
-    test('create space, document is created by default', async () => {
+    test('create space, document is created by default, is displayed in tree', async () => {
       await host.createSpace();
       await waitForExpect(async () => {
-        expect(await host.getNSpaceItems()).to.equal(1);
+        expect(await host.getNSpaceItems()).to.equal(2);
         expect(await host.getNDocumentItems()).to.equal(1);
+      });
+    });
+
+    test('create document', async () => {
+      await host.createDocument();
+      const textbox = await host.getMarkdownTextbox();
+      const title = await host.getDocumentTitleInput();
+      await waitForExpect(async () => {
+        expect(await host.getNDocumentItems()).to.equal(2);
+        expect(await textbox.isEditable()).to.be.true;
+        expect(await title.isEditable()).to.be.true;
       });
     });
   });
