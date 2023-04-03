@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { range } from '@dxos/util';
 import { latch } from '@dxos/async';
 import randomBytes from 'randombytes';
-import { plot } from 'nodeplotlib'
 
 import { describe, test } from '@dxos/test';
 
@@ -32,8 +31,8 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
       const directory = storage.createDirectory();
 
       let numReads = 0, numWrites = 0;
-      const writes: number = [];
-      const reads: number = [];
+      const writes: number[] = [];
+      const reads: number[] = [];
 
       const startTime = performance.now()
       const [allDone, done] = latch({ count: NUM_THREADS });
@@ -74,17 +73,31 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
       const realRunTime = performance.now() - startTime;
 
       console.log({
-        numReads,
-        numWrites,
-        realRunTime,
+        params: {
+          environment: mochaExecutor.environment,
+          date: new Date().toISOString(),
+          type: testGroupName,
+          DATA_SIZE,
+          NUM_THREADS,
+          NUM_READS,
+          NUM_WRITES,
+          RUN_TIME,
+        },
+        result: {
+          numReads,
+          numWrites,
+          realRunTime,
+          avgReadTime: reads.reduce((a, b) => a + b, 0) / reads.length,
+          avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length,
+        }
       })
 
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>')
-      console.log(JSON.stringify({
-        reads,
-        writes
-      }))
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>')
+      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
+      // console.log(JSON.stringify({
+      //   reads,
+      //   writes
+      // }))
+      // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
     })
   });
 };
