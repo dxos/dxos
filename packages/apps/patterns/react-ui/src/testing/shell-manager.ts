@@ -9,6 +9,7 @@ type Scope = Locator | FrameLocator | Page;
 export class ShellManager {
   page!: Page;
 
+  // TODO(wittjosiah): Type => kind enum.
   authenticatorIsVisible(type: 'device' | 'space', scope?: Scope) {
     return (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).isVisible();
   }

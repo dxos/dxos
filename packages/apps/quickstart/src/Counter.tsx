@@ -24,7 +24,7 @@ export const Counter = () => {
   }
 
   return (
-    <div>
+    <div data-testid='counter'>
       {identity && `Hello ${identity?.profile?.displayName}!`}
       {counter && (
         <button
@@ -32,6 +32,8 @@ export const Counter = () => {
           onClick={() => {
             counter.count = (counter.count ?? 0) + 1;
           }}
+          data-testid='counter.button'
+          data-count={counter.count ?? 0}
         >
           {counter.count ? `Clicked ${counter.count} times` : 'Click me!'}
         </button>

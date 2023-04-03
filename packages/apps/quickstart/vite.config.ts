@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { ConfigPlugin } from "@dxos/config/vite-plugin";
+import { VaultPlugin } from "@dxos/vault/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { ThemePlugin } from "@dxos/react-components/plugin";
 import { resolve } from "node:path";
@@ -7,7 +8,6 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "", // Ensures relative path to assets.
   server: {
     host: true,
   },
@@ -42,6 +42,7 @@ export default defineConfig({
   },
 
   plugins: [
+    VaultPlugin(),
     ConfigPlugin(),
     react(),
     ThemePlugin({

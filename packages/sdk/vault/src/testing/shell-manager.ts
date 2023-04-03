@@ -5,6 +5,7 @@
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
+import { Invitation } from '@dxos/client';
 import { ShellManager as NaturalShellManager } from '@dxos/react-ui/testing';
 
 export class ShellManager extends NaturalShellManager {
@@ -39,6 +40,10 @@ export class ShellManager extends NaturalShellManager {
     await this.shell.getByTestId('halo-invitation-accepted-done').click();
   }
 
+  async joinIdentity() {
+    await this.shell.getByTestId('join-identity').click();
+  }
+
   async closeShell() {
     await this.page.keyboard.press('Escape');
   }
@@ -47,7 +52,7 @@ export class ShellManager extends NaturalShellManager {
     await this.page.keyboard.press('Control+.');
   }
 
-  async openSpaceList() {
+  async openCurrentIdentity() {
     await this.page.keyboard.press('Control+Shift+>');
   }
 
@@ -59,15 +64,17 @@ export class ShellManager extends NaturalShellManager {
     await this.shell.getByTestId('show-current-space').click();
   }
 
-  async createSpaceInvitation(): Promise<string> {
-    await this.openCurrentSpace();
+  async createInvitation(kind = Invitation.Kind.SPACE): Promise<string> {
+    kind === Invitation.Kind.SPACE ? await this.openCurrentSpace() : await this.openCurrentIdentity();
     this._invitationCode = new Trigger<string>();
-    await this.shell.getByTestId('spaces-panel.create-invitation').click();
+    await this.shell
+      .getByTestId(`${kind === Invitation.Kind.SPACE ? 'spaces' : 'devices'}-panel.create-invitation`)
+      .click();
     return await this._invitationCode.wait();
   }
 
-  async acceptSpaceInvitation(invitationCode: string) {
-    await this.inputInvitation('space', invitationCode, this.shell);
+  async acceptInvitation(invitationCode: string, kind = Invitation.Kind.SPACE) {
+    await this.inputInvitation(kind === Invitation.Kind.SPACE ? 'space' : 'device', invitationCode, this.shell);
   }
 
   async getAuthCode(): Promise<string> {
@@ -75,11 +82,11 @@ export class ShellManager extends NaturalShellManager {
     return await this._authCode.wait();
   }
 
-  async authenticate(authCode: string) {
+  async authenticate(authCode: string, kind = Invitation.Kind.SPACE) {
     // Wait for focus to shift before typing.
     await sleep(10);
-    await this.authenticateInvitation('space', authCode, this.shell);
-    await this.doneInvitation('space', this.shell);
+    await this.authenticateInvitation(kind === Invitation.Kind.SPACE ? 'space' : 'device', authCode, this.shell);
+    await this.doneInvitation(kind === Invitation.Kind.SPACE ? 'space' : 'device', this.shell);
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {
