@@ -41,8 +41,8 @@ export default defineConfig({
 
     Run the app:
     ${relative ? `$ cd ${relative}` : null}
-    $ pnpm install
-    $ pnpm serve
+    $ npm install
+    $ npm serve
 
     See also:
     - ${path.join(relative, 'README.md')}
