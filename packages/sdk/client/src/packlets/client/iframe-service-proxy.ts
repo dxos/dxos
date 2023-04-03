@@ -7,7 +7,6 @@ import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -45,11 +44,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
     channel = DEFAULT_CLIENT_CHANNEL,
-    shell = false,
+    shell = DEFAULT_SHELL_CHANNEL,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
-    shell = shell === true && DEFAULT_SHELL_CHANNEL;
     this._options = { source, channel, shell, timeout };
   }
 
@@ -117,19 +115,8 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    const identity = await new Promise<Identity | undefined>((resolve) => {
-      if (!this._clientServicesProxy) {
-        resolve(undefined);
-        return;
-      }
-
-      this._clientServicesProxy.services.IdentityService.queryIdentity().subscribe(({ identity }) => {
-        resolve(identity);
-      });
-    });
-
     const haloInvitationCode = searchParams.get('haloInvitationCode');
-    if (!identity) {
+    if (haloInvitationCode) {
       await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
         invitationCode: haloInvitationCode ?? undefined
       });

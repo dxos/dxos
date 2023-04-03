@@ -103,6 +103,9 @@
         "buildTarget": "kai:bundle"
       }
     },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    },
     "storybook": {
       "configurations": {
         "ci": {

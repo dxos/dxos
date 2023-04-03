@@ -62,6 +62,7 @@ export const useShell = (): {
 };
 export type ShellProviderProps = PropsWithChildren<{
   space?: Space;
+  // TODO(wittjosiah): `deviceInvitationCode`.
   haloInvitationCode?: string | null;
   spaceInvitationCode?: string | null;
   onJoinedSpace?: (spaceKey?: PublicKey) => void;
@@ -104,7 +105,7 @@ export const ShellProvider = ({
   );
 
   const shellRuntime = useMemo(() => {
-    if (client.config.get('runtime.app.env.DX_VAULT') === 'true') {
+    if (client.config.get('runtime.app.env.DX_VAULT') !== 'false') {
       return;
     }
 
@@ -115,10 +116,14 @@ export const ShellProvider = ({
       });
     }
 
-    return new MemoryShellRuntime({
-      layout: identity ? ShellLayout.DEFAULT : ShellLayout.INITIALIZE_IDENTITY,
-      invitationCode: haloInvitationCode ?? undefined
-    });
+    if (haloInvitationCode) {
+      return new MemoryShellRuntime({
+        layout: ShellLayout.INITIALIZE_IDENTITY,
+        invitationCode: haloInvitationCode
+      });
+    }
+
+    return new MemoryShellRuntime({ layout: ShellLayout.DEFAULT });
   }, [client, identity, spaceInvitationCode, haloInvitationCode]);
 
   const handleKeyDown = useCallback(
@@ -167,9 +172,7 @@ export const ShellProvider = ({
         </div>
       )}
 
-      <ShellContext.Provider value={{ runtime: shellRuntime, setDisplay }}>
-        {identity ? children : undefined}
-      </ShellContext.Provider>
+      <ShellContext.Provider value={{ runtime: shellRuntime, setDisplay }}>{children}</ShellContext.Provider>
     </>
   );
 };

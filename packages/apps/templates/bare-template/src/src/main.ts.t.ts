@@ -15,27 +15,30 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     ${
       dxosUi &&
       text`
-    // this includes css styles from @dxos/react-components
-    // this must precede all other style imports in the app
+    // This includes css styles from @dxos/react-components.
+    // This must precede all other style imports in the app.
     import '@dxosTheme';`
     }
+
+    // Include css styles for displaying the shell iframe.
+    import '@dxos/client/shell.css';
 
     ${
       !dxosUi &&
       text`
-    // include any css files directly
+    // Include any css files directly.
     import './index.css';`
     }
     
     void (async () => {
-      // grab a configuration with defaults and dynamic values from KUBE
+      // Grab a configuration with defaults and dynamic values from KUBE.
       const config = new Config(await Dynamics(), Defaults());
-      // create a client
+      // Create a client,
       const client = new Client({ config });
-      // initialize before using
+      // Initialize before using.
       await client.initialize();
     
-      // usage:
+      // Usage:
       console.log(client.toJSON());
 
       const element = document.getElementById('output') ?? document.createElement('pre');

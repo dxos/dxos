@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
+import { useIdentity } from '../halo';
 
 /**
  * Get a specific Space using its key. Returns undefined when no spaceKey is
@@ -30,12 +31,15 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
  */
 export const useOrCreateFirstSpace = () => {
   const client = useClient();
-  const spaces = useSpaces();
+  const identity = useIdentity();
+  const spaces = useSpaces({ all: true });
+  const spacesReady = spaces.every((space) => space.state.get() === SpaceState.READY);
   const [space, setSpace] = useState(spaces?.[0]);
   const isCreatingSpace = useRef(false);
+
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      if (!space && !isCreatingSpace.current) {
+      if (identity && spacesReady && !space && !isCreatingSpace.current) {
         isCreatingSpace.current = true;
         try {
           const newSpace = await client.createSpace();
@@ -47,10 +51,11 @@ export const useOrCreateFirstSpace = () => {
         }
       }
     });
-    return () => clearTimeout(timeout);
-  }, [space]);
 
-  return space;
+    return () => clearTimeout(timeout);
+  }, [identity, spacesReady, space]);
+
+  return spacesReady ? space : undefined;
 };
 
 export type UseSpacesParams = {
