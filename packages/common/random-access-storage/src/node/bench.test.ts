@@ -4,14 +4,12 @@
 
 // @dxos/test platform=nodejs
 
-import crypto from 'crypto';
 import del from 'del';
-import expect from 'expect';
 import path from 'path';
 
 import { afterAll, beforeAll, describe } from '@dxos/test';
 
-import { File, StorageType } from '../common';
+import { StorageType } from '../common';
 import { storageBenchmark } from '../testing/benchmark.blueprint-test';
 import { createStorage } from './storage';
 

@@ -2,15 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
-import assert from 'node:assert';
-import { range } from '@dxos/util';
-import { latch } from '@dxos/async';
 import randomBytes from 'randombytes';
 
+import { latch } from '@dxos/async';
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
-import { File, Storage, StorageType } from '../common';
+import { Storage, StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
@@ -30,11 +28,12 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
       const storage = createStorage();
       const directory = storage.createDirectory();
 
-      let numReads = 0, numWrites = 0;
+      let numReads = 0;
+      let numWrites = 0;
       const writes: number[] = [];
       const reads: number[] = [];
 
-      const startTime = performance.now()
+      const startTime = performance.now();
       const [allDone, done] = latch({ count: NUM_THREADS });
       for (const threadId of range(NUM_THREADS)) {
         const fileName = `file-${threadId}`;
@@ -81,16 +80,16 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
           NUM_THREADS,
           NUM_READS,
           NUM_WRITES,
-          RUN_TIME,
+          RUN_TIME
         },
         result: {
           numReads,
           numWrites,
           realRunTime,
           avgReadTime: reads.reduce((a, b) => a + b, 0) / reads.length,
-          avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length,
+          avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length
         }
-      })
+      });
 
       // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
       // console.log(JSON.stringify({
@@ -98,6 +97,6 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
       //   writes
       // }))
       // console.log('>>>>>>>>>>>>>>>>>>>>>>>')
-    })
+    });
   });
 };
