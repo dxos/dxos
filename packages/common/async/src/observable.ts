@@ -49,6 +49,13 @@ export class MulticastObservable<T> extends Observable<T> {
   }
 
   /**
+   * @returns Stable reference to an observable that always returns `undefined`.
+   */
+  static empty() {
+    return EMPTY_OBSERVABLE;
+  }
+
+  /**
    * Get the current value of the observable.
    */
   get(): T {
@@ -94,3 +101,5 @@ export class MulticastObservable<T> extends Observable<T> {
     }
   };
 }
+
+const EMPTY_OBSERVABLE = MulticastObservable.of(null);

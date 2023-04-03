@@ -26,6 +26,11 @@ const workerRuntime = new WorkerRuntime(async () => {
   return config;
 });
 
+// Allow to access host from console.
+(globalThis as any).__DXOS__ = {
+  host: workerRuntime.host
+};
+
 const start = Date.now();
 void workerRuntime.start().then(
   () => {
