@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Space, SpaceState } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
@@ -67,13 +68,7 @@ export type UseSpacesParams = {
  */
 export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
-  const spaces = useSyncExternalStore(
-    (listener) => {
-      const subscription = client.spaces.subscribe(listener);
-      return () => subscription.unsubscribe();
-    },
-    () => client.spaces.get()
-  );
+  const spaces = useMulticastObservable(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
   return spaces.filter((space) => all || space.state.get() === SpaceState.READY);

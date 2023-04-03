@@ -29,7 +29,8 @@ filter:
   # - auth:debug
   # - control-pipeline:debug
   # - notarization:debug
-  # - pipeline:debug
+  - pipeline:debug
+  - iterator:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

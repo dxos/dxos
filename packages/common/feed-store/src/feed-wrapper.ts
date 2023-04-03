@@ -68,6 +68,7 @@ export class FeedWrapper<T extends {}> {
         try {
           this._pendingWrites.add(stackTrace);
           const seq = await this.append(data);
+          assert(seq < this.length, 'Invalid seq after write');
           log('write complete', { feed: this._key, seq });
           return {
             feedKey: this.key,
