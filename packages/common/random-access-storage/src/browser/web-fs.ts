@@ -124,6 +124,7 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this))
   } as RandomAccessStorage;
 
+  @synchronized
   async write(offset: number, data: Buffer) {
     // TODO(mykola): Fix types.
     const fileHandle: any = await this._fileHandle;
@@ -132,6 +133,7 @@ export class WebFile extends EventEmitter implements File {
     await writable.close();
   }
 
+  @synchronized
   async read(offset: number, size: number) {
     const fileHandle: any = await this._fileHandle;
     const file = await fileHandle.getFile();
