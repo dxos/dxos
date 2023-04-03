@@ -1469,6 +1469,7 @@ importers:
 
   packages/common/react-async:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
       '@types/react': ^18.0.21
@@ -1477,6 +1478,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
+      '@dxos/async': link:../async
       immutability-helper: 3.1.1
     devDependencies:
       '@dxos/esbuild-plugins': link:../esbuild-plugins
@@ -1774,6 +1776,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
+      fast-check: ~3.3.0
       hypercore-protocol: ^8.0.7
       source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
@@ -1809,6 +1812,7 @@ importers:
     devDependencies:
       '@dxos/text-model': link:../text-model
       '@types/debug': 4.1.7
+      fast-check: 3.3.0
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
@@ -2535,6 +2539,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/faker': ^5.5.9
@@ -2580,6 +2585,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
