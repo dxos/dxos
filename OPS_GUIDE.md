@@ -42,17 +42,29 @@ These are all deployed from `dxos` repo via CircleCI. See [.circleci/scripts/pub
 
 ## Supporting Assets
 
-| Asset          | Role | Description                                                                           |
-| :------------- | :-- | :------------------------------------------------------------------------------------ |
-| PagerDuty | Notifications     | Reliably notifies DXOS developers when monitors fail                                  |
-| DataDog | Server telemetry (short term)  | Collects detailed telemetry from servers, runs monitors, and notifies PagerDuty       |
-| Sentry | Errors and traces        | Collects error reports from servers and clients, replays, and traces from all clients |
-| Segment     | Long term usage telemetry ingress   | Collects long term product usage telemetry into PostgreSQL                            |
-| Superset     | Telemetry visualizer  | Visualizes telemetry stored in PostgreSQL, running on DigitalOcean                    |
-| PostgreSQL    | Long term telemetry store | Contains long term usage telemetry from all sources via Segment                       |
-| Elastic Search | Log store | Contains access and runtime logs from servers                                         |
-| Kibana       | Log visualizer  | Visualizes logs stored in Elastic Search, running on DigitalOcean                     |
-| DigitalOcean  | Infrastructure service | Runs machines for kubes and PostgreSQL                                                |
-| PipeDream    | Custom API connectors  | Forwards certain events from GitHub (such as CI failures) to Discord                  |
+| Asset          | Role                              | Description                                                                           |
+| :------------- | :-------------------------------- | :------------------------------------------------------------------------------------ |
+| PagerDuty      | Notifications                     | Reliably notifies DXOS developers when monitors fail                                  |
+| DataDog        | Server telemetry (short term)     | Collects detailed telemetry from servers, runs monitors, and notifies PagerDuty       |
+| Sentry         | Errors and traces                 | Collects error reports from servers and clients, replays, and traces from all clients |
+| Segment        | Long term usage telemetry ingress | Collects long term product usage telemetry into PostgreSQL                            |
+| Superset       | Telemetry visualizer              | Visualizes telemetry stored in PostgreSQL, running on DigitalOcean                    |
+| PostgreSQL     | Long term telemetry store         | Contains long term usage telemetry from all sources via Segment                       |
+| Elastic Search | Log store                         | Contains access and runtime logs from servers                                         |
+| Kibana         | Log visualizer                    | Visualizes logs stored in Elastic Search, running on DigitalOcean                     |
+| DigitalOcean   | Infrastructure service            | Runs machines for kubes and PostgreSQL                                                |
+| PipeDream      | Custom API connectors             | Forwards certain events from GitHub (such as CI failures) to Discord                  |
+| CloudFlare     | CDN                               | Caches assets by intercepting DNS traffic                                             |
+| NPM  | Package store | Node.js packages are hosted in the public NPM registry |
 
 No system collects all client side logs entirely. Only the errors, traces, and replays subset is covered by Sentry for all clients and may be impaired by client side blockers like browsers, extensions, proxies, etc.
+
+## Other dependencies
+
+|      |               |                                                        |
+| :--- | :------------ | :----------------------------------------------------- |
+| IPFS | Content Store | Applications in KUBE are backed by IPFS storage        |
+
+## Diagram
+
+![Diagram](./docs/docs/ops/operations-diagram.drawio.svg)
