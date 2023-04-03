@@ -2,19 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UserPlus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback, useReducer } from 'react';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
-import { getSize, mx, useTranslation } from '@dxos/react-components';
+import { useTranslation, Avatar } from '@dxos/react-components';
 
-import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
-import { defaultSurface, subduedSurface } from '../../styles';
-
-import { Title, Heading, Content, Button, Panel, CloseButton } from '../Panel';
+import { InvitationList, SpaceMemberListContainer } from '../../components';
 import { HaloRing } from '../../components/HaloRing';
-import { Avatar } from '@dxos/react-components';
+import { Title, Heading, Content, Button, Panel, CloseButton } from '../Panel';
 
 export type SpacePanelProps = {
   titleId?: string;
@@ -48,6 +44,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
   return (
     <Panel>
       <Title>Space membership</Title>
+      <CloseButton />
       <Content className='text-center flex items-center justify-center content-center'>
         <HaloRing>
           <Avatar labelId={''} fallbackValue={space.key.toString()} />

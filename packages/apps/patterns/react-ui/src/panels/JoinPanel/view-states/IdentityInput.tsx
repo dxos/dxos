@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Input, useTranslation } from '@dxos/react-components';
 
 import { Heading, Content, Button } from '../../Panel';
 import { ViewState, ViewStateProps } from './ViewState';
@@ -62,9 +61,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           onClick={handleNext}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          {/* <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} /> */}
           <span className='grow'>{t('continue label')}</span>
-          {/* <CaretRight weight='bold' className={getSize(4)} /> */}
         </Button>
         <Button
           variant='ghost'
@@ -72,7 +69,6 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          {/* <CaretLeft weight='bold' className={getSize(4)} /> */}
           <span>{t('back label')}</span>
         </Button>
       </Content>
