@@ -49,6 +49,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../halo-app"
+    },
+    {
       "path": "../patterns/react-appkit"
     },
     {

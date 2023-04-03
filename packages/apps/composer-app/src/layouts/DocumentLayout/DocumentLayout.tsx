@@ -27,30 +27,33 @@ export const DocumentLayout = () => {
   const haloInvitationCode = searchParams.get('haloInvitationCode');
 
   return (
-    <ShellProvider
-      space={space}
-      spaceInvitationCode={spaceInvitationCode}
-      haloInvitationCode={haloInvitationCode}
-      onJoinedSpace={(spaceKey) => {
-        console.log('[joined space]', spaceKey);
-      }}
-    >
-      <OctokitProvider>
-        <PanelSidebarProvider
-          slots={{
-            content: {
-              children: <SidebarContent />,
-              className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
-              onOpenAutoFocus: (event) => event.preventDefault(),
-              onCloseAutoFocus: (event) => event.preventDefault()
-            },
-            main: { role: 'main', className: 'min-bs-full' }
-          }}
-        >
-          <Outlet context={{ space }} />
-          <SidebarToggle />
-        </PanelSidebarProvider>
-      </OctokitProvider>
-    </ShellProvider>
+    <>
+      <span className='sr-only' data-testid='composer.pageReady' />
+      <ShellProvider
+        space={space}
+        spaceInvitationCode={spaceInvitationCode}
+        haloInvitationCode={haloInvitationCode}
+        onJoinedSpace={(spaceKey) => {
+          console.log('[joined space]', spaceKey);
+        }}
+      >
+        <OctokitProvider>
+          <PanelSidebarProvider
+            slots={{
+              content: {
+                children: <SidebarContent />,
+                className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
+                onOpenAutoFocus: (event) => event.preventDefault(),
+                onCloseAutoFocus: (event) => event.preventDefault()
+              },
+              main: { role: 'main', className: 'min-bs-full' }
+            }}
+          >
+            <Outlet context={{ space }} />
+            <SidebarToggle />
+          </PanelSidebarProvider>
+        </OctokitProvider>
+      </ShellProvider>
+    </>
   );
 };
