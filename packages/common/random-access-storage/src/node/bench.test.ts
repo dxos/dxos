@@ -18,7 +18,7 @@ const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 /**
  * Node file system specific tests.
  */
-describe.only('storage benchmark', () => {
+describe.skip('storage benchmark', () => {
   beforeAll(() => del(ROOT_DIRECTORY));
 
   afterAll(() => del(ROOT_DIRECTORY));
