@@ -3,7 +3,8 @@
 //
 
 import assert from 'node:assert';
-import EventEmitter from 'node:events';
+import { EventEmitter } from 'node:events';
+import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
 
 import { synchronized } from '@dxos/async';
@@ -114,7 +115,14 @@ export class WebFile extends EventEmitter implements File {
   directory = '';
   filename = '';
   type: StorageType = StorageType.WEBFS;
-  native: RandomAccessStorage = {} as RandomAccessStorage;
+  native: RandomAccessStorage = {
+    write: callbackify(this.write.bind(this)),
+    read: callbackify(this.read.bind(this)),
+    del: callbackify(this.del.bind(this)),
+    stat: callbackify(this.stat.bind(this)),
+    destroy: callbackify(this.destroy.bind(this)),
+    truncate: callbackify(this.truncate?.bind(this))
+  } as RandomAccessStorage;
 
   async write(offset: number, data: Buffer) {
     // TODO(mykola): Fix types.
@@ -127,6 +135,9 @@ export class WebFile extends EventEmitter implements File {
   async read(offset: number, size: number) {
     const fileHandle: any = await this._fileHandle;
     const file = await fileHandle.getFile();
+    if (offset + size > file.size) {
+      throw new Error('Read out of bounds');
+    }
     return Buffer.from(new Uint8Array(await file.slice(offset, offset + size).arrayBuffer()));
   }
 
@@ -151,7 +162,10 @@ export class WebFile extends EventEmitter implements File {
     return await this._destroy();
   }
 
-  async truncate?(offset: number) {
-    throw new Error('Method not implemented.');
+  async truncate(offset: number) {
+    const fileHandle: any = await this._fileHandle;
+    const writable = await fileHandle.createWritable({ keepExistingData: true });
+    await writable.write({ type: 'truncate', size: offset });
+    await writable.close();
   }
 }

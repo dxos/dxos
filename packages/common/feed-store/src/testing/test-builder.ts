@@ -34,7 +34,7 @@ export class TestBuilder<T extends {}> {
 
   // prettier-ignore
   constructor(
-    protected readonly _properties: TestBuilderOptions<T> = {}
+    public readonly _properties: TestBuilderOptions<T> = {}
   ) {}
 
   /**
