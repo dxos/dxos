@@ -20,8 +20,8 @@ describe('Tests for different storage types in different browsers', () => {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
-  test(`Used ${StorageType.IDB} by default`, async () => {
+  test(`Used ${StorageType.WEBFS} by default`, async () => {
     const storage = createStorage({ root: ROOT_DIRECTORY });
-    expect(storage.type).toBe(StorageType.IDB);
+    expect(storage.type).toBe(StorageType.WEBFS);
   });
 });
