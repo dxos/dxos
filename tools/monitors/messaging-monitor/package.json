@@ -8,8 +8,8 @@
   "author": "DXOS.org",
   "scripts": {
     "setup": "npm install --no-package-lock",
-    "start": "npm run setup && npm run test",
-    "test": "mocha -r ts-node/register --reporter mocha-multi-reporters --reporter-options configFile=config.json ./test/*.test.ts"
+    "start": "npm run setup && npm run monitor",
+    "monitor": "mocha -r ts-node/register --reporter mocha-multi-reporters --reporter-options configFile=config.json ./test/*.test.ts"
   },
   "devDependencies": {
     "@dxos/messaging": "latest",
