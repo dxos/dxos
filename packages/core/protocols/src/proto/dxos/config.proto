@@ -130,7 +130,6 @@ message Runtime {
     optional string public_url = 4 [(env_var) = "PUBLIC_URL"];
 
     optional BuildInfo build = 100;
-    // TODO: fix - is clashing with field option "env"
     optional google.protobuf.Struct env = 101;
   }
 
