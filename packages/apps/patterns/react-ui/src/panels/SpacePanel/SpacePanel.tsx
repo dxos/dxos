@@ -34,11 +34,10 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
   }
 
   const onInvitationEvent = useCallback((invitation: Invitation) => {
-    console.log('[invitation event]');
     const invitationCode = InvitationEncoder.encode(invitation);
     console.log(JSON.stringify({ invitationCode }));
     if (invitation.authCode) {
-      console.log(JSON.stringify({ authenticationCode: invitation.authCode }));
+      console.log(JSON.stringify({ authCode: invitation.authCode }));
     }
   }, []);
 

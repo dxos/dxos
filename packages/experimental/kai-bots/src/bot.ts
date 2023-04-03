@@ -3,9 +3,11 @@
 //
 
 import assert from 'assert';
+import { inspect } from 'node:util';
 
 import { Space } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 /**
@@ -17,6 +19,18 @@ export abstract class Bot {
 
   constructor(private readonly _id: string) {
     assert(this._id);
+  }
+
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return { id: this._id };
+  }
+
+  toString() {
+    return `Bot(${JSON.stringify(this.toJSON())})`;
   }
 
   get id() {
@@ -36,22 +50,37 @@ export abstract class Bot {
     assert(space);
     this._config = config;
     this._space = space;
-    log('initializing...');
-    await this.onInit();
+
+    try {
+      log('initializing...');
+      return await this.onInit();
+    } catch (err) {
+      log.catch('initializing', err);
+      throw err;
+    }
   }
 
   async start() {
-    log('starting...');
-    return this.onStart();
+    try {
+      log('starting...');
+      return await this.onStart();
+    } catch (err) {
+      log.catch('starting', err);
+      throw err;
+    }
   }
 
   async stop() {
-    log('stopping...');
-    return this.onStop();
+    try {
+      log('stopping...');
+      return await this.onStop();
+    } catch (err) {
+      log.catch('stopping', err);
+      throw err;
+    }
   }
 
   async onInit(): Promise<void> {}
-
   abstract onStart(): Promise<void>;
   abstract onStop(): Promise<void>;
 }

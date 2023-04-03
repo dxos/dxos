@@ -28,7 +28,8 @@ export class InvitationEncoder {
         kind: invitation.kind,
         authMethod: invitation.authMethod,
         swarmKey: invitation.swarmKey,
-        state: invitation.state
+        state: invitation.state,
+        timeout: invitation.timeout
       })
     );
   }

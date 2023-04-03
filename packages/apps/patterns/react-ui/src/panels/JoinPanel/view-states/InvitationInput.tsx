@@ -10,15 +10,15 @@ import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-componen
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationInputProps extends ViewStateProps {
-  Domain: 'Space' | 'Halo';
+  Kind: 'Space' | 'Halo';
 }
 
-export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputProps) => {
+export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProps) => {
   const disabled = !viewStateProps.active;
   const { joinSend, joinState } = viewStateProps;
   const { t } = useTranslation('os');
 
-  const contextUnredeemedCode = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].unredeemedCode;
+  const contextUnredeemedCode = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].unredeemedCode;
 
   const [inputValue, setInputValue] = useState(contextUnredeemedCode ?? '');
 
@@ -28,7 +28,7 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
 
   const handleNext = () =>
     joinSend({
-      type: `set${Domain}InvitationCode`,
+      type: `set${Kind}InvitationCode`,
       code: inputValue
     });
 
@@ -42,8 +42,8 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
         slots={{
           root: { className: 'm-0' },
           input: {
-            'data-autofocus': `inputting${Domain}InvitationCode`,
-            'data-testid': `${Domain.toLowerCase()}-invitation-input`,
+            'data-autofocus': `inputting${Kind}InvitationCode`,
+            'data-testid': `${Kind.toLowerCase()}-invitation-input`,
             onKeyUp: ({ key }) => key === 'Enter' && handleNext()
           } as ComponentPropsWithoutRef<'input'>
         }}
@@ -54,17 +54,17 @@ export const InvitationInput = ({ Domain, ...viewStateProps }: InvitationInputPr
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
-          data-testid={`${Domain.toLowerCase()}-invitation-input-continue`}
+          data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('continue label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
         </Button>
         <Button
-          disabled={Domain === 'Space'}
+          disabled={disabled || Kind === 'Space'}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
           className='flex items-center gap-2 pis-2 pie-4'
-          data-testid={`${Domain.toLowerCase()}-invitation-input-back`}
+          data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />
           <span>{t('back label')}</span>

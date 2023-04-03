@@ -46,11 +46,11 @@ test.describe('Basic test', () => {
       const invitationCode = await host.shell.createSpaceInvitation();
       await guest.showSpaceList();
       await guest.openJoinSpace();
-      const [authenticationCode] = await Promise.all([
-        host.shell.getAuthenticationCode(),
+      const [authCode] = await Promise.all([
+        host.shell.getAuthCode(),
         guest.shell.acceptSpaceInvitation(invitationCode)
       ]);
-      await guest.shell.authenticate(authenticationCode);
+      await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 
       // Wait for redirect.

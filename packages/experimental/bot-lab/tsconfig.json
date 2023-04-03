@@ -4,6 +4,7 @@
     "outDir": "dist/types"
   },
   "include": [
+    "config",
     "src"
   ],
   "references": [

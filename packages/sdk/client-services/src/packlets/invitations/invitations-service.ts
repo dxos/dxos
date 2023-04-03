@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { TimeoutError } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
@@ -56,6 +55,12 @@ export class InvitationsServiceImpl implements InvitationsService {
               next(invitation);
               break;
             }
+            case Invitation.State.READY_FOR_AUTHENTICATION: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.READY_FOR_AUTHENTICATION;
+              next(invitation);
+              break;
+            }
             case Invitation.State.AUTHENTICATING: {
               assert(invitation.invitationId);
               invitation.state = Invitation.State.AUTHENTICATING;
@@ -66,7 +71,6 @@ export class InvitationsServiceImpl implements InvitationsService {
               assert(invitation.invitationId);
               invitation.state = Invitation.State.SUCCESS;
               next(invitation);
-              close();
               break;
             }
             case Invitation.State.CANCELLED: {
@@ -74,20 +78,22 @@ export class InvitationsServiceImpl implements InvitationsService {
               invitation.invitationId = invitationId;
               invitation.state = Invitation.State.CANCELLED;
               next(invitation);
-              close();
+              break;
+            }
+            case Invitation.State.TIMEOUT: {
+              assert(invitationId);
+              invitation.invitationId = invitationId;
+              invitation.state = Invitation.State.TIMEOUT;
+              next(invitation);
               break;
             }
           }
         },
         (err: Error) => {
-          if (err instanceof TimeoutError) {
-            invitation.state = Invitation.State.TIMEOUT;
-            // TODO(wittjosiah): Fire an event here.
-            close(err);
-          } else {
-            invitation.state = Invitation.State.ERROR;
-            close(err);
-          }
+          close(err);
+        },
+        () => {
+          close();
         }
       );
 
@@ -128,6 +134,12 @@ export class InvitationsServiceImpl implements InvitationsService {
               next(invitation);
               break;
             }
+            case Invitation.State.READY_FOR_AUTHENTICATION: {
+              assert(invitation.invitationId);
+              invitation.state = Invitation.State.READY_FOR_AUTHENTICATION;
+              next(invitation);
+              break;
+            }
             case Invitation.State.AUTHENTICATING: {
               assert(invitation.invitationId);
               invitation.state = Invitation.State.AUTHENTICATING;
@@ -137,7 +149,6 @@ export class InvitationsServiceImpl implements InvitationsService {
             case Invitation.State.SUCCESS: {
               invitation.state = Invitation.State.SUCCESS;
               next(invitation);
-              close();
               break;
             }
             case Invitation.State.CANCELLED: {
@@ -145,19 +156,22 @@ export class InvitationsServiceImpl implements InvitationsService {
               invitation.invitationId = invitationId;
               invitation.state = Invitation.State.CANCELLED;
               next(invitation);
-              close();
+              break;
+            }
+            case Invitation.State.TIMEOUT: {
+              assert(invitationId);
+              invitation.invitationId = invitationId;
+              invitation.state = Invitation.State.TIMEOUT;
+              next(invitation);
+              break;
             }
           }
         },
         (err: Error) => {
-          if (err instanceof TimeoutError) {
-            invitation.state = Invitation.State.TIMEOUT;
-            // TODO(wittjosiah): Fire an event here.
-            close(err);
-          } else {
-            invitation.state = Invitation.State.ERROR;
-            close(err);
-          }
+          close(err);
+        },
+        () => {
+          close();
         }
       );
 
