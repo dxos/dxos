@@ -24,7 +24,7 @@ const stripe = mx('rounded-full grow', getSize(3));
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
-    <h2 {...props} className={mx('font-system-normal text-sm mbe-1 mli-1 text-center', className)}>
+    <h2 {...props} className={mx('font-system-normal text-sm mlb-3 mli-1 text-center', className)}>
       {children}
     </h2>
   );
@@ -145,7 +145,7 @@ export const ViewState = ({ active, children, className, joinSend, joinState, ..
       {...(!active && { 'aria-hidden': true })}
       className={mx('is-[50%] flex flex-col', active ? 'order-2' : 'order-4', className)}
     >
-      <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-4 pbs-1')}>
+      <div role='region' className={mx('grow shrink-0')}>
         {children}
       </div>
     </div>

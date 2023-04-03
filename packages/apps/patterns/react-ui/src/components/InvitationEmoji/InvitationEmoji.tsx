@@ -21,8 +21,10 @@ export const InvitationEmoji = ({ invitationId, size = 'lg', ...rootProps }: Inv
       {...rootProps}
       className={mx(
         getSize(size === 'sm' ? 8 : 12),
-        'inline-flex items-center justify-center leading-none',
-        size === 'sm' ? 'text-2xl' : 'text-5xl bg-neutral-300 dark:bg-neutral-700 rounded-full',
+        'inline-flex items-center justify-center leading-none shrink-0',
+        size === 'sm'
+          ? 'text-2xl'
+          : 'text-5xl bg-neutral-500 rounded-full bg-gradient-radial from-neutral-200 to-neutral-500 dark:from-neutral-600 dark:to-neutral-850',
         rootProps.className
       )}
     >

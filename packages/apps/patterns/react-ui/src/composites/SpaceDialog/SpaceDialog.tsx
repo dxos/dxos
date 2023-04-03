@@ -7,11 +7,11 @@ import React from 'react';
 
 import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
 
-import { PanelDialog, PanelDialogProps } from '../../layouts';
+import { Dialog, DialogProps } from '../../layouts';
 import { SpacePanel, SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
-  extends Omit<PanelDialogProps, 'titleId' | 'children'>,
+  extends Omit<DialogProps, 'titleId' | 'children'>,
     Omit<SpacePanelProps, 'doneActionParent'> {}
 
 export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => {
@@ -19,7 +19,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
   const themeContextValue = useThemeContext();
 
   return (
-    <PanelDialog
+    <Dialog
       {...{
         slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(), ...slots?.root } },
         titleId
@@ -34,6 +34,6 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
           }}
         />
       </ThemeContext.Provider>
-    </PanelDialog>
+    </Dialog>
   );
 };

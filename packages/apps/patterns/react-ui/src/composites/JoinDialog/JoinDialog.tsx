@@ -5,31 +5,27 @@
 import { Action, Cancel } from '@radix-ui/react-alert-dialog';
 import React from 'react';
 
-import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
+import { useId } from '@dxos/react-components';
 
-import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
+import { AlertDialog, AlertDialogProps } from '../../layouts';
 import { JoinPanel, JoinPanelProps } from '../../panels';
 
 export interface JoinDialogProps
-  extends Omit<PanelAlertDialogProps, 'titleId' | 'children'>,
+  extends Omit<AlertDialogProps, 'titleId' | 'children'>,
     Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
 
 export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
-  const themeContextValue = useThemeContext();
-
   return (
-    <PanelAlertDialog {...{ slots, titleId }}>
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
-        <JoinPanel
-          {...{
-            ...joinPanelProps,
-            titleId,
-            exitActionParent: <Cancel asChild />,
-            doneActionParent: <Action asChild />
-          }}
-        />
-      </ThemeContext.Provider>
-    </PanelAlertDialog>
+    <AlertDialog {...{ slots, titleId }}>
+      <JoinPanel
+        {...{
+          ...joinPanelProps,
+          titleId,
+          exitActionParent: <Cancel asChild />,
+          doneActionParent: <Action asChild />
+        }}
+      />
+    </AlertDialog>
   );
 };

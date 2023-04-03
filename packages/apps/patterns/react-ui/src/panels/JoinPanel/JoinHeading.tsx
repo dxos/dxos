@@ -5,12 +5,13 @@ import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
 import { useSpace } from '@dxos/react-client';
-import { Button, defaultDescription, getSize, Heading, mx, useId, useTranslation } from '@dxos/react-components';
+import { getSize, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { InvitationEmoji } from '../../components';
-import { defaultSurface } from '../../styles';
+import { Title, CloseButton, Content } from '../Panel';
 import { JoinPanelMode } from './JoinPanelProps';
 import { JoinState } from './joinMachine';
+import { HaloRing } from '../../components/HaloRing';
 
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;
@@ -36,37 +37,24 @@ export const JoinHeading = forwardRef(
     const invitationId = joinState?.context[mode === 'halo-only' ? 'halo' : 'space'].invitation?.invitationId;
 
     const exitButton = (
-      <Button
-        variant='ghost'
-        {...(onExit && { onClick: onExit })}
-        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2 z-[1]')}
-        data-testid='join-exit'
-      >
+      <CloseButton label={t('exit label')} {...(onExit && { onClick: onExit })} data-testid='join-exit'>
         <X weight='bold' className={getSize(4)} />
-        <span className='sr-only'>{t('exit label')}</span>
-      </Button>
+        <span className='sr-only'>{}</span>
+      </CloseButton>
     );
 
     return (
-      <div role='none' className={mx(defaultSurface, 'pbs-3 pbe-1 rounded-bs-md relative')} ref={ref}>
+      <div role='none' className={mx('relative')} ref={ref}>
         {!preventExit &&
           mode !== 'halo-only' &&
           (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
-        <Heading
-          level={1}
-          className={mx(
-            defaultDescription,
-            'font-body font-system-normal text-center text-sm grow pbe-2',
-            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0')
-          )}
-          id={titleId}
-        >
+        <Title className={mode === 'halo-only' ? (preventExit ? 'sr-only' : 'opacity-100') : ''} id={titleId}>
           {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
-        </Heading>
-        <div role='group' className='flex items-center justify-center gap-2'>
-          <InvitationEmoji {...{ invitationId }} />
+        </Title>
+        <Content className='flex items-center justify-center gap-2'>
+          <HaloRing loading={!invitationId}>{invitationId && <InvitationEmoji {...{ invitationId }} />}</HaloRing>
           {name && <p id={nameId}>{name}</p>}
-        </div>
+        </Content>
       </div>
     );
   }

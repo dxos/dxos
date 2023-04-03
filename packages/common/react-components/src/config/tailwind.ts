@@ -586,6 +586,18 @@ export const tailwindConfig = ({
             '100%': {
               transform: 'translateX(100%)'
             }
+          },
+          // Pulse
+          'pulse-loop': {
+            '0%': {
+              opacity: '0.3'
+            },
+            '7%': {
+              opacity: '0.8'
+            },
+            '100%': {
+              opacity: '0.3'
+            }
           }
         },
         animation: {
@@ -613,7 +625,13 @@ export const tailwindConfig = ({
           'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
           // Shimmer
-          shimmer: 'shimmer-loop 2s infinite'
+          shimmer: 'shimmer-loop 2s infinite',
+          // Pulse
+          pulse: 'pulse-loop 3.5s ease-out infinite',
+          'pulse-late': 'pulse-loop 3.5s ease-out infinite 1.5s'
+        },
+        backgroundImage: {
+          'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))'
         }
       },
       ...extensions

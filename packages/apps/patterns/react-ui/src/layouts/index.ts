@@ -4,5 +4,5 @@
 
 export * from './PanelPopover';
 export * from './PanelSidebar';
-export * from './PanelAlertDialog';
-export * from './PanelDialog';
+export * from './AlertDialog';
+export * from './Dialog';

@@ -6,9 +6,10 @@ import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { Heading, Content, Button } from '../../Panel';
+import { ViewState, ViewStateProps } from './ViewState';
 
 export interface IdentityCreatorProps extends ViewStateProps {
   method: 'recover identity' | 'create identity';
@@ -34,46 +35,47 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
   };
   return (
     <ViewState {...viewStateProps}>
-      <Input
-        disabled={disabled}
-        label={
-          <ViewStateHeading>
-            {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-          </ViewStateHeading>
-        }
-        onChange={({ target: { value } }) => setInputValue(value)}
-        slots={{
-          root: { className: 'm-0' },
-          input: {
-            'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
-        }}
-        {...(validationMessage.length && { validationValence: 'error', validationMessage })}
-        data-testid='identity-input'
-      />
-      <div role='none' className='grow' />
-      <div className='flex gap-2'>
+      <Content className='mbs-0'>
+        <Input
+          disabled={disabled}
+          label={
+            <Heading className='mbs-0'>
+              {t(isRecover ? 'recover identity input label' : 'new identity input label')}
+            </Heading>
+          }
+          placeholder='Type here'
+          onChange={({ target: { value } }) => setInputValue(value)}
+          slots={{
+            root: { className: 'm-0' },
+            input: {
+              className: 'text-center p-4',
+              autoFocus: true,
+              'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
+              onKeyUp: ({ key }) => key === 'Enter' && handleNext()
+            } as ComponentPropsWithoutRef<'input'>
+          }}
+          {...(validationMessage.length && { validationValence: 'error', validationMessage })}
+          data-testid='identity-input'
+        />
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
+          {/* <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} /> */}
           <span className='grow'>{t('continue label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
+          {/* <CaretRight weight='bold' className={getSize(4)} /> */}
         </Button>
         <Button
+          variant='ghost'
           disabled={disabled}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-          className='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          <CaretLeft weight='bold' className={getSize(4)} />
+          {/* <CaretLeft weight='bold' className={getSize(4)} /> */}
           <span>{t('back label')}</span>
         </Button>
-      </div>
+      </Content>
     </ViewState>
   );
 };

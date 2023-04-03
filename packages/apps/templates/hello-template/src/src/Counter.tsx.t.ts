@@ -5,7 +5,7 @@ export default defineTemplate(
   ({ input: { react } }) => {
     return !react
       ? null
-      : text/* javascript */ `
+      : text /* javascript */ `
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-components';

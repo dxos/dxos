@@ -18,6 +18,7 @@ export * from './Loading';
 export * from './Input';
 export * from './NavMenu';
 export * from './Popover';
+export * from './Pulse';
 export * from './QrCode';
 export * from './Table';
 export * from './Tag';

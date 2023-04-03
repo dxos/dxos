@@ -24,7 +24,7 @@ export const defaultInput = (
   return mx(
     'text-neutral-900 dark:text-white',
     themeVariant === 'os'
-      ? 'rounded-sm text-sm bg-white/50 dark:bg-neutral-750/50'
+      ? 'rounded text-sm bg-white/50 dark:bg-neutral-750/50'
       : 'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
     props.density === 'fine' ? defaultFine : defaultCoarse,
     focus({ ...props, variant: 'default' }, themeVariant),

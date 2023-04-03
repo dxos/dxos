@@ -5,8 +5,9 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { DensityProvider, useId, useThemeContext } from '@dxos/react-components';
+import { useId, useThemeContext } from '@dxos/react-components';
 
+import { Panel, Title, Heading, Content } from '../Panel';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
@@ -64,7 +65,7 @@ export const JoinPanel = ({
   }, [joinState.value, hasIosKeyboard]);
 
   return (
-    <DensityProvider density='fine'>
+    <Panel>
       <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1200%]' aria-live='polite'>
@@ -242,6 +243,6 @@ export const JoinPanel = ({
           />
         </div>
       </div>
-    </DensityProvider>
+    </Panel>
   );
 };

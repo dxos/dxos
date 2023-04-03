@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Input, useTranslation } from '@dxos/react-components';
 
+import { Content, Heading, Button } from '../../Panel';
 import { JoinSend, JoinState } from '../joinMachine';
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateProps } from './ViewState';
 
 const pinLength = 6;
 
@@ -39,18 +39,19 @@ const PureInvitationAuthenticatorContent = ({
   const { t } = useTranslation('os');
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   return (
-    <>
+    <Content className='mbs-0'>
       <Input
-        label={<ViewStateHeading>{t('auth code input label')}</ViewStateHeading>}
+        label={<Heading className='mbs-0'>{t('auth code input label')}</Heading>}
         size='pin'
         length={pinLength}
         onChange={onChange}
         disabled={disabled}
         slots={{
-          root: { className: 'm-0' },
+          root: { className: 'mbs-0' },
           description: { className: 'text-center' },
           input: {
             disabled,
+            className: 'mlb-3',
             inputMode: 'numeric',
             autoComplete: 'off',
             pattern: '\\d*',
@@ -65,30 +66,23 @@ const PureInvitationAuthenticatorContent = ({
           validationMessage: t('failed to authenticate message')
         })}
       />
-      <div role='none' className='grow' />
-      <div className='flex gap-2'>
-        <Button
-          disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
-          onClick={onAuthenticate}
-          data-autofocus-pinlength={invitationType}
-          data-testid={`${invitationType}-invitation-authenticator-next`}
-        >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-          <span className='grow'>{t('next label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
-        </Button>
-        <Button
-          disabled={disabled}
-          className='flex items-center gap-2 pis-2 pie-4'
-          onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
-          data-testid={`${invitationType}-invitation-authenticator-cancel`}
-        >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('cancel label')}</span>
-        </Button>
-      </div>
-    </>
+      <Button
+        disabled={disabled}
+        onClick={onAuthenticate}
+        data-autofocus-pinlength={invitationType}
+        data-testid={`${invitationType}-invitation-authenticator-next`}
+      >
+        <span className='grow'>{t('next label')}</span>
+      </Button>
+      <Button
+        disabled={disabled}
+        variant='ghost'
+        onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
+        data-testid={`${invitationType}-invitation-authenticator-cancel`}
+      >
+        <span>{t('cancel label')}</span>
+      </Button>
+    </Content>
   );
 };
 

@@ -7,7 +7,8 @@ import React, { cloneElement } from 'react';
 
 import type { Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
-import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Avatar, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Content, Button, Heading } from '../../Panel';
 
 import { JoinPanelMode } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
@@ -30,13 +31,10 @@ const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
     <Button
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
-      className='grow flex items-center gap-2 pli-2'
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
-      <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
-      <Check className={getSize(4)} />
     </Button>
   );
 
@@ -56,7 +54,7 @@ export const IdentityAdded = ({
 
   return (
     <ViewState {...viewStateProps}>
-      <ViewStateHeading>{t('identity added label')}</ViewStateHeading>
+      <Heading className='mbs-0'>{t('identity added label')}</Heading>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar
           size={20}

@@ -7,11 +7,11 @@ import React from 'react';
 
 import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
 
-import { PanelDialog, PanelDialogProps } from '../../layouts';
+import { Dialog, DialogProps } from '../../layouts';
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
 
 export interface DevicesDialogProps
-  extends Omit<PanelDialogProps, 'titleId' | 'children'>,
+  extends Omit<DialogProps, 'titleId' | 'children'>,
     Omit<DevicesPanelProps, 'doneActionParent'> {}
 
 export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogProps) => {
@@ -19,7 +19,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
   const themeContextValue = useThemeContext();
 
   return (
-    <PanelDialog
+    <Dialog
       {...{
         slots: { ...slots, root: { onOpenChange: (open) => open || devicesDialogProps.onDone?.(), ...slots?.root } },
         titleId
@@ -34,6 +34,6 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
           }}
         />
       </ThemeContext.Provider>
-    </PanelDialog>
+    </Dialog>
   );
 };

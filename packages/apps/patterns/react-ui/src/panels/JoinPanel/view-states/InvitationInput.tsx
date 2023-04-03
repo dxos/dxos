@@ -5,8 +5,9 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Input, useTranslation } from '@dxos/react-components';
 
+import { Button, Content, Heading } from '../../Panel';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationInputProps extends ViewStateProps {
@@ -34,42 +35,41 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
 
   return (
     <ViewState {...viewStateProps}>
-      <Input
-        disabled={disabled}
-        label={<ViewStateHeading>{t('invitation input label')}</ViewStateHeading>}
-        value={inputValue}
-        onChange={({ target: { value } }) => setInputValue(value)}
-        slots={{
-          root: { className: 'm-0' },
-          input: {
-            'data-autofocus': `inputting${Kind}InvitationCode`,
-            'data-testid': `${Kind.toLowerCase()}-invitation-input`,
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
-        }}
-      />
-      <div role='none' className='grow' />
-      <div className='flex gap-2'>
+      <Content className='mbs-0'>
+        <Input
+          disabled={disabled}
+          label={<Heading className='mbs-0'>{t('invitation input label')}</Heading>}
+          value={inputValue}
+          onChange={({ target: { value } }) => setInputValue(value)}
+          slots={{
+            root: { className: 'm-0' },
+            input: {
+              className: 'text-center p-4',
+              autoFocus: true,
+              'data-autofocus': `inputting${Kind}InvitationCode`,
+              'data-testid': `${Kind.toLowerCase()}-invitation-input`,
+              onKeyUp: ({ key }) => key === 'Enter' && handleNext()
+            } as ComponentPropsWithoutRef<'input'>
+          }}
+        />
+
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('continue label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
         </Button>
-        <Button
-          disabled={Kind === 'Space'}
-          onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-          className='flex items-center gap-2 pis-2 pie-4'
-          data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
-        >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('back label')}</span>
-        </Button>
-      </div>
+        {Kind !== 'Space' && (
+          <Button
+            variant='ghost'
+            onClick={() => joinSend({ type: 'deselectAuthMethod' })}
+            data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
+          >
+            <span>{t('back label')}</span>
+          </Button>
+        )}
+      </Content>
     </ViewState>
   );
 };

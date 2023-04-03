@@ -7,10 +7,14 @@ import React, { cloneElement, useCallback, useReducer } from 'react';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/react-components';
+import { getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
+
+import { Title, Heading, Content, Button, Panel, CloseButton } from '../Panel';
+import { HaloRing } from '../../components/HaloRing';
+import { Avatar } from '@dxos/react-components';
 
 export type SpacePanelProps = {
   titleId?: string;
@@ -42,21 +46,23 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
   }, []);
 
   return (
-    <div role='none' className='flex flex-col'>
-      <div role='none' className={mx(subduedSurface, 'rounded-bs-md flex items-center p-2 gap-2')}>
-        {/* TODO(wittjosiah): Label this as the space panel. */}
-        <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
-          {name ?? space.key.truncate()}
-        </h2>
-      </div>
-      <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
+    <Panel>
+      <Title>Space membership</Title>
+      <Content className='text-center flex items-center justify-center content-center'>
+        <HaloRing>
+          <Avatar labelId={''} fallbackValue={space.key.toString()} />
+        </HaloRing>
+      </Content>
+      <Heading>{name ?? space.key.truncate()}</Heading>
+      <Content>
         <InvitationList
           invitations={invitations}
           onClickRemove={(invitation) => invitation.get() && space?.removeInvitation(invitation.get().invitationId)}
           createInvitationUrl={createInvitationUrl}
         />
+      </Content>
+      <Content>
         <Button
-          className='is-full flex gap-2 mbs-2'
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {
@@ -66,12 +72,12 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           data-testid='spaces-panel.create-invitation'
         >
           <span>{t('create space invitation label')}</span>
-          <UserPlus className={getSize(4)} weight='bold' />
         </Button>
-        <PanelSeparator />
+      </Content>
+      <Content>
         <SpaceMemberListContainer spaceKey={space.key} includeSelf />
-      </div>
-    </div>
+      </Content>
+    </Panel>
   );
 });
 
@@ -97,9 +103,5 @@ export const SpacePanel = (props: SpacePanelProps) => {
   });
 
   // TODO(wittjosiah): Use ViewState or similar.
-  return (
-    <DensityProvider density='fine'>
-      {panelState.activeView === 'current space' ? <CurrentSpaceView {...props} /> : null}
-    </DensityProvider>
-  );
+  return panelState.activeView === 'current space' ? <CurrentSpaceView {...props} /> : null;
 };
