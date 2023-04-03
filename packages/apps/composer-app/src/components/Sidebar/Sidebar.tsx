@@ -64,6 +64,7 @@ const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDoc
         <Link
           to={linkTo}
           className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
+          data-testid='composer.documentTreeItemHeading'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
@@ -129,7 +130,10 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
       }}
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-medium'>
+        <TreeItemHeading
+          className='grow break-words pbs-1.5 text-sm font-medium'
+          data-testid='composer.spaceTreeItemHeading'
+        >
           {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : space.key.truncate()}
         </TreeItemHeading>
         <TooltipRoot>
@@ -196,7 +200,7 @@ const DocumentTree = observer(() => {
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot labelId={treeLabel}>
+      <TreeRoot labelId={treeLabel} data-testid='composer.sidebarTree'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
@@ -247,7 +251,7 @@ const SidebarContent = () => {
             }}
             slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
             closeTriggers={[
-              <Button key='a1' variant='primary'>
+              <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
                 {t('done label', { ns: 'os' })}
               </Button>
             ]}
@@ -255,6 +259,7 @@ const SidebarContent = () => {
             <Input
               label={t('github pat label')}
               value={patValue}
+              data-testid='composer.githubPat'
               onChange={({ target: { value } }) => setPatValue(value)}
               slots={{
                 root: { className: 'mlb-2' },
@@ -271,7 +276,12 @@ const SidebarContent = () => {
                 side='bottom'
                 tooltipLabelsTrigger
               >
-                <Button variant='ghost' onClick={handleCreateSpace} className='pli-1'>
+                <Button
+                  variant='ghost'
+                  data-testid='composer.createSpace'
+                  onClick={handleCreateSpace}
+                  className='pli-1'
+                >
                   <Planet className={getSize(4)} />
                 </Button>
               </Tooltip>
@@ -281,7 +291,7 @@ const SidebarContent = () => {
                 side='bottom'
                 tooltipLabelsTrigger
               >
-                <Button variant='ghost' onClick={handleJoinSpace} className='pli-1'>
+                <Button variant='ghost' data-testid='composer.joinSpace' onClick={handleJoinSpace} className='pli-1'>
                   <Intersect className={getSize(4)} />
                 </Button>
               </Tooltip>
@@ -293,6 +303,7 @@ const SidebarContent = () => {
               >
                 <Button
                   variant='ghost'
+                  data-testid='composer.toggleSidebarWithinSidebar'
                   onClick={() => setDisplayState(displayState === 'show' ? 'hide' : 'show')}
                   className='pli-1'
                 >
@@ -315,7 +326,12 @@ const SidebarContent = () => {
                   }
                 />
                 <Tooltip content={t('profile settings label')} zIndex='z-[31]' side='bottom' tooltipLabelsTrigger>
-                  <Button variant='ghost' onClick={() => setSettingsDialogOpen(true)} className='pli-1'>
+                  <Button
+                    variant='ghost'
+                    data-testid='composer.openUserSettingsDialog'
+                    onClick={() => setSettingsDialogOpen(true)}
+                    className='pli-1'
+                  >
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
                   </Button>
                 </Tooltip>
@@ -333,7 +349,11 @@ const SidebarToggle = () => {
   const { t } = useTranslation('os');
   const open = displayState === 'show';
   const button = (
-    <Button onClick={() => setDisplayState('show')} className='p-0 is-[40px] shadow-md'>
+    <Button
+      data-testid='composer.toggleSidebar'
+      onClick={() => setDisplayState('show')}
+      className='p-0 is-[40px] shadow-md'
+    >
       <Sidebar className={getSize(6)} />
     </Button>
   );

@@ -26,7 +26,7 @@ test.describe('Basic test', () => {
     }
   });
 
-  test.describe('Default space', () => {
+  test.describe('Solo tests', () => {
     test('create identity', async () => {
       await host.shell.createIdentity('host');
 
@@ -34,6 +34,14 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.isAuthenticated()).to.be.true;
       }, 1000);
+    });
+
+    test('create space, document is created by default', async () => {
+      await host.createSpace();
+      await waitForExpect(async () => {
+        expect(await host.getNSpaceItems()).to.equal(1);
+        expect(await host.getNDocumentItems()).to.equal(1);
+      });
     });
   });
 });

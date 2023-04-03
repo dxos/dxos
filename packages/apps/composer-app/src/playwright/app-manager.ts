@@ -38,6 +38,14 @@ export class AppManager {
   // Actions
 
   async createSpace() {
-    await this.page.getByTestId('add-button').click();
+    return await this.page.getByTestId('composer.createSpace').click();
+  }
+
+  async getNSpaceItems() {
+    return await this.page.getByTestId('composer.spaceTreeItemHeading').count();
+  }
+
+  async getNDocumentItems() {
+    return await this.page.getByTestId('composer.documentTreeItemHeading').count();
   }
 }
