@@ -3,6 +3,7 @@
 //
 
 import assert from 'node:assert';
+import EventEmitter from 'node:events';
 import { RandomAccessStorage } from 'random-access-storage';
 
 import { synchronized } from '@dxos/async';
@@ -87,7 +88,8 @@ export class WebFS implements Storage {
   }
 }
 
-export class WebFile implements File {
+// TODO(mykola): Remove EventEmitter.
+export class WebFile extends EventEmitter implements File {
   readonly opened: boolean = true;
   readonly suspended: boolean = false;
   readonly closed: boolean = false;
@@ -103,6 +105,7 @@ export class WebFile implements File {
   private readonly _destroy: () => Promise<void>;
 
   constructor({ file, destroy }: { file: Promise<FileSystemFileHandle>; destroy: () => Promise<void> }) {
+    super();
     this._fileHandle = file;
     this._destroy = destroy;
   }
@@ -124,7 +127,7 @@ export class WebFile implements File {
   async read(offset: number, size: number) {
     const fileHandle: any = await this._fileHandle;
     const file = await fileHandle.getFile();
-    return Buffer.from(new Uint8Array(await file.arrayBuffer(), offset, size));
+    return Buffer.from(new Uint8Array(await file.slice(offset, offset + size).arrayBuffer()));
   }
 
   async del(offset: number, size: number) {
@@ -149,70 +152,6 @@ export class WebFile implements File {
   }
 
   async truncate?(offset: number) {
-    throw new Error('Method not implemented.');
-  }
-
-  //
-  // EventEmitter methods.
-  //
-
-  addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  on(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  once(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  off(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  removeAllListeners(event?: string | symbol | undefined): this {
-    throw new Error('Method not implemented.');
-  }
-
-  setMaxListeners(n: number): this {
-    throw new Error('Method not implemented.');
-  }
-
-  getMaxListeners(): number {
-    throw new Error('Method not implemented.');
-  }
-
-  listeners(eventName: string | symbol): Function[] {
-    throw new Error('Method not implemented.');
-  }
-
-  rawListeners(eventName: string | symbol): Function[] {
-    throw new Error('Method not implemented.');
-  }
-
-  emit(eventName: string | symbol, ...args: any[]): boolean {
-    throw new Error('Method not implemented.');
-  }
-
-  listenerCount(eventName: string | symbol): number {
-    throw new Error('Method not implemented.');
-  }
-
-  prependListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  prependOnceListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
-  }
-
-  eventNames(): (string | symbol)[] {
     throw new Error('Method not implemented.');
   }
 }
