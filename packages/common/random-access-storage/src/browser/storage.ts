@@ -5,6 +5,7 @@
 import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
 import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
+import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
@@ -23,6 +24,10 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
 
     case StorageType.FIREFOX: {
       return new FirefoxStorage(root);
+    }
+
+    case StorageType.WEBFS: {
+      return new WebFS(root);
     }
 
     default: {
