@@ -15,10 +15,11 @@ There are two repositories that deploy in combination to produce the environment
 
 See the full [branch flow](./REPOSITORY_GUIDE.md#branch-diagram) in the [Repository Guide](./REPOSITORY_GUIDE.md).
 
-| Environment | Description                                                                                     |
-| :---------- | :---------------------------------------------------------------------------------------------- |
-| prod        | whatever is on `production` branch in `dxos` repo gets deployed via GitHub Actions and CircleCI |
-| staging     | whatever is on `staging` branch in `dxos` repo gets deployed via GitHub Actions and CircleCI    |
+| Environment | Description                                       |
+| :---------- | :------------------------------------------------ |
+| prod        | whatever is on `production` branch in `dxos` repo |
+| staging     | whatever is on `staging` branch in `dxos` repo    |
+| dev         | whatever is on `main` branch in `dxos` repo       |
 
 ## Assets
 
