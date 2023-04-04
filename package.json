@@ -42,7 +42,7 @@
     "@dxos/log-hook": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/serve-with-halo": "workspace:*",
+    "@dxos/serve-with-vault": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/swc-log-plugin": "workspace:*",
     "@dxos/test": "workspace:*",

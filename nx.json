@@ -97,7 +97,19 @@
       ]
     },
     "e2e": {
-      "inputs": ["default", "^production"],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_LEVEL"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
       "dependsOn": [
         "prebuild",
         "^compile"
@@ -128,7 +140,7 @@
         "prebuild"
       ]
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",

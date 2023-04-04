@@ -84,7 +84,7 @@
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
     "rpc-tunnel-e2e": "packages/e2e/rpc-tunnel-e2e",
     "sentry": "packages/common/sentry",
-    "serve-with-halo": "tools/executors/serve-with-halo",
+    "serve-with-vault": "tools/executors/serve-with-vault",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
     "swc-log-plugin": "tools/swc-log-plugin",
@@ -103,6 +103,7 @@
     "toolbox": "tools/executors/toolbox",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
+    "vault": "packages/sdk/vault",
     "websocket-rpc": "packages/core/mesh/websocket-rpc",
     "x": "tools/x"
   }

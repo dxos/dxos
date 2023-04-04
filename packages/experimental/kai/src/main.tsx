@@ -17,7 +17,6 @@ import { captureException } from '@dxos/sentry';
 import { AppState } from './hooks';
 import { createRouter } from './router';
 
-import '@dxos/client/shell.css';
 import '../style.css';
 
 void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });

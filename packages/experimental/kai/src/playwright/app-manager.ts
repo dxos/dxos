@@ -5,12 +5,12 @@
 import type { Browser, ConsoleMessage, Page } from 'playwright';
 
 import { Trigger } from '@dxos/async';
-import { HaloShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test/playwright';
+import { ShellManager } from '@dxos/vault/testing';
 
 export class AppManager {
   page!: Page;
-  shell!: HaloShellManager;
+  shell!: ShellManager;
 
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
@@ -24,12 +24,12 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('create-identity').isVisible(),
+      waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
       bridgeLogs: true
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-    this.shell = new HaloShellManager(this.page, false);
+    this.shell = new ShellManager(this.page);
     this._initialized = true;
   }
 

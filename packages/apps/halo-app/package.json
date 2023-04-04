@@ -1,24 +1,13 @@
 {
   "name": "@dxos/halo-app",
   "version": "0.1.35",
+  "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/testing/node/testing.cjs"
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing.d.ts"
-      ]
-    }
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -40,6 +29,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vault": "workspace:*",
     "@headlessui/react": "^1.7.3",
     "@phosphor-icons/react": "^2.0.5",
     "@radix-ui/react-alert-dialog": "^1.0.3",
@@ -62,8 +52,5 @@
     "vite": "^4.2.0",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -10,7 +10,8 @@ export enum StorageType {
   IDB = 'idb',
   CHROME = 'chrome',
   FIREFOX = 'firefox',
-  NODE = 'node'
+  NODE = 'node',
+  WEBFS = 'webfs'
 }
 
 export interface Storage {

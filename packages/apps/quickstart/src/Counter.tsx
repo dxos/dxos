@@ -4,19 +4,21 @@
 
 import React, { useEffect } from 'react';
 
-import { Expando, useQuery, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
+import { Expando, useQuery, useIdentity, useSpaces } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
 export const Counter = () => {
   const identity = useIdentity({ login: true });
-  const space = useOrCreateFirstSpace();
+  const [space] = useSpaces();
   const [counter] = useQuery(space, { type: 'counter' });
+
   useEffect(() => {
     if (!counter && space) {
       const counter = new Expando({ type: 'counter' });
       void space.db.add(counter);
     }
   }, [counter, space]);
+
   if (!space) {
     return <Loading label='Loading' />;
   }
