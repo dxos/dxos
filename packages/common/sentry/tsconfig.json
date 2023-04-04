@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../context"
+    },
+    {
       "path": "../debug"
     },
     {

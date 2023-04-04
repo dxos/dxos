@@ -19,6 +19,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@sentry/browser": "^7.45.0",
