@@ -16,7 +16,7 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
   }
 
   if (type === undefined) {
-    if (typeof navigator.storage.getDirectory === 'function' && !insideWebkit) {
+    if (navigator && navigator.storage && typeof navigator.storage.getDirectory === 'function' && !insideWebkit) {
       // WEBFS is not supported in webkit test environment but it passes check for navigator.storage.getDirectory.
       return new WebFS(root);
     } else {
