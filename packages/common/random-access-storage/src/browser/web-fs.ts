@@ -156,9 +156,20 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async del(offset: number, size: number) {
+    if (offset < 0 || size < 0) {
+      return;
+    }
     const fileHandle: any = await this._fileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.write({ type: 'truncate', size: offset });
+    const file = await fileHandle.getFile();
+    let leftoverSize = 0;
+    if (offset + size < file.size) {
+      const leftover = Buffer.from(new Uint8Array(await file.slice(offset + size, file.size).arrayBuffer()));
+      leftoverSize = leftover.length;
+      await writable.write({ type: 'write', data: leftover, position: offset });
+    }
+
+    await writable.write({ type: 'truncate', size: offset + leftoverSize });
     await writable.close();
   }
 
