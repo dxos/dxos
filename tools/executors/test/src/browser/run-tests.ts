@@ -112,7 +112,7 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
   const packageDir = dirname((await pkgUp({ cwd: __dirname })) as string);
   assert(packageDir);
 
-  const port = 4848;
+  const port = 5175;
   const server = await servePage(join(packageDir, './src/browser/index.html'), port);
   await page.goto(`http://localhost:${port}`);
 
