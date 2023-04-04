@@ -54,6 +54,15 @@ jobs:
           DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
+      - name: Bundle Vault
+        run: pnpm nx run-many --target=bundle --projects=vault --skip-nx-cache
+        env:
+          NODE_ENV: production
+          DX_ENVIRONMENT: production
+          DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          DX_SENTRY_DESTINATION: ${{ secrets.VAULT_SENTRY_DESTINATION }}
+          DX_TELEMETRY_API_KEY: ${{ secrets.VAULT_SEGMENT_API_KEY }}
+
       - name: Publish to NPM
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
