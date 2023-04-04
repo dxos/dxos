@@ -28,8 +28,8 @@ export interface File extends RandomAccessStorageProperties {
   read(offset: number, size: number): Promise<Buffer>;
   del(offset: number, size: number): Promise<void>;
   stat(): Promise<FileStat>;
-  close(): Promise<Error>;
-  destroy(): Promise<Error>;
+  close(): Promise<Error | void>;
+  destroy(): Promise<Error | void>;
 
   // Not supported in node, memory.
   truncate?(offset: number): Promise<void>;
