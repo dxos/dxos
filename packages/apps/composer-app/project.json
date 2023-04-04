@@ -36,7 +36,7 @@
         "outputPath": "tmp/playwright/packages/apps/composer-app",
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/apps/composer-app",
-        "serve": "composer-app:serve-with-halo",
+        "serve": "composer-app:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
         },

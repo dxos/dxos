@@ -4,12 +4,12 @@
 
 import type { Browser, Page } from 'playwright';
 
-import { HaloShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test/playwright';
+import { ShellManager } from '@dxos/vault/testing';
 
 export class AppManager {
   page!: Page;
-  shell!: HaloShellManager;
+  shell!: ShellManager;
 
   private _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -24,10 +24,10 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('composer.pageReady').isVisible()
+      waitFor: (page) => page.getByTestId('dxos-shell').isVisible()
     });
     this.page = page;
-    this.shell = new HaloShellManager(this.page, this._inIframe);
+    this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
   }
 
@@ -47,16 +47,23 @@ export class AppManager {
     return this.page.getByTestId('composer.createDocument').last().click();
   }
 
-  getNSpaceItems() {
+  getSpaceItemsCount() {
     return this.page.getByTestId('composer.spaceTreeItemHeading').count();
   }
 
-  getNDocumentItems() {
+  getDocumentItemsCount() {
     return this.page.getByTestId('composer.documentTreeItemHeading').count();
   }
 
   getMarkdownTextbox() {
     return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
+  }
+
+  getMarkdownActiveLineText() {
+    return this.getMarkdownTextbox()
+      .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
+      .first()
+      .textContent();
   }
 
   waitForMarkdownTextbox() {
@@ -65,5 +72,13 @@ export class AppManager {
 
   getDocumentTitleInput() {
     return this.page.getByTestId('composer.documentTitle');
+  }
+
+  getDocumentLinks() {
+    return this.page.getByTestId('composer.documentTreeItemHeading');
+  }
+
+  getCollaboratorCursors() {
+    return this.page.locator('.cm-ySelectionInfo');
   }
 }

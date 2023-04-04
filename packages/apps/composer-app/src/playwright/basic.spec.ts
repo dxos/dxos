@@ -15,12 +15,12 @@ test.describe('Basic test', () => {
   // TODO(wittjosiah): Currently not running in Firefox.
   //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser, browserName }) => {
-    host = new AppManager(browser, false);
+    host = new AppManager(browser, true);
 
     await host.init();
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
     //   https://github.com/microsoft/playwright/issues/2973
-    guest = browserName === 'chromium' ? new AppManager(browser, false) : host;
+    guest = browserName === 'chromium' ? new AppManager(browser, true) : host;
     if (browserName === 'chromium') {
       await guest.init();
     }
@@ -31,15 +31,15 @@ test.describe('Basic test', () => {
       await host.shell.createIdentity('host');
       await waitForExpect(async () => {
         expect(await host.isAuthenticated()).to.be.true;
-        expect(await host.getNSpaceItems()).to.equal(1);
+        expect(await host.getSpaceItemsCount()).to.equal(1);
       });
     });
 
     test('create space, document is created by default, is displayed in tree', async () => {
       await host.createSpace();
       await waitForExpect(async () => {
-        expect(await host.getNSpaceItems()).to.equal(2);
-        expect(await host.getNDocumentItems()).to.equal(1);
+        expect(await host.getSpaceItemsCount()).to.equal(2);
+        expect(await host.getDocumentItemsCount()).to.equal(1);
       });
     });
 
@@ -48,7 +48,7 @@ test.describe('Basic test', () => {
       const textBox = await host.getMarkdownTextbox();
       const title = await host.getDocumentTitleInput();
       await waitForExpect(async () => {
-        expect(await host.getNDocumentItems()).to.equal(2);
+        expect(await host.getDocumentItemsCount()).to.equal(2);
         expect(await textBox.isEditable()).to.be.true;
         expect(await title.isEditable()).to.be.true;
       });
@@ -78,12 +78,12 @@ test.describe('Basic test', () => {
 
     test('guest can see same documents on join', async () => {
       const hostLinks = await Promise.all([
-        host.page.getByRole('link').nth(0).getAttribute('href'),
-        host.page.getByRole('link').nth(1).getAttribute('href')
+        host.getDocumentLinks().nth(0).getAttribute('href'),
+        host.getDocumentLinks().nth(1).getAttribute('href')
       ]);
       const guestLinks = await Promise.all([
-        guest.page.getByRole('link').nth(0).getAttribute('href'),
-        guest.page.getByRole('link').nth(1).getAttribute('href')
+        guest.getDocumentLinks().nth(0).getAttribute('href'),
+        guest.getDocumentLinks().nth(1).getAttribute('href')
       ]);
       expect(hostLinks[0]).to.equal(guestLinks[0]);
       expect(hostLinks[1]).to.equal(guestLinks[1]);
@@ -91,20 +91,20 @@ test.describe('Basic test', () => {
 
     test('host and guest can see each others’ presence when same document is in focus', async () => {
       await Promise.all([
-        host.page.getByRole('link').nth(0).click(),
-        guest.page.getByRole('link').nth(0).click(),
+        host.getDocumentLinks().nth(0).click(),
+        guest.getDocumentLinks().nth(0).click(),
         host.waitForMarkdownTextbox(),
         guest.waitForMarkdownTextbox()
       ]);
       await waitForExpect(async () => {
-        expect(await host.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
-        expect(await guest.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
+        expect(await host.getCollaboratorCursors().count()).to.equal(0);
+        expect(await guest.getCollaboratorCursors().count()).to.equal(0);
       });
       await host.getMarkdownTextbox().focus();
       await guest.getMarkdownTextbox().focus();
       await waitForExpect(async () => {
-        expect(await host.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('guest');
-        expect(await guest.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('host');
+        expect(await host.getCollaboratorCursors().first().textContent()).to.equal('guest');
+        expect(await guest.getCollaboratorCursors().first().textContent()).to.equal('host');
       });
     });
 
@@ -129,19 +129,9 @@ test.describe('Basic test', () => {
       await Promise.all([host.getMarkdownTextbox().press('ArrowDown'), guest.getMarkdownTextbox().press('ArrowDown')]);
       // await Promise.all([host.page.pause(), guest.page.pause()]);
       await host.getMarkdownTextbox().getByText(allParts).waitFor();
-      const hostContent = await host
-        .getMarkdownTextbox()
-        .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
-        .first()
-        .textContent();
-      const guestContent = await guest
-        .getMarkdownTextbox()
-        .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
-        .first()
-        .textContent();
-      await waitForExpect(async () => {
-        expect(hostContent).to.equal(guestContent);
-      });
+      const hostContent = await host.getMarkdownActiveLineText();
+      const guestContent = await guest.getMarkdownActiveLineText();
+      expect(hostContent).to.equal(guestContent);
     });
   });
 

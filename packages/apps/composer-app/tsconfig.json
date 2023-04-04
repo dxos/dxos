@@ -49,7 +49,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../halo-app"
+      "path": "../../sdk/vault"
     },
     {
       "path": "../patterns/react-appkit"

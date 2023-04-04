@@ -29,33 +29,30 @@ export const DocumentLayout = () => {
   const haloInvitationCode = searchParams.get('haloInvitationCode');
 
   return (
-    <>
-      <span className='sr-only' data-testid='composer.pageReady' />
-      <ShellProvider
-        space={space}
-        spaceInvitationCode={spaceInvitationCode}
-        haloInvitationCode={haloInvitationCode}
-        onJoinedSpace={(nextSpaceKey) => {
-          navigate(getPath(nextSpaceKey));
-        }}
-      >
-        <OctokitProvider>
-          <PanelSidebarProvider
-            slots={{
-              content: {
-                children: <SidebarContent />,
-                className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
-                onOpenAutoFocus: (event) => event.preventDefault(),
-                onCloseAutoFocus: (event) => event.preventDefault()
-              },
-              main: { role: 'main', className: 'min-bs-full' }
-            }}
-          >
-            <Outlet context={{ space }} />
-            <SidebarToggle />
-          </PanelSidebarProvider>
-        </OctokitProvider>
-      </ShellProvider>
-    </>
+    <ShellProvider
+      space={space}
+      spaceInvitationCode={spaceInvitationCode}
+      haloInvitationCode={haloInvitationCode}
+      onJoinedSpace={(nextSpaceKey) => {
+        navigate(getPath(nextSpaceKey));
+      }}
+    >
+      <OctokitProvider>
+        <PanelSidebarProvider
+          slots={{
+            content: {
+              children: <SidebarContent />,
+              className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
+              onOpenAutoFocus: (event) => event.preventDefault(),
+              onCloseAutoFocus: (event) => event.preventDefault()
+            },
+            main: { role: 'main', className: 'min-bs-full' }
+          }}
+        >
+          <Outlet context={{ space }} />
+          <SidebarToggle />
+        </PanelSidebarProvider>
+      </OctokitProvider>
+    </ShellProvider>
   );
 };
