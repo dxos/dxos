@@ -24,12 +24,12 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('create-identity').isVisible(),
+      waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
       bridgeLogs: true
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-    this.shell = new ShellManager(this.page, false);
+    this.shell = new ShellManager(this.page);
     this._initialized = true;
   }
 
