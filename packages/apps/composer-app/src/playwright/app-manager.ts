@@ -32,38 +32,38 @@ export class AppManager {
   }
 
   async isAuthenticated() {
-    return await this.page.getByTestId('composer.firstRunMessage').isVisible();
+    return this.page.getByTestId('composer.firstRunMessage').isVisible();
   }
 
   async createSpace() {
-    return await this.page.getByTestId('composer.createSpace').click();
+    return this.page.getByTestId('composer.createSpace').click();
   }
 
   async joinSpace() {
-    return await this.page.getByTestId('composer.joinSpace').click();
+    return this.page.getByTestId('composer.joinSpace').click();
   }
 
   async createDocument() {
-    return await this.page.getByTestId('composer.createDocument').last().click();
+    return this.page.getByTestId('composer.createDocument').last().click();
   }
 
   async getNSpaceItems() {
-    return await this.page.getByTestId('composer.spaceTreeItemHeading').count();
+    return this.page.getByTestId('composer.spaceTreeItemHeading').count();
   }
 
   async getNDocumentItems() {
-    return await this.page.getByTestId('composer.documentTreeItemHeading').count();
+    return this.page.getByTestId('composer.documentTreeItemHeading').count();
   }
 
   async getMarkdownTextbox() {
-    return await this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
+    return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
   }
 
   async waitForMarkdownTextbox() {
-    return await this.page.getByTestId('composer.markdownRoot').getByRole('textbox').waitFor();
+    return this.page.getByTestId('composer.markdownRoot').getByRole('textbox').waitFor();
   }
 
   async getDocumentTitleInput() {
-    return await this.page.getByTestId('composer.documentTitle');
+    return this.page.getByTestId('composer.documentTitle');
   }
 }

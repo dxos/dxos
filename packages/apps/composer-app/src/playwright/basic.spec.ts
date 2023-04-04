@@ -75,8 +75,39 @@ test.describe('Basic test', () => {
         expect(await host.page.url()).to.include(await guest.page.url());
       });
     });
-    test('guest can see same documents on join', async () => {});
-    test('host and guest can see each others’ presence when same document is in focus', async () => {});
+
+    test('guest can see same documents on join', async () => {
+      const hostLinks = await Promise.all([
+        host.page.getByRole('link').nth(0).getAttribute('href'),
+        host.page.getByRole('link').nth(1).getAttribute('href')
+      ]);
+      const guestLinks = await Promise.all([
+        guest.page.getByRole('link').nth(0).getAttribute('href'),
+        guest.page.getByRole('link').nth(1).getAttribute('href')
+      ]);
+      expect(hostLinks[0]).to.equal(guestLinks[0]);
+      expect(hostLinks[1]).to.equal(guestLinks[1]);
+    });
+
+    test('host and guest can see each others’ presence when same document is in focus', async () => {
+      await Promise.all([
+        host.page.getByRole('link').nth(0).click(),
+        guest.page.getByRole('link').nth(0).click(),
+        host.waitForMarkdownTextbox(),
+        guest.waitForMarkdownTextbox()
+      ]);
+      await waitForExpect(async () => {
+        expect(await host.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
+        expect(await guest.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
+      });
+      await (await host.getMarkdownTextbox()).focus();
+      await (await guest.getMarkdownTextbox()).focus();
+      await waitForExpect(async () => {
+        expect(await host.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('guest');
+        expect(await guest.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('host');
+      });
+    });
+
     test('host and guest can see each others’ changes in same document', async () => {});
   });
 
