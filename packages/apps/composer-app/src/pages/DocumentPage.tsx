@@ -19,6 +19,7 @@ import React, {
   ReactNode,
   SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState
@@ -29,7 +30,7 @@ import { useOutletContext, useParams } from 'react-router-dom';
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
-import { Space } from '@dxos/client';
+import { ShellLayout, Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useFileDownload } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
@@ -46,6 +47,7 @@ import {
   Trans
 } from '@dxos/react-components';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/react-composer';
+import { useShell } from '@dxos/react-ui';
 
 import { useOctokitContext } from '../components/OctokitProvider';
 import { ComposerDocument } from '../proto';
@@ -538,16 +540,27 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
 export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
+  const shell = useShell();
   const { docKey } = useParams();
-  const document = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
+  const composerDocument = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
+
+  useEffect(() => {
+    const openSpaceSettingsOnCmdDot = ({ key, getModifierState }: KeyboardEvent) => {
+      if (space && key === '.' && (getModifierState('Meta') || getModifierState('Control'))) {
+        return shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+      }
+    };
+    document.addEventListener('keydown', openSpaceSettingsOnCmdDot);
+    return () => document.removeEventListener('keydown', openSpaceSettingsOnCmdDot);
+  }, [space]);
 
   return (
     <div role='none' className='pli-14 plb-11'>
-      {document && space ? (
-        document.content.kind === TextKind.PLAIN ? (
-          <MarkdownDocumentPage document={document} space={space} />
+      {composerDocument && space ? (
+        composerDocument.content.kind === TextKind.PLAIN ? (
+          <MarkdownDocumentPage document={composerDocument} space={space} />
         ) : (
-          <RichTextDocumentPage document={document} space={space} />
+          <RichTextDocumentPage document={composerDocument} space={space} />
         )
       ) : (
         <p role='alert' className='p-8 text-center'>

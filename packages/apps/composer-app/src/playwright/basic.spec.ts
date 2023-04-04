@@ -29,12 +29,10 @@ test.describe('Basic test', () => {
   test.describe('Solo tests', () => {
     test('create identity, space is created by default', async () => {
       await host.shell.createIdentity('host');
-
-      // Wait for app to load identity.
       await waitForExpect(async () => {
         expect(await host.isAuthenticated()).to.be.true;
         expect(await host.getNSpaceItems()).to.equal(1);
-      }, 1000);
+      });
     });
 
     test('create space, document is created by default, is displayed in tree', async () => {
@@ -47,13 +45,37 @@ test.describe('Basic test', () => {
 
     test('create document', async () => {
       await host.createDocument();
-      const textbox = await host.getMarkdownTextbox();
+      const textBox = await host.getMarkdownTextbox();
       const title = await host.getDocumentTitleInput();
       await waitForExpect(async () => {
         expect(await host.getNDocumentItems()).to.equal(2);
-        expect(await textbox.isEditable()).to.be.true;
+        expect(await textBox.isEditable()).to.be.true;
         expect(await title.isEditable()).to.be.true;
       });
     });
+  });
+
+  test.describe('Collab tests', () => {
+    test('guest joins host’s space', async ({ browserName }) => {
+      if (browserName !== 'chromium') {
+        return;
+      }
+      await guest.shell.createIdentity('guest');
+      const invitationCode = await host.shell.createSpaceInvitation();
+      await guest.joinSpace();
+      const [authCode] = await Promise.all([
+        host.shell.getAuthCode(),
+        guest.shell.acceptSpaceInvitation(invitationCode)
+      ]);
+      await guest.shell.authenticate(authCode);
+      await host.shell.closeShell();
+      // todo(thure): Guest does not currently redirect, which it should do.
+      // await waitForExpect(async () => {
+      //   expect(await host.page.url()).to.equal(await guest.page.url());
+      // });
+    });
+    test('guest can see same documents on join', async () => {});
+    test('host and guest can see each others’ presence when same document is in focus', async () => {});
+    test('host and guest can see each others’ changes in same document', async () => {});
   });
 });

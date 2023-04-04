@@ -39,6 +39,10 @@ export class AppManager {
     return await this.page.getByTestId('composer.createSpace').click();
   }
 
+  async joinSpace() {
+    return await this.page.getByTestId('composer.joinSpace').click();
+  }
+
   async createDocument() {
     return await this.page.getByTestId('composer.createDocument').last().click();
   }
