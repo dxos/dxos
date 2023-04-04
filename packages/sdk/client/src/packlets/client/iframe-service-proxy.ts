@@ -7,7 +7,6 @@ import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -17,6 +16,17 @@ import { ShellController } from '../proxies';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_CLIENT_ORIGIN, DEFAULT_SHELL_CHANNEL } from './config';
 import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
+
+const shellStyles = Object.entries({
+  display: 'none',
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  border: 0,
+  'z-index': 1000000
+}).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
 export type IFrameClientServicesProxyOptions = {
   source: string;
@@ -45,11 +55,10 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
     channel = DEFAULT_CLIENT_CHANNEL,
-    shell = false,
+    shell = DEFAULT_SHELL_CHANNEL,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
-    shell = shell === true && DEFAULT_SHELL_CHANNEL;
     this._options = { source, channel, shell, timeout };
   }
 
@@ -90,7 +99,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     if (!this._shellController && typeof this._options.shell === 'string') {
       this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
-      this._iframe!.classList.add('__DXOS_SHELL');
+      this._iframe!.setAttribute('style', shellStyles);
       this._iframe!.setAttribute('data-testid', 'dxos-shell');
       this._shellController.contextUpdate.on(({ display, spaceKey }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
@@ -117,19 +126,8 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    const identity = await new Promise<Identity | undefined>((resolve) => {
-      if (!this._clientServicesProxy) {
-        resolve(undefined);
-        return;
-      }
-
-      this._clientServicesProxy.services.IdentityService.queryIdentity().subscribe(({ identity }) => {
-        resolve(identity);
-      });
-    });
-
     const haloInvitationCode = searchParams.get('haloInvitationCode');
-    if (!identity) {
+    if (haloInvitationCode) {
       await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
         invitationCode: haloInvitationCode ?? undefined
       });
