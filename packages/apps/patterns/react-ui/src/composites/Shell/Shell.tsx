@@ -48,7 +48,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           mode='halo-only'
           initialInvitationCode={invitationCode}
           onDone={async () => {
-            // TODO(wittjosiah): Is this app-specific?
+            // TODO(wittjosiah): Support this first-class inside client?
             spaces.length > 0 || (await client.createSpace());
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
