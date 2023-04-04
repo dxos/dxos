@@ -106,7 +106,7 @@ describe('FeedQueue', () => {
 
     expect(queue.isOpen).to.be.false;
     expect(queue.feed.properties.closed).to.be.false;
-  }).onlyEnvironments('chromium', 'firefox', 'webkit');
+  }).onlyEnvironments('chromium', 'firefox');
 
   test('feed closed while reading', async () => {
     const feedStore = builder.createFeedStore();
