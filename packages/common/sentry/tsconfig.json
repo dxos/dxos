@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../async"
+    },
+    {
       "path": "../context"
     },
     {
