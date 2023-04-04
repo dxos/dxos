@@ -8,6 +8,7 @@ import { ConfigDeclaration } from './config';
 import { File, getFileType, MaybePromise, promise } from './file';
 import { Imports } from './util/imports';
 import { loadModule, LoadModuleOptions } from './util/loadModule';
+import { InquirableZodType } from './util/zodInquire';
 
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -91,11 +92,12 @@ export type Files<R = any> = File<R, TemplateContext<any>>[];
 
 export type TemplateFunctionResult<R = any> = null | string | Files<R>;
 
-export type ExtractInput<TConfig> = TConfig extends ConfigDeclaration<infer U, infer V>
-  ? z.infer<U> & z.infer<V>
-  : TConfig extends ConfigDeclaration<infer U>
+export type ExtractInput<TConfig> = TConfig extends ConfigDeclaration<infer _U, infer V>
+  ? V
+  : TConfig extends ConfigDeclaration<infer U extends InquirableZodType>
   ? z.infer<U>
   : TConfig;
+
 export type ExtractConfig<TConfig> = TConfig extends ConfigDeclaration<any, any> ? TConfig : never;
 export type ExtractNonConfig<TConfig> = TConfig extends ConfigDeclaration<any, any> ? never : TConfig;
 

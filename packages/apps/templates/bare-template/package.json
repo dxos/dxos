@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",
+    "@dxos/process": "workspace:*",
     "chalk": "^4.1.0",
+    "filenamify": "^5.1.1",
     "lodash.merge": "^4.6.2",
     "types-package-json": "^2.0.39"
   },

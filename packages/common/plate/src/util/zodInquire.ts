@@ -54,7 +54,9 @@ export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> =
 
 export type InquirablePrimitive = z.ZodString | z.ZodNumber | z.ZodBoolean;
 
-export type InquirableZodObject = z.ZodObject<{ [k: string]: InquirablePrimitive | z.ZodDefault<InquirablePrimitive> }>;
+export type InquirableZodObject = z.ZodObject<{
+  [k: string]: InquirablePrimitive | z.ZodDefault<InquirablePrimitive> | z.ZodOptional<InquirablePrimitive>;
+}>;
 
 // TODO: only three refinements allowed per this need to nest them
 export type InquirableZodType =

@@ -13,5 +13,5 @@ export default defineConfig({
     react: true,
     dxosUi: true,
     tailwind: true
-  },
+  }
 });

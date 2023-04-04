@@ -33,11 +33,7 @@ void (async () => {
     verbose,
     input: interactive
       ? { monorepo }
-<<<<<<< HEAD
-      : { pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false },
-=======
       : { name, pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false }
->>>>>>> a1e4d4a5f (fix(create): better non-interactive mode)
   });
   await result.save();
 

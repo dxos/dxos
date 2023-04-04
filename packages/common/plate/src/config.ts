@@ -10,7 +10,8 @@ import {
   executeDirectoryTemplate,
   DirectoryTemplateOptions,
   ExecuteDirectoryTemplateOptions,
-  DirectoryTemplateResult,
+  CompleteExecuteDirectoryTemplateOptions,
+  DirectoryTemplateResult
 } from './executeDirectoryTemplate';
 import { TEMPLATE_FILE_IGNORE, Files } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
@@ -23,18 +24,25 @@ export type FilterExpression = string | RegExp;
 
 export type Filter<TInput = any> = FilterExpression[] | ((input: TInput) => FilterExpression[]);
 
-export type ConfigDeclaration<
-  TShape extends InquirableZodType = InquirableZodType,
-  TInheritedShape extends InquirableZodType = InquirableZodType,
-> = {
-  inherits?: ConfigDefinition<TInheritedShape>;
-  include?: Filter<z.infer<TShape>>;
-  exclude?: Filter<z.infer<TShape>>;
+export type ShellScripts = {
+  after?: string[];
+};
+
+export type ConfigDeclaration<TShape extends InquirableZodType = InquirableZodType, TInput = z.infer<TShape>> = {
+  inherits?: ConfigDefinition<InquirableZodType, any>;
+  include?: Filter<TInput>;
+  exclude?: Filter<TInput>;
   inputShape?: TShape;
-  inputQuestions?: QuestionOptions<z.infer<TShape>>;
-  defaults?: Partial<z.infer<TShape>>;
+  inputQuestions?: QuestionOptions<TInput>;
+  defaults?: Partial<TInput>;
+  prepareContext?: (
+    context: CompleteExecuteDirectoryTemplateOptions<TInput>
+  ) => CompleteExecuteDirectoryTemplateOptions<TInput>;
+  events?: {
+    after?: (context: { results: Files; input: TInput; outputDirectory: string }) => Promise<any> | any;
+  };
   message?: (
-    context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
+    context: Required<DirectoryTemplateOptions<TInput>> & {
       results: Files;
       inheritedMessage?: string;
     },
@@ -42,11 +50,11 @@ export type ConfigDeclaration<
 };
 
 export type ConfigDefinition<
-  TInput extends InquirableZodType = InquirableZodType,
-  TInherited extends InquirableZodType = InquirableZodType,
-> = ConfigDeclaration<TInput, TInherited> & {
+  TShape extends InquirableZodType = InquirableZodType,
+  TInput = z.infer<TShape>
+> = ConfigDeclaration<TShape, TInput> & {
   templateDirectory: string;
-  execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<DirectoryTemplateResult>;
+  execute(options?: ExecuteSpecificDirectoryTemplateOptions<TInput>): Promise<DirectoryTemplateResult>;
 };
 
 export type ExecuteSpecificDirectoryTemplateOptions<TInput> = Omit<
@@ -54,12 +62,9 @@ export type ExecuteSpecificDirectoryTemplateOptions<TInput> = Omit<
   'templateDirectory'
 >;
 
-export const defineConfig = <
-  I extends InquirableZodType = InquirableZodType,
-  U extends InquirableZodType = InquirableZodType,
->(
-  config: ConfigDeclaration<I, U>,
-): ConfigDefinition<I, U> => {
+export const defineConfig = <TShape extends InquirableZodType = InquirableZodType, TInput = z.infer<TShape>>(
+  config: ConfigDeclaration<TShape, TInput>
+): ConfigDefinition<TShape, TInput> => {
   const stack = callsite();
   const requester = stack[1].getFileName();
   const templateDirectory = path.dirname(requester);
@@ -70,12 +75,12 @@ export const defineConfig = <
   );
   return {
     // TODO(zhenyasav): remove this cast
-    ...(merged as ConfigDefinition<I, U>),
+    ...(merged as ConfigDefinition<TShape, TInput>),
     templateDirectory,
-    execute: async (options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<I>>) => {
+    execute: async (options?: ExecuteSpecificDirectoryTemplateOptions<TInput>) => {
       return executeDirectoryTemplate({
-        ...options,
-        templateDirectory,
+        ...(options as any),
+        templateDirectory
       });
     },
   };
@@ -89,7 +94,7 @@ export const defaultConfig: ConfigDeclaration = {
 
 export type LoadConfigOptions = LoadModuleOptions & {
   verbose?: boolean;
-  overrides?: Partial<ConfigDeclaration>;
+  overrides?: Partial<ConfigDeclaration<InquirableZodType, any>>;
 };
 
 export const CONFIG_FILE_BASENAME = 'config.t';
@@ -117,7 +122,7 @@ export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape
   }
 };
 
-export const forceFilter = <TInput>(filter?: Filter<TInput>, input?: TInput) => {
+export const forceFilter = <TInput>(filter?: Filter<TInput>, input?: Partial<TInput>) => {
   return (typeof filter === 'function' ? filter({ ...(input ?? ({} as any)) }) : filter) ?? [];
 };
 
@@ -144,7 +149,7 @@ export const mergeConfigs = (a: ConfigDeclaration, b: ConfigDeclaration) => {
   return merged as ConfigDeclaration;
 };
 
-export const prettyConfig = (o?: ConfigDeclaration): any => {
+export const prettyConfig = (o?: ConfigDeclaration<InquirableZodType, any>): any => {
   if (!o) {
     return o;
   }
@@ -158,8 +163,8 @@ export const prettyConfig = (o?: ConfigDeclaration): any => {
 
 export const loadConfig = async (
   templateDirectory: string,
-  options?: LoadConfigOptions,
-): Promise<ConfigDeclaration<any, any>> => {
+  options?: LoadConfigOptions
+): Promise<ConfigDeclaration<InquirableZodType, any>> => {
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');
   const { verbose } = { verbose: false, ...options };

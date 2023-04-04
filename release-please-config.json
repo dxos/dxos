@@ -193,6 +193,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/process/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/protobuf-compiler/package.json",
           "jsonpath": "$.version"
         },

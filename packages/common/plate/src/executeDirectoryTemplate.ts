@@ -35,8 +35,11 @@ export type DirectoryTemplateOptions<TInput> = {
 };
 
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
-  ConfigDeclaration &
-  DirectoryTemplateOptions<TInput>;
+  ConfigDeclaration<InquirableZodType, TInput> &
+  DirectoryTemplateOptions<TInput> & { input: TInput };
+
+export type CompleteExecuteDirectoryTemplateOptions<TInput> = ExecuteDirectoryTemplateOptions<TInput> &
+  Required<DirectoryTemplateOptions<TInput>>;
 
 export type DirectoryTemplateResult = {
   files: Files;
@@ -53,7 +56,7 @@ export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>,
 ): Promise<DirectoryTemplateResult> => {
   const { templateDirectory } = options;
-  const mergedOptions = {
+  let mergedOptions = {
     parallel: true,
     verbose: false,
     interactive: true,
@@ -65,42 +68,44 @@ export const executeDirectoryTemplate = async <TInput>(
     ...options,
     ...(await loadConfig(templateDirectory, { verbose: options?.verbose, overrides: options })),
   };
-  const {
-    parallel,
-    verbose,
-    inherits,
-    interactive,
-    overwrite,
-    inputShape,
-    include,
-    exclude,
-    inheritance,
-    executeFileTemplates,
-    outputDirectory,
-    printMessage,
-    message,
-    inputQuestions,
-    ...restOptions
-  } = mergedOptions;
-  const debug = logger(verbose);
-  const info = logger(true);
-  if (!outputDirectory) {
-    throw new Error('an output directory is required');
-  }
-  debug(`executing template ${templateDirectory}`);
-  debug(prettyConfig(mergedOptions));
-  let input = mergedOptions.input;
+  const { inputShape, executeFileTemplates, interactive, inputQuestions, verbose } = mergedOptions;
+  let input: TInput = mergedOptions.input;
   if (inputShape && executeFileTemplates) {
     if (interactive) {
       input = await acquireInput<TInput>(inputShape, { ...mergedOptions.defaults, ...input }, inputQuestions, verbose);
     } else {
       const parse = inputShape.safeParse(input);
       if (!parse.success) {
-        throw new Error('invalid input: ' + formatErrors(parse.error));
+        throw new Error('invalid input: ' + formatErrors([parse.error]));
       }
       input = parse.data as TInput;
     }
   }
+  if (typeof mergedOptions.prepareContext === 'function') {
+    mergedOptions = mergedOptions.prepareContext(mergedOptions as any) as any;
+    input = mergedOptions.input;
+  }
+  const {
+    parallel,
+    inherits,
+    overwrite,
+    include,
+    exclude,
+    inheritance,
+    outputDirectory,
+    printMessage,
+    message,
+    events,
+    ...restOptions
+  } = mergedOptions;
+  const debug = logger(verbose);
+  const info = logger(true);
+  const err = console.error;
+  if (!outputDirectory) {
+    throw new Error('an output directory is required');
+  }
+  debug(`executing template ${templateDirectory}`);
+  debug(prettyConfig(mergedOptions));
   debug('inputs:', input);
   inherits && debug(`executing inherited template ${inherits?.templateDirectory}`);
   const inherited =
@@ -234,6 +239,14 @@ export const executeDirectoryTemplate = async <TInput>(
       if (errors.length) {
         info(`${errors.length} errors`);
       }
+      if (events?.after) {
+        try {
+          await events.after({ results, outputDirectory, input: input as TInput });
+        } catch (e) {
+          err('A problem occurred after processing the template');
+          err(e);
+        }
+      }
       if (printMessage && outputMessage) {
         info(os.EOL + outputMessage + os.EOL);
       }
@@ -246,8 +259,8 @@ const acquireInput = async <TInput>(
   inputShape: InquirableZodType,
   input?: Partial<TInput> | undefined,
   questionOptions?: QuestionOptions<TInput>,
-  verbose?: boolean,
-) => {
+  verbose?: boolean
+): Promise<TInput> => {
   const log = logger(!!verbose);
   const parse = unDefault(inputShape).safeParse(input);
   if (!parse.success) {
@@ -269,7 +282,7 @@ const acquireInput = async <TInput>(
     }
     input = parse.data as TInput;
   }
-  return input;
+  return input as TInput;
 };
 
 const formatErrors = (errors?: { message: string }[]) => errors?.map((e) => e?.message)?.join(', ');

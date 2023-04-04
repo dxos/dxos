@@ -62,14 +62,7 @@ export default class Create extends BaseCommand<typeof Create> {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
-
-    try {
-      await exec('which pnpm');
-    } catch {
-      this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
-    }
-
-    // TODO(???): make sure this exists in the @dxos/create packages too.
+    // TODO:: make sure this exists in the @dxos/create packages too
     if (os.platform() === 'darwin') {
       try {
         await exec('which xcrun');
