@@ -1,15 +1,15 @@
 {
-  "sourceRoot": "tools/executors/serve-with-halo/src",
+  "sourceRoot": "tools/executors/serve-with-vault/src",
   "targets": {
     "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "tools/executors/serve-with-halo/src/index.ts",
-        "outputPath": "tools/executors/serve-with-halo/dist",
+        "main": "tools/executors/serve-with-vault/src/index.ts",
+        "outputPath": "tools/executors/serve-with-vault/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "tools/executors/serve-with-halo/tsconfig.json"
+        "tsConfig": "tools/executors/serve-with-vault/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -20,7 +20,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/executors/serve-with-halo/**/*.{ts,js}"
+          "tools/executors/serve-with-vault/**/*.{ts,js}"
         ]
       },
       "outputs": [
