@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, DeferredTask, synchronized } from '@dxos/async';
+import { Event, DeferredTask, synchronized, scheduleTask, asyncTimeout } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -15,6 +15,9 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
+
+const ERROR_RECONCILE_DELAY = 1000;
+const SIGNAL_INTERACTION_TIMEOUT = 1000;
 
 /**
  * Manages connection to multiple Signal Servers over WebSocket
@@ -56,8 +59,7 @@ export class WebsocketSignalManager implements SignalManager {
   constructor(
     private readonly _hosts: string[]
   ) {
-    log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
-    assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
+    log(`Created WebsocketSignalManager`, { hosts: this._hosts });
     for (const host of this._hosts) {
       const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
       server._traceParent = this._instanceId;
@@ -78,6 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
     if (this._opened) {
       return;
     }
+    log('open signal manager', { hosts: this._hosts })
     log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     this._initContext();
@@ -112,7 +115,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log(`Join ${topic} ${peerId}`);
+    log(`Join`, { topic, peerId });
     assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     assert(this._opened, 'Closed');
 
@@ -177,10 +180,16 @@ export class WebsocketSignalManager implements SignalManager {
     });
   }
 
+  private async _scheduleReconcileAfterError() {
+    scheduleTask(this._ctx, () => { this._reconcileTask.schedule() }, ERROR_RECONCILE_DELAY);
+  }
+
   private async _reconcileJoinedTopics() {
-    log('Reconciling..');
+    log.info('Reconciling..');
+    
     // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
-    for (const [host, server] of this._servers) {
+    // TODO(dmaretskyi): Each connection should have its separate reconcile thread.
+    await Promise.all(Array.from(this._servers).map(async ([host, server]) => {
       const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
 
       // Leave swarms
@@ -188,12 +197,12 @@ export class WebsocketSignalManager implements SignalManager {
         try {
           const desiredPeerId = this._topicsJoined.get(topic);
           if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
-            await server.leave({ topic, peerId: actualPeerId });
+            await asyncTimeout(server.leave({ topic, peerId: actualPeerId }), SIGNAL_INTERACTION_TIMEOUT);
             actualJoinedTopics.delete(topic);
           }
         } catch (err) {
-          log.error(`Error leaving swarm: ${err}`);
-          this._reconcileTask.schedule();
+          log.error(`Error leaving swarm: ${err}`, { host });
+          this._scheduleReconcileAfterError();
         }
       }
 
@@ -202,7 +211,7 @@ export class WebsocketSignalManager implements SignalManager {
         try {
           const actualPeerId = actualJoinedTopics.get(topic);
           if (!actualPeerId) {
-            await server.join({ topic, peerId: desiredPeerId });
+            await asyncTimeout(server.join({ topic, peerId: desiredPeerId }), SIGNAL_INTERACTION_TIMEOUT);
             actualJoinedTopics.set(topic, desiredPeerId);
           } else {
             if (!actualPeerId.equals(desiredPeerId)) {
@@ -215,11 +224,12 @@ export class WebsocketSignalManager implements SignalManager {
             }
           }
         } catch (err) {
-          log.error(`Error joining swarm: ${err}`);
-          this._reconcileTask.schedule();
+          log.error(`Error joining swarm: ${err}`, { host });
+          this._scheduleReconcileAfterError();
+
         }
       }
-    }
-    log('Done reconciling..');
+    }));
+    log.info('Done reconciling..');
   }
 }

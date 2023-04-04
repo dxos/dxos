@@ -26,6 +26,8 @@ export class SignalRPCClient {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
+  private _closed = false;
+
   // prettier-ignore
   constructor(
     private readonly _url: string
@@ -74,6 +76,10 @@ export class SignalRPCClient {
     };
 
     this._socket.onerror = (event: WebSocket.ErrorEvent) => {
+      if(this._closed) { // Ignore errors after close.
+        return;
+      }
+
       log.error(event.message ?? 'Socket error', { url: this._url });
       this.error.emit(event.error ?? new Error(event.message));
     };
@@ -85,6 +91,7 @@ export class SignalRPCClient {
     } catch (err) {
       log.catch(err);
     }
+    this._closed = true;
     this._socket?.close();
   }
 

@@ -179,6 +179,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async subscribeMessages(peerId: PublicKey) {
+    log('subscribing to messages', { peerId });
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
@@ -236,6 +237,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private _createClient() {
+    log('creating client', { host: this._host })
     this._connectionStarted = new Date();
     try {
       this._client = new SignalRPCClient(this._host);
@@ -251,6 +253,7 @@ export class SignalClient implements SignalMethods {
     }
 
     this._client.connected.on(this._ctx, () => {
+      log('socket connected');
       this._lastError = undefined;
       this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
       this._setState(SignalState.CONNECTED);
@@ -327,6 +330,7 @@ export class SignalClient implements SignalMethods {
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
     swarmStream.subscribe((swarmEvent: SwarmEvent) => {
+      log('swarm event', { swarmEvent });
       this.swarmEvent.emit({ topic, swarmEvent });
     });
 
