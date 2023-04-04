@@ -37,7 +37,7 @@ jobs:
           rm -rf target
           git clone https://.:${{ secrets.CREATE_PR_TOKEN }}@github.com/dxos/kube target
 
-          cp -r packages/core/protocols/src/proto target/kube/proto
+          cp -r packages/core/protocols/src/proto target/proto
           cd target
           go generate ./...
 
