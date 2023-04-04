@@ -28,7 +28,6 @@ export const configureTracing = () => {
       process.on('exit', finish);
     }
 
-    log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
     SENTRY_INITIALIZED.wake();
   });
 };
@@ -118,6 +117,8 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
     }
   });
 };
+
+log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
 
 /**
  * @see https://develop.sentry.dev/sdk/event-payloads/span/#:~:text=this%20value%20explicitly.-,status,-Optional.%20Describes%20the

@@ -10,8 +10,7 @@
   "browser": {
     "./src/node.ts": "./src/browser.ts",
     "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "@sentry/node": "@sentry/browser"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
