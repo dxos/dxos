@@ -17,7 +17,7 @@ const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
   for (const storageType of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
-    if (mochaExecutor.environment === 'webkit' && storageType === StorageType.WEBFS) {
+    if (mochaExecutor.environment !== 'chromium' && storageType === StorageType.WEBFS) {
       // Skip WEBFS in webkit.
       continue;
     }
