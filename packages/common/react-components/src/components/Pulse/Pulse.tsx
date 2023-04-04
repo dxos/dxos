@@ -44,13 +44,22 @@ export const Pulse = (props: PulseProps) => {
         keySplines='0.3, 0.61, 0.355, 1'
         repeatCount='indefinite'
       />
+      <animate
+        attributeName='stroke-width'
+        begin={delay / (duty * duration) + 's'}
+        dur={duration + 's'}
+        values='4; 0.1'
+        calcMode='spline'
+        keyTimes='0; 1'
+        keySplines='0.3, 0.61, 0.355, 1'
+        repeatCount='indefinite'
+      />
     </circle>
   );
   return (
     <div
       aria-label={label}
       role='status'
-      aria-busy='true'
       className={mx('text-center stroke-neutral-400', size ? getSizeHeight(size) : '', className)}
     >
       <svg
