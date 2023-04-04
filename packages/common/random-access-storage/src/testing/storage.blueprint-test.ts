@@ -213,5 +213,29 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
     });
+
+    // TODO(mykola): Implement such behavior for all storages?
+    test.skip('list all files after reopen', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory();
+      const files = [...Array(10)].map((name) => directory.getOrCreateFile(randomText()));
+
+      for (const file of files) {
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+      }
+
+      {
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(files.length);
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(files.length);
+      }
+    }); 
   });
 };

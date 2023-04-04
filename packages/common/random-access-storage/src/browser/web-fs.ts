@@ -28,9 +28,9 @@ export class WebFS implements Storage {
   }
 
   private _getFiles(path: string): Map<string, File> {
-    const fullPath = getFullPath(this.path, path);
+    const fullName = this._getFullFilename(this.path, path);
     return new Map(
-      [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
+      [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true)
     );
   }
 
@@ -55,23 +55,25 @@ export class WebFS implements Storage {
   }
 
   getOrCreateFile(path: string, filename: string, opts?: any): File {
-    const fullPath = getFullPath(path, filename);
-    // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
-    const fullFilename = fullPath.split('/').join('_');
-    const existingFile = this._files.get(fullPath);
+    const fullName = this._getFullFilename(path, filename);
+    const existingFile = this._files.get(fullName);
     if (existingFile) {
       return existingFile;
     }
-    const file = new WebFile({
-      file: this._initialize().then((root) => root.getFileHandle(fullFilename, { create: true })),
+    const file = this._createFile(fullName);
+    this._files.set(fullName, file);
+    return file;
+  }
+
+  private _createFile(fullName: string) {
+    return new WebFile({
+      file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
       destroy: async () => {
-        this._files.delete(fullPath);
+        this._files.delete(fullName);
         const root = await this._initialize();
-        return root.removeEntry(fullFilename);
+        return root.removeEntry(fullName);
       }
     });
-    this._files.set(fullPath, file);
-    return file;
   }
 
   private async _delete(path: string): Promise<void> {
@@ -86,6 +88,15 @@ export class WebFS implements Storage {
   async reset() {
     await this._delete('');
     this._root = undefined;
+  }
+
+  private _getFullFilename(path: string, filename?: string) {
+    // Replace slashes with underscores. Because we can't have slashes in filenames in Browser File Handle API.
+    if (filename) {
+      return getFullPath(path, filename).split('/').join('_');
+    } else {
+      return path.split('/').join('_');
+    }
   }
 }
 
@@ -164,6 +175,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async destroy() {
+    this.destroyed = true;
     return await this._destroy();
   }
 
