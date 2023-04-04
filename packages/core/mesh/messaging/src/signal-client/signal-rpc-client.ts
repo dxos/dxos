@@ -75,13 +75,21 @@ export class SignalRPCClient {
       await this.close();
     };
 
-    this._socket.onerror = (event: WebSocket.ErrorEvent) => {
-      if(this._closed) { // Ignore errors after close.
+    this._socket.onerror = async (event: WebSocket.ErrorEvent) => {
+      if (this._closed) { // Ignore errors after close.
         return;
       }
 
+      try {
+        await this._rpc?.close();
+      } catch (err) {
+        log.catch(err);
+      }
+      this._closed = true;
+
       log.error(event.message ?? 'Socket error', { url: this._url });
       this.error.emit(event.error ?? new Error(event.message));
+
     };
   }
 
