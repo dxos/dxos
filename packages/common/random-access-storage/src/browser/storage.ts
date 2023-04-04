@@ -9,7 +9,15 @@ import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    return new WebFS(root);
+    if (
+      typeof navigator.storage.getDirectory === 'function' &&
+      (!mochaExecutor || mochaExecutor.environment !== 'webkit')
+    ) {
+      // WEBFS is not supported in webkit.
+      return new WebFS(root);
+    } else {
+      return new IDbStorage(root);
+    }
   }
 
   switch (type) {
