@@ -1,0 +1,57 @@
+on:
+  push:
+    branches:
+      - egorgripasov/proto-sync
+    # paths:
+    #   - 'proto/**'
+
+name: sync-proto
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set env
+        run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+      - name: Install protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install protoc deps
+        run: |
+          go install github.com/golang/protobuf/protoc-gen-go@latest
+          go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
+      - name: Setup Git
+        run: |
+          git config user.name "dxos-bot"
+          git config user.email "bot@dxos.org"
+      - name: Update KUBE repo
+        run: |
+          rm -rf target
+          git clone https://.:${{ secrets.CREATE_PR_TOKEN }}@github.com/dxos/kube target
+
+          cp -r packages/core/protocols/src/proto target/kube/proto
+          cd target
+          go generate ./...
+
+          git checkout -B ${{ env.BRANCH_NAME }}
+          git add .
+          git diff-index --quiet HEAD || git commit -m "fix: automatic .proto clone from dxos repo"
+          git push origin ${{ env.BRANCH_NAME }} -f
+
+          gh pr edit ${{ env.BRANCH_NAME }} --title '${{ env.PR_TITLE }} from ${{ env.COMMIT_HASH }}' &&
+          gh pr reopen ${{ env.BRANCH_NAME }} ||
+          gh pr create -B main -H ${{ env.BRANCH_NAME }} --title '${{ env.PR_TITLE }} from ${{ env.COMMIT_HASH }}' --body '${{ env.PR_BODY }}'
+        env:
+          GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          BRANCH_NAME: proto-sync
+          PR_TITLE: Sync Protocol Buffers
+          PR_BODY: Created automatically by Github Action
+
