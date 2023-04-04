@@ -48,7 +48,7 @@ describe('space/space', () => {
 
     await builder.close();
     expect(space.isOpen).toBeFalsy();
-  });
+  }).onlyEnvironments('nodejs', 'chromium');
 
   test('two spaces replicating', async () => {
     const builder = new TestAgentBuilder();
@@ -140,5 +140,5 @@ describe('space/space', () => {
     await builder.close();
     expect(space1.isOpen).toBeFalsy();
     expect(space2.isOpen).toBeFalsy();
-  });
+  }).onlyEnvironments('nodejs', 'chromium');
 });

@@ -54,6 +54,8 @@ const toStorageType = (type: StorageDriver | undefined): StorageType | undefined
       return StorageType.IDB;
     case StorageDriver.NODE:
       return StorageType.NODE;
+    case StorageDriver.WEBFS:
+      return StorageType.WEBFS;
     default:
       throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
   }
