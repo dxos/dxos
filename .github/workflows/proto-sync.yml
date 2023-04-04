@@ -40,9 +40,10 @@ jobs:
           cd target
 
           # Prepare tools.
-          go build -o ./bin/protoc-gen-go-dxrpc ./cmds/protoc-gen-go-dxrpc
-          echo "$(pwd)/bin" >> $GITHUB_PATH
-          export PATH="$GITHUB_PATH:$PATH"
+          go build ./cmds/protoc-gen-go-dxrpc
+          sudo mv protoc-gen-go-dxrpc /usr/local/bin/protoc-gen-go-dxrpc
+          # echo "$(pwd)/bin" >> $GITHUB_PATH
+          # export PATH="$GITHUB_PATH:$PATH"
 
           # Update protos & gen defs.
           cp -r ../packages/core/protocols/src/proto proto
