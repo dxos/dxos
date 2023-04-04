@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { createStorage } from '@dxos/random-access-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -19,7 +19,7 @@ import { valueEncoding } from '../common';
 describe('replication', () => {
   test('replicates a feed through a direct stream', async () => {
     // Some storage drivers may break when there are multiple storage instances.
-    const storage = createStorage();
+    const storage = createStorage({ type: StorageType.IDB });
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
     const keyring1 = new Keyring();
@@ -60,5 +60,5 @@ describe('replication', () => {
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(1);
     });
-  }).onlyEnvironments('chromium');
+  });
 });
