@@ -146,6 +146,7 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
     server.close();
   }
 };
+
 const servePage = async (path: string, port = 4848) => {
   const server = http.createServer((req, res) => {
     const fileName = req.url === '/' ? path : req.url;
