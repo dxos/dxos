@@ -14,7 +14,7 @@ import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
 import { Root, Todos } from './components';
 
-await initializeAppTelemetry({ namespace: 'todomvc', config: new Config(Defaults()) });
+void initializeAppTelemetry({ namespace: 'todomvc', config: new Config(Defaults()) });
 
 const router = createBrowserRouter([
   {

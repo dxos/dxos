@@ -10,7 +10,7 @@ import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { namespace, useRemoteClient } from '../hooks';
 import { Devtools } from './Devtools';
 
-await initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
+void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 
 export const App = () => {
   const client = useRemoteClient();

@@ -14,7 +14,7 @@ import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 
 import { createRouter, namespace } from './router';
 
-await initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
+void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 
 const router = createRouter();
 const App = withProfiler(() => <RouterProvider router={router} />);
