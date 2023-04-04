@@ -4,11 +4,11 @@
 
 import { Args, Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
+import { exec } from '@dxos/process';
 import os from 'os';
 import { cwd } from 'process';
 
 import { BaseCommand } from '../../base-command';
-import { exec } from '../../util/exec';
 
 export const APP_TEMPLATES = ['hello', 'bare'];
 
@@ -61,14 +61,7 @@ export default class Create extends BaseCommand<typeof Create> {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`);
     }
-
-    try {
-      await exec('which pnpm');
-    } catch {
-      this.error('pnpm not found. Please run "npm i -g pnpm" first.');
-    }
-
-    // TODO(???): make sure this exists in the @dxos/create packages too.
+    // TODO:: make sure this exists in the @dxos/create packages too
     if (os.platform() === 'darwin') {
       try {
         await exec('which xcrun');

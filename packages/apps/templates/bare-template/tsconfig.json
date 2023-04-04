@@ -19,6 +19,9 @@
   "references": [
     {
       "path": "../../../common/plate"
+    },
+    {
+      "path": "../../../common/process"
     }
   ]
 }

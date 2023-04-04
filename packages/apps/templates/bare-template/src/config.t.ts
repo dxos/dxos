@@ -9,6 +9,8 @@ export * from './utils.t/nodePackage';
 import appTsx from './src/App.tsx.t';
 import indexHtml from './index.html.t';
 import path from 'path';
+import filenamify from 'filenamify';
+import { exec } from '@dxos/process';
 export { appTsx, indexHtml };
 
 export default defineConfig({
@@ -16,6 +18,7 @@ export default defineConfig({
   inputShape: z
     .object({
       name: z.string().describe('Name the new package').default(path.basename(process.cwd())),
+      createFolder: z.boolean().describe('Create a new folder for the project').default(true),
       react: z.boolean().describe('Include react').default(true),
       dxosUi: z.boolean().describe('Include the DXOS UI system for react').default(true),
       tailwind: z.boolean().describe('Include tailwind (https://tailwindcss.com)').default(true),
@@ -32,6 +35,20 @@ export default defineConfig({
     dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
     tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
     storybook: { when: ({ react }) => react, default: ({ react }) => react }
+  },
+  prepareContext({ input, outputDirectory, ...rest }) {
+    const { name, createFolder } = input;
+    return {
+      input,
+      outputDirectory: createFolder ? path.resolve(outputDirectory, filenamify(name)) : outputDirectory,
+      ...rest
+    };
+  },
+  events: {
+    async after({ outputDirectory }) {
+      console.log(`running ${chalk.gray('npm install')}...`);
+      await exec('npm install', { cwd: outputDirectory });
+    }
   },
   message: ({ outputDirectory, input: { name } }) => {
     const cwd = process.cwd();

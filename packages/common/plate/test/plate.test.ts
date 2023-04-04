@@ -45,4 +45,37 @@ describe('executeDirectoryTemplate', () => {
     expect(/content-to-be-replaced/.test(file?.content)).to.be.false;
     expect(/replaced-content-here/.test(file?.content)).to.be.true;
   });
+
+  it('prepare template context', async () => {
+    const results = await executeDirectoryTemplate({
+      templateDirectory: path.resolve(__dirname, 'context'),
+      input: {
+        name: 'context'
+      },
+      interactive: false
+    });
+    expect(results).to.exist;
+    const [file] = results.files;
+    expect(file).to.exist;
+    expect(/context suffix/.test(file.content)).to.be.true;
+  });
+
+  it('calls after event', async () => {
+    const results = await executeDirectoryTemplate<{ name: string }>({
+      templateDirectory: path.resolve(__dirname, 'context'),
+      input: {
+        name: 'context'
+      },
+      interactive: false,
+      events: {
+        after: ({ input, results }) => {
+          expect(results).to.exist;
+          expect(input.name).to.eq('context suffix');
+        }
+      }
+    });
+    expect(results).to.exist;
+    const [file] = results.files;
+    expect(file).to.exist;
+  });
 });
