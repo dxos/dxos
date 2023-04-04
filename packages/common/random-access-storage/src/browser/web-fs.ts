@@ -143,6 +143,7 @@ export class WebFile extends EventEmitter implements File {
     return Buffer.from(new Uint8Array(await file.slice(offset, offset + size).arrayBuffer()));
   }
 
+  @synchronized
   async del(offset: number, size: number) {
     const fileHandle: any = await this._fileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: true });
@@ -150,6 +151,7 @@ export class WebFile extends EventEmitter implements File {
     await writable.close();
   }
 
+  @synchronized
   async stat() {
     const fileHandle: any = await this._fileHandle;
     const file = await fileHandle.getFile();
@@ -160,10 +162,12 @@ export class WebFile extends EventEmitter implements File {
 
   async close(): Promise<void> {}
 
+  @synchronized
   async destroy() {
     return await this._destroy();
   }
 
+  @synchronized
   async truncate(offset: number) {
     const fileHandle: any = await this._fileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: true });
