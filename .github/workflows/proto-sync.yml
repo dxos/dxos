@@ -28,10 +28,6 @@ jobs:
         run: |
           go install github.com/golang/protobuf/protoc-gen-go@latest
           go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
-      - name: Setup Git
-        run: |
-          git config user.name "dxos-bot"
-          git config user.email "bot@dxos.org"
       - name: Update KUBE repo
         run: |
           # Clone the repo.
@@ -48,6 +44,10 @@ jobs:
           # Update protos & gen defs.
           cp -r ../packages/core/protocols/src/proto proto
           go generate ./...
+
+          # Setup Git.
+          git config user.name "dxos-bot"
+          git config user.email "bot@dxos.org"
 
           # Setup branch.
           git checkout -B ${{ env.BRANCH_NAME }}
