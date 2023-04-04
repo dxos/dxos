@@ -32,13 +32,19 @@ These are all deployed from `dxos` repo via CircleCI. See [.circleci/scripts/pub
 | App                                   | Production                                                                         | Staging                                                                                                    | Dev                                                                                            |
 | :------------------------------------ | :--------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------- |
 | [Composer](https://composer.dxos.org) | [composer.dxos.org](https://composer.dxos.org) [☁](https://composer.kube.dxos.org) | [composer.staging.dxos.org](https://composer.staging.dxos.org) [☁](https://composer.staging.kube.dxos.org) | [composer.dev.dxos.org](https://composer.dev.dxos.org) [☁](https://composer.dev.kube.dxos.org) |
-| [Kai](https://kai.dxos.org)           | [kai.dxos.org](https://kai.dxos.org) [☁](https://kai.kube.dxos.org)                | [kai.staging.dxos.org](https://kai.staging.dxos.org) [☁](https://kai.staging.kube.dxos.org)                | [kai.dev.dxos.org](https://kai.dev.dxos.org) [☁](https://kai.dev.kube.dxos.org)                |
+| [Kai](https://kai.dxos.org) (PWA)          | [kai.dxos.org](https://kai.dxos.org) [☁](https://kai.kube.dxos.org)                | [kai.staging.dxos.org](https://kai.staging.dxos.org) [☁](https://kai.staging.kube.dxos.org)                | [kai.dev.dxos.org](https://kai.dev.dxos.org) [☁](https://kai.dev.kube.dxos.org)                |
+| [Kai-web](https://kai-web.dxos.org) (Non-PWA)   | [kai-web.dxos.org](https://kai-web.dxos.org) [☁](https://kai-web.kube.dxos.org)                | [kai-web.staging.dxos.org](https://kai-web.staging.dxos.org) [☁](https://kai-web.staging.kube.dxos.org)                | [kai-web.dev.dxos.org](https://kai-web.dev.dxos.org) [☁](https://kai-web.dev.kube.dxos.org)                |
 | [Docs](https://docs.dxos.org)         | [docs.dxos.org](https://docs.dxos.org) [☁](https://docs.kube.dxos.org)             | [docs.staging.dxos.org](https://docs.staging.dxos.org) [☁](https://docs.staging.kube.dxos.org)             | [docs.dev.dxos.org](https://docs.dev.dxos.org) [☁](https://docs.dev.kube.dxos.org)             |
 | Halo                                  |                                                                                    |                                                                                                            |
 | TodoMVC                               |                                                                                    |                                                                                                            |
 | Tasks App                             |                                                                                    |                                                                                                            |
 | Kube Console                          |                                                                                    |                                                                                                            |
 | Dev Tools                             |                                                                                    |                                                                                                            |
+#### Infrastructure
+See [kube ops documentation](https://github.com/dxos/kube/tree/main/docs/ops).
+
+
+
 
 ## Supporting Assets
 
