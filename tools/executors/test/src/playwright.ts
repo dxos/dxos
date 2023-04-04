@@ -138,7 +138,7 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
       : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure'
   },
   projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType))
 };

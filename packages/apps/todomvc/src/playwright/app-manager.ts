@@ -29,7 +29,7 @@ export class AppManager {
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-
+    this.shell = new ShellManager(this.page);
     this._initialized = true;
   }
 

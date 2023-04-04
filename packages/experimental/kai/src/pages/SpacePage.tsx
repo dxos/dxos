@@ -19,6 +19,7 @@ import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppStat
  * Home page with current space.
  */
 const SpacePage = () => {
+  useIdentity({ login: true });
   const { fullscreen } = useAppState();
   const { space, frame } = useAppRouter();
   const spaces = useSpaces();
