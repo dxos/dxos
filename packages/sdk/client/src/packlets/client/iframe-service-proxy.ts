@@ -18,6 +18,7 @@ import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
 
 const shellStyles = Object.entries({
+  display: 'none',
   position: 'fixed',
   top: 0,
   left: 0,
