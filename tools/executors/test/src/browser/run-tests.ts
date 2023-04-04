@@ -112,7 +112,7 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
   const packageDir = dirname((await pkgUp({ cwd: __dirname })) as string);
   assert(packageDir);
 
-  const port = 5175;
+  const port = 5176;
   const server = await servePage(join(packageDir, './src/browser/index.html'), port);
   await page.goto(`http://localhost:${port}`);
 
@@ -170,9 +170,19 @@ const servePage = async (path: string, port = 4848) => {
   const serverReady = new Promise<void>((resolve) => {
     trigger = resolve;
   });
-  server.listen(port, () => {
-    trigger();
-  });
+
+  let retries = 0;
+  while (retries < 100) {
+    try {
+      server.listen(port, () => {
+        trigger();
+      });
+      break;
+    } catch (e) {
+      retries++;
+      port++;
+    }
+  }
   await serverReady;
   return server;
 };
