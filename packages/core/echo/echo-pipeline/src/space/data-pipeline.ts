@@ -53,7 +53,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 /**
  * Flag to disable automatic local snapshots.
  */
-const DISABLE_SNAPSHOT_CACHE = false;
+const DISABLE_SNAPSHOT_CACHE = true;
 
 /**
  * Controls data pipeline in the space.
@@ -106,7 +106,7 @@ export class DataPipeline {
     }
 
     this._spaceContext = spaceContext;
-    if (this._params.snapshotId) {
+    if (this._params.snapshotId && !DISABLE_SNAPSHOT_CACHE) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
       this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
     }

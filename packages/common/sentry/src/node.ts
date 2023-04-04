@@ -22,30 +22,34 @@ import { InitOptions } from './types';
  * @param options {InitOptions}
  */
 export const init = (options: InitOptions) => {
-  if (options.tracing) {
-    void import('@sentry/tracing');
-  }
-
-  naturalInit({
-    enabled: options.enable ?? true,
-    dsn: options.destination,
-    serverName: options.installationId,
-    release: options.release,
-    environment: options.environment ?? process.env.DX_ENVIRONMENT,
-    integrations: [new CaptureConsole({ levels: ['error', 'warn'] })],
-    tracesSampleRate: options.sampleRate,
-    transport: options.transport,
-    beforeSend: (event) => {
-      options.scrubFilenames && scrub(event);
-      options.onError?.(event);
-
-      return event;
+  try {
+    if (options.tracing) {
+      void import('@sentry/tracing');
     }
-  });
 
-  Object.entries(options.properties ?? {}).forEach(([key, value]) => {
-    setTag(key, value);
-  });
+    naturalInit({
+      enabled: options.enable ?? true,
+      dsn: options.destination,
+      serverName: options.installationId,
+      release: options.release,
+      environment: options.environment ?? process.env.DX_ENVIRONMENT,
+      integrations: [new CaptureConsole({ levels: ['error', 'warn'] })],
+      tracesSampleRate: options.sampleRate,
+      transport: options.transport,
+      beforeSend: (event) => {
+        options.scrubFilenames && scrub(event);
+        options.onError?.(event);
+
+        return event;
+      }
+    });
+
+    Object.entries(options.properties ?? {}).forEach(([key, value]) => {
+      setTag(key, value);
+    });
+  } catch (err) {
+    log.catch('Failed to initialize sentry', err);
+  }
 };
 
 const scrub = (event: Event) => {
@@ -67,8 +71,12 @@ const scrub = (event: Event) => {
  * @param breadcrumb — The breadcrumb to record.
  */
 export const addBreadcrumb: typeof naturalAddBreadcrumb = (breadcrumb) => {
-  naturalAddBreadcrumb(breadcrumb);
-  log('add breadcrumb', breadcrumb);
+  try {
+    naturalAddBreadcrumb(breadcrumb);
+    log('add breadcrumb', breadcrumb);
+  } catch (err) {
+    log.catch('Failed to add breadcrumb', err);
+  }
 };
 
 /**
@@ -79,7 +87,12 @@ export const addBreadcrumb: typeof naturalAddBreadcrumb = (breadcrumb) => {
  * @returns — The generated eventId.
  */
 export const captureException: typeof naturalCaptureException = (exception, captureContext) => {
-  const eventId = naturalCaptureException(exception, captureContext);
-  log('capture exception', { exception, eventId, ...captureContext });
-  return eventId;
+  try {
+    const eventId = naturalCaptureException(exception, captureContext);
+    log('capture exception', { exception, eventId, ...captureContext });
+    return eventId;
+  } catch (err) {
+    log.catch('Failed to capture exception', err);
+    return 'unknown';
+  }
 };

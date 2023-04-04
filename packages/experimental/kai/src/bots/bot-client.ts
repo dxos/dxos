@@ -10,6 +10,8 @@ import { log } from '@dxos/log';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+// TODO(burdon): Factor out to separate package.
+
 // TODO(burdon): Copied from @dxos/bot-lab.
 export const DX_BOT_SERVICE_PORT = 7100;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
@@ -21,7 +23,8 @@ export const DX_BOT_RPC_PORT_MAX = 7300;
 export const BOT_STARTUP_CHECK_INTERVAL = 250;
 export const BOT_STARTUP_CHECK_TIMEOUT = 10_000;
 
-const BOT_IMAGE_URL = 'ghcr.io/dxos/bot:latest';
+// TODO(burdon): Registry.
+const BOT_IMAGE = 'ghcr.io/dxos/bot:latest';
 
 export type BotClientOptions = {
   proxy?: string;
@@ -46,6 +49,7 @@ export class BotClient {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
 
+  // TODO(burdon): Access control.
   // TODO(burdon): Error handling.
 
   get active() {
@@ -57,7 +61,7 @@ export class BotClient {
     return fetch(`${this._botServiceEndpoint}/docker/containers/json?all=true`).then(async (response) => {
       const records = (await response.json()) as any[];
       return records.filter((record) => {
-        return record.Image === BOT_IMAGE_URL;
+        return record.Image === BOT_IMAGE;
       });
     });
   }
@@ -78,11 +82,16 @@ export class BotClient {
     }
   }
 
+  async stopBot(id: string) {
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStop
+    await fetch(`${this._botServiceEndpoint}/docker/containers/${id}/stop`, { method: 'POST' });
+  }
+
   /**
    * Fetch latest image.
    */
   async fetchImage() {
-    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE_URL}`, {
+    await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE}`, {
       method: 'POST',
       body: JSON.stringify({}) // Empty body required.
     });
@@ -91,47 +100,63 @@ export class BotClient {
   /**
    * Start bot container.
    */
-  async startBot(botId: string, envMap?: Map<string, string>) {
-    log('starting bot', { bot: botId });
+  async startBot(botName: string, envMap?: Map<string, string>) {
+    log('starting bot', { bot: botName });
     this.onStatusUpdate.emit('Connecting...');
 
-    const env: { [key: string]: string } = {
-      BOT_NAME: botId,
-      LOG_FILTER: 'info'
-      // COM_PROTONMAIL_HOST: 'host.docker.internal'
-    };
+    const botInstanceId = botName.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
 
-    Array.from(envMap?.entries() ?? []).forEach(([key, value]) => (env[key] = value));
-
-    /**
-     * {@see DX_BOT_RPC_PORT_MIN}
-     */
+    // TODO(burdon): Select free port (may clash with other clients).
     const proxyPort = DX_BOT_RPC_PORT_MIN + Math.floor(Math.random() * (DX_BOT_RPC_PORT_MAX - DX_BOT_RPC_PORT_MIN));
-    const request = {
-      Image: BOT_IMAGE_URL,
-      ExposedPorts: {
-        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
+
+    // ENV variables passed to container.
+    const envs = Array.from(envMap?.entries() ?? []).reduce<{ [key: string]: string }>(
+      (envs, [key, value]) => {
+        envs[key] = value;
+        return envs;
       },
+      {
+        LOG_FILTER: 'info',
+        DX_BOT_NAME: botName,
+        // Access container directly.
+        COM_PROTONMAIL_HOST: 'protonmail-bridge',
+        COM_PROTONMAIL_PORT: '143'
+        // COM_PROTONMAIL_HOST: 'host.docker.internal' // NOTE: Docker Desktop only (for development).
+      }
+    );
+
+    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
+    const request = {
+      Image: BOT_IMAGE,
       HostConfig: {
         PortBindings: {
+          // Allows client to initiate connection.
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
               HostAddr: '127.0.0.1', // Only expose on loop-back interface.
               HostPort: `${proxyPort}`
             }
           ]
-        }
+        },
+
+        // Use host's network
+        // https://docs.docker.com/network/host
+        // NetworkMode: 'host'
+
+        // Maps the named container's name to the container IP address.
+        // TODO(burdon): Generalize links to other containers (e.g., Protonmail bridge.)
+        Links: ['protonmail-bridge:protonmail-bridge']
       },
-      Env: Object.entries(env).map(([key, value]) => `${key}=${String(value)}`),
+      ExposedPorts: {
+        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
+      },
+      Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
-        'dxos.bot.name': botId,
+        'dxos.bot.name': botName,
         'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
       }
     };
 
-    const botInstanceId = botId.split('.').slice(-1) + '-bot-' + PublicKey.random().toHex().slice(0, 8);
-
-    // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
     log('creating bot', { request, botInstanceId });
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',

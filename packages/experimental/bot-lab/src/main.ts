@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import sortKeys from 'sort-keys';
+
 import { Client, ClientServices, PublicKey, Space } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-bots';
@@ -20,7 +22,17 @@ const rpcPort = process.env.DX_BOT_CONTAINER_RPC_PORT
  * Starts a websocket server implementing remote DXOS client services.
  */
 const start = async () => {
-  log.info('env', process.env);
+  // TODO(burdon): Factor out.
+  log.info(
+    'env',
+    sortKeys(
+      Object.entries(process.env).reduce<any>((result, [key, value]) => {
+        result[key] = value;
+        return result;
+      }, {}),
+      { deep: true }
+    )
+  );
 
   // TODO(burdon): Set logging from client.
   // TODO(burdon): Update via ENV from client.
@@ -55,7 +67,7 @@ const start = async () => {
   });
 
   await server.open();
-  log.info('listening ', { rpcPort });
+  log.info('listening', { rpcPort });
 
   let bot: Bot | undefined;
   // TODO(burdon): Reconcile this subscription with the ECHO db.query.
@@ -64,9 +76,14 @@ const start = async () => {
       const space = spaces[0];
       log.info('joined', { space: space.key });
       if (!bot) {
-        bot = createBot(process.env.BOT_NAME);
-        await bot.init(config, space);
-        await bot.start();
+        bot = createBot(process.env.DX_BOT_NAME);
+        try {
+          await bot.init(config, space);
+          await bot.start();
+        } catch (err) {
+          await server.close();
+          process.exit(1);
+        }
       }
     }
   };
@@ -78,11 +95,11 @@ const start = async () => {
 
   const printStatus = () => {
     log.info('status', {
-      bot: bot?.constructor.name,
-      identity: client.halo.identity,
+      bot: bot?.toString(),
+      identity: client.halo.identity.get(),
       spaces: client.spaces.get().map((space) => ({
         key: space.key,
-        title: space.properties.title,
+        title: space.properties.name,
         members: space.members.get()
       }))
     });

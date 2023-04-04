@@ -2,29 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Eye, Layout, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import { Eye, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
+import React, { useState } from 'react';
 
-import { Text } from '@dxos/echo-schema';
-import { Document, Presentation } from '@dxos/kai-types';
-import { observer, Space, useSubscription } from '@dxos/react-client';
+import { Presentation } from '@dxos/kai-types';
+import { observer } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
-import { TextKind } from '@dxos/react-composer';
 
-import { Deck, DeckProps } from '../../components';
-import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
-import { Stack } from '../Stack';
+import { useAppRouter, useAppState } from '../../hooks';
+import { DeckContainer } from './DeckContainer';
+import { DeckEditor } from './DeckEditor';
 
 // TODO(burdon): Load/save Deck to IPFS.
 // TODO(burdon): IPFS images.
 // TODO(burdon): Layout.
 // TODO(burdon): MDX components (runtime build).
 
+/*
+        showTitle={false}
+        space={space}
+        items={[
+          {
+            type: Document.type.name,
+            label: 'New slide',
+            Icon: Layout,
+            onCreate: async (space: Space) => space!.db.add(new Document())
+          }
+        ]}
+*/
+
 enum View {
   EDITOR = 1,
   MARKDOWN = 2,
   SPLIT = 3
 }
+
+// TODO(burdon): Header title.
+// TODO(burdon): StackSection renderer.
+// TODO(burdon): ContextMenu
+// TODO(burdon): Rename Item.
+// TODO(burdon): Factor out common content.
 
 export const PresenterFrame = observer(() => {
   const { space, objectId } = useAppRouter();
@@ -41,7 +58,7 @@ export const PresenterFrame = observer(() => {
       <div className='flex flex-1 overflow-hidden'>
         {view !== View.MARKDOWN && !fullscreen && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <Editor space={space} presentation={presentation} />
+            <DeckEditor space={space} presentation={presentation} />
           </div>
         )}
 
@@ -52,6 +69,7 @@ export const PresenterFrame = observer(() => {
         )}
       </div>
 
+      {/* View selector. */}
       {!fullscreen && (
         <div className='flex shrink-0 justify-center m-2 space-x-2'>
           <Button onClick={() => setView(View.EDITOR)} variant={view === View.EDITOR ? 'ghost' : 'default'}>
@@ -68,59 +86,5 @@ export const PresenterFrame = observer(() => {
     </div>
   );
 });
-
-const Editor: FC<{ space: Space; presentation: Presentation }> = ({ space, presentation }) => (
-  <div className='flex flex-1 justify-center overflow-y-auto'>
-    <div className='flex flex-col w-full md:max-w-[800px] md:pt-4 mb-6'>
-      <Stack
-        slots={{ root: { className: 'py-12 bg-paper-bg shadow-1' } }}
-        showTitle={false}
-        space={space}
-        stack={presentation.stack}
-        items={[
-          {
-            type: Document.type.name,
-            label: 'New slide',
-            Icon: Layout,
-            onCreate: async (space: Space) => space!.db.add(new Document())
-          }
-        ]}
-      />
-      <div className='pb-4' />
-    </div>
-  </div>
-);
-
-const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide' | 'onSlideChange'>> = ({
-  presentation,
-  ...rest
-}) => {
-  const { fullscreen } = useAppState();
-  const { setFullscreen } = useAppReducer();
-  const [content, setContent] = useState<string[]>([]);
-
-  const handleUpdate = useCallback(() => {
-    const texts = presentation.stack.sections
-      .map((section) => section.object)
-      .map((document) => {
-        return document.content?.kind === TextKind.PLAIN ? document.content : undefined;
-      })
-      .filter(Boolean) as Text[];
-
-    setContent(texts.map((text) => text.content!.toString()) ?? []);
-  }, [presentation]);
-
-  // First time.
-  useEffect(handleUpdate, []);
-
-  // Get update if stack sections updated.
-  useSubscription(handleUpdate, [presentation.stack]);
-
-  // Get update if any text content changed.
-  // TODO(burdon): This seems unnecessary?
-  useSubscription(handleUpdate, [presentation.stack.sections.map((section) => section.object.content)]);
-
-  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} {...rest} />;
-};
 
 export default PresenterFrame;

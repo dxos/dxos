@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug } from '@phosphor-icons/react';
+import { ArrowUUpLeft } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -35,10 +35,10 @@ const SettingsPage = () => {
         <div className='flex items-center justify-between p-2 bg-appbar-header'>
           <div className='flex w-full items-center'>
             <Link to='/' title='Home'>
-              <Bug className={mx(getSize(8))} />
+              <ArrowUUpLeft className={mx(getSize(6))} />
             </Link>
             <div className='grow' />
-            <div>
+            <div className='text-sm'>
               v{config.values.runtime?.app?.build?.version} [
               {formatDistance(new Date(config.values.runtime?.app?.build?.timestamp ?? ''), Date.now(), {
                 addSuffix: true
@@ -48,7 +48,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className='flex flex-1 flex-col overflow-y-scroll text-sm w-full md:w-[600px] md:max-w-[600px] shadow-1'>
+        <div className='flex flex-1 flex-col overflow-y-scroll text-sm w-full md:w-[800px] md:max-w-[800px] shadow-1'>
           <div className='flex flex-col'>
             <h2 className='p-2 bg-paper-3-bg'>KEYS</h2>
             <div className='py-4 bg-white'>

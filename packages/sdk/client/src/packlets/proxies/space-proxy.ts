@@ -154,6 +154,11 @@ export class SpaceProxy implements Space {
     };
 
     databaseRouter.register(this.key, this._db);
+
+    // Update observables
+    this._stateUpdate.emit(this._currentState);
+    this._pipelineUpdate.emit(_data.pipeline ?? {});
+    this._membersUpdate.emit(_data.members ?? []);
   }
 
   get key() {

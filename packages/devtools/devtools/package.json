@@ -36,6 +36,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",

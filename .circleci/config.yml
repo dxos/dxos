@@ -43,6 +43,11 @@ aliases:
   - &store_test_results
     store_test_results:
       path: test-results
+  # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
+  - &install_datadog
+    run:
+      name: Install Datadog
+      command: npm install -g @datadog/datadog-ci 
 
 jobs:
   #
@@ -147,8 +152,39 @@ jobs:
           environment:
             NODE_ENV: production
 
+  messaging_monitor:
+    docker:
+      - *docker_image
+    parameters:
+      dx_environment:
+        type: string
+    steps:
+      - checkout
+      - run:
+          command: npm run start
+          working_directory: ./tools/monitors/messaging-monitor
+          environment:
+            DX_ENVIRONMENT: << parameters.dx_environment >>
+      - *install_datadog
+      - run:
+          name: Upload results to Datadog
+          command: datadog-ci junit upload --service dxos ./tools/monitors/messaging-monitor/test-results.xml
+          environment:
+            DD_TAGS: env:<< parameters.dx_environment >>
+
+parameters:
+  run_daily_workflow:
+    type: boolean
+    default: false
+
+  run_hourly_workflow:
+    type: boolean
+    default: false
+
 workflows:
   default:
+    when:
+      equal: [ webhook, << pipeline.trigger_source >> ]
     jobs:
       - check:
           context:
@@ -161,6 +197,8 @@ workflows:
             - Github
 
   deploy:
+    when:
+      equal: [ webhook, << pipeline.trigger_source >> ]
     jobs:
       - publish:
           filters:
@@ -171,5 +209,19 @@ workflows:
                 - staging
           context:
             - Github
+
+  hourly:
+    when: << pipeline.parameters.run_hourly_workflow >>
+    jobs:
+      - messaging_monitor:
+          context:
+            - Datadog
+            - Github
+          matrix:
+            parameters:
+              dx_environment:
+                - development
+                - production
+                - staging
 
 # VS Code Extension Version: 1.5.1
