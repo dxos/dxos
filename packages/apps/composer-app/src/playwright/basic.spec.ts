@@ -79,4 +79,10 @@ test.describe('Basic test', () => {
     test('host and guest can see each others’ presence when same document is in focus', async () => {});
     test('host and guest can see each others’ changes in same document', async () => {});
   });
+
+  const describeGithubIntegration = (process.env.GITHUB_PAT?.length ?? -1) > 0 ? test.describe : test.describe.skip;
+
+  describeGithubIntegration('Github integration', () => {
+    test('add Github PAT to profile', () => {});
+  });
 });
