@@ -62,6 +62,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
           BRANCH_NAME: proto-sync
-          PR_TITLE: Sync Protocol Buffers
+          PR_TITLE: "fix: sync protocol buffers"
           PR_BODY: Created automatically by Github Action
 
