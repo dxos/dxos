@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.36](https://github.com/dxos/dxos/compare/v0.1.35...v0.1.36) (2023-04-04)
+
+
+### Features
+
+* Add "Open with Kai" link to github ([#2920](https://github.com/dxos/dxos/issues/2920)) ([30ff4ec](https://github.com/dxos/dxos/commit/30ff4ec11a47341c139ab321e89ec09acdd7f08c))
+* Add exponential back-off in NetworkManager ([#2881](https://github.com/dxos/dxos/issues/2881)) ([484d498](https://github.com/dxos/dxos/commit/484d498e5e1fcb42bf4eed72be1ca4e97f07690d))
+* add non pwa kai to ops guide ([#2924](https://github.com/dxos/dxos/issues/2924)) ([5838d86](https://github.com/dxos/dxos/commit/5838d865d2cb5a6b61d7309dfc885f83a6b27f40))
+* Bot config fix. ([#2903](https://github.com/dxos/dxos/issues/2903)) ([661676b](https://github.com/dxos/dxos/commit/661676b71e50fdd7cc497c1b3ff1b0cd2b5720a9))
+* Fix bot config. ([#2904](https://github.com/dxos/dxos/issues/2904)) ([f39316c](https://github.com/dxos/dxos/commit/f39316c0573873ca82967ca3a134ecb6000f301e))
+* ops guide ([#2911](https://github.com/dxos/dxos/issues/2911)) ([0bff0ef](https://github.com/dxos/dxos/commit/0bff0ef4a1475829d80233303f1cf11d8195ce2c))
+* Protonmail bot config ([#2906](https://github.com/dxos/dxos/issues/2906)) ([5dfe113](https://github.com/dxos/dxos/commit/5dfe11387646c49102b7fd5ce796b6264ddc1384))
+* Protonmail configuration ([#2908](https://github.com/dxos/dxos/issues/2908)) ([2768962](https://github.com/dxos/dxos/commit/2768962d229e92ada7cfcdd2b4b4bdd545ee09db))
+* Storage bench ([#2907](https://github.com/dxos/dxos/issues/2907)) ([1b81d4c](https://github.com/dxos/dxos/commit/1b81d4c7b7c0c3c50b0ca82c02f3414707be6dd4))
+* **vault:** create package ([#2830](https://github.com/dxos/dxos/issues/2830)) ([4dd7ad0](https://github.com/dxos/dxos/commit/4dd7ad024d5ed2ac72e3499091e6d2e6ca039814))
+
+
+### Bug Fixes
+
+* **composer-app:** Markdown Composer size & spacing ([#2900](https://github.com/dxos/dxos/issues/2900)) ([a7f0f08](https://github.com/dxos/dxos/commit/a7f0f081fccf258c1148a3d15d08387bf4f65c6e))
+* Disable snapshots ([#2880](https://github.com/dxos/dxos/issues/2880)) ([8226e1b](https://github.com/dxos/dxos/commit/8226e1b082014899b64142193a99197a3818bdcb))
+* Keep a constant max signal reconnect timeout ([#2913](https://github.com/dxos/dxos/issues/2913)) ([df76e91](https://github.com/dxos/dxos/commit/df76e913b58547ba67f7cc67941cb8752e4cfb00))
+* **react-composer:** Composer zebra ([#2901](https://github.com/dxos/dxos/issues/2901)) ([0eb756e](https://github.com/dxos/dxos/commit/0eb756ea62210a1bd31548204bb2c9df7b034af2))
+* sync protos between dxos and kube repos ([#2898](https://github.com/dxos/dxos/issues/2898)) ([253f495](https://github.com/dxos/dxos/commit/253f495fd9b0fdf738f137a2c0328e07c97104b5))
+
 ## [0.1.35](https://github.com/dxos/dxos/compare/v0.1.34...v0.1.35) (2023-03-30)
 
 
