@@ -19,7 +19,7 @@ import { valueEncoding } from '../common';
 describe('replication', () => {
   test('replicates a feed through a direct stream', async () => {
     // Some storage drivers may break when there are multiple storage instances.
-    const storage = createStorage({ type: StorageType.IDB });
+    const storage = createStorage();
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
     const keyring1 = new Keyring();
