@@ -54,8 +54,7 @@ jobs:
           git push origin ${{ env.BRANCH_NAME }} -f
 
           # Prepare Pull Request.
-          gh pr edit ${{ env.BRANCH_NAME }} --title '${{ env.PR_TITLE }} from ${{ env.COMMIT_HASH }}' &&
-          gh pr reopen ${{ env.BRANCH_NAME }} ||
+          gh pr close ${{ env.BRANCH_NAME }} || true
           gh pr create -B main -H ${{ env.BRANCH_NAME }} --title '${{ env.PR_TITLE }} from ${{ env.COMMIT_HASH }}' --body '${{ env.PR_BODY }}'
         env:
           GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
