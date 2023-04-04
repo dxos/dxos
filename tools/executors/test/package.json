@@ -12,6 +12,7 @@
     "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@types/wtfnode": "^0.7.0",
     "wtfnode": "^0.9.1"
   },
