@@ -9,7 +9,6 @@ import { RouterProvider } from 'react-router-dom';
 import { createRouter } from './routes';
 
 import '@dxosTheme';
-import '@dxos/client/shell.css';
 
 import 'virtual:fonts.css';
 import '../style.css';

@@ -5,7 +5,7 @@ import React from 'react';
 import { Outlet, useParams, useSearchParams } from 'react-router-dom';
 
 import { useTelemetry } from '@dxos/react-appkit';
-import { SpaceState, useSpaces } from '@dxos/react-client';
+import { SpaceState, useIdentity, useSpaces } from '@dxos/react-client';
 import { defaultOsButtonColors, mx, useButtonShadow } from '@dxos/react-components';
 import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
 
@@ -16,6 +16,7 @@ import { namespace, abbreviateKey } from '../../router';
 export const DocumentLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace });
+  useIdentity({ login: true });
   const shadow = useButtonShadow('base');
 
   const { spaceKey } = useParams();

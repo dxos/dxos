@@ -3,7 +3,6 @@
 //
 
 import '@dxosTheme';
-import '@dxos/client/shell.css';
 
 import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';

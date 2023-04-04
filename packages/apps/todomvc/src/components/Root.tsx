@@ -13,7 +13,7 @@ import { Main } from './Main';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
-  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config, { shell: true });
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const Root = () => (
   <ClientProvider config={configProvider} services={servicesProvider}>
