@@ -167,23 +167,27 @@ const servePage = async (path: string, port = 4848) => {
     });
   });
 
+  let retries = 0;
+  server.on('error', (err) => {
+    if (err.message.includes('EADDRINUSE') && retries < 100) {
+      retries++;
+      server.close();
+      server.listen(port++, () => {
+        trigger();
+      });
+    } else {
+      throw err;
+    }
+  });
+
   let trigger: () => void;
   const serverReady = new Promise<void>((resolve) => {
     trigger = resolve;
   });
 
-  let retries = 0;
-  while (retries < 100) {
-    try {
-      server.listen(port, () => {
-        trigger();
-      });
-      break;
-    } catch (e) {
-      retries++;
-      port++;
-    }
-  }
+  server.listen(port++, () => {
+    trigger();
+  });
   await serverReady;
   return server;
 };
