@@ -42,8 +42,8 @@ Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
 | `pnpm nx serve halo` | Runs the `halo` app in dev mode |
-| `pnpm nx serve-with-halo tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
-| `pnpm nx serve-with-halo composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve-with-vault tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve-with-vault composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
 
 ## Test commands:

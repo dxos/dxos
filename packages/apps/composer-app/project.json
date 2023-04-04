@@ -59,11 +59,11 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-halo": {
-      "executor": "@dxos/serve-with-halo:run"
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
     }
   },
   "implicitDependencies": [
-    "serve-with-halo"
+    "serve-with-vault"
   ]
 }

@@ -52,7 +52,7 @@
         "buildTarget": "tasks-app:bundle"
       }
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "dependsOn": [
         "^compile"
       ],
