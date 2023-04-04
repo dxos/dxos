@@ -5,7 +5,7 @@
   "properties": {
     "serveProject": {
       "type": "string",
-      "description": "Project to run with HALO, defaults to current project."
+      "description": "Project to run with vault, defaults to current project."
     },
     "serveTarget": {
       "type": "string",

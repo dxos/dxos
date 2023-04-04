@@ -8,11 +8,11 @@ import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-import { namespace } from '../util';
+import { namespace } from './util';
 
 // NOTE: Verbose logging enabled in the shared worker for the time being.
-const LOG_FILTER = 'client:debug,info';
-console.log(Defaults());
+const LOG_FILTER = 'debug';
+
 void initializeAppTelemetry({
   namespace,
   config: new Config(Defaults()),

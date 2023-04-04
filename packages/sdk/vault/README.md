@@ -1,10 +1,6 @@
-# @dxos/serve-with-halo
+# @dxos/vault
 
-## Installation
-
-```bash
-pnpm i @dxos/serve-with-halo
-```
+DXOS web browser vault
 
 ## DXOS Resources
 

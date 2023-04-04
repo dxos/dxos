@@ -128,7 +128,7 @@
         "prebuild"
       ]
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",
