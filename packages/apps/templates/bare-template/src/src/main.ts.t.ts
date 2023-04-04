@@ -30,7 +30,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     void (async () => {
       // Grab a configuration with defaults and dynamic values from KUBE.
       const config = new Config(await Dynamics(), Defaults());
-      // Create a client,
+      // Create a client.
       const client = new Client({ config });
       // Initialize before using.
       await client.initialize();

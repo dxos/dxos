@@ -33,7 +33,7 @@ export const App = () => {
         name="add"
         onClick={() => {
           const task = new Task({ title: 'buy milk' });
-          space.db.add(task);
+          space?.db.add(task);
         }}
       >
         Add a task

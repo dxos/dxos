@@ -32,7 +32,7 @@ export const App = () => {
         name="add"
         onClick={() => {
           const task = new Expando({ title: 'buy milk' });
-          space.db.add(task);
+          space?.db.add(task);
         }}
       >
         Add a task
