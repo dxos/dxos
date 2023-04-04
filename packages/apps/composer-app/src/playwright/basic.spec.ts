@@ -69,10 +69,11 @@ test.describe('Basic test', () => {
       ]);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
-      // todo(thure): Guest does not currently redirect, which it should do.
-      // await waitForExpect(async () => {
-      //   expect(await host.page.url()).to.equal(await guest.page.url());
-      // });
+      await host.page.getByRole('link').last().click();
+      await host.waitForMarkdownTextbox();
+      await waitForExpect(async () => {
+        expect(await host.page.url()).to.include(await guest.page.url());
+      });
     });
     test('guest can see same documents on join', async () => {});
     test('host and guest can see each others’ presence when same document is in focus', async () => {});

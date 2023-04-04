@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import React from 'react';
-import { Outlet, useParams, useSearchParams } from 'react-router-dom';
+import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useTelemetry } from '@dxos/react-appkit';
 import { SpaceState, useSpaces } from '@dxos/react-client';
@@ -11,7 +11,7 @@ import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
 
 import { SidebarContent, SidebarToggle } from '../../components';
 import { OctokitProvider } from '../../components/OctokitProvider';
-import { namespace, abbreviateKey } from '../../router';
+import { namespace, abbreviateKey, getPath } from '../../router';
 
 export const DocumentLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
@@ -23,6 +23,7 @@ export const DocumentLayout = () => {
   const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY);
 
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
 
@@ -33,8 +34,8 @@ export const DocumentLayout = () => {
         space={space}
         spaceInvitationCode={spaceInvitationCode}
         haloInvitationCode={haloInvitationCode}
-        onJoinedSpace={(spaceKey) => {
-          console.log('[joined space]', spaceKey);
+        onJoinedSpace={(nextSpaceKey) => {
+          navigate(getPath(nextSpaceKey));
         }}
       >
         <OctokitProvider>

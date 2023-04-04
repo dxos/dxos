@@ -59,6 +59,10 @@ export class AppManager {
     return await this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
   }
 
+  async waitForMarkdownTextbox() {
+    return await this.page.getByTestId('composer.markdownRoot').getByRole('textbox').waitFor();
+  }
+
   async getDocumentTitleInput() {
     return await this.page.getByTestId('composer.documentTitle');
   }

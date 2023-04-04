@@ -91,7 +91,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
-    return navigate(getPath(space, document));
+    return navigate(getPath(space.key, document.id));
   }, [space, navigate]);
 
   const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
@@ -185,7 +185,7 @@ const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         {documents.length > 0 && (
           <TreeBranch collapsible={false}>
             {documents.map((document) => (
-              <DocumentTreeItem key={document.id} document={document} linkTo={getPath(space, document)} />
+              <DocumentTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
             ))}
           </TreeBranch>
         )}
@@ -234,7 +234,7 @@ const SidebarContent = () => {
   const handleCreateSpace = async () => {
     const space = await client.createSpace();
     const document = await space.db.add(new ComposerDocument());
-    return navigate(getPath(space, document));
+    return navigate(getPath(space.key, document.id));
   };
 
   const handleJoinSpace = () => {
