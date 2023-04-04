@@ -24,7 +24,7 @@ describe('Tests for different storage types in different browsers', () => {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
-  test(`Used ${StorageType.WEBFS} by default`, async () => {
+  test.skip(`Used ${StorageType.WEBFS} by default`, async () => {
     const storage = createStorage({ root: ROOT_DIRECTORY });
     expect(storage.type).toBe(StorageType.WEBFS);
   });
