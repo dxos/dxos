@@ -100,15 +100,48 @@ test.describe('Basic test', () => {
         expect(await host.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
         expect(await guest.page.locator('.cm-ySelectionInfo').count()).to.equal(0);
       });
-      await (await host.getMarkdownTextbox()).focus();
-      await (await guest.getMarkdownTextbox()).focus();
+      await host.getMarkdownTextbox().focus();
+      await guest.getMarkdownTextbox().focus();
       await waitForExpect(async () => {
         expect(await host.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('guest');
         expect(await guest.page.locator('.cm-ySelectionInfo').first().textContent()).to.equal('host');
       });
     });
 
-    test('host and guest can see each others’ changes in same document', async () => {});
+    test('host and guest can see each others’ changes in same document', async () => {
+      const parts = [
+        'Lorem ipsum dolor sit amet,',
+        ' consectetur adipiscing elit,',
+        ' sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+      ];
+      const allParts = parts.join('');
+
+      await host.getMarkdownTextbox().type(parts[0]);
+      await guest.getMarkdownTextbox().getByText(parts[0]).waitFor();
+      await guest.getMarkdownTextbox().press('End');
+      await guest.getMarkdownTextbox().type(parts[1]);
+      await host.getMarkdownTextbox().getByText([parts[0], parts[1]].join('')).waitFor();
+      await host.getMarkdownTextbox().press('End');
+      await host.getMarkdownTextbox().type(parts[2]);
+      await guest.getMarkdownTextbox().getByText(allParts).waitFor();
+      await Promise.all([host.getMarkdownTextbox().press('ArrowDown'), guest.getMarkdownTextbox().press('ArrowDown')]);
+      await Promise.all([host.getMarkdownTextbox().press('ArrowDown'), guest.getMarkdownTextbox().press('ArrowDown')]);
+      // await Promise.all([host.page.pause(), guest.page.pause()]);
+      await host.getMarkdownTextbox().getByText(allParts).waitFor();
+      const hostContent = await host
+        .getMarkdownTextbox()
+        .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
+        .first()
+        .textContent();
+      const guestContent = await guest
+        .getMarkdownTextbox()
+        .locator('.cm-activeLine > span:not([class=cm-ySelectionCaret])')
+        .first()
+        .textContent();
+      await waitForExpect(async () => {
+        expect(hostContent).to.equal(guestContent);
+      });
+    });
   });
 
   const describeGithubIntegration = (process.env.GITHUB_PAT?.length ?? -1) > 0 ? test.describe : test.describe.skip;

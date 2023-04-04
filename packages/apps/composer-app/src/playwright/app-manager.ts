@@ -31,39 +31,39 @@ export class AppManager {
     this._initialized = true;
   }
 
-  async isAuthenticated() {
+  isAuthenticated() {
     return this.page.getByTestId('composer.firstRunMessage').isVisible();
   }
 
-  async createSpace() {
+  createSpace() {
     return this.page.getByTestId('composer.createSpace').click();
   }
 
-  async joinSpace() {
+  joinSpace() {
     return this.page.getByTestId('composer.joinSpace').click();
   }
 
-  async createDocument() {
+  createDocument() {
     return this.page.getByTestId('composer.createDocument').last().click();
   }
 
-  async getNSpaceItems() {
+  getNSpaceItems() {
     return this.page.getByTestId('composer.spaceTreeItemHeading').count();
   }
 
-  async getNDocumentItems() {
+  getNDocumentItems() {
     return this.page.getByTestId('composer.documentTreeItemHeading').count();
   }
 
-  async getMarkdownTextbox() {
+  getMarkdownTextbox() {
     return this.page.getByTestId('composer.markdownRoot').getByRole('textbox');
   }
 
-  async waitForMarkdownTextbox() {
-    return this.page.getByTestId('composer.markdownRoot').getByRole('textbox').waitFor();
+  waitForMarkdownTextbox() {
+    return this.getMarkdownTextbox().waitFor();
   }
 
-  async getDocumentTitleInput() {
+  getDocumentTitleInput() {
     return this.page.getByTestId('composer.documentTitle');
   }
 }
