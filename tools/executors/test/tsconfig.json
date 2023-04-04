@@ -10,9 +10,5 @@
     "playwright.d.ts",
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../packages/common/async"
-    }
-  ]
+  "references": []
 }

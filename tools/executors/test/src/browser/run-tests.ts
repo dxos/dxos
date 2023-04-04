@@ -12,8 +12,6 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { Page } from 'playwright';
 
-import { Trigger } from '@dxos/async';
-
 import { BrowserType } from '../types';
 import { Lock, trigger } from '../util';
 import { TestResult } from './reporter';
@@ -168,10 +166,13 @@ const servePage = async (path: string, port = 4848) => {
     });
   });
 
-  const trigger = new Trigger();
-  server.listen(port, () => {
-    trigger.wake();
+  let trigger: () => void;
+  const serverReady = new Promise<void>((resolve) => {
+    trigger = resolve;
   });
-  await trigger.wait();
+  server.listen(port, () => {
+    trigger();
+  });
+  await serverReady;
   return server;
 };
