@@ -539,15 +539,15 @@ export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
-  const composerDocument = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
+  const document = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
 
   return (
     <div role='none' className='pli-14 plb-11'>
-      {composerDocument && space ? (
-        composerDocument.content.kind === TextKind.PLAIN ? (
-          <MarkdownDocumentPage document={composerDocument} space={space} />
+      {document && space ? (
+        document.content.kind === TextKind.PLAIN ? (
+          <MarkdownDocumentPage document={document} space={space} />
         ) : (
-          <RichTextDocumentPage document={composerDocument} space={space} />
+          <RichTextDocumentPage document={document} space={space} />
         )
       ) : (
         <p role='alert' className='p-8 text-center'>
