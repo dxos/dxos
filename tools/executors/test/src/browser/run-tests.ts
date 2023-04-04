@@ -7,6 +7,7 @@ import http from 'http';
 import get from 'lodash.get';
 import set from 'lodash.set';
 import { Stats } from 'mocha';
+import { AddressInfo } from 'net';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -112,8 +113,8 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
   const packageDir = dirname((await pkgUp({ cwd: __dirname })) as string);
   assert(packageDir);
 
-  const port = 5176;
-  const server = await servePage(join(packageDir, './src/browser/index.html'), port);
+  const server = await servePage(join(packageDir, './src/browser/index.html'));
+  const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
 
   const [getPromise, resolve] = trigger<RunTestsResults>();
@@ -147,7 +148,7 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
   }
 };
 
-const servePage = async (path: string, port = 4848) => {
+const servePage = async (path: string, port = 5176) => {
   const server = http.createServer((req, res) => {
     const fileName = req.url === '/' ? path : req.url;
     if (!fileName) {
