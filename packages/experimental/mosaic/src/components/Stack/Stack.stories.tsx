@@ -2,24 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowCircleDown } from '@phosphor-icons/react';
-import faker from 'faker';
+import { Plus, Trash } from '@phosphor-icons/react';
+import assert from 'assert';
 import React, { FC, useState } from 'react';
 
-import { getSize } from '@dxos/react-components';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
 import { Item } from '../../layout';
-import { createItem, TestData } from '../../testing';
+import { createItem, SeedDecorator, TestData } from '../../testing';
 import { ScrollContainer } from '../ScrollContainer';
 import { Stack } from './Stack';
+import { StackMenu, StackMenuItem } from './StackMenu';
 import { StackRow } from './StackRow';
 
-faker.seed(100);
-
 const num = 8;
+
+const sectionMenuItems = (section?: any): StackMenuItem[][] => {
+  const items: StackMenuItem[][] = [
+    [
+      {
+        action: 'insert',
+        label: 'Insert',
+        Icon: Plus,
+        onCreate: () => createItem()
+      }
+    ]
+  ];
+
+  if (section) {
+    items.push([
+      {
+        action: 'delete',
+        label: 'Delete',
+        Icon: Trash
+      }
+    ]);
+  }
+
+  return items;
+};
 
 const StackSection: FC<{ section: Item<TestData> }> = ({ section }) => {
   return (
@@ -31,18 +54,34 @@ const StackSection: FC<{ section: Item<TestData> }> = ({ section }) => {
   );
 };
 
-const Menu: FC = () => {
-  return (
-    <div className='p-1 cursor-pointer'>
-      <button>
-        <ArrowCircleDown className={getSize(6)} />
-      </button>
-    </div>
-  );
-};
-
 const Test = () => {
   const [sections, setSections] = useState<Item<TestData>[]>(() => range(num).map(() => createItem()));
+
+  const handleMenu = (item: StackMenuItem, section?: any) => {
+    switch (item.action) {
+      case 'insert': {
+        setSections((sections) => {
+          const idx = sections.findIndex(({ id }) => id === section?.id);
+          sections.splice(idx === -1 ? sections.length : idx, 0, item.onCreate!());
+          return [...sections];
+        });
+        break;
+      }
+
+      case 'delete': {
+        assert(section);
+        setSections((sections) => {
+          const idx = sections.findIndex(({ id }) => id === section.id);
+          if (idx !== -1) {
+            sections.splice(idx, 1);
+          }
+
+          return [...sections];
+        });
+        break;
+      }
+    }
+  };
 
   const handleMoveSection = (id: string, from: number, to: number) => {
     setSections((sections) => {
@@ -60,7 +99,7 @@ const Test = () => {
         <Stack<Item<TestData>>
           slots={{ root: { className: 'flex flex-1' }, section: { className: 'py-4' } }}
           StackSection={StackSection}
-          ContextMenu={<Menu />}
+          ContextMenu={({ section }) => <StackMenu items={sectionMenuItems(section)} onSelect={handleMenu} />}
           sections={sections}
           onMoveSection={handleMoveSection}
         />
@@ -72,6 +111,7 @@ const Test = () => {
 export default {
   component: Stack,
   decorators: [
+    SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>
         <div className='flex w-[600px] h-full'>

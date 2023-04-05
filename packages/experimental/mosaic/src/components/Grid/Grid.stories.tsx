@@ -10,10 +10,8 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { GridLayout, Item, Location } from '../../layout';
-import { createItem, TestData, TestTileContent } from '../../testing';
+import { createItem, SeedDecorator, TestData, TestTileContent } from '../../testing';
 import { Grid } from './Grid';
-
-faker.seed(100);
 
 // TODO(burdon): Layout for columns (as sorted list) vs positional grid.
 
@@ -88,6 +86,7 @@ const Test = () => {
 export default {
   component: Grid,
   decorators: [
+    SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col h-screen w-full'>
         <Story />

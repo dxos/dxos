@@ -5,17 +5,18 @@
 import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { FC, ReactNode } from 'react';
+import React, { FC } from 'react';
 
 import { DragEndEvent, mx } from '@dxos/react-components';
 
-import { SortableStackRow, StackRow } from './StackRow';
+import { StackFooter, StackSectionContainer } from './StackRow';
+import { StackSectionContext } from './context';
 
-// TODO(burdon): Configurable menu options and section renderers (like frames).
-// TODO(burdon): Factor out new section data factories.
-// TODO(burdon): Factor out components: from other frames, editable task list, etc. Pure vs containers.
+const footerId = '__footer';
 
 export type SectionType = { id: string };
+
+export const DefaultStackSection = <T extends SectionType>({ section }: { section: T }) => <div>{section.id}</div>;
 
 export type StackSlots = {
   root?: {
@@ -28,15 +29,15 @@ export type StackSlots = {
 
 export type StackProps<T extends SectionType> = {
   sections?: T[];
-  StackSection: FC<{ section: T }>;
-  ContextMenu?: ReactNode;
+  StackSection?: FC<{ section: T }>;
+  ContextMenu?: FC<{ section?: T }>;
   onMoveSection?: (id: string, from: number, to: number) => void;
   slots?: StackSlots;
 };
 
 export const Stack = <T extends SectionType>({
   sections = [],
-  StackSection,
+  StackSection = DefaultStackSection<T>,
   ContextMenu,
   onMoveSection,
   slots = {}
@@ -44,48 +45,53 @@ export const Stack = <T extends SectionType>({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (onMoveSection && active && over && active.id !== over.id) {
+      if (over.id === footerId) {
+        over.id = sections[sections.length - 1].id;
+      }
+
       const activeIndex = sections.findIndex((section) => section.id === active.id);
       const overIndex = sections.findIndex((section) => section.id === over.id);
       onMoveSection(active.id as string, activeIndex, overIndex);
     }
   };
 
-  // TODO(burdon): Scrolling bug to bottom.
   return (
     <div className={mx('flex flex-col flex-1 overflow-x-hidden', slots?.root?.className)}>
       <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
         <SortableContext
           strategy={verticalListSortingStrategy}
-          items={
-            sections.map((section) => {
+          items={[
+            ...(sections.map((section) => {
               return section.id!;
-            }) ?? []
-          }
+            }) ?? []),
+            footerId
+          ]}
         >
           <div>
             {sections.map((section, i) => {
               return (
-                <SortableStackRow
-                  key={section.id}
-                  id={section.id}
-                  slots={{
-                    root: {
-                      className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className)
-                    }
-                  }}
-                  ContextMenu={ContextMenu}
-                >
-                  <div className={mx('flex w-full overflow-x-hidden')}>
-                    <StackSection section={section} />
-                  </div>
-                </SortableStackRow>
+                <StackSectionContext.Provider key={section.id} value={{ section }}>
+                  <StackSectionContainer
+                    section={section}
+                    ContextMenu={ContextMenu}
+                    slots={{
+                      root: {
+                        className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className)
+                      }
+                    }}
+                  >
+                    <div className={mx('flex flex-col w-full overflow-x-hidden')}>
+                      <StackSection section={section} />
+                    </div>
+                  </StackSectionContainer>
+                </StackSectionContext.Provider>
               );
             })}
+
+            <StackFooter id={footerId} ContextMenu={ContextMenu} />
           </div>
         </SortableContext>
       </DndContext>
-
-      <StackRow />
     </div>
   );
 };

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import faker from 'faker';
 import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
@@ -10,10 +9,8 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Item } from '../../layout';
-import { createItem, TestData } from '../../testing';
+import { createItem, SeedDecorator, TestData } from '../../testing';
 import { Table, TableColumn } from './Table';
-
-faker.seed(100);
 
 const num = 8;
 
@@ -43,6 +40,7 @@ const Test = () => {
 export default {
   component: Table,
   decorators: [
+    SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>
         <div className='flex w-[600px] h-full'>

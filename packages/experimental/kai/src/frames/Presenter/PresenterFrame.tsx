@@ -18,30 +18,11 @@ import { DeckEditor } from './DeckEditor';
 // TODO(burdon): Layout.
 // TODO(burdon): MDX components (runtime build).
 
-/*
-        showTitle={false}
-        space={space}
-        items={[
-          {
-            type: Document.type.name,
-            label: 'New slide',
-            Icon: Layout,
-            onCreate: async (space: Space) => space!.db.add(new Document())
-          }
-        ]}
-*/
-
 enum View {
   EDITOR = 1,
   MARKDOWN = 2,
   SPLIT = 3
 }
-
-// TODO(burdon): Header title.
-// TODO(burdon): StackSection renderer.
-// TODO(burdon): ContextMenu
-// TODO(burdon): Rename Item.
-// TODO(burdon): Factor out common content.
 
 export const PresenterFrame = observer(() => {
   const { space, objectId } = useAppRouter();
@@ -58,7 +39,7 @@ export const PresenterFrame = observer(() => {
       <div className='flex flex-1 overflow-hidden'>
         {view !== View.MARKDOWN && !fullscreen && (
           <div className='flex flex-1 shrink-0 overflow-hidden'>
-            <DeckEditor space={space} presentation={presentation} />
+            <DeckEditor presentation={presentation} />
           </div>
         )}
 

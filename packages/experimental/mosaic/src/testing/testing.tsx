@@ -3,6 +3,7 @@
 //
 
 import faker from 'faker';
+import React from 'react';
 
 import { Item, Location } from '../layout';
 
@@ -19,3 +20,10 @@ export const createItem = (location?: Location): Item<TestData> => ({
   },
   location
 });
+
+export const SeedDecorator =
+  (seed = 0) =>
+  (Story: any) => {
+    faker.seed(seed);
+    return <Story />;
+  };

@@ -5,26 +5,22 @@
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { TypedObject } from '@dxos/echo-schema';
 import { Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
-import { Config, Space, useIdentity, useQuery } from '@dxos/react-client';
+import { Space, TypedObject, useConfig, useIdentity, useQuery } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 
-import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
+import { useAppRouter } from '../../hooks';
 import { getColumnType } from '../Table';
+import { TaskList as TaskListComponent } from '../Task';
 
-export const StackContent: FC<{
-  config: Config;
-  space: Space;
-  section: DocumentStack.Section;
-  spellCheck: boolean;
-}> = ({ config, space, section, spellCheck }) => {
+export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }) => {
+  const config = useConfig();
   const identity = useIdentity();
+  const { space } = useAppRouter();
   const object = section.object;
 
-  // TODO(burdon): Instance of check fails.
   switch (object.__typename) {
     case Document.type.name: {
       return (
@@ -35,7 +31,7 @@ export const StackContent: FC<{
           text={object.content}
           slots={{
             editor: {
-              spellCheck
+              spellCheck: false // TODO(burdon): Config.
             }
           }}
         />

@@ -3,7 +3,6 @@
 //
 
 import { Circle, X } from '@phosphor-icons/react';
-import faker from 'faker';
 import React, { useState } from 'react';
 
 import { getSize } from '@dxos/react-components';
@@ -12,10 +11,8 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Item } from '../../layout';
-import { createItem, TestData } from '../../testing';
+import { createItem, SeedDecorator, TestData } from '../../testing';
 import { List, ListItem, IconButton, ListItemText } from './List';
-
-faker.seed(100);
 
 const num = 20;
 
@@ -54,6 +51,7 @@ const Test = () => {
 export default {
   component: List,
   decorators: [
+    SeedDecorator(999),
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full bg-zinc-200'>
         <div className='flex w-[300px] h-full overflow-hidden bg-white shadow'>
