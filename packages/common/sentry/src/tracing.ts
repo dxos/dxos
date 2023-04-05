@@ -5,13 +5,17 @@
 import { setUser, startTransaction } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
+import { runInContext, scheduleTask, Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 
 let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
+const SENTRY_INITIALIZED = new Trigger();
+const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
 
 export const configureTracing = () => {
-  try {
+  runInContext(ctx, () => {
     // Configure root transaction.
     TX = startTransaction({
       name: 'DXOS Core Tracing',
@@ -24,10 +28,8 @@ export const configureTracing = () => {
       process.on('exit', finish);
     }
 
-    log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
-  } catch (err) {
-    log.catch('Failed to configure tracing', err);
-  }
+    SENTRY_INITIALIZED.wake();
+  });
 };
 
 export const finish = () => {
@@ -41,7 +43,8 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.level !== LogLevel.TRACE) {
     return;
   }
-  try {
+  scheduleTask(ctx, async () => {
+    await SENTRY_INITIALIZED.wait();
     const context = getContextFromEntry(entry);
 
     if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
@@ -63,13 +66,21 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
 
           let parentSpan: Span = TX;
           if (context.span.parent) {
-            parentSpan = SPAN_MAP.get(context.span.parent) || TX;
+            parentSpan = SPAN_MAP.get(context.span.parent) ?? TX;
+          }
+
+          let logContext: string;
+          try {
+            logContext = JSON.stringify({ ...context, ...entry });
+          } catch (err) {
+            logContext = JSON.stringify(context);
           }
 
           const span = parentSpan.startChild({
             op: entry.message,
             data: {
-              ...context.span.data
+              ...context.span.data,
+              '@dxos/log': logContext
             }
           });
           SPAN_MAP.set(context.span.id, span);
@@ -104,10 +115,10 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
         }
       }
     }
-  } catch (err) {
-    log.catch('Failed to process trace log', err);
-  }
+  });
 };
+
+log.runtimeConfig.processors.push(SENTRY_PROCESSOR);
 
 /**
  * @see https://develop.sentry.dev/sdk/event-payloads/span/#:~:text=this%20value%20explicitly.-,status,-Optional.%20Describes%20the

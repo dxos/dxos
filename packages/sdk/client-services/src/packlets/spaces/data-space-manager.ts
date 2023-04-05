@@ -23,6 +23,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { trace } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
@@ -58,6 +59,8 @@ export class DataSpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
   private _isOpen = false;
+  private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -78,6 +81,7 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     log('open');
+    log.trace('dxos.echo.data-space-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
@@ -99,6 +103,7 @@ export class DataSpaceManager {
     for (const space of this._spaces.values()) {
       await space.close();
     }
+    log.trace('dxos.echo.data-space-manager', trace.end({ id: this._instanceId }));
   }
 
   /**

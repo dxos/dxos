@@ -41,8 +41,10 @@ describe('SignalClient', () => {
     const api1 = new SignalClient(broker1.url(), async (msg) => {
       received.wake(msg);
     });
+    api1.open();
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    api2.open();
     afterTest(() => api2.close());
 
     await api1.subscribeMessages(peer1);
@@ -62,8 +64,10 @@ describe('SignalClient', () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const api1 = new SignalClient(broker1.url(), async () => {});
+    api1.open();
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), async () => {});
+    api2.open();
     afterTest(() => api2.close());
 
     const promise1 = api1.swarmEvent.waitFor(
@@ -87,6 +91,7 @@ describe('SignalClient', () => {
     const api1 = new SignalClient(broker1.url(), async (msg) => {
       received.wake(msg);
     });
+    api1.open();
     afterTest(() => api1.close());
 
     await api1.subscribeMessages(peer1);
@@ -109,9 +114,11 @@ describe('SignalClient', () => {
     const client1 = new SignalClient(broker1.url(), async (msg) => {
       received.emit(msg);
     });
+    client1.open();
     afterTest(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    client2.open();
     afterTest(() => client2.close());
 
     const unsubscribeHandle = await client1.subscribeMessages(peer1);
@@ -153,9 +160,11 @@ describe('SignalClient', () => {
     const client1 = new SignalClient(broker1.url(), async (msg) => {
       received.emit(msg);
     });
+    client1.open();
     afterTest(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    client2.open();
     afterTest(() => client2.close());
 
     const message = {
@@ -201,8 +210,10 @@ describe('SignalClient', () => {
       const peer2 = PublicKey.random();
       // This feature is not implemented yet.
       const api1 = new SignalClient(broker1.url(), async () => {});
+      api1.open();
       afterTest(() => api1.close());
       const api2 = new SignalClient(broker2.url(), async () => {});
+      api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });
@@ -232,8 +243,10 @@ describe('SignalClient', () => {
         >().resolvesTo();
 
       const api1 = new SignalClient(broker1.url(), async () => {});
+      api1.open();
       afterTest(() => api1.close());
       const api2 = new SignalClient(broker2.url(), signalMock);
+      api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });
