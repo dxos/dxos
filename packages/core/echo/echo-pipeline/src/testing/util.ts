@@ -4,19 +4,19 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseBackendHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
+import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
 import { DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
-  const backend = new DatabaseBackendHost(feed, undefined);
+  const backend = new DatabaseHost(feed, undefined);
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({
@@ -47,7 +47,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const spaceKey = PublicKey.random();
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
-  const backend = new DatabaseBackendProxy(dataService, spaceKey);
+  const backend = new DatabaseProxy(dataService, spaceKey);
   const itemManager = new ItemManager(modelFactory);
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {

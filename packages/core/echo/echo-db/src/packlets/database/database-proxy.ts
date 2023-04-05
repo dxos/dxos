@@ -24,11 +24,12 @@ export type MutateResult = {
 };
 
 const FLUSH_TIMEOUT = 5_000;
+
 /**
- * Database backend that is backed by the DataService instance.
- * Uses DataMirror to populate entities in ItemManager.
+ * Maintains a local cache of objects and provides a API for mutating the database.
+ * Connects to a host instance via a DataService.
  */
-export class DatabaseBackendProxy {
+export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
