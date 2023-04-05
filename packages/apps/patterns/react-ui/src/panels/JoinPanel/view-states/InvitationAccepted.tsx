@@ -29,7 +29,7 @@ const PureInvitationAcceptedContent = ({
 
   const doneButton = (
     <Button
-      {...(onDone && { onClick: () => onDone(result) })}
+      onClick={() => onDone?.(result)}
       disabled={disabled}
       className='flex items-center gap-2 pli-2'
       data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}

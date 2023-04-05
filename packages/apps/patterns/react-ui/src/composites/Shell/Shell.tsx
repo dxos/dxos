@@ -47,11 +47,11 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
         <JoinDialog
           mode='halo-only'
           initialInvitationCode={invitationCode}
-          onDone={async () => {
-            // TODO(wittjosiah): Support this first-class inside client?
-            spaces.length > 0 || (await client.createSpace());
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
+          onDone={() => {
+            void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
+            // TODO(wittjosiah): Support this first-class inside client?
+            spaces.length > 0 || client.createSpace();
           }}
         />
       );
