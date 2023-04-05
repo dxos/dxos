@@ -5,12 +5,12 @@
 import { Robot, Ghost, X } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Column, CellProps } from 'react-table';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { TableCellProps, TableColumn, Table } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
-import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
+import { Button, getSize, mx, Select } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
@@ -27,7 +27,7 @@ type BotRecord = {
 };
 
 // running | exited
-const columns = ({ onStop }: { onStop: (id: string) => void }): Column<BotRecord>[] => [
+const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotRecord>[] => [
   {
     Header: 'state',
     accessor: (record) =>
@@ -69,7 +69,7 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): Column<BotRecord
   {
     id: '__delete',
     width: 80,
-    Cell: ({ cell }: CellProps<BotRecord>) => {
+    Cell: ({ cell }: TableCellProps<BotRecord>) => {
       return (
         <Button variant='ghost' onClick={() => onStop(cell.row.original.id)}>
           <X />

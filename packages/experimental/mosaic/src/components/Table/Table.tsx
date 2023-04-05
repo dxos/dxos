@@ -3,9 +3,13 @@
 //
 
 import React, { useMemo } from 'react';
-import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
+import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '../../util';
+import { mx } from '@dxos/react-components';
+
+// TODO(burdon): Think about re-exports.
+export type TableCellProps<T extends object = {}> = CellProps<T>;
+export type TableColumn<T extends object = {}> = Column<T>;
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
@@ -37,7 +41,7 @@ export type TableSlots = {
 };
 
 export type TableProps<T extends {}> = {
-  columns: Column<T>[];
+  columns: TableColumn<T>[];
   data?: T[];
   slots?: TableSlots;
   selected?: T;
