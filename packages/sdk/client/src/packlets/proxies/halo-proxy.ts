@@ -58,7 +58,13 @@ export class HaloProxy implements Halo {
   private _devices = MulticastObservable.from(this._devicesChanged, []);
   private _contacts = MulticastObservable.from(this._contactsChanged, []);
   private _invitations = MulticastObservable.from(this._invitationsUpdate, []);
+
   private readonly _instanceId = PublicKey.random().toHex();
+
+  /**
+   * @internal
+   */
+  public _traceParent?: string;
 
   // prettier-ignore
   constructor(
@@ -110,7 +116,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.halo-proxy', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.halo-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 

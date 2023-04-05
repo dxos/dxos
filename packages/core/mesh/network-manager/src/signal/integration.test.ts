@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
@@ -26,8 +26,10 @@ describe('Signal Integration Test', () => {
     broker.stop();
   });
 
-  const setupPeer = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
+  const setupPeer = async ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
+    await signalManager.open();
+    afterTest(() => signalManager.close());
     signalManager.onMessage.on((message) => messageRouter.receiveMessage(message));
 
     const receivedSignals: SignalMessage[] = [];
@@ -53,8 +55,8 @@ describe('Signal Integration Test', () => {
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const peerNetworking1 = setupPeer({ topic });
-    const peerNetworking2 = setupPeer({ topic });
+    const peerNetworking1 = await setupPeer({ topic });
+    const peerNetworking2 = await setupPeer({ topic });
 
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
       ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)

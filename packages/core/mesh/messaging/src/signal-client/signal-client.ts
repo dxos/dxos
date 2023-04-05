@@ -114,9 +114,7 @@ export class SignalClient implements SignalMethods {
   constructor(
     private readonly _host: string,
     private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
-  ) {
-    this.open();
-  }
+  ) {}
 
   open() {
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));

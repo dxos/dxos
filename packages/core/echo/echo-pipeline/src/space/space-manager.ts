@@ -48,6 +48,7 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
   private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   constructor({ feedStore, networkManager }: SpaceManagerParams) {
     // TODO(burdon): Assert.
@@ -62,7 +63,7 @@ export class SpaceManager {
 
   @synchronized
   async open() {
-    log.trace('dxos.echo.space-manager', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.echo.space-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
   }
 
   @synchronized
