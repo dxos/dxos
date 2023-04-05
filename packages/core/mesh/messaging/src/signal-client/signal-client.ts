@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, Trigger, scheduleTask, synchronized } from '@dxos/async';
+import { DeferredTask, Event, Trigger, scheduleTask, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -18,6 +18,7 @@ import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;
+const ERROR_RECONCILE_DELAY = 1000;
 
 export enum SignalState {
   /** Connection is being established. */
@@ -82,7 +83,22 @@ export class SignalClient implements SignalMethods {
   private _client!: SignalRPCClient;
   private readonly _clientReady = new Trigger();
 
-  private _ctx!: Context;
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+      this._scheduleReconcileAfterError();
+    }
+  });
+
+  private _connectionContext = this._ctx.derive();
+
+  private readonly _reconcileTask = new DeferredTask(this._ctx, async () => {
+    for (const [{ topic, peerId }, task] of this._joinedTopics.entries()) {
+      if (!this._swarmStreams.has({ topic, peerId })) {
+        task.schedule();
+      }
+    }
+  });
 
   readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -91,7 +107,17 @@ export class SignalClient implements SignalMethods {
     swarmEvent: SwarmEvent;
   }>();
 
+  /**
+   * Swarm events streams. Keys represent actually joined topic and peerId.
+   */
   private readonly _swarmStreams = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, Stream<SwarmEvent>>(
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+  );
+
+  /**
+   * Deferred tasks for join requests. Keys represent desired joined topic and peerId.
+   */
+  private readonly _joinedTopics = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, DeferredTask>(
     ({ topic, peerId }) => topic.toHex() + peerId.toHex()
   );
 
@@ -123,7 +149,6 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    this._initContext();
     this._setState(SignalState.CONNECTING);
     this._createClient();
   }
@@ -155,12 +180,26 @@ export class SignalClient implements SignalMethods {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
-    this._performance.joinCounter++;
-    log('joining', { topic, peerId });
-    await this._clientReady.wait();
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    const existingTask = this._joinedTopics.get({ topic, peerId });
+    if (existingTask) {
+      existingTask.schedule();
+      return;
+    }
 
-    await this._subscribeSwarmEvents({ topic, peerId });
+    const task = new DeferredTask(this._ctx, async () => {
+      this._performance.joinCounter++;
+      log('joining', { topic, peerId });
+      if (!this._swarmStreams.has({ topic, peerId })) {
+        await this._clientReady.wait();
+        assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+        await this._subscribeSwarmEvents({ topic, peerId });
+      }
+    });
+    this._joinedTopics.set({ topic, peerId }, task);
+    this._ctx.onDispose(() => {
+      this._joinedTopics.delete({ topic, peerId });
+    });
+    task.schedule();
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
@@ -169,6 +208,7 @@ export class SignalClient implements SignalMethods {
 
     this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
+    this._joinedTopics.delete({ topic, peerId });
   }
 
   async sendMessage(msg: Message): Promise<void> {
@@ -210,7 +250,7 @@ export class SignalClient implements SignalMethods {
       this._messageStreams.set(peerId, messageStream);
     }
 
-    this._ctx.onDispose(() => {
+    this._connectionContext.onDispose(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
     });
@@ -223,6 +263,16 @@ export class SignalClient implements SignalMethods {
     };
   }
 
+  private _scheduleReconcileAfterError() {
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._reconcileTask.schedule();
+      },
+      ERROR_RECONCILE_DELAY
+    );
+  }
+
   private _setState(newState: SignalState) {
     this._state = newState;
     this._lastStateChange = new Date();
@@ -230,14 +280,8 @@ export class SignalClient implements SignalMethods {
     this.statusChanged.emit(this.getStatus());
   }
 
-  private _initContext() {
-    this._ctx = new Context({
-      onError: (err) => log.catch(err)
-    });
-  }
-
   private _createClient() {
-    log('creating client', { host: this._host })
+    log('creating client', { host: this._host });
     this._connectionStarted = new Date();
     try {
       this._client = new SignalRPCClient(this._host);
@@ -252,15 +296,16 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     }
 
-    this._client.connected.on(this._ctx, () => {
+    this._client.connected.on(this._connectionContext, () => {
       log('socket connected');
       this._lastError = undefined;
       this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
       this._setState(SignalState.CONNECTED);
       this._clientReady.wake();
+      this._reconcileTask.schedule();
     });
 
-    this._client.error.on(this._ctx, (error) => {
+    this._client.error.on(this._connectionContext, (error) => {
       log('socket error', { error });
       if (this._state === SignalState.CLOSED) {
         return;
@@ -275,7 +320,7 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     });
 
-    this._client.disconnected.on(this._ctx, () => {
+    this._client.disconnected.on(this._connectionContext, () => {
       log('socket disconnected');
       // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
       if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
@@ -308,11 +353,11 @@ export class SignalClient implements SignalMethods {
     }
 
     this._setState(SignalState.RE_CONNECTING);
-    this._ctx.dispose().catch((err) => log.catch(err));
-    this._initContext();
+    void this._connectionContext.dispose();
+    this._connectionContext = this._ctx.derive();
 
     scheduleTask(
-      this._ctx,
+      this._connectionContext,
       async () => {
         // Close client if it wasn't already closed.
         this._client.close().catch(() => {});
@@ -337,7 +382,7 @@ export class SignalClient implements SignalMethods {
     // Saving swarm stream.
     this._swarmStreams.set({ topic, peerId }, swarmStream);
 
-    this._ctx.onDispose(() => {
+    this._connectionContext.onDispose(() => {
       swarmStream.close();
       this._swarmStreams.delete({ topic, peerId });
     });
