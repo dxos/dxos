@@ -14,34 +14,33 @@ import { Item } from '../../layout';
 import { createItem, SeedDecorator, TestData } from '../../testing';
 import { ScrollContainer } from '../ScrollContainer';
 import { Stack } from './Stack';
-import { StackMenu, StackMenuItem } from './StackMenu';
+import { StackMenu, StackMenuAction } from './StackMenu';
 import { StackRow } from './StackRow';
 
 const num = 8;
 
-const sectionMenuItems = (section?: any): StackMenuItem[][] => {
-  const items: StackMenuItem[][] = [
+const sectionMenuActions = (section?: any): StackMenuAction[][] => {
+  const actions: StackMenuAction[][] = [
     [
       {
-        action: 'insert',
+        id: 'insert',
         label: 'Insert',
-        Icon: Plus,
-        onCreate: () => createItem()
+        Icon: Plus
       }
     ]
   ];
 
   if (section) {
-    items.push([
+    actions.push([
       {
-        action: 'delete',
+        id: 'delete',
         label: 'Delete',
         Icon: Trash
       }
     ]);
   }
 
-  return items;
+  return actions;
 };
 
 const StackSection: FC<{ section: Item<TestData> }> = ({ section }) => {
@@ -57,12 +56,12 @@ const StackSection: FC<{ section: Item<TestData> }> = ({ section }) => {
 const Test = () => {
   const [sections, setSections] = useState<Item<TestData>[]>(() => range(num).map(() => createItem()));
 
-  const handleMenu = (item: StackMenuItem, section?: any) => {
-    switch (item.action) {
+  const handleMenu = (action: StackMenuAction, section?: any) => {
+    switch (action.id) {
       case 'insert': {
         setSections((sections) => {
           const idx = sections.findIndex(({ id }) => id === section?.id);
-          sections.splice(idx === -1 ? sections.length : idx, 0, item.onCreate!());
+          sections.splice(idx === -1 ? sections.length : idx, 0, createItem());
           return [...sections];
         });
         break;
@@ -99,7 +98,7 @@ const Test = () => {
         <Stack<Item<TestData>>
           slots={{ root: { className: 'flex flex-1' }, section: { className: 'py-4' } }}
           StackSection={StackSection}
-          ContextMenu={({ section }) => <StackMenu items={sectionMenuItems(section)} onSelect={handleMenu} />}
+          ContextMenu={({ section }) => <StackMenu actions={sectionMenuActions(section)} onAction={handleMenu} />}
           sections={sections}
           onMoveSection={handleMoveSection}
         />

@@ -3,3 +3,5 @@
 //
 
 export * from './defs';
+
+export * from './CustomActionMenu';

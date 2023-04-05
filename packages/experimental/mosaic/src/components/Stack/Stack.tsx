@@ -9,7 +9,7 @@ import React, { FC } from 'react';
 
 import { DragEndEvent, mx } from '@dxos/react-components';
 
-import { StackFooter, StackSectionContainer } from './StackRow';
+import { StackFooter, StackSectionContainer } from './StackSection';
 import { StackSectionContext } from './context';
 
 const footerId = '__footer';
@@ -56,7 +56,7 @@ export const Stack = <T extends SectionType>({
   };
 
   return (
-    <div className={mx('flex flex-col flex-1 overflow-x-hidden', slots?.root?.className)}>
+    <div className={mx('flex flex-col overflow-x-hidden', slots?.root?.className)}>
       <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
         <SortableContext
           strategy={verticalListSortingStrategy}

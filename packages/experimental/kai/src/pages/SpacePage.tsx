@@ -8,7 +8,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useMulticastObservable } from '@dxos/react-async';
 import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
-import { Button, getSize, Loading, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
@@ -101,7 +101,7 @@ const SpaceLoading = ({ space }: { space: Space }) => {
   const members = useMembers(space.key);
   const pipelineState = useMulticastObservable(space.pipeline);
 
-  // +1 for the pipeline itself being initialized
+  // +1 for the pipeline itself being initialized.
   const currentProgress =
     (pipelineState.currentControlTimeframe?.totalMessages() ?? -1) +
     (pipelineState.currentDataTimeframe?.totalMessages() ?? -1) +
@@ -117,10 +117,9 @@ const SpaceLoading = ({ space }: { space: Space }) => {
       (!identity?.identityKey || !member.identity.identityKey.equals(identity?.identityKey))
   ).length;
 
+  return null;
   return (
-    // center div vertically
     <div className='flex flex-col justify-center h-full'>
-      <Loading label='Space loading' />
       <div className='flex justify-center'>
         {currentProgress} / {targetProgress}
       </div>

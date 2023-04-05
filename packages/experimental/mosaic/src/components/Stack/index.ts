@@ -4,3 +4,4 @@
 
 export * from './Stack';
 export * from './StackMenu';
+export * from './StackRow';

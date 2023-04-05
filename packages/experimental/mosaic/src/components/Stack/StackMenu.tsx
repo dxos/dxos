@@ -2,71 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PlusCircle } from '@phosphor-icons/react';
-import React, { FC, useContext, useState } from 'react';
+import { DotsThreeCircle } from '@phosphor-icons/react';
+import React, { FC, useContext } from 'react';
 
 import { Button, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, getSize } from '@dxos/react-components';
 
 import { StackSectionContext } from './context';
 
-export type SelectorComponent = FC<{ onSelect: (objectId: string | undefined) => void }>;
-
-export type StackMenuItem = {
-  action: 'insert' | 'delete';
+export type StackMenuAction = {
+  id: string;
   label: string;
   Icon: FC<any>;
-  Selector?: SelectorComponent;
-  onCreate?: () => any; // TODO(burdon): Type.
 };
 
 export type StackMenuProps = {
-  items?: StackMenuItem[][];
-  onChange?: (open: boolean) => void;
-  onSelect?: (item: StackMenuItem, section?: any) => void; // TODO(burdon): Type.
+  actions?: StackMenuAction[][];
+  onAction?: (action: StackMenuAction, section?: any) => void; // TODO(burdon): Type.
 };
 
-// TODO(burdon): Generalize action: Create, Select, Delete.
-
-export const StackMenu = ({ items = [], onChange, onSelect }: StackMenuProps) => {
-  const [Selector, setSelector] = useState<SelectorComponent>();
+export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
   const { section } = useContext(StackSectionContext);
-  const handleSelect = (item: StackMenuItem) => {
-    if (item.Selector) {
-      setSelector(item.Selector);
-    } else {
-      onSelect?.(item, section);
-    }
+  const handleAction = (action: StackMenuAction) => {
+    onAction?.(action, section);
   };
 
   return (
-    <>
-      {Selector && <Selector onSelect={() => onSelect?.()} />}
-
-      <DropdownMenu
-        slots={{ root: { onOpenChange: onChange }, content: { className: 'z-50', align: 'end' } }}
-        trigger={
-          <div className='flex'>
-            <Button variant='ghost' className='p-0'>
-              <PlusCircle className={getSize(6)} />
-            </Button>
-          </div>
-        }
-      >
-        {items?.map((items, i) => (
-          <div key={i}>
-            {i > 0 && <DropdownMenuSeparator />}
-            {items?.map((item, i) => {
-              const { label, Icon } = item;
-              return (
-                <DropdownMenuItem key={i} onClick={() => handleSelect(item)}>
-                  <Icon className={getSize(5)} />
-                  <span className='mis-2'>{label}</span>
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-        ))}
-      </DropdownMenu>
-    </>
+    <DropdownMenu
+      slots={{ content: { className: 'z-50', align: 'end' } }}
+      trigger={
+        <div className='flex'>
+          <Button variant='ghost' className='p-0'>
+            <DotsThreeCircle className={getSize(6)} />
+          </Button>
+        </div>
+      }
+    >
+      {actions?.map((action, i) => (
+        <div key={i}>
+          {i > 0 && <DropdownMenuSeparator />}
+          {action?.map((action, i) => {
+            const { label, Icon } = action;
+            return (
+              <DropdownMenuItem key={i} onClick={() => handleAction(action)}>
+                <Icon className={getSize(5)} />
+                <span className='mis-2'>{label}</span>
+              </DropdownMenuItem>
+            );
+          })}
+        </div>
+      ))}
+    </DropdownMenu>
   );
 };
