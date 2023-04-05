@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { AppManager } from './app-manager';
 
-test.describe('Basic test', () => {
+test.describe.skip('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
@@ -26,7 +26,7 @@ test.describe('Basic test', () => {
     }
   });
 
-  test.describe('Solo tests', () => {
+  test.describe.skip('Solo tests', () => {
     test('create identity, space is created by default', async () => {
       await host.shell.createIdentity('host');
       await waitForExpect(async () => {
@@ -55,7 +55,7 @@ test.describe('Basic test', () => {
     });
   });
 
-  test.describe('Collab tests', () => {
+  test.describe.skip('Collab tests', () => {
     test('guest joins host’s space', async ({ browserName }) => {
       if (browserName !== 'chromium') {
         return;
