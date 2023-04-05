@@ -7,10 +7,10 @@ import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
+import { FrameDef } from '@dxos/kai-frames';
 import { useQuery } from '@dxos/react-client';
 
 import { frameDefs } from '../frames'; // TODO(burdon): Cyclic dependency.
-import { FrameDef } from '../registry';
 
 export type SearchResult = {
   object: TypedObject;

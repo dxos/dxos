@@ -5,11 +5,11 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { FrameDef } from '@dxos/kai-frames';
 import { ScrollContainer } from '@dxos/mosaic';
 import { getSize, mx, Dialog } from '@dxos/react-components';
 
 import { useFrames, useAppReducer, createPath, useAppRouter } from '../../hooks';
-import { FrameDef } from '../../registry';
 
 // TODO(burdon): Inject generic classes for slots from themecontext.
 

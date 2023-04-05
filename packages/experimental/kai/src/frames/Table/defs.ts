@@ -5,7 +5,7 @@
 import { Table as TableIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { FrameRuntime } from '../../registry';
+import { FrameRuntime } from '@dxos/kai-frames';
 
 const TableFrame = React.lazy(() => import('./TableFrame'));
 

@@ -6,9 +6,8 @@ import { Presentation as PresentationIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Space, Text } from '@dxos/client';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { Document, DocumentStack, Presentation } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 

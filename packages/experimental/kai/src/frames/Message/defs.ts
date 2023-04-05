@@ -5,7 +5,7 @@
 import { Tray as MessageIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { FrameRuntime } from '../../registry';
+import { FrameRuntime } from '@dxos/kai-frames';
 
 const MessageFrame = React.lazy(() => import('./MessageFrame'));
 

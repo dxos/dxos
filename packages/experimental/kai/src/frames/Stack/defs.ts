@@ -6,9 +6,8 @@ import { Stack as StackIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Space } from '@dxos/client';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { Document, DocumentStack } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 const StackFrame = React.lazy(() => import('./StackFrame'));
 

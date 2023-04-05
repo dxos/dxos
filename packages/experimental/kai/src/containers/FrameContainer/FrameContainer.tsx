@@ -6,9 +6,9 @@ import React, { FC, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
+import { FrameContext, FrameDef } from '@dxos/kai-frames';
 
-import { createPath, FrameContext } from '../../hooks';
-import { FrameDef } from '../../registry';
+import { createPath } from '../../hooks';
 
 /**
  * Frame component container and context.
@@ -39,7 +39,7 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any> }> = ({ spa
 
   return (
     <main className='flex flex-1 flex-col overflow-hidden'>
-      <FrameContext.Provider value={{ frameDef: frame }}>
+      <FrameContext.Provider value={{ space, frame }}>
         <Suspense>
           <Component />
         </Suspense>

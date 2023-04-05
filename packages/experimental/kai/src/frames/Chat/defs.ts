@@ -5,7 +5,7 @@
 import { Chat as ChatIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { FrameRuntime } from '../../registry';
+import { FrameRuntime } from '@dxos/kai-frames';
 
 const ChatFrame = React.lazy(() => import('./ChatFrame'));
 

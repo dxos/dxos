@@ -49,9 +49,6 @@ export const SketchFrame = observer(() => {
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
 
-  // const { space } = useAppRouter();
-  // const [sketch, setSketch] = useState<Sketch>();
-
   const { space, objectId } = useAppRouter();
   const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
   useEffect(() => {

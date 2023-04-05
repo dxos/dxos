@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { FrameDef } from '@dxos/kai-frames';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
-import { FrameDef } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
 import { ChatFrameRuntime } from './Chat';
 import { ChessFrameRuntime } from './Chess';

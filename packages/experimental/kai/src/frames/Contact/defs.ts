@@ -5,7 +5,7 @@
 import { IdentificationCard as ContactIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { FrameRuntime } from '../../registry';
+import { FrameRuntime } from '@dxos/kai-frames';
 
 const ContactFrame = React.lazy(() => import('./ContactFrame'));
 

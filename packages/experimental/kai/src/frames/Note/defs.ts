@@ -6,9 +6,8 @@ import { Cards as NoteIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Space } from '@dxos/client';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { NoteBoard } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 const NoteFrame = React.lazy(() => import('./NoteFrame'));
 

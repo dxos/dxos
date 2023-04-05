@@ -5,10 +5,10 @@
 import { useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { FrameDef } from '@dxos/kai-frames';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { FrameDef } from '../registry';
 import { defaultFrameId, useFrames } from './useFrames';
 
 // TODO(burdon): Create defs/helpers for other routes.

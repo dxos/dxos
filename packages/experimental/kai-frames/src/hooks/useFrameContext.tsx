@@ -4,10 +4,16 @@
 
 import { Context, createContext, useContext } from 'react';
 
+import { Space } from '@dxos/client';
+
 import { FrameDef } from '../registry';
 
+// TODO(burdon): Replace useAppRouter.
+
 export type FrameContextType = {
-  frameDef: FrameDef<any>;
+  space: Space;
+  frame: FrameDef<any>;
+  objectId?: string;
 };
 
 export const FrameContext: Context<FrameContextType | undefined> = createContext<FrameContextType | undefined>(
@@ -15,6 +21,10 @@ export const FrameContext: Context<FrameContextType | undefined> = createContext
 );
 
 export const useFrameContext = (): FrameContextType => {
-  const context = useContext(FrameContext);
+  const context = useContext(FrameContext)!;
   return context!;
 };
+
+// TODO(burdon): Event handler.
+
+export const useFrameEvents = () => {};

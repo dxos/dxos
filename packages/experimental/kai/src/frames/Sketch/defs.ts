@@ -6,9 +6,8 @@ import { HighlighterCircle as SketchIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Space } from '@dxos/client';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { Sketch } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 const SketchFrame = React.lazy(() => import('./SketchFrame'));
 

@@ -32,6 +32,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/kai-frames": "workspace:*",
     "@dxos/kai-sandbox": "workspace:*",
     "@dxos/kai-types": "workspace:*",
     "@dxos/keys": "workspace:*",

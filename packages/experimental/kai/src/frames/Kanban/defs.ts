@@ -5,9 +5,8 @@
 import { Kanban as KanbanIcon } from '@phosphor-icons/react';
 import React from 'react';
 
+import { FrameRuntime } from '@dxos/kai-frames';
 import { Kanban } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 const KanbanFrame = React.lazy(() => import('./KanbanFrame'));
 

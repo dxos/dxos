@@ -6,11 +6,11 @@ import assert from 'assert';
 import React, { FC } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { useQuery } from '@dxos/react-client';
 
-import { EditableObjectList } from '../../components';
 import { useAppRouter } from '../../hooks';
-import { FrameRuntime } from '../../registry';
+import { EditableObjectList } from './EditableObjectList';
 
 export type FrameObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;

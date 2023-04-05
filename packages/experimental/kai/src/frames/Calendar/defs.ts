@@ -5,7 +5,7 @@
 import { Calendar as CalendarIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { FrameRuntime } from '../../registry';
+import { FrameRuntime } from '@dxos/kai-frames';
 
 const CalendarFrame = React.lazy(() => import('./CalendarFrame'));
 

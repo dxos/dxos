@@ -2979,6 +2979,7 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/kai-frames': workspace:*
       '@dxos/kai-sandbox': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/keys': workspace:*
@@ -3084,6 +3085,7 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
+      '@dxos/kai-frames': link:../kai-frames
       '@dxos/kai-sandbox': link:../kai-sandbox
       '@dxos/kai-types': link:../kai-types
       '@dxos/keys': link:../../common/keys
@@ -3266,7 +3268,11 @@ importers:
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
@@ -3303,6 +3309,10 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util

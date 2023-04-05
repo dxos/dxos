@@ -7,10 +7,9 @@ import React from 'react';
 
 import { Space } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
+import { FrameRuntime } from '@dxos/kai-frames';
 import { Document } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-
-import { FrameRuntime } from '../../registry';
 
 const DocumentFrame = React.lazy(() => import('./DocumentFrame'));
 

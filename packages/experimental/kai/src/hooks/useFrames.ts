@@ -5,10 +5,10 @@
 import assert from 'assert';
 import { useMemo } from 'react';
 
+import { FrameDef } from '@dxos/kai-frames';
 import { useModules } from '@dxos/react-metagraph';
 
 import { frameDefs } from '../frames';
-import { FrameDef } from '../registry';
 import { useAppState } from './useAppState';
 
 export const defaultFrameId = 'dxos.module.frame.stack';

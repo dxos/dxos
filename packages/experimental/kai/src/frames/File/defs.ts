@@ -5,9 +5,8 @@
 import { Files as FileIcon } from '@phosphor-icons/react';
 import React from 'react';
 
+import { FrameRuntime } from '@dxos/kai-frames';
 import { File } from '@dxos/kai-types';
-
-import { FrameRuntime } from '../../registry';
 
 const FileFrame = React.lazy(() => import('./FileFrame'));
 const FilePlugin = React.lazy(() => import('./FilePlugin'));
