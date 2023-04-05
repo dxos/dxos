@@ -81,7 +81,6 @@ export class DatabaseProxy {
     });
     this._entities.subscribe(
       async (msg) => {
-        console.log(JSON.stringify(msg, null, 2))
         log('process', {
           clientTag: msg.clientTag,
           feedKey: msg.feedKey,

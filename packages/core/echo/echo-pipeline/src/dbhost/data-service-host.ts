@@ -75,7 +75,7 @@ export class DataServiceHost {
   async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
-    log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 })
+    log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
 
     // Clear client metadata.
     const message: DataMessage = {
@@ -94,12 +94,11 @@ export class DataServiceHost {
       afterWrite: async (receipt) => {
         // Runs before the mutation is read from the pipeline.
         if (request.clientTag) {
-          log('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq })
+          log('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
           this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
         }
       }
     });
-    
 
     return receipt;
   }

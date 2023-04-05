@@ -105,13 +105,16 @@ describe('database (unit)', () => {
     expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
   });
 
-  test.skip('flush', async () => {
-    const builder = new DatabaseTestBuilder();
-    const peer = await builder.createPeer();
+  // TODO(dmaretskyi): Flush is broken in this test database fixture.
+  test
+    .skip('flush', async () => {
+      const builder = new DatabaseTestBuilder();
+      const peer = await builder.createPeer();
 
-    const id = PublicKey.random().toHex();
-    peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
-    peer.confirm();
-    await peer.proxy.flush();
-  }).timeout(100);
+      const id = PublicKey.random().toHex();
+      peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+      peer.confirm();
+      await peer.proxy.flush();
+    })
+    .timeout(100);
 });

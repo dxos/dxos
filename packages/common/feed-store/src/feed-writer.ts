@@ -15,7 +15,7 @@ export type WriteOptions = {
    * Runs and completes before the mutation is read from the pipeline.
    */
   afterWrite?: (receipt: WriteReceipt) => Promise<void>;
-}
+};
 
 export interface FeedWriter<T extends {}> {
   /**

@@ -5,16 +5,15 @@
 import { Hypercore, HypercoreProperties, ReadStreamOptions } from 'hypercore';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
-import { Readable } from 'streamx';
+import { Readable, Transform } from 'streamx';
 
+import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
-import { Transform } from 'streamx';
-import { Trigger } from '@dxos/async';
 
 /**
  * Async feed wrapper.
@@ -64,13 +63,14 @@ export class FeedWrapper<T extends {}> {
   }
 
   createReadableStream(opts?: ReadStreamOptions): Readable {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const transform = new Transform({
       transform(data: any, cb: (err?: Error | null, data?: any) => void) {
         // Delay until write is complete.
-        self._writeLock.wait().then(() => {
-            this.push(data);
-            cb();
+        void self._writeLock.wait().then(() => {
+          this.push(data);
+          cb();
         });
       }
     });
@@ -86,13 +86,13 @@ export class FeedWrapper<T extends {}> {
     return {
       write: async (data: T, { afterWrite } = {}) => {
         log('write', { feed: this._key, seq: this._hypercore.length, data });
-        assert(!this._closed, 'Feed closed')
+        assert(!this._closed, 'Feed closed');
         const stackTrace = new StackTrace();
 
         try {
           // Pending writes pause the read stream.
           this._pendingWrites.add(stackTrace);
-          if(this._pendingWrites.size === 1) {
+          if (this._pendingWrites.size === 1) {
             this._writeLock.reset();
           }
 
@@ -103,14 +103,14 @@ export class FeedWrapper<T extends {}> {
             feedKey: this.key,
             seq
           };
-          
+
           await afterWrite?.(receipt);
 
           return receipt;
         } finally {
           // Unblock the read stream after the write (and callback) is complete.
           this._pendingWrites.delete(stackTrace);
-          if(this._pendingWrites.size === 0) {
+          if (this._pendingWrites.size === 0) {
             this._writeLock.wake();
           }
         }
