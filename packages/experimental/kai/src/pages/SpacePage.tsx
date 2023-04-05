@@ -73,7 +73,7 @@ const Content = () => {
       </div>
 
       {/* Main content. */}
-      {space?.state.get() === SpaceState.READY + 1 ? (
+      {space?.state.get() === SpaceState.READY ? (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
           {frame && (
