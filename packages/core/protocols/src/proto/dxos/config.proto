@@ -189,8 +189,8 @@ message Runtime {
         bool enabled = 1;
         int32 port = 2;
         string email = 3;
-        string certfile = 4;
-        string keyfile = 5;
+        string cert_file = 4;
+        string key_file = 5;
         string dns_provider = 6;
       }
 
