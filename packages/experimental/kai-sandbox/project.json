@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/framebox/src",
+  "sourceRoot": "packages/experimental/kai-sandbox/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/framebox/src/index.ts",
-        "outputPath": "packages/experimental/framebox/dist/types",
-        "tsConfig": "packages/experimental/framebox/tsconfig.json"
+        "main": "packages/experimental/kai-sandbox/src/index.ts",
+        "outputPath": "packages/experimental/kai-sandbox/dist/types",
+        "tsConfig": "packages/experimental/kai-sandbox/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/framebox/src/index.ts"
+          "packages/experimental/kai-sandbox/src/index.ts"
         ],
-        "outputPath": "packages/experimental/framebox/dist/lib"
+        "outputPath": "packages/experimental/kai-sandbox/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/framebox/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/kai-sandbox/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -43,7 +43,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/experimental/framebox/src/proto/gen"
+        "packages/experimental/kai-sandbox/src/proto/gen"
       ]
     }
   },

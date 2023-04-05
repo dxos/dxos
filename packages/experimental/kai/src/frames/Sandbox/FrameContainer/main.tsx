@@ -13,7 +13,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
 const reexportModule = (key: string, module: any) => {
-  ((window as any).__DXOS_FRAMEBOX_MODULES ??= {})[key] = module;
+  ((window as any).__DXOS_kai-sandbox_MODULES ??= {})[key] = module;
 };
 
 // TODO(dmaretskyi): This can actually be done from the parent window via `iframe.contentWindow`.

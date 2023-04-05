@@ -5,7 +5,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client';
-import { Frame } from '@dxos/framebox';
+import { FrameConatainer as Frame } from '@dxos/kai-sandbox';
 import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -66,9 +66,9 @@ export const FrameContainer = ({ frame }: EmbeddedFrameProps) => {
 
 const createReexportingModule = (namedImports: string[], key: string) => {
   const code = `
-    const { ${namedImports.join(',')} } = window.__DXOS_FRAMEBOX_MODULES[${JSON.stringify(key)}];
+    const { ${namedImports.join(',')} } = window.__DXOS_kai-sandbox_MODULES[${JSON.stringify(key)}];
     export { ${namedImports.join(',')} }
-    export default window.__DXOS_FRAMEBOX_MODULES[${JSON.stringify(key)}].default;
+    export default window.__DXOS_kai-sandbox_MODULES[${JSON.stringify(key)}].default;
   `;
 
   return `data:text/javascript;base64,${btoa(code)}`;

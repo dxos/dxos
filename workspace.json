@@ -49,6 +49,7 @@
     "hypercore": "packages/common/hypercore",
     "kai": "packages/experimental/kai",
     "kai-bots": "packages/experimental/kai-bots",
+    "kai-frames": "packages/experimental/kai-frames",
     "kai-types": "packages/experimental/kai-types",
     "keyring": "packages/core/halo/keyring",
     "keys": "packages/common/keys",

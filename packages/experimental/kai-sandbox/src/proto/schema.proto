@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/schema.proto";
 
-package dxos.experimental.framebox;
+package dxos.experimental.kai-sandbox;
 
 message Frame {
   option (object) = true;
@@ -19,7 +19,7 @@ message Frame {
 message Artifact {
   message Import {
     string module_url = 1;
-    
+
     repeated string named_imports = 2;
     bool default_import = 3;
   }

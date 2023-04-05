@@ -6,7 +6,7 @@ import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';
-import { compile, Editor, Frame } from '@dxos/framebox';
+import { compile, Editor, FrameContainer as Frame } from '@dxos/kai-sandbox';
 import { useQuery, observer } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 

@@ -30,7 +30,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/framebox": "workspace:*",
+    "@dxos/kai-sandbox": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/kai-types": "workspace:*",
