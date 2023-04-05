@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/schema.proto";
 
-package dxos.experimental.kai-sandbox;
+package dxos.experimental.kai.sandbox;
 
 message Frame {
   option (object) = true;

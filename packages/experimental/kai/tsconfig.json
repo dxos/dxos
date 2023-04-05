@@ -100,13 +100,13 @@
       "path": "../chess-app"
     },
     {
-      "path": "../kai-sandbox"
-    },
-    {
       "path": "../gem-core"
     },
     {
       "path": "../gem-spore"
+    },
+    {
+      "path": "../kai-sandbox"
     },
     {
       "path": "../kai-types"
