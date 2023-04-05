@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
@@ -83,22 +83,11 @@ export class SignalClient implements SignalMethods {
   private _client!: SignalRPCClient;
   private readonly _clientReady = new Trigger();
 
-  private readonly _ctx = new Context({
-    onError: (err) => {
-      log.catch(err);
-      this._scheduleReconcileAfterError();
-    }
-  });
+  private _ctx?: Context;
 
-  private _connectionContext = this._ctx.derive();
+  private _connectionContext?: Context;
 
-  private readonly _reconcileTask = new DeferredTask(this._ctx, async () => {
-    for (const [{ topic, peerId }, task] of this._joinedTopics.entries()) {
-      if (!this._swarmStreams.has({ topic, peerId })) {
-        task.schedule();
-      }
-    }
-  });
+  private _reconcileTask?: DeferredTask;
 
   readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -115,9 +104,9 @@ export class SignalClient implements SignalMethods {
   );
 
   /**
-   * Deferred tasks for join requests. Keys represent desired joined topic and peerId.
+   * Represent desired joined topic and peerId.
    */
-  private readonly _joinedTopics = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, DeferredTask>(
+  private readonly _joinedTopics = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
     ({ topic, peerId }) => topic.toHex() + peerId.toHex()
   );
 
@@ -143,6 +132,23 @@ export class SignalClient implements SignalMethods {
   ) {}
 
   open() {
+    this._ctx = new Context({
+      onError: (err) => {
+        log.catch(err);
+        this._scheduleReconcileAfterError();
+      }
+    });
+    this._connectionContext = this._ctx.derive();
+    this._reconcileTask = new DeferredTask(this._ctx, async () => {
+      for (const { topic, peerId } of this._joinedTopics.values()) {
+        if (this._swarmStreams.has({ topic, peerId })) {
+          continue;
+        }
+        await this._clientReady.wait();
+        assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+        await this._subscribeSwarmEvents({ topic, peerId });
+      }
+    });
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
@@ -159,7 +165,7 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    await this._ctx.dispose();
+    await this._ctx?.dispose();
 
     this._clientReady.reset();
     await this._client.close();
@@ -180,26 +186,10 @@ export class SignalClient implements SignalMethods {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
-    const existingTask = this._joinedTopics.get({ topic, peerId });
-    if (existingTask) {
-      existingTask.schedule();
-      return;
-    }
-
-    const task = new DeferredTask(this._ctx, async () => {
-      this._performance.joinCounter++;
-      log('joining', { topic, peerId });
-      if (!this._swarmStreams.has({ topic, peerId })) {
-        await this._clientReady.wait();
-        assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-        await this._subscribeSwarmEvents({ topic, peerId });
-      }
-    });
-    this._joinedTopics.set({ topic, peerId }, task);
-    this._ctx.onDispose(() => {
-      this._joinedTopics.delete({ topic, peerId });
-    });
-    task.schedule();
+    log('joining', { topic, peerId });
+    this._performance.joinCounter++;
+    this._joinedTopics.add({ topic, peerId });
+    this._reconcileTask!.schedule();
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
@@ -250,7 +240,7 @@ export class SignalClient implements SignalMethods {
       this._messageStreams.set(peerId, messageStream);
     }
 
-    this._connectionContext.onDispose(() => {
+    this._connectionContext!.onDispose(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
     });
@@ -265,9 +255,9 @@ export class SignalClient implements SignalMethods {
 
   private _scheduleReconcileAfterError() {
     scheduleTask(
-      this._ctx,
+      this._ctx!,
       () => {
-        this._reconcileTask.schedule();
+        this._reconcileTask!.schedule();
       },
       ERROR_RECONCILE_DELAY
     );
@@ -282,6 +272,7 @@ export class SignalClient implements SignalMethods {
 
   private _createClient() {
     log('creating client', { host: this._host });
+    this._connectionContext = this._ctx!.derive();
     this._connectionStarted = new Date();
     try {
       this._client = new SignalRPCClient(this._host);
@@ -302,7 +293,7 @@ export class SignalClient implements SignalMethods {
       this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
       this._setState(SignalState.CONNECTED);
       this._clientReady.wake();
-      this._reconcileTask.schedule();
+      this._reconcileTask!.schedule();
     });
 
     this._client.error.on(this._connectionContext, (error) => {
@@ -353,11 +344,10 @@ export class SignalClient implements SignalMethods {
     }
 
     this._setState(SignalState.RE_CONNECTING);
-    void this._connectionContext.dispose();
-    this._connectionContext = this._ctx.derive();
+    void this._connectionContext?.dispose();
 
     scheduleTask(
-      this._connectionContext,
+      this._ctx!,
       async () => {
         // Close client if it wasn't already closed.
         this._client.close().catch(() => {});
@@ -381,8 +371,7 @@ export class SignalClient implements SignalMethods {
 
     // Saving swarm stream.
     this._swarmStreams.set({ topic, peerId }, swarmStream);
-
-    this._connectionContext.onDispose(() => {
+    this._connectionContext!.onDispose(() => {
       swarmStream.close();
       this._swarmStreams.delete({ topic, peerId });
     });
