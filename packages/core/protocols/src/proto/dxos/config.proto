@@ -152,7 +152,15 @@ message Runtime {
         /// Seconds
         int32 interval = 2;
       }
-  
+
+      Autoupdate autoupdate = 1;
+
+      /// Environment variables.
+      repeated string env = 100;
+    }
+
+    message Instrumentation {
+      /// Monitoring OTEL configuration.
       message Monitoring {
         bool enabled = 1;
         string endpoint = 2;
@@ -160,10 +168,12 @@ message Runtime {
         int32 interval = 3;
       }
   
+      /// Sentry tracing configuration.
       message Trace {
         bool disabled = 1;
       }
   
+      /// Segment telemetry configuration.
       message Telemetry {
         bool disabled = 1;
       }
@@ -174,14 +184,10 @@ message Runtime {
         optional string log_dir = 3;
       }
 
-      Autoupdate autoupdate = 1;
-      Monitoring monitoring = 2;
-      Trace trace = 3;
-      Telemetry telemetry = 4;
-      Gravity gravity = 5;
-
-      /// Environment variables.
-      repeated string env = 100;
+      Monitoring monitoring = 1;
+      Trace trace = 2;
+      Telemetry telemetry = 3;
+      Gravity gravity = 4;
     }
 
     message Server {
@@ -228,8 +234,9 @@ message Runtime {
     }
 
     System system = 1;
-    Server server = 2;
-    Services services = 3;
+    Instrumentation instrumentation = 2;
+    Server server = 3;
+    Services services = 4;
   }
 
   //
@@ -271,6 +278,10 @@ message Runtime {
       optional string server = 1;
     }
 
+    message Tunneler {
+      optional string server = 1;
+    }
+
     // TODO(egorgripasov): Do we have a better name for this?
     message Supervisor { // TODO(burdon): Is this a service?
       optional string server = 1;
@@ -284,6 +295,7 @@ message Runtime {
     repeated Ice ice = 14;
     optional Container container = 15;
     optional Publisher publisher = 16;
+    optional Tunneler tunneler = 17;
   }
 
   message Keys {
