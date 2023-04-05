@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
-describe.only('WebSocketSignalManager', () => {
+describe('WebSocketSignalManager', () => {
   let broker1: TestBroker;
   let broker2: TestBroker;
 
@@ -66,7 +66,7 @@ describe.only('WebSocketSignalManager', () => {
 
   test('join two swarms with a broken signal server', async () => {
     const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
-    const client2 = new WebsocketSignalManager(['ws://broken.server/signal', broker2.url()]);
+    const client2 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
     await openAndClose(client1, client2);
 
     const [topic1, topic2, peer1, peer2] = PublicKey.randomSequence();
