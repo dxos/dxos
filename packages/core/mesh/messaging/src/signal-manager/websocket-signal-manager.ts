@@ -59,7 +59,7 @@ export class WebsocketSignalManager implements SignalManager {
   constructor(
     private readonly _hosts: string[]
   ) {
-    log(`Created WebsocketSignalManager`, { hosts: this._hosts });
+    log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
       server._traceParent = this._instanceId;
@@ -80,7 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
     if (this._opened) {
       return;
     }
-    log('open signal manager', { hosts: this._hosts })
+    log('open signal manager', { hosts: this._hosts });
     log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     this._initContext();
@@ -115,7 +115,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log(`Join`, { topic, peerId });
+    log('Join', { topic, peerId });
     assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     assert(this._opened, 'Closed');
 
@@ -181,55 +181,62 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private async _scheduleReconcileAfterError() {
-    scheduleTask(this._ctx, () => { this._reconcileTask.schedule() }, ERROR_RECONCILE_DELAY);
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._reconcileTask.schedule();
+      },
+      ERROR_RECONCILE_DELAY
+    );
   }
 
   private async _reconcileJoinedTopics() {
     log.info('Reconciling..');
-    
+
     // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
     // TODO(dmaretskyi): Each connection should have its separate reconcile thread.
-    await Promise.all(Array.from(this._servers).map(async ([host, server]) => {
-      const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
+    await Promise.all(
+      Array.from(this._servers).map(async ([host, server]) => {
+        const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
 
-      // Leave swarms
-      for (const [topic, actualPeerId] of actualJoinedTopics) {
-        try {
-          const desiredPeerId = this._topicsJoined.get(topic);
-          if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
-            await asyncTimeout(server.leave({ topic, peerId: actualPeerId }), SIGNAL_INTERACTION_TIMEOUT);
-            actualJoinedTopics.delete(topic);
-          }
-        } catch (err) {
-          log.error(`Error leaving swarm: ${err}`, { host });
-          this._scheduleReconcileAfterError();
-        }
-      }
-
-      // Join swarms
-      for (const [topic, desiredPeerId] of this._topicsJoined) {
-        try {
-          const actualPeerId = actualJoinedTopics.get(topic);
-          if (!actualPeerId) {
-            await asyncTimeout(server.join({ topic, peerId: desiredPeerId }), SIGNAL_INTERACTION_TIMEOUT);
-            actualJoinedTopics.set(topic, desiredPeerId);
-          } else {
-            if (!actualPeerId.equals(desiredPeerId)) {
-              throw new Error(
-                `Joined with peerId different from desired: ${JSON.stringify({
-                  actualPeerId,
-                  desiredPeerId
-                })}`
-              );
+        // Leave swarms
+        for (const [topic, actualPeerId] of actualJoinedTopics) {
+          try {
+            const desiredPeerId = this._topicsJoined.get(topic);
+            if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
+              await asyncTimeout(server.leave({ topic, peerId: actualPeerId }), SIGNAL_INTERACTION_TIMEOUT);
+              actualJoinedTopics.delete(topic);
             }
+          } catch (err) {
+            log.error(`Error leaving swarm: ${err}`, { host });
+            this._scheduleReconcileAfterError();
           }
-        } catch (err) {
-          log.error(`Error joining swarm: ${err}`, { host });
-          this._scheduleReconcileAfterError();
-
         }
-      }
-    }));
+
+        // Join swarms
+        for (const [topic, desiredPeerId] of this._topicsJoined) {
+          try {
+            const actualPeerId = actualJoinedTopics.get(topic);
+            if (!actualPeerId) {
+              await asyncTimeout(server.join({ topic, peerId: desiredPeerId }), SIGNAL_INTERACTION_TIMEOUT);
+              actualJoinedTopics.set(topic, desiredPeerId);
+            } else {
+              if (!actualPeerId.equals(desiredPeerId)) {
+                throw new Error(
+                  `Joined with peerId different from desired: ${JSON.stringify({
+                    actualPeerId,
+                    desiredPeerId
+                  })}`
+                );
+              }
+            }
+          } catch (err) {
+            log.error(`Error joining swarm: ${err}`, { host });
+            this._scheduleReconcileAfterError();
+          }
+        }
+      })
+    );
     log.info('Done reconciling..');
   }
 }
