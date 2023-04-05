@@ -48,6 +48,8 @@ export class DatabaseProxy {
 
   private _currentBatch?: Batch;
 
+  private _opening = false;
+
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
@@ -63,6 +65,9 @@ export class DatabaseProxy {
   }
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
+    assert(!this._opening);
+    this._opening = true;
+
     this._itemManager = itemManager;
     this._itemManager._debugLabel = 'proxy';
 
@@ -76,6 +81,7 @@ export class DatabaseProxy {
 
     const loaded = new Trigger();
 
+    assert(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey
     });
@@ -103,7 +109,9 @@ export class DatabaseProxy {
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
           } else {
-            log.warn('missing pending batch', { clientTag: msg.clientTag });
+            // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
+            // TODO(dmaretskyi): Just ignore the I guess.
+            // log.warn('missing pending batch', { clientTag: msg.clientTag });
           }
         }
 
@@ -295,5 +303,6 @@ export class DatabaseProxy {
     }
 
     await this._entities?.close();
+    this._entities = undefined;
   }
 }

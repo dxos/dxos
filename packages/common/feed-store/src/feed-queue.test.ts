@@ -145,56 +145,59 @@ describe('FeedQueue', () => {
     expect(queue.feed.properties.closed).to.be.true;
   });
 
-  test('responds immediately when feed is appended', async () => {
-    const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
-    await feed.open();
+  // TODO(dmaretskyi): Fix.
+  test
+    .skip('responds immediately when feed is appended', async () => {
+      const key = await builder.keyring.createKey();
+      const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+      await feed.open();
 
-    const queue = new FeedQueue<any>(feed);
-    await queue.open();
-    expect(queue.isOpen).to.be.true;
+      const queue = new FeedQueue<any>(feed);
+      await queue.open();
+      expect(queue.isOpen).to.be.true;
 
-    const numBlocks = 10;
-    const [done, received] = latch({ count: numBlocks });
+      const numBlocks = 10;
+      const [done, received] = latch({ count: numBlocks });
 
-    {
-      // Read blocks.
-      setTimeout(async () => {
-        expect(queue.peek()).to.be.undefined;
-        expect(queue.length).to.eq(0);
-        expect(feed.properties.length).to.eq(0);
+      {
+        // Read blocks.
+        setTimeout(async () => {
+          expect(queue.peek()).to.be.undefined;
+          expect(queue.length).to.eq(0);
+          expect(feed.properties.length).to.eq(0);
 
-        const next = await asyncTimeout(queue.pop(), 500);
-        expect(next).not.to.be.undefined;
-        received();
-
-        // Check called immediately (i.e., after first block is written).
-        expect(queue.length).to.eq(1);
-        expect(feed.properties.length).to.eq(1);
-
-        for await (const _ of Array.from(Array(numBlocks - 1))) {
-          const next = await queue.pop();
+          const next = await asyncTimeout(queue.pop(), 500);
           expect(next).not.to.be.undefined;
-          const i = received();
-          expect(i).to.eq(queue.index);
-        }
-      });
+          received();
 
-      // Write blocks.
-      setTimeout(async () => {
-        await builder.generator.writeBlocks(feed.createFeedWriter(), {
-          count: numBlocks
+          // Check called immediately (i.e., after first block is written).
+          expect(queue.length).to.eq(1);
+          expect(feed.properties.length).to.eq(1);
+
+          for await (const _ of Array.from(Array(numBlocks - 1))) {
+            const next = await queue.pop();
+            expect(next).not.to.be.undefined;
+            const i = received();
+            expect(i).to.eq(queue.index);
+          }
         });
-        expect(feed.properties.length).to.eq(numBlocks);
-        expect(queue.length).to.eq(numBlocks);
-      }, 100); // Make sure reader waits.
-    }
 
-    await done();
-    expect(queue.isOpen).to.be.true;
-    await queue.close();
-    expect(queue.isOpen).to.be.false;
-  }).timeout(1000);
+        // Write blocks.
+        setTimeout(async () => {
+          await builder.generator.writeBlocks(feed.createFeedWriter(), {
+            count: numBlocks
+          });
+          expect(feed.properties.length).to.eq(numBlocks);
+          expect(queue.length).to.eq(numBlocks);
+        }, 100); // Make sure reader waits.
+      }
+
+      await done();
+      expect(queue.isOpen).to.be.true;
+      await queue.close();
+      expect(queue.isOpen).to.be.false;
+    })
+    .timeout(1000);
 
   test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();

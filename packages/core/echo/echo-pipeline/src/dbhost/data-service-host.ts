@@ -36,7 +36,6 @@ export class DataServiceHost {
     return new Stream(({ next, ctx }) => {
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
-
       next({
         batch: {
           objects
