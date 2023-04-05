@@ -14,8 +14,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set env
+      - name: Get current commit
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Get new branch name
+        run: echo "BRANCH_NAME=${{ env.BRANCH_NAME_PREFIX }}/${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
@@ -51,14 +53,13 @@ jobs:
           git checkout -B ${{ env.BRANCH_NAME }}
           git add .
           git diff-index --quiet HEAD || git commit -m "fix: automatic .proto clone from dxos repo"
-          git push origin ${{ env.BRANCH_NAME }} -f
+          git push origin ${{ env.BRANCH_NAME }}
 
-          # Prepare Pull Request.
-          gh pr close ${{ env.BRANCH_NAME }} || true
+          # Open Pull Request.
           gh pr create -B main -H ${{ env.BRANCH_NAME }} --title '${{ env.PR_TITLE }} from ${{ env.COMMIT_HASH }}' --body '${{ env.PR_BODY }}'
         env:
           GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
-          BRANCH_NAME: proto-sync
+          BRANCH_NAME_PREFIX: proto-sync
           PR_TITLE: "fix: sync protocol buffers"
           PR_BODY: Created automatically by Github Action
 
