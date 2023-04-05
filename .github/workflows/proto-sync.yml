@@ -1,9 +1,10 @@
 on:
   push:
     branches:
-      - egorgripasov/proto-sync
-    # paths:
-    #   - 'packages/core/protocols/src/proto/**'
+      - main
+    paths:
+      - 'packages/core/protocols/src/proto/**'
+  workflow_dispatch:
 
 name: sync-proto
 
@@ -69,4 +70,3 @@ jobs:
           GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
           PR_TITLE: "fix: sync protocol buffers"
           PR_BODY: Created automatically by Github Action
-
