@@ -4,10 +4,10 @@
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { ConfigProto } from '@dxos/config';
-import { Button, getSize, Table } from '@dxos/react-components';
+import { TableColumn, Table } from '@dxos/mosaic';
+import { Button, getSize } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
@@ -25,8 +25,8 @@ type Module = {
   tags: string[];
 };
 
-const columns: (host: string | undefined) => Column<Module>[] = (host) => {
-  const columns: Column<Module>[] = [
+const columns: (host: string | undefined) => TableColumn<Module>[] = (host) => {
+  const columns: TableColumn<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,

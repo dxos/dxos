@@ -3,14 +3,13 @@
 //
 
 import React, { useState } from 'react';
-import { Column } from 'react-table';
 
-import { Table } from '@dxos/react-components';
+import { TableColumn, Table } from '@dxos/mosaic';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: Column<T>[];
+  columns: TableColumn<T>[];
   data: T[];
 };
 
