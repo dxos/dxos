@@ -50,7 +50,9 @@ describe('Messenger', () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
+    await peer1.open();
     const peer2 = builder.createPeer();
+    await peer2.open();
 
     const message: Message = {
       author: peer1.peerId,
@@ -69,8 +71,11 @@ describe('Messenger', () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
+    await peer1.open();
     const peer2 = builder.createPeer();
+    await peer2.open();
     const peer3 = builder.createPeer();
+    await peer3.open();
 
     {
       const message: Message = {
@@ -113,7 +118,9 @@ describe('Messenger', () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
+    await peer1.open();
     const peer2 = builder.createPeer();
+    await peer2.open();
 
     // Subscribe first listener for second messenger.
     const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
@@ -161,7 +168,9 @@ describe('Messenger', () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
+    await peer1.open();
     const peer2 = builder.createPeer();
+    await peer2.open();
 
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
@@ -226,7 +235,9 @@ describe('Messenger', () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
+    await peer1.open();
     const peer2 = builder.createPeer();
+    await peer2.open();
 
     const message: Message = {
       author: peer1.peerId,
@@ -272,7 +283,9 @@ describe('Messenger', () => {
       const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: unreliableConnection });
       afterTest(() => builder.close());
       const peer1 = builder.createPeer();
+      await peer1.open();
       const peer2 = builder.createPeer();
+      await peer2.open();
 
       const message = {
         author: peer2.peerId,
@@ -299,7 +312,9 @@ describe('Messenger', () => {
       const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: doublingMessage });
       afterTest(() => builder.close());
       const peer1 = builder.createPeer();
+      await peer1.open();
       const peer2 = builder.createPeer();
+      await peer2.open();
 
       const [promise, inc] = latch({ count: 1 });
       let count = 0;
@@ -325,6 +340,7 @@ describe('Messenger', () => {
       range(100).map(async () => {
         const peerId = PublicKey.random();
         const newLocal = new WebsocketSignalManager(['wss://dev.kube.dxos.org/.well-known/dx/signal']);
+        await newLocal.open();
         const messenger = new Messenger({ signalManager: newLocal });
 
         // newLocal.join({

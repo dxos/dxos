@@ -92,6 +92,9 @@ export class Client {
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory);
     this._mesh = new MeshProxy(this._services);
+    this._halo._traceParent = this._instanceId;
+    this._echo._traceParent = this._instanceId;
+    this._mesh._traceParent = this._instanceId;
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = this.config.get('runtime.client.log.filter');
