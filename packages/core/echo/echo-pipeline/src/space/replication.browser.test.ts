@@ -60,5 +60,5 @@ describe('replication', () => {
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(1);
     });
-  }).onlyEnvironments('chromium');
+  });
 });
