@@ -1,5 +1,5 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 syntax = "proto3";
@@ -38,7 +38,6 @@ message Package {
   repeated Module modules = 3;
 }
 
-// TODO(wittjosiah): Shared with registry types. Factor out?
 message Repo {
   optional string name = 1;
   optional string url = 2;
@@ -134,34 +133,6 @@ message Runtime {
     optional google.protobuf.Struct env = 101;
   }
 
-  // CLI configuration
-  message CLI {
-    message AppServe {
-      message Serve {
-        optional string config = 1;
-        optional string login_app = 2;
-        optional string key_phrase = 3;
-      }
-
-      optional Serve serve = 1;
-    }
-
-    message Package {
-      optional string package = 1;
-      optional string channel = 2;
-      optional string bin = 3;
-      optional string config = 4;
-    }
-
-    optional string node_path = 1;
-    optional AppServe app = 2;
-    optional Package console = 3;
-    optional Package mdns = 4;
-    optional Package signal = 5;
-    optional string npm_client = 6;
-    optional string channel = 7;
-  }
-
   message Props {
     optional string title = 1;
   }
@@ -174,123 +145,104 @@ message Runtime {
   // KUBE
   //
   message Kube {
-    message Autoupdate {
-      bool enabled = 1;
-      /// Seconds
-      int32 interval = 2;
+    // TODO: "bin" / "kernel" / "core" / "runtime" / "system"?
+    message System {
+      message Autoupdate {
+        bool enabled = 1;
+        /// Seconds
+        int32 interval = 2;
+      }
+  
+      message Monitoring {
+        bool enabled = 1;
+        string endpoint = 2;
+        /// Seconds
+        int32 interval = 3;
+      }
+  
+      message Trace {
+        bool disabled = 1;
+      }
+  
+      message Telemetry {
+        bool disabled = 1;
+      }
+  
+      message Gravity {
+        bool disabled = 1;
+        string name = 2;
+        optional string log_dir = 3;
+      }
+
+      Autoupdate autoupdate = 1;
+      Monitoring monitoring = 2;
+      Trace trace = 3;
+      Telemetry telemetry = 4;
+      Gravity gravity = 5;
+
+      /// Environment variables.
+      repeated string env = 100;
     }
 
-    message Https {
-      bool enabled = 1;
-      string port = 2;
-      string email = 3;
-      string certfile = 4;
-      string keyfile = 5;
-      string dnsprovider = 6; // TODO(burdon): dns_provider.
+    message Server {
+      message Https {
+        bool enabled = 1;
+        int32 port = 2;
+        string email = 3;
+        string certfile = 4;
+        string keyfile = 5;
+        string dns_provider = 6;
+      }
+
+      string host = 1;
+      int32 port = 2;
+
+      /// Hostname to use in KUBE configuration response.
+      string host_in_config = 3;
+
+      /// Alises for the hostname (e.g. dev.dxos.org vs dev.kube.dxos.org)
+      repeated string host_alias = 4;
+
+      Https https = 5;
     }
 
-    message P2P {
-      // TODO(egorgripasov): private_key
-      string privatekey = 1;
-      string port = 2;
-      repeated string bootstrap = 3;
+    message Services {
+      message Signal {
+        string private_key = 1;
+        int32 port = 2;
+        repeated string bootstrap_node = 3;
+      }
+
+      message Tunneler {
+        bool enabled = 1;
+        string command_template = 2;
+        string output_re = 3;
+        int32 port = 4;
+      }
+
+      message Container {
+        bool enabled = 1;
+        /// Refresh interval - Seconds
+        int32 interval = 2;
+      }
     }
 
-    message Monitoring {
-      bool enabled = 1;
-      string endpoint = 2;
-      /// Seconds
-      int32 interval = 3;
-    }
-
-    message Trace {
-      bool disabled = 1;
-    }
-
-    message Telemetry {
-      bool disabled = 1;
-    }
-
-    message Gravity {
-      bool disabled = 1;
-      string name = 2;
-      optional string log_dir = 3;
-    }
-
-    message AppTunneling {
-      bool enabled = 1;
-      string command_template = 2;
-      string output_re = 3;
-      string port = 4;
-    }
-
-    message Bots {
-      bool enabled = 1;
-      /// Refresh interval - Seconds
-      int32 interval = 2;
-    }
-
-    // TODO(burdon): Needs documentation/
-    string host = 1;
-    string port = 2;
-    Autoupdate autoupdate = 3;
-    Https https = 4;
-    P2P p2p = 5;
-    string confhost = 6; // TODO(burdon): ?
-    repeated string env = 7;
-    repeated string alias = 8;
-    Monitoring monitoring = 9;
-    Trace trace = 10;
-    Telemetry telemetry = 11;
-    Gravity gravity = 12;
-    AppTunneling app_tunneling = 13;
-    Bots bots = 14;
+    System system = 1;
+    Server server = 2;
+    Services services = 3;
   }
 
   //
   // DXOS Services.
   //
   message Services {
-    message Kube {
-      message Endpoints {
-        optional string logs = 1;
-        optional string services = 2;
-        optional string cert = 3;
-      }
-
-      optional Endpoints endpoints = 1;
-      optional string public_url = 2;
-    }
-
     message AppServer {
       optional string prefix = 1;
       optional string server = 2;
     }
 
-    // TODO(burdon): Delete/Rename DMG.
-    message Dxns {
-      /// DXNS endpoint.
+    message Authentication {
       optional string server = 1;
-
-      /**
-       * Substrate account URI. This is a secret.
-       * KUBEs do not serve this with the config but we store it in profile.yml.
-       *
-       * TODO(dmaretskyi): Deprecate this and move it to keyring.
-       */
-      optional string account_uri = 2;
-
-      /**
-       * Public Polkadot Address.
-       */
-      optional string address = 3;
-
-      /**
-       * Public address of a DXNS Account.
-       */
-      optional string account = 4;
-
-      optional string faucet = 5;
     }
 
     message Ipfs {
@@ -310,36 +262,28 @@ message Runtime {
       optional string credential = 3;
     }
 
-    message Machine {
-      optional string do_access_token = 1;
-      optional string github_access_token = 2;
-      optional string github_username = 3;
-      optional string dns_domain = 4;
-      optional string npm_access_token = 5;
-    }
-
-    message BotHost { // TODO(burdon): Add Service suffix to all?
+    message Container { // TODO(burdon): Add Service suffix to all?
       optional string proxy = 1;
     }
 
+    // TODO: Rename to "Publishing" everywhere (in the KUBE source as well)?
     message Publisher { // TODO(burdon): Publishing.
       optional string server = 1;
     }
 
+    // TODO(egorgripasov): Do we have a better name for this?
     message Supervisor { // TODO(burdon): Is this a service?
       optional string server = 1;
     }
 
-    optional Kube kube = 1;
-    optional AppServer app = 2;
-    optional Dxns dxns = 3;
-    optional Ipfs ipfs = 4;
-    optional Signal signal = 5;
-    repeated Ice ice = 6;
-    optional Machine machine = 7;
-    optional BotHost bot = 8;
-    optional Publisher publisher = 9;
-    optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
+    optional Supervisor supervisor = 1;
+    optional AppServer app = 10;
+    optional Authentication auth = 11;
+    optional Ipfs ipfs = 12;
+    optional Signal signal = 13;
+    repeated Ice ice = 14;
+    optional Container bot = 15;
+    optional Publisher publisher = 16;
   }
 
   message Keys {
@@ -349,10 +293,9 @@ message Runtime {
 
   optional Client client = 1;
   optional App app = 2;
-  optional CLI cli = 3;
-  optional Props props = 4;
-  optional Services services = 5;
-  optional System system = 6;
-  optional Kube kube = 7;
-  repeated Keys keys = 8;
+  optional Props props = 3;
+  optional Services services = 4;
+  optional System system = 5;
+  optional Kube kube = 6;
+  repeated Keys keys = 7;
 }
