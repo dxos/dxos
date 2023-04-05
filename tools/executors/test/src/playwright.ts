@@ -129,7 +129,7 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   outputDir: process.env.OUTPUT_PATH,
   timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : 30_000,
   forbidOnly: !!process.env.CI,
-  retries: 2,
+  retries: process.env.CI ? 2 : 0,
   reporter:
     process.env.WATCH === 'true'
       ? [['dot']]
