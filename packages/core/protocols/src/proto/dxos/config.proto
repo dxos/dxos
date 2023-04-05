@@ -282,7 +282,7 @@ message Runtime {
     optional Ipfs ipfs = 12;
     optional Signal signal = 13;
     repeated Ice ice = 14;
-    optional Container bot = 15;
+    optional Container container = 15;
     optional Publisher publisher = 16;
   }
 
