@@ -48,7 +48,7 @@ export const ManageSpacePage = ({
     }
   }, [space]);
 
-  const handleRemove = useCallback((id: string) => space?.removeInvitation(id), [space]);
+  const handleRemove = useCallback((id: string) => space?.deleteInvitation(id), [space]);
 
   return (
     <>

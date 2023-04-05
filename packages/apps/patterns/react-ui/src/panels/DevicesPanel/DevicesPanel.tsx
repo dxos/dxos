@@ -65,7 +65,7 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
         <InvitationList
           invitations={invitations}
           onClickRemove={(invitation) =>
-            invitation.get() && client.halo.removeInvitation(invitation.get().invitationId)
+            invitation.get() && client.halo.deleteInvitation(invitation.get().invitationId)
           }
           createInvitationUrl={createInvitationUrl}
         />

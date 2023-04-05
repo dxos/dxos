@@ -23,7 +23,7 @@ const DevicesPage = () => {
   }, []);
 
   const handleRemove = useCallback((id: string) => {
-    void client.halo.removeInvitation(id);
+    void client.halo.deleteInvitation(id);
   }, []);
 
   return (

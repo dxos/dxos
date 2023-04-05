@@ -52,7 +52,6 @@ export class EchoProxy implements Echo {
   public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: InvitationsProxy;
-  private _destroying = false; // TODO(burdon): Standardize enum.
   private readonly _instanceId = PublicKey.random().toHex();
   /**
    * @internal
@@ -112,6 +111,7 @@ export class EchoProxy implements Echo {
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE
     }));
+    await this._invitationProxy.open();
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
@@ -165,6 +165,7 @@ export class EchoProxy implements Echo {
     this._spacesMap.clear();
     this._spacesChanged.emit([]);
 
+    await this._invitationProxy?.close();
     this._invitationProxy = undefined;
     log.trace('dxos.sdk.echo-proxy', trace.end({ id: this._instanceId }));
   }
