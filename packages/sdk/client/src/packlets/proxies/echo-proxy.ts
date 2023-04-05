@@ -234,7 +234,6 @@ export class EchoProxy implements Echo {
   /**
    * Initiates an interactive accept invitation flow.
    */
-  // TODO(wittjosiah): Make idempotent.
   acceptInvitation(invitation: Invitation) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
@@ -242,5 +241,17 @@ export class EchoProxy implements Echo {
 
     log('accept invitation', invitation);
     return this._invitationProxy!.acceptInvitation(invitation);
+  }
+
+  /**
+   * Removes accepted space invitation.
+   */
+  deleteInvitation(id: string) {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
+    }
+
+    log('remove invitation', { id });
+    return this._invitationProxy!.deleteInvitation(id);
   }
 }
