@@ -1,7 +1,11 @@
-import { sleep } from '@dxos/async';
+//
+// Copyright 2023 DXOS.org
+//
+
 import { PublicKey } from '@dxos/keys';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, describe, test, openAndClose } from '@dxos/test'
+import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
+
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
 describe.only('WebSocketSignalManager', () => {
@@ -19,9 +23,12 @@ describe.only('WebSocketSignalManager', () => {
   });
 
   const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>
-    client.swarmEvent.waitFor(({ swarmEvent, topic }) => !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic));
+    client.swarmEvent.waitFor(
+      ({ swarmEvent, topic }) =>
+        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic)
+    );
 
-  test('join swarm with two brokers', async () => {
+  test.only('join swarm with two brokers', async () => {
     const client1 = new WebsocketSignalManager([broker1.url(), broker2.url()]);
     const client2 = new WebsocketSignalManager([broker1.url()]);
     const client3 = new WebsocketSignalManager([broker2.url()]);
@@ -39,7 +46,7 @@ describe.only('WebSocketSignalManager', () => {
     await client3.join({ topic, peerId: peer3 });
 
     await Promise.all([joined12, joined13, joined21, joined31]);
-  })
+  });
 
   test('works with one broken server', async () => {
     const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
@@ -55,7 +62,7 @@ describe.only('WebSocketSignalManager', () => {
     await client2.join({ topic, peerId: peer2 });
 
     await Promise.all([joined12, joined21]);
-  })
+  });
 
   test('join two swarms with a broken signal server', async () => {
     const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
@@ -77,6 +84,5 @@ describe.only('WebSocketSignalManager', () => {
     await client1.join({ topic: topic2, peerId: peer1 });
     await client2.join({ topic: topic2, peerId: peer2 });
     await Promise.all([joined212, joined221]);
-  })
-  
-})
+  });
+});
