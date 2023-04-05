@@ -9,21 +9,24 @@ export default defineTemplate(
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-components';
-    import { useQuery, Expando, useIdentity, useOrCreateFirstSpace } from '@dxos/react-client';
+    import { useQuery, Expando, useIdentity, useSpaces } from '@dxos/react-client';
 
     export const Counter = () => {
       const identity = useIdentity({ login: true });
-      const space = useOrCreateFirstSpace();
+      const [space] = useSpaces();
       const [counter] = useQuery(space, { type: 'counter' });
+
       useEffect(() => {
         if (!counter && space) {
           const c = new Expando({ type: 'counter' });
           void space.db.add(c);
         }
       }, [counter, space]);
+
       if (!space) {
         return <Loading label='Loading' />;
       }
+
       return (
         <div>
           {identity && \`Hello \${identity?.profile?.displayName}!\`}

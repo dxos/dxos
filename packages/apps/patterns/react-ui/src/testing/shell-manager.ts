@@ -31,6 +31,8 @@ export class ShellManager {
       await (scope || this.page)
         .getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-cancel`)
         .click();
+    } else {
+      await (scope || this.page).getByTestId('cancel-invitation').nth(0).click();
     }
   }
 
