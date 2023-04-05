@@ -69,6 +69,7 @@ export class ServiceContext {
     public readonly networkManager: NetworkManager,
     public readonly modelFactory: ModelFactory
   ) {
+    networkManager._traceParent = this._instanceId;
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -88,6 +89,7 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager
     });
+    this.spaceManager._traceParent = this._instanceId;
 
     this.identityManager = new IdentityManager(
       this.metadataStore,
@@ -95,6 +97,7 @@ export class ServiceContext {
       this.feedStore,
       this.spaceManager
     );
+    this.identityManager._traceParent = this._instanceId;
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
@@ -185,6 +188,7 @@ export class ServiceContext {
       this.feedStore,
       this.snapshotStore
     );
+    this.dataSpaceManager._traceParent = this._instanceId;
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {

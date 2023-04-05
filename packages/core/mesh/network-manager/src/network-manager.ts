@@ -82,6 +82,7 @@ export class NetworkManager {
   public readonly topicsUpdated = new Event<void>();
 
   private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
     this._transportFactory = transportFactory;
@@ -130,7 +131,7 @@ export class NetworkManager {
   }
 
   async open() {
-    log.trace('dxos.mesh.network-manager', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.mesh.network-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     await this._messenger.open();
     await this._signalManager.open();
   }
