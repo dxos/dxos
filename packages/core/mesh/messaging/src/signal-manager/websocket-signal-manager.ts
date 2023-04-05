@@ -4,20 +4,17 @@
 
 import assert from 'node:assert';
 
-import { Event, DeferredTask, synchronized, scheduleTask, asyncTimeout } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexSet } from '@dxos/util';
 
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
-
-const ERROR_RECONCILE_DELAY = 1000;
-const SIGNAL_INTERACTION_TIMEOUT = 1000;
 
 /**
  * Manages connection to multiple Signal Servers over WebSocket
@@ -26,17 +23,14 @@ export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
-  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>((topic) => topic.toHex());
-
-  /** host => topic => peerId */
-  private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
+  private readonly _topicsJoined = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+  );
 
   /** peerId[] */
   private readonly _subscribedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _ctx!: Context;
-  private _reconcileTask!: DeferredTask;
-  private _reconcilingLater = false;
   private _opened = false;
 
   readonly statusChanged = new Event<SignalStatus[]>();
@@ -69,7 +63,6 @@ export class WebsocketSignalManager implements SignalManager {
 
       this._servers.set(host, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
-      this._topicsJoinedPerSignal.set(host, new ComplexMap(PublicKey.hash));
     }
 
     this._initContext();
@@ -89,11 +82,16 @@ export class WebsocketSignalManager implements SignalManager {
 
     await Promise.all(
       [...this._servers.values()].map((server) =>
+        Promise.all([...this._topicsJoined.values()].map((params) => server.join(params)))
+      )
+    );
+
+    await Promise.all(
+      [...this._servers.values()].map((server) =>
         Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
       )
     );
     this._opened = true;
-    this._reconcileTask.schedule();
   }
 
   async close() {
@@ -105,7 +103,6 @@ export class WebsocketSignalManager implements SignalManager {
     await this._ctx.dispose();
 
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
-    [...this._topicsJoinedPerSignal.values()].map((value) => value.clear());
     log.trace('dxos.mesh.websocket-signal-manager', trace.end({ id: this._instanceId }));
   }
 
@@ -116,21 +113,19 @@ export class WebsocketSignalManager implements SignalManager {
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('Join', { topic, peerId });
-    assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
+    assert(!this._topicsJoined.has({ topic, peerId }), 'Already joined');
     assert(this._opened, 'Closed');
-
-    this._topicsJoined.set(topic, peerId);
-    this._reconcileTask.schedule();
+    this._topicsJoined.add({ topic, peerId });
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.join({ topic, peerId })));
   }
 
   @synchronized
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('leaving', { topic, peerId });
-    assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     assert(this._opened, 'Closed');
 
-    this._topicsJoined.delete(topic);
-    this._reconcileTask.schedule();
+    this._topicsJoined.delete({ topic, peerId });
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.leave({ topic, peerId })));
   }
 
   async sendMessage({
@@ -174,69 +169,5 @@ export class WebsocketSignalManager implements SignalManager {
     this._ctx = new Context({
       onError: (err) => log.catch(err)
     });
-
-    this._reconcileTask = new DeferredTask(this._ctx, async () => {
-      await this._reconcileJoinedTopics();
-    });
-  }
-
-  private async _scheduleReconcileAfterError() {
-    scheduleTask(
-      this._ctx,
-      () => {
-        this._reconcileTask.schedule();
-      },
-      ERROR_RECONCILE_DELAY
-    );
-  }
-
-  private async _reconcileJoinedTopics() {
-    log.info('Reconciling..');
-
-    // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
-    // TODO(dmaretskyi): Each connection should have its separate reconcile thread.
-    await Promise.all(
-      Array.from(this._servers).map(async ([host, server]) => {
-        const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
-
-        // Leave swarms
-        for (const [topic, actualPeerId] of actualJoinedTopics) {
-          try {
-            const desiredPeerId = this._topicsJoined.get(topic);
-            if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
-              await asyncTimeout(server.leave({ topic, peerId: actualPeerId }), SIGNAL_INTERACTION_TIMEOUT);
-              actualJoinedTopics.delete(topic);
-            }
-          } catch (err) {
-            log.error(`Error leaving swarm: ${err}`, { host });
-            this._scheduleReconcileAfterError();
-          }
-        }
-
-        // Join swarms
-        for (const [topic, desiredPeerId] of this._topicsJoined) {
-          try {
-            const actualPeerId = actualJoinedTopics.get(topic);
-            if (!actualPeerId) {
-              await asyncTimeout(server.join({ topic, peerId: desiredPeerId }), SIGNAL_INTERACTION_TIMEOUT);
-              actualJoinedTopics.set(topic, desiredPeerId);
-            } else {
-              if (!actualPeerId.equals(desiredPeerId)) {
-                throw new Error(
-                  `Joined with peerId different from desired: ${JSON.stringify({
-                    actualPeerId,
-                    desiredPeerId
-                  })}`
-                );
-              }
-            }
-          } catch (err) {
-            log.error(`Error joining swarm: ${err}`, { host });
-            this._scheduleReconcileAfterError();
-          }
-        }
-      })
-    );
-    log.info('Done reconciling..');
   }
 }

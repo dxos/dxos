@@ -28,7 +28,7 @@ describe.only('WebSocketSignalManager', () => {
         !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic)
     );
 
-  test.only('join swarm with two brokers', async () => {
+  test('join swarm with two brokers', async () => {
     const client1 = new WebsocketSignalManager([broker1.url(), broker2.url()]);
     const client2 = new WebsocketSignalManager([broker1.url()]);
     const client3 = new WebsocketSignalManager([broker2.url()]);
