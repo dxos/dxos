@@ -83,22 +83,3 @@ export class FeedFactory<T extends {}> {
     return hypercore(this._storage(publicKey), key, opts);
   }
 }
-
-
-
-
-database.add(new Expando({ }))
-
-
-innerDatabase.mutate({
-  genesis: {
-
-  }
-})
-
-// 3.
-
-
-this._writeStream.write({
-  genesis
-})

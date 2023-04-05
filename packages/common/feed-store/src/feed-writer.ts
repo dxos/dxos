@@ -9,8 +9,20 @@ export type WriteReceipt = {
   seq: number;
 };
 
+export type WriteOptions = {
+  /**
+   * Called after the write is complete.
+   * Runs and completes before the mutation is read from the pipeline.
+   */
+  afterWrite?: (receipt: WriteReceipt) => Promise<void>;
+}
+
 export interface FeedWriter<T extends {}> {
-  write(data: T): Promise<WriteReceipt>;
+  /**
+   * Write data to the feed.
+   * Awaits `afterWrite` before returning.
+   */
+  write(data: T, options?: WriteOptions): Promise<WriteReceipt>;
 }
 
 export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): FeedWriter<T> => ({

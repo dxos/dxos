@@ -14,9 +14,27 @@ import { describe, test, afterTest } from '@dxos/test';
 import { performInvitation, TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
-  test.only('creates a space', async () => {
+  test('creates a space', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.WEBFS });
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    // TODO(burdon): Extend basic queries.
+    const space = await client.createSpace();
+    await testSpace(space.internal.db);
+
+    expect(space.members.get()).to.be.length(1);
+  });
+
+  // TODO(dmaretskyi): Test suit for different conditions/storages.
+  test.skip('creates a space on webfs', async () => {
+    const testBuilder = new TestBuilder();
+    // testBuilder.storage = createStorage({ type: StorageType.WEBFS });
 
     const host = testBuilder.createClientServicesHost();
     await host.open();
@@ -27,14 +45,10 @@ describe('Spaces', () => {
     await client.initialize();
     afterTest(() => client.destroy());
 
-    console.log('create identity')
     await client.halo.createIdentity({ displayName: 'test-user' });
-    console.log('after create identity')
 
     // TODO(burdon): Extend basic queries.
-    console.log('create space')
     const space = await client.createSpace();
-    console.log('after create space')
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
