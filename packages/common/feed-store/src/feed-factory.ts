@@ -21,6 +21,13 @@ export type FeedFactoryOptions = {
 
 export type FeedOptions = HypercoreOptions & {
   writable?: boolean;
+  /**
+   * Optional hook called before data is written after being verified.
+   * Called for writes done by this peer as well as for data replicated from other peers.
+   * NOTE: Remember to call the callback.
+   * @param peer Always null in hypercore@9.12.0.
+   */
+  onwrite?: (index: number, data: any, peer: null, cb: (err: Error | null) => void) => void;
 };
 
 /**
@@ -67,7 +74,8 @@ export class FeedFactory<T extends {}> {
       this._hypercoreOptions,
       {
         secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
-        crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
+        crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined,
+        onwrite: options?.onwrite,
       },
       options
     );
@@ -75,3 +83,22 @@ export class FeedFactory<T extends {}> {
     return hypercore(this._storage(publicKey), key, opts);
   }
 }
+
+
+
+
+database.add(new Expando({ }))
+
+
+innerDatabase.mutate({
+  genesis: {
+
+  }
+})
+
+// 3.
+
+
+this._writeStream.write({
+  genesis
+})

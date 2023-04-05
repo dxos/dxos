@@ -47,10 +47,10 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
-        log('Object update', { batch, meta });
+        log.info('message', { batch, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
-        // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
         // Assign feed metadata
         batch.objects?.forEach((object) => {
@@ -75,20 +75,24 @@ export class DataServiceHost {
   async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
+    log.info('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 })
+
     // Clear client metadata.
     const receipt = await this._writeStream.write({
       batch: {
         objects: request.batch.objects?.map((object) => ({
           ...object,
-          mutations: object.mutations?.map((m) => ({
-            ...m,
+          mutations: object.mutations?.map((mutation) => ({
+            ...mutation,
             meta: undefined
           })),
           meta: undefined
         }))
       }
     });
+    
     if (request.clientTag) {
+      log.info('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq })
       this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
     }
 

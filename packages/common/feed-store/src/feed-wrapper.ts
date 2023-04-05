@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter } from './feed-writer';
+import { Transform } from 'streamx';
+import { Trigger } from '@dxos/async';
 
 /**
  * Async feed wrapper.
@@ -21,12 +23,16 @@ export class FeedWrapper<T extends {}> {
   private readonly _pendingWrites = new Set<StackTrace>();
   private readonly _binder = createBinder(this._hypercore);
 
+  // Blocked while writes are happening.
+  private readonly _writeLock = new Trigger();
+
   constructor(
     private _hypercore: Hypercore<T>,
     private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
   ) {
     assert(this._hypercore);
     assert(this._key);
+    this._writeLock.wake();
   }
 
   [inspect.custom]() {
@@ -56,12 +62,18 @@ export class FeedWrapper<T extends {}> {
   }
 
   createReadableStream(): Readable {
-    return this._hypercore.createReadStream({ live: true });
+    return this._hypercore.createReadStream({ live: true })
+      .pipe(new Transform({
+        transform (data: any, cb: (err: Error | null, data: any) => void) {
+          // Delay until write is complete.
+          this._writeLock.wait().then(() => cb(null, data));
+        }
+      }));
   }
 
   createFeedWriter(): FeedWriter<T> {
     return {
-      write: async (data: T) => {
+      write: async (data: T, cb?: () => Promise<void>) => {
         log('write', { feed: this._key, seq: this._hypercore.length, data });
         const stackTrace = new StackTrace();
 
@@ -76,6 +88,9 @@ export class FeedWrapper<T extends {}> {
           };
         } finally {
           this._pendingWrites.delete(stackTrace);
+          if(this._pendingWrites.size === 0) {
+            this._writeLock.wake();
+          }
         }
       }
     };

@@ -81,6 +81,7 @@ export class DatabaseProxy {
     });
     this._entities.subscribe(
       async (msg) => {
+        console.log(JSON.stringify(msg, null, 2))
         log('process', {
           clientTag: msg.clientTag,
           feedKey: msg.feedKey,
@@ -103,7 +104,7 @@ export class DatabaseProxy {
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
           } else {
-            log('Missing pending batch', { clientTag: msg.clientTag });
+            log.warn('missing pending batch', { clientTag: msg.clientTag });
           }
         }
 
@@ -130,7 +131,7 @@ export class DatabaseProxy {
 
       let entity: Item<any> | undefined;
       if (object.genesis && !this._itemManager.entities.has(object.objectId)) {
-        log('Construct', { object });
+        log('construct', { object });
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
@@ -162,7 +163,7 @@ export class DatabaseProxy {
 
     let entity: Item<any> | undefined;
     if (objectMutation.genesis && !this._itemManager.entities.has(objectMutation.objectId)) {
-      log('Construct', { object: objectMutation });
+      log('construct optimistic', { object: objectMutation });
       assert(objectMutation.genesis.modelType);
       entity = this._itemManager.constructItem({
         itemId: objectMutation.objectId,
