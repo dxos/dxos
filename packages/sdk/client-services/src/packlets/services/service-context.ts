@@ -108,7 +108,7 @@ export class ServiceContext {
   }
 
   async open() {
-    log.trace('dxos.sdk.client-services', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context', trace.begin({ id: this._instanceId }));
 
     log('opening...');
     await this.networkManager.open();
@@ -131,7 +131,7 @@ export class ServiceContext {
     this.dataServiceSubscriptions.clear();
     log('closed');
 
-    log.trace('dxos.sdk.client-services', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
   }
 
   async reset() {
