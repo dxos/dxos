@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { setUser, startTransaction } from '@sentry/browser';
+import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
@@ -17,7 +17,7 @@ const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry 
 export const configureTracing = () => {
   runInContext(ctx, () => {
     // Configure root transaction.
-    TX = startTransaction({
+    TX = getCurrentHub().startTransaction({
       name: 'DXOS Core Tracing',
       op: 'dxos'
     });
