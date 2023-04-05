@@ -50,6 +50,7 @@ export class WebsocketSignalManager implements SignalManager {
   }>();
 
   private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   // prettier-ignore
   constructor(
@@ -77,7 +78,7 @@ export class WebsocketSignalManager implements SignalManager {
     if (this._opened) {
       return;
     }
-    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     this._initContext();
 

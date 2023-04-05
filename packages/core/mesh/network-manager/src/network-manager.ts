@@ -85,6 +85,7 @@ export class NetworkManager {
   public _traceParent?: string;
 
   constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
+    (signalManager as any)._traceParent = this._instanceId;
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.

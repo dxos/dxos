@@ -54,6 +54,10 @@ export class EchoProxy implements Echo {
   private _invitationProxy?: InvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
   private readonly _instanceId = PublicKey.random().toHex();
+  /**
+   * @internal
+   */
+  public _traceParent?: string;
 
   // prettier-ignore
   constructor(
@@ -100,7 +104,7 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
-    log.trace('dxos.sdk.echo-proxy', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.echo-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context();
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
