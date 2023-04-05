@@ -6,6 +6,7 @@
 
 import { expect } from 'chai';
 
+import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
@@ -51,10 +52,11 @@ describe('Logger tracing', () => {
       },
       error: new Error('test')
     });
+    // Sleep to allow Sentry tracing to flush.
+    await sleep(10);
     Tracing.finish();
 
     expect(testkit.transactions().length).to.eq(1);
-
     expect(testkit.transactions()[0].spans[0].op).to.eq('test.trace');
   });
 });
