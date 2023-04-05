@@ -19,7 +19,7 @@ jobs:
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Get new branch name
-        run: echo "BRANCH_NAME=${{ env.BRANCH_NAME_PREFIX }}/${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${{ env.BRANCH_NAME_PREFIX }}-${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
         env:
           BRANCH_NAME_PREFIX: proto-sync
 
