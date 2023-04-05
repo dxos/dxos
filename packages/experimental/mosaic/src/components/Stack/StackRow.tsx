@@ -31,7 +31,11 @@ export const StackRow = forwardRef(
       <section
         ref={ref}
         style={style}
-        className={mx('group flex overflow-hidden mx-6 md:mx-0', slots?.root?.className, dragging && 'relative z-10')}
+        className={mx(
+          'group flex overflow-hidden mx-6 md:mx-0',
+          slots?.root?.className,
+          dragging && 'border-t border-b relative z-10'
+        )}
       >
         <div className={mx('md:flex invisible shrink-0 w-24 h-[32px] items-center')}>
           {!dragging && (

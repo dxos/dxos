@@ -36,12 +36,15 @@ export const StackSectionContainer: FC<StackRowProps & { section: any }> = ({ se
 
 // TODO(burdon): Option to show menu.
 // TODO(burdon): Hack to provide fake drop target to prevent flickering bug when dragging to the bottom of the list.
-export const StackFooter: FC<{ id: string; ContextMenu?: FC<{ section?: any }> }> = ({ id, ContextMenu }) => {
+export const StackFooter: FC<StackRowProps & { id: string; ContextMenu?: FC<{ section?: any }> }> = ({
+  id,
+  ...rest
+}) => {
   const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   return (
-    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} ContextMenu={ContextMenu}>
+    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} {...rest}>
       <div className='h-[50vh]' />
     </StackRow>
   );

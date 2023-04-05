@@ -3,5 +3,6 @@
 //
 
 export * from './defs';
+export * from './sections';
 
 export * from './CustomActionMenu';

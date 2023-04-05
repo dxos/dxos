@@ -88,7 +88,7 @@ export const Stack = <T extends SectionType>({
               );
             })}
 
-            <StackFooter id={footerId} ContextMenu={ContextMenu} />
+            <StackFooter id={footerId} ContextMenu={ContextMenu} slots={{ root: slots?.section }} />
           </div>
         </SortableContext>
       </DndContext>

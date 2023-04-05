@@ -21,16 +21,18 @@ export const DeckEditor: FC<{ presentation: Presentation }> = observer(({ presen
 
   return (
     <div className='flex flex-1 justify-center overflow-y-auto'>
-      <div className='flex flex-col flex-1 w-full md:max-w-[800px] md:py-4'>
-        <Stack<DocumentStack.Section>
-          slots={{ root: { className: 'py-12 bg-paper-bg shadow-1' }, section: { className: 'py-2' } }}
-          sections={presentation.stack.sections}
-          onMoveSection={handleMoveSection}
-          StackSection={StackSection}
-          ContextMenu={({ section }) => (
-            <CustomActionMenu actions={sectionActions(section)} section={section} stack={presentation.stack} />
-          )}
-        />
+      <div className='flex flex-col flex-1 md:max-w-[800px]'>
+        <div className='flex flex-col w-full pt-4 bg-paper-bg shadow-1'>
+          <Stack<DocumentStack.Section>
+            slots={{ section: { className: 'py-4' } }}
+            sections={presentation.stack.sections}
+            onMoveSection={handleMoveSection}
+            StackSection={StackSection}
+            ContextMenu={({ section }) => (
+              <CustomActionMenu actions={sectionActions(section)} section={section} stack={presentation.stack} />
+            )}
+          />
+        </div>
       </div>
     </div>
   );

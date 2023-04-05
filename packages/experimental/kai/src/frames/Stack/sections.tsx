@@ -104,8 +104,6 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
       );
     }
 
-    // TODO(burdon): Add/delete/sort.
-    // TODO(burdon): Hide controls if not highlighted.
     case TaskList.type.name: {
       return (
         <TaskListComponent
@@ -129,8 +127,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
   }
 };
 
-// TODO(burdon): Factor out.
-// TODO(burdon): Make configurable.
+// TODO(burdon): Factor out and make configurable.
 const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) => {
   const type = getColumnType(table.type);
   const objects = useQuery(space, type.filter);
@@ -148,16 +145,20 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
 
 // TODO(burdon): Generalize Dialog.
 export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
-  console.log(':::::::::::', stack);
-  return null;
-
+  const { space } = useAppRouter();
   const insert = (stack: DocumentStack, section: DocumentStack.Section | undefined, object: TypedObject) => {
     const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
   };
 
   const handleSelect = (objectId?: string) => {
-    console.log(':::', objectId);
+    if (objectId) {
+      const object = space!.db.getObjectById<File>(objectId);
+      if (object) {
+        insert(stack, section, object);
+      }
+    }
+
     onClose();
   };
 
@@ -167,9 +168,9 @@ export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
       onOpenChange={() => onClose()}
       title='Select image'
       closeLabel='Close'
-      slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[620px] md:max-h-[640px]' } }}
+      slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[400px] md:max-h-[640px]' } }}
     >
-      <FilePlugin disableDownload fileTypes={imageTypes} onSelect={handleSelect} />;
+      <FilePlugin disableDownload fileTypes={imageTypes} onSelect={handleSelect} />
     </Dialog>
   );
 };
