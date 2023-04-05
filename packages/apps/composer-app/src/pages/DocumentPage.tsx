@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import React, {
   Dispatch,
+  HTMLAttributes,
   PropsWithChildren,
   ReactNode,
   SetStateAction,
@@ -93,7 +94,10 @@ const DocumentPageContent = observer(
             placeholder={t('untitled document title')}
             value={document.title ?? ''}
             onChange={({ target: { value } }) => (document.title = value)}
-            slots={{ root: { className: 'shrink-0 pli-6 plb-1 bg-neutral-500/20' } }}
+            slots={{
+              root: { className: 'shrink-0 pli-6 plb-1 bg-neutral-500/20' },
+              input: { 'data-testid': 'composer.documentTitle' } as HTMLAttributes<HTMLInputElement>
+            }}
           />
           {children}
         </div>
@@ -402,8 +406,9 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
           slots={{
             root: {
               role: 'none',
-              className: 'shrink-0 grow flex flex-col'
-            },
+              className: 'shrink-0 grow flex flex-col',
+              'data-testid': 'composer.markdownRoot'
+            } as HTMLAttributes<HTMLDivElement>,
             editor: {
               markdownTheme: {
                 '&, & .cm-scroller': { display: 'flex', flexDirection: 'column', flex: '1 0 auto', inlineSize: '100%' },

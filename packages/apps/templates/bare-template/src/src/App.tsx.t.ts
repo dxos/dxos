@@ -37,7 +37,7 @@ export default defineTemplate(
       
       ${render?.extraImports?.()}
       
-      // Dynamics allows configuration to be supplied by the hosting KUBE
+      // Dynamics allows configuration to be supplied by the hosting KUBE.
       const config = async () => new ${Config()}(await ${Dynamics()}(), ${Defaults()}());
 
       export const App = () => {

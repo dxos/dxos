@@ -25,6 +25,34 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "chromium",
+          "webkit"
+        ],
+        "coveragePath": "coverage/packages/apps/composer-app",
+        "outputPath": "tmp/playwright/packages/apps/composer-app",
+        "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/apps/composer-app",
+        "serve": "composer-app:serve-with-vault",
+        "serveOptions": {
+          "serveTarget": "preview"
+        },
+        "testPatterns": [
+          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/composer-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -59,11 +87,11 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-halo": {
-      "executor": "@dxos/serve-with-halo:run"
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
     }
   },
   "implicitDependencies": [
-    "serve-with-halo"
+    "serve-with-vault"
   ]
 }

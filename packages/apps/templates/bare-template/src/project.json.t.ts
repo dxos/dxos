@@ -43,7 +43,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           buildTarget: `${name}:bundle`
         }
       },
-      'serve-with-halo': {
+      'serve-with-vault': {
         dependsOn: ['^build'],
         executor: 'nx:run-commands',
         options: {

@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretRight } from '@phosphor-icons/react';
-import React, { Suspense, useContext } from 'react';
+import { CaretRight, Database, Shield, Users } from '@phosphor-icons/react';
+import React, { Suspense, useContext, useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useMulticastObservable } from '@dxos/react-async';
@@ -19,6 +19,7 @@ import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppStat
  * Home page with current space.
  */
 const SpacePage = () => {
+  useIdentity({ login: true });
   const { fullscreen } = useAppState();
   const { space, frame } = useAppRouter();
   const spaces = useSpaces();
@@ -72,7 +73,7 @@ const Content = () => {
       </div>
 
       {/* Main content. */}
-      {space?.state.get() === SpaceState.READY ? (
+      {space?.state.get() === SpaceState.READY + 1 ? (
         <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
           {frame && (
@@ -97,34 +98,39 @@ const Content = () => {
 };
 
 const SpaceLoading = ({ space }: { space: Space }) => {
-  const identity = useIdentity();
   const members = useMembers(space.key);
   const pipelineState = useMulticastObservable(space.pipeline);
+  const onlinePeers = members.filter((member) => member.presence === SpaceMember.PresenceState.ONLINE).length;
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    // Delayed visibility.
+    setTimeout(() => setVisible(true), 1000);
+  }, []);
+  if (!visible) {
+    return null;
+  }
 
-  // +1 for the pipeline itself being initialized.
-  const currentProgress =
-    (pipelineState.currentControlTimeframe?.totalMessages() ?? -1) +
-    (pipelineState.currentDataTimeframe?.totalMessages() ?? -1) +
-    2;
-  const targetProgress =
-    (pipelineState.targetControlTimeframe?.totalMessages() ?? -1) +
-    (pipelineState.targetDataTimeframe?.totalMessages() ?? -1) +
-    2;
-
-  const onlinePeers = members.filter(
-    (member) =>
-      member.presence === SpaceMember.PresenceState.ONLINE &&
-      (!identity?.identityKey || !member.identity.identityKey.equals(identity?.identityKey))
-  ).length;
-
-  return null;
   return (
-    <div className='flex flex-col justify-center h-full'>
-      <div className='flex justify-center'>
-        {currentProgress} / {targetProgress}
+    <div className='flex absolute right-2 bottom-2 bg-orange-300 rounded px-2 text-sm font-mono items-center space-x-2'>
+      <div className='flex items-center'>
+        <Shield />
+        <span className='flex px-1'>
+          {pipelineState.currentControlTimeframe?.totalMessages() ?? 0}/
+          {pipelineState.targetControlTimeframe?.totalMessages() ?? 0}
+        </span>
       </div>
-      <div className='flex justify-center'>
-        {onlinePeers} / {members.length} peers online
+      <div className='flex items-center'>
+        <Database />
+        <span className='flex px-1'>
+          {pipelineState.currentDataTimeframe?.totalMessages() ?? 0}/
+          {pipelineState.targetDataTimeframe?.totalMessages() ?? 0}
+        </span>
+      </div>
+      <div className='flex items-center'>
+        <Users />
+        <span className='flex px-1'>
+          {onlinePeers}/{members.length}
+        </span>
       </div>
     </div>
   );

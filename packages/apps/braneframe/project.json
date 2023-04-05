@@ -68,8 +68,8 @@
         "buildTarget": "braneframe:bundle"
       }
     },
-    "serve-with-halo": {
-      "executor": "@dxos/serve-with-halo:run"
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
     },
     "storybook": {
       "configurations": {
@@ -87,6 +87,6 @@
     }
   },
   "implicitDependencies": [
-    "serve-with-halo"
+    "serve-with-vault"
   ]
 }
