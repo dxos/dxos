@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, runInContextAsync, scheduleTask } from '@dxos/async';
+import { DeferredTask, Event, Trigger, scheduleTask } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
