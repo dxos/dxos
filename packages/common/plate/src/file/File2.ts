@@ -72,7 +72,7 @@ const foobarTemplate = ts<Input>({
 const multipleOutputs = template<Input>(() => {
   return [
     foobarTemplate,
-    ts<Input>({
+    ts({
       content: ({ input }) => `${input.name}`
     })
   ];
