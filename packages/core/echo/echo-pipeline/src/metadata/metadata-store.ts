@@ -105,12 +105,14 @@ export class MetadataStore {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
       const checksum = CRC32.buf(encoded);
 
-      // Saving file size at first 4 bytes.
-      await file.write(0, toBytesInt32(encoded.length));
-      // Saving checksum at 4th byte.
-      await file.write(4, toBytesInt32(checksum));
-      // Saving data.
-      await file.write(8, encoded);
+      const result = Buffer.alloc(8 + encoded.length);
+      
+      result.writeInt32LE(encoded.length, 0);
+      result.writeInt32LE(checksum, 4);
+      encoded.copy(result, 8);
+
+      // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
+      await file.write(0, result)
 
       log('saved', { size: encoded.length, checksum });
     } finally {
@@ -172,11 +174,4 @@ export class MetadataStore {
     await this._save();
   }
 }
-
-const toBytesInt32 = (num: number) => {
-  const buf = Buffer.alloc(4);
-  buf.writeInt32LE(num, 0);
-  return buf;
-};
-
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
