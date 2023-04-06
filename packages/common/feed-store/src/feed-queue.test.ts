@@ -211,6 +211,7 @@ describe('FeedQueue', () => {
     const [done, received] = latch({ count: numBlocks });
 
     {
+      const updatedPromise = queue.updated.waitForCount(1);
       // Write blocks.
       await builder.generator.writeBlocks(feed.createFeedWriter(), {
         count: numBlocks
@@ -219,6 +220,7 @@ describe('FeedQueue', () => {
       expect(queue.length).to.eq(numBlocks);
 
       // Peek and read first block.
+      await updatedPromise;
       const peek = queue.peek();
       const next = await queue.pop();
       received();
