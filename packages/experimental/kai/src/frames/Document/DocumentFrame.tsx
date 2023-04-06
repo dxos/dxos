@@ -4,15 +4,14 @@
 
 import React from 'react';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { Document } from '@dxos/kai-types';
 import { observer, useIdentity } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { useAppRouter } from '../../hooks';
-
 export const DocumentFrame = observer(() => {
-  const { space, objectId } = useAppRouter();
+  const { space, objectId } = useFrameContext();
   const identity = useIdentity();
   const document = objectId ? space!.db.getObjectById<Document>(objectId) : undefined;
   if (!document?.content) {

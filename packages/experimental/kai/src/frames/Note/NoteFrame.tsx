@@ -6,13 +6,13 @@ import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
 import { Text } from '@dxos/client';
+import { useFrameContext } from '@dxos/kai-frames';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
 import { NoteTile } from './NoteTile';
 
 const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>
@@ -52,7 +52,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 export const NoteFrame = () => {
   const range = { x: 4, y: 3 }; // TODO(burdon): Props.
 
-  const { space, objectId } = useAppRouter();
+  const { space, objectId } = useFrameContext();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
   const notes = useQuery(space, Note.filter());
 

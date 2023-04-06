@@ -4,18 +4,17 @@
 
 import React from 'react';
 
-import { FrameComponent } from '@dxos/kai-frames';
+import { useFrameContext, FrameComponent } from '@dxos/kai-frames';
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
 import { observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 
-import { useAppRouter } from '../../hooks';
 import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
 
 export const StackFrame: FrameComponent = observer(() => {
-  const { space, objectId } = useAppRouter();
+  const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {
     return null;

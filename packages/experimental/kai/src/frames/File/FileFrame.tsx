@@ -5,16 +5,16 @@
 import React from 'react';
 import urlJoin from 'url-join';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { File } from '@dxos/kai-types';
 import { useConfig } from '@dxos/react-client';
 
 import { FilePreview } from '../../components';
-import { useAppRouter } from '../../hooks';
 import { imageTypes } from './defs';
 
 export const FileFrame = () => {
   const config = useConfig();
-  const { space, objectId } = useAppRouter();
+  const { space, objectId } = useFrameContext();
   const object = objectId ? space!.db.getObjectById<File>(objectId) : undefined;
   if (!object) {
     return null;

@@ -7,6 +7,7 @@ import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
 import { TypedObject, Space } from '@dxos/client';
+import { useFrameContext } from '@dxos/kai-frames';
 import { Contact, Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
@@ -15,7 +16,6 @@ import { Composer } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
-import { useAppRouter } from '../../hooks';
 import { FilePlugin, imageTypes } from '../File';
 import { getColumnType } from '../Table';
 import { ActionDialog, CustomStackMenuAction } from './CustomActionMenu';
@@ -76,7 +76,7 @@ export const sectionActions = (section?: DocumentStack.Section) => {
 export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }) => {
   const config = useConfig();
   const identity = useIdentity();
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const object = section.object;
 
   switch (object.__typename) {
@@ -144,8 +144,11 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
 };
 
 // TODO(burdon): Generalize Dialog.
+// TODO(burdon): onSelect.
+//  const router = useFrameRouter();
+//  router({ space, frame, objectId });
 export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const insert = (stack: DocumentStack, section: DocumentStack.Section | undefined, object: TypedObject) => {
     const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
@@ -162,6 +165,10 @@ export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
     onClose();
   };
 
+  if (!space) {
+    return null;
+  }
+
   return (
     <Dialog
       open={true}
@@ -170,7 +177,7 @@ export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
       closeLabel='Close'
       slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[400px] md:max-h-[640px]' } }}
     >
-      <FilePlugin disableDownload fileTypes={imageTypes} onSelect={handleSelect} />
+      <FilePlugin space={space} disableDownload fileTypes={imageTypes} onSelect={handleSelect} />
     </Dialog>
   );
 };

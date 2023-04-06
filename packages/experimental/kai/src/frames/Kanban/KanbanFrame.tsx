@@ -5,6 +5,7 @@
 import React, { FC, useState } from 'react';
 
 import { TypedObject, TypeFilter } from '@dxos/echo-schema';
+import { useFrameContext } from '@dxos/kai-frames';
 import { Contact, Project } from '@dxos/kai-types';
 import { tags } from '@dxos/kai-types/testing';
 import { useQuery } from '@dxos/react-client';
@@ -12,7 +13,6 @@ import { Select } from '@dxos/react-components';
 
 import { ProjectCard, ContactCard } from '../../cards';
 import { Toolbar } from '../../components';
-import { useAppRouter } from '../../hooks';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 type Type = {
@@ -43,7 +43,7 @@ const types: Type[] = [
 
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const [typeName, setTypeName] = useState<string>(types[0].name);
   const type = types.find(({ name }) => name === typeName)!;
   const [text] = useState<string>();

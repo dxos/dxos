@@ -32,7 +32,7 @@ const SpacePage = () => {
   if (space && space.state.get() === SpaceState.READY && frame && fullscreen) {
     return (
       <div className='flex w-full h-full overflow-hidden'>
-        <FrameContainer space={space} frame={frame} objectId={objectId} />
+        <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
       </div>
     );
   }
@@ -53,7 +53,7 @@ const SpacePage = () => {
 
 const Content = () => {
   const theme = useTheme();
-  const { chat, dev } = useAppState();
+  const { chat, dev, fullscreen } = useAppState();
   const { space, frame, objectId } = useAppRouter();
   const { section } = useParams();
   const toggleSidebar = useTogglePanelSidebar();
@@ -78,7 +78,7 @@ const Content = () => {
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
-              <FrameContainer space={space} frame={frame} objectId={objectId} />
+              <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
 
               {chat && frame.module.id !== 'dxos.module.frame.chat' && (
                 <div className='flex shrink-0 w-sidebar'>

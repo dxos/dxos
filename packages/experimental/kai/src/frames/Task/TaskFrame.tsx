@@ -4,14 +4,14 @@
 
 import React from 'react';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { Task } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 
 import { TaskList } from '../../cards';
-import { useAppRouter } from '../../hooks';
 
 export const TaskFrame = () => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const tasks = useQuery(space, Task.filter());
   if (!space) {
     return null;

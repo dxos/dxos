@@ -8,10 +8,9 @@ import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
+import { useFrameContext } from '@dxos/kai-frames';
 import { useQuery, observer } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
-
-import { useAppRouter } from '../../hooks';
 
 const gridSize = 300;
 
@@ -31,7 +30,7 @@ const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [pieces, setPieces] = useState(0);
   const [game, setGame] = useState<Game | undefined>();
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
 
   const handleCreate = async () => {
     const game = new Game();
@@ -130,7 +129,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   onSelect,
   onCreate
 }) => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (

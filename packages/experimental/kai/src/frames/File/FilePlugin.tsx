@@ -4,45 +4,36 @@
 
 import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
-import { useConfig, useQuery } from '@dxos/react-client';
+import { Space, useConfig, useQuery } from '@dxos/react-client';
 import { useMediaQuery } from '@dxos/react-components';
 
 import { FrameObjectList } from '../../containers';
-import { createPath, useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
+import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
 import { FileFrameRuntime, defaultFileTypes } from './defs';
 
+// TODO(burdon): Plugin signature.
 export type FileListProps = {
+  space: Space;
   disableDownload?: boolean;
   fileTypes?: string[];
   onSelect?: (objectId: string | undefined) => void;
 };
 
 // TODO(burdon): Rename.
-export const FilePlugin: FC<FileListProps> = ({ disableDownload, fileTypes = defaultFileTypes, onSelect }) => {
+export const FilePlugin: FC<FileListProps> = ({ space, disableDownload, fileTypes = defaultFileTypes, onSelect }) => {
   const config = useConfig();
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
-  const navigate = useNavigate();
   const [isMd] = useMediaQuery('md', { ssr: false });
-  const { space, frame } = useAppRouter();
   const objects = useQuery(space, File.filter());
-  if (!space || !frame) {
+  if (!space) {
     return null;
   }
-
-  const handleSelect = (objectId: string) => {
-    if (onSelect) {
-      onSelect(objectId);
-    } else {
-      navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
-    }
-  };
 
   // https://www.npmjs.com/package/react-drag-drop-files
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
@@ -55,7 +46,7 @@ export const FilePlugin: FC<FileListProps> = ({ disableDownload, fileTypes = def
     await ipfsClient.pin.add(cid); // TODO(burdon): Option.
     const file = new File({ name: uploadedFile.name, cid: path });
     await space.db.add(file);
-    handleSelect(file.id);
+    onSelect?.(file.id);
   };
 
   // TODO(burdon): Factor out (ipfs hook/wrapper).

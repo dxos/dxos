@@ -6,19 +6,21 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { TypedObject } from '@dxos/echo-schema';
+import { useFrameContext, useFrameRouter } from '@dxos/kai-frames';
 
 import { SearchPanel } from '../../containers';
-import { createPath, objectMeta, useAppRouter } from '../../hooks';
+import { objectMeta } from '../../hooks';
 
 export const SearchFrame = () => {
   const navigate = useNavigate();
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
+  const router = useFrameRouter();
 
   const handleSelect = (object: TypedObject) => {
     if (space) {
       const frame = objectMeta[object.__typename!]?.frame;
       if (frame) {
-        navigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId: object.id }));
+        router({ space, frame, objectId: object.id });
       }
     }
   };

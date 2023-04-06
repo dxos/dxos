@@ -8,12 +8,18 @@ import { Space } from '@dxos/client';
 
 import { FrameDef } from '../registry';
 
-// TODO(burdon): Replace useAppRouter.
-
-export type FrameContextType = {
-  space: Space;
-  frame: FrameDef<any>;
+export type FrameState = {
+  space?: Space;
+  frame?: FrameDef<any>;
   objectId?: string;
+};
+
+export type FrameContextType = FrameState & {
+  // TODO(burdon): Event handler/reducer (e.g., fullscreen).
+  onStateChange: (state: FrameState) => void;
+
+  // TODO(burdon): Generalize.
+  fullscreen?: boolean;
 };
 
 export const FrameContext: Context<FrameContextType | undefined> = createContext<FrameContextType | undefined>(
@@ -25,15 +31,8 @@ export const useFrameContext = (): FrameContextType => {
   return context!;
 };
 
-// TODO(burdon): Event handler.
-
-type FrameEvent = {
-  space?: Space;
-  frame?: FrameDef<any>;
-  objectId?: string;
-};
-
-// const router = useFrameEvents();
-export const useFrameEvents = () => {
-  return (event: FrameEvent) => {};
+// TODO(burdon): Rename.
+export const useFrameRouter = () => {
+  const { onStateChange } = useContext(FrameContext)!;
+  return (state: FrameState) => onStateChange(state);
 };

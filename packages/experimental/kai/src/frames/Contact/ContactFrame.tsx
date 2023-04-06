@@ -3,13 +3,12 @@
 //
 
 import React, { FC, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { useFrameRouter, useFrameContext } from '@dxos/kai-frames';
 import { Contact } from '@dxos/kai-types';
 import { Space, useQuery } from '@dxos/react-client';
 
 import { ContactCard } from '../../cards';
-import { createPath, useAppRouter } from '../../hooks';
 import { ContactStack } from './ContactStack';
 
 const stringSort = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -19,9 +18,9 @@ const sort = ({ name: a1, email: a2 }: Contact, { name: b1, email: b2 }: Contact
 // TODO(burdon): Recent messages.
 // TODO(burdon): Tasks.
 export const ContactFrame = () => {
-  const navigate = useNavigate();
   const selectedRef = useRef<HTMLDivElement>(null);
-  const { space, frame, objectId } = useAppRouter();
+  const { space, frame, objectId } = useFrameContext();
+  const router = useFrameRouter();
 
   const contacts = useQuery(space, Contact.filter()).sort(sort);
 
@@ -31,7 +30,7 @@ export const ContactFrame = () => {
   }, [selected]);
 
   const handleSelect = (contact: Contact) => {
-    navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: contact.id }));
+    router({ space, frame, objectId: contact.id });
   };
 
   // TODO(burdon): Factor out.

@@ -5,11 +5,11 @@
 import { Article, Trash } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { Document, DocumentStack } from '@dxos/kai-types';
 import { TypedObject, useIdentity } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 
-import { useAppRouter } from '../../hooks';
 import { CustomStackMenuAction } from '../Stack';
 
 // TODO(burdon): Generalize with Stack.
@@ -49,7 +49,7 @@ export const sectionActions = (section?: DocumentStack.Section) => {
 
 export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }) => {
   const identity = useIdentity();
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const object = section.object;
 
   return (

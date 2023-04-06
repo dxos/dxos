@@ -8,11 +8,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { File, Sketch } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFileDownload, useAppRouter, useIpfsClient } from '../../hooks';
+import { useFileDownload, useIpfsClient } from '../../hooks';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
@@ -49,7 +50,7 @@ export const SketchFrame = observer(() => {
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
 
-  const { space, objectId } = useAppRouter();
+  const { space, objectId } = useFrameContext();
   const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
   useEffect(() => {
     if (sketch) {

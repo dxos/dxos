@@ -5,11 +5,11 @@
 import { Eye, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { Presentation } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { useAppRouter, useAppState } from '../../hooks';
 import { DeckContainer } from './DeckContainer';
 import { DeckEditor } from './DeckEditor';
 
@@ -25,8 +25,7 @@ enum View {
 }
 
 export const PresenterFrame = observer(() => {
-  const { space, objectId } = useAppRouter();
-  const { fullscreen } = useAppState();
+  const { space, objectId, fullscreen } = useFrameContext();
   const [view, setView] = useState<View>(View.EDITOR);
   const [slide, setSlide] = useState(1); // TODO(burdon): Reset when goes into full screen.
   const presentation = objectId ? space!.db.getObjectById<Presentation>(objectId) : undefined;

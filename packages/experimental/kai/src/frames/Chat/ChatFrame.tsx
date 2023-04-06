@@ -3,21 +3,22 @@
 //
 
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { useFrameContext, useFrameRouter } from '@dxos/kai-frames';
 import { Message } from '@dxos/kai-types';
 import { useClient, useQuery } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { createPath, useAppRouter } from '../../hooks';
+import { useFrames } from '../../hooks';
 import { sortMessage } from '../Message';
 import { ChatPanel } from './ChatPanel';
 import { Video } from './Video';
 
 export const ChatFrame = () => {
-  const navigate = useNavigate();
   const client = useClient();
-  const { space, frame, objectId } = useAppRouter();
+  const { space, frame, objectId } = useFrameContext();
+  const { frames } = useFrames();
+  const router = useFrameRouter();
   const selectedRef = useRef<HTMLDivElement>(null);
   const messages = useQuery(space, Message.filter())
     .filter((message) => message.source?.resolver === 'dxos.module.frame.chat')
@@ -31,7 +32,7 @@ export const ChatFrame = () => {
       // TODO(burdon): Load frame.
       const [frame, objectId] = message.ref?.split('/') ?? [];
       if (frame) {
-        navigate(createPath({ spaceKey: space?.key, frame, objectId }));
+        router({ space, frame: frames.get(frame), objectId });
       }
     }
   };

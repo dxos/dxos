@@ -10,6 +10,7 @@ import startOfWeek from 'date-fns/startOfWeek';
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { Contact, Event as EventType } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
@@ -18,7 +19,6 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { ContactCard } from '../../cards';
-import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Custom views:
 //  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8
@@ -55,7 +55,7 @@ const views = [
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
 export const CalendarFrame = () => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
   const [view, setView] = useState<any>(Views.MONTH);

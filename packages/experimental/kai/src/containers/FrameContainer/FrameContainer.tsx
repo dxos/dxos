@@ -6,17 +6,18 @@ import React, { FC, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
-import { FrameContext, FrameDef } from '@dxos/kai-frames';
+import { FrameState, FrameContext, FrameDef } from '@dxos/kai-frames';
 
 import { createPath } from '../../hooks';
 
 /**
  * Frame component container and context.
  */
-export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?: string }> = ({
+export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?: string; fullscreen?: boolean }> = ({
   space,
   frame,
-  objectId
+  objectId,
+  fullscreen
 }) => {
   const navigate = useNavigate();
   useEffect(() => {
@@ -41,9 +42,13 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
   // TODO(burdon): Factor out creating default item if not found (pass-in runtime).
   // TODO(burdon): Pass in current object.
 
+  const handleStateChange = (state: FrameState) => {
+    navigate(createPath({ spaceKey: state.space?.key, frame: state.frame?.module.id, objectId: state.objectId }));
+  };
+
   return (
     <main className='flex flex-1 flex-col overflow-hidden'>
-      <FrameContext.Provider value={{ space, frame, objectId }}>
+      <FrameContext.Provider value={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
         <Suspense>
           <Component />
         </Suspense>

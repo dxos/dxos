@@ -358,7 +358,19 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 )}
 
                 {/* Frame-specific plugin. */}
-                {Plugin && <Suspense>{<Plugin />}</Suspense>}
+                {/* TODO(burdon): Plugin spec (space, onSelect). */}
+                {Plugin && (
+                  <Suspense>
+                    {
+                      <Plugin
+                        space={space}
+                        onSelect={(objectId: string) => {
+                          onNavigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
+                        }}
+                      />
+                    }
+                  </Suspense>
+                )}
 
                 {/* Frame registry dialog. */}
                 <div className='flex px-4 items-center'>

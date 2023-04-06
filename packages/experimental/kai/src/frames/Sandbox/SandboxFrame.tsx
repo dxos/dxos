@@ -6,18 +6,18 @@ import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';
+import { useFrameContext } from '@dxos/kai-frames';
 import { compile, Editor, Frame } from '@dxos/kai-sandbox';
 import { useQuery, observer } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { useAppRouter } from '../../hooks';
 import { FrameContainer, sampleCode } from './FrameContainer';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
 export const SandboxFrame = observer(() => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 

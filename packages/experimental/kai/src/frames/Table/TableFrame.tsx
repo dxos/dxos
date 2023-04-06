@@ -5,16 +5,16 @@
 import React, { useEffect, useState } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
+import { useFrameContext } from '@dxos/kai-frames';
 import { Table } from '@dxos/mosaic';
 import { useQuery } from '@dxos/react-client';
 import { Searchbar, Select } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
-import { useAppRouter } from '../../hooks';
 import { ColumnType, getColumnType, schemaTypes } from './util';
 
 export const TableFrame = () => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const [type, setType] = useState<ColumnType<any> | undefined>(schemaTypes[0]);
   const [text, setText] = useState<string>();
   // TODO(burdon): Bug if changes.

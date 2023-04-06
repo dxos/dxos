@@ -5,18 +5,19 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';
+import { useFrameContext } from '@dxos/kai-frames';
 import { Presentation } from '@dxos/kai-types';
 import { useSubscription } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
-import { useAppReducer, useAppState } from '../../hooks';
+import { useAppReducer } from '../../hooks';
 
 export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide' | 'onSlideChange'>> = ({
   presentation,
   ...rest
 }) => {
-  const { fullscreen } = useAppState();
+  const { fullscreen } = useFrameContext();
   const { setFullscreen } = useAppReducer();
   const [content, setContent] = useState<string[]>([]);
 

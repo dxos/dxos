@@ -10,11 +10,10 @@ import { LatLngExpression } from 'leaflet';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
+import { useFrameContext } from '@dxos/kai-frames';
 import { GeoLocation, Organization } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx, NavMenu } from '@dxos/react-components';
-
-import { useAppRouter } from '../../hooks';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
@@ -45,7 +44,7 @@ type MapPropsGetter<T> = {
  * https://react-leaflet.js.org/docs/api-map
  */
 export const MapControl = () => {
-  const { space } = useAppRouter();
+  const { space } = useFrameContext();
   const objects = useQuery(space, Organization.filter());
   const getter: MapPropsGetter<Organization> = {
     id: (object: Organization) => object.id,

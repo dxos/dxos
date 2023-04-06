@@ -4,21 +4,21 @@
 
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
+import { useFrameRouter, useFrameContext } from '@dxos/kai-frames';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { ContactCard } from '../../cards';
-import { createPath, useAppRouter } from '../../hooks';
+import { useFrames } from '../../hooks';
 import { formatDate, getCompanyName, sortMessage } from './util';
 
 // TODO(burdon): Common container patter (see ContactFrame).
 export const MessageFrame = () => {
-  const navigate = useNavigate();
   const selectedRef = useRef<HTMLDivElement>(null);
-  const { space, frame, objectId } = useAppRouter();
+  const { space, frame, objectId } = useFrameContext();
+  const router = useFrameRouter();
 
   // TODO(burdon): Add sort to filter.
   // TODO(burdon): Sort by source type.
@@ -28,7 +28,7 @@ export const MessageFrame = () => {
 
   useEffect(() => {
     if (frame && messages.length && !objectId) {
-      navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: messages[0].id }));
+      router({ space, frame, objectId: messages[0].id });
     }
   }, [frame]);
 
@@ -38,7 +38,7 @@ export const MessageFrame = () => {
   }, [selected]);
 
   const handleSelect = (message: Message) => {
-    navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: message.id }));
+    router({ space, frame, objectId: message.id });
   };
 
   const now = new Date();
@@ -110,7 +110,8 @@ export const MessageFrame = () => {
 };
 
 const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, message }) => {
-  const navigate = useNavigate();
+  const router = useFrameRouter();
+  const { frames } = useFrames();
 
   // TODO(burdon): Reuse in Calendar.
   const contact = useMemo(() => {
@@ -147,7 +148,7 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
   };
 
   const handleNavigate = (contact: Contact) => {
-    navigate(createPath({ spaceKey: space?.key, frame: 'dxos.module.frame.contact', objectId: contact.id }));
+    router({ space, frame: frames.get('dxos.module.frame.contact'), objectId: contact.id });
   };
 
   return (

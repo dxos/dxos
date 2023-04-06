@@ -23,7 +23,8 @@ export type FrameRuntime<T extends TypedObject> = {
   title?: string;
   filter?: () => TypeFilter<T>;
   onCreate?: (space: Space) => Promise<T>;
-  Plugin?: FC<any>;
+  // TODO(burdon): Rename Selector.
+  Plugin?: FC<{ space: Space; onSelect: (objectId: string) => void }>;
 };
 
 export type FrameDef<T extends TypedObject> = {
