@@ -344,6 +344,18 @@ export class SignalClient implements SignalMethods {
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
+    // Unsubscribe from topics that are no longer needed.
+    for (const { topic, peerId } of this._swarmStreams.keys()) {
+      // Join desired topics.
+      if (this._joinedTopics.has({ topic, peerId })) {
+        continue;
+      }
+
+      this._swarmStreams.get({ topic, peerId })?.close();
+      this._swarmStreams.delete({ topic, peerId });
+    }
+
+    // Subscribe to topics that are needed.
     for (const { topic, peerId } of this._joinedTopics.values()) {
       // Join desired topics.
       if (this._swarmStreams.has({ topic, peerId })) {
@@ -372,6 +384,18 @@ export class SignalClient implements SignalMethods {
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
+    // Unsubscribe from messages that are no longer needed.
+    for (const peerId of this._messageStreams.keys()) {
+      // Join desired topics.
+      if (this._subscribedMessages.has({ peerId })) {
+        continue;
+      }
+
+      this._messageStreams.get(peerId)?.close();
+      this._messageStreams.delete(peerId);
+    }
+
+    // Subscribe to messages that are needed.
     for (const { peerId } of this._subscribedMessages.values()) {
       if (this._messageStreams.has(peerId)) {
         continue;
