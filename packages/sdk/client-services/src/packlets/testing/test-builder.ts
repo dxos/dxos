@@ -9,7 +9,7 @@ import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory,
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
+import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -116,7 +116,7 @@ export class TestBuilder {
   }
 }
 
-export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
+export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
   const objectId = PublicKey.random().toHex();
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
@@ -133,7 +133,7 @@ export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBac
   return result;
 };
 
-export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendProxy) => {
+export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
   // Check item replicated from 1 => 2.
   await testSpace(db1, db2);
 

@@ -24,11 +24,12 @@ export type MutateResult = {
 };
 
 const FLUSH_TIMEOUT = 5_000;
+
 /**
- * Database backend that is backed by the DataService instance.
- * Uses DataMirror to populate entities in ItemManager.
+ * Maintains a local cache of objects and provides a API for mutating the database.
+ * Connects to a host instance via a DataService.
  */
-export class DatabaseBackendProxy {
+export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
@@ -47,6 +48,8 @@ export class DatabaseBackendProxy {
 
   private _currentBatch?: Batch;
 
+  private _opening = false;
+
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
@@ -62,6 +65,9 @@ export class DatabaseBackendProxy {
   }
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
+    assert(!this._opening);
+    this._opening = true;
+
     this._itemManager = itemManager;
     this._itemManager._debugLabel = 'proxy';
 
@@ -75,6 +81,7 @@ export class DatabaseBackendProxy {
 
     const loaded = new Trigger();
 
+    assert(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey
     });
@@ -102,7 +109,9 @@ export class DatabaseBackendProxy {
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
           } else {
-            log('Missing pending batch', { clientTag: msg.clientTag });
+            // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
+            // TODO(dmaretskyi): Just ignore the I guess.
+            // log.warn('missing pending batch', { clientTag: msg.clientTag });
           }
         }
 
@@ -129,7 +138,7 @@ export class DatabaseBackendProxy {
 
       let entity: Item<any> | undefined;
       if (object.genesis && !this._itemManager.entities.has(object.objectId)) {
-        log('Construct', { object });
+        log('construct', { object });
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
@@ -161,7 +170,7 @@ export class DatabaseBackendProxy {
 
     let entity: Item<any> | undefined;
     if (objectMutation.genesis && !this._itemManager.entities.has(objectMutation.objectId)) {
-      log('Construct', { object: objectMutation });
+      log('construct optimistic', { object: objectMutation });
       assert(objectMutation.genesis.modelType);
       entity = this._itemManager.constructItem({
         itemId: objectMutation.objectId,
@@ -294,5 +303,6 @@ export class DatabaseBackendProxy {
     }
 
     await this._entities?.close();
+    this._entities = undefined;
   }
 }

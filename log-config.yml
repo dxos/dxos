@@ -6,6 +6,8 @@ formatter:
 filter:
   - warn
   - info
+  - database-proxy.ts:debug
+  - data-service-host.ts:debug
   # - debug
   # - test.ts:debug
   # - database:debug
