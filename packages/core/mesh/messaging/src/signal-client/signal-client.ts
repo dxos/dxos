@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, scheduleTask, synchronized } from '@dxos/async';
+import { DeferredTask, Event, Trigger, runInContextAsync, scheduleTask } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -111,6 +111,12 @@ export class SignalClient implements SignalMethods {
   );
 
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
+
+  /**
+   * Represent desired message subscriptions.
+   */
+  private readonly _subscribedMessages = new ComplexSet<{ peerId: PublicKey }>(({ peerId }) => peerId.toHex());
+
   private readonly _instanceId = PublicKey.random().toHex();
   public _traceParent?: string;
 
@@ -140,14 +146,8 @@ export class SignalClient implements SignalMethods {
     });
     this._connectionContext = this._ctx.derive();
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
-      for (const { topic, peerId } of this._joinedTopics.values()) {
-        if (this._swarmStreams.has({ topic, peerId })) {
-          continue;
-        }
-        await this._clientReady.wait();
-        assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-        await this._subscribeSwarmEvents({ topic, peerId });
-      }
+      await this._reconcileSwarmSubscriptions();
+      await this._reconcileMessageSubscriptions();
     });
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
@@ -213,42 +213,14 @@ export class SignalClient implements SignalMethods {
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
-    // Do nothing if already subscribed.
-    if (this._messageStreams.has(peerId)) {
-      // TODO(mykola): on multiple subscription for same peerId, everybody will receive same unsubscribe handle.
-      return {
-        unsubscribe: async () => {
-          this._messageStreams.get(peerId)!.close();
-          this._messageStreams.delete(peerId);
-        }
-      };
-    }
-
-    // Subscribing to messages.
-    const messageStream = await this._client.receiveMessages(peerId);
-    messageStream.subscribe(async (message: SignalMessage) => {
-      this._performance.receivedMessages++;
-      await this._onMessage({
-        author: PublicKey.from(message.author),
-        recipient: PublicKey.from(message.recipient),
-        payload: message.payload
-      });
-    });
-
-    // Saving message stream.
-    if (!this._messageStreams.has(peerId)) {
-      this._messageStreams.set(peerId, messageStream);
-    }
-
-    this._connectionContext!.onDispose(() => {
-      messageStream.close();
-      this._messageStreams.delete(peerId);
-    });
+    this._subscribedMessages.add({ peerId });
+    this._reconcileTask!.schedule();
 
     return {
       unsubscribe: async () => {
-        messageStream.close();
+        this._messageStreams.get(peerId)!.close();
         this._messageStreams.delete(peerId);
+        this._subscribedMessages.delete({ peerId });
       }
     };
   }
@@ -357,23 +329,60 @@ export class SignalClient implements SignalMethods {
     );
   }
 
-  @synchronized
-  private async _subscribeSwarmEvents({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
-    assert(!this._swarmStreams.has({ topic, peerId }), 'Already subscribed to swarm events.');
-    const swarmStream = await this._client.join({ topic, peerId });
+  private async _reconcileSwarmSubscriptions(): Promise<void> {
+    await this._clientReady.wait();
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
-    // Subscribing to swarm events.
-    // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
-    swarmStream.subscribe((swarmEvent: SwarmEvent) => {
-      log('swarm event', { swarmEvent });
-      this.swarmEvent.emit({ topic, swarmEvent });
-    });
+    for (const { topic, peerId } of this._joinedTopics.values()) {
+      // Join desired topics.
+      if (this._swarmStreams.has({ topic, peerId })) {
+        continue;
+      }
 
-    // Saving swarm stream.
-    this._swarmStreams.set({ topic, peerId }, swarmStream);
-    this._connectionContext!.onDispose(() => {
-      swarmStream.close();
-      this._swarmStreams.delete({ topic, peerId });
-    });
+      const swarmStream = await this._client.join({ topic, peerId });
+      // Subscribing to swarm events.
+      // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
+      swarmStream.subscribe((swarmEvent: SwarmEvent) => {
+        log('swarm event', { swarmEvent });
+        this.swarmEvent.emit({ topic, swarmEvent });
+      });
+
+      // Saving swarm stream.
+      this._swarmStreams.set({ topic, peerId }, swarmStream);
+
+      this._connectionContext!.onDispose(() => {
+        swarmStream.close();
+        this._swarmStreams.delete({ topic, peerId });
+      });
+    }
+  }
+
+  private async _reconcileMessageSubscriptions(): Promise<void> {
+    await this._clientReady.wait();
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+
+    for (const { peerId } of this._subscribedMessages.values()) {
+      if (this._messageStreams.has(peerId)) {
+        continue;
+      }
+
+      const messageStream = await this._client.receiveMessages(peerId);
+      messageStream.subscribe(async (message: SignalMessage) => {
+        this._performance.receivedMessages++;
+        await this._onMessage({
+          author: PublicKey.from(message.author),
+          recipient: PublicKey.from(message.recipient),
+          payload: message.payload
+        });
+      });
+
+      // Saving message stream.
+      this._messageStreams.set(peerId, messageStream);
+
+      this._connectionContext!.onDispose(() => {
+        messageStream.close();
+        this._messageStreams.delete(peerId);
+      });
+    }
   }
 }
