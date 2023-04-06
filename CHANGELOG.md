@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.1.36](https://github.com/dxos/dxos/compare/v0.1.35...v0.1.36) (2023-04-06)
+
+
+### Features
+
+* Add "Open with Kai" link to github ([#2920](https://github.com/dxos/dxos/issues/2920)) ([30ff4ec](https://github.com/dxos/dxos/commit/30ff4ec11a47341c139ab321e89ec09acdd7f08c))
+* Add exponential back-off in NetworkManager ([#2881](https://github.com/dxos/dxos/issues/2881)) ([484d498](https://github.com/dxos/dxos/commit/484d498e5e1fcb42bf4eed72be1ca4e97f07690d))
+* add non pwa kai to ops guide ([#2924](https://github.com/dxos/dxos/issues/2924)) ([5838d86](https://github.com/dxos/dxos/commit/5838d865d2cb5a6b61d7309dfc885f83a6b27f40))
+* Add web file storage ([#2915](https://github.com/dxos/dxos/issues/2915)) ([f24b876](https://github.com/dxos/dxos/commit/f24b876a112d42411bca3282647a0bb33becb8fe))
+* Bot config fix. ([#2903](https://github.com/dxos/dxos/issues/2903)) ([661676b](https://github.com/dxos/dxos/commit/661676b71e50fdd7cc497c1b3ff1b0cd2b5720a9))
+* **composer-app:** Basic e2e tests ([#2923](https://github.com/dxos/dxos/issues/2923)) ([8823a8f](https://github.com/dxos/dxos/commit/8823a8fa023b5e29db9e68fa19afbaa5784b2f11))
+* Fix bot config. ([#2904](https://github.com/dxos/dxos/issues/2904)) ([f39316c](https://github.com/dxos/dxos/commit/f39316c0573873ca82967ca3a134ecb6000f301e))
+* Mosaic blocks ([#2902](https://github.com/dxos/dxos/issues/2902)) ([3793aa1](https://github.com/dxos/dxos/commit/3793aa14f26a680b57ce419a694b9f4285545474))
+* ops guide ([#2911](https://github.com/dxos/dxos/issues/2911)) ([0bff0ef](https://github.com/dxos/dxos/commit/0bff0ef4a1475829d80233303f1cf11d8195ce2c))
+* Protonmail bot config ([#2906](https://github.com/dxos/dxos/issues/2906)) ([5dfe113](https://github.com/dxos/dxos/commit/5dfe11387646c49102b7fd5ce796b6264ddc1384))
+* Protonmail configuration ([#2908](https://github.com/dxos/dxos/issues/2908)) ([2768962](https://github.com/dxos/dxos/commit/2768962d229e92ada7cfcdd2b4b4bdd545ee09db))
+* Storage bench ([#2907](https://github.com/dxos/dxos/issues/2907)) ([1b81d4c](https://github.com/dxos/dxos/commit/1b81d4c7b7c0c3c50b0ca82c02f3414707be6dd4))
+* **vault:** create package ([#2830](https://github.com/dxos/dxos/issues/2830)) ([4dd7ad0](https://github.com/dxos/dxos/commit/4dd7ad024d5ed2ac72e3499091e6d2e6ca039814))
+
+
+### Bug Fixes
+
+* Composer presence themeMode ([#2948](https://github.com/dxos/dxos/issues/2948)) ([bc82300](https://github.com/dxos/dxos/commit/bc82300a168e0fe5f0cdcfddde017ec9aecbc97f))
+* **composer-app:** Markdown Composer size & spacing ([#2900](https://github.com/dxos/dxos/issues/2900)) ([a7f0f08](https://github.com/dxos/dxos/commit/a7f0f081fccf258c1148a3d15d08387bf4f65c6e))
+* **composer-app:** Restore Composer e2e tests ([#2949](https://github.com/dxos/dxos/issues/2949)) ([1c602f9](https://github.com/dxos/dxos/commit/1c602f93de5e30b838159d28207981506e77c2a7))
+* Disable snapshots ([#2880](https://github.com/dxos/dxos/issues/2880)) ([8226e1b](https://github.com/dxos/dxos/commit/8226e1b082014899b64142193a99197a3818bdcb))
+* Fix NetworkManager traces ([#2885](https://github.com/dxos/dxos/issues/2885)) ([3f4093b](https://github.com/dxos/dxos/commit/3f4093bb6133a5f2a2cb7f065bd3b6d5e3e5d56a))
+* Fix port in browser Test runner and storage related tests ([#2928](https://github.com/dxos/dxos/issues/2928)) ([77fdcbc](https://github.com/dxos/dxos/commit/77fdcbc5ee3a4ef4097aa3896c2eb6d806336a72))
+* **hello-template:** remove useOrCreateFirstSpace ([#2935](https://github.com/dxos/dxos/issues/2935)) ([a86f3a6](https://github.com/dxos/dxos/commit/a86f3a6aca1140ef99577800377735f1b4861f7b))
+* Keep a constant max signal reconnect timeout ([#2913](https://github.com/dxos/dxos/issues/2913)) ([df76e91](https://github.com/dxos/dxos/commit/df76e913b58547ba67f7cc67941cb8752e4cfb00))
+* Metadata corruption  ([#2951](https://github.com/dxos/dxos/issues/2951)) ([be39b7a](https://github.com/dxos/dxos/commit/be39b7ad7127045571620102e908a7a903ebe8c7))
+* Race condition in batch confirmation ([#2941](https://github.com/dxos/dxos/issues/2941)) ([1690937](https://github.com/dxos/dxos/commit/1690937ca3d8d86f2fc35a6a1902a14ed0afb9b4))
+* Race conditions in the data pipeline ([#2952](https://github.com/dxos/dxos/issues/2952)) ([f000373](https://github.com/dxos/dxos/commit/f000373221d161c373a8edf0eb4ca0f5c2df46c4))
+* **ras:** Fix storage fall back in browser ([#2943](https://github.com/dxos/dxos/issues/2943)) ([9b703b8](https://github.com/dxos/dxos/commit/9b703b85705418736d82357944934bf1eaf44db3))
+* **react-appkit:** client fallback pending state ([#2942](https://github.com/dxos/dxos/issues/2942)) ([12cf025](https://github.com/dxos/dxos/commit/12cf0258ee6e9177f0e71edb12c4c2e7f6781003))
+* **react-client,composer-app:** Shell & Toast z-indexes. ([#2959](https://github.com/dxos/dxos/issues/2959)) ([c852bc6](https://github.com/dxos/dxos/commit/c852bc69bd61db1e4406b2d2eb905479c173e3e7))
+* **react-client:** don't attempt login if invitation is in progress ([#2944](https://github.com/dxos/dxos/issues/2944)) ([adf89f6](https://github.com/dxos/dxos/commit/adf89f6196a8d04fb5ada856a30e65352513665d))
+* **react-composer:** Composer zebra ([#2901](https://github.com/dxos/dxos/issues/2901)) ([0eb756e](https://github.com/dxos/dxos/commit/0eb756ea62210a1bd31548204bb2c9df7b034af2))
+* **react-ui:** initial layout for in memory shell runtime ([#2947](https://github.com/dxos/dxos/issues/2947)) ([a096b9d](https://github.com/dxos/dxos/commit/a096b9d2a07fb8db2a725828d2c2c73251ebe924))
+* Skip all Composer e2e tests ([#2931](https://github.com/dxos/dxos/issues/2931)) ([54a2c65](https://github.com/dxos/dxos/commit/54a2c65b7e33176f1d3900b3e400123510b1e5af))
+* sync protos between dxos and kube repos ([#2898](https://github.com/dxos/dxos/issues/2898)) ([253f495](https://github.com/dxos/dxos/commit/253f495fd9b0fdf738f137a2c0328e07c97104b5))
+* template use with vault ([#2962](https://github.com/dxos/dxos/issues/2962)) ([ec62a58](https://github.com/dxos/dxos/commit/ec62a583c4dcf6779c9b7389b32ed3798ecba7d4))
+
 ## [0.1.35](https://github.com/dxos/dxos/compare/v0.1.34...v0.1.35) (2023-03-30)
 
 
