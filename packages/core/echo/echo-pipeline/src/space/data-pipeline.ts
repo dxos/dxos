@@ -144,7 +144,11 @@ export class DataPipeline {
     }
     log('close');
     this._isOpen = false;
+    
+    await this._ctx.dispose();
+    await this._pipeline?.stop();
 
+    // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
@@ -155,8 +159,7 @@ export class DataPipeline {
     } catch (err) {
       log.catch(err);
     }
-    await this._ctx.dispose();
-    await this._pipeline?.stop();
+    
     await this.databaseBackend?.close();
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
