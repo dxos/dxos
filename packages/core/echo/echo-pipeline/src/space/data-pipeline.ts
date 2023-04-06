@@ -17,7 +17,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { DatabaseBackendHost, SnapshotManager } from '../dbhost';
+import { DatabaseHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
@@ -76,7 +76,7 @@ export class DataPipeline {
   constructor(private readonly _params: DataPipelineParams) {}
 
   public _itemManager!: ItemManager;
-  public databaseBackend?: DatabaseBackendHost;
+  public databaseBackend?: DatabaseHost;
 
   get isOpen() {
     return this._isOpen;
@@ -122,7 +122,7 @@ export class DataPipeline {
       this._pipeline.writer ?? failUndefined()
     );
 
-    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database);
+    this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
     this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.

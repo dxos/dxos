@@ -17,7 +17,7 @@ import { DataServiceHost } from './data-service-host';
  * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
  * Write operations result in mutations being written to the outgoing stream.
  */
-export class DatabaseBackendHost {
+export class DatabaseHost {
   private _echoProcessor!: EchoProcessor;
   private _itemManager!: ItemManager;
   public _itemDemuxer!: ItemDemuxer;
