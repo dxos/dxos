@@ -21,7 +21,7 @@ import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppStat
 const SpacePage = () => {
   useIdentity({ login: true });
   const { fullscreen } = useAppState();
-  const { space, frame } = useAppRouter();
+  const { space, frame, objectId } = useAppRouter();
   const spaces = useSpaces();
   const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
 
@@ -32,7 +32,7 @@ const SpacePage = () => {
   if (space && space.state.get() === SpaceState.READY && frame && fullscreen) {
     return (
       <div className='flex w-full h-full overflow-hidden'>
-        <FrameContainer space={space} frame={frame} />
+        <FrameContainer space={space} frame={frame} objectId={objectId} />
       </div>
     );
   }
@@ -54,7 +54,7 @@ const SpacePage = () => {
 const Content = () => {
   const theme = useTheme();
   const { chat, dev } = useAppState();
-  const { space, frame } = useAppRouter();
+  const { space, frame, objectId } = useAppRouter();
   const { section } = useParams();
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
@@ -78,7 +78,7 @@ const Content = () => {
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
-              <FrameContainer space={space} frame={frame} />
+              <FrameContainer space={space} frame={frame} objectId={objectId} />
 
               {chat && frame.module.id !== 'dxos.module.frame.chat' && (
                 <div className='flex shrink-0 w-sidebar'>

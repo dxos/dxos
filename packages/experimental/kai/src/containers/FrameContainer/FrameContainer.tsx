@@ -13,7 +13,11 @@ import { createPath } from '../../hooks';
 /**
  * Frame component container and context.
  */
-export const FrameContainer: FC<{ space: Space; frame: FrameDef<any> }> = ({ space, frame }) => {
+export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?: string }> = ({
+  space,
+  frame,
+  objectId
+}) => {
   const navigate = useNavigate();
   useEffect(() => {
     // Auto-create first object.
@@ -39,7 +43,7 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any> }> = ({ spa
 
   return (
     <main className='flex flex-1 flex-col overflow-hidden'>
-      <FrameContext.Provider value={{ space, frame }}>
+      <FrameContext.Provider value={{ space, frame, objectId }}>
         <Suspense>
           <Component />
         </Suspense>
