@@ -4,7 +4,6 @@
 
 import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { Text } from '@dxos/client';
 import { Note, NoteBoard } from '@dxos/kai-types';
@@ -13,7 +12,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { createPath, useAppRouter } from '../../hooks';
+import { useAppRouter } from '../../hooks';
 import { NoteTile } from './NoteTile';
 
 const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>
@@ -53,23 +52,14 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
 export const NoteFrame = () => {
   const range = { x: 4, y: 3 }; // TODO(burdon): Props.
 
-  const { space, frame, objectId } = useAppRouter();
+  const { space, objectId } = useAppRouter();
   const board = objectId ? space!.db.getObjectById<NoteBoard>(objectId) : undefined;
-  const boards = useQuery(space, NoteBoard.filter());
   const notes = useQuery(space, Note.filter());
 
   // Rerender when offset, zoom changed.
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const lensModel = useMemo(() => new GridLensModel(), []);
   useEffect(() => lensModel.onChange.on(() => forceUpdate()), [lensModel]);
-
-  // Redirect if nothing selected.
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (frame && !board && boards.length) {
-      navigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: boards[0].id }));
-    }
-  }, [frame, boards]);
 
   // TODO(burdon): Unify layout (setting location vs. setting positions).
   // Cells should be 366px wide (390px - 2 x 12px padding) with 24px margins.

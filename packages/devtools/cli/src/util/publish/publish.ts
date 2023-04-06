@@ -53,7 +53,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   if (verbose) {
     log(`Publishing from: ${publishFolder}`);
   }
-  log('Uploading ...');
+  log('Uploading...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
 

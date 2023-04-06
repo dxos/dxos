@@ -27,4 +27,13 @@ export const useFrameContext = (): FrameContextType => {
 
 // TODO(burdon): Event handler.
 
-export const useFrameEvents = () => {};
+type FrameEvent = {
+  space?: Space;
+  frame?: FrameDef<any>;
+  objectId?: string;
+};
+
+// const router = useFrameEvents();
+export const useFrameEvents = () => {
+  return (event: FrameEvent) => {};
+};
