@@ -25,7 +25,7 @@ const shellStyles = Object.entries({
   width: '100vw',
   height: '100vh',
   border: 0,
-  'z-index': 1000000
+  'z-index': 60
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
 export type IFrameClientServicesProxyOptions = {
