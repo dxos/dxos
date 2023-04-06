@@ -43,3 +43,9 @@ export class RemoteServiceConnectionTimeout extends ApiError {
     super('REMOTE_SERVICE_CONNECTION_TIMEOUT', message, context);
   }
 }
+
+export class DataCorruptionError extends SystemError {
+  constructor(message?: string, context?: any) {
+    super('DATA_CORRUPTION', message, context);
+  }
+}
