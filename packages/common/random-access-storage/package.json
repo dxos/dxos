@@ -23,6 +23,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "del": "^5.1.0",
+    "detect-browser": "^5.3.0",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
     "random-access-idb": "^1.2.2",

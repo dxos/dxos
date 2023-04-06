@@ -1452,6 +1452,7 @@ importers:
       '@types/pify': ^3.0.2
       '@types/randombytes': ^2.0.0
       del: ^5.1.0
+      detect-browser: ^5.3.0
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
@@ -1467,6 +1468,7 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       del: 5.1.0
+      detect-browser: 5.3.0
       pify: 5.0.0
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
@@ -15884,7 +15886,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -20832,6 +20834,10 @@ packages:
   /destroy/1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
+
+  /detect-browser/5.3.0:
+    resolution: {integrity: sha512-53rsFbGdwMwlF7qvCt0ypLM5V5/Mbl0szB7GPN8y9NCcbknYOeVVXdrXEq+90IwAfrrzt6Hd+u2E2ntakICU8w==}
+    dev: false
 
   /detect-indent/6.1.0:
     resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
@@ -36916,7 +36922,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
