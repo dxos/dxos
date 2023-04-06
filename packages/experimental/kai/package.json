@@ -64,7 +64,6 @@
     "clipboard-copy": "^4.0.1",
     "d3": "^7.4.4",
     "date-fns": "^2.29.3",
-    "ipfs-http-client": "~56.0.1",
     "leaflet": "^1.9.3",
     "mobile-detect": "^1.4.5",
     "node-fetch": "^2.6.0",

@@ -6,13 +6,13 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { useFileDownload, useIpfsClient } from '@dxos/kai-frames';
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { Space, useConfig, useQuery } from '@dxos/react-client';
 import { useMediaQuery } from '@dxos/react-components';
 
 import { FrameObjectList } from '../../containers';
-import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
 import { FileFrameRuntime, defaultFileTypes } from './defs';
 

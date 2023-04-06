@@ -35,7 +35,7 @@ import { useConfig } from '@dxos/react-client';
  * - https://github.com/ipfs/js-ipfs/tree/master/docs/core-api
  * - https://www.npmjs.com/package/ipfs-http-client
  */
-// TODO(burdon): Remove dxos/react-ipfs.
+// TODO(burdon): Factor out and remove Remove dxos/react-ipfs package.
 export const useIpfsClient = () => {
   const config = useConfig();
   const ipfsClient = create({

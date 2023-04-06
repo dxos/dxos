@@ -3034,7 +3034,6 @@ importers:
       d3: ^7.4.4
       date-fns: ^2.29.3
       faker: ^5.5.3
-      ipfs-http-client: ~56.0.1
       leaflet: ^1.9.3
       mobile-detect: ^1.4.5
       monaco-editor: ^0.25.0
@@ -3117,7 +3116,6 @@ importers:
       clipboard-copy: 4.0.1
       d3: 7.6.1
       date-fns: 2.29.3
-      ipfs-http-client: 56.0.3_node-fetch@2.6.7
       leaflet: 1.9.3
       mobile-detect: 1.4.5
       node-fetch: 2.6.7
@@ -3272,7 +3270,9 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
@@ -3288,8 +3288,10 @@ importers:
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
       faker: ^5.5.3
+      ipfs-http-client: ~56.0.1
       lodash.defaultsdeep: ^4.6.1
       lodash.isequal: ^4.5.0
+      node-fetch: ^2.6.0
       postcss: ^8.4.21
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
@@ -3312,14 +3314,18 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
       lodash.defaultsdeep: 4.6.1
       lodash.isequal: 4.5.0
+      node-fetch: 2.6.7
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
