@@ -3,7 +3,6 @@
 //
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { TypedObject } from '@dxos/echo-schema';
 import { useFrameContext, useFrameRouter } from '@dxos/kai-frames';
@@ -12,7 +11,6 @@ import { SearchPanel } from '../../containers';
 import { objectMeta } from '../../hooks';
 
 export const SearchFrame = () => {
-  const navigate = useNavigate();
   const { space } = useFrameContext();
   const router = useFrameRouter();
 
