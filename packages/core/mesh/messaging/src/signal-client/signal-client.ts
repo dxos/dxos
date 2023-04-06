@@ -110,12 +110,22 @@ export class SignalClient implements SignalMethods {
     ({ topic, peerId }) => topic.toHex() + peerId.toHex()
   );
 
-  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
+  /**
+   * Message streams. Keys represents actually subscribed peers.
+   * @internal
+   */
+  public readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
 
   /**
    * Represent desired message subscriptions.
    */
   private readonly _subscribedMessages = new ComplexSet<{ peerId: PublicKey }>(({ peerId }) => peerId.toHex());
+
+  /**
+   * Event to use in tests to wait till subscription is successfully established.
+   * @internal
+   */
+  public _reconciled = new Event();
 
   private readonly _instanceId = PublicKey.random().toHex();
   public _traceParent?: string;
@@ -148,6 +158,7 @@ export class SignalClient implements SignalMethods {
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
       await this._reconcileSwarmSubscriptions();
       await this._reconcileMessageSubscriptions();
+      this._reconciled.emit();
     });
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
