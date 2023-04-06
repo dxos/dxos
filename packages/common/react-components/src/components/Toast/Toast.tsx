@@ -8,6 +8,7 @@ import React, { cloneElement, ComponentProps, ReactHTMLElement, ReactNode, useSt
 import { defaultDescription, defaultFocus } from '../../styles';
 import { mx } from '../../util';
 import { Button } from '../Button';
+import { ElevationProvider } from '../ElevationProvider';
 
 export interface ToastSlots {
   root?: Omit<ComponentProps<typeof ToastPrimitive.Root>, 'children'>;
@@ -65,41 +66,46 @@ export const Toast = ({
           slots.root?.className
         )}
       >
-        <div
-          role='none'
-          {...slots.heading}
-          className={mx('w-0 flex-1 flex items-center pl-5 py-4 min-h-full', slots.heading?.className)}
-        >
+        <ElevationProvider elevation='chrome'>
           <div
             role='none'
-            {...slots.headingInner}
-            className={mx('w-full radix flex flex-col justify-center min-h-full gap-1', slots.headingInner?.className)}
+            {...slots.heading}
+            className={mx('w-0 flex-1 flex items-center pl-5 py-4 min-h-full', slots.heading?.className)}
           >
-            <ToastPrimitive.Title className={mx('text-md font-medium', titleVisuallyHidden && 'sr-only')}>
-              {title}
-            </ToastPrimitive.Title>
-            {description && (
-              <ToastPrimitive.Description className={defaultDescription}>{description}</ToastPrimitive.Description>
+            <div
+              role='none'
+              {...slots.headingInner}
+              className={mx(
+                'w-full radix flex flex-col justify-center min-h-full gap-1',
+                slots.headingInner?.className
+              )}
+            >
+              <ToastPrimitive.Title className={mx('text-md font-medium', titleVisuallyHidden && 'sr-only')}>
+                {title}
+              </ToastPrimitive.Title>
+              {description && (
+                <ToastPrimitive.Description className={defaultDescription}>{description}</ToastPrimitive.Description>
+              )}
+            </div>
+          </div>
+          <div
+            role='none'
+            {...slots.actions}
+            className={mx(
+              'flex flex-col px-3 py-2 gap-1 items-stretch justify-center min-h-full',
+              slots.actions?.className
+            )}
+          >
+            {(actionTriggers || []).map(({ altText, trigger }, index) => (
+              <ToastPrimitive.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
+                {trigger}
+              </ToastPrimitive.Action>
+            ))}
+            {closeTrigger && (
+              <ToastPrimitive.Close asChild={typeof closeTrigger !== 'string'}>{closeTrigger}</ToastPrimitive.Close>
             )}
           </div>
-        </div>
-        <div
-          role='none'
-          {...slots.actions}
-          className={mx(
-            'flex flex-col px-3 py-2 gap-1 items-stretch justify-center min-h-full',
-            slots.actions?.className
-          )}
-        >
-          {(actionTriggers || []).map(({ altText, trigger }, index) => (
-            <ToastPrimitive.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
-              {trigger}
-            </ToastPrimitive.Action>
-          ))}
-          {closeTrigger && (
-            <ToastPrimitive.Close asChild={typeof closeTrigger !== 'string'}>{closeTrigger}</ToastPrimitive.Close>
-          )}
-        </div>
+        </ElevationProvider>
       </ToastPrimitive.Root>
     </>
   );
