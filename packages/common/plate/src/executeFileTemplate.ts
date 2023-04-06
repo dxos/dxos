@@ -84,10 +84,6 @@ export type TemplateContext<TInput = {}, TSlots extends TemplateSlotMap = {}> = 
   slots?: { [key in keyof TSlots]?: TemplateSlotContent };
 };
 
-// export type TemplateResultMetadata = {
-//   templateFile?: string;
-// };
-
 export type Files<R = any> = File<R, TemplateContext<any>>[];
 
 export type TemplateFunctionResult<R = any> = null | string | Files<R>;
