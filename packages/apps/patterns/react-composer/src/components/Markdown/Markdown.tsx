@@ -106,7 +106,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ]
         });
       }
-    }, [provider, peer]);
+    }, [provider, peer, themeMode]);
 
     useEffect(() => {
       if (!parent) {
@@ -170,7 +170,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           setState(undefined);
         }
       };
-    }, [parent, content, provider?.awareness]);
+    }, [parent, content, provider?.awareness, themeMode]);
 
     return <div key={id} {...slots.root} ref={setParent} />;
   }
