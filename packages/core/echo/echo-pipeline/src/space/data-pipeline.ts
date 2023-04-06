@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -74,7 +74,7 @@ export class DataPipeline {
   private _lastTimeframeSaveTime = 0;
   private _lastSnapshotSaveTime = 0;
 
-  constructor(private readonly _params: DataPipelineParams) { }
+  constructor(private readonly _params: DataPipelineParams) {}
 
   public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseHost;
@@ -147,7 +147,7 @@ export class DataPipeline {
 
     try {
       if (this._pipeline) {
-        await this._saveTargetTimeframe(this._pipeline.state.timeframe)
+        await this._saveTargetTimeframe(this._pipeline.state.timeframe);
         if (!DISABLE_SNAPSHOT_CACHE) {
           await this._saveSnapshot(this._pipeline.state.timeframe);
         }
@@ -161,7 +161,6 @@ export class DataPipeline {
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
-
 
   private async _consumePipeline() {
     assert(this._pipeline, 'Pipeline is not initialized.');
@@ -237,8 +236,6 @@ export class DataPipeline {
       log('save', { snapshot });
     }
   }
-
-
 
   async waitUntilTimeframe(timeframe: Timeframe) {
     assert(this._pipeline, 'Pipeline is not initialized.');
