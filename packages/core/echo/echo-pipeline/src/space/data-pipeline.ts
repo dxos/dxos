@@ -144,7 +144,7 @@ export class DataPipeline {
     }
     log('close');
     this._isOpen = false;
-    
+
     await this._ctx.dispose();
     await this._pipeline?.stop();
 
@@ -159,7 +159,7 @@ export class DataPipeline {
     } catch (err) {
       log.catch(err);
     }
-    
+
     await this.databaseBackend?.close();
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
