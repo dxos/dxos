@@ -14,6 +14,7 @@ import { useClient } from '../client';
  */
 export const useIdentity = (options?: { login?: boolean }) => {
   const { login } = { login: false, ...options };
+
   const client = useClient();
   const identity = useSyncExternalStore(
     (listener) => {
@@ -24,7 +25,18 @@ export const useIdentity = (options?: { login?: boolean }) => {
   );
 
   useEffect(() => {
-    if (login && !identity && client.services instanceof IFrameClientServicesProxy) {
+    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
+    const searchParams = new URLSearchParams(window.location.search);
+    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+    const haloInvitationCode = searchParams.get('haloInvitationCode');
+
+    if (
+      login &&
+      !identity &&
+      !spaceInvitationCode &&
+      !haloInvitationCode &&
+      client.services instanceof IFrameClientServicesProxy
+    ) {
       void client.services.setLayout(ShellLayout.INITIALIZE_IDENTITY);
     }
   }, [client, identity, login]);
