@@ -1766,6 +1766,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
@@ -1787,6 +1788,7 @@ importers:
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
+      crc-32: ^1.2.2
       debug: ^4.3.3
       fast-check: ~3.3.0
       hypercore-protocol: ^8.0.7
@@ -1801,6 +1803,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
       '@dxos/echo-db': link:../echo-db
+      '@dxos/errors': link:../../../sdk/errors
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/hypercore': link:../../../common/hypercore
       '@dxos/keyring': link:../../halo/keyring
@@ -1820,6 +1823,7 @@ importers:
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
+      crc-32: 1.2.2
       debug: 4.3.4
     devDependencies:
       '@dxos/text-model': link:../text-model
@@ -19703,6 +19707,12 @@ packages:
 
   /count-trailing-zeros/1.0.1:
     resolution: {integrity: sha512-ZnX7MMZDpu7R1aMwQRe0P1RGvfnXHibhTE+Oe/BHOCAZ/Mrp0Nv8VwaZ3G5cfFHMl5RrZ9s3HxnYoaVNB2gzgA==}
+    dev: false
+
+  /crc-32/1.2.2:
+    resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
+    engines: {node: '>=0.8'}
+    hasBin: true
     dev: false
 
   /crc/3.8.0:
