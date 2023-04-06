@@ -52,7 +52,7 @@ importers:
       '@nrwl/vite': 15.4.5
       '@nrwl/web': 15.4.5
       '@nrwl/workspace': 15.4.5
-      '@playwright/test': ^1.25.1
+      '@playwright/test': ^1.32.2
       '@rushstack/eslint-patch': ^1.1.4
       '@storybook/addon-essentials': 7.0.0-beta.48
       '@storybook/addon-interactions': 7.0.0-beta.48
@@ -107,7 +107,7 @@ importers:
       nx: 15.4.5
       nyc: ^15.1.0
       pkg-up: ^3.1.0
-      playwright: ^1.27.1
+      playwright: ^1.32.2
       prettier: ^2.7.1
       raf: ^3.4.1
       react: ^18.2.0
@@ -156,7 +156,7 @@ importers:
       '@nrwl/vite': 15.4.5_v7zfrrr3yshofrhd3w7sykn3ky_kuua75gbmhprsnwbjvpdyfjmee
       '@nrwl/web': 15.4.5_f6td3dfplkbd7c3xwt3lntcjoi
       '@nrwl/workspace': 15.4.5_mlbovilqnvggnt5yedqlfaesd4
-      '@playwright/test': 1.27.1
+      '@playwright/test': 1.32.2
       '@rushstack/eslint-patch': 1.2.0
       '@storybook/addon-essentials': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-interactions': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -210,7 +210,7 @@ importers:
       nx: 15.4.5_h4pdoyo3l3nua2jmzaw5vfqqmq
       nyc: 15.1.0
       pkg-up: 3.1.0
-      playwright: 1.27.1
+      playwright: 1.32.2
       prettier: 2.7.1
       raf: 3.4.1
       react: 18.2.0
@@ -1766,6 +1766,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
@@ -1787,6 +1788,7 @@ importers:
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
+      crc-32: ^1.2.2
       debug: ^4.3.3
       fast-check: ~3.3.0
       hypercore-protocol: ^8.0.7
@@ -1801,6 +1803,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
       '@dxos/echo-db': link:../echo-db
+      '@dxos/errors': link:../../../sdk/errors
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/hypercore': link:../../../common/hypercore
       '@dxos/keyring': link:../../halo/keyring
@@ -1820,6 +1823,7 @@ importers:
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
+      crc-32: 1.2.2
       debug: 4.3.4
     devDependencies:
       '@dxos/text-model': link:../text-model
@@ -11135,13 +11139,15 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
-  /@playwright/test/1.27.1:
-    resolution: {integrity: sha512-mrL2q0an/7tVqniQQF6RBL2saskjljXzqNcCOVMUjRIgE6Y38nCNaP+Dc2FBW06bcpD3tqIws/HT9qiMHbNU0A==}
+  /@playwright/test/1.32.2:
+    resolution: {integrity: sha512-nhaTSDpEdTTttdkDE8Z6K3icuG1DVRxrl98Qq0Lfc63SS9a2sjc9+x8ezysh7MzCKz6Y+nArml3/mmt+gqRmQQ==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.9
-      playwright-core: 1.27.1
+      playwright-core: 1.32.2
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /@polka/url/1.0.0-next.21:
@@ -19771,6 +19777,12 @@ packages:
 
   /count-trailing-zeros/1.0.1:
     resolution: {integrity: sha512-ZnX7MMZDpu7R1aMwQRe0P1RGvfnXHibhTE+Oe/BHOCAZ/Mrp0Nv8VwaZ3G5cfFHMl5RrZ9s3HxnYoaVNB2gzgA==}
+    dev: false
+
+  /crc-32/1.2.2:
+    resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
+    engines: {node: '>=0.8'}
+    hasBin: true
     dev: false
 
   /crc/3.8.0:
@@ -30761,19 +30773,19 @@ packages:
     dependencies:
       find-up: 3.0.0
 
-  /playwright-core/1.27.1:
-    resolution: {integrity: sha512-9EmeXDncC2Pmp/z+teoVYlvmPWUC6ejSSYZUln7YaP89Z6lpAaiaAnqroUt/BoLo8tn7WYShcfaCh+xofZa44Q==}
+  /playwright-core/1.32.2:
+    resolution: {integrity: sha512-zD7aonO+07kOTthsrCR3YCVnDcqSHIJpdFUtZEMOb6//1Rc7/6mZDRdw+nlzcQiQltOOsiqI3rrSyn/SlyjnJQ==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.27.1:
-    resolution: {integrity: sha512-xXYZ7m36yTtC+oFgqH0eTgullGztKSRMb4yuwLPl8IYSmgBM88QiB+3IWb1mRIC9/NNwcgbG0RwtFlg+EAFQHQ==}
+  /playwright/1.32.2:
+    resolution: {integrity: sha512-jHVnXJke0PXpuPszKtk9y1zZSlzO5+2a+aockT/AND0oeXx46FiJEFrafthurglLygVZA+1gEbtUM1C7qtTV+Q==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.27.1
+      playwright-core: 1.32.2
     dev: true
 
   /pluralize/7.0.0:

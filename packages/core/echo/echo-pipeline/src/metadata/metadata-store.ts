@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import CRC32 from 'crc-32';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -59,21 +61,25 @@ export class MetadataStore {
     const file = this._directory.getOrCreateFile('EchoMetadata');
     try {
       const { size: fileLength } = await file.stat();
-      if (fileLength < 4) {
+      if (fileLength < 8) {
         return;
       }
       // Loading file size from first 4 bytes.
       const dataSize = fromBytesInt32(await file.read(0, 4));
-      log('loaded', { size: dataSize });
+      const checksum = fromBytesInt32(await file.read(4, 4));
+      log('loaded', { size: dataSize, checksum });
 
-      // Sanity check.
-      {
-        if (fileLength < dataSize + 4) {
-          throw new Error('Metadata storage is corrupted');
-        }
+      if (fileLength < dataSize + 8) {
+        throw new DataCorruptionError('Metadata size is smaller than expected.');
       }
 
-      const data = await file.read(4, dataSize);
+      const data = await file.read(8, dataSize);
+
+      const calculatedChecksum = CRC32.buf(data);
+      if (calculatedChecksum !== checksum) {
+        throw new DataCorruptionError('Metadata checksum is invalid.');
+      }
+
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       log.error('failed to load metadata', { err });
@@ -96,13 +102,18 @@ export class MetadataStore {
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
+      const checksum = CRC32.buf(encoded);
 
-      // Saving file size at first 4 bytes.
-      await file.write(0, toBytesInt32(encoded.length));
-      log('saved', { size: encoded.length });
+      const result = Buffer.alloc(8 + encoded.length);
 
-      // Saving data.
-      await file.write(4, encoded);
+      result.writeInt32LE(encoded.length, 0);
+      result.writeInt32LE(checksum, 4);
+      encoded.copy(result, 8);
+
+      // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
+      await file.write(0, result);
+
+      log('saved', { size: encoded.length, checksum });
     } finally {
       await file.close();
     }
@@ -162,11 +173,4 @@ export class MetadataStore {
     await this._save();
   }
 }
-
-const toBytesInt32 = (num: number) => {
-  const buf = Buffer.alloc(4);
-  buf.writeInt32LE(num, 0);
-  return buf;
-};
-
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);

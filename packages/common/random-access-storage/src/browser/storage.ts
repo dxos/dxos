@@ -8,16 +8,14 @@ import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
-  let insideWebkit: boolean;
-  try {
-    insideWebkit = mochaExecutor.environment === 'webkit';
-  } catch (e) {
-    insideWebkit = false;
-  }
-
   if (type === undefined) {
-    if (navigator && navigator.storage && typeof navigator.storage.getDirectory === 'function' && !insideWebkit) {
-      // WEBFS is not supported in webkit test environment but it passes check for navigator.storage.getDirectory.
+    if (
+      navigator &&
+      navigator.storage &&
+      typeof navigator.storage.getDirectory === 'function' &&
+      FileSystemFileHandle &&
+      typeof (FileSystemFileHandle.prototype as any).createWriteable === 'function'
+    ) {
       return new WebFS(root);
     } else {
       return new IDbStorage(root);

@@ -18,6 +18,6 @@ export const createMappedFeedWriter = <Source extends {}, Target extends {}>(
   assert(writer);
 
   return {
-    write: async (data: Source) => await writer.write(await mapper(data))
+    write: async (data: Source, options) => await writer.write(await mapper(data), options)
   };
 };

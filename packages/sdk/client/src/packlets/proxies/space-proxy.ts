@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
-import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -24,7 +24,7 @@ import { CancellableInvitationObservable, InvitationsProxy } from '../invitation
 import { Properties } from '../proto';
 
 interface Internal {
-  get db(): DatabaseBackendProxy;
+  get db(): DatabaseProxy;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -115,7 +115,7 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
-  private readonly _dbBackend?: DatabaseBackendProxy;
+  private readonly _dbBackend?: DatabaseProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: InvitationsProxy;
 
@@ -145,7 +145,7 @@ export class SpaceProxy implements Space {
     }));
 
     assert(this._clientServices.services.DataService, 'DataService not available');
-    this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
+    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
 
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);

@@ -28,28 +28,28 @@ export type AppState = {
   frames?: string[];
 };
 
-type Action = {
+type ActionType = {
   type: 'set-active-frame' | 'set-fullscreen' | 'set-chat';
 };
 
-type SetFrameAction = Action & {
+type SetFrameAction = ActionType & {
   frameId: string;
   active: boolean;
 };
 
-type SetFullscreenAction = Action & {
+type SetFullscreenAction = ActionType & {
   fullscreen: boolean;
 };
 
-type SetChatAction = Action & {
+type SetChatAction = ActionType & {
   chat: boolean;
 };
 
-type ActionType = SetFrameAction | SetFullscreenAction | SetChatAction;
+type Action = SetFrameAction | SetFullscreenAction | SetChatAction;
 
 const reducer =
   (config: Config) =>
-  (state: AppState, action: ActionType): AppState => {
+  (state: AppState, action: Action): AppState => {
     switch (action.type) {
       case 'set-active-frame': {
         const { frameId, active } = action as SetFrameAction;
@@ -84,7 +84,7 @@ export type AppReducer = {
   setActiveFrame: (id: string, active: boolean) => void;
 };
 
-export const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
+const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
 
 // TODO(burdon): Implement reducer.
 // https://beta.reactjs.org/learn/scaling-up-with-reducer-and-context

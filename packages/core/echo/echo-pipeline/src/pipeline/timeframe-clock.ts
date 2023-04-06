@@ -24,17 +24,36 @@ export const startAfter = (timeframe: Timeframe): FeedIndex[] =>
 export class TimeframeClock {
   readonly update = new Event<Timeframe>();
 
+  private _pendingTimeframe: Timeframe;
+
   // prettier-ignore
   constructor(
     private _timeframe = new Timeframe()
-  ) {}
+  ) {
+    this._pendingTimeframe = _timeframe;
+  }
 
+  /**
+   * Timeframe that was processed by ECHO.
+   */
   get timeframe() {
     return this._timeframe;
   }
 
-  updateTimeframe(key: PublicKey, seq: number) {
-    this._timeframe = Timeframe.merge(this._timeframe, new Timeframe([[key, seq]]));
+  /**
+   * Timeframe that is currently being processed by ECHO.
+   * Will be equal to `timeframe` after the processing is complete.
+   */
+  get pendingTimeframe() {
+    return this._pendingTimeframe;
+  }
+
+  updatePendingTimeframe(key: PublicKey, seq: number) {
+    this._pendingTimeframe = Timeframe.merge(this._pendingTimeframe, new Timeframe([[key, seq]]));
+  }
+
+  updateTimeframe() {
+    this._timeframe = this._pendingTimeframe;
     this.update.emit(this._timeframe);
   }
 

@@ -2,11 +2,74 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, createContext, useContext } from 'react';
+import { raise } from 'packages/common/debug/src';
+import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
 
 import { FrameDef } from '../registry';
+
+//
+// Global app state.
+//
+
+// TODO(burdon): Make extensible? Or just an aspect for frames?
+
+export type AppState = {
+  fullscreen?: boolean;
+};
+
+export type AppContext = {
+  state: AppState;
+  setFullscreen: (fullscreen: boolean) => void;
+};
+
+type ActionType = {
+  type: 'set-fullscreen';
+};
+
+type SetFullscreenAction = ActionType & {
+  fullscreen: boolean;
+};
+
+type Action = SetFullscreenAction;
+
+const AppContextImpl: Context<AppContext | undefined> = createContext<AppContext | undefined>(undefined);
+
+export const AppContextProvider: FC<{ children: ReactNode; initialState: AppState }> = ({ children, initialState }) => {
+  const [state, dispatch] = useReducer((state: AppState, action: Action) => {
+    switch (action.type) {
+      case 'set-fullscreen': {
+        const { fullscreen } = action as SetFullscreenAction;
+        return { ...state, fullscreen };
+      }
+    }
+
+    return state;
+  }, initialState ?? {});
+
+  const context: AppContext = {
+    state,
+    setFullscreen: (fullscreen: boolean) => {
+      dispatch({ type: 'set-fullscreen', fullscreen });
+    }
+  };
+
+  return <AppContextImpl.Provider value={context}>{children}</AppContextImpl.Provider>;
+};
+
+export const useAppState = (): AppState => {
+  const { state } = useContext(AppContextImpl) ?? raise(new Error('Missing AppStateContext.'));
+  return state;
+};
+
+export const useAppContext = (): AppContext => {
+  return useContext(AppContextImpl) ?? raise(new Error('Missing AppStateContext.'));
+};
+
+//
+// Frame context.
+//
 
 export type FrameState = {
   space?: Space;
