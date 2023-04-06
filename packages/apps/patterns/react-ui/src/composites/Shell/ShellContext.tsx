@@ -123,7 +123,7 @@ export const ShellProvider = ({
       });
     }
 
-    return new MemoryShellRuntime({ layout: ShellLayout.DEFAULT });
+    return new MemoryShellRuntime({ layout: identity ? ShellLayout.DEFAULT : ShellLayout.INITIALIZE_IDENTITY });
   }, [client, identity, spaceInvitationCode, haloInvitationCode]);
 
   const handleKeyDown = useCallback(
