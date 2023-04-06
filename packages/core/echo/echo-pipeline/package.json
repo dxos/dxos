@@ -27,6 +27,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/keyring": "workspace:*",
@@ -46,6 +47,7 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
+    "crc-32": "^1.2.2",
     "debug": "^4.3.3"
   },
   "devDependencies": {
