@@ -134,7 +134,7 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
     process.env.WATCH === 'true'
       ? [['dot']]
       : process.env.RESULTS_PATH
-      ? [['dot'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
+      ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
       : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
