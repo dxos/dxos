@@ -34,6 +34,13 @@ describe('SignalClient', () => {
     // code await broker2.stop();
   });
 
+  const waitForSubscription = async (signal: SignalClient, peerId: PublicKey) => {
+    await asyncTimeout(
+      signal._reconciled.waitForCondition(() => signal._messageStreams.has(peerId)),
+      500
+    );
+  };
+
   test('message between 2 clients', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
@@ -48,7 +55,7 @@ describe('SignalClient', () => {
     afterTest(() => api2.close());
 
     await api1.subscribeMessages(peer1);
-    await api2.subscribeMessages(peer2);
+    await waitForSubscription(api1, peer1);
 
     const message = {
       author: peer2,
@@ -95,6 +102,7 @@ describe('SignalClient', () => {
     afterTest(() => api1.close());
 
     await api1.subscribeMessages(peer1);
+    await waitForSubscription(api1, peer1);
 
     const message = {
       author: peer2,
@@ -123,6 +131,7 @@ describe('SignalClient', () => {
 
     const unsubscribeHandle = await client1.subscribeMessages(peer1);
     await client2.subscribeMessages(peer2);
+    await waitForSubscription(client2, peer2);
 
     const message = {
       author: peer2,
@@ -150,7 +159,7 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await expect(asyncTimeout(promise, 200)).toBeRejected();
     }
-  });
+  }).timeout(1_000);
 
   test('signal after re-entrance', async () => {
     const peer1 = PublicKey.random();
@@ -174,7 +183,7 @@ describe('SignalClient', () => {
     };
 
     await client1.subscribeMessages(peer1);
-    await client2.subscribeMessages(peer2);
+    await waitForSubscription(client1, peer1);
 
     {
       const promise = received.waitFor((msg) => {
@@ -191,7 +200,7 @@ describe('SignalClient', () => {
 
     await client1.close();
     client1.open();
-    await client1.subscribeMessages(peer1);
+    await waitForSubscription(client1, peer1);
 
     {
       const promise = received.waitFor((msg) => {
@@ -201,7 +210,7 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await promise;
     }
-  });
+  }).timeout(1_000);
 
   test
     .skip('join across multiple signal servers', async () => {
