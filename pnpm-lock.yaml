@@ -52,7 +52,7 @@ importers:
       '@nrwl/vite': 15.4.5
       '@nrwl/web': 15.4.5
       '@nrwl/workspace': 15.4.5
-      '@playwright/test': ^1.25.1
+      '@playwright/test': ^1.32.2
       '@rushstack/eslint-patch': ^1.1.4
       '@storybook/addon-essentials': 7.0.0-beta.48
       '@storybook/addon-interactions': 7.0.0-beta.48
@@ -107,7 +107,7 @@ importers:
       nx: 15.4.5
       nyc: ^15.1.0
       pkg-up: ^3.1.0
-      playwright: ^1.27.1
+      playwright: ^1.32.2
       prettier: ^2.7.1
       raf: ^3.4.1
       react: ^18.2.0
@@ -156,7 +156,7 @@ importers:
       '@nrwl/vite': 15.4.5_v7zfrrr3yshofrhd3w7sykn3ky_kuua75gbmhprsnwbjvpdyfjmee
       '@nrwl/web': 15.4.5_f6td3dfplkbd7c3xwt3lntcjoi
       '@nrwl/workspace': 15.4.5_mlbovilqnvggnt5yedqlfaesd4
-      '@playwright/test': 1.27.1
+      '@playwright/test': 1.32.2
       '@rushstack/eslint-patch': 1.2.0
       '@storybook/addon-essentials': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-interactions': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -210,7 +210,7 @@ importers:
       nx: 15.4.5_h4pdoyo3l3nua2jmzaw5vfqqmq
       nyc: 15.1.0
       pkg-up: 3.1.0
-      playwright: 1.27.1
+      playwright: 1.32.2
       prettier: 2.7.1
       raf: 3.4.1
       react: 18.2.0
@@ -1452,7 +1452,6 @@ importers:
       '@types/pify': ^3.0.2
       '@types/randombytes': ^2.0.0
       del: ^5.1.0
-      detect-browser: ^5.3.0
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
@@ -1468,7 +1467,6 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       del: 5.1.0
-      detect-browser: 5.3.0
       pify: 5.0.0
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
@@ -11063,13 +11061,15 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
-  /@playwright/test/1.27.1:
-    resolution: {integrity: sha512-mrL2q0an/7tVqniQQF6RBL2saskjljXzqNcCOVMUjRIgE6Y38nCNaP+Dc2FBW06bcpD3tqIws/HT9qiMHbNU0A==}
+  /@playwright/test/1.32.2:
+    resolution: {integrity: sha512-nhaTSDpEdTTttdkDE8Z6K3icuG1DVRxrl98Qq0Lfc63SS9a2sjc9+x8ezysh7MzCKz6Y+nArml3/mmt+gqRmQQ==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.9
-      playwright-core: 1.27.1
+      playwright-core: 1.32.2
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /@polka/url/1.0.0-next.21:
@@ -15886,7 +15886,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -20834,10 +20834,6 @@ packages:
   /destroy/1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-
-  /detect-browser/5.3.0:
-    resolution: {integrity: sha512-53rsFbGdwMwlF7qvCt0ypLM5V5/Mbl0szB7GPN8y9NCcbknYOeVVXdrXEq+90IwAfrrzt6Hd+u2E2ntakICU8w==}
-    dev: false
 
   /detect-indent/6.1.0:
     resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
@@ -30697,19 +30693,19 @@ packages:
     dependencies:
       find-up: 3.0.0
 
-  /playwright-core/1.27.1:
-    resolution: {integrity: sha512-9EmeXDncC2Pmp/z+teoVYlvmPWUC6ejSSYZUln7YaP89Z6lpAaiaAnqroUt/BoLo8tn7WYShcfaCh+xofZa44Q==}
+  /playwright-core/1.32.2:
+    resolution: {integrity: sha512-zD7aonO+07kOTthsrCR3YCVnDcqSHIJpdFUtZEMOb6//1Rc7/6mZDRdw+nlzcQiQltOOsiqI3rrSyn/SlyjnJQ==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.27.1:
-    resolution: {integrity: sha512-xXYZ7m36yTtC+oFgqH0eTgullGztKSRMb4yuwLPl8IYSmgBM88QiB+3IWb1mRIC9/NNwcgbG0RwtFlg+EAFQHQ==}
+  /playwright/1.32.2:
+    resolution: {integrity: sha512-jHVnXJke0PXpuPszKtk9y1zZSlzO5+2a+aockT/AND0oeXx46FiJEFrafthurglLygVZA+1gEbtUM1C7qtTV+Q==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.27.1
+      playwright-core: 1.32.2
     dev: true
 
   /pluralize/7.0.0:
@@ -36922,7 +36918,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
