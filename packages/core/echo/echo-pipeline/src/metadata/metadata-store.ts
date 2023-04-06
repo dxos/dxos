@@ -2,17 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
+import CRC32 from 'crc-32';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { DataCorruptionError } from '@dxos/errors'
 import { EchoMetadata, SpaceMetadata, IdentityRecord } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import CRC32 from 'crc-32'
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -73,7 +73,6 @@ export class MetadataStore {
         throw new DataCorruptionError('Metadata size is smaller than expected.');
       }
 
-
       const data = await file.read(8, dataSize);
 
       const calculatedChecksum = CRC32.buf(data);
@@ -106,13 +105,13 @@ export class MetadataStore {
       const checksum = CRC32.buf(encoded);
 
       const result = Buffer.alloc(8 + encoded.length);
-      
+
       result.writeInt32LE(encoded.length, 0);
       result.writeInt32LE(checksum, 4);
       encoded.copy(result, 8);
 
       // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
-      await file.write(0, result)
+      await file.write(0, result);
 
       log('saved', { size: encoded.length, checksum });
     } finally {
