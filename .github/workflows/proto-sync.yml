@@ -8,6 +8,9 @@ on:
 
 name: sync-proto
 
+#
+# Synchronize protobufs across dxos and kube repos.
+#
 jobs:
   copy:
     runs-on: ubuntu-latest
@@ -69,4 +72,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
           PR_TITLE: "fix: sync protocol buffers"
-          PR_BODY: Created automatically by Github Action
+          PR_BODY: Created automatically by Github Action https://github.com/dxos/dxos/blob/main/.github/workflows/proto-sync.yml
