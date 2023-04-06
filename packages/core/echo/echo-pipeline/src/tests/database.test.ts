@@ -5,11 +5,15 @@
 import expect from 'expect';
 
 import { DocumentModel, MutationBuilder } from '@dxos/document-model';
-import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
+import { createModelMutation, DatabaseProxy, encodeModelMutation, genesisMutation, ItemManager } from '@dxos/echo-db';
+import { TestBuilder as FeedTestBuilder } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
+import { createMappedFeedWriter } from '../common';
+import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
 
 const createDatabase = async () => {
@@ -21,6 +25,29 @@ const createDatabase = async () => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   return proxy;
+};
+
+const createDatabaseWithFeeds = async () => {
+  const modelFactory = new ModelFactory().registerModel(DocumentModel);
+
+  const feedTestBuilder = new FeedTestBuilder();
+  const feedStore = feedTestBuilder.createFeedStore();
+  const feed = await feedStore.openFeed(await feedTestBuilder.keyring.createKey(), { writable: true });
+
+  const writer = createMappedFeedWriter((data: DataMessage) => ({ data }), feed.createFeedWriter());
+  const host = new DatabaseHost(writer);
+  await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
+
+  const dataServiceSubscriptions = new DataServiceSubscriptions();
+  const dataService = new DataServiceImpl(dataServiceSubscriptions);
+
+  const spaceKey = PublicKey.random();
+  dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());
+
+  const proxy = new DatabaseProxy(dataService, spaceKey);
+  await proxy.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
+
+  return { proxy, host };
 };
 
 describe('database', () => {
@@ -49,5 +76,16 @@ describe('database', () => {
       await result.batch.waitToBeProcessed();
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
     });
+
+    // TODO(dmaretskyi): Flush is broken in this mock database.
+    test
+      .skip('flush', async () => {
+        const { proxy } = await createDatabaseWithFeeds();
+
+        const id = PublicKey.random().toHex();
+        proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+        await proxy.flush();
+      })
+      .timeout(100);
   });
 });

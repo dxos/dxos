@@ -36,7 +36,6 @@ export class DataServiceHost {
     return new Stream(({ next, ctx }) => {
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
-
       next({
         batch: {
           objects
@@ -47,10 +46,10 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
-        log('Object update', { batch, meta });
+        log('message', { batch, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
-        // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
         // Assign feed metadata
         batch.objects?.forEach((object) => {
@@ -75,22 +74,30 @@ export class DataServiceHost {
   async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
+    log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
+
     // Clear client metadata.
-    const receipt = await this._writeStream.write({
+    const message: DataMessage = {
       batch: {
         objects: request.batch.objects?.map((object) => ({
           ...object,
-          mutations: object.mutations?.map((m) => ({
-            ...m,
+          mutations: object.mutations?.map((mutation) => ({
+            ...mutation,
             meta: undefined
           })),
           meta: undefined
         }))
       }
+    };
+    const receipt = await this._writeStream.write(message, {
+      afterWrite: async (receipt) => {
+        // Runs before the mutation is read from the pipeline.
+        if (request.clientTag) {
+          log('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
+          this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
+        }
+      }
     });
-    if (request.clientTag) {
-      this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
-    }
 
     return receipt;
   }

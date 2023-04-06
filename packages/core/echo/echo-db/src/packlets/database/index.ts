@@ -3,7 +3,7 @@
 //
 
 export * from './builder';
-export * from './database-backend';
+export * from './database-proxy';
 export * from './item';
 export * from './item-demuxer';
 export * from './item-manager';
