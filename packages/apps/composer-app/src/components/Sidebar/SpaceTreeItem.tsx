@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, EyeSlash, PaperPlaneTilt, Plus } from '@phosphor-icons/react';
+import { DotsThreeVertical, Download, EyeSlash, PaperPlaneTilt, Plus, Upload } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -27,6 +27,7 @@ import { useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
+import { Separator } from '../Separator';
 import { DocumentTreeItem } from './DocumentTreeItem';
 
 export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
@@ -83,7 +84,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           className='grow break-words pbs-1.5 text-sm font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
-          {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : space.key.truncate()}
+          {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : t('untitled space title')}
         </TreeItemHeading>
         <TooltipRoot>
           <TooltipContent className='z-[31]' side='bottom'>
@@ -104,7 +105,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
                 label={t('space name label')}
                 labelVisuallyHidden
                 value={space.properties.name ?? ''}
-                placeholder={space.key.truncate()}
+                placeholder={t('untitled space title')}
                 onChange={({ target: { value } }) => (space.properties.name = value)}
               />
             </DropdownMenuItem>
@@ -115,6 +116,15 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
             <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
               <EyeSlash className={getSize(4)} />
               <span>{t('hide space label')}</span>
+            </DropdownMenuItem>
+            <Separator />
+            <DropdownMenuItem className='flex items-center gap-2'>
+              <Download className={getSize(4)} />
+              <span>{t('download all docs in space label')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className='flex items-center gap-2'>
+              <Upload className={getSize(4)} />
+              <span>{t('upload all docs in space label')}</span>
             </DropdownMenuItem>
           </DropdownMenu>
         </TooltipRoot>
