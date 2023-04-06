@@ -13,6 +13,8 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 // TODO(burdon): Create useFrameContext hook?
 export type FrameComponent = FC<any>;
 
+export type PluginComponent = FC<{ space: Space; onSelect?: (objectId: string | undefined) => void } | any>;
+
 // TODO(burdon): Rename.
 export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
@@ -24,7 +26,7 @@ export type FrameRuntime<T extends TypedObject> = {
   filter?: () => TypeFilter<T>;
   onCreate?: (space: Space) => Promise<T>;
   // TODO(burdon): Rename Selector.
-  Plugin?: FC<{ space: Space; onSelect: (objectId: string) => void }>;
+  Plugin?: PluginComponent;
 };
 
 export type FrameDef<T extends TypedObject> = {

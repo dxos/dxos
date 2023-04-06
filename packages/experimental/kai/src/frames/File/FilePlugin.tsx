@@ -19,9 +19,9 @@ import { FileFrameRuntime, defaultFileTypes } from './defs';
 // TODO(burdon): Plugin signature.
 export type FileListProps = {
   space: Space;
+  onSelect?: (objectId: string | undefined) => void;
   disableDownload?: boolean;
   fileTypes?: string[];
-  onSelect?: (objectId: string | undefined) => void;
 };
 
 // TODO(burdon): Rename.
