@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -46,7 +46,7 @@ const MESSAGES_PER_SNAPSHOT = 10;
 const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 
 /**
- * Minimum time between recording latest timeframe in metadata.
+ * Minimum time in MS between recording latest timeframe in metadata.
  */
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
@@ -71,7 +71,8 @@ export class DataPipeline {
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
   private _isOpen = false;
 
-  public readonly onTimeframeReached = new Event<Timeframe>();
+  private _lastTimeframeSaveTime = 0;
+  private _lastSnapshotSaveTime = 0;
 
   constructor(private readonly _params: DataPipelineParams) {}
 
@@ -133,51 +134,7 @@ export class DataPipeline {
       await this._consumePipeline();
     });
 
-    this._createPeriodicSnapshots();
-
     this._isOpen = true;
-  }
-
-  private _createPeriodicSnapshots() {
-    // Record last timeframe.
-    this.onTimeframeReached.debounce(TIMEFRAME_SAVE_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
-      await this._saveLatestTimeframe();
-    });
-
-    if (!DISABLE_SNAPSHOT_CACHE) {
-      this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
-        const latestTimeframe = this._pipeline?.state.timeframe;
-        if (!latestTimeframe) {
-          return;
-        }
-
-        // Save snapshot.
-        if (
-          latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
-          MESSAGES_PER_SNAPSHOT
-        ) {
-          const snapshot = await this._saveSnapshot();
-          this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-          log('save', { snapshot });
-        }
-      });
-    }
-  }
-
-  private async _saveSnapshot() {
-    const snapshot = await this.createSnapshot();
-    const snapshotKey = await this._params.snapshotManager.store(snapshot);
-    await this._params.metadataStore.setSpaceSnapshot(this._params.spaceKey, snapshotKey);
-    return snapshot;
-  }
-
-  private async _saveLatestTimeframe() {
-    const latestTimeframe = this._pipeline?.state.timeframe;
-    log('save latest timeframe', { latestTimeframe, spaceKey: this._params.spaceKey });
-    if (latestTimeframe) {
-      const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), latestTimeframe);
-      await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
-    }
   }
 
   @synchronized
@@ -188,26 +145,24 @@ export class DataPipeline {
     log('close');
     this._isOpen = false;
 
+    await this._ctx.dispose();
+    await this._pipeline?.stop();
+
+    // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
-      await this._saveLatestTimeframe();
-      await this._saveSnapshot();
+      if (this._pipeline) {
+        await this._saveTargetTimeframe(this._pipeline.state.timeframe);
+        if (!DISABLE_SNAPSHOT_CACHE) {
+          await this._saveSnapshot(this._pipeline.state.timeframe);
+        }
+      }
     } catch (err) {
       log.catch(err);
     }
-    await this._ctx.dispose();
-    await this._pipeline?.stop();
+
     await this.databaseBackend?.close();
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
-  }
-
-  createSnapshot(): SpaceSnapshot {
-    assert(this.databaseBackend, 'Database backend is not initialized.');
-    return {
-      spaceKey: this._params.spaceKey.asUint8Array(),
-      timeframe: this._pipeline?.state.timeframe ?? new Timeframe(),
-      database: this.databaseBackend!.createSnapshot()
-    };
   }
 
   private async _consumePipeline() {
@@ -233,11 +188,55 @@ export class DataPipeline {
               memberKey: feedInfo.assertion.identityKey
             }
           });
-          this.onTimeframeReached.emit(data.timeframe);
+
+          // Timeframe clock is not updated yet
+          await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
         }
       } catch (err: any) {
         log.catch(err);
       }
+    }
+  }
+
+  private _createSnapshot(timeframe: Timeframe): SpaceSnapshot {
+    assert(this.databaseBackend, 'Database backend is not initialized.');
+    return {
+      spaceKey: this._params.spaceKey.asUint8Array(),
+      timeframe,
+      database: this.databaseBackend!.createSnapshot()
+    };
+  }
+
+  private async _saveSnapshot(timeframe: Timeframe) {
+    const snapshot = await this._createSnapshot(timeframe);
+    const snapshotKey = await this._params.snapshotManager.store(snapshot);
+    await this._params.metadataStore.setSpaceSnapshot(this._params.spaceKey, snapshotKey);
+    return snapshot;
+  }
+
+  private async _saveTargetTimeframe(timeframe: Timeframe) {
+    const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
+    await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
+    this._targetTimeframe = newTimeframe;
+  }
+
+  private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
+      this._lastTimeframeSaveTime = Date.now();
+
+      await this._saveTargetTimeframe(timeframe);
+    }
+
+    if (
+      !DISABLE_SNAPSHOT_CACHE &&
+      Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
+      timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
+    ) {
+      this._lastSnapshotSaveTime = Date.now();
+
+      const snapshot = await this._saveSnapshot(timeframe);
+      this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+      log('save', { snapshot });
     }
   }
 
