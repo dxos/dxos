@@ -70,6 +70,10 @@ export class PipelineState {
     return this._timeframeClock.timeframe;
   }
 
+  get pendingTimeframe() {
+    return this._timeframeClock.pendingTimeframe;
+  }
+
   get targetTimeframe() {
     return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
   }
@@ -265,10 +269,11 @@ export class Pipeline implements PipelineAccessor {
 
     for await (const block of this._feedSetIterator) {
       this._processingTrigger.reset();
+      this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
       yield block;
       this._processingTrigger.wake();
 
-      this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
+      this._timeframeClock.updateTimeframe();
     }
 
     // TODO(burdon): Test re-entrant?
