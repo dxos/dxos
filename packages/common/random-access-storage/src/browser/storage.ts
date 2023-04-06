@@ -2,23 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import { detect } from 'detect-browser';
-
 import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
 import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
-  const browser = detect();
-
   if (type === undefined) {
     if (
       navigator &&
       navigator.storage &&
       typeof navigator.storage.getDirectory === 'function' &&
-      browser &&
-      (browser?.name === 'chrome' || browser?.name === 'chromium-webview' || browser?.name === 'edge-chromium')
+      FileSystemFileHandle &&
+      typeof (FileSystemFileHandle.prototype as any).createWriteable === 'function'
     ) {
       return new WebFS(root);
     } else {
