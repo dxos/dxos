@@ -279,7 +279,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     debouncedEvent.addEffect(() => {
       const unsubscribe = this.on(() => {
         if (!firing) {
-          const fireIn = !lastFired || (Date.now() - lastFired) > timeout ? timeout / 8 : timeout;
+          const fireIn = !lastFired || Date.now() - lastFired > timeout ? timeout / 8 : timeout;
 
           firing = setTimeout(() => {
             lastFired = Date.now();
