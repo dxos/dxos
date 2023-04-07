@@ -14,10 +14,10 @@ import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { captureException } from '@dxos/sentry';
 
+import '../style.css';
+
 import { AppState } from './hooks';
 import { createRouter } from './router';
-
-import '../style.css';
 
 void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
 
@@ -31,9 +31,7 @@ const initialState: Partial<AppState> = {
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA),
-  chat: false,
-  fullscreen: false
+  pwa: bool(import.meta.env.VITE_PWA)
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 
