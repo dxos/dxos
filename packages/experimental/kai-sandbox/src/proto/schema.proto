@@ -8,6 +8,7 @@ import "dxos/schema.proto";
 
 package dxos.experimental.kai.sandbox;
 
+// TODO(burdon): Rename.
 message Frame {
   option (object) = true;
 

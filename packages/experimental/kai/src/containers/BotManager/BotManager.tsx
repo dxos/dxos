@@ -8,11 +8,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { TableCellProps, TableColumn, Table } from '@dxos/mosaic';
+import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select } from '@dxos/react-components';
 
-import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 5_000;

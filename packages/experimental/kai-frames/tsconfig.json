@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -18,10 +19,19 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
@@ -31,6 +41,9 @@
     },
     {
       "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/react-async"
     },
     {
       "path": "../../common/react-components"
@@ -43,6 +56,12 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"
@@ -60,7 +79,28 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../chess-app"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
+    },
+    {
+      "path": "../kai-sandbox"
+    },
+    {
+      "path": "../kai-types"
+    },
+    {
       "path": "../metagraph"
+    },
+    {
+      "path": "../mosaic"
+    },
+    {
+      "path": "../plexus"
     },
     {
       "path": "../react-metagraph"
