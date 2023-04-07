@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { raise } from 'packages/common/debug/src';
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
+import { raise } from '@dxos/debug';
 
 import { FrameDef } from '../registry';
 

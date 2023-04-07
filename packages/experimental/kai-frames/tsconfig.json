@@ -24,7 +24,13 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/react-components"
