@@ -267,6 +267,27 @@ describe('Messenger', () => {
     }
   });
 
+  test('Message with broken signal server', async () => {
+    const builder = new TestBuilder({ signalHosts: ['ws://broken.kube', broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    await peer1.open();
+    const peer2 = builder.createPeer();
+    await peer2.open();
+
+    const message: Message = {
+      author: peer1.peerId,
+      recipient: peer2.peerId,
+      payload: PAYLOAD_1
+    };
+
+    {
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(receivePromise, 1_000);
+    }
+  });
+
   describe('Reliability', () => {
     test('message with non reliable connection', async () => {
       // Simulate unreliable connection.
