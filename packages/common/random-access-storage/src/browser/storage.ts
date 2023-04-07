@@ -14,7 +14,7 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
       navigator.storage &&
       typeof navigator.storage.getDirectory === 'function' &&
       FileSystemFileHandle &&
-      typeof (FileSystemFileHandle.prototype as any).createWriteable === 'function'
+      typeof (FileSystemFileHandle.prototype as any).createWritable === 'function'
     ) {
       return new WebFS(root);
     } else {
