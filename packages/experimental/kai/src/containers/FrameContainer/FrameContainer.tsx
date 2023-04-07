@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Space } from '@dxos/client';
 import { FrameContextProvider, FrameState, FrameDef } from '@dxos/kai-frames';
 
-import { createPath } from '../../hooks';
+import { createPath, useAppReducer } from '../../hooks';
 
 /**
  * Frame component container and context.
@@ -19,6 +19,7 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
   objectId,
   fullscreen
 }) => {
+  const { setFullscreen } = useAppReducer();
   const navigate = useNavigate();
   useEffect(() => {
     // Auto-create first object.
@@ -43,7 +44,13 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
   // TODO(burdon): Pass in current object.
 
   const handleStateChange = (state: FrameState) => {
-    navigate(createPath({ spaceKey: state.space?.key, frame: state.frame?.module.id, objectId: state.objectId }));
+    if (state.space) {
+      navigate(createPath({ spaceKey: state.space?.key, frame: state.frame?.module.id, objectId: state.objectId }));
+    }
+
+    if (state.fullscreen !== undefined) {
+      setFullscreen(state.fullscreen);
+    }
   };
 
   return (

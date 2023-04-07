@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
+import React, { Context, FC, ReactNode, createContext, useContext } from 'react';
 
 import { Space } from '@dxos/client';
-import { raise } from '@dxos/debug';
 
 import { FrameDef } from '../registry';
 
@@ -14,6 +13,7 @@ import { FrameDef } from '../registry';
 //
 
 // TODO(burdon): Make extensible? Or just an aspect for frames?
+/*
 
 export type AppState = {
   fullscreen?: boolean;
@@ -66,6 +66,7 @@ export const useAppState = (): AppState => {
 export const useAppContext = (): AppContext => {
   return useContext(AppContextImpl) ?? raise(new Error('Missing AppStateContext.'));
 };
+*/
 
 //
 // Frame context.
@@ -75,11 +76,12 @@ export type FrameState = {
   space?: Space;
   frame?: FrameDef<any>;
   objectId?: string;
+  fullscreen?: boolean;
 };
 
 export type FrameContextType = FrameState & {
   // TODO(burdon): Event handler/reducer (e.g., fullscreen).
-  onStateChange: (state: FrameState) => void;
+  onStateChange?: (state: FrameState) => void;
 
   // TODO(burdon): Generalize.
   fullscreen?: boolean;
@@ -96,8 +98,14 @@ export const useFrameContext = (): FrameContextType => {
   return context!;
 };
 
-// TODO(burdon): Rename.
+// TODO(burdon): Intent emitter.
 export const useFrameRouter = () => {
   const { onStateChange } = useContext(FrameContext)!;
-  return (state: FrameState) => onStateChange(state);
+  return (state: FrameState) => {
+    if (!onStateChange) {
+      console.log(state);
+    } else {
+      return onStateChange(state);
+    }
+  };
 };

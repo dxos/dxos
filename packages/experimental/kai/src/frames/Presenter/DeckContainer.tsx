@@ -5,20 +5,19 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { Text } from '@dxos/echo-schema';
-import { useFrameContext } from '@dxos/kai-frames';
+import { useFrameRouter, useFrameContext } from '@dxos/kai-frames';
 import { Presentation } from '@dxos/kai-types';
 import { useSubscription } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-composer';
 
 import { Deck, DeckProps } from '../../components';
-import { useAppReducer } from '../../hooks';
 
 export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide' | 'onSlideChange'>> = ({
   presentation,
   ...rest
 }) => {
+  const router = useFrameRouter();
   const { fullscreen } = useFrameContext();
-  const { setFullscreen } = useAppReducer();
   const [content, setContent] = useState<string[]>([]);
 
   const handleUpdate = useCallback(() => {
@@ -32,6 +31,10 @@ export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 
     setContent(texts.map((text) => text.content!.toString()) ?? []);
   }, [presentation]);
 
+  const handleToggleFullscreen = (fullscreen: boolean) => {
+    router({ fullscreen });
+  };
+
   // First time.
   useEffect(handleUpdate, []);
 
@@ -42,5 +45,5 @@ export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 
   // TODO(burdon): This seems unnecessary?
   useSubscription(handleUpdate, [presentation.stack.sections.map((section) => section.object.content)]);
 
-  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={setFullscreen} {...rest} />;
+  return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={handleToggleFullscreen} {...rest} />;
 };
