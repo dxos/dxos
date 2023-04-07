@@ -30,32 +30,43 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
         await client.halo.createIdentity({ displayName: faker.name.firstName() });
         schema && client.addSchema(schema);
 
-        const success1 = new Trigger<Invitation>();
-        const success2 = new Trigger<Invitation>();
+        const hostDone = new Trigger<Invitation>();
+        const guestDone = new Trigger<Invitation>();
 
-        const observable1 = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+        const hostObservable = rootSpace.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
         log('invitation created');
-        observable1.subscribe({
-          onConnecting: (invitation) => {
-            const observable2 = client.acceptInvitation(invitation);
-            log('invitation accepted');
+        hostObservable.subscribe(
+          (hostInvitation) => {
+            switch (hostInvitation.state) {
+              case Invitation.State.CONNECTING: {
+                const guestObservable = client.acceptInvitation(hostInvitation);
+                log('invitation accepted');
 
-            observable2.subscribe({
-              onSuccess: (invitation: Invitation) => {
-                success2.wake(invitation);
-                log('invitation success2');
-              },
-              onError: (err: Error) => raise(err)
-            });
-          },
-          onSuccess: (invitation) => {
-            success1.wake(invitation);
-            log('invitation success1');
-          },
-          onError: (err) => raise(err)
-        });
+                guestObservable.subscribe(
+                  (guestInvitation) => {
+                    switch (guestInvitation.state) {
+                      case Invitation.State.SUCCESS: {
+                        guestDone.wake(guestInvitation);
+                        log('invitation guestDone');
+                        break;
+                      }
+                    }
+                  },
+                  (err) => raise(err)
+                );
+                break;
+              }
 
-        await Promise.all([success1.wait(), success2.wait()]);
+              case Invitation.State.SUCCESS: {
+                hostDone.wake(hostInvitation);
+                log('invitation hostDone');
+              }
+            }
+          },
+          (err) => raise(err)
+        );
+
+        await Promise.all([hostDone.wait(), guestDone.wait()]);
       }}
     >
       {children}

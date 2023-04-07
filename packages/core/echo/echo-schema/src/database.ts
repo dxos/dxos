@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
@@ -34,7 +34,7 @@ export class EchoDatabase {
      * @internal
      */
     public readonly _itemManager: ItemManager,
-    public readonly _backend: DatabaseBackendProxy,
+    public readonly _backend: DatabaseProxy,
     private readonly _router: DatabaseRouter
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));

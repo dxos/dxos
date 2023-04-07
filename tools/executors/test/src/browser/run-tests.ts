@@ -2,9 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import fs from 'fs';
+import http from 'http';
 import get from 'lodash.get';
 import set from 'lodash.set';
 import { Stats } from 'mocha';
+import { AddressInfo } from 'net';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -109,7 +112,10 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
 
   const packageDir = dirname((await pkgUp({ cwd: __dirname })) as string);
   assert(packageDir);
-  await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
+
+  const server = await servePage(join(packageDir, './src/browser/index.html'));
+  const port = (server.address() as AddressInfo).port;
+  await page.goto(`http://localhost:${port}`);
 
   const [getPromise, resolve] = trigger<RunTestsResults>();
   await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
@@ -135,5 +141,54 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
 
   await page.addScriptTag({ path: bundleFile });
 
-  return getPromise();
+  try {
+    return await getPromise();
+  } finally {
+    server.close();
+  }
+};
+
+const servePage = async (path: string, port = 5176) => {
+  const server = http.createServer((req, res) => {
+    const fileName = req.url === '/' ? path : req.url;
+    if (!fileName) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found');
+      return;
+    }
+    // Read the HTML file from disk
+    fs.readFile(fileName, (err, data) => {
+      if (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(data);
+      }
+    });
+  });
+
+  let retries = 0;
+  server.on('error', (err) => {
+    if (err.message.includes('EADDRINUSE') && retries < 100) {
+      retries++;
+      server.close();
+      server.listen(port++, () => {
+        trigger();
+      });
+    } else {
+      throw err;
+    }
+  });
+
+  let trigger: () => void;
+  const serverReady = new Promise<void>((resolve) => {
+    trigger = resolve;
+  });
+
+  server.listen(port++, () => {
+    trigger();
+  });
+  await serverReady;
+  return server;
 };

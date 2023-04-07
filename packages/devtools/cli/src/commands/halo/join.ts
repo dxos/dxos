@@ -45,21 +45,30 @@ export default class Join extends BaseCommand {
         const connecting = new Trigger<Invitation>();
         const done = new Trigger<Invitation>();
 
-        observable.subscribe({
-          onConnecting: (invitation) => {
-            connecting.wake(invitation);
+        observable.subscribe(
+          async (invitation) => {
+            switch (invitation.state) {
+              case Invitation.State.CONNECTING: {
+                connecting.wake(invitation);
+                break;
+              }
+
+              case Invitation.State.AUTHENTICATING: {
+                const code = invitation.authCode ?? (await ux.prompt('Invitation code'));
+                await observable.authenticate(code);
+                break;
+              }
+
+              case Invitation.State.SUCCESS: {
+                done.wake(invitation);
+                break;
+              }
+            }
           },
-          async onAuthenticating() {
-            const code = invitation.authenticationCode ?? (await ux.prompt('Invitation code'));
-            await observable.authenticate(code);
-          },
-          onSuccess: (invitation) => {
-            done.wake(invitation);
-          },
-          onError: (err) => {
+          (err) => {
             throw err;
           }
-        });
+        );
 
         ux.action.start('Waiting for peer to connect');
         await connecting.wait();

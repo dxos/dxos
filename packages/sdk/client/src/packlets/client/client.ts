@@ -21,7 +21,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { AuthenticatingInvitationObservable, InvitationsOptions } from '../invitations';
+import { AuthenticatingInvitationObservable } from '../invitations';
 import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy, Space } from '../proxies';
 import { SpaceSerializer } from './serializer';
@@ -92,6 +92,9 @@ export class Client {
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory);
     this._mesh = new MeshProxy(this._services);
+    this._halo._traceParent = this._instanceId;
+    this._echo._traceParent = this._instanceId;
+    this._mesh._traceParent = this._instanceId;
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = this.config.get('runtime.client.log.filter');
@@ -192,8 +195,8 @@ export class Client {
   /**
    * Accept an invitation to a space.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
-    return this._echo.acceptInvitation(invitation, options);
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+    return this._echo.acceptInvitation(invitation);
   }
 
   /**

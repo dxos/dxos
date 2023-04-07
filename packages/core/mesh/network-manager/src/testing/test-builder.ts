@@ -116,6 +116,7 @@ export class TestPeer {
   }
 
   async open() {
+    await this._networkManager.open();
     await this._proxy?.open();
     await this._service?.open();
   }

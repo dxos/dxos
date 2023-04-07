@@ -1,13 +1,24 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./testing": "./dist/lib/browser/testing/index.mjs",
+    "./theme-extensions": "./theme-extensions.js"
+  },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src",

@@ -67,7 +67,10 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
       };
     },
     {
-      __DXOS_CONFIG__: { dynamic, publicUrl }
+      __DXOS_CONFIG__: { dynamic, publicUrl },
+      __CONFIG_DEFAULTS__: {},
+      __CONFIG_ENVS__: {},
+      __CONFIG_DYNAMICS__: {}
     }
   );
 };

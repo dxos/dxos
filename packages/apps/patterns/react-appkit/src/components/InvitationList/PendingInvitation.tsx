@@ -34,16 +34,16 @@ const PendingInvitationSkeleton = ({ message }: { message: string }) => {
 
 export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove }: PendingInvitationProps) => {
   const { t } = useTranslation('appkit');
-  const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
+  const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
 
   const handleRemove = useCallback(() => {
-    const id = wrapper.invitation?.invitationId;
+    const id = wrapper.get().invitationId;
     id && onClickRemove(id);
   }, []);
 
   return (
     <div role='group' className={mx(defaultGroup({ elevation: 'group' }), 'mbe-2')}>
-      {wrapper.invitation ? (
+      {wrapper.get() ? (
         <>
           <HeadingWithActions
             compact
@@ -54,7 +54,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
               children: (
                 <Avatar
                   size={10}
-                  fallbackValue={wrapper.invitation.invitationId!}
+                  fallbackValue={wrapper.get().invitationId}
                   label={<InvitationStatus {...{ status, haltedAt }} className='grow' />}
                 />
               )
@@ -62,7 +62,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
             actions={
               <>
                 {status === Invitation.State.AUTHENTICATING ? (
-                  <p className='text-xl text-center text-success-500 dark:text-success-300'>{authenticationCode}</p>
+                  <p className='text-xl text-center text-success-500 dark:text-success-300'>{authCode}</p>
                 ) : (
                   <CompactQrCode
                     {...{

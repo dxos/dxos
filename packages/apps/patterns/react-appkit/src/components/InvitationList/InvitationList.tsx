@@ -31,7 +31,7 @@ export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove
       {!empty &&
         invitations.map((wrapper, index) => (
           <PendingInvitation
-            key={wrapper.invitation?.invitationId ?? index}
+            key={wrapper.get().invitationId ?? index}
             wrapper={wrapper}
             createInvitationUrl={createInvitationUrl}
             onClickRemove={onClickRemove}

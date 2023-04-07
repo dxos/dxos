@@ -8,13 +8,7 @@ Defined in:
 ### [enabled]()
 Type: <code>boolean</code>
 
-Options:
-  - proto3_optional = true
-
 ### [interval]()
-Type: <code>string</code>
+Type: <code>number</code>
 
 Seconds
-
-Options:
-  - proto3_optional = true

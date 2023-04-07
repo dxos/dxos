@@ -53,6 +53,7 @@ export class IdentityManager {
   private _identity?: Identity;
 
   private readonly _instanceId = PublicKey.random().toHex();
+  public _traceParent?: string;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -68,7 +69,7 @@ export class IdentityManager {
   }
 
   async open() {
-    log.trace('dxos.halo.identity-manager', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.halo.identity-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();

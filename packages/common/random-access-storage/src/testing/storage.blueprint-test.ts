@@ -197,6 +197,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.write(buffer1.length, buffer2);
       expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
 
+      // Weird behavior. Works only if offset + size === file size. If greater - throws error, if less - does nothing.
       await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
       expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
@@ -212,6 +213,61 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
+    });
+
+    test('call del with edge arguments', async () => {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        // Not deletable.
+        return;
+      }
+      const directory = storage.createDirectory();
+
+      const buffer = Buffer.from(randomText());
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(0, buffer.length + 1);
+        expect((await file.stat()).size).toBe(0);
+      }
+
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(1, buffer.length);
+        expect((await file.stat()).size).toBe(1);
+      }
+
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(0, -1);
+        expect((await file.stat()).size).toBe(buffer.length);
+      }
+    });
+
+    // TODO(mykola): Implement such behavior for all storages?
+    test.skip('list all files after reopen', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory();
+      const files = [...Array(10)].map((name) => directory.getOrCreateFile(randomText()));
+
+      for (const file of files) {
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+      }
+
+      {
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(files.length);
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(files.length);
+      }
     });
   });
 };

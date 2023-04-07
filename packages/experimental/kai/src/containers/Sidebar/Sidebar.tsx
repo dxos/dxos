@@ -24,7 +24,6 @@ import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, Sh
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -104,7 +103,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
   useEffect(() => {
     if (observable) {
-      const href = createInvitationPath(observable.invitation!);
+      const href = createInvitationPath(observable.get());
       const url = new URL(href, window.origin);
       console.log(url);
       void clipboardCopy(url.toString());
@@ -162,22 +161,22 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
           const swarmKey = PublicKey.random();
           const observable = space.createInvitation({
             swarmKey,
-            authMethod: AuthMethod.NONE,
-            type: Invitation.Type.MULTIUSE_TESTING
+            type: Invitation.Type.MULTIUSE,
+            authMethod: Invitation.AuthMethod.NONE
           });
 
-          const unsubscribe = observable.subscribe({
-            onConnecting: () => {
-              setObservable(observable);
-              unsubscribe();
+          const subscription = observable.subscribe(
+            (invitation: Invitation) => {
+              if (invitation.state === Invitation.State.CONNECTING) {
+                setObservable(observable);
+                subscription.unsubscribe();
+              }
             },
-            onConnected: () => {},
-            onSuccess: () => {},
-            onError: (error) => {
+            (error) => {
               log.error(error);
-              unsubscribe();
+              subscription.unsubscribe();
             }
-          });
+          );
         } else {
           void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
         }
@@ -332,7 +331,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 variant='ghost'
                 className='flex p-0 justify-start'
                 title='Close settings'
-                data-testid='sidebar.joinSpace'
+                data-testid='sidebar.closeSettings'
                 onClick={() => setShowSpaceList(false)}
               >
                 <X className={getSize(6)} />

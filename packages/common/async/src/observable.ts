@@ -4,10 +4,11 @@
 
 import Observable from 'zen-observable';
 import type { ObservableLike, Observer, Subscriber, Subscription } from 'zen-observable/esm';
+import PushStream from 'zen-push';
 
 import { Event } from './events';
 
-export { Observable };
+export { Observable, PushStream, Subscriber };
 
 /**
  * Observable which supports multiple subscribers and stores the current value.
@@ -45,6 +46,13 @@ export class MulticastObservable<T> extends Observable<T> {
 
   static override of<T>(...items: T[]) {
     return new MulticastObservable(super.of(...items.slice(1)), items[0]);
+  }
+
+  /**
+   * @returns Stable reference to an observable that always returns `undefined`.
+   */
+  static empty() {
+    return EMPTY_OBSERVABLE;
   }
 
   /**
@@ -93,3 +101,5 @@ export class MulticastObservable<T> extends Observable<T> {
     }
   };
 }
+
+const EMPTY_OBSERVABLE = MulticastObservable.of(null);

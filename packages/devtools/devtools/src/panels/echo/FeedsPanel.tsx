@@ -3,9 +3,9 @@
 //
 
 import React, { useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { PublicKey } from '@dxos/keys';
+import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { humanize } from '@dxos/util';
 
@@ -13,7 +13,7 @@ import { MasterTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
-const columns: Column<SubscribeToFeedBlocksResponse.Block>[] = [
+const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
     Header: 'FeedKey',
     width: 120,

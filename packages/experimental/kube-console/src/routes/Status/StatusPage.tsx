@@ -3,9 +3,9 @@
 //
 
 import React, { useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
-import { Button, Table } from '@dxos/react-components';
+import { TableColumn, Table } from '@dxos/mosaic';
+import { Button } from '@dxos/react-components';
 import { alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
@@ -19,7 +19,7 @@ type Service = {
   addresses: string[];
 };
 
-const columns: Column<Service>[] = [
+const columns: TableColumn<Service>[] = [
   {
     Header: 'service',
     accessor: ({ name }) => name,

@@ -47,6 +47,7 @@ describe('MessageRouter', () => {
   }) => {
     const peerId = PublicKey.random();
     const signalManager = new WebsocketSignalManager([signalApiUrl]);
+    await signalManager.open();
     afterTest(() => signalManager.close());
 
     const messenger = new Messenger({ signalManager });
