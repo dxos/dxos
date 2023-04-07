@@ -60,16 +60,17 @@ export default defineConfig({
     }),
     ReactPlugin(),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'vault',
-            include: './dist/bundle',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : [])
+    // TODO(wittjosiah): Get github to recognize sentry token.
+    // ...(process.env.NODE_ENV === 'production'
+    //   ? [
+    //       sentryVitePlugin({
+    //         org: 'dxos',
+    //         project: 'vault',
+    //         include: './dist/bundle',
+    //         authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+    //       })
+    //     ]
+    //   : [])
   ],
   worker: {
     format: 'es',
