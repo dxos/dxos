@@ -64,8 +64,6 @@ export class WebsocketSignalManager implements SignalManager {
       this._servers.set(host, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
     }
-
-    this._initContext();
   }
 
   @synchronized
@@ -140,11 +138,9 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Signal ${recipient}`);
     assert(this._opened, 'Closed');
 
-    await Promise.all(
-      [...this._servers.values()].map((server: SignalClient) =>
-        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
-      )
-    );
+    [...this._servers.values()].forEach((server: SignalClient) => {
+      void server.sendMessage({ author, recipient, payload }).catch((err) => log(err));
+    });
   }
 
   async subscribeMessages(peerId: PublicKey) {

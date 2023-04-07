@@ -221,9 +221,6 @@ export class SignalClient implements SignalMethods {
 
   async subscribeMessages(peerId: PublicKey) {
     log('subscribing to messages', { peerId });
-    await this._clientReady.wait();
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-
     this._subscribedMessages.add({ peerId });
     this._reconcileTask!.schedule();
 
