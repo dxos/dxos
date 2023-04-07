@@ -41,7 +41,7 @@ describe('log', function () {
     try {
       throw new LogError('Test failed', { value: 2 });
     } catch (err: any) {
-      log.error('failed', err);
+      log.error(err);
     }
   });
 

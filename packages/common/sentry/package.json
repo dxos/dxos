@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sentry",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "Provides a common interface for Sentry node & browser",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,8 +10,7 @@
   "browser": {
     "./src/node.ts": "./src/browser.ts",
     "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "@sentry/node": "@sentry/browser"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -19,15 +18,17 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@sentry/browser": "^7.42.0",
-    "@sentry/integrations": "7.42.0",
-    "@sentry/node": "^7.42.0",
-    "@sentry/tracing": "^7.42.0"
+    "@sentry/browser": "^7.45.0",
+    "@sentry/integrations": "7.45.0",
+    "@sentry/node": "^7.45.0",
+    "@sentry/tracing": "^7.45.0"
   },
   "devDependencies": {
-    "@sentry/types": "^7.42.0",
+    "@sentry/types": "^7.45.0",
     "sentry-testkit": "^5.0.5"
   },
   "publishConfig": {

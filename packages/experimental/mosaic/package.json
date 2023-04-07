@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mosaic",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "private": true,
   "description": "Card layout and navigation.",
   "homepage": "https://dxos.org",
@@ -28,7 +28,8 @@
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
-    "react-resize-detector": "^7.1.2"
+    "react-resize-detector": "^7.1.2",
+    "react-table": "^7.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -40,6 +41,7 @@
     "@types/lodash.isequal": "^4.5.0",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "@types/react-table": "^7.7.14",
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "postcss": "^8.4.21",

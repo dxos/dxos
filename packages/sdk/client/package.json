@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,7 +14,6 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "shell.css",
     "src"
   ],
   "scripts": {

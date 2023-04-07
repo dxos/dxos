@@ -67,14 +67,6 @@ export class TestPeer {
   constructor(private readonly testBuilder: TestBuilder) {
     this.signalManager = testBuilder.createSignalManager();
     this.messenger = new Messenger({ signalManager: this.signalManager });
-    this.messenger
-      .listen({
-        peerId: this.peerId,
-        onMessage: async (msg) => {
-          this.defaultReceived.emit(msg);
-        }
-      })
-      .catch((err) => log.catch(err));
   }
 
   waitTillReceive(message: Message) {
@@ -89,6 +81,14 @@ export class TestPeer {
   async open() {
     await this.signalManager.open();
     this.messenger.open();
+    this.messenger
+      .listen({
+        peerId: this.peerId,
+        onMessage: async (msg) => {
+          this.defaultReceived.emit(msg);
+        }
+      })
+      .catch((err) => log.catch(err));
   }
 
   async close() {

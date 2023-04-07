@@ -443,6 +443,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/vault/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
@@ -483,7 +488,7 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/serve-with-halo/package.json",
+          "path": "tools/executors/serve-with-vault/package.json",
           "jsonpath": "$.version"
         },
         {

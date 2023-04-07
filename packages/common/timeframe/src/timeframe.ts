@@ -88,12 +88,16 @@ export class Timeframe implements Equatable {
     return `Timeframe${this.toString()}`;
   }
 
+  equals(other: Timeframe) {
+    return this.size() === other.size() && this.frames().every(([key, seq]) => other.get(key) === seq);
+  }
+
   [equalsSymbol](other: any) {
     if (!(other instanceof Timeframe)) {
       return false;
     }
 
-    return this.size() === other.size() && this.frames().every(([key, seq]) => other.get(key) === seq);
+    return this.equals(other);
   }
 
   /**

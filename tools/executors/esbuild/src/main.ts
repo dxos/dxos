@@ -6,6 +6,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import RawPlugin from 'esbuild-plugin-raw';
+import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -114,7 +115,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 return { contents: 'export default ""' };
               });
             }
-          }
+          },
+          yamlPlugin({})
         ]
       });
 
@@ -123,12 +125,13 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       if (context.isVerbose) {
         console.log(`Build took ${Date.now() - start}ms.`);
       }
+
       return result.errors;
     })
   );
 
   if (options.watch) {
-    await new Promise(() => {}); // wait indefinitely
+    await new Promise(() => {}); // Wait indefinitely.
   }
 
   return { success: errors.flat().length === 0 };

@@ -5,8 +5,8 @@
 import type { Browser, ConsoleMessage, Page } from 'playwright';
 
 import { Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test/playwright';
+import { ShellManager } from '@dxos/vault/testing';
 
 export class AppManager {
   page!: Page;
@@ -14,7 +14,7 @@ export class AppManager {
 
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
-  private _authenticationCode = new Trigger<string>();
+  private _authCode = new Trigger<string>();
 
   constructor(private readonly _browser: Browser) {}
 
@@ -24,12 +24,12 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('create-identity').isVisible(),
+      waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
       bridgeLogs: true
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
-    this.shell = new ShellManager(this.page, false);
+    this.shell = new ShellManager(this.page);
     this._initialized = true;
   }
 
@@ -63,8 +63,8 @@ export class AppManager {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
-      } else if (json.authenticationCode) {
-        this._authenticationCode.wake(json.authenticationCode);
+      } else if (json.authCode) {
+        this._authCode.wake(json.authCode);
       }
     } catch {}
   }

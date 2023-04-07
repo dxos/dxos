@@ -25,6 +25,7 @@ export const MessageFrame = () => {
   const messages = useQuery(space, Message.filter())
     .filter((message) => message.from.email)
     .sort(sortMessage);
+
   useEffect(() => {
     if (frame && messages.length && !objectId) {
       navigate(createPath({ spaceKey: space?.key, frame: frame!.module.id, objectId: messages[0].id }));

@@ -15,7 +15,7 @@ import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends ViewStateProps {
-  Domain: 'Space' | 'Halo';
+  Kind: 'Space' | 'Halo';
   failed?: boolean;
 }
 
@@ -24,20 +24,20 @@ const PureInvitationAuthenticatorContent = ({
   failed,
   joinSend,
   joinState,
-  Domain,
+  Kind,
   onChange,
   onAuthenticate
 }: {
   disabled?: boolean;
   joinSend: JoinSend;
   joinState?: JoinState;
-  Domain: InvitationAuthenticatorProps['Domain'];
+  Kind: InvitationAuthenticatorProps['Kind'];
   failed: InvitationAuthenticatorProps['failed'];
   onChange: ComponentProps<typeof Input>['onChange'];
   onAuthenticate: ComponentProps<typeof Button>['onClick'];
 }) => {
   const { t } = useTranslation('os');
-  const invitationType = Domain.toLowerCase() as 'space' | 'halo';
+  const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   return (
     <>
       <Input
@@ -54,7 +54,7 @@ const PureInvitationAuthenticatorContent = ({
             inputMode: 'numeric',
             autoComplete: 'off',
             pattern: '\\d*',
-            'data-autofocus': `connecting${Domain}Invitation inputting${Domain}VerificationCode authenticationFailing${Domain}VerificationCode authenticating${Domain}VerificationCode`,
+            'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
             'data-prevent-ios-autofocus': true,
             'data-testid': `${invitationType}-auth-code-input`,
             'data-1p-ignore': true
@@ -97,21 +97,21 @@ const InvitationAuthenticatorContent = ({
   joinState,
   disabled,
   invitation,
-  Domain,
+  Kind,
   failed
 }: {
   joinSend: JoinSend;
   joinState?: JoinState;
   disabled?: boolean;
   invitation: AuthenticatingInvitationObservable;
-  Domain: InvitationAuthenticatorProps['Domain'];
+  Kind: InvitationAuthenticatorProps['Kind'];
   failed: InvitationAuthenticatorProps['failed'];
 }) => {
-  const invitationType = Domain.toLowerCase();
+  const invitationType = Kind.toLowerCase();
   const [pinValue, setPinValue] = useState('');
   const { authenticate } = useInvitationStatus(invitation);
   const onAuthenticate = useCallback(() => {
-    joinSend({ type: `authenticate${Domain}VerificationCode` });
+    joinSend({ type: `authenticate${Kind}VerificationCode` });
     void authenticate(pinValue);
   }, [joinSend, authenticate, pinValue]);
   const onChange = useCallback(
@@ -125,26 +125,26 @@ const InvitationAuthenticatorContent = ({
   );
   return (
     <PureInvitationAuthenticatorContent
-      {...{ disabled, failed, joinSend, joinState, Domain, onChange, onAuthenticate }}
+      {...{ disabled, failed, joinSend, joinState, Kind, onChange, onAuthenticate }}
     />
   );
 };
 
-export const InvitationAuthenticator = ({ failed, Domain, ...viewStateProps }: InvitationAuthenticatorProps) => {
+export const InvitationAuthenticator = ({ failed, Kind, ...viewStateProps }: InvitationAuthenticatorProps) => {
   const { joinSend, joinState } = viewStateProps;
   const disabled =
     !viewStateProps.active ||
     ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str));
-  const activeInvitation = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitationObservable;
+  const activeInvitation = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].invitationObservable;
   return (
     <ViewState {...viewStateProps}>
       {!activeInvitation ? (
         <PureInvitationAuthenticatorContent
-          {...{ disabled, failed, joinSend, joinState, Domain, onChange: () => {}, onAuthenticate: () => {} }}
+          {...{ disabled, failed, joinSend, joinState, Kind, onChange: () => {}, onAuthenticate: () => {} }}
         />
       ) : (
         <InvitationAuthenticatorContent
-          {...{ disabled, failed, invitation: activeInvitation, joinSend, joinState, Domain }}
+          {...{ disabled, failed, invitation: activeInvitation, joinSend, joinState, Kind }}
         />
       )}
     </ViewState>

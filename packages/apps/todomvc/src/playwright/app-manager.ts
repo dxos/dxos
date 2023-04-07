@@ -5,8 +5,8 @@
 import type { Browser, ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test/playwright';
+import { ShellManager } from '@dxos/vault/testing';
 
 import { FILTER } from '../constants';
 

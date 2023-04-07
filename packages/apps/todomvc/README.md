@@ -5,5 +5,5 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run todomvc:serve-with-halo
+pnpm -w nx run todomvc:serve-with-vault
 ```

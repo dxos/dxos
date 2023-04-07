@@ -9,22 +9,22 @@ import assert from 'node:assert';
 import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
-import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { ClientServicesProvider } from '../client';
-import { CancellableInvitationObservable, InvitationsOptions, SpaceInvitationsProxy } from '../invitations';
+import { CancellableInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
 
 interface Internal {
-  get db(): DatabaseBackendProxy;
+  get db(): DatabaseProxy;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -70,7 +70,7 @@ export interface Space {
   postMessage: (channel: string, message: any) => Promise<void>;
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
-  createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
+  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
   removeInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
@@ -115,9 +115,9 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
-  private readonly _dbBackend?: DatabaseBackendProxy;
+  private readonly _dbBackend?: DatabaseProxy;
   private readonly _itemManager?: ItemManager;
-  private readonly _invitationProxy: SpaceInvitationsProxy;
+  private readonly _invitationProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
@@ -138,11 +138,14 @@ export class SpaceProxy implements Space {
     private _data: SpaceData,
     databaseRouter: DatabaseRouter
   ) {
-    assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
-    this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+    assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
+    this._invitationProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
+      kind: Invitation.Kind.SPACE,
+      spaceKey: this.key
+    }));
 
     assert(this._clientServices.services.DataService, 'DataService not available');
-    this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
+    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
 
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
@@ -151,6 +154,11 @@ export class SpaceProxy implements Space {
     };
 
     databaseRouter.register(this.key, this._db);
+
+    // Update observables
+    this._stateUpdate.emit(this._currentState);
+    this._pipelineUpdate.emit(_data.pipeline ?? {});
+    this._membersUpdate.emit(_data.members ?? []);
   }
 
   get key() {
@@ -356,25 +364,10 @@ export class SpaceProxy implements Space {
   /**
    * Creates an interactive invitation.
    */
-  createInvitation(options?: InvitationsOptions) {
+  createInvitation(options?: Partial<Invitation>) {
     log('create invitation', options);
-    const invitation = this._invitationProxy.createInvitation(this.key, options);
-
-    const unsubscribe = invitation.subscribe({
-      onConnecting: () => {
-        this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
-        unsubscribe();
-      },
-      onCancelled: () => {
-        unsubscribe();
-      },
-      onSuccess: () => {
-        unsubscribe();
-      },
-      onError: function (err: any): void {
-        unsubscribe();
-      }
-    });
+    const invitation = this._invitationProxy.createInvitation(options);
+    this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
 
     return invitation;
   }
@@ -385,7 +378,7 @@ export class SpaceProxy implements Space {
   removeInvitation(id: string) {
     log('remove invitation', { id });
     const invitations = this._invitations.get();
-    const index = invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    const index = invitations.findIndex((invitation) => invitation.get().invitationId === id);
     void invitations[index]?.cancel();
     this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
   }

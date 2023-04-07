@@ -1,0 +1,152 @@
+{
+  "sourceRoot": "packages/sdk/vault/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/vault/src/index.ts",
+        "outputPath": "packages/sdk/vault/dist/types",
+        "tsConfig": "packages/sdk/vault/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/sdk/vault/dist/bundle"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle-test": {
+      "dependsOn": [
+        "compile"
+      ],
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "base": "/src/testing",
+        "configFile": "packages/sdk/vault/src/testing/vite.config.ts",
+        "outputPath": "packages/sdk/vault/src/testing/dist"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/vault/src/index.ts",
+          "packages/sdk/vault/src/shared-worker.ts"
+        ],
+        "outputPath": "packages/sdk/vault/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/vault/src/cli.ts",
+          "packages/sdk/vault/src/testing/index.ts",
+          "packages/sdk/vault/src/vite-plugin.ts"
+        ],
+        "outputPath": "packages/sdk/vault/dist/node",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "chromium",
+          "webkit"
+        ],
+        "coveragePath": "coverage/packages/sdk/vault",
+        "outputPath": "tmp/playwright/packages/sdk/vault",
+        "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/sdk/vault",
+        "serve": "vault:serve-test",
+        "testPatterns": [
+          "packages/sdk/vault/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/vault/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/sdk/vault/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "preview": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "vault:bundle",
+        "port": 3967,
+        "staticFilePath": "packages/sdk/vault/dist/bundle"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "vault:bundle"
+      }
+    },
+    "serve-test": {
+      "dependsOn": [
+        "bundle",
+        "compile"
+      ],
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "vault:bundle-test"
+      }
+    }
+  }
+}

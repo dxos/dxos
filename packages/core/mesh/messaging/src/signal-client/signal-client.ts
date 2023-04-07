@@ -17,7 +17,7 @@ import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
-const MAX_RECONNECT_TIMEOUT = 10000;
+const MAX_RECONNECT_TIMEOUT = 5000;
 
 export enum SignalState {
   /** Connection is being established. */
@@ -114,9 +114,7 @@ export class SignalClient implements SignalMethods {
   constructor(
     private readonly _host: string,
     private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
-  ) {
-    this.open();
-  }
+  ) {}
 
   open() {
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
@@ -243,7 +241,7 @@ export class SignalClient implements SignalMethods {
       this._client = new SignalRPCClient(this._host);
     } catch (err: any) {
       if (this._state === SignalState.RE_CONNECTING) {
-        this._reconnectAfter *= 2;
+        this._incrementReconnectTimeout();
       }
 
       // TODO(burdon): If client isn't set, then flows through to error below.
@@ -266,7 +264,7 @@ export class SignalClient implements SignalMethods {
       }
 
       if (this._state === SignalState.RE_CONNECTING) {
-        this._reconnectAfter *= 2;
+        this._incrementReconnectTimeout();
       }
 
       this._lastError = error;
@@ -282,12 +280,17 @@ export class SignalClient implements SignalMethods {
       }
 
       if (this._state === SignalState.RE_CONNECTING) {
-        this._reconnectAfter *= 2;
+        this._incrementReconnectTimeout();
       }
 
       this._setState(SignalState.DISCONNECTED);
       this._reconnect();
     });
+  }
+
+  private _incrementReconnectTimeout() {
+    this._reconnectAfter *= 2;
+    this._reconnectAfter = Math.min(this._reconnectAfter, MAX_RECONNECT_TIMEOUT);
   }
 
   private _reconnect() {
@@ -298,11 +301,6 @@ export class SignalClient implements SignalMethods {
       return;
     }
     if (this._state === SignalState.CLOSED) {
-      return;
-    }
-
-    if (this._reconnectAfter > MAX_RECONNECT_TIMEOUT) {
-      log.error('Signal api reconnect timeout exceeded.');
       return;
     }
 

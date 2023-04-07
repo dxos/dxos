@@ -70,9 +70,9 @@ export class ItemDemuxer {
             }
           }
         }
-
-        this.mutation.emit(message);
       }
+
+      this.mutation.emit(message);
     };
   }
 

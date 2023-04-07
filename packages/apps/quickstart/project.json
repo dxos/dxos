@@ -43,7 +43,7 @@
         "buildTarget": "quickstart:bundle"
       }
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "dependsOn": [
         "^build"
       ],

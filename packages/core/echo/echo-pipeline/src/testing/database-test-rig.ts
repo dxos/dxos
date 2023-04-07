@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessageBlock } from '@dxos/protocols';
@@ -14,7 +14,7 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { DatabaseBackendHost } from '../dbhost';
+import { DatabaseHost } from '../dbhost';
 
 const SPACE_KEY = PublicKey.random();
 
@@ -33,9 +33,9 @@ export class DatabaseTestPeer {
   public readonly modelFactory = new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 
   public items!: ItemManager;
-  public proxy!: DatabaseBackendProxy;
+  public proxy!: DatabaseProxy;
 
-  public host!: DatabaseBackendHost;
+  public host!: DatabaseHost;
   public hostItems!: ItemManager;
 
   //
@@ -64,7 +64,7 @@ export class DatabaseTestPeer {
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseBackendHost(
+    this.host = new DatabaseHost(
       {
         write: async (message) => {
           const seq =
@@ -86,7 +86,7 @@ export class DatabaseTestPeer {
     );
     await this.host.open(this.hostItems, this.modelFactory);
 
-    this.proxy = new DatabaseBackendProxy(this.host.createDataServiceHost(), SPACE_KEY);
+    this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), SPACE_KEY);
     this.items = new ItemManager(this.modelFactory);
     await this.proxy.open(this.items, this.modelFactory);
   }

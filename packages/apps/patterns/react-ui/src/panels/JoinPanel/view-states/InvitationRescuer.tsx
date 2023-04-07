@@ -12,7 +12,7 @@ import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationConnectorProps extends ViewStateProps {
-  Domain: 'Space' | 'Halo';
+  Kind: 'Space' | 'Halo';
 }
 
 const InvitationActions = ({
@@ -20,16 +20,16 @@ const InvitationActions = ({
   disabled,
   joinSend,
   joinState,
-  Domain
+  Kind
 }: {
   invitationState?: Invitation.State;
   disabled?: boolean;
   joinSend: JoinSend;
   joinState?: JoinState;
-  Domain: InvitationConnectorProps['Domain'];
+  Kind: InvitationConnectorProps['Kind'];
 }) => {
   const { t } = useTranslation('os');
-  const invitationType = Domain.toLowerCase() as 'space' | 'halo';
+  const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   switch (invitationState) {
     case Invitation.State.CONNECTING:
       return (
@@ -73,7 +73,7 @@ const InvitationActions = ({
           <Button
             disabled={disabled}
             className='flex items-center gap-2 pli-2'
-            onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
+            onClick={() => joinSend({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
             <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
@@ -85,10 +85,10 @@ const InvitationActions = ({
   }
 };
 
-export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConnectorProps) => {
+export const InvitationRescuer = ({ Kind, ...viewStateProps }: InvitationConnectorProps) => {
   const disabled = !viewStateProps.active;
   const { joinSend, joinState } = viewStateProps;
-  const invitationState = joinState?.context[Domain.toLowerCase() as 'space' | 'halo'].invitation?.state;
+  const invitationState = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].invitation?.state;
   const { t } = useTranslation('os');
   return (
     <ViewState {...viewStateProps}>
@@ -98,9 +98,9 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
           <Button
             disabled={disabled}
             className='flex items-center gap-2 pli-2'
-            data-autofocus={`inputting${Domain}InvitationCode`}
+            data-autofocus={`inputting${Kind}InvitationCode`}
             data-testid='invitation-rescuer-blank-reset'
-            onClick={() => joinSend({ type: `reset${Domain}Invitation` })}
+            onClick={() => joinSend({ type: `reset${Kind}Invitation` })}
           >
             <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
             <span className='grow'>{t('reset label')}</span>
@@ -108,7 +108,7 @@ export const InvitationRescuer = ({ Domain, ...viewStateProps }: InvitationConne
           </Button>
         </>
       ) : (
-        <InvitationActions {...{ invitationState, disabled, joinSend, joinState, Domain }} />
+        <InvitationActions {...{ invitationState, disabled, joinSend, joinState, Kind }} />
       )}
     </ViewState>
   );

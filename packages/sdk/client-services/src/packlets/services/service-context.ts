@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Trigger } from '@dxos/async';
+import { Invitation } from '@dxos/client';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -25,7 +28,12 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
-import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
+import {
+  DeviceInvitationProtocol,
+  InvitationsHandler,
+  InvitationProtocol,
+  SpaceInvitationProtocol
+} from '../invitations';
 import { DataSpaceManager } from '../spaces';
 
 /**
@@ -41,13 +49,17 @@ export class ServiceContext {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
-  public readonly deviceInvitations: DeviceInvitationsHandler;
-
-  private _deviceSpaceSync?: CredentialConsumer<any>;
+  public readonly invitations: InvitationsHandler;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
-  public spaceInvitations?: SpaceInvitationsHandler;
+
+  private readonly _handlerFactories = new Map<
+    Invitation.Kind,
+    (invitation: Partial<Invitation>) => InvitationProtocol
+  >();
+
+  private _deviceSpaceSync?: CredentialConsumer<any>;
 
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -57,6 +69,7 @@ export class ServiceContext {
     public readonly networkManager: NetworkManager,
     public readonly modelFactory: ModelFactory
   ) {
+    networkManager._traceParent = this._instanceId;
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -76,6 +89,7 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager
     });
+    this.spaceManager._traceParent = this._instanceId;
 
     this.identityManager = new IdentityManager(
       this.metadataStore,
@@ -83,19 +97,21 @@ export class ServiceContext {
       this.feedStore,
       this.spaceManager
     );
+    this.identityManager._traceParent = this._instanceId;
+
+    this.invitations = new InvitationsHandler(this.networkManager);
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.deviceInvitations = new DeviceInvitationsHandler({
-      networkManager: this.networkManager,
-      getIdentity: () => this.identityManager.identity ?? failUndefined(),
-      acceptIdentity: this._acceptIdentity.bind(this),
-      keyring: this.keyring
-    });
+    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
+      this.keyring,
+      () => this.identityManager.identity ?? failUndefined(),
+      this._acceptIdentity.bind(this)
+    ));
   }
 
   async open() {
-    log.trace('dxos.sdk.client-services', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context', trace.begin({ id: this._instanceId }));
 
     log('opening...');
     await this.networkManager.open();
@@ -118,7 +134,7 @@ export class ServiceContext {
     this.dataServiceSubscriptions.clear();
     log('closed');
 
-    log.trace('dxos.sdk.client-services', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
   }
 
   async reset() {
@@ -133,6 +149,12 @@ export class ServiceContext {
 
     await this._initialize();
     return identity;
+  }
+
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    const factory = this._handlerFactories.get(invitation.kind);
+    assert(factory, `Unknown invitation kind: ${invitation.kind}`);
+    return factory(invitation);
   }
 
   private async _acceptIdentity(params: JoinIdentityParams) {
@@ -166,14 +188,13 @@ export class ServiceContext {
       this.feedStore,
       this.snapshotStore
     );
+    this.dataSpaceManager._traceParent = this._instanceId;
     await this.dataSpaceManager.open();
 
-    this.spaceInvitations = new SpaceInvitationsHandler(
-      this.networkManager,
-      this.dataSpaceManager,
-      signingContext,
-      this.keyring
-    );
+    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
+      assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
+      return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+    });
     this.initialized.wake();
 
     this._deviceSpaceSync = identity.space.spaceState.registerProcessor({

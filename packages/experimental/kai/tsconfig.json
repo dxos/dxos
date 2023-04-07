@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/halo-app"
-    },
-    {
       "path": "../../apps/patterns/react-appkit"
     },
     {
@@ -95,6 +92,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/vault"
     },
     {
       "path": "../chess-app"
