@@ -1,18 +1,14 @@
-# Interface `AppTunneling`
+# Interface `Bots`
 > Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/config.d.ts`]()
 
 Defined in:
    file://./../../dxos/config.proto
 
 ## Properties
-### [commandTemplate]()
-Type: <code>string</code>
-
 ### [enabled]()
 Type: <code>boolean</code>
 
-### [outputRe]()
-Type: <code>string</code>
+### [interval]()
+Type: <code>number</code>
 
-### [port]()
-Type: <code>string</code>
+Refresh interval - Seconds
