@@ -301,7 +301,7 @@ message Runtime {
     }
 
     message Signal {
-      optional string server = 1;
+      repeated string servers = 1;
       optional string api = 2;
       optional string status = 3;
     }

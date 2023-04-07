@@ -30,11 +30,11 @@ export const fromHost = (config: Config = new Config()): ClientServicesProvider 
  */
 // TODO(burdon): Move to client-services and remove dependencies from here.
 const createNetworkManager = (config: Config, options: Partial<NetworkManagerOptions> = {}): NetworkManager => {
-  const signalServer = config.get('runtime.services.signal.server');
-  if (signalServer) {
+  const signalServers = config.get('runtime.services.signal.servers');
+  if (signalServers) {
     const {
       log = true,
-      signalManager = new WebsocketSignalManager([signalServer]),
+      signalManager = new WebsocketSignalManager(signalServers),
       transportFactory = createWebRTCTransportFactory({
         iceServers: config.get('runtime.services.ice')
       })
