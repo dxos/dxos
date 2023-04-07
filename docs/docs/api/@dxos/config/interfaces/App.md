@@ -27,7 +27,7 @@ Options:
 Type: <code>string</code>
 
 Options:
-  - (env) = "PUBLIC_URL"
+  - (env_var) = "PUBLIC_URL"
   - proto3_optional = true
 
 ### [theme]()

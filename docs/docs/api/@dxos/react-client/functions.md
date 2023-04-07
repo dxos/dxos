@@ -170,11 +170,11 @@ Arguments:
 
 
 
-Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)[]</code>
 
 Arguments: none
 
-### [useIdentity(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L13)
+### [useIdentity(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L15)
 
 
 
@@ -188,7 +188,7 @@ Arguments:
 
 `options`: <code>object</code>
 
-### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L76)
+### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L74)
 
 
 
@@ -196,7 +196,7 @@ Returns: <code>[InvitationStatus](/api/@dxos/react-client/types/InvitationStatus
 
 Arguments: 
 
-`initialObservable`: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)</code>
+`initialObservable`: <code>[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)</code>
 
 ### [useKeyStore(defaultKeys)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/util/useKeyStore.ts#L13)
 
@@ -211,7 +211,7 @@ Arguments:
 
 `defaultKeys`: <code>string[]</code>
 
-### [useMembers(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
+### [useMembers(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L13)
 
 
 
@@ -229,19 +229,6 @@ Creates a network status subscription.
 
 
 Returns: <code>NetworkStatus</code>
-
-Arguments: none
-
-### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L30)
-
-
-
-Returns the first space in the current spaces array. If none exist,  `undefined` 
-will be returned at first, then the hook will re-run and return a space once
-it has been created. Requires a ClientProvider somewhere in the parent tree.
-
-
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 Arguments: none
 
@@ -274,7 +261,7 @@ Arguments:
 
 `resultSet`: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;T&gt;</code>
 
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L19)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L17)
 
 
 
@@ -304,13 +291,13 @@ Arguments:
 
 
 
-Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]</code>
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)[]</code>
 
 Arguments: 
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L68)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L35)
 
 
 
@@ -379,4 +366,4 @@ Returns: <code>Promise&lt;[Invitation](/api/@dxos/react-client/interfaces/Invita
 
 Arguments: 
 
-`observable`: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)</code>
+`observable`: <code>[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)</code>

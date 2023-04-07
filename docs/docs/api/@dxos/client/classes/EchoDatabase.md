@@ -14,14 +14,14 @@ Returns: <code>[EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</code>
 
 Arguments: 
 
-`_backend`: <code>DatabaseBackendProxy</code>
+`_backend`: <code>DatabaseProxy</code>
 
 `_router`: <code>[DatabaseRouter](/api/@dxos/client/classes/DatabaseRouter)</code>
 
 
 ## Properties
 ### [_backend]()
-Type: <code>DatabaseBackendProxy</code>
+Type: <code>DatabaseProxy</code>
 
 ### [objects]()
 Type: <code>[EchoObject](/api/@dxos/client/classes/EchoObject)&lt;any&gt;[]</code>
