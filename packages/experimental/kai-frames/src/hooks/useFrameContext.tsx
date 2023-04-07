@@ -85,9 +85,11 @@ export type FrameContextType = FrameState & {
   fullscreen?: boolean;
 };
 
-export const FrameContext: Context<FrameContextType | undefined> = createContext<FrameContextType | undefined>(
-  undefined
-);
+const FrameContext: Context<FrameContextType | undefined> = createContext<FrameContextType | undefined>(undefined);
+
+export const FrameContextProvider: FC<{ children: ReactNode; state: FrameContextType }> = ({ children, state }) => {
+  return <FrameContext.Provider value={state}>{children}</FrameContext.Provider>;
+};
 
 export const useFrameContext = (): FrameContextType => {
   const context = useContext(FrameContext)!;

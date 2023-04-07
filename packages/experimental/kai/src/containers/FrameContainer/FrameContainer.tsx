@@ -6,7 +6,7 @@ import React, { FC, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
-import { FrameState, FrameContext, FrameDef } from '@dxos/kai-frames';
+import { FrameContextProvider, FrameState, FrameDef } from '@dxos/kai-frames';
 
 import { createPath } from '../../hooks';
 
@@ -48,11 +48,11 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
 
   return (
     <main className='flex flex-1 flex-col overflow-hidden'>
-      <FrameContext.Provider value={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
+      <FrameContextProvider state={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
         <Suspense>
           <Component />
         </Suspense>
-      </FrameContext.Provider>
+      </FrameContextProvider>
     </main>
   );
 };
