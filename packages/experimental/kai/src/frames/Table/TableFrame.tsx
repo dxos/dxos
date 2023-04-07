@@ -5,8 +5,9 @@
 import React, { useEffect, useState } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
+import { Table } from '@dxos/mosaic';
 import { useQuery } from '@dxos/react-client';
-import { Table, Searchbar, Select } from '@dxos/react-components';
+import { Searchbar, Select } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { useAppRouter } from '../../hooks';

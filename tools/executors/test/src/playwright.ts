@@ -129,16 +129,16 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   outputDir: process.env.OUTPUT_PATH,
   timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : 30_000,
   forbidOnly: !!process.env.CI,
-  retries: 2,
+  retries: process.env.CI ? 2 : 0,
   reporter:
     process.env.WATCH === 'true'
       ? [['dot']]
       : process.env.RESULTS_PATH
-      ? [['dot'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
+      ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
       : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure'
   },
   projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType))
 };

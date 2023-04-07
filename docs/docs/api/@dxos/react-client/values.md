@@ -13,7 +13,7 @@ Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContex
 Type: "dxos:app"
 
 ### [`DEFAULT_CLIENT_ORIGIN`]()
-Type: "https://halo.dxos.org/vault.html"
+Type: string
 
 ### [`DEFAULT_SHELL_CHANNEL`]()
 Type: "dxos:shell"

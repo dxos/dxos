@@ -11,6 +11,7 @@ export const FirstRunPage = () => {
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
       <p
+        data-testid='composer.firstRunMessage'
         role='alert'
         className={mx(
           defaultDescription,

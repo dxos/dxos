@@ -5,23 +5,46 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client, Invitation, Space } from '@dxos/client';
+import { Client, Space, SpaceProxy } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestBuilder, testSpace } from '../testing';
+import { performInvitation, TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
 
     const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
     afterTest(() => client.destroy());
 
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    // TODO(burdon): Extend basic queries.
+    const space = await client.createSpace();
+    await testSpace(space.internal.db);
+
+    expect(space.members.get()).to.be.length(1);
+  });
+
+  // TODO(dmaretskyi): Test suit for different conditions/storages.
+  test.skip('creates a space on webfs', async () => {
+    const testBuilder = new TestBuilder();
+    // testBuilder.storage = createStorage({ type: StorageType.WEBFS });
+
+    const host = testBuilder.createClientServicesHost();
+    await host.open();
+    afterTest(() => host.close());
+    const [client, server] = testBuilder.createClientServer(host);
+    void server.open();
+    afterTest(() => server.close());
     await client.initialize();
+    afterTest(() => client.destroy());
+
     await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
@@ -92,33 +115,12 @@ describe('Spaces', () => {
     afterTest(() => Promise.all([client1.destroy()]));
     afterTest(() => Promise.all([client2.destroy()]));
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
-
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-
-    observable1.subscribe({
-      onConnecting: (invitation) => {
-        const observable2 = client2.acceptInvitation(invitation);
-        observable2.subscribe({
-          onSuccess: (invitation: Invitation) => {
-            success2.wake(invitation);
-          },
-          onError: (err: Error) => raise(err)
-        });
-      },
-      onSuccess: (invitation) => {
-        log('onSuccess');
-        success1.wake(invitation);
-      },
-      onError: (err) => raise(err)
-    });
-
-    const [_, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-
-    const space2 = await client2.getSpace(invitation2.spaceKey!)!.waitUntilReady();
+    const [, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({ host: space1 as SpaceProxy, guest: client2 })
+    );
+    const space2 = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
 
     const hello = new Trigger();
     {

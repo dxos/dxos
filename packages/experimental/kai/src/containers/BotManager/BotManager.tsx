@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Robot, Ghost } from '@phosphor-icons/react';
+import { Robot, Ghost, X } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { TableCellProps, TableColumn, Table } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
-import { Button, getSize, mx, Select, Table } from '@dxos/react-components';
+import { Button, getSize, mx, Select } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
@@ -27,7 +27,7 @@ type BotRecord = {
 };
 
 // running | exited
-const columns: Column<BotRecord>[] = [
+const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotRecord>[] => [
   {
     Header: 'state',
     accessor: (record) =>
@@ -65,6 +65,17 @@ const columns: Column<BotRecord>[] = [
     Header: 'created',
     accessor: (record) => formatDistance(new Date(record.created), Date.now(), { addSuffix: true }),
     width: 160
+  },
+  {
+    id: '__delete',
+    width: 80,
+    Cell: ({ cell }: TableCellProps<BotRecord>) => {
+      return (
+        <Button variant='ghost' onClick={() => onStop(cell.row.original.id)}>
+          <X />
+        </Button>
+      );
+    }
   }
 ];
 
@@ -121,13 +132,16 @@ export const BotManager = () => {
     refresh();
   };
 
-  const handleStop = async () => {
-    await botClient?.flushBots();
-    refresh();
+  const handleStop = async (id: string) => {
+    setStatus('stopping...');
+    await botClient?.stopBot(id);
+    setTimeout(handleFlush, 10_000);
+  };
+
+  const handleStopAll = async () => {
     setStatus('stopping...');
     await botClient?.stopBots();
-    setStatus('');
-    refresh(); // TODO(burdon): Wait until stopped before can remove (flush).
+    setTimeout(handleFlush, 10_000);
   };
 
   if (!botClient) {
@@ -154,7 +168,7 @@ export const BotManager = () => {
         </div>
         <div className='flex items-center space-x-2'>
           <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
-          <Button onClick={handleStop}>Stop</Button>
+          <Button onClick={handleStopAll}>Stop</Button>
           <Button onClick={handleFlush}>Flush</Button>
           <Button onClick={() => refresh}>Refresh</Button>
         </div>
@@ -162,7 +176,7 @@ export const BotManager = () => {
 
       <div className='flex flex-col flex-1'>
         <Table
-          columns={columns}
+          columns={columns({ onStop: handleStop })}
           data={records}
           slots={{
             header: { className: 'bg-paper-1-bg' },

@@ -50,6 +50,16 @@ Returns: <code>T</code>
 
 Arguments: none
 
+### [definitions(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/plugin/definitions.ts#L19)
+
+
+
+Returns: <code>object</code>
+
+Arguments: 
+
+`options`: <code>[ConfigPluginOpts](/api/@dxos/config/interfaces/ConfigPluginOpts)</code>
+
 ### [mapFromKeyValues(spec, values)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L33)
 
 

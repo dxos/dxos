@@ -40,6 +40,10 @@ export class WorkerRuntime {
     this._clientServices = new ClientServicesHost();
   }
 
+  get host() {
+    return this._clientServices;
+  }
+
   async start() {
     log('starting...');
     try {

@@ -72,6 +72,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/vault"
+    },
+    {
       "path": "../patterns/react-appkit"
     },
     {

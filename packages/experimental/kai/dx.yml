@@ -21,6 +21,7 @@ package:
         command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
         env:
           VITE_DEV: true
+          DX_VAULT: false
 
 runtime:
   client:

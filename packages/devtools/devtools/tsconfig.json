@@ -48,6 +48,9 @@
       "path": "../../common/sentry"
     },
     {
+      "path": "../../common/timeframe"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -76,6 +79,9 @@
     },
     {
       "path": "../../experimental/gem-spore"
+    },
+    {
+      "path": "../../experimental/mosaic"
     },
     {
       "path": "../../experimental/mosaic"

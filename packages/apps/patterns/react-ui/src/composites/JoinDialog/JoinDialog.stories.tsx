@@ -35,8 +35,8 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
       log.info('[next invitation code]', { nextInvitationCode });
       setInvitationCode(nextInvitationCode);
     }
-    if (invitation.authenticationCode) {
-      log.info('[verification code]', invitation.authenticationCode);
+    if (invitation.authCode) {
+      log.info('[verification code]', invitation.authCode);
     }
   }, []);
 
@@ -51,16 +51,7 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
     space.properties.name = 'Q3 2022 Planning';
 
     const invitation = space.createInvitation({ type: Invitation.Type.INTERACTIVE });
-
-    invitation.subscribe({
-      onAuthenticating: onInvitationEvent,
-      onCancelled: (...args) => log.warn('[cancelled]', args),
-      onConnected: onInvitationEvent,
-      onConnecting: onInvitationEvent,
-      onError: onInvitationEvent,
-      onSuccess: onInvitationEvent,
-      onTimeout: (...args) => log.warn('[timeout]', args)
-    });
+    invitation.subscribe(onInvitationEvent, (err) => log.catch(err));
 
     return () => {
       void Promise.all(clients.map((client) => client.destroy()));

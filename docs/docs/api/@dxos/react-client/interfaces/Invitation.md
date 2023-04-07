@@ -7,32 +7,23 @@ Defined in:
    file://./../../../dxos/client/services.proto
 
 ## Properties
-### [authMethod]()
-Type: <code>AuthMethod</code>
-
-Options:
-  - proto3_optional = true
-
-### [authenticationCode]()
+### [authCode]()
 Type: <code>string</code>
 
-Authentication code created by host.
+Authentication code created by host (only present if auth_method is SHARED_SECRET).
 
 Options:
   - proto3_optional = true
 
-### [error]()
-Type: <code>[Error](/api/@dxos/react-client/enums#Error)</code>
+### [authMethod]()
+Type: <code>[AuthMethod](/api/@dxos/react-client/enums#AuthMethod)</code>
 
-Error.
-
-Options:
-  - proto3_optional = true
+How the invitation is authenticated.
 
 ### [identityKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
-Guest's identity (only present if OFFLINE).
+Guest's identity.
 
 Options:
   - proto3_optional = true
@@ -40,15 +31,17 @@ Options:
 ### [invitationId]()
 Type: <code>string</code>
 
-Local identifier.
+Local identifier (random).
 
-Options:
-  - proto3_optional = true
+### [kind]()
+Type: <code>[Kind](/api/@dxos/react-client/enums#Kind)</code>
+
+Kind of access the invitation will grant.
 
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
-Space to join.
+Space to join (only present if kind is SPACE).
 
 Options:
   - proto3_optional = true
@@ -58,16 +51,10 @@ Type: <code>[State](/api/@dxos/react-client/enums#State)</code>
 
 Local state.
 
-Options:
-  - proto3_optional = true
-
 ### [swarmKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 Swarm rendezvous (random).
-
-Options:
-  - proto3_optional = true
 
 ### [timeout]()
 Type: <code>number</code>
@@ -80,7 +67,4 @@ Options:
 ### [type]()
 Type: <code>[Type](/api/@dxos/react-client/enums#Type)</code>
 
-Determined when created.
-
-Options:
-  - proto3_optional = true
+Determines the behavior of the invitation.

@@ -4,10 +4,10 @@
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { ConfigProto } from '@dxos/config';
-import { Button, getSize, Table } from '@dxos/react-components';
+import { TableColumn, Table } from '@dxos/mosaic';
+import { Button, getSize } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
@@ -16,19 +16,26 @@ import { useKube } from '../../hooks';
 // TODO(burdon): Get from KUBE config proto.
 type Module = {
   name: string;
+  build?: {
+    version: string;
+  };
   type: string;
   displayName: string;
   description: string;
   tags: string[];
 };
 
-// TODO(burdon): App versions.
-const columns: (host: string | undefined) => Column<Module>[] = (host) => {
-  const columns: Column<Module>[] = [
+const columns: (host: string | undefined) => TableColumn<Module>[] = (host) => {
+  const columns: TableColumn<Module>[] = [
     {
       Header: 'module',
       accessor: ({ name }) => name,
       width: 120
+    },
+    {
+      Header: 'version',
+      accessor: ({ build }) => build?.version,
+      width: 80
     },
     {
       Header: 'type',
@@ -52,9 +59,9 @@ const columns: (host: string | undefined) => Column<Module>[] = (host) => {
       Cell: ({ value }: { value: string[] }) => (
         <div>
           {value.sort(alphabetical()).map((tag, i) => (
-            <span key={i} className='rounded-lg p-1 mr-2 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>
-              {tag}
-            </span>
+            <div key={i} className='pr-1'>
+              <span className='rounded-md p-1 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>{tag}</span>
+            </div>
           ))}
         </div>
       )
@@ -105,7 +112,7 @@ export const RegistryPage = () => {
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin' }
+          cell: { className: 'align-start font-mono font-thin p-0 m-1' }
         }}
       />
     </div>

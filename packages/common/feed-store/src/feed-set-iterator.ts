@@ -97,7 +97,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       })
     );
 
-    // TODO(burdon): Open at index?
     await queue.open({
       start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index
     });
@@ -137,6 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
+        log('selected', { idx, blocks });
         if (idx === undefined) {
           // Timeout if all candidates are rejected.
           if (t === undefined) {

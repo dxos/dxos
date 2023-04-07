@@ -4,10 +4,10 @@
 
 import { noCase } from 'change-case';
 import React from 'react';
-import { Column } from 'react-table';
 
 import { TypedObject, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { schema } from '@dxos/kai-types';
+import { TableColumn } from '@dxos/mosaic';
 import { PublicKey } from '@dxos/react-client';
 
 // UX field types.
@@ -16,7 +16,7 @@ const COLUMN_TYPES = ['string', 'number', 'boolean'];
 export type ColumnType<T extends TypedObject> = {
   id: string; // TODO(burdon): Type `name`?
   title: string;
-  columns: Column<TypedObject>[];
+  columns: TableColumn<TypedObject>[];
   filter?: TypeFilter<any>;
   subFilter?: (match?: string) => (object: T) => boolean;
 };
@@ -24,7 +24,7 @@ export type ColumnType<T extends TypedObject> = {
 // TODO(burdon): Factor out.
 export const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   const generateColumns = (type: EchoSchemaType) => {
-    const columns: Column<TypedObject>[] = [
+    const columns: TableColumn<TypedObject>[] = [
       {
         Header: 'id',
         accessor: (object) => PublicKey.from(object.id).truncate(),
@@ -34,7 +34,7 @@ export const generateTypes = (schemaTypes: EchoSchemaType[]) => {
 
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
-        const column: Column<TypedObject> = {
+        const column: TableColumn<TypedObject> = {
           Header: noCase(field.name),
           accessor: field.name
         };

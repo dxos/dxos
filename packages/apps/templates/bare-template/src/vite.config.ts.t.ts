@@ -54,6 +54,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   return /* javascript */ text`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
+  import { VaultPlugin } from '@dxos/vault/vite-plugin';
   ${() => imports.render(defaultOutputFile)}
 
   // https://vitejs.dev/config/
@@ -64,6 +65,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
+      VaultPlugin(),
       ConfigPlugin(),
       ${react ? `${reactPlugin()}(),` : ''}
       ${

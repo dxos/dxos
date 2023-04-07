@@ -106,7 +106,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ]
         });
       }
-    }, [provider, peer]);
+    }, [provider, peer, themeMode]);
 
     useEffect(() => {
       if (!parent) {
@@ -155,16 +155,13 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
         ]
       });
+
       setState(state);
 
-      if (view) {
-        // NOTE: This repaints the editor.
-        // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
-        // Ideally this should not be hit except when changing between text objects.
-        view.setState(state);
-      } else {
-        setView(new EditorView({ state, parent }));
-      }
+      // NOTE: This repaints the editor.
+      // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
+      // Ideally this should not be hit except when changing between text objects.
+      setView(new EditorView({ state, parent }));
 
       return () => {
         if (view) {
@@ -173,7 +170,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           setState(undefined);
         }
       };
-    }, [parent, content, provider?.awareness]);
+    }, [parent, content, provider?.awareness, themeMode]);
 
     return <div key={id} {...slots.root} ref={setParent} />;
   }

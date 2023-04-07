@@ -25,6 +25,10 @@ export class MeshProxy {
   private _ctx?: Context;
 
   private readonly _instanceId = PublicKey.random().toHex();
+  /**
+   * @internal
+   */
+  public _traceParent?: string;
 
   // prettier-ignore
   constructor(
@@ -50,7 +54,7 @@ export class MeshProxy {
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.mesh-proxy', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.mesh-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');

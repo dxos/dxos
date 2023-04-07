@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -26,6 +26,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/mosaic": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
@@ -35,13 +36,13 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
     "react-syntax-highlighter": "^15.5.0",
-    "react-table": "^7.8.0",
     "react-vis": "^1.11.12"
   },
   "devDependencies": {
@@ -55,7 +56,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/react-syntax-highlighter": "^15.5.5",
-    "@types/react-table": "^7.7.14",
     "@types/react-vis": "^1.11.11",
     "@vitejs/plugin-react": "^3.0.1",
     "postcss": "^8.4.21",

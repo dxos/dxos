@@ -6,6 +6,8 @@ formatter:
 filter:
   - warn
   - info
+  - database-proxy.ts:debug
+  - data-service-host.ts:debug
   # - debug
   # - test.ts:debug
   # - database:debug
@@ -29,7 +31,8 @@ filter:
   # - auth:debug
   # - control-pipeline:debug
   # - notarization:debug
-  # - pipeline:debug
+  - pipeline:debug
+  - iterator:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

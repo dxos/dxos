@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Invitation } from '@dxos/client';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { describe, test } from '@dxos/test';
 
@@ -16,7 +17,7 @@ describe('services/ServiceContext', () => {
     const space1 = await device1.dataSpaceManager!.createSpace();
 
     const device2 = createServiceContext({ signalContext: networkContext });
-    await performInvitation(device1.deviceInvitations, device2.deviceInvitations, undefined);
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
@@ -29,7 +30,7 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = createServiceContext({ signalContext: networkContext });
-    await performInvitation(device1.deviceInvitations, device2.deviceInvitations, undefined);
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
@@ -43,12 +44,18 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = createServiceContext({ signalContext: networkContext });
-    await performInvitation(device1.deviceInvitations, device2.deviceInvitations, undefined);
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const identity2 = createServiceContext({ signalContext: networkContext });
     await identity2.createIdentity();
     const space1 = await identity2.dataSpaceManager!.createSpace();
-    await performInvitation(identity2.spaceInvitations!, device1.spaceInvitations!, space1);
+    await Promise.all(
+      performInvitation({
+        host: identity2,
+        guest: device1,
+        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key }
+      })
+    );
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);

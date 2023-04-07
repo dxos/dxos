@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot-lab",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "private": true,
   "description": "Bot experiments incubator.",
   "homepage": "https://dxos.org",
@@ -19,7 +19,7 @@
   "scripts": {
     "build": "node -r @swc-node/register src/build.ts",
     "build:local": "pnpm -w nx compile bot-lab && pnpm run build && docker build . -t ghcr.io/dxos/bot:latest",
-    "build:remote": "pnpm -w nx compile bot-lab && pnpm run build && docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/dxos/bot:latest . --push"
+    "build:remote": "pnpm -w nx compile bot-lab && pnpm run build && docker buildx build --platform linux/amd64 -t ghcr.io/dxos/bot:latest . --push"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -35,6 +35,7 @@
     "esbuild": "^0.16.14",
     "express": "4.17.1",
     "http-proxy": "^1.18.1",
-    "node-http-proxy": "^0.2.4"
+    "node-http-proxy": "^0.2.4",
+    "sort-keys": "^5.0.0"
   }
 }

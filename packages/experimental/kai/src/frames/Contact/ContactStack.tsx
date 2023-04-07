@@ -5,13 +5,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Contact, DocumentStack, Message } from '@dxos/kai-types';
+import { Stack, StackRow } from '@dxos/mosaic';
+import { observer } from '@dxos/react-client';
 import { Button } from '@dxos/react-components';
 
 import { AddressSection, CardProps } from '../../cards';
 import { formatShortDate, sortMessage } from '../Message';
-import { Stack, StackRow } from '../Stack';
+import { sectionActions, StackSection, CustomActionMenu } from '../Stack';
 
-export const ContactStack = ({ space, object }: CardProps<Contact>) => {
+export const ContactStack = observer(({ space, object }: CardProps<Contact>) => {
   const name = object.name ?? object.email;
   const [stack, setStack] = useState<DocumentStack>();
   useEffect(() => {
@@ -33,12 +35,12 @@ export const ContactStack = ({ space, object }: CardProps<Contact>) => {
 
   return (
     <div className='flex flex-col w-full'>
-      <StackRow className='py-4 border-b'>
+      <StackRow slots={{ root: { className: 'py-4 border-b' } }}>
         <div className='text-2xl'>{name}</div>
       </StackRow>
 
       {(object.email !== name || object.username !== undefined) && (
-        <StackRow className='py-4 border-b'>
+        <StackRow slots={{ root: { className: 'py-4 border-b' } }}>
           <div className='flex flex-col text-sm'>
             {object.email && object.email !== name && <div className='text-sky-700'>{object.email}</div>}
             {object.username && <div className='text-sky-700'>{object.username}</div>}
@@ -48,16 +50,16 @@ export const ContactStack = ({ space, object }: CardProps<Contact>) => {
       )}
 
       {object.address && (
-        <StackRow className='py-4 border-b'>
+        <StackRow slots={{ root: { className: 'py-4 border-b' } }}>
           <AddressSection address={object.address} />
         </StackRow>
       )}
 
       {/* TODO(burdon): Icon and Link. */}
-      {object.employer && <StackRow className='py-4 border-b'>{object.employer.name}</StackRow>}
+      {object.employer && <StackRow slots={{ root: { className: 'py-4 border-b' } }}>{object.employer.name}</StackRow>}
 
       {messages.length > 0 && (
-        <StackRow className='py-4'>
+        <StackRow slots={{ root: { className: 'py-4' } }}>
           {messages.map((message) => (
             <div key={message.id} className='flex flex-col overflow-hidden items'>
               <div className='flex overflow-hidden items-center'>
@@ -72,13 +74,24 @@ export const ContactStack = ({ space, object }: CardProps<Contact>) => {
       )}
 
       {stack && (
-        <div className='py-4'>
-          <Stack space={space} stack={stack} showTitle={false} />
+        <div>
+          <Stack<DocumentStack.Section>
+            slots={{
+              section: {
+                className: 'py-4'
+              }
+            }}
+            sections={stack.sections}
+            StackSection={StackSection}
+            ContextMenu={({ section }) => (
+              <CustomActionMenu actions={sectionActions(section)} stack={stack} section={section} />
+            )}
+          />
         </div>
       )}
 
       {!stack && (
-        <StackRow className='py-4'>
+        <StackRow slots={{ root: { className: 'py-4' } }}>
           <div>
             <Button variant='outline' onClick={() => handleCreateStack()}>
               Create Stack
@@ -88,4 +101,4 @@ export const ContactStack = ({ space, object }: CardProps<Contact>) => {
       )}
     </div>
   );
-};
+});

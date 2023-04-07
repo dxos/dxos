@@ -9,7 +9,7 @@ import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory,
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, genesisMutation } from '@dxos/echo-db';
+import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -116,7 +116,7 @@ export class TestBuilder {
   }
 }
 
-export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
+export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
   const objectId = PublicKey.random().toHex();
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
@@ -133,7 +133,7 @@ export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBac
   return result;
 };
 
-export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendProxy) => {
+export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
   // Check item replicated from 1 => 2.
   await testSpace(db1, db2);
 
@@ -150,27 +150,38 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservabli = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+      const hostObservable = rootSpace.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
       log('invitation created');
-      hostObservabli.subscribe({
-        onConnecting: (invitation) => {
-          const guestObservable = peer.acceptInvitation(invitation);
-          log('invitation accepted');
+      hostObservable.subscribe(
+        (hostInvitation) => {
+          switch (hostInvitation.state) {
+            case Invitation.State.CONNECTING: {
+              const guestObservable = peer.acceptInvitation(hostInvitation);
+              log('invitation accepted');
 
-          guestObservable.subscribe({
-            onSuccess: (invitation: Invitation) => {
-              guestDone.wake(invitation);
-              log('invitation guestDone');
-            },
-            onError: (err: Error) => raise(err)
-          });
+              guestObservable.subscribe(
+                (guestInvitation) => {
+                  switch (guestInvitation.state) {
+                    case Invitation.State.SUCCESS: {
+                      guestDone.wake(guestInvitation);
+                      log('invitation guestDone');
+                      break;
+                    }
+                  }
+                },
+                (err) => raise(err)
+              );
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              hostDone.wake(hostInvitation);
+              log('invitation hostDone');
+            }
+          }
         },
-        onSuccess: (invitation) => {
-          hostDone.wake(invitation);
-          log('invitation hostDone');
-        },
-        onError: (err) => raise(err)
-      });
+        (err) => raise(err)
+      );
 
       await Promise.all([hostDone.wait(), guestDone.wait()]);
     })

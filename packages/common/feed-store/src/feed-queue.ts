@@ -75,6 +75,7 @@ export class FeedQueue<T extends {}> {
 
   /**
    * Opens (or reopens) the queue.
+   * @param options.start Starting index. First mutation to be read would have `seq == options.start`.
    */
   async open(options: ReadStreamOptions = {}) {
     if (this.isOpen) {
@@ -91,7 +92,7 @@ export class FeedQueue<T extends {}> {
 
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
-    const feedStream = this._feed.core.createReadStream(opts);
+    const feedStream = this._feed.createReadableStream(opts);
 
     this._feedConsumer = new Writable({
       write: (data: any, next: () => void) => {

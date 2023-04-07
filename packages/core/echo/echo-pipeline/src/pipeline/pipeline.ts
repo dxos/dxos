@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { sleep, Trigger } from '@dxos/async';
+import { sleep, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -15,7 +15,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
-import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
+import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
 
 export type WaitUntilReachedTargetParams = {
   /**
@@ -54,13 +54,14 @@ export class PipelineState {
    * Latest theoretical timeframe based on the last mutation in each feed.
    * NOTE: This might never be reached if the mutation dependencies
    */
+  // TODO(dmaretskyi): Rename `totalTimeframe`? or `lastTimeframe`.
   get endTimeframe() {
     return mapFeedIndexesToTimeframe(
       this._iterator.feeds
-        .filter((feed) => feed.properties.length > 0)
+        .filter((feed) => feed.length > 0)
         .map((feed) => ({
           feedKey: feed.key,
-          index: feed.properties.length - 1
+          index: feed.length - 1
         }))
     );
   }
@@ -69,8 +70,16 @@ export class PipelineState {
     return this._timeframeClock.timeframe;
   }
 
+  get pendingTimeframe() {
+    return this._timeframeClock.pendingTimeframe;
+  }
+
   get targetTimeframe() {
     return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
+  }
+
+  get feeds() {
+    return this._iterator.feeds;
   }
 
   async waitUntilTimeframe(target: Timeframe) {
@@ -175,7 +184,7 @@ export class Pipeline implements PipelineAccessor {
 
   // Inbound feed stream.
   private readonly _feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
-    start: mapTimeframeToFeedIndexes(this._initialTimeframe),
+    start: startAfter(this._initialTimeframe),
     stallTimeout: 1000
   });
 
@@ -212,6 +221,8 @@ export class Pipeline implements PipelineAccessor {
     return this._feedSetIterator.feeds;
   }
 
+  // NOTE: This cannot be synchronized with `stop` because stop waits for the mutation processing to complete,
+  // which might be opening feeds during the mutation processing, which w
   async addFeed(feed: FeedWrapper<FeedMessage>) {
     await this._feedSetIterator.addFeed(feed);
   }
@@ -233,12 +244,14 @@ export class Pipeline implements PipelineAccessor {
     );
   }
 
+  @synchronized
   async start() {
     log('starting...', {});
     await this._feedSetIterator.open();
     log('started');
   }
 
+  @synchronized
   async stop() {
     log('stopping...', {});
     await this._feedSetIterator.close();
@@ -256,10 +269,11 @@ export class Pipeline implements PipelineAccessor {
 
     for await (const block of this._feedSetIterator) {
       this._processingTrigger.reset();
+      this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
       yield block;
       this._processingTrigger.wake();
 
-      this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
+      this._timeframeClock.updateTimeframe();
     }
 
     // TODO(burdon): Test re-entrant?
