@@ -30,18 +30,18 @@ import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/reac
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
 import { FrameObjectList, FrameRegistryDialog } from '../../containers';
+import { objectMeta } from '../../frames';
 import {
   createInvitationPath,
   createPath,
   getIcon,
   defaultFrameId,
-  objectMeta,
   Section,
   SearchResults,
   useAppRouter,
   useTheme,
-  useFrames,
-  useAppReducer
+  useAppReducer,
+  useAppState
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
@@ -218,14 +218,15 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     }
   }, [space]);
 
-  const { active: activeFrames } = useFrames();
-
+  const { frames: activeFrames } = useAppState();
+  // const frameRegistry = useFrameRegistry();
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
 
+    // TODO(burdon): Hack.
     // Check if Frame which we are try to focus in is installed, and install it if necessary.
     const id = path?.split('/')[3].split('_').join('.');
-    // TODO(mykola): Reconcile with FrameRegistry
+    // TODO(mykola): Reconcile with FrameRegistry.
     if (id) {
       const activate = !activeFrames.find((frameId) => frameId === id);
       if (activate) {

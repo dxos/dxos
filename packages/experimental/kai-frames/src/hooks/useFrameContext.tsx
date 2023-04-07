@@ -5,77 +5,57 @@
 import React, { Context, FC, ReactNode, createContext, useContext } from 'react';
 
 import { Space } from '@dxos/client';
+import { raise } from '@dxos/debug';
 
-import { FrameDef } from '../registry';
-
-//
-// Global app state.
-//
-
-// TODO(burdon): Make extensible? Or just an aspect for frames?
-/*
-
-export type AppState = {
-  fullscreen?: boolean;
-};
-
-export type AppContext = {
-  state: AppState;
-  setFullscreen: (fullscreen: boolean) => void;
-};
-
-type ActionType = {
-  type: 'set-fullscreen';
-};
-
-type SetFullscreenAction = ActionType & {
-  fullscreen: boolean;
-};
-
-type Action = SetFullscreenAction;
-
-const AppContextImpl: Context<AppContext | undefined> = createContext<AppContext | undefined>(undefined);
-
-export const AppContextProvider: FC<{ children: ReactNode; initialState: AppState }> = ({ children, initialState }) => {
-  const [state, dispatch] = useReducer((state: AppState, action: Action) => {
-    switch (action.type) {
-      case 'set-fullscreen': {
-        const { fullscreen } = action as SetFullscreenAction;
-        return { ...state, fullscreen };
-      }
-    }
-
-    return state;
-  }, initialState ?? {});
-
-  const context: AppContext = {
-    state,
-    setFullscreen: (fullscreen: boolean) => {
-      dispatch({ type: 'set-fullscreen', fullscreen });
-    }
-  };
-
-  return <AppContextImpl.Provider value={context}>{children}</AppContextImpl.Provider>;
-};
-
-export const useAppState = (): AppState => {
-  const { state } = useContext(AppContextImpl) ?? raise(new Error('Missing AppStateContext.'));
-  return state;
-};
-
-export const useAppContext = (): AppContext => {
-  return useContext(AppContextImpl) ?? raise(new Error('Missing AppStateContext.'));
-};
-*/
+import { FrameDef, FrameRegistry } from '../registry';
 
 //
-// Frame context.
+// Frame registry.
+//
+
+export type FrameRegistryContextType = {
+  frameRegistry: FrameRegistry;
+};
+
+const FrameRegistryContext: Context<FrameRegistryContextType | undefined> = createContext<
+  FrameRegistryContextType | undefined
+>(undefined);
+
+export const FrameRegistryContextProvider: FC<{ children: ReactNode; frameDefs?: FrameDef<any>[] }> = ({
+  children,
+  frameDefs = []
+}) => {
+  const frameRegistry = frameDefs.reduce((registry, frameDef) => {
+    registry.addFrameDef(frameDef);
+    return registry;
+  }, new FrameRegistry());
+
+  return (
+    <FrameRegistryContext.Provider
+      value={{
+        frameRegistry
+      }}
+    >
+      {children}
+    </FrameRegistryContext.Provider>
+  );
+};
+
+export const useFrameRegistry = () => {
+  const { frameRegistry } = useContext(FrameRegistryContext) ?? raise(new Error('Missing FrameRegistryContext.'));
+  return frameRegistry;
+};
+
+//
+// Frame container.
 //
 
 export type FrameState = {
   space?: Space;
   frame?: FrameDef<any>;
   objectId?: string;
+
+  // TODO(burdon): Generalize.
   fullscreen?: boolean;
 };
 
@@ -94,7 +74,7 @@ export const FrameContextProvider: FC<{ children: ReactNode; state: FrameContext
 };
 
 export const useFrameContext = (): FrameContextType => {
-  const context = useContext(FrameContext)!;
+  const context = useContext(FrameContext) ?? raise(new Error('Missing FrameContext.'));
   return context!;
 };
 

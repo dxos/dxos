@@ -4,20 +4,19 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useFrameContext, useFrameRouter } from '@dxos/kai-frames';
+import { useFrameContext, useFrameRouter, useFrameRegistry } from '@dxos/kai-frames';
 import { Message } from '@dxos/kai-types';
 import { useClient, useQuery } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { useFrames } from '../../hooks';
 import { sortMessage } from '../Message';
 import { ChatPanel } from './ChatPanel';
 import { Video } from './Video';
 
 export const ChatFrame = () => {
   const client = useClient();
+  const frameRegistry = useFrameRegistry();
   const { space, frame, objectId } = useFrameContext();
-  const { frames } = useFrames();
   const router = useFrameRouter();
   const selectedRef = useRef<HTMLDivElement>(null);
   const messages = useQuery(space, Message.filter())
@@ -32,7 +31,7 @@ export const ChatFrame = () => {
       // TODO(burdon): Load frame.
       const [frame, objectId] = message.ref?.split('/') ?? [];
       if (frame) {
-        router({ space, frame: frames.get(frame), objectId });
+        router({ space, frame: frameRegistry.getFrameDef(frame), objectId });
       }
     }
   };

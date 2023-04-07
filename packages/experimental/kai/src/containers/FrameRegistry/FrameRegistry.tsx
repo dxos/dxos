@@ -5,11 +5,11 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { FrameDef } from '@dxos/kai-frames';
+import { useFrameRegistry, FrameDef } from '@dxos/kai-frames';
 import { ScrollContainer } from '@dxos/mosaic';
 import { getSize, mx, Dialog } from '@dxos/react-components';
 
-import { useFrames, useAppReducer, createPath, useAppRouter } from '../../hooks';
+import { useAppReducer, createPath, useAppRouter, useAppState } from '../../hooks';
 
 // TODO(burdon): Inject generic classes for slots from themecontext.
 
@@ -66,9 +66,11 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots; onSelect?: (frameId
 }) => {
   const { space } = useAppRouter();
   const navigate = useNavigate();
-  const { frames, active: activeFrames } = useFrames();
+  const { frames: activeFrames } = useAppState();
+  const frameRegistry = useFrameRegistry();
   const { setActiveFrame } = useAppReducer();
 
+  // TODO(burdon): Active should depend on objects within the Space.
   const handleSelect = (id: string) => {
     const active = !activeFrames.find((frameId) => frameId === id);
     setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
@@ -82,20 +84,18 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots; onSelect?: (frameId
     <div className='flex flex-col flex-1 overflow-hidden py-4'>
       <ScrollContainer vertical>
         <div className='flex flex-wrap gap-3'>
-          {Array.from(frames.values())
-            .sort(sorter)
-            .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
-              <Tile
-                key={id!}
-                id={id!}
-                label={displayName ?? id!}
-                description={description}
-                slots={slots}
-                Icon={Icon}
-                onSelect={handleSelect}
-                active={!!activeFrames.find((active) => active === id)}
-              />
-            ))}
+          {frameRegistry.frames.sort(sorter).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
+            <Tile
+              key={id!}
+              id={id!}
+              label={displayName ?? id!}
+              description={description}
+              slots={slots}
+              Icon={Icon}
+              onSelect={handleSelect}
+              active={!!activeFrames.find((active) => active === id)}
+            />
+          ))}
         </div>
       </ScrollContainer>
     </div>

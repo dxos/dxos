@@ -8,7 +8,7 @@ import { TypedObject } from '@dxos/echo-schema';
 import { useFrameContext, useFrameRouter } from '@dxos/kai-frames';
 
 import { SearchPanel } from '../../containers';
-import { objectMeta } from '../../hooks';
+import { objectMeta } from '../../frames';
 
 export const SearchFrame = () => {
   const { space } = useFrameContext();

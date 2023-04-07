@@ -2,11 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import { ClientProvider, Config, Space, useClient } from '@dxos/react-client';
+import { MetagraphClientFake } from '@dxos/metagraph';
+import { useSpaces } from '@dxos/react-client';
+import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 
-import { FrameContextProvider, useFrameContext } from './useFrameContext';
+import { FrameContextProvider, FrameRegistryContextProvider, useFrameContext } from './useFrameContext';
+
+import '@dxosTheme';
 
 export default {
   component: FrameContextProvider,
@@ -17,41 +22,37 @@ export default {
 
 const TestFrame = () => {
   const { space } = useFrameContext();
-  return <div>{space!.key.toHex()}</div>;
-};
-
-// TODO(burdon): Convert to decorator?
-const TestApp = () => {
-  const client = useClient();
-  const [space, setSpace] = useState<Space>();
-  useEffect(() => {
-    setTimeout(async () => {
-      const space = await client.createSpace();
-      setSpace(space);
-    });
-  }, []);
-
-  if (!space) {
-    return null;
-  }
-
   return (
-    <FrameContextProvider state={{ space }}>
-      <TestFrame />
-    </FrameContextProvider>
+    <div className='flex w-full justify-center'>
+      <div className='flex w-[600px] m-4 p-2 overflow-hidden bg-white'>
+        <div>{space!.key.truncate()}</div>
+      </div>
+    </div>
   );
 };
 
-const Test = () => {
-  const config = new Config({});
+const TestApp = () => {
+  // TODO(burdon): Replace fake with memory backend.
+  const metagraph = new MetagraphClientFake([]);
+  const spaces = useSpaces();
+  if (!spaces.length) {
+    return null;
+  }
+
+  // TODO(burdon): FrameRegistry (use DMG with runtime bindings).
 
   return (
-    <ClientProvider config={config}>
-      <TestApp />
-    </ClientProvider>
+    <MetagraphProvider>
+      <FrameRegistryContextProvider>
+        <FrameContextProvider state={{ space: spaces[0] }}>
+          <TestFrame />
+        </FrameContextProvider>
+      </FrameRegistryContextProvider>
+    </MetagraphProvider>
   );
 };
 
 export const Default = {
-  render: () => <Test />
+  decorators: [ClientSpaceDecorator()],
+  render: () => <TestApp />
 };

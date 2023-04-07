@@ -3271,15 +3271,18 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/react-metagraph': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -3322,10 +3325,12 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../metagraph
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-metagraph': link:../react-metagraph
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -3341,6 +3346,7 @@ importers:
       react-table: 7.8.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.21.3
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21

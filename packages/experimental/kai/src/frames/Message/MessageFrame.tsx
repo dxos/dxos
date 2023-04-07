@@ -5,13 +5,12 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 
-import { useFrameRouter, useFrameContext } from '@dxos/kai-frames';
+import { useFrameRouter, useFrameContext, useFrameRegistry } from '@dxos/kai-frames';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { ContactCard } from '../../cards';
-import { useFrames } from '../../hooks';
 import { formatDate, getCompanyName, sortMessage } from './util';
 
 // TODO(burdon): Common container patter (see ContactFrame).
@@ -111,7 +110,7 @@ export const MessageFrame = () => {
 
 const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, message }) => {
   const router = useFrameRouter();
-  const { frames } = useFrames();
+  const frameRegistry = useFrameRegistry();
 
   // TODO(burdon): Reuse in Calendar.
   const contact = useMemo(() => {
@@ -148,7 +147,7 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
   };
 
   const handleNavigate = (contact: Contact) => {
-    router({ space, frame: frames.get('dxos.module.frame.contact'), objectId: contact.id });
+    router({ space, frame: frameRegistry.getFrameDef('dxos.module.frame.contact'), objectId: contact.id });
   };
 
   return (

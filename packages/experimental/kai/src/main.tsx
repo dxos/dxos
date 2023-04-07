@@ -25,7 +25,7 @@ const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
 // TODO(wittjosiah): Migrate to ES Modules.
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-const initialState: AppState = {
+const initialState: Partial<AppState> = {
   // @ts-ignore
   dev: bool(import.meta.env.VITE_DEV),
   // @ts-ignore

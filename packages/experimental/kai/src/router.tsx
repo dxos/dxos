@@ -13,7 +13,7 @@ import { SettingsPage, SpacePage } from './pages';
 /**
  * Main app routes.
  */
-export const createRouter = (initialState: AppState = {}, children?: ReactNode): Router =>
+export const createRouter = (initialState: Partial<AppState> = {}, children?: ReactNode): Router =>
   createBrowserRouter([
     {
       path: '/',

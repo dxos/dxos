@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Bag, Buildings, Calendar, Check, Envelope, FileText, UserCircle } from '@phosphor-icons/react';
+import { FC } from 'react';
+
 import { FrameDef } from '@dxos/kai-frames';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
@@ -195,3 +198,45 @@ export const frameDefs: FrameDef<any>[] = [
 
 // TODO(burdon): Create map of modules to runtime defs.
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
+
+// TODO(burdon): Inject into provider.
+// TODO(burdon): Reconcile with type and frame system.
+export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef<any> } } = {
+  'dxos.experimental.kai.Organization': {
+    rank: 3,
+    Icon: Buildings
+  },
+  'dxos.experimental.kai.Project': {
+    rank: 1,
+    Icon: Bag
+  },
+  'dxos.experimental.kai.Task': {
+    rank: 1,
+    Icon: Check
+  },
+  'dxos.experimental.kai.Contact': {
+    rank: 3,
+    Icon: UserCircle,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.contact')
+  },
+  'dxos.experimental.kai.Event': {
+    rank: 1,
+    Icon: Calendar,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.calendar')
+  },
+  'dxos.experimental.kai.Document': {
+    rank: 2,
+    Icon: FileText,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.document')
+  },
+  'dxos.experimental.kai.DocumentStack': {
+    rank: 2,
+    Icon: FileText,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.stack')
+  },
+  'dxos.experimental.kai.Message': {
+    rank: 1,
+    Icon: Envelope,
+    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.inbox')
+  }
+};

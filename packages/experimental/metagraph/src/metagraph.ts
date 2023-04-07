@@ -95,6 +95,7 @@ export class MetagraphClient implements Metagraph {
   }
 }
 
+// TODO(burdon): Move to /testing.
 export class MetagraphClientFake implements Metagraph {
   constructor(private readonly _modules: Module[] = []) {}
 

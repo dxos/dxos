@@ -4,9 +4,29 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
-import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
-import { useConfig } from '@dxos/react-client';
+
+export const defaultFrameId = 'dxos.module.frame.stack';
+
+// prettier-ignore
+export const defaultFrames = [
+  'dxos.module.frame.stack',
+  'dxos.module.frame.presenter',
+  'dxos.module.frame.inbox',
+  'dxos.module.frame.calendar',
+  'dxos.module.frame.contact',
+  'dxos.module.frame.file'
+  // 'dxos.module.frame.kanban',
+  // 'dxos.module.frame.table',
+  // 'dxos.module.frame.note',
+  // 'dxos.module.frame.sketch',
+  // 'dxos.module.frame.chess',
+  // 'dxos.module.frame.sandbox',
+  // 'dxos.module.frame.maps',
+  // 'dxos.module.frame.document',
+  // 'dxos.module.frame.task',
+  // 'dxos.module.frame.explorer'
+];
 
 export type AppState = {
   // Debug info.
@@ -25,7 +45,11 @@ export type AppState = {
   chat?: boolean;
 
   // Active frames.
-  frames?: string[];
+  frames: string[];
+};
+
+const defaultAppState: AppState = {
+  frames: []
 };
 
 type ActionType = {
@@ -47,35 +71,33 @@ type SetChatAction = ActionType & {
 
 type Action = SetFrameAction | SetFullscreenAction | SetChatAction;
 
-const reducer =
-  (config: Config) =>
-  (state: AppState, action: Action): AppState => {
-    switch (action.type) {
-      case 'set-active-frame': {
-        const { frameId, active } = action as SetFrameAction;
-        const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
-        if (active) {
-          frames.push(frameId);
-        }
-
-        return { ...state, frames };
+const reducer = (state: AppState, action: Action): AppState => {
+  switch (action.type) {
+    case 'set-active-frame': {
+      const { frameId, active } = action as SetFrameAction;
+      const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
+      if (active) {
+        frames.push(frameId);
       }
 
-      case 'set-fullscreen': {
-        const { fullscreen } = action as SetFullscreenAction;
-        return { ...state, fullscreen };
-      }
-
-      case 'set-chat': {
-        const { chat } = action as SetChatAction;
-        return { ...state, chat };
-      }
-
-      default: {
-        throw new Error(`Invalid action: ${JSON.stringify(action)}`);
-      }
+      return { ...state, frames };
     }
-  };
+
+    case 'set-fullscreen': {
+      const { fullscreen } = action as SetFullscreenAction;
+      return { ...state, fullscreen };
+    }
+
+    case 'set-chat': {
+      const { chat } = action as SetChatAction;
+      return { ...state, chat };
+    }
+
+    default: {
+      throw new Error(`Invalid action: ${JSON.stringify(action)}`);
+    }
+  }
+};
 
 export type AppReducer = {
   state: AppState;
@@ -88,9 +110,11 @@ const AppStateContext: Context<AppReducer | undefined> = createContext<AppReduce
 
 // TODO(burdon): Implement reducer.
 // https://beta.reactjs.org/learn/scaling-up-with-reducer-and-context
-export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState }> = ({ children, initialState }) => {
-  const config = useConfig();
-  const [state, dispatch] = useReducer(reducer(config), initialState ?? {});
+export const AppStateProvider: FC<{ children: ReactNode; initialState?: Partial<AppState> }> = ({
+  children,
+  initialState
+}) => {
+  const [state, dispatch] = useReducer(reducer, Object.assign({}, defaultAppState, initialState));
 
   const value: AppReducer = {
     state,
