@@ -45,20 +45,18 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation, \[options\])]()
+### [acceptInvitation(invitation)]()
 
 
 
 Initiates an interactive accept invitation flow.
 
 
-Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/interfaces/AuthenticatingInvitationObservable)</code>
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/classes/AuthenticatingInvitationObservable)</code>
 
 Arguments: 
 
 `invitation`: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
-
-`options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
 
 ### [addSchema(schema)]()
 

@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.35"</code>
+Type: <code>"0.1.36"</code>
 
 The version of this client API
 
@@ -71,20 +71,18 @@ Returns: <code>string</code>
 
 Arguments: none
 
-### [acceptInvitation(invitation, \[options\])]()
+### [acceptInvitation(invitation)]()
 
 
 
 Accept an invitation to a space.
 
 
-Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/interfaces/AuthenticatingInvitationObservable)</code>
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/classes/AuthenticatingInvitationObservable)</code>
 
 Arguments: 
 
 `invitation`: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
-
-`options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
 
 ### [addSchema(schema)]()
 

@@ -12,6 +12,6 @@ Type: <code>boolean</code>
 Type: <code>string</code>
 
 ### [interval]()
-Type: <code>string</code>
+Type: <code>number</code>
 
 Seconds
