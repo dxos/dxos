@@ -2,22 +2,27 @@
 title: Enumerations
 ---
 # Enumerations
-### [`Error`]()
+### [`AuthMethod`]()
 
 Defined in:
    file://./../../../dxos/client/services.proto
 
 
 Values:
-- `INVALID_CREDENTIALS`
+- `NONE`
 
-- `INVALID_OPT_ATTEMPTS`
+- `SHARED_SECRET`
 
-- `INVALID_OTP`
+### [`Kind`]()
 
-- `OK`
+Defined in:
+   file://./../../../dxos/client/services.proto
 
-- `TIMEOUT`
+
+Values:
+- `DEVICE`
+
+- `SPACE`
 
 ### [`State`]()
 
@@ -38,6 +43,8 @@ Values:
 
 - `INIT`
 
+- `READY_FOR_AUTHENTICATION`
+
 - `SUCCESS`
 
 - `TIMEOUT`
@@ -51,9 +58,7 @@ Defined in:
 Values:
 - `INTERACTIVE`
 
-- `INTERACTIVE_TESTING`
-
-- `MULTIUSE_TESTING`
+- `MULTIUSE`
 
 - `OFFLINE`
 
