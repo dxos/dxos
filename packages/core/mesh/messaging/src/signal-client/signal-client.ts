@@ -319,7 +319,7 @@ export class SignalClient implements SignalMethods {
     this._performance.reconnectCounter++;
     log(`reconnecting in ${this._reconnectAfter}ms`);
     if (this._state === SignalState.RE_CONNECTING) {
-      console.error('Signal api already reconnecting.');
+      log.warn('Signal api already reconnecting.');
       return;
     }
     if (this._state === SignalState.CLOSED) {

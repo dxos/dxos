@@ -87,7 +87,7 @@ export class SignalRPCClient {
       }
       this._closed = true;
 
-      log.error(event.message ?? 'Socket error', { url: this._url });
+      log.warn(event.message ?? 'Socket error', { url: this._url });
       this.error.emit(event.error ?? new Error(event.message));
 
     };
