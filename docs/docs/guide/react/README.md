@@ -25,19 +25,19 @@ import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
   useIdentity,
-  useOrCreateFirstSpace,
   useQuery,
+  useSpaces
 } from '@dxos/react-client';
 
 const Component = () => {
-  // get the user to log in before a space can be obtained
+  // Get the user to log in before a space can be obtained.
   const identity = useIdentity({ login: true });
-  // create or use the first space
-  const space = useOrCreateFirstSpace();
-  // grab everything in the space
+  // Get the first available space, created with the identity.
+  const [space] = useSpaces();
+  // Grab everything in the space.
   const objects = useQuery(space, {});
-  // show the id of the first object returned
-  return <>{objects?.[0]?.id}</>;
+  // Show the id of the first object returned.
+  return <>{objects[0]?.id}</>;
 };
 
 const App = () => (
