@@ -10,11 +10,10 @@ import { observer } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
-import { FrameComponent } from '../../registry';
 import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
 
-export const StackFrame: FrameComponent = observer(() => {
+export const StackFrame = observer(() => {
   const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {

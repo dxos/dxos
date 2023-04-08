@@ -188,7 +188,6 @@ export const frameDefs: FrameDef<any>[] = [
   }
 ];
 
-// TODO(burdon): Create map of modules to runtime defs.
 export const frameModules: Module[] = frameDefs.map(({ module }) => module);
 
 // TODO(burdon): Inject into provider.

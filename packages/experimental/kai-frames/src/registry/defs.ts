@@ -8,15 +8,16 @@ import { Space } from '@dxos/client';
 import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
-export type FrameComponent = FC<any>;
-
+// TODO(burdon): Hack for sidebar content.
 export type PluginComponent = FC<{ space: Space; onSelect?: (objectId: string | undefined) => void } | any>;
 
-// TODO(burdon): Rename.
+/**
+ * Dynamically loaded metadata for frame.
+ */
 // TODO(burdon): Remove generic type.
 export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
-  Component: FrameComponent;
+  Component: FC<any>;
 
   // Sidebar
   autoCreate?: boolean;
@@ -28,11 +29,16 @@ export type FrameRuntime<T extends TypedObject> = {
   Plugin?: PluginComponent;
 };
 
+// TODO(burdon): Rename.
+// TODO(burdon): Remove generic type.
 export type FrameDef<T extends TypedObject> = {
   module: Module;
   runtime: FrameRuntime<T>;
 };
 
+/**
+ * In-memory registry of loaded frames.
+ */
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
