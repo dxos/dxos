@@ -3,10 +3,10 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { Suspense, useContext } from 'react';
+import React, { useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { useFrameRegistry } from '@dxos/kai-frames';
+import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -60,11 +60,13 @@ const Content = () => {
   const { displayState } = useContext(PanelSidebarContext);
 
   const frameRegistry = useFrameRegistry();
-  const frameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
-  const { Component } = frameDef?.runtime ?? {};
+  let sidebarFrameDef: FrameDef<any> | undefined;
+  if (chat && frame?.module.id !== 'dxos.module.frame.chat') {
+    sidebarFrameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
+  }
 
   return (
-    <main className='flex flex-col bs-full overflow-hidden'>
+    <div className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
         {displayState !== 'show' && (
           <Button variant='ghost' onClick={toggleSidebar}>
@@ -78,27 +80,27 @@ const Content = () => {
 
       {/* Main content. */}
       {space?.state.get() === SpaceState.READY ? (
-        <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
+        <main role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
               <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
 
-              {/* TODO(burdon): Generalize container. */}
-              {chat && frame.module.id !== 'dxos.module.frame.chat' && Component && (
-                <div className='flex shrink-0 w-sidebar'>
-                  <Suspense>
-                    <Component />
-                  </Suspense>
+              {/* Sidebar. */}
+              {sidebarFrameDef && (
+                <div className='flex relative'>
+                  <div className='flex absolute right-0 w-sidebar h-full z-50'>
+                    <FrameContainer space={space} frame={sidebarFrameDef} />
+                  </div>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </main>
       ) : (
         space && dev && <SpaceLoading space={space} />
       )}
-    </main>
+    </div>
   );
 };
 

@@ -9,8 +9,6 @@ import { useFrameRegistry, FrameDef } from '@dxos/kai-frames';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { defaultFrameId } from './useAppState';
-
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
   FRAME = 'frame',
@@ -73,8 +71,8 @@ export const useAppRouter = (): AppRoute => {
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
   const frameRegistry = useFrameRegistry();
-  const frameId = (frame && decodeFrame(frame)) ?? defaultFrameId;
-  const frameDef = frameRegistry.getFrameDef(frameId) ?? frameRegistry.getFrameDef(defaultFrameId);
+  const frameId = frame && decodeFrame(frame);
+  const frameDef = frameId ? frameRegistry.getFrameDef(frameId) : undefined;
 
   return { space, section, frame: frameDef, objectId };
 };

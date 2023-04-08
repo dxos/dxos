@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
@@ -33,7 +32,7 @@ const TestFrame = () => {
 
 const TestApp = () => {
   // TODO(burdon): Replace fake with memory backend.
-  const metagraph = new MetagraphClientFake([]);
+  // const metagraph = new MetagraphClientFake([]);
   const spaces = useSpaces();
   if (!spaces.length) {
     return null;
