@@ -30,8 +30,8 @@ export const StackFrame = observer(() => {
   return (
     <div className='flex flex-1 justify-center overflow-y-auto w-full'>
       <div className='flex flex-col flex-1 md:max-w-[800px]'>
-        {/* TODO(burdon): Editable title. */}
         <div className='flex flex-col w-full md:mt-4 pt-2 bg-paper-bg shadow-1'>
+          {/* Editable title. */}
           <StackRow>
             <Input
               variant='subdued'
