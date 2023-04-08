@@ -4,7 +4,6 @@
 
 import { viteBundler } from '@vuepress/bundler-vite';
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
-import { searchPlugin } from '@vuepress/plugin-search';
 import { resolve } from 'node:path';
 import { defineUserConfig, UserConfig } from 'vuepress';
 import { hopeTheme, sidebar } from 'vuepress-theme-hope';
@@ -36,6 +35,7 @@ const config: UserConfig = defineUserConfig({
     md.use(MarkdownIt.apiDocRenderDirective);
     md.use(MarkdownIt.showcaseRenderDirective);
   },
+  // https://theme-hope.vuejs.press/config/intro.html
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
     // Header logotype.
@@ -82,8 +82,9 @@ const config: UserConfig = defineUserConfig({
         Showcase: resolve(__dirname, './src/components/Showcase.vue')
       }
     }),
+    // TODO(burdon): Removed search until working.
     // Config: https://vuepress.github.io/reference/plugin/search.html
-    searchPlugin(),
+    // searchPlugin(),
     telemetryPlugin()
   ],
   bundler: viteBundler({
