@@ -95,7 +95,7 @@ export const ClientProvider = ({
       return;
     }
 
-    const subscription = client.status.subscribe((newStatus) => setStatus(newStatus));
+    const subscription = client.status.subscribe((status) => setStatus(status));
     return () => subscription.unsubscribe();
   }, [client, setStatus]);
 

@@ -6,11 +6,11 @@ import assert from 'assert';
 import React, { FC } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
+import { FrameRuntime } from '@dxos/kai-frames';
+import { EditableObjectList } from '@dxos/mosaic';
 import { useQuery } from '@dxos/react-client';
 
-import { EditableObjectList } from '../../components';
 import { useAppRouter } from '../../hooks';
-import { FrameRuntime } from '../../registry';
 
 export type FrameObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;
@@ -19,6 +19,7 @@ export type FrameObjectListProps<T extends TypedObject> = {
   onAction?: (objectId: string) => void;
 };
 
+// TODO(burdon): Make component.
 export const FrameObjectList = <T extends TypedObject>({
   frameDef, // TODO(burdon): Not required.
   Action,
