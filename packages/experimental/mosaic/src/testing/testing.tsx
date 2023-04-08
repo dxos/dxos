@@ -21,9 +21,9 @@ export const createItem = (location?: Location): Item<TestData> => ({
   location
 });
 
-export const SeedDecorator =
-  (seed = 0) =>
-  (Story: any) => {
+export const SeedDecorator = (seed = 0) => {
+  return (Story: any) => {
     faker.seed(seed);
     return <Story />;
   };
+};

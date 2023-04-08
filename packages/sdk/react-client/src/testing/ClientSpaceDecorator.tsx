@@ -104,6 +104,7 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
       >
         {space && children(0, space.key)}
       </ClientProvider>
+
       {space &&
         [...Array(count - 1)].map((_, index) => (
           <ChildClient key={index} rootSpace={space} schema={schema}>
@@ -120,9 +121,10 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
  */
 // prettier-ignore
 export const ClientSpaceDecorator =
-  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> =>
-  (Story, context) => (
-    <PeersInSpace {...options}>
-      {(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}
-    </PeersInSpace>
-  );
+  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> => {
+    return (Story, context) => (
+      <PeersInSpace {...options}>
+        {(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}
+      </PeersInSpace>
+    );
+  };
