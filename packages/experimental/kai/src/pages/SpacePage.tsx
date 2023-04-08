@@ -64,7 +64,7 @@ const Content = () => {
   const { Component } = frameDef?.runtime ?? {};
 
   return (
-    <main className='flex flex-col bs-full overflow-hidden'>
+    <div className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
         {displayState !== 'show' && (
           <Button variant='ghost' onClick={toggleSidebar}>
@@ -78,7 +78,7 @@ const Content = () => {
 
       {/* Main content. */}
       {space?.state.get() === SpaceState.READY ? (
-        <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
+        <main role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
@@ -94,11 +94,11 @@ const Content = () => {
               )}
             </div>
           )}
-        </div>
+        </main>
       ) : (
         space && dev && <SpaceLoading space={space} />
       )}
-    </main>
+    </div>
   );
 };
 

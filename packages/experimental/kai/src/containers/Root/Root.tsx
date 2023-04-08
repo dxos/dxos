@@ -6,7 +6,7 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { FrameRegistryContextProvider, frameModules } from '@dxos/kai-frames';
+import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -37,7 +37,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
-              <FrameRegistryContextProvider>
+              <FrameRegistryContextProvider frameDefs={frameDefs}>
                 <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                   <ShellProvider>
                     <Outlet />

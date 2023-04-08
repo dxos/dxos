@@ -54,12 +54,10 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
   };
 
   return (
-    <main className='flex flex-1 flex-col overflow-hidden'>
-      <FrameContextProvider state={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
-        <Suspense>
-          <Component />
-        </Suspense>
-      </FrameContextProvider>
-    </main>
+    <FrameContextProvider state={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
+      <Suspense>
+        <Component />
+      </Suspense>
+    </FrameContextProvider>
   );
 };
