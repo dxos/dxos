@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bag, Buildings, Calendar, Check, Circle, Envelope, FileText, UserCircle } from '@phosphor-icons/react';
+import { Circle } from '@phosphor-icons/react';
 import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
+import { objectMeta } from '@dxos/kai-frames';
 import { useQuery } from '@dxos/react-client';
 
-import { frameDefs } from '../frames'; // TODO(burdon): Cyclic dependency.
-import { FrameDef } from '../registry';
+// TODO(burdon): Cyclic dependency.
 
 export type SearchResult = {
   object: TypedObject;
@@ -26,48 +26,6 @@ export type SearchResults = {
 };
 
 const sortByRank = ({ rank: a }: SearchResult, { rank: b }: SearchResult) => (a < b ? 1 : a > b ? -1 : 0);
-
-// TODO(burdon): Inject into provider.
-// TODO(burdon): Reconcile with type and frame system.
-export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef<any> } } = {
-  'dxos.experimental.kai.Organization': {
-    rank: 3,
-    Icon: Buildings
-  },
-  'dxos.experimental.kai.Project': {
-    rank: 1,
-    Icon: Bag
-  },
-  'dxos.experimental.kai.Task': {
-    rank: 1,
-    Icon: Check
-  },
-  'dxos.experimental.kai.Contact': {
-    rank: 3,
-    Icon: UserCircle,
-    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.contact')
-  },
-  'dxos.experimental.kai.Event': {
-    rank: 1,
-    Icon: Calendar,
-    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.calendar')
-  },
-  'dxos.experimental.kai.Document': {
-    rank: 2,
-    Icon: FileText,
-    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.document')
-  },
-  'dxos.experimental.kai.DocumentStack': {
-    rank: 2,
-    Icon: FileText,
-    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.stack')
-  },
-  'dxos.experimental.kai.Message': {
-    rank: 1,
-    Icon: Envelope,
-    frame: frameDefs.find(({ module: { id } }) => id === 'dxos.module.frame.inbox')
-  }
-};
 
 // TODO(burdon): Based on schema. Convert documents. to text.
 const searchFields = ['title', 'name', 'description', 'content', 'subject', 'body', 'from.name'];
