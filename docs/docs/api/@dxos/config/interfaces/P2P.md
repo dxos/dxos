@@ -11,11 +11,5 @@ Type: <code>string[]</code>
 ### [port]()
 Type: <code>string</code>
 
-Options:
-  - proto3_optional = true
-
-### [privateKey]()
+### [privatekey]()
 Type: <code>string</code>
-
-Options:
-  - proto3_optional = true

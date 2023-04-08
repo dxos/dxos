@@ -1,8 +1,0 @@
-# Interface `AuthenticatingInvitationObservable`
-> Declared in [`packages/sdk/client/dist/types/src/packlets/invitations/invitations.d.ts`]()
-
-Cancelable observer that relays authentication requests.
-
-## Properties
-### [value]()
-Type: <code>unknown</code>

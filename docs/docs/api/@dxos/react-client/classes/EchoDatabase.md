@@ -14,14 +14,14 @@ Returns: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</cod
 
 Arguments: 
 
-`_backend`: <code>DatabaseBackendProxy</code>
+`_backend`: <code>DatabaseProxy</code>
 
 `_router`: <code>[DatabaseRouter](/api/@dxos/react-client/classes/DatabaseRouter)</code>
 
 
 ## Properties
 ### [_backend]()
-Type: <code>DatabaseBackendProxy</code>
+Type: <code>DatabaseProxy</code>
 
 ### [objects]()
 Type: <code>[EchoObject](/api/@dxos/react-client/classes/EchoObject)&lt;any&gt;[]</code>

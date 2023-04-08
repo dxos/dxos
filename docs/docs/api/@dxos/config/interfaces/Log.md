@@ -9,12 +9,12 @@ Defined in:
 Type: <code>string</code>
 
 Options:
-  - (env) = "LOG_FILTER"
+  - (env_var) = "LOG_FILTER"
   - proto3_optional = true
 
 ### [prefix]()
 Type: <code>string</code>
 
 Options:
-  - (env) = "LOG_PREFIX"
+  - (env_var) = "LOG_PREFIX"
   - proto3_optional = true
