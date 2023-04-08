@@ -7,6 +7,8 @@ import { FC } from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
+// TODO(burdon): Implement packlets for frames.
+
 import { FrameDef } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
 import { ChatFrameRuntime } from './Chat';

@@ -2972,14 +2972,17 @@ importers:
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/kai-frames': workspace:*
+      '@dxos/kai-sandbox': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -3015,9 +3018,11 @@ importers:
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
       base-x: ~3.0.9
+      clipboard-copy: ^4.0.1
       date-fns: ^2.29.3
       faker: ^5.5.3
       mobile-detect: ^1.4.5
@@ -3025,9 +3030,12 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       react-resize-detector: ^7.1.2
       react-router: ^6.4.0
       react-router-dom: ^6.4.0
+      react-syntax-highlighter: ^15.5.0
       storybook-addon-react-router-v6: ^0.3.2
       tailwindcss: ~3.2.7
       typescript: ^4.8.4
@@ -3044,14 +3052,17 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../../common/context
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/kai-frames': link:../kai-frames
+      '@dxos/kai-sandbox': link:../kai-sandbox
       '@dxos/kai-types': link:../kai-types
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -3077,13 +3088,17 @@ importers:
       '@sentry/react': 7.42.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
+      clipboard-copy: 4.0.1
       date-fns: 2.29.3
       mobile-detect: 1.4.5
       node-fetch: 2.6.7
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
+      react-is: 18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      react-syntax-highlighter: 15.5.0_react@18.2.0
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
@@ -3099,6 +3114,7 @@ importers:
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
       '@vitejs/plugin-react': 3.0.1_vite@4.2.0
       faker: 5.5.3
       postcss: 8.4.21
@@ -3247,7 +3263,6 @@ importers:
       '@types/react-color': ^3.0.6
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
-      '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-table': ^7.7.14
       '@types/simple-peer': 9.11.3
       '@types/string-hash': ^1.1.1
@@ -3277,7 +3292,6 @@ importers:
       react-markdown: ^8.0.5
       react-resize-detector: ^7.1.2
       react-sketch-canvas: ^6.2.0
-      react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       rehype-add-classes: ^1.0.0
       rehype-highlight: ^6.0.0
@@ -3347,7 +3361,6 @@ importers:
       react-markdown: 8.0.5_iapumuv4e6jcjznwuxpf4tt22e
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-sketch-canvas: 6.2.0_react@18.2.0
-      react-syntax-highlighter: 15.5.0_react@18.2.0
       react-table: 7.8.0_react@18.2.0
       rehype-add-classes: 1.0.0
       rehype-highlight: 6.0.0
@@ -3371,7 +3384,6 @@ importers:
       '@types/react-color': 3.0.6
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
-      '@types/react-syntax-highlighter': 15.5.5
       '@types/react-table': 7.7.14
       '@types/simple-peer': 9.11.3
       '@types/string-hash': 1.1.1

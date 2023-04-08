@@ -33,6 +33,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -93,7 +96,13 @@
       "path": "../../sdk/vault"
     },
     {
+      "path": "../chess-app"
+    },
+    {
       "path": "../kai-frames"
+    },
+    {
+      "path": "../kai-sandbox"
     },
     {
       "path": "../kai-types"

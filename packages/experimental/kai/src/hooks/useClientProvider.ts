@@ -32,6 +32,7 @@ export const useClientProvider = (dev: boolean) => {
     }
 
     // TODO(burdon): Document.
+    // TODO(burdon): Make modular (via registry).
     client.addSchema(schema);
     client.addSchema(chessSchema);
     client.addSchema(sandboxSchema);

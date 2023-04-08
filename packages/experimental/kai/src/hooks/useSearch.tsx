@@ -7,9 +7,8 @@ import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
+import { objectMeta } from '@dxos/kai-frames';
 import { useQuery } from '@dxos/react-client';
-
-import { objectMeta } from '../frames';
 
 // TODO(burdon): Cyclic dependency.
 

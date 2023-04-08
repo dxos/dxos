@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import { scheduleTaskInterval } from '@dxos/async';
 import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
+import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
@@ -30,7 +31,6 @@ import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/reac
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
 import { FrameObjectList, FrameRegistryDialog } from '../../containers';
-import { objectMeta } from '../../frames';
 import {
   createInvitationPath,
   createPath,

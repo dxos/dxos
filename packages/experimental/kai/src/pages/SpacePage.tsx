@@ -6,13 +6,13 @@ import { CaretRight } from '@phosphor-icons/react';
 import React, { Suspense, useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
+import { useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
-import { ChatFrameRuntime } from '../frames/Chat';
-import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
+import { Section, createPath, defaultFrameId, useAppRouter, useAppState, useTheme } from '../hooks';
 import { SpaceLoading } from './SpaceLoading';
 
 /**
@@ -59,6 +59,10 @@ const Content = () => {
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
 
+  const frameRegistry = useFrameRegistry();
+  const frameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
+  const { Component } = frameDef?.runtime ?? {};
+
   return (
     <main className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
@@ -81,10 +85,10 @@ const Content = () => {
               <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
 
               {/* TODO(burdon): Generalize container. */}
-              {chat && frame.module.id !== 'dxos.module.frame.chat' && (
+              {chat && frame.module.id !== 'dxos.module.frame.chat' && Component && (
                 <div className='flex shrink-0 w-sidebar'>
                   <Suspense>
-                    <ChatFrameRuntime.Component />
+                    <Component />
                   </Suspense>
                 </div>
               )}
