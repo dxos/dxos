@@ -10,10 +10,6 @@
 Type: <code>DataService</code>
 
 
-### [DeviceInvitationsService]()
-Type: <code>DeviceInvitationsService</code>
-
-
 ### [DevicesService]()
 Type: <code>DevicesService</code>
 
@@ -26,12 +22,12 @@ Type: <code>DevtoolsHost</code>
 Type: <code>IdentityService</code>
 
 
+### [InvitationsService]()
+Type: <code>InvitationsService</code>
+
+
 ### [NetworkService]()
 Type: <code>NetworkService</code>
-
-
-### [SpaceInvitationsService]()
-Type: <code>SpaceInvitationsService</code>
 
 
 ### [SpacesService]()
