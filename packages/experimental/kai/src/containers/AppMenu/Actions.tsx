@@ -9,10 +9,11 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
+import { useFileDownload } from '@dxos/kai-frames';
 import { useClient } from '@dxos/react-client';
 import { DropdownMenuItem, getSize } from '@dxos/react-components';
 
-import { createPath, defaultFrameId, useAppRouter, useFileDownload, useGenerator } from '../../hooks';
+import { createPath, defaultFrameId, useAppRouter, useGenerator } from '../../hooks';
 
 // TODO(burdon): Factor out.
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();

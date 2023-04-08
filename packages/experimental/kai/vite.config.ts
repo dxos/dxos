@@ -12,7 +12,6 @@ import mkcert from 'vite-plugin-mkcert';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { VaultPlugin } from '@dxos/vault/vite-plugin';
 
 // @ts-ignore
 // NOTE: Vite requires uncompiled JS.
@@ -56,6 +55,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
