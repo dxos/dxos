@@ -21,8 +21,10 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
 }) => {
   const { setFullscreen } = useAppReducer();
   const navigate = useNavigate();
+
+  // TODO(burdon): Remove.
+  // Auto-create first object.
   useEffect(() => {
-    // Auto-create first object.
     if (frame.runtime.filter && frame.runtime.autoCreate) {
       const { objects } = space.db.query(frame.runtime.filter());
       // TODO(burdon): Race condition?
@@ -40,9 +42,6 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
     return null;
   }
 
-  // TODO(burdon): Factor out creating default item if not found (pass-in runtime).
-  // TODO(burdon): Pass in current object.
-
   const handleStateChange = (state: FrameState) => {
     if (state.space) {
       navigate(createPath({ spaceKey: state.space?.key, frame: state.frame?.module.id, objectId: state.objectId }));
@@ -54,10 +53,12 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
   };
 
   return (
-    <FrameContextProvider state={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
-      <Suspense>
-        <Component />
-      </Suspense>
-    </FrameContextProvider>
+    <div className='flex flex-col w-full overflow-hidden'>
+      <FrameContextProvider state={{ space, frame, objectId, fullscreen, onStateChange: handleStateChange }}>
+        <Suspense>
+          <Component />
+        </Suspense>
+      </FrameContextProvider>
+    </div>
   );
 };

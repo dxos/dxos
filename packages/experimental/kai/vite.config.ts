@@ -12,7 +12,6 @@ import mkcert from 'vite-plugin-mkcert';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { VaultPlugin } from '@dxos/vault/vite-plugin';
 
 // @ts-ignore
 // NOTE: Vite requires uncompiled JS.

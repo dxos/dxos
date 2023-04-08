@@ -3,7 +3,8 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { Suspense, useContext } from 'react';
+import { FrameDef } from 'packages/experimental/kai-frames/src';
+import React, { useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useFrameRegistry } from '@dxos/kai-frames';
@@ -60,8 +61,10 @@ const Content = () => {
   const { displayState } = useContext(PanelSidebarContext);
 
   const frameRegistry = useFrameRegistry();
-  const frameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
-  const { Component } = frameDef?.runtime ?? {};
+  let sidebarFrameDef: FrameDef<any> | undefined;
+  if (chat && frame?.module.id !== 'dxos.module.frame.chat') {
+    sidebarFrameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
+  }
 
   return (
     <div className='flex flex-col bs-full overflow-hidden'>
@@ -84,12 +87,12 @@ const Content = () => {
             <div className='flex flex-1 overflow-hidden'>
               <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
 
-              {/* TODO(burdon): Generalize container. */}
-              {chat && frame.module.id !== 'dxos.module.frame.chat' && Component && (
-                <div className='flex shrink-0 w-sidebar'>
-                  <Suspense>
-                    <Component />
-                  </Suspense>
+              {/* Sidebar. */}
+              {sidebarFrameDef && (
+                <div className='flex relative'>
+                  <div className='flex absolute right-0 w-sidebar h-full z-50'>
+                    <FrameContainer space={space} frame={sidebarFrameDef} />
+                  </div>
                 </div>
               )}
             </div>
