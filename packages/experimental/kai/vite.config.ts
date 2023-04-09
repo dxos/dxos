@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Plugin } from 'vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
@@ -17,6 +18,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 // NOTE: Vite requires uncompiled JS.
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { PluginContext } from 'rollup';
 
 /**
  * https://vitejs.dev/config
@@ -34,14 +36,23 @@ export default defineConfig({
         manualChunks: {
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
-          monaco: ['monaco-editor', '@monaco-editor/react'],
-          vendor: ['react', 'react-dom', 'react-router-dom']
+          // monaco: ['monaco-editor', '@monaco-editor/react'],
+          vendor: ['react-dom', 'react-router-dom']
         }
       }
     }
   },
 
   plugins: [
+    importMaps({
+      packages: {
+        'react': { cjs: true, buildOnly: true },
+        '@dxos/client': {},
+        '@dxos/react-client': {},
+        '@dxos/react-ui': {},
+      }
+    }),
+
     mkcert(),
 
     // TODO(burdon): Document.
@@ -128,16 +139,16 @@ export default defineConfig({
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'kai',
-            include: './out/kai',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : []),
+    // ...(process.env.NODE_ENV === 'production'
+    //   ? [
+    //       sentryVitePlugin({
+    //         org: 'dxos',
+    //         project: 'kai',
+    //         include: './out/kai',
+    //         authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
+    //       })
+    //     ]
+    //   : []),
 
     // https://www.bundle-buddy.com/rollup
     {
@@ -162,3 +173,100 @@ export default defineConfig({
     }
   ]
 });
+
+export type ImportMap = {
+  imports?: Record<string, string>
+  scope?: Record<string, string>
+}
+
+type Options = {
+  packages: Record<string, {
+    cjs?: boolean
+    buildOnly?: boolean
+  }>
+}
+
+export function importMaps({ packages }: Options): Plugin {
+  // start with /node_modules/.vite/deps to fool the import compat plugin
+  const prefix = '/@import-mapped/'
+  const proxyModulePrefix = `/0${prefix}cjs-proxy/`
+
+  let pluginCtx!: PluginContext;
+  let commandRun!: 'build' | 'serve';
+  return {
+    name: 'vite-plugin-import-maps',
+    enforce: 'pre',
+    buildStart() {
+      pluginCtx = this;
+    },
+    config(_, { command }) {
+      commandRun = command;
+      return {}
+    },
+    resolveId(id, importer) {
+      if (packages[id] && (!packages[id].buildOnly || commandRun === 'build')) {
+        if(!packages[id].cjs || importer?.startsWith(proxyModulePrefix)) {
+          return {
+            id: prefix + id,
+            external: 'absolute',
+          }
+        } else {
+          return {
+            id: proxyModulePrefix + id,
+            syntheticNamedExports: '__syntheticExports'
+          }
+        }
+      }
+    },
+    load(id) {
+      if(id.startsWith(proxyModulePrefix)) {
+        const name = id.replace(proxyModulePrefix, '');
+        return `import { default as __syntheticExports } from "${name}"; export { __syntheticExports, __syntheticExports as default };`
+      }
+    },
+    transformIndexHtml: {
+      enforce: 'pre',
+      async transform(html) {
+        const processedImportMap: Required<ImportMap> = {
+          imports: {
+            ...Object.fromEntries(await Promise.all(Object.entries(packages).map(async ([name, { }]) => {
+              let resultingUrl: string;
+
+
+              if (commandRun === 'build') {
+                const { id } = (await pluginCtx.resolve(name, undefined, { skipSelf: true }))!
+                const chunkId = pluginCtx.emitFile({
+                  type: 'chunk',
+                  fileName: `assets/import-map-${name.replace('/', '_')}.js`,
+                  preserveSignature: 'allow-extension',
+                  id,
+                })
+                resultingUrl = `/${pluginCtx.getFileName(chunkId)}`
+              } else {
+                const { id } = (await pluginCtx.resolve(name, undefined, { skipSelf: true }))!
+                resultingUrl = id;
+              }
+
+              return [`${prefix}${name}`, resultingUrl]
+            })))
+          },
+          scope: {},
+        }
+
+        return {
+          html,
+          tags: [
+            {
+              tag: 'script',
+              attrs: {
+                type: 'importmap',
+              },
+              children: JSON.stringify(processedImportMap, null, 2),
+              injectTo: 'head-prepend',
+            },
+          ],
+        }
+      },
+    },
+  }
+}
