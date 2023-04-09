@@ -3614,6 +3614,7 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/kai-frames': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
@@ -3688,6 +3689,7 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
+      '@dxos/kai-frames': link:../kai-frames
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/metagraph': link:../metagraph
