@@ -29,7 +29,7 @@ type BotRecord = {
 const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotRecord>[] => [
   {
     Header: 'state',
-    Cell: ({ value }) =>
+    Cell: ({ value }: any) =>
       value === 'running' ? (
         <Robot className={mx(getSize(6), 'text-green-500')} />
       ) : (

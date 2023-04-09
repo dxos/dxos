@@ -13,7 +13,7 @@ import { alphabeticalByKey } from '@dxos/util';
 
 // TODO(burdon): Type selector.
 
-const iconTypes: { [index: string]: { Icon: FC; color: string } } = {
+const iconTypes: { [index: string]: { Icon: FC<any>; color: string } } = {
   'dxos:type/bot': { Icon: Robot, color: 'text-green-400' },
   'dxos:type/frame': { Icon: AppWindow, color: 'text-orange-400' },
   'dxos:type/schema': { Icon: Code, color: 'text-blue-400' }
@@ -25,7 +25,7 @@ const columns: TableColumn<Module>[] = [
     Header: ' ',
     accessor: ({ type }) => type,
     width: 0,
-    Cell: ({ value }) => {
+    Cell: ({ value }: any) => {
       const { Icon, color } = iconTypes[value] ?? Circle;
       return <Icon weight='duotone' className={mx(getSize(6), color)} />;
     }
