@@ -11,6 +11,7 @@ import { useSpaces } from '@dxos/react-client';
 
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
+  DMG = 'metagraph',
   FRAME = 'frame',
   BOTS = 'bots'
 }

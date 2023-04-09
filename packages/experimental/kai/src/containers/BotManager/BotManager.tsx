@@ -29,12 +29,13 @@ type BotRecord = {
 const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotRecord>[] => [
   {
     Header: 'state',
-    accessor: (record) =>
-      record.state === 'running' ? (
+    Cell: ({ value }) =>
+      value === 'running' ? (
         <Robot className={mx(getSize(6), 'text-green-500')} />
       ) : (
         <Ghost className={mx(getSize(6), 'text-gray-400')} />
       ),
+    accessor: (record) => record.state,
     width: 48
   },
   {
@@ -149,7 +150,7 @@ export const BotManager = () => {
 
   return (
     <div className='flex flex-1 flex-col px-2 overflow-hidden'>
-      <Toolbar className='shrink-0 justify-between'>
+      <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
           <Select value={botId} onValueChange={setBotId}>
             {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (

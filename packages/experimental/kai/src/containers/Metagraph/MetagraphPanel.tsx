@@ -2,25 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { AppWindow, Circle, Code, Robot } from '@phosphor-icons/react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { TableColumn, Table } from '@dxos/mosaic';
+import { TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { Button } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { useMetagraph } from '@dxos/react-metagraph';
-import { alphabetical, alphabeticalByKey } from '@dxos/util';
+import { alphabeticalByKey } from '@dxos/util';
+
+// TODO(burdon): Type selector.
+
+const iconTypes: { [index: string]: { Icon: FC; color: string } } = {
+  'dxos:type/bot': { Icon: Robot, color: 'text-green-400' },
+  'dxos:type/frame': { Icon: AppWindow, color: 'text-orange-400' },
+  'dxos:type/schema': { Icon: Code, color: 'text-blue-400' }
+};
 
 // TODO(burdon): Re-use in console.
 const columns: TableColumn<Module>[] = [
   {
-    Header: 'module',
-    accessor: ({ name }) => name,
-    width: 120
-  },
-  {
-    Header: 'version',
-    accessor: ({ build }) => build?.version,
-    width: 80
+    Header: ' ',
+    accessor: ({ type }) => type,
+    width: 0,
+    Cell: ({ value }) => {
+      const { Icon, color } = iconTypes[value] ?? Circle;
+      return <Icon weight='duotone' className={mx(getSize(6), color)} />;
+    }
   },
   {
     Header: 'type',
@@ -28,25 +36,15 @@ const columns: TableColumn<Module>[] = [
     width: 80
   },
   {
-    Header: 'link',
-    accessor: ({ name }) => name,
-    width: 40
+    Header: 'module',
+    accessor: ({ id, name }) => id ?? name,
+    width: 160
   },
   {
-    Header: 'tags',
-    accessor: ({ tags }) => tags,
-    width: 100,
-    Cell: ({ value }: { value: string[] }) => (
-      <div>
-        {value.sort(alphabetical()).map((tag, i) => (
-          <div key={i} className='pr-1'>
-            <span className='rounded-md p-1 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>{tag}</span>
-          </div>
-        ))}
-      </div>
-    )
+    Header: 'version',
+    accessor: ({ build }) => build?.version,
+    width: 80
   },
-  // TODO(burdon): Column property (monospace, etc.)
   {
     Header: 'description',
     accessor: ({ description }) => description,
@@ -58,7 +56,6 @@ export const MetagraphPanel = () => {
   const client = useMetagraph();
   const [modules, setModules] = useState<Module[]>([]);
   const sortedModules = modules.sort(alphabeticalByKey('name'));
-  console.log(JSON.stringify(sortedModules, undefined, 2));
 
   useEffect(() => {
     void handleRefresh();
@@ -66,23 +63,23 @@ export const MetagraphPanel = () => {
 
   const handleRefresh = async () => {
     // TODO(burdon): Make type optional (frames, bots, apps).
-    const { results: modules } = await client.modules.query({ type: 'dxos:type/frame' });
+    const { results: modules } = await client.modules.query();
     setModules(modules);
   };
 
   return (
     // TODO(burdon): Factor out panel layout.
-    <div className='flex flex-col flex-1 overflow-hidden'>
-      <div>
+    <div className='flex flex-1 flex-col px-2 overflow-hidden'>
+      <Toolbar className='justify-between'>
         <Button onClick={handleRefresh}>Refresh</Button>
-      </div>
+      </Toolbar>
 
       <Table
         columns={columns}
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin p-0 m-1' }
+          cell: { className: 'align-start py-1 font-mono font-thin' }
         }}
       />
     </div>
