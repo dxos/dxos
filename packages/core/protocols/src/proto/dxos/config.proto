@@ -65,6 +65,8 @@ message Module {
   optional bytes bundle = 6;
   optional bool tunnel = 7;
 
+  repeated Module deps = 10;  // TODO(burdon): E.g., types.
+
   optional Build build = 100;
   repeated Repo repos = 101;
 

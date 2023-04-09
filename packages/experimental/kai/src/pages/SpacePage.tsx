@@ -11,7 +11,7 @@ import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
+import { AppMenu, BotManager, FrameContainer, MetagraphPanel, Sidebar } from '../containers';
 import { Section, createPath, defaultFrameId, useAppRouter, useAppState, useTheme } from '../hooks';
 import { SpaceLoading } from './SpaceLoading';
 
@@ -81,6 +81,7 @@ const Content = () => {
       {/* Main content. */}
       {space?.state.get() === SpaceState.READY ? (
         <main role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
+          {section === Section.DMG && <MetagraphPanel />}
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>

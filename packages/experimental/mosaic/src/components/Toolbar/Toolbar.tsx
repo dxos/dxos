@@ -9,7 +9,7 @@ import { ElevationProvider, mx } from '@dxos/react-components';
 export const Toolbar: FC<{ children?: ReactNode; className?: string }> = ({ children, className }) => {
   return (
     <ElevationProvider elevation='group'>
-      <div className={mx('flex w-full p-2 items-center', className)}>{children}</div>
+      <div className={mx('flex shrink-0 w-full p-2 items-center', className)}>{children}</div>
     </ElevationProvider>
   );
 };

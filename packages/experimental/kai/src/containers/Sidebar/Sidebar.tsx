@@ -3,10 +3,11 @@
 //
 
 import {
+  AppWindow,
   CaretCircleDoubleDown,
   CaretLeft,
   Info as CaretUpDown,
-  FrameCorners,
+  Graph,
   PlusCircle,
   Robot,
   UserPlus,
@@ -376,7 +377,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 {/* Frame registry dialog. */}
                 <div className='flex px-4 items-center'>
                   <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
-                    <FrameCorners className={getSize(6)} />
+                    <AppWindow className={getSize(6)} />
                   </Button>
                   {/* TODO(burdon): Put inside button? */}
                   <span className='w-full pl-2'>Frames</span>
@@ -412,12 +413,22 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             onSelect={focusOnMember}
           />
 
+          <Separator />
+
           <Link
             className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
             to={createPath({ spaceKey: space.key, section: Section.BOTS })}
           >
             <Robot className={getSize(6)} />
             <div className='pl-2'>Bots</div>
+          </Link>
+
+          <Link
+            className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
+            to={createPath({ spaceKey: space.key, section: Section.DMG })}
+          >
+            <Graph className={getSize(6)} />
+            <div className='pl-2'>Metagraph</div>
           </Link>
 
           <Separator />

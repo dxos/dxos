@@ -19,6 +19,8 @@ export const AppMenu = () => {
   const { setChat } = useAppReducer();
   const [newChat, setNewChat] = useState(false);
   const { space } = useAppRouter();
+
+  // TODO(burdon): Factor out kai-types Message dep (event).
   const messages = useQuery(space, Message.filter());
   const messageCount = useRef(0);
   useEffect(() => {

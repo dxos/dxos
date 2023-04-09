@@ -7,6 +7,7 @@ import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
+import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -24,7 +25,7 @@ import { ShellProvider } from '../ShellProvider';
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
-    client: new MetagraphClientFake([...botModules, ...frameModules])
+    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
   };
 
   return (
