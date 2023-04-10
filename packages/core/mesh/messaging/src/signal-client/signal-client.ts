@@ -285,22 +285,22 @@ export class SignalClient implements SignalMethods {
 
           onDisconnected: () => {
             log('socket disconnected', { state: this._state });
-            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+            if (this._state === SignalState.RE_CONNECTING) {
               this._incrementReconnectTimeout();
             }
             this._setState(SignalState.DISCONNECTED);
-            this._reconcileTask!.schedule();
+            this._reconnectTask!.schedule();
           },
 
           onError: (error) => {
             log('socket error', { error, state: this._state });
-            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+            if (this._state === SignalState.RE_CONNECTING) {
               this._incrementReconnectTimeout();
             }
 
             this._lastError = error;
             this._setState(SignalState.DISCONNECTED);
-            this._reconcileTask!.schedule();
+            this._reconnectTask!.schedule();
           }
         }
       });
@@ -312,7 +312,7 @@ export class SignalClient implements SignalMethods {
       // TODO(burdon): If client isn't set, then flows through to error below.
       this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
-      this._reconcileTask!.schedule();
+      this._reconnectTask!.schedule();
     }
   }
 
