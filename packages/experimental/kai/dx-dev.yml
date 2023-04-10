@@ -7,7 +7,8 @@ runtime:
 
   services:
     signal:
-      servers: [ws://localhost:5767/.well-known/dx/signal, ws://localhost/.well-known/dx/signal]
+      server: wss://kube.dxos.org/.well-known/dx/signal
+#      server: wss://kube.dx.ninja/.well-known/dx/signal
     ice:
       - urls: stun:kube.dxos.org:3478
         username: dxos
