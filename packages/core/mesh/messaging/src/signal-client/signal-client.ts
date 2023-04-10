@@ -156,6 +156,9 @@ export class SignalClient implements SignalMethods {
 
     this._ctx = new Context({
       onError: (err) => {
+        if (this._state === SignalState.CLOSED || this._ctx?.disposed) {
+          return;
+        }
         log.warn('Signal Client Error', err);
         this._scheduleReconcileAfterError();
       }
@@ -183,7 +186,7 @@ export class SignalClient implements SignalMethods {
     await this._ctx?.dispose();
 
     this._clientReady.reset();
-    await this._client!.close();
+    await this._client?.close();
     this._client = undefined;
     this._setState(SignalState.CLOSED);
     log('closed');
@@ -328,7 +331,7 @@ export class SignalClient implements SignalMethods {
     // Close client if it wasn't already closed.
     this._clientReady.reset();
     await this._connectionCtx?.dispose();
-    this._client!.close().catch(() => {});
+    this._client?.close().catch(() => {});
     this._client = undefined;
 
     await cancelWithContext(this._ctx!, sleep(this._reconnectAfter));
