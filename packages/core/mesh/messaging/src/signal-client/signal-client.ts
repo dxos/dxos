@@ -85,7 +85,7 @@ export class SignalClient implements SignalMethods {
 
   private _ctx?: Context;
 
-  private _connectionContext?: Context;
+  private _connectionCtx?: Context;
 
   private _reconcileTask?: DeferredTask;
 
@@ -148,25 +148,25 @@ export class SignalClient implements SignalMethods {
   ) {}
 
   open() {
+    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (err) => {
-        log.catch(err);
+        log.warn('Signal Client Error', err);
         this._scheduleReconcileAfterError();
       }
     });
-    this._connectionContext = this._ctx.derive();
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
       await this._reconcileSwarmSubscriptions();
       await this._reconcileMessageSubscriptions();
       this._reconciled.emit();
     });
-    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;
     }
 
     this._setState(SignalState.CONNECTING);
+    this._initConnectionCtx();
     this._createClient();
   }
 
@@ -250,12 +250,56 @@ export class SignalClient implements SignalMethods {
     this.statusChanged.emit(this.getStatus());
   }
 
+  private _initConnectionCtx() {
+    void this._connectionCtx?.dispose();
+    this._connectionCtx = this._ctx!.derive();
+    this._connectionCtx.onDispose(() => {
+      log('connection context disposed');
+      Array.from(this._swarmStreams.values()).forEach((stream) => stream.close());
+      Array.from(this._messageStreams.values()).forEach((stream) => stream.close());
+      this._swarmStreams.clear();
+      this._messageStreams.clear();
+    });
+  }
+
   private _createClient() {
-    log('creating client', { host: this._host });
-    this._connectionContext = this._ctx!.derive();
+    log('creating client', { host: this._host, state: this._state });
+
     this._connectionStarted = new Date();
     try {
-      this._client = new SignalRPCClient(this._host);
+      this._client = new SignalRPCClient({
+        url: this._host,
+        callbacks: {
+          onConnected: () => {
+            log('socket connected');
+            this._lastError = undefined;
+            this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
+            this._setState(SignalState.CONNECTED);
+            this._clientReady.wake();
+            this._reconcileTask!.schedule();
+          },
+
+          onDisconnected: () => {
+            log('socket disconnected', { state: this._state });
+            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+              this._incrementReconnectTimeout();
+            }
+            this._setState(SignalState.DISCONNECTED);
+            this._reconnect();
+          },
+
+          onError: (error) => {
+            log('socket error', { error, state: this._state });
+            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+              this._incrementReconnectTimeout();
+            }
+
+            this._lastError = error;
+            this._setState(SignalState.DISCONNECTED);
+            this._reconnect();
+          }
+        }
+      });
     } catch (err: any) {
       if (this._state === SignalState.RE_CONNECTING) {
         this._incrementReconnectTimeout();
@@ -266,45 +310,6 @@ export class SignalClient implements SignalMethods {
       this._setState(SignalState.DISCONNECTED);
       this._reconnect();
     }
-
-    this._client.connected.on(this._connectionContext, () => {
-      log('socket connected');
-      this._lastError = undefined;
-      this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
-      this._setState(SignalState.CONNECTED);
-      this._clientReady.wake();
-      this._reconcileTask!.schedule();
-    });
-
-    this._client.error.on(this._connectionContext, (error) => {
-      log('socket error', { error });
-      if (this._state === SignalState.CLOSED) {
-        return;
-      }
-
-      if (this._state === SignalState.RE_CONNECTING) {
-        this._incrementReconnectTimeout();
-      }
-
-      this._lastError = error;
-      this._setState(SignalState.DISCONNECTED);
-      this._reconnect();
-    });
-
-    this._client.disconnected.on(this._connectionContext, () => {
-      log('socket disconnected');
-      // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-      if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
-        return;
-      }
-
-      if (this._state === SignalState.RE_CONNECTING) {
-        this._incrementReconnectTimeout();
-      }
-
-      this._setState(SignalState.DISCONNECTED);
-      this._reconnect();
-    });
   }
 
   private _incrementReconnectTimeout() {
@@ -314,22 +319,25 @@ export class SignalClient implements SignalMethods {
 
   private _reconnect() {
     this._performance.reconnectCounter++;
-    log(`reconnecting in ${this._reconnectAfter}ms`);
-    if (this._state === SignalState.RE_CONNECTING) {
-      log.warn('Signal api already reconnecting.');
-      return;
-    }
+    log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
     if (this._state === SignalState.CLOSED) {
       return;
     }
 
+    if (this._state === SignalState.RE_CONNECTING) {
+      log.warn('Signal api already reconnecting.');
+      return;
+    }
+
     this._setState(SignalState.RE_CONNECTING);
-    void this._connectionContext?.dispose();
+    this._initConnectionCtx();
 
     scheduleTask(
-      this._ctx!,
+      this._connectionCtx!,
       async () => {
+        log('Reconnect task', { state: this._state });
         // Close client if it wasn't already closed.
+        this._clientReady.reset();
         this._client.close().catch(() => {});
         this._createClient();
       },
@@ -339,6 +347,8 @@ export class SignalClient implements SignalMethods {
 
   private async _reconcileSwarmSubscriptions(): Promise<void> {
     await this._clientReady.wait();
+    // Copy Client reference to avoid client change during the reconcile.
+    const client = this._client;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from topics that are no longer needed.
@@ -359,7 +369,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      const swarmStream = await this._client.join({ topic, peerId });
+      const swarmStream = await client.join({ topic, peerId });
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
       swarmStream.subscribe((swarmEvent: SwarmEvent) => {
@@ -369,16 +379,13 @@ export class SignalClient implements SignalMethods {
 
       // Saving swarm stream.
       this._swarmStreams.set({ topic, peerId }, swarmStream);
-
-      this._connectionContext!.onDispose(() => {
-        swarmStream.close();
-        this._swarmStreams.delete({ topic, peerId });
-      });
     }
   }
 
   private async _reconcileMessageSubscriptions(): Promise<void> {
     await this._clientReady.wait();
+    // Copy Client reference to avoid client change during the reconcile.
+    const client = this._client;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from messages that are no longer needed.
@@ -398,7 +405,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      const messageStream = await this._client.receiveMessages(peerId);
+      const messageStream = await client.receiveMessages(peerId);
       messageStream.subscribe(async (message: SignalMessage) => {
         this._performance.receivedMessages++;
         await this._onMessage({
@@ -410,11 +417,6 @@ export class SignalClient implements SignalMethods {
 
       // Saving message stream.
       this._messageStreams.set(peerId, messageStream);
-
-      this._connectionContext!.onDispose(() => {
-        messageStream.close();
-        this._messageStreams.delete(peerId);
-      });
     }
   }
 }
