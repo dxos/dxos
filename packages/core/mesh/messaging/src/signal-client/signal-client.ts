@@ -4,9 +4,9 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask } from '@dxos/async';
+import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -80,7 +80,7 @@ export class SignalClient implements SignalMethods {
    */
   private _lastStateChange = new Date();
 
-  private _client!: SignalRPCClient;
+  private _client?: SignalRPCClient;
   private readonly _clientReady = new Trigger();
 
   private _ctx?: Context;
@@ -88,6 +88,7 @@ export class SignalClient implements SignalMethods {
   private _connectionCtx?: Context;
 
   private _reconcileTask?: DeferredTask;
+  private _reconnectTask?: DeferredTask;
 
   readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -149,6 +150,10 @@ export class SignalClient implements SignalMethods {
 
   open() {
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
+      return;
+    }
+
     this._ctx = new Context({
       onError: (err) => {
         log.warn('Signal Client Error', err);
@@ -161,12 +166,12 @@ export class SignalClient implements SignalMethods {
       this._reconciled.emit();
     });
 
-    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
-      return;
-    }
+    this._reconnectTask = new DeferredTask(this._ctx, async () => {
+      await this._connectionCtx?.dispose();
+      await this._reconnect();
+    });
 
     this._setState(SignalState.CONNECTING);
-    this._initConnectionCtx();
     this._createClient();
   }
 
@@ -179,7 +184,8 @@ export class SignalClient implements SignalMethods {
     await this._ctx?.dispose();
 
     this._clientReady.reset();
-    await this._client.close();
+    await this._client!.close();
+    this._client = undefined;
     this._setState(SignalState.CLOSED);
     log('closed');
     log.trace('dxos.mesh.signal-client', trace.end({ id: this._instanceId, data: { performance: this._performance } }));
@@ -216,7 +222,7 @@ export class SignalClient implements SignalMethods {
     this._performance.sentMessages++;
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-    await this._client.sendMessage(msg);
+    await this._client!.sendMessage(msg);
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -250,8 +256,10 @@ export class SignalClient implements SignalMethods {
     this.statusChanged.emit(this.getStatus());
   }
 
-  private _initConnectionCtx() {
-    void this._connectionCtx?.dispose();
+  private _createClient() {
+    log('creating client', { host: this._host, state: this._state });
+    this._connectionStarted = new Date();
+
     this._connectionCtx = this._ctx!.derive();
     this._connectionCtx.onDispose(() => {
       log('connection context disposed');
@@ -260,12 +268,6 @@ export class SignalClient implements SignalMethods {
       this._swarmStreams.clear();
       this._messageStreams.clear();
     });
-  }
-
-  private _createClient() {
-    log('creating client', { host: this._host, state: this._state });
-
-    this._connectionStarted = new Date();
     try {
       this._client = new SignalRPCClient({
         url: this._host,
@@ -285,7 +287,7 @@ export class SignalClient implements SignalMethods {
               this._incrementReconnectTimeout();
             }
             this._setState(SignalState.DISCONNECTED);
-            this._reconnect();
+            this._reconcileTask!.schedule();
           },
 
           onError: (error) => {
@@ -296,7 +298,7 @@ export class SignalClient implements SignalMethods {
 
             this._lastError = error;
             this._setState(SignalState.DISCONNECTED);
-            this._reconnect();
+            this._reconcileTask!.schedule();
           }
         }
       });
@@ -308,7 +310,7 @@ export class SignalClient implements SignalMethods {
       // TODO(burdon): If client isn't set, then flows through to error below.
       this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
-      this._reconnect();
+      this._reconcileTask!.schedule();
     }
   }
 
@@ -317,9 +319,17 @@ export class SignalClient implements SignalMethods {
     this._reconnectAfter = Math.min(this._reconnectAfter, MAX_RECONNECT_TIMEOUT);
   }
 
-  private _reconnect() {
-    this._performance.reconnectCounter++;
+  private async _reconnect() {
     log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
+    this._performance.reconnectCounter++;
+    // Close client if it wasn't already closed.
+    this._clientReady.reset();
+    await this._connectionCtx?.dispose();
+    this._client!.close().catch(() => {});
+    this._client = undefined;
+
+    await cancelWithContext(this._ctx!, sleep(this._reconnectAfter));
+
     if (this._state === SignalState.CLOSED) {
       return;
     }
@@ -330,25 +340,14 @@ export class SignalClient implements SignalMethods {
     }
 
     this._setState(SignalState.RE_CONNECTING);
-    this._initConnectionCtx();
 
-    scheduleTask(
-      this._connectionCtx!,
-      async () => {
-        log('Reconnect task', { state: this._state });
-        // Close client if it wasn't already closed.
-        this._clientReady.reset();
-        this._client.close().catch(() => {});
-        this._createClient();
-      },
-      this._reconnectAfter
-    );
+    this._createClient();
   }
 
   private async _reconcileSwarmSubscriptions(): Promise<void> {
     await asyncTimeout(this._clientReady.wait(), 1000);
     // Copy Client reference to avoid client change during the reconcile.
-    const client = this._client;
+    const client = this._client!;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from topics that are no longer needed.
@@ -385,7 +384,7 @@ export class SignalClient implements SignalMethods {
   private async _reconcileMessageSubscriptions(): Promise<void> {
     await asyncTimeout(this._clientReady.wait(), 1000);
     // Copy Client reference to avoid client change during the reconcile.
-    const client = this._client;
+    const client = this._client!;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from messages that are no longer needed.
