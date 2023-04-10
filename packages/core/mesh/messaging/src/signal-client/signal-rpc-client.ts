@@ -5,7 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 import assert from 'node:assert';
 
-import { Trigger, Event } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,21 +17,30 @@ interface Services {
   Signal: Signal;
 }
 
+export type SignalCallbacks = {
+  onConnected?: () => void;
+  onDisconnected?: () => void;
+  onError?: (error: Error) => void;
+};
+
+export type SignalRPCClientParams = {
+  url: string;
+  callbacks?: SignalCallbacks;
+};
+
 export class SignalRPCClient {
   private _socket?: WebSocket;
   private _rpc?: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
 
-  readonly connected = new Event();
-  readonly disconnected = new Event();
-  readonly error = new Event<Error>();
-
   private _closed = false;
 
-  // prettier-ignore
-  constructor(
-    private readonly _url: string
-  ) {
+  private readonly _url: string;
+  private readonly _callbacks: SignalCallbacks;
+
+  constructor({ url, callbacks = {} }: SignalRPCClientParams) {
+    this._url = url;
+    this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
 
     this._rpc = createProtoRpcPeer({
@@ -41,7 +50,15 @@ export class SignalRPCClient {
       noHandshake: true,
       port: {
         send: (msg) => {
-          this._socket!.send(msg);
+          if (this._closed) {
+            // Do not send messages after close.
+            return;
+          }
+          try {
+            this._socket!.send(msg);
+          } catch (err) {
+            log.warn(String(err));
+          }
         },
         subscribe: (cb) => {
           this._socket!.onmessage = async (msg: WebSocket.MessageEvent) => {
@@ -62,23 +79,27 @@ export class SignalRPCClient {
       try {
         await this._rpc!.open();
         log(`RPC open ${this._url}`);
-        this.connected.emit();
+        this._callbacks.onConnected?.();
         this._connectTrigger.wake();
       } catch (err: any) {
-        this.error.emit(err);
+        this._callbacks.onError?.(err);
       }
     };
 
     this._socket.onclose = async () => {
       log(`Disconnected ${this._url}`);
-      this.disconnected.emit();
+      this._callbacks.onDisconnected?.();
       await this.close();
     };
 
     this._socket.onerror = async (event: WebSocket.ErrorEvent) => {
-      if (this._closed) { // Ignore errors after close.
+      if (this._closed) {
+        // Ignore errors after close.
         return;
       }
+
+      this._callbacks.onError?.(event.error ?? new Error(event.message));
+      this._connectTrigger.reset();
 
       try {
         await this._rpc?.close();
@@ -88,24 +109,23 @@ export class SignalRPCClient {
       this._closed = true;
 
       log.warn(event.message ?? 'Socket error', { url: this._url });
-      this.error.emit(event.error ?? new Error(event.message));
-
     };
   }
 
   async close() {
+    this._closed = true;
     try {
       await this._rpc?.close();
+      this._socket?.close();
     } catch (err) {
-      log.catch(err);
+      log.warn(String(err));
     }
-    this._closed = true;
-    this._socket?.close();
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId });
     await this._connectTrigger.wait();
+    assert(!this._closed, 'SignalRPCClient is closed');
     assert(this._rpc, 'Rpc is not initialized');
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
@@ -117,6 +137,7 @@ export class SignalRPCClient {
 
   async receiveMessages(peerId: PublicKey): Promise<Stream<SignalMessage>> {
     log('receiveMessages', { peerId });
+    assert(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
     assert(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
@@ -128,6 +149,7 @@ export class SignalRPCClient {
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     log('sendMessage', { author, recipient, payload });
+    assert(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
     assert(this._rpc, 'Rpc is not initialized');
     await this._rpc.rpc.Signal.sendMessage({
