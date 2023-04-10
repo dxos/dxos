@@ -258,6 +258,7 @@ export class SignalClient implements SignalMethods {
 
   private _createClient() {
     log('creating client', { host: this._host, state: this._state });
+    assert(!this._client, 'Client already created');
     this._connectionStarted = new Date();
 
     // Create new context for each connection.
