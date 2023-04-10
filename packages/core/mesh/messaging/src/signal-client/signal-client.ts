@@ -167,7 +167,6 @@ export class SignalClient implements SignalMethods {
     });
 
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
-      await this._connectionCtx?.dispose();
       await this._reconnect();
     });
 
@@ -259,6 +258,7 @@ export class SignalClient implements SignalMethods {
   private _createClient() {
     log('creating client', { host: this._host, state: this._state });
     assert(!this._client, 'Client already created');
+
     this._connectionStarted = new Date();
 
     // Create new context for each connection.
@@ -270,6 +270,7 @@ export class SignalClient implements SignalMethods {
       this._swarmStreams.clear();
       this._messageStreams.clear();
     });
+
     try {
       this._client = new SignalRPCClient({
         url: this._host,
@@ -285,19 +286,12 @@ export class SignalClient implements SignalMethods {
 
           onDisconnected: () => {
             log('socket disconnected', { state: this._state });
-            if (this._state === SignalState.RE_CONNECTING) {
-              this._incrementReconnectTimeout();
-            }
             this._setState(SignalState.DISCONNECTED);
             this._reconnectTask!.schedule();
           },
 
           onError: (error) => {
             log('socket error', { error, state: this._state });
-            if (this._state === SignalState.RE_CONNECTING) {
-              this._incrementReconnectTimeout();
-            }
-
             this._lastError = error;
             this._setState(SignalState.DISCONNECTED);
             this._reconnectTask!.schedule();
@@ -305,10 +299,6 @@ export class SignalClient implements SignalMethods {
         }
       });
     } catch (err: any) {
-      if (this._state === SignalState.RE_CONNECTING) {
-        this._incrementReconnectTimeout();
-      }
-
       // TODO(burdon): If client isn't set, then flows through to error below.
       this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
@@ -324,6 +314,17 @@ export class SignalClient implements SignalMethods {
   private async _reconnect() {
     log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
     this._performance.reconnectCounter++;
+
+    if (this._state === SignalState.RE_CONNECTING) {
+      this._incrementReconnectTimeout();
+      log.warn('Signal api already reconnecting.');
+      return;
+    }
+
+    if (this._state === SignalState.CLOSED) {
+      return;
+    }
+
     // Close client if it wasn't already closed.
     this._clientReady.reset();
     await this._connectionCtx?.dispose();
@@ -331,15 +332,6 @@ export class SignalClient implements SignalMethods {
     this._client = undefined;
 
     await cancelWithContext(this._ctx!, sleep(this._reconnectAfter));
-
-    if (this._state === SignalState.CLOSED) {
-      return;
-    }
-
-    if (this._state === SignalState.RE_CONNECTING) {
-      log.warn('Signal api already reconnecting.');
-      return;
-    }
 
     this._setState(SignalState.RE_CONNECTING);
 
