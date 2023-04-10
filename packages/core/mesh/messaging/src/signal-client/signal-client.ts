@@ -370,7 +370,10 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      const swarmStream = await client.join({ topic, peerId });
+      const swarmStream = await asyncTimeout(
+        cancelWithContext(this._connectionCtx!, client.join({ topic, peerId })),
+        5000
+      );
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
       swarmStream.subscribe((swarmEvent: SwarmEvent) => {
@@ -406,7 +409,11 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      const messageStream = await client.receiveMessages(peerId);
+      const messageStream = await asyncTimeout(
+        cancelWithContext(this._connectionCtx!, client.receiveMessages(peerId)),
+        5000
+      );
+
       messageStream.subscribe(async (message: SignalMessage) => {
         this._performance.receivedMessages++;
         await this._onMessage({
