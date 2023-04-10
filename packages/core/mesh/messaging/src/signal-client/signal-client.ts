@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, scheduleTask } from '@dxos/async';
+import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -346,7 +346,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private async _reconcileSwarmSubscriptions(): Promise<void> {
-    await this._clientReady.wait();
+    await asyncTimeout(this._clientReady.wait(), 1000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
@@ -383,7 +383,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private async _reconcileMessageSubscriptions(): Promise<void> {
-    await this._clientReady.wait();
+    await asyncTimeout(this._clientReady.wait(), 1000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
