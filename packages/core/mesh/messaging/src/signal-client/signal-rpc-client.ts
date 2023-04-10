@@ -57,7 +57,7 @@ export class SignalRPCClient {
           try {
             this._socket!.send(msg);
           } catch (err) {
-            log.warn(String(err));
+            log.warn('send error', err);
           }
         },
         subscribe: (cb) => {
@@ -118,7 +118,7 @@ export class SignalRPCClient {
       await this._rpc?.close();
       this._socket?.close();
     } catch (err) {
-      log.warn(String(err));
+      log.warn('close error', err);
     }
   }
 
