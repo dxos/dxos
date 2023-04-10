@@ -347,7 +347,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private async _reconcileSwarmSubscriptions(): Promise<void> {
-    await asyncTimeout(this._clientReady.wait(), 1000);
+    await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
@@ -387,7 +387,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private async _reconcileMessageSubscriptions(): Promise<void> {
-    await asyncTimeout(this._clientReady.wait(), 1000);
+    await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
