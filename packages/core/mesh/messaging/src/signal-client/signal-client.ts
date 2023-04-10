@@ -260,6 +260,7 @@ export class SignalClient implements SignalMethods {
     log('creating client', { host: this._host, state: this._state });
     this._connectionStarted = new Date();
 
+    // Create new context for each connection.
     this._connectionCtx = this._ctx!.derive();
     this._connectionCtx.onDispose(() => {
       log('connection context disposed');
