@@ -52,7 +52,7 @@ export const SpaceIcons: FC<{ selected: string; onSelect: (selected: string) => 
       <div className='grid grid-cols-6'>
         {icons.map(({ id, Icon }) => (
           <Button key={id} variant='ghost' className='p-0' onClick={() => onSelect(id)}>
-            <div className={mx('m-1 p-1', selected === id && 'ring-2 ring-black')}>
+            <div className={mx('m-1 p-1', selected === id && 'rounded ring-2 ring-black')}>
               <Icon className={getSize(6)} />
             </div>
           </Button>
