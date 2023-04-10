@@ -54,6 +54,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
             labelVisuallyHidden
             placeholder={t('space title placeholder')}
             slots={{
+              root: { className: 'w-full' },
               input: { autoFocus: !space.properties.name?.length }
             }}
             value={space.properties.name ?? ''}
