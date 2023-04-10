@@ -15,12 +15,12 @@ import { Actions } from './Actions';
 
 export const AppMenu = () => {
   const shell = useShell();
+  const { space } = useAppRouter();
+
+  // TODO(burdon): Factor out kai-types Message dep (frame triggers event?)
   const { chat } = useAppState();
   const { setChat } = useAppReducer();
   const [newChat, setNewChat] = useState(false);
-  const { space } = useAppRouter();
-
-  // TODO(burdon): Factor out kai-types Message dep (event).
   const messages = useQuery(space, Message.filter());
   const messageCount = useRef(0);
   useEffect(() => {

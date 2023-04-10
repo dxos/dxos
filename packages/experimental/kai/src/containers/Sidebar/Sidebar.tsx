@@ -6,7 +6,7 @@ import {
   AppWindow,
   CaretCircleDoubleDown,
   CaretLeft,
-  Info as CaretUpDown,
+  Info,
   Graph,
   PlusCircle,
   Robot,
@@ -269,31 +269,33 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       <div
         role='none'
         className={mx(
-          'flex flex-col h-full overflow-hidden min-bs-full bg-sidebar-bg',
+          'flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg',
           theme.panel === 'flat' && 'border-r'
         )}
       >
-        {/* Space Selector */}
+        {/* Header */}
         <div className='flex flex-col shrink-0'>
-          <div className={mx('flex items-center h-[40px]', theme.classes.header)}>
-            <div className='flex w-full items-center'>
-              <div className='flex justify-center px-3'>
+          <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
+            <div className='flex overflow-hidden grow items-center'>
+              <div className='flex shrink-0 px-3'>
                 <Icon className={getSize(8)} weight='duotone' data-testid='sidebar.spaceIcon' />
               </div>
+              <div className='truncate text-lg'>{space.properties.name ?? 'Space'}</div>
+            </div>
+
+            <div className='flex shrink-0 items-center'>
               <Button
                 variant='ghost'
-                className='flex w-full p-0'
+                className='flex p-0 px-1'
                 data-testid='sidebar.showSpaceList'
                 onClick={() => setShowSpaceList((show) => !show)}
               >
-                <div className='px-2 text-lg'>{space.properties.name ?? 'Space'}</div>
-                <CaretUpDown className={getSize(4)} />
+                <Info className={getSize(5)} />
+              </Button>
+              <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
+                {displayState === 'show' && <CaretLeft className={getSize(6)} />}
               </Button>
             </div>
-
-            <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
-              {displayState === 'show' && <CaretLeft className={getSize(6)} />}
-            </Button>
           </div>
         </div>
 
