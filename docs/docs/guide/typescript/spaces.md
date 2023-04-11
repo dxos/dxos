@@ -58,17 +58,14 @@ const client = new Client();
   // create a space
   const space = await client.createSpace();
   // create an invitation to join the space
-  const { invitation } = space.createInvitation();
-  if (invitation) {
-    // share this code with a friend, it will be used to locate the peer and
-    // establish a secure connection
-    const code = InvitationEncoder.encode(invitation);
-
-    // later we will pass this second authentication code to our friend over a
-    // side-channel and they'll send it to us over the new connection which
-    // will verify that it's secure.
-    const authCode = invitation.authCode;
-  }
+  const invitation = space.createInvitation();
+  // share this code with a friend, it will be used to locate the peer and
+  // establish a secure connection
+  const code = InvitationEncoder.encode(invitation.get());
+  // later we will pass this second authentication code to our friend over a
+  // side-channel and they'll send it to us over the new connection which
+  // will verify that it's secure.
+  const authCode = invitation.get().authCode;
 })()
 ```
 
@@ -87,11 +84,11 @@ const client = new Client();
   // friend decodes the invitation code
   const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
   // accept the invitation
-  const { authenticate, invitation } = client.acceptInvitation(receivedInvitation);
+  const invitation = client.acceptInvitation(receivedInvitation);
   // verify it's secure by sending the second factor authCode
-  await authenticate('<authentication code here>');
+  await invitation.authenticate('<authentication code here>');
   // space joined!
-  const space = client.getSpace(invitation?.spaceKey!);
+  const space = client.getSpace(invitation.get().spaceKey!);
 })();
 ```
 

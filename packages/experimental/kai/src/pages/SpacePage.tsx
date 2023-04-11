@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretRight, Database, Shield, Users } from '@phosphor-icons/react';
-import React, { Suspense, useContext, useEffect, useState } from 'react';
+import { CaretRight } from '@phosphor-icons/react';
+import React, { useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { useMulticastObservable } from '@dxos/react-async';
-import { SpaceState, useSpaces, Space, useMembers, SpaceMember, useIdentity } from '@dxos/react-client';
+import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
+import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { AppMenu, BotManager, FrameContainer, Sidebar } from '../containers';
-import { ChatFrameRuntime } from '../frames/Chat';
-import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppState } from '../hooks';
+import { AppMenu, BotManager, FrameContainer, MetagraphPanel, Sidebar } from '../containers';
+import { Section, createPath, defaultFrameId, useAppRouter, useAppState, useTheme } from '../hooks';
+import { SpaceLoading } from './SpaceLoading';
 
 /**
  * Home page with current space.
@@ -21,7 +21,7 @@ import { useAppRouter, useTheme, Section, createPath, defaultFrameId, useAppStat
 const SpacePage = () => {
   useIdentity({ login: true });
   const { fullscreen } = useAppState();
-  const { space, frame } = useAppRouter();
+  const { space, frame, objectId } = useAppRouter();
   const spaces = useSpaces();
   const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
 
@@ -32,7 +32,7 @@ const SpacePage = () => {
   if (space && space.state.get() === SpaceState.READY && frame && fullscreen) {
     return (
       <div className='flex w-full h-full overflow-hidden'>
-        <FrameContainer space={space} frame={frame} />
+        <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
       </div>
     );
   }
@@ -53,14 +53,20 @@ const SpacePage = () => {
 
 const Content = () => {
   const theme = useTheme();
-  const { chat, dev } = useAppState();
-  const { space, frame } = useAppRouter();
+  const { chat, dev, fullscreen } = useAppState();
+  const { space, frame, objectId } = useAppRouter();
   const { section } = useParams();
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
 
+  const frameRegistry = useFrameRegistry();
+  let sidebarFrameDef: FrameDef<any> | undefined;
+  if (chat && frame?.module.id !== 'dxos.module.frame.chat') {
+    sidebarFrameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
+  }
+
   return (
-    <main className='flex flex-col bs-full overflow-hidden'>
+    <div className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
         {displayState !== 'show' && (
           <Button variant='ghost' onClick={toggleSidebar}>
@@ -74,64 +80,27 @@ const Content = () => {
 
       {/* Main content. */}
       {space?.state.get() === SpaceState.READY ? (
-        <div role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
+        <main role='none' className='flex flex-col bs-full overflow-hidden bg-paper-2-bg'>
+          {section === Section.DMG && <MetagraphPanel />}
           {section === Section.BOTS && <BotManager />}
           {frame && (
             <div className='flex flex-1 overflow-hidden'>
-              <FrameContainer space={space} frame={frame} />
+              <FrameContainer space={space} frame={frame} objectId={objectId} fullscreen={fullscreen} />
 
-              {chat && frame.module.id !== 'dxos.module.frame.chat' && (
-                <div className='flex shrink-0 w-sidebar'>
-                  <Suspense>
-                    <ChatFrameRuntime.Component />
-                  </Suspense>
+              {/* Sidebar. */}
+              {sidebarFrameDef && (
+                <div className='flex relative'>
+                  <div className='flex absolute right-0 w-sidebar h-full z-50'>
+                    <FrameContainer space={space} frame={sidebarFrameDef} />
+                  </div>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </main>
       ) : (
         space && dev && <SpaceLoading space={space} />
       )}
-    </main>
-  );
-};
-
-const SpaceLoading = ({ space }: { space: Space }) => {
-  const members = useMembers(space.key);
-  const pipelineState = useMulticastObservable(space.pipeline);
-  const onlinePeers = members.filter((member) => member.presence === SpaceMember.PresenceState.ONLINE).length;
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    // Delayed visibility.
-    setTimeout(() => setVisible(true), 1000);
-  }, []);
-  if (!visible) {
-    return null;
-  }
-
-  return (
-    <div className='flex absolute right-2 bottom-2 bg-orange-300 rounded px-2 text-sm font-mono items-center space-x-2'>
-      <div className='flex items-center'>
-        <Shield />
-        <span className='flex px-1'>
-          {pipelineState.currentControlTimeframe?.totalMessages() ?? 0}/
-          {pipelineState.targetControlTimeframe?.totalMessages() ?? 0}
-        </span>
-      </div>
-      <div className='flex items-center'>
-        <Database />
-        <span className='flex px-1'>
-          {pipelineState.currentDataTimeframe?.totalMessages() ?? 0}/
-          {pipelineState.targetDataTimeframe?.totalMessages() ?? 0}
-        </span>
-      </div>
-      <div className='flex items-center'>
-        <Users />
-        <span className='flex px-1'>
-          {onlinePeers}/{members.length}
-        </span>
-      </div>
     </div>
   );
 };

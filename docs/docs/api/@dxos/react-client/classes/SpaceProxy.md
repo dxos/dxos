@@ -33,7 +33,7 @@ Echo database.
 Type: <code>Internal</code>
 
 ### [invitations]()
-Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)[]&gt;</code>
+Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)[]&gt;</code>
 
 ### [isOpen]()
 Type: <code>boolean</code>
@@ -91,11 +91,11 @@ Arguments: none
 Creates an interactive invitation.
 
 
-Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)</code>
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)</code>
 
 Arguments: 
 
-`options`: <code>[InvitationsOptions](/api/@dxos/react-client/types/InvitationsOptions)</code>
+`options`: <code>Partial&lt;[Invitation](/api/@dxos/react-client/interfaces/Invitation)&gt;</code>
 
 ### [createSnapshot()]()
 

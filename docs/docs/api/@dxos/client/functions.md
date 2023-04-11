@@ -68,7 +68,7 @@ Arguments:
 
 `object`: <code>unknown</code>
 
-### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L100)
+### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L73)
 
 
 
@@ -80,4 +80,4 @@ Returns: <code>Promise&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&
 
 Arguments: 
 
-`observable`: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)</code>
+`observable`: <code>[CancellableInvitationObservable](/api/@dxos/client/classes/CancellableInvitationObservable)</code>

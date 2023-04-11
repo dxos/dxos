@@ -8,23 +8,11 @@ Defined in:
 ### [commandTemplate]()
 Type: <code>string</code>
 
-Options:
-  - proto3_optional = true
-
 ### [enabled]()
 Type: <code>boolean</code>
-
-Options:
-  - proto3_optional = true
 
 ### [outputRe]()
 Type: <code>string</code>
 
-Options:
-  - proto3_optional = true
-
 ### [port]()
 Type: <code>string</code>
-
-Options:
-  - proto3_optional = true

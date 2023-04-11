@@ -81,7 +81,7 @@ export class TestPeer {
   async open() {
     await this.signalManager.open();
     this.messenger.open();
-    this.messenger
+    await this.messenger
       .listen({
         peerId: this.peerId,
         onMessage: async (msg) => {
