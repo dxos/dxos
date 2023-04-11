@@ -5,7 +5,7 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Alert, Button, Dialog, useTranslation } from '@dxos/react-components';
+import { Alert, Button, Dialog, DropdownMenu, DropdownMenuItem, useTranslation } from '@dxos/react-components';
 
 import { Tooltip } from '../Tooltip';
 
@@ -55,17 +55,26 @@ export const FatalError = ({ error }: FatalErrorProps) => {
       ) : (
         <p>{t('fatal error message')}</p>
       )}
-      <div role='none' className='flex'>
+      <div role='none' className='flex gap-2'>
         <Tooltip content={t('copy error label')} zIndex={'z-[21]'}>
           <Button onClick={onCopyError}>
             <Clipboard weight='duotone' size='1em' />
           </Button>
         </Tooltip>
         <div role='none' className='flex-grow' />
-        {/* TODO(wittjosiah): How do we get access to Client here so that we can trigger reset? */}
-        {/* <Button variant='primary' onClick={() => client.reset()}>
-          {t('reset client label')}
-        </Button> */}
+        <DropdownMenu
+          trigger={<Button variant='ghost'>{t('reset client label')}</Button>}
+          slots={{ content: { side: 'top', className: 'z-[51]' } }}
+        >
+          <DropdownMenuItem
+            onClick={() => {
+              // TODO(wittjosiah): How do we get access to Client here so that we can trigger reset?
+              console.log('todo: reset');
+            }}
+          >
+            {t('reset client confirm label')}
+          </DropdownMenuItem>
+        </DropdownMenu>
         <Button variant='primary' onClick={() => location.reload()}>
           {t('reload page label')}
         </Button>
