@@ -193,8 +193,6 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Composer
 type ExportViewState = 'init' | 'pending' | 'response' | null;
 
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
-  throw new Error('Test fatal error');
-
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
