@@ -46,10 +46,8 @@ export class WebsocketSignalManager implements SignalManager {
   ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
-      const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
+      const server = new SignalClient(host, async (message) => this.onMessage.emit(message), async (data) => this.swarmEvent.emit(data));
       server._traceParent = this._instanceId;
-      // TODO(mykola): Add subscription group
-      server.swarmEvent.on((data) => this.swarmEvent.emit(data));
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host, server);
@@ -140,7 +138,7 @@ export class WebsocketSignalManager implements SignalManager {
     });
   }
 
-  private async _forEachServer(fn: (server: SignalClient) => Promise<any>) {
+  private async _forEachServer<ReturnType>(fn: (server: SignalClient) => Promise<ReturnType>): Promise<ReturnType[]> {
     return Promise.all(Array.from(this._servers.values()).map(fn));
   }
 }

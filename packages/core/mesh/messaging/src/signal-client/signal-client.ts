@@ -95,10 +95,6 @@ export class SignalClient implements SignalMethods {
 
   readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
-  readonly swarmEvent = new Event<{
-    topic: PublicKey;
-    swarmEvent: SwarmEvent;
-  }>();
 
   /**
    * Swarm events streams. Keys represent actually joined topic and peerId.
@@ -148,7 +144,8 @@ export class SignalClient implements SignalMethods {
    */
   constructor(
     private readonly _host: string,
-    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
+    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
+    private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>
   ) {}
 
   open() {
@@ -389,9 +386,9 @@ export class SignalClient implements SignalMethods {
       );
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
-      swarmStream.subscribe((swarmEvent: SwarmEvent) => {
+      swarmStream.subscribe(async (swarmEvent: SwarmEvent) => {
         log('swarm event', { swarmEvent });
-        this.swarmEvent.emit({ topic, swarmEvent });
+        await this._onSwarmEvent({ topic, swarmEvent });
       });
 
       // Saving swarm stream.
