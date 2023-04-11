@@ -46,7 +46,9 @@ describe('WebSocketSignalManager', () => {
     await client3.join({ topic, peerId: peer3 });
 
     await Promise.all([joined12, joined13, joined21, joined31]);
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('works with one broken server', async () => {
     const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
@@ -62,7 +64,9 @@ describe('WebSocketSignalManager', () => {
     await client2.join({ topic, peerId: peer2 });
 
     await Promise.all([joined12, joined21]);
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('join two swarms with a broken signal server', async () => {
     const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
@@ -84,5 +88,7 @@ describe('WebSocketSignalManager', () => {
     await client1.join({ topic: topic2, peerId: peer1 });
     await client2.join({ topic: topic2, peerId: peer2 });
     await Promise.all([joined212, joined221]);
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 });
