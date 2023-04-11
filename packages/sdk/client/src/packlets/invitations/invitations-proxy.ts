@@ -45,6 +45,8 @@ export class InvitationsProxy {
   // Invitations originating from this proxy.
   private _invitations = new Set<string>();
 
+  private _opened = false;
+
   // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService,
@@ -59,7 +61,16 @@ export class InvitationsProxy {
     return this._accepted;
   }
 
+  get isOpen(): boolean {
+    return this._opened;
+  }
+
   async open() {
+    if (this._opened) {
+      return;
+    }
+
+    log('opening...', this._getInvitationContext());
     this._ctx = new Context();
 
     const stream = this._invitationsService.queryInvitations();
@@ -91,12 +102,20 @@ export class InvitationsProxy {
     });
 
     this._ctx.onDispose(() => stream.close());
+    this._opened = true;
+    log('opened', this._getInvitationContext());
   }
 
   async close() {
+    if (!this._opened) {
+      return;
+    }
+
+    log('closing...', this._getInvitationContext());
     await this._ctx.dispose();
     this._createdUpdate.emit([]);
     this._acceptedUpdate.emit([]);
+    log('closed', this._getInvitationContext());
   }
 
   getInvitationOptions(): Invitation {
