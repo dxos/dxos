@@ -339,7 +339,7 @@ export class InvitationsHandler {
                 log('timeout', { ...protocol.toJSON() });
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
               } else {
-                log.warn('auth failed', err);
+                log('auth failed', err);
                 stream.error(err);
               }
             } finally {
