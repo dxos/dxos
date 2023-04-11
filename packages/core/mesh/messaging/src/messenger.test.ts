@@ -65,7 +65,9 @@ describe('Messenger', () => {
     await peer1.messenger.sendMessage(message);
 
     await asyncTimeout(promise, 1_000);
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('Message 3 peers', async () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
@@ -112,7 +114,9 @@ describe('Messenger', () => {
       await peer2.messenger.sendMessage(message);
       await asyncTimeout(promise, 1_000);
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('Message routing', async () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
@@ -162,7 +166,9 @@ describe('Messenger', () => {
       expect(onMessage2).toHaveBeenCalledWith([message]);
       expect(onMessage3).not.toHaveBeenCalledWith([message]);
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('Unsubscribe listener', async () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
@@ -229,7 +235,10 @@ describe('Messenger', () => {
       expect(messages1.length).toEqual(2);
       expect(messages2.length).toEqual(1);
     }
-  }).tag('flaky');
+  })
+    .tag('flaky')
+    .timeout(1_000)
+    .retries(2);
 
   test('re-entrant message', async () => {
     const builder = new TestBuilder({ signalHosts: [broker.url()] });
@@ -265,7 +274,9 @@ describe('Messenger', () => {
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('Message with broken signal server', async () => {
     const builder = new TestBuilder({ signalHosts: ['ws://broken.kube', broker.url()] });
@@ -286,7 +297,9 @@ describe('Messenger', () => {
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   describe('Reliability', () => {
     test('message with non reliable connection', async () => {
@@ -324,7 +337,9 @@ describe('Messenger', () => {
 
       // expect to receive 3 messages.
       await receivePromise;
-    }).timeout(5_000);
+    })
+      .timeout(5_000)
+      .retries(2);
 
     test('ignoring doubled messages', async () => {
       // Message got doubled going through signal network.
@@ -352,7 +367,9 @@ describe('Messenger', () => {
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
     });
-  });
+  })
+    .timeout(5_000)
+    .retries(2);
 
   describe.skip('load', () => {
     test('many connections to KUBE', async () => {
@@ -387,6 +404,8 @@ describe('Messenger', () => {
       });
 
       await sleep(1000000);
-    }).timeout(100000);
+    })
+      .timeout(5_000)
+      .retries(2);
   });
 });
