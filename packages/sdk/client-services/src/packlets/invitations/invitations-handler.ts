@@ -339,10 +339,8 @@ export class InvitationsHandler {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
-              } else if(err instanceof RpcClosedError) {
-                // TODO(dmaretskyi): .
               } else {
-                log.warn('auth failed', err);
+                log('auth failed', err);
                 stream.error(err);
               }
             } finally {
