@@ -8,7 +8,7 @@ import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
-import { WebsocketSignalManager } from '@dxos/messaging';
+import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
@@ -26,18 +26,27 @@ describe('Signal Integration Test', () => {
     broker.stop();
   });
 
-  const setupPeer = async ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
+  const setupPeer = async ({ peerId, topic = PublicKey.random() }: { peerId: PublicKey; topic?: PublicKey }) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
     await signalManager.open();
     afterTest(() => signalManager.close());
-    signalManager.onMessage.on((message) => messageRouter.receiveMessage(message));
+
+    const messenger = new Messenger({
+      signalManager
+    });
+    messenger.open();
+    afterTest(() => messenger.close());
+    await messenger.listen({
+      peerId,
+      onMessage: async (message) => await messageRouter.receiveMessage(message)
+    });
 
     const receivedSignals: SignalMessage[] = [];
     const signalMock = async (msg: SignalMessage) => {
       receivedSignals.push(msg);
     };
     const messageRouter = new MessageRouter({
-      sendMessage: signalManager.sendMessage.bind(signalManager),
+      sendMessage: messenger.sendMessage.bind(messenger),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true }),
       topic
@@ -45,6 +54,7 @@ describe('Signal Integration Test', () => {
 
     return {
       signalManager,
+      messenger,
       receivedSignals,
       messageRouter
     };
@@ -55,9 +65,8 @@ describe('Signal Integration Test', () => {
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const peerNetworking1 = await setupPeer({ topic });
-    const peerNetworking2 = await setupPeer({ topic });
-
+    const peerNetworking1 = await setupPeer({ peerId: peer1, topic });
+    const peerNetworking2 = await setupPeer({ peerId: peer2, topic });
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
       ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)
     );
@@ -67,8 +76,6 @@ describe('Signal Integration Test', () => {
 
     await peerNetworking1.signalManager.join({ topic, peerId: peer1 });
     await peerNetworking2.signalManager.join({ topic, peerId: peer2 });
-    await peerNetworking1.signalManager.subscribeMessages(peer1);
-    await peerNetworking2.signalManager.subscribeMessages(peer2);
 
     await promise1;
     await promise2;
