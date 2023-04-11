@@ -57,7 +57,6 @@ describe('Signal Integration Test', () => {
 
     const peerNetworking1 = await setupPeer({ topic });
     const peerNetworking2 = await setupPeer({ topic });
-
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
       ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)
     );

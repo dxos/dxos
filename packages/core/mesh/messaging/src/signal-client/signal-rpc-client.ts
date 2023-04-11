@@ -19,7 +19,13 @@ interface Services {
 
 export type SignalCallbacks = {
   onConnected?: () => void;
+
+  /**
+   * Called on disconnect.
+   * In case of error, `onError` will be called first and then `onDisconnected`.
+   */
   onDisconnected?: () => void;
+
   onError?: (error: Error) => void;
 };
 

@@ -33,6 +33,9 @@ export enum SignalState {
   /** Server terminated the connection. Socket will be reconnected. */
   DISCONNECTED = 'DISCONNECTED',
 
+  /** Server terminated the connection with an ERROR. Socket will be reconnected. */
+  ERROR = 'ERROR',
+
   /** Socket was closed. */
   CLOSED = 'CLOSED'
 }
@@ -288,6 +291,12 @@ export class SignalClient implements SignalMethods {
 
           onDisconnected: () => {
             log('socket disconnected', { state: this._state });
+            if (this._state === SignalState.ERROR) {
+              // Ignore disconnects after error.
+              // Handled by error handler before disconnect handler.
+              this._setState(SignalState.DISCONNECTED);
+              return;
+            }
             this._setState(SignalState.DISCONNECTED);
             this._reconnectTask!.schedule();
           },
@@ -295,7 +304,7 @@ export class SignalClient implements SignalMethods {
           onError: (error) => {
             log('socket error', { error, state: this._state });
             this._lastError = error;
-            this._setState(SignalState.DISCONNECTED);
+            this._setState(SignalState.ERROR);
             this._reconnectTask!.schedule();
           }
         }
