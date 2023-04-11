@@ -301,7 +301,7 @@ message Runtime {
     }
 
     message Signal {
-      optional string server = 1;
+      optional string servers = 1;
       optional string api = 2;
       optional string status = 3;
     }
@@ -336,7 +336,7 @@ message Runtime {
     optional AppServer app = 2;
     optional Dxns dxns = 3;
     optional Ipfs ipfs = 4;
-    optional Signal signal = 5;
+    repeated Signal signal = 5;
     repeated Ice ice = 6;
     optional Machine machine = 7;
     optional BotHost bot = 8;
