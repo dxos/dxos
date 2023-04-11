@@ -124,14 +124,14 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Subscribed for message stream peerId=${peerId}`);
     assert(this._opened, 'Closed');
 
-    const unsubscribeHandles = this._forEachServer(async (server) => server.subscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.subscribeMessages(peerId));
+  }
 
-    // TODO(mykola): on multiple subscription for same peerId, everybody will receive same unsubscribe handle.
-    return {
-      unsubscribe: async () => {
-        await Promise.all((await unsubscribeHandles).map((handle) => handle.unsubscribe()));
-      }
-    };
+  async unsubscribeMessages(peerId: PublicKey) {
+    log(`Subscribed for message stream peerId=${peerId}`);
+    assert(this._opened, 'Closed');
+
+    await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
   }
 
   private _initContext() {

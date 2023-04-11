@@ -231,14 +231,13 @@ export class SignalClient implements SignalMethods {
     log('subscribing to messages', { peerId });
     this._subscribedMessages.add({ peerId });
     this._reconcileTask!.schedule();
+  }
 
-    return {
-      unsubscribe: async () => {
-        this._messageStreams.get(peerId)!.close();
-        this._messageStreams.delete(peerId);
-        this._subscribedMessages.delete({ peerId });
-      }
-    };
+  async unsubscribeMessages(peerId: PublicKey) {
+    log('unsubscribing from messages', { peerId });
+    this._subscribedMessages.delete({ peerId });
+    this._messageStreams.get(peerId)?.close();
+    this._messageStreams.delete(peerId);
   }
 
   private _scheduleReconcileAfterError() {
@@ -408,7 +407,6 @@ export class SignalClient implements SignalMethods {
         cancelWithContext(this._connectionCtx!, client.receiveMessages(peerId)),
         5000
       );
-
       messageStream.subscribe(async (message: SignalMessage) => {
         this._performance.receivedMessages++;
         await this._onMessage({
