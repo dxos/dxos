@@ -11,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexSet } from '@dxos/util';
 
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
@@ -21,14 +20,6 @@ import { SignalManager } from './signal-manager';
  */
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
-
-  /** Topics joined: topic => peerId */
-  private readonly _topicsJoined = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
-    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
-  );
-
-  /** peerId[] */
-  private readonly _subscribedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _ctx!: Context;
   private _opened = false;
@@ -78,17 +69,6 @@ export class WebsocketSignalManager implements SignalManager {
 
     [...this._servers.values()].forEach((server) => server.open());
 
-    await Promise.all(
-      [...this._servers.values()].map((server) =>
-        Promise.all([...this._topicsJoined.values()].map((params) => server.join(params)))
-      )
-    );
-
-    await Promise.all(
-      [...this._servers.values()].map((server) =>
-        Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
-      )
-    );
     this._opened = true;
   }
 
@@ -111,10 +91,8 @@ export class WebsocketSignalManager implements SignalManager {
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('Join', { topic, peerId });
-    assert(!this._topicsJoined.has({ topic, peerId }), 'Already joined');
     assert(this._opened, 'Closed');
-    this._topicsJoined.add({ topic, peerId });
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.join({ topic, peerId })));
+    await this._forEachServer((server) => server.join({ topic, peerId }));
   }
 
   @synchronized
@@ -122,8 +100,7 @@ export class WebsocketSignalManager implements SignalManager {
     log('leaving', { topic, peerId });
     assert(this._opened, 'Closed');
 
-    this._topicsJoined.delete({ topic, peerId });
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.leave({ topic, peerId })));
+    await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
 
   async sendMessage({
@@ -138,7 +115,7 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Signal ${recipient}`);
     assert(this._opened, 'Closed');
 
-    [...this._servers.values()].forEach((server: SignalClient) => {
+    void this._forEachServer(async (server) => {
       void server.sendMessage({ author, recipient, payload }).catch((err) => log(err));
     });
   }
@@ -146,24 +123,24 @@ export class WebsocketSignalManager implements SignalManager {
   async subscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
     assert(this._opened, 'Closed');
-    this._subscribedMessages.add(peerId);
 
-    const unsubscribeHandles = await Promise.all(
-      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
-    );
+    await this._forEachServer(async (server) => server.subscribeMessages(peerId));
+  }
 
-    // TODO(mykola): on multiple subscription for same peerId, everybody will receive same unsubscribe handle.
-    return {
-      unsubscribe: async () => {
-        await Promise.all(unsubscribeHandles.map((handle) => handle.unsubscribe()));
-        this._subscribedMessages.delete(peerId);
-      }
-    };
+  async unsubscribeMessages(peerId: PublicKey) {
+    log(`Subscribed for message stream peerId=${peerId}`);
+    assert(this._opened, 'Closed');
+
+    await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
   }
 
   private _initContext() {
     this._ctx = new Context({
       onError: (err) => log.catch(err)
     });
+  }
+
+  private async _forEachServer(fn: (server: SignalClient) => Promise<any>) {
+    return Promise.all(Array.from(this._servers.values()).map(fn));
   }
 }

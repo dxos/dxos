@@ -129,7 +129,7 @@ describe('SignalClient', () => {
     client2.open();
     afterTest(() => client2.close());
 
-    const unsubscribeHandle = await client1.subscribeMessages(peer1);
+    await client1.subscribeMessages(peer1);
     await client2.subscribeMessages(peer2);
     await waitForSubscription(client2, peer2);
 
@@ -149,7 +149,7 @@ describe('SignalClient', () => {
     }
 
     // unsubscribing.
-    await unsubscribeHandle.unsubscribe();
+    await client1.unsubscribeMessages(peer1);
 
     {
       const promise = received.waitFor((msg) => {
