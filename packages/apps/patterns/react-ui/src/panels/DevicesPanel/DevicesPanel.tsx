@@ -64,9 +64,7 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
         <InvitationList
           invitations={invitations}
-          onClickRemove={(invitation) =>
-            invitation.get() && client.halo.deleteInvitation(invitation.get().invitationId)
-          }
+          onClickRemove={(invitation) => invitation.cancel()}
           createInvitationUrl={createInvitationUrl}
         />
         <Button

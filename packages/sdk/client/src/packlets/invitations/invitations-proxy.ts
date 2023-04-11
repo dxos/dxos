@@ -63,44 +63,30 @@ export class InvitationsProxy {
     this._ctx = new Context();
 
     const stream = this._invitationsService.queryInvitations();
-    stream.subscribe(({ added, removed }: QueryInvitationsResponse) => {
-      if (
-        added?.created &&
-        this._matchesInvitationContext(added.created) &&
-        !this._invitations.has(added.created.invitationId)
-      ) {
-        log('remote invitation created', { invitation: added.created });
-        this.createInvitation(added.created);
-      }
-
-      if (
-        added?.accepted &&
-        this._matchesInvitationContext(added.accepted) &&
-        !this._invitations.has(added.accepted.invitationId)
-      ) {
-        log('remote invitation accepted', { invitation: added.accepted });
-        this.acceptInvitation(added.accepted);
-      }
-
-      if (removed?.created) {
-        const index = this._created
-          .get()
-          .findIndex((invitation) => invitation.get().invitationId === removed.created?.invitationId);
-        void this._created.get()[index]?.cancel();
-        index >= 0 &&
-          this._createdUpdate.emit([...this._created.get().slice(0, index), ...this._created.get().slice(index + 1)]);
-      }
-
-      if (removed?.accepted) {
-        const index = this._accepted
-          .get()
-          .findIndex((invitation) => invitation.get().invitationId === removed.accepted?.invitationId);
-        void this._accepted.get()[index]?.cancel();
-        index >= 0 &&
-          this._acceptedUpdate.emit([
-            ...this._accepted.get().slice(0, index),
-            ...this._accepted.get().slice(index + 1)
-          ]);
+    stream.subscribe(({ action, type, invitations }: QueryInvitationsResponse) => {
+      if (action === QueryInvitationsResponse.Action.ADDED) {
+        log('remote invitations added', { type, invitations });
+        invitations
+          ?.filter((invitation) => this._matchesInvitationContext(invitation))
+          .filter((invitation) => !this._invitations.has(invitation.invitationId))
+          .forEach((invitation) => {
+            type === QueryInvitationsResponse.Type.CREATED
+              ? this.createInvitation(invitation)
+              : this.acceptInvitation(invitation);
+          });
+      } else if (action === QueryInvitationsResponse.Action.REMOVED) {
+        log('remote invitations removed', { type, invitations });
+        const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+        const cacheUpdate = type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+        invitations?.forEach((removed) => {
+          const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
+          void cache.get()[index]?.cancel();
+          index >= 0 &&
+            cacheUpdate.emit([
+              ...cache.get().slice(0, index),
+              ...cache.get().slice(index + 1)
+            ] as AuthenticatingInvitationObservable[]);
+        });
       }
     });
 
@@ -173,10 +159,6 @@ export class InvitationsProxy {
     this._acceptedUpdate.emit([...this._accepted.get(), observable]);
 
     return observable;
-  }
-
-  deleteInvitation(invitationId: string): Promise<void> {
-    return this._invitationsService.deleteInvitation({ invitationId });
   }
 
   private _matchesInvitationContext(invitation: Invitation): boolean {

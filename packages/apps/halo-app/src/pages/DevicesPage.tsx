@@ -22,10 +22,6 @@ const DevicesPage = () => {
     client.halo.createInvitation();
   }, []);
 
-  const handleRemove = useCallback((id: string) => {
-    void client.halo.deleteInvitation(id);
-  }, []);
-
   return (
     <>
       <HeadingWithActions
@@ -45,7 +41,7 @@ const DevicesPage = () => {
       <InvitationList
         invitations={invitations as unknown as CancellableInvitationObservable[] | undefined}
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
-        onClickRemove={handleRemove}
+        onClickRemove={(invitation) => invitation.cancel()}
       />
     </>
   );

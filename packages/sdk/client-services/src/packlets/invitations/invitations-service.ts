@@ -64,6 +64,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         },
         () => {
           close();
+          this._createInvitations.delete(invitation.get().invitationId);
         }
       );
     });
@@ -92,6 +93,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         },
         () => {
           close();
+          this._acceptInvitations.delete(invitation.get().invitationId);
         }
       );
     });
@@ -109,25 +111,16 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
-    log('cancelling...');
-    assert(invitationId);
-    const observable = this._createInvitations.get(invitationId) ?? this._acceptInvitations.get(invitationId);
-    if (!observable) {
-      log.warn('invalid invitation', { invitationId });
-    } else {
-      await observable.cancel();
-    }
-  }
-
-  async deleteInvitation({ invitationId }: { invitationId: string }): Promise<void> {
     log('deleting...');
     assert(invitationId);
     const created = this._createInvitations.get(invitationId);
     const accepted = this._acceptInvitations.get(invitationId);
     if (created) {
+      await created.cancel();
       this._createInvitations.delete(invitationId);
       this._removedCreated.emit(created.get());
     } else if (accepted) {
+      await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
       this._removedAccepted.emit(accepted.get());
     } else {
@@ -139,30 +132,50 @@ export class InvitationsServiceImpl implements InvitationsService {
     return new Stream<QueryInvitationsResponse>(({ next, ctx }) => {
       // Push added invitations to the stream.
       this._invitationCreated.on(ctx, (invitation) => {
-        next({ added: { created: invitation } });
+        next({
+          action: QueryInvitationsResponse.Action.ADDED,
+          type: QueryInvitationsResponse.Type.CREATED,
+          invitations: [invitation]
+        });
       });
 
       this._invitationAccepted.on(ctx, (invitation) => {
-        next({ added: { accepted: invitation } });
+        next({
+          action: QueryInvitationsResponse.Action.ADDED,
+          type: QueryInvitationsResponse.Type.ACCEPTED,
+          invitations: [invitation]
+        });
       });
 
       // Push removed invitations to the stream.
       this._removedCreated.on(ctx, (invitation) => {
-        next({ removed: { created: invitation } });
+        next({
+          action: QueryInvitationsResponse.Action.REMOVED,
+          type: QueryInvitationsResponse.Type.CREATED,
+          invitations: [invitation]
+        });
       });
 
       this._removedAccepted.on(ctx, (invitation) => {
-        next({ removed: { accepted: invitation } });
+        next({
+          action: QueryInvitationsResponse.Action.REMOVED,
+          type: QueryInvitationsResponse.Type.ACCEPTED,
+          invitations: [invitation]
+        });
       });
 
       // Push existing invitations to the stream.
-      for (const invitation of this._createInvitations.values()) {
-        next({ added: { created: invitation.get() } });
-      }
+      next({
+        action: QueryInvitationsResponse.Action.ADDED,
+        type: QueryInvitationsResponse.Type.CREATED,
+        invitations: Array.from(this._createInvitations.values()).map((invitation) => invitation.get())
+      });
 
-      for (const invitation of this._acceptInvitations.values()) {
-        next({ added: { accepted: invitation.get() } });
-      }
+      next({
+        action: QueryInvitationsResponse.Action.ADDED,
+        type: QueryInvitationsResponse.Type.ACCEPTED,
+        invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get())
+      });
     });
   }
 }

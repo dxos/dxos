@@ -52,7 +52,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
         <InvitationList
           invitations={invitations}
-          onClickRemove={(invitation) => invitation.get() && space?.deleteInvitation(invitation.get().invitationId)}
+          onClickRemove={(invitation) => invitation.cancel()}
           createInvitationUrl={createInvitationUrl}
         />
         <Button

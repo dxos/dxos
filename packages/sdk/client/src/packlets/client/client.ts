@@ -200,13 +200,6 @@ export class Client {
   }
 
   /**
-   * Removes accepted space invitation.
-   */
-  deleteInvitation(invitationId: string) {
-    return this._echo.deleteInvitation(invitationId);
-  }
-
-  /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
    */

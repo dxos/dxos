@@ -71,7 +71,6 @@ export interface Space {
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
-  deleteInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -368,14 +367,6 @@ export class SpaceProxy implements Space {
   createInvitation(options?: Partial<Invitation>) {
     log('create invitation', options);
     return this._invitationProxy.createInvitation(options);
-  }
-
-  /**
-   * Remove invitation from space.
-   */
-  deleteInvitation(id: string) {
-    log('delete invitation', { id });
-    return this._invitationProxy.deleteInvitation(id);
   }
 
   /**

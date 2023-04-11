@@ -321,6 +321,40 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       unsetIdentity: assign<JoinMachineContext>({
         identity: () => null
       }),
+      resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
+        halo: (context, event) => {
+          if (event.type !== 'resetHaloInvitation') {
+            return context.halo;
+          }
+
+          if (context.halo.invitationObservable) {
+            void context.halo.invitationObservable.cancel();
+          }
+
+          return {
+            ...context.halo,
+            invitation: undefined,
+            invitationObservable: undefined,
+            invitationSubscribable: undefined
+          };
+        },
+        space: (context, event) => {
+          if (event.type !== 'resetSpaceInvitation') {
+            return context.space;
+          }
+
+          if (context.space.invitationObservable) {
+            void context.space.invitationObservable.cancel();
+          }
+
+          return {
+            ...context.space,
+            invitation: undefined,
+            invitationObservable: undefined,
+            invitationSubscribable: undefined
+          };
+        }
+      }),
       setInvitation: assign<JoinMachineContext, SetInvitationEvent>({
         halo: (context, event) =>
           event.type.includes('Halo') ? { ...context.halo, invitation: event.invitation } : context.halo,
@@ -396,56 +430,12 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
     [client]
   );
 
-  const resetHaloInvitation = useCallback(
-    (context: JoinMachineContext, event: EmptyInvitationEvent) => {
-      if (event.type !== 'resetHaloInvitation') {
-        return context.halo;
-      }
-
-      if (context.halo.invitation) {
-        void client.halo.deleteInvitation(context.halo.invitation.invitationId);
-      }
-
-      return {
-        ...context.halo,
-        invitation: undefined,
-        invitationObservable: undefined,
-        invitationSubscribable: undefined
-      };
-    },
-    [client]
-  );
-
-  const resetSpaceInvitation = useCallback(
-    (context: JoinMachineContext, event: EmptyInvitationEvent) => {
-      if (event.type !== 'resetSpaceInvitation') {
-        return context.space;
-      }
-
-      if (context.space.invitation) {
-        void client.deleteInvitation(context.space.invitation.invitationId);
-      }
-
-      return {
-        ...context.space,
-        invitation: undefined,
-        invitationObservable: undefined,
-        invitationSubscribable: undefined
-      };
-    },
-    [client]
-  );
-
   return useMachine(joinMachine, {
     ...options,
     actions: {
       ...options?.actions,
       redeemHaloInvitationCode: assign<JoinMachineContext>({ halo: redeemHaloInvitationCode }),
-      redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode }),
-      resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
-        halo: resetHaloInvitation,
-        space: resetSpaceInvitation
-      })
+      redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode })
     }
   });
 };

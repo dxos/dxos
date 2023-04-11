@@ -40,7 +40,6 @@ export interface Halo {
 
   createInvitation(): CancellableInvitationObservable;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
-  deleteInvitation(id: string): void;
 }
 
 const THROW_TIMEOUT_ERROR_AFTER = 3000;
@@ -269,18 +268,6 @@ export class HaloProxy implements Halo {
 
     log('accept invitation', invitation);
     return this._invitationProxy!.acceptInvitation(invitation);
-  }
-
-  /**
-   * Removes device invitation.
-   */
-  deleteInvitation(id: string) {
-    if (!this.opened) {
-      throw new ApiError('Client not open.');
-    }
-
-    log('remove invitation', { id });
-    return this._invitationProxy!.deleteInvitation(id);
   }
 
   /**
