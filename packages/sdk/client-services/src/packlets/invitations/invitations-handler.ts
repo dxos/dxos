@@ -32,6 +32,7 @@ import {
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { InvitationProtocol } from './invitation-protocol';
+import { RpcClosedError } from '@dxos/rpc';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -338,6 +339,8 @@ export class InvitationsHandler {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+              } else if(err instanceof RpcClosedError) {
+                // TODO(dmaretskyi): .
               } else {
                 log.warn('auth failed', err);
                 stream.error(err);
