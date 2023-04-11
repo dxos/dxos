@@ -162,7 +162,9 @@ export class SignalClient implements SignalMethods {
         if (this._state === SignalState.CLOSED || this._ctx?.disposed) {
           return;
         }
-        log.warn('Signal Client Error', err);
+        if (this._state === SignalState.CONNECTED) {
+          log.warn('SignalClient error:', err);
+        }
         this._scheduleReconcileAfterError();
       }
     });
@@ -297,6 +299,9 @@ export class SignalClient implements SignalMethods {
               this._setState(SignalState.DISCONNECTED);
               return;
             }
+            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+              this._incrementReconnectTimeout();
+            }
             this._setState(SignalState.DISCONNECTED);
             this._reconnectTask!.schedule();
           },
@@ -304,13 +309,19 @@ export class SignalClient implements SignalMethods {
           onError: (error) => {
             log('socket error', { error, state: this._state });
             this._lastError = error;
+            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+              this._incrementReconnectTimeout();
+            }
             this._setState(SignalState.ERROR);
+
             this._reconnectTask!.schedule();
           }
         }
       });
     } catch (err: any) {
-      // TODO(burdon): If client isn't set, then flows through to error below.
+      if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+        this._incrementReconnectTimeout();
+      }
       this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
       this._reconnectTask!.schedule();
@@ -327,7 +338,6 @@ export class SignalClient implements SignalMethods {
     this._performance.reconnectCounter++;
 
     if (this._state === SignalState.RE_CONNECTING) {
-      this._incrementReconnectTimeout();
       log.warn('Signal api already reconnecting.');
       return;
     }
