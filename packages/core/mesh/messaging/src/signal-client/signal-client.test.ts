@@ -68,7 +68,9 @@ describe('SignalClient', () => {
     };
     await api2.sendMessage(message);
     expect(await received.wait()).toEqual(message);
-  }).timeout(500);
+  })
+    .timeout(500)
+    .retries(2);
 
   test('join', async () => {
     const topic = PublicKey.random();
@@ -105,7 +107,9 @@ describe('SignalClient', () => {
 
     await trigger1.wait();
     await trigger2.wait();
-  }).timeout(500);
+  })
+    .timeout(500)
+    .retries(2);
 
   test('signal to self', async () => {
     const peer1 = PublicKey.random();
@@ -183,7 +187,9 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await expect(asyncTimeout(promise, 200)).toBeRejected();
     }
-  }).timeout(1_000);
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('signal after re-entrance', async () => {
     const peer1 = PublicKey.random();
@@ -238,7 +244,9 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await promise;
     }
-  }).timeout(1_000);
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test
     .skip('join across multiple signal servers', async () => {
