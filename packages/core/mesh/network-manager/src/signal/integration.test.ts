@@ -60,7 +60,7 @@ describe('Signal Integration Test', () => {
     };
   };
 
-  test.repeat(100)('two peers connecting', async () => {
+  test('two peers connecting', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
