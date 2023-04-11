@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, sleep } from '@dxos/async';
+import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -19,6 +19,7 @@ import { SignalRPCClient } from './signal-rpc-client';
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;
 const ERROR_RECONCILE_DELAY = 1000;
+const RECONCILE_INTERVAL = 5_000;
 
 export enum SignalState {
   /** Connection is being established. */
@@ -165,11 +166,23 @@ export class SignalClient implements SignalMethods {
         this._scheduleReconcileAfterError();
       }
     });
+
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
       await this._reconcileSwarmSubscriptions();
       await this._reconcileMessageSubscriptions();
       this._reconciled.emit();
     });
+
+    // Reconcile subscriptions periodically.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        if (this._state === SignalState.CONNECTED) {
+          this._reconcileTask!.schedule();
+        }
+      },
+      RECONCILE_INTERVAL
+    );
 
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
       await this._reconnect();
