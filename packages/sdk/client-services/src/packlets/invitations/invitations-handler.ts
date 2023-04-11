@@ -32,7 +32,6 @@ import {
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { InvitationProtocol } from './invitation-protocol';
-import { RpcClosedError } from '@dxos/rpc';
 
 const MAX_OTP_ATTEMPTS = 3;
 
