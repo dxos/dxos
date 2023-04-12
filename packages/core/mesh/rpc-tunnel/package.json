@@ -17,7 +17,11 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "ua-parser-js": "^1.0.35"
+  },
+  "devDependencies": {
+    "@types/ua-parser-js": "^0.7.36"
   },
   "publishConfig": {
     "access": "public"
