@@ -65,7 +65,7 @@ export const Root = () => {
       tooltipProviderProps={{ delayDuration: 1200, skipDelayDuration: 600, disableHoverableContent: true }}
     >
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
-      <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
+      <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
           <ErrorProvider>
             <DocumentLayout />
