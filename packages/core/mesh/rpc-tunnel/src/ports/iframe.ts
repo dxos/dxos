@@ -9,10 +9,15 @@ import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
 
-// TODO(wittjosiah): Stop user agent parsing.
-const parser = new UAParser(navigator.userAgent);
-const browser = parser.getBrowser();
-const os = parser.getOS();
+let browser: string | undefined;
+let os: string | undefined;
+
+if (typeof navigator !== 'undefined') {
+  // TODO(wittjosiah): Stop user agent parsing.
+  const parser = new UAParser(navigator.userAgent);
+  browser = parser.getBrowser().name;
+  os = parser.getOS().name;
+}
 
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
@@ -20,7 +25,7 @@ const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: Messag
     return;
   }
 
-  if (browser.name === 'Chrome' && os.name === 'iOS') {
+  if (browser === 'Chrome' && os === 'iOS') {
     iframe.contentWindow.postMessage(message, origin);
   } else {
     iframe.contentWindow.postMessage(message, origin, [message.payload]);
@@ -28,7 +33,7 @@ const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: Messag
 };
 
 const sendToParentWindow = (origin: string, message: MessageData) => {
-  if (browser.name === 'Chrome' && os.name === 'iOS') {
+  if (browser === 'Chrome' && os === 'iOS') {
     window.parent.postMessage(message, origin);
   } else {
     window.parent.postMessage(message, origin, [message.payload]);
