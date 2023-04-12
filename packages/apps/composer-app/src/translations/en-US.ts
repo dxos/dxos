@@ -7,7 +7,8 @@ export const composer = {
   'sidebar tree label': 'Spaces with documents',
   'space options label': 'Configure this space',
   'create document label': 'Create new document',
-  'untitled document title': 'Untitled',
+  'untitled document title': 'Untitled document',
+  'untitled space title': 'Untitled space',
   'first run message': 'Choose a document or create one to get started',
   'loading document message': 'Loading document…',
   'no spaces message': 'Create or join a space to start creating documents',
@@ -41,5 +42,7 @@ export const composer = {
     '<resultStyle>Success!</resultStyle> Your changes are now available at this Github pull request: <prLink>{{linkText}}</prLink>',
   'github branch name label': 'Name of the branch to create',
   'github branch name placeholder': 'update-readme',
-  'github commit message label': 'Updated README.md'
+  'github commit message label': 'Updated README.md',
+  'download all docs in space label': 'Download backup',
+  'upload all docs in space label': 'Upload backup'
 };
