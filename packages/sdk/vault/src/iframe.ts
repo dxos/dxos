@@ -50,13 +50,15 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
         channel: 'dxos:app',
         onOrigin: async (origin) => {
           iframeRuntime.origin = origin;
-          iframeRuntime.shell && (await startShell(config, iframeRuntime.shell, iframeRuntime.services, origin));
         }
       }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
 
     await iframeRuntime.start();
+    iframeRuntime.shell &&
+      iframeRuntime.origin &&
+      (await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
