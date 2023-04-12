@@ -60,7 +60,7 @@ export const ResetDialog = ({
   // TODO(burdon): Make responsive (full page mobile).
   return (
     <Dialog
-      title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label')}
+      title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label', { count: errors.length })}
       slots={{ content: { className: 'block' } }}
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
