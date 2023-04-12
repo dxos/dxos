@@ -10,15 +10,15 @@ export default defineTemplate(
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
     const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-components');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const { FatalError, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
-      ['FatalError', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
+    const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
+      ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
       '@dxos/react-appkit'
     );
 
     const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
     
     const coreContent = text`
-    <ErrorBoundary fallback={${FatalError()}}>
+    <ErrorBoundary fallback={${ResetDialog()}}>
       <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
         ${render?.content?.()}
         ${dxosUi && pwa && swToast()}
