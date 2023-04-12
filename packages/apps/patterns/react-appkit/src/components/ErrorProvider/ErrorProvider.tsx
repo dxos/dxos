@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Warning } from '@phosphor-icons/react';
+import { Circle, Warning } from '@phosphor-icons/react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
-import { valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-components';
+import { SystemStatus, ClientContext } from '@dxos/react-client';
+import { valenceColorText, useTranslation, Button, getSize, DensityProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
+import { FatalError } from '../FatalError';
 import { Tooltip } from '../Tooltip';
 
 export interface ErrorContextState {
@@ -25,11 +27,13 @@ export const ErrorContext = createContext<ErrorContextState>({
 // TODO(burdon): Override if dev-only?
 const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
-export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
+export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ isDev?: boolean }>) => {
   const { t } = useTranslation('appkit');
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
   const resetErrors = useCallback(() => setErrors([]), []);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const clientContextValue = useContext(ClientContext);
 
   const onUnhandledRejection = useCallback((event: PromiseRejectionEvent) => {
     captureException(event.reason);
@@ -42,7 +46,7 @@ export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
     (message, source, lineno, colno, error?: Error) => {
       captureException(error);
       logError('onerror', message);
-      addError(error!);
+      error && addError(error);
       return true; // Prevent default.
     },
     []
@@ -62,14 +66,40 @@ export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
       {children}
-      <div role='none' className={mx('fixed bottom-2 right-2', valenceColorText('warning'))}>
-        {/* TODO(wittjosiah): Render this warning conditionally based on a prop (e.g., isInternalUser?). */}
-        {!!errors.length && (
-          <Tooltip content={t('caught error message')}>
-            <Warning tabIndex={0} weight='duotone' className={mx('w-6 h-6 rounded-md', defaultFocus)} />
-          </Tooltip>
-        )}
-      </div>
+      {isDev && (
+        <>
+          <div role='none' className='fixed bottom-2 right-2'>
+            <DensityProvider density='fine'>
+              {errors.length ? (
+                <Tooltip content={t('caught error message')} tooltipLabelsTrigger>
+                  <Button
+                    variant='ghost'
+                    onClick={() => setErrorDialogOpen(true)}
+                    className={valenceColorText('warning')}
+                  >
+                    <Warning weight='duotone' className={getSize(6)} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  variant='ghost'
+                  className={
+                    clientContextValue?.status === SystemStatus.ACTIVE
+                      ? valenceColorText('success')
+                      : !clientContextValue?.status
+                      ? 'text-neutral-550'
+                      : valenceColorText('error')
+                  }
+                  onClick={() => setErrorDialogOpen(true)}
+                >
+                  <Circle weight='fill' className={getSize(3)} />
+                </Button>
+              )}
+            </DensityProvider>
+          </div>
+          <FatalError errors={errors} open={errorDialogOpen} onOpenChange={setErrorDialogOpen} />
+        </>
+      )}
     </ErrorContext.Provider>
   );
 };

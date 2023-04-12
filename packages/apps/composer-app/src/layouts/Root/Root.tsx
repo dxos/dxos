@@ -64,14 +64,14 @@ export const Root = () => {
       appNs='composer'
       tooltipProviderProps={{ delayDuration: 1200, skipDelayDuration: 600, disableHoverableContent: true }}
     >
-      <ErrorProvider>
-        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
+      {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+      <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
+          <ErrorProvider>
             <DocumentLayout />
-          </ClientProvider>
-        </ErrorBoundary>
-      </ErrorProvider>
+          </ErrorProvider>
+        </ClientProvider>
+      </ErrorBoundary>
       {/* NOTE: Outside error boundary so that this renders even in the event of a fatal error. */}
       {needRefresh ? (
         <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />

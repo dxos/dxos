@@ -5,7 +5,15 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Alert, Button, Dialog, DropdownMenu, DropdownMenuItem, useTranslation } from '@dxos/react-components';
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogProps,
+  DropdownMenu,
+  DropdownMenuItem,
+  useTranslation
+} from '@dxos/react-components';
 
 import { Tooltip } from '../Tooltip';
 
@@ -27,31 +35,47 @@ const parseError = (error: Error) => {
   return { message, stack };
 };
 
-export interface FatalErrorProps {
-  error: Error;
-}
+export type FatalErrorProps = Pick<DialogProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
+  error?: Error;
+  errors?: Error[];
+  isDev?: boolean;
+};
 
-export const FatalError = ({ error }: FatalErrorProps) => {
+export const FatalError = ({
+  error,
+  errors: propsErrors,
+  isDev = process.env.NODE_ENV === 'development',
+  defaultOpen,
+  open,
+  onOpenChange
+}: FatalErrorProps) => {
   const { t } = useTranslation('appkit');
-  // TODO(wittjosiah): process.env.NODE_ENV not available. Make a prop and determine from config?
-  const isDev = process.env.NODE_ENV === 'development';
 
-  const { message, stack } = parseError(error);
+  const errors = [...(error ? [error] : []), ...(propsErrors || [])].map(parseError);
+
   const onCopyError = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify({ message, stack }));
-  }, [message, stack]);
+    void navigator.clipboard.writeText(JSON.stringify(errors));
+  }, [error, propsErrors]);
 
   // TODO(burdon): Make responsive (full page mobile).
   return (
     <Dialog
       title={t('fatal error label')}
-      slots={{ overlay: { className: 'md:w-[500px' }, content: { className: 'w-full]' } }}
-      defaultOpen
+      {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
+        ? { defaultOpen: true }
+        : { defaultOpen, open, onOpenChange })}
     >
-      {isDev ? (
-        <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
-          <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
-        </Alert>
+      {isDev && errors.length > 0 ? (
+        errors.map(({ message, stack }, index) => (
+          <Alert
+            key={`${index}--${message}`}
+            title={message}
+            valence={'error'}
+            slots={{ root: { className: 'mlb-4' } }}
+          >
+            <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
+          </Alert>
+        ))
       ) : (
         <p>{t('fatal error message')}</p>
       )}
