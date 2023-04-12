@@ -3,5 +3,3 @@
 //
 
 export * from './Separator';
-export * from './Sidebar';
-export * from './OctokitProvider';
