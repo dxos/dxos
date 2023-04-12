@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, Download, EyeSlash, PaperPlaneTilt, Plus, Upload } from '@phosphor-icons/react';
+import { DotsThreeVertical, Download, EyeSlash, PaperPlaneTilt, Plus } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -132,10 +132,11 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
               <Download className={getSize(4)} />
               <span>{t('download all docs in space label')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className='flex items-center gap-2'>
-              <Upload className={getSize(4)} />
-              <span>{t('upload all docs in space label')}</span>
-            </DropdownMenuItem>
+            {/* todo(thure): Implement */}
+            {/* <DropdownMenuItem className='flex items-center gap-2'> */}
+            {/*  <Upload className={getSize(4)} /> */}
+            {/*  <span>{t('upload all docs in space label')}</span> */}
+            {/* </DropdownMenuItem> */}
           </DropdownMenu>
         </TooltipRoot>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
