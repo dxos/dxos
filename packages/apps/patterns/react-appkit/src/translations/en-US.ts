@@ -30,8 +30,11 @@ export const appkit = {
   'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
-  'fatal error label': 'Runtime error',
-  'fatal error message': 'Something went wrong that requires the app to be reloaded.',
+  'fatal error label': 'A wild error appeared',
+  'fatal error message': 'Reloading the app might fix the issue. If it doesn’t, consider resetting the app.',
+  'reset dialog label': 'Reload or reset',
+  'reset dialog message':
+    'If you’re encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',
   'caught error message': 'Something went wrong; check the console for details.',
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',

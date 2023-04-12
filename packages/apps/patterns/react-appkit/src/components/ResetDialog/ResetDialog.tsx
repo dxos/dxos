@@ -41,7 +41,7 @@ export type FatalErrorProps = Pick<DialogProps, 'defaultOpen' | 'open' | 'onOpen
   isDev?: boolean;
 };
 
-export const FatalError = ({
+export const ResetDialog = ({
   error,
   errors: propsErrors,
   isDev = process.env.NODE_ENV === 'development',
@@ -60,7 +60,7 @@ export const FatalError = ({
   // TODO(burdon): Make responsive (full page mobile).
   return (
     <Dialog
-      title={t('fatal error label')}
+      title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label')}
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
@@ -71,20 +71,22 @@ export const FatalError = ({
             key={`${index}--${message}`}
             title={message}
             valence={'error'}
-            slots={{ root: { className: 'mlb-4' } }}
+            slots={{ root: { className: 'mlb-4 overflow-auto max-bs-72' } }}
           >
-            <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
+            <pre className='text-xs'>{stack}</pre>
           </Alert>
         ))
       ) : (
-        <p>{t('fatal error message')}</p>
+        <p>{t(errors.length > 0 ? 'fatal error message' : 'reset dialog message')}</p>
       )}
-      <div role='none' className='flex gap-2'>
-        <Tooltip content={t('copy error label')} zIndex={'z-[21]'}>
-          <Button onClick={onCopyError}>
-            <Clipboard weight='duotone' size='1em' />
-          </Button>
-        </Tooltip>
+      <div role='none' className='flex gap-2 mbs-4'>
+        {errors.length > 0 && (
+          <Tooltip content={t('copy error label')} zIndex={'z-[21]'}>
+            <Button onClick={onCopyError}>
+              <Clipboard weight='duotone' size='1em' />
+            </Button>
+          </Tooltip>
+        )}
         <div role='none' className='flex-grow' />
         <DropdownMenu
           trigger={<Button variant='ghost'>{t('reset client label')}</Button>}

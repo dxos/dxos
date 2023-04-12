@@ -16,7 +16,7 @@ import {
   ClientFallback,
   ErrorProvider,
   Fallback,
-  FatalError,
+  ResetDialog,
   ServiceWorkerToast
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -51,7 +51,7 @@ export const App = withProfiler(() => {
     >
       <ErrorProvider>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
             <HashRouter>
               <Routes />

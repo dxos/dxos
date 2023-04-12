@@ -8,7 +8,7 @@ import { Outlet } from 'react-router-dom';
 
 import { fromHost } from '@dxos/client-services';
 import { Defaults, Envs } from '@dxos/config';
-import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
 import { ClientProvider, Config } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
@@ -23,7 +23,7 @@ export const Root: FC<PropsWithChildren> = ({ children }) => {
   return (
     <ThemeProvider appNs='console' rootDensity='fine' resourceExtensions={[appkitTranslations, osTranslations]}>
       <ErrorProvider>
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
           <ClientProvider config={configProvider} services={fromHost}>
             <Fullscreen>
               <Outlet />

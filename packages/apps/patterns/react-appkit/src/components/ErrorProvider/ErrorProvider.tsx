@@ -9,7 +9,7 @@ import { SystemStatus, ClientContext } from '@dxos/react-client';
 import { valenceColorText, useTranslation, Button, getSize, DensityProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
-import { FatalError } from '../FatalError';
+import { ResetDialog } from '../ResetDialog';
 import { Tooltip } from '../Tooltip';
 
 export interface ErrorContextState {
@@ -97,7 +97,7 @@ export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ is
               )}
             </DensityProvider>
           </div>
-          <FatalError errors={errors} open={errorDialogOpen} onOpenChange={setErrorDialogOpen} />
+          <ResetDialog errors={errors} open={errorDialogOpen} onOpenChange={setErrorDialogOpen} />
         </>
       )}
     </ErrorContext.Provider>

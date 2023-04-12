@@ -15,7 +15,7 @@ import {
   ClientFallback,
   ErrorProvider,
   Fallback,
-  FatalError,
+  ResetDialog,
   ServiceWorkerToast
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -65,7 +65,7 @@ export const Root = () => {
       tooltipProviderProps={{ delayDuration: 1200, skipDelayDuration: 600, disableHoverableContent: true }}
     >
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
-      <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+      <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
           <ErrorProvider>
             <DocumentLayout />
