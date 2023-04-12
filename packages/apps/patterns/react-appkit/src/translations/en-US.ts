@@ -30,7 +30,8 @@ export const appkit = {
   'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
-  'fatal error label': 'The app encountered one or more errors',
+  'fatal error label_one': 'The app encountered an error',
+  'fatal error label_other': 'The app encountered some errors',
   'fatal error message': 'Reloading the app might fix the issue. If it doesn’t, consider resetting the app.',
   'reset dialog label': 'Reload or reset',
   'reset dialog message':
