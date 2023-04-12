@@ -6,7 +6,7 @@ import { DotsThreeVertical, Download, EyeSlash, PaperPlaneTilt, Plus, Upload } f
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Tooltip } from '@dxos/react-appkit';
+import { Tooltip, useFileDownload } from '@dxos/react-appkit';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import {
   Button,
@@ -27,6 +27,7 @@ import { useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
+import { backupSpace } from '../../util';
 import { Separator } from '../Separator';
 import { DocumentTreeItem } from './DocumentTreeItem';
 
@@ -38,6 +39,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const { spaceKey, docKey } = useParams();
   const identity = useIdentity();
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
+  const download = useFileDownload();
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
@@ -68,6 +70,8 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     spaceKey === abbreviateKey(space.key) && setOpen(true);
   }, [spaceKey]);
 
+  const spaceDisplayName = (space.properties.name?.length ?? 0) > 0 ? space.properties.name : t('untitled space title');
+
   return (
     <TreeItem
       collapsible
@@ -84,7 +88,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           className='grow break-words pbs-1.5 text-sm font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
-          {(space.properties.name?.length ?? 0) > 0 ? space.properties.name : t('untitled space title')}
+          {spaceDisplayName}
         </TreeItemHeading>
         <TooltipRoot>
           <TooltipContent className='z-[31]' side='bottom'>
@@ -118,7 +122,13 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
               <span>{t('hide space label')}</span>
             </DropdownMenuItem>
             <Separator />
-            <DropdownMenuItem className='flex items-center gap-2'>
+            <DropdownMenuItem
+              className='flex items-center gap-2'
+              onClick={async () => {
+                const backupBlob = await backupSpace(space, t('untitled document title'));
+                return download(backupBlob, `${spaceDisplayName} backup.zip`);
+              }}
+            >
               <Download className={getSize(4)} />
               <span>{t('download all docs in space label')}</span>
             </DropdownMenuItem>

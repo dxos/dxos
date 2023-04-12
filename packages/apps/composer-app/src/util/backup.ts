@@ -24,17 +24,18 @@ export type SpaceBackup = {
   items: ComposerDocumentBackup[];
 };
 
-export const getSpaceBackup = async (space: Space): Promise<SpaceBackup> => {
+export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string): Promise<SpaceBackup> => {
   const itemsQuery = space.db.query(ComposerDocument.filter());
   const namesCount = new Map<string, number>();
   const getFileName = (title: string) => {
-    if (namesCount.has(title)) {
-      const count = namesCount.get(title)!;
-      namesCount.set(title, count + 1);
-      return `${title} (${count})`;
+    const displayTitle = title || defaultDocumentTitle;
+    if (namesCount.has(displayTitle)) {
+      const count = namesCount.get(displayTitle)!;
+      namesCount.set(displayTitle, count + 1);
+      return `${displayTitle} (${count})`;
     } else {
-      namesCount.set(title, 1);
-      return title;
+      namesCount.set(displayTitle, 1);
+      return displayTitle;
     }
   };
   return {
@@ -49,10 +50,10 @@ export const getSpaceBackup = async (space: Space): Promise<SpaceBackup> => {
   };
 };
 
-export const backupSpace = async (space: Space): Promise<Blob> => {
-  const backup = await getSpaceBackup(space);
+export const backupSpace = async (space: Space, defaultDocumentTitle: string): Promise<Blob> => {
+  const backup = await getSpaceBackup(space, defaultDocumentTitle);
   const backupPackage = new JSZip();
-  backupPackage.file('backup.json', JSON.stringify(backup));
+  backupPackage.file('composer-space-backup.json', JSON.stringify(backup));
   const items = backupPackage.folder('items');
   backup.items.forEach((docBackup) => {
     const document = space.db.getObjectById(docBackup.origin!.id!) as ComposerDocument;
