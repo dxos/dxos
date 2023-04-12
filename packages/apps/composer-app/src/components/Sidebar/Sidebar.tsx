@@ -152,9 +152,9 @@ const SidebarContent = () => {
                 </Button>
               </Tooltip>
             </div>
-            <Separator />
+            <Separator flush />
             <DocumentTree />
-            <Separator />
+            <Separator flush />
             {identity && (
               <div role='none' className='shrink-0 flex items-center gap-1 pli-3 plb-1.5'>
                 <Avatar
@@ -191,7 +191,7 @@ const SidebarToggle = () => {
   const open = displayState === 'show';
   const button = (
     <Button data-testid='composer.toggleSidebar' onClick={() => setDisplayState('show')} className='p-0 is-[40px]'>
-      <Sidebar className={getSize(6)} />
+      <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
   return (
