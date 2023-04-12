@@ -7,7 +7,7 @@ export * from './DeviceList';
 export * from './EditableList';
 export * from './ErrorProvider';
 export * from './Fallback';
-export * from './FatalError';
+export * from './ResetDialog';
 export * from './HeadingWithActions';
 export * from './InvitationList';
 export * from './Join';
