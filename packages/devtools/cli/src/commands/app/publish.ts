@@ -4,6 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import assert from 'node:assert';
+import os from 'os';
 
 import { captureException } from '@dxos/sentry';
 
@@ -75,7 +76,7 @@ export default class Publish extends BaseCommand {
           // TODO (zhenyasav): this is to de-advertise any non localhost urls because of security sandboxes
           // in the browser requiring https for those domains to support halo vault
           const filteredUrls = urls?.length ? urls.filter((u) => /localhost/.test(u)) : [];
-          this.log(`Module ${module.name} published${filteredUrls?.length ? filteredUrls.join(', ') : ''}.`);
+          this.log(`Module ${module.name} published.${filteredUrls?.length ? os.EOL + filteredUrls.join(os.EOL) : ''}`);
         });
       });
     } catch (err: any) {
