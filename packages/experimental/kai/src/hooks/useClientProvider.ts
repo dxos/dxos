@@ -12,9 +12,11 @@ import { schema as sandboxSchema } from '@dxos/kai-sandbox';
 import { schema } from '@dxos/kai-types';
 import { Generator } from '@dxos/kai-types/testing';
 
+export const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+
 export const useClientProvider = (dev: boolean) => {
   return useCallback(async () => {
-    const config = new Config(await Dynamics(), await Envs(), Defaults());
+    const config = await configProvider();
     const client = new Client({
       config,
       services: config.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config)

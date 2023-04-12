@@ -5,6 +5,8 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
+import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
+import { Config } from '@dxos/config';
 import {
   Alert,
   Button,
@@ -14,6 +16,7 @@ import {
   DropdownMenuItem,
   useTranslation
 } from '@dxos/react-components';
+import { getAsyncValue, Provider } from '@dxos/util';
 
 import { Tooltip } from '../Tooltip';
 
@@ -38,12 +41,15 @@ const parseError = (error: Error) => {
 export type FatalErrorProps = Pick<DialogProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   errors?: Error[];
+  config?: Config | Provider<Promise<Config>>;
   isDev?: boolean;
 };
 
 export const ResetDialog = ({
   error,
   errors: propsErrors,
+  config: configProvider,
+  // TODO(wittjosiah): Don't use process.env.
   isDev = process.env.NODE_ENV === 'development',
   defaultOpen,
   open,
@@ -94,9 +100,11 @@ export const ResetDialog = ({
           slots={{ content: { side: 'top', className: 'z-[51]' } }}
         >
           <DropdownMenuItem
-            onClick={() => {
-              // TODO(wittjosiah): How do we get access to Client here so that we can trigger reset?
-              console.log('todo: reset');
+            onClick={async () => {
+              // TODO(wittjosiah): This is a hack.
+              //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
+              const config = await getAsyncValue(configProvider);
+              window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN}#reset`, '_blank');
             }}
           >
             {t('reset client confirm label')}
