@@ -47,7 +47,7 @@ export const App = () => {
     >
       <ErrorProvider>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
-        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
             <HashRouter>
               <Routes />

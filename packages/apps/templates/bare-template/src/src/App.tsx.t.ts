@@ -18,7 +18,7 @@ export default defineTemplate(
     const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
     
     const coreContent = text`
-    <ErrorBoundary fallback={${ResetDialog()}}>
+    <ErrorBoundary fallback={({ error }) => <${ResetDialog()} error={error} config={config} />}>
       <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
         ${render?.content?.()}
         ${dxosUi && pwa && swToast()}

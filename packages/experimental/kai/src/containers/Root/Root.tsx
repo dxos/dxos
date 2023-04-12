@@ -15,7 +15,7 @@ import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
 
-import { AppState, AppStateProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
+import { AppState, AppStateProvider, configProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';
 import { ShellProvider } from '../ShellProvider';
 
@@ -35,7 +35,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
     >
       <ErrorProvider>
-        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
               <FrameRegistryContextProvider frameDefs={frameDefs}>
