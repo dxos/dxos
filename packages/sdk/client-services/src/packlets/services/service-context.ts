@@ -138,13 +138,6 @@ export class ServiceContext {
     log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
   }
 
-  async reset() {
-    log('resetting...');
-    await this.close();
-    await this.storage.reset();
-    log('reset');
-  }
-
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
 

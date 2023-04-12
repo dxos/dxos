@@ -106,7 +106,7 @@ export const App = withProfiler(() => {
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
-        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <MetagraphProvider>
               <HashRouter>
