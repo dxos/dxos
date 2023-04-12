@@ -17,7 +17,7 @@ import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { schema } from '@dxos/protocols';
+import { schema, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -63,6 +63,10 @@ const MAX_OTP_ATTEMPTS = 3;
  *  ```
  */
 export class InvitationsHandler {
+  /**
+   * @internal
+   */
+  public _traceParent?: string;
   constructor(private readonly _networkManager: NetworkManager) {}
 
   createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
@@ -187,12 +191,18 @@ export class InvitationsHandler {
 
         onOpen: () => {
           scheduleTask(ctx, async () => {
+            const traceId = PublicKey.random().toHex();
             try {
+              log.trace(
+                'dxos.sdk.invitations-handler.host.onOpen',
+                trace.begin({ id: traceId, parentId: this._traceParent })
+              );
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await success.wait({ timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
@@ -201,6 +211,7 @@ export class InvitationsHandler {
                 log.error('failed', err);
                 stream.error(err);
               }
+              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
               if (type !== Invitation.Type.MULTIUSE) {
                 await sleep(ON_CLOSE_DELAY);
@@ -210,6 +221,7 @@ export class InvitationsHandler {
           });
         }
       });
+      extension._traceParent = this._traceParent;
 
       return extension;
     };
@@ -273,7 +285,12 @@ export class InvitationsHandler {
       const extension = new InvitationGuestExtension({
         onOpen: () => {
           scheduleTask(ctx, async () => {
+            const traceId = PublicKey.random().toHex();
             try {
+              log.trace(
+                'dxos.sdk.invitations-handler.guest.onOpen',
+                trace.begin({ id: traceId, parentId: this._traceParent })
+              );
               // TODO(burdon): Bug where guest may create multiple connections.
               if (++connectionCount > 1) {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
@@ -334,6 +351,7 @@ export class InvitationsHandler {
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
               stream.next({ ...invitation, ...result, state: Invitation.State.SUCCESS });
+              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
@@ -342,6 +360,7 @@ export class InvitationsHandler {
                 log('auth failed', err);
                 stream.error(err);
               }
+              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
               await ctx.dispose();
             }
@@ -400,6 +419,11 @@ type InvitationHostExtensionCallbacks = {
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
 class InvitationHostExtension extends RpcExtension<{}, { InvitationHostService: InvitationHostService }> {
+  /**
+   * @internal
+   */
+  public _traceParent?: string;
+
   constructor(private readonly _callbacks: InvitationHostExtensionCallbacks) {
     super({
       exposed: {
@@ -414,15 +438,36 @@ class InvitationHostExtension extends RpcExtension<{}, { InvitationHostService: 
       // Perhaps in the future we will have more complex logic here.
       InvitationHostService: {
         introduce: async (request) => {
-          return this._callbacks.introduce(request);
+          const traceId = PublicKey.random().toHex();
+          log.trace(
+            'dxos.sdk.invitation-handler.host.introduce',
+            trace.begin({ id: traceId, parentId: this._traceParent })
+          );
+          const response = await this._callbacks.introduce(request);
+          log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
+          return response;
         },
 
         authenticate: async (request) => {
-          return this._callbacks.authenticate(request);
+          const traceId = PublicKey.random().toHex();
+          log.trace(
+            'dxos.sdk.invitation-handler.host.authenticate',
+            trace.begin({ id: traceId, parentId: this._traceParent })
+          );
+          const response = await this._callbacks.authenticate(request);
+          log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { ...response } }));
+          return response;
         },
 
         admit: async (request) => {
-          return this._callbacks.admit(request);
+          const traceId = PublicKey.random().toHex();
+          log.trace(
+            'dxos.sdk.invitation-handler.host.admit',
+            trace.begin({ id: traceId, parentId: this._traceParent })
+          );
+          const response = await this._callbacks.admit(request);
+          log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
+          return response;
         }
       }
     };
