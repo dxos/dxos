@@ -61,6 +61,7 @@ export const ResetDialog = ({
   return (
     <Dialog
       title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label')}
+      slots={{ content: { className: 'block' } }}
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
@@ -81,7 +82,7 @@ export const ResetDialog = ({
       )}
       <div role='none' className='flex gap-2 mbs-4'>
         {errors.length > 0 && (
-          <Tooltip content={t('copy error label')} zIndex={'z-[21]'}>
+          <Tooltip content={t('copy error label')} zIndex='z-[51]'>
             <Button onClick={onCopyError}>
               <Clipboard weight='duotone' size='1em' />
             </Button>
