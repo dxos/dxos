@@ -28,7 +28,12 @@ export interface SignalMethods {
   sendMessage: (message: Message) => Promise<void>;
 
   /**
-   * Start receiving messages from
+   * Start receiving messages from peer.
    */
-  subscribeMessages: (peerId: PublicKey) => Promise<{ unsubscribe: () => Promise<void> }>;
+  subscribeMessages: (peerId: PublicKey) => Promise<void>;
+
+  /**
+   * Stop receiving messages from peer.
+   */
+  unsubscribeMessages: (peerId: PublicKey) => Promise<void>;
 }
