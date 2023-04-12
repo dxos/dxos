@@ -12,6 +12,7 @@ import mkcert from 'vite-plugin-mkcert';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { VaultPlugin } from '@dxos/vault/vite-plugin';
 
 // @ts-ignore
 // NOTE: Vite requires uncompiled JS.
@@ -34,7 +35,6 @@ export default defineConfig({
         manualChunks: {
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
-          monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
@@ -44,7 +44,6 @@ export default defineConfig({
   plugins: [
     mkcert(),
 
-    // TODO(burdon): Document.
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
@@ -66,6 +65,9 @@ export default defineConfig({
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
+
+    // HALO.
+    VaultPlugin(),
 
     ReactPlugin(),
 
