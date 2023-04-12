@@ -10,18 +10,20 @@ export default defineTemplate(
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
     const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-components');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const { ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
-      ['ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
+    const { FatalError, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
+      ['FatalError', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
       '@dxos/react-appkit'
     );
 
     const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
     
     const coreContent = text`
-    <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
-      ${render?.content?.()}
-      ${dxosUi && pwa && swToast()}
-    </${ClientProvider()}>`;
+    <ErrorBoundary fallback={${FatalError()}}>
+      <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
+        ${render?.content?.()}
+        ${dxosUi && pwa && swToast()}
+      </${ClientProvider()}>
+    </ErrorBoundary>`;
 
     const themeProvider = (content: string) => text`
     <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}]} fallback={<${GenericFallback()} />}>
@@ -34,6 +36,7 @@ export default defineTemplate(
       : text`
       import React from 'react';
       ${() => imports.render(defaultOutputFile)}
+      import { ErrorBoundary } from './ErrorBoundary';
       
       ${render?.extraImports?.()}
       
