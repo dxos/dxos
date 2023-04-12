@@ -2,10 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { UAParser } from 'ua-parser-js';
+
 import { log } from '@dxos/log';
 import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
+
+// TODO(wittjosiah): Stop user agent parsing.
+const parser = new UAParser(navigator.userAgent);
+const browser = parser.getBrowser();
+const os = parser.getOS();
 
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
@@ -13,12 +20,19 @@ const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: Messag
     return;
   }
 
-  // TODO(dmaretskyi): Determine if we need to strictly specify the target origin here.
-  iframe.contentWindow.postMessage(message, '*', [message.payload]);
+  if (browser.name === 'Chrome' && os.name === 'iOS') {
+    iframe.contentWindow.postMessage(message, origin);
+  } else {
+    iframe.contentWindow.postMessage(message, origin, [message.payload]);
+  }
 };
 
 const sendToParentWindow = (origin: string, message: MessageData) => {
-  window.parent.postMessage(message, origin, [message.payload]);
+  if (browser.name === 'Chrome' && os.name === 'iOS') {
+    window.parent.postMessage(message, origin);
+  } else {
+    window.parent.postMessage(message, origin, [message.payload]);
+  }
 };
 
 export type IFramePortOptions = {
