@@ -5,10 +5,10 @@
 import { ThemeContextValue } from '../components';
 import { MessageValence } from '../props';
 
-export const successText = 'text-xs font-medium text-success-600 dark:text-success-300';
-export const infoText = 'text-xs font-medium text-info-600 dark:text-info-300';
-export const warningText = 'text-xs font-medium text-warning-600 dark:text-warning-300';
-export const errorText = 'text-xs font-medium text-error-600 dark:text-error-300';
+export const successText = 'text-xs font-medium text-success-550 dark:text-success-300';
+export const infoText = 'text-xs font-medium text-info-550 dark:text-info-300';
+export const warningText = 'text-xs font-medium text-warning-550 dark:text-warning-300';
+export const errorText = 'text-xs font-medium text-error-550 dark:text-error-300';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {

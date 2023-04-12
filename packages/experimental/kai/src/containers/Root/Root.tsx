@@ -9,7 +9,7 @@ import { Outlet } from 'react-router-dom';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
-import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
@@ -35,7 +35,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
     >
       <ErrorProvider>
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
               <FrameRegistryContextProvider frameDefs={frameDefs}>
