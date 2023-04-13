@@ -217,20 +217,23 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     }
   }, [document, content]);
 
-  const handleImport = useCallback(async (file: File) => {
-    if (content && editorRef.current?.view) {
-      try {
-        const data = new Uint8Array(await file.arrayBuffer());
-        const md = new TextDecoder('utf-8').decode(data);
-        editorRef.current.view.dispatch({
-          changes: { from: 0, to: content.toString().length, insert: md }
-        });
-      } catch (error) {
-        log.catch(error);
+  const handleImport = useCallback(
+    async (file: File) => {
+      if (content && editorRef.current?.view) {
+        try {
+          const data = new Uint8Array(await file.arrayBuffer());
+          const md = new TextDecoder('utf-8').decode(data);
+          editorRef.current.view.dispatch({
+            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md }
+          });
+        } catch (error) {
+          log.catch(error);
+        }
+        setImportDialogOpen(false);
       }
-      setImportDialogOpen(false);
-    }
-  }, []);
+    },
+    [content]
+  );
 
   const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
     try {
