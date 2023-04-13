@@ -11,6 +11,7 @@ import { useTranslation, Avatar } from '@dxos/react-components';
 import { InvitationList, SpaceMemberListContainer } from '../../components';
 import { HaloRing } from '../../components/HaloRing';
 import { Title, Heading, Content, Button, Panel, CloseButton } from '../Panel';
+import { humanize } from '@dxos/util';
 
 export type SpacePanelProps = {
   titleId?: string;
@@ -43,14 +44,14 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
 
   return (
     <Panel>
-      <Title>Space membership</Title>
+      <Title>Space members</Title>
       <CloseButton />
       <Content className='text-center flex items-center justify-center content-center'>
         <HaloRing>
           <Avatar labelId={''} fallbackValue={space.key.toString()} />
         </HaloRing>
       </Content>
-      <Heading>{name ?? space.key.truncate()}</Heading>
+      <Heading>{name ?? humanize(space?.key)}</Heading>
       <Content>
         <InvitationList
           invitations={invitations}

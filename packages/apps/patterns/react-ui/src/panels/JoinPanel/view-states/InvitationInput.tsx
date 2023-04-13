@@ -5,9 +5,9 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
-import { Input, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/react-components';
 
-import { Button, Content, Heading } from '../../Panel';
+import { Button, Content, Heading, Input } from '../../Panel';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationInputProps extends ViewStateProps {
@@ -42,9 +42,8 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
           value={inputValue}
           onChange={({ target: { value } }) => setInputValue(value)}
           slots={{
-            root: { className: 'm-0' },
             input: {
-              className: 'text-center p-4',
+              className: 'text-center',
               autoFocus: true,
               'data-autofocus': `inputting${Kind}InvitationCode`,
               'data-testid': `${Kind.toLowerCase()}-invitation-input`,

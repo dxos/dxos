@@ -5,9 +5,9 @@
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { Input, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/react-components';
 
-import { Heading, Content, Button } from '../../Panel';
+import { Heading, Content, Button, Input } from '../../Panel';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export interface IdentityCreatorProps extends ViewStateProps {
@@ -45,9 +45,8 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           placeholder='Type here'
           onChange={({ target: { value } }) => setInputValue(value)}
           slots={{
-            root: { className: 'm-0' },
             input: {
-              className: 'text-center p-4',
+              className: 'text-center',
               autoFocus: true,
               'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
               onKeyUp: ({ key }) => key === 'Enter' && handleNext()

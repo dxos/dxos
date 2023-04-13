@@ -5,7 +5,7 @@
 import React, { cloneElement } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
+import { InvitationResult, useInvitationStatus, useIdentity } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-components';
 
 import { Content, Button, Heading } from '../../Panel';
@@ -13,46 +13,61 @@ import { ViewState, ViewStateProps } from './ViewState';
 
 export interface InvitationAcceptedProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
+  screenName?: string;
   doneActionParent?: Parameters<typeof cloneElement>[0];
-  onDone?: (result: InvitationResult | null) => void;
+  onDone?: () => void;
 }
 
 const PureInvitationAcceptedContent = ({
   onDone,
-  result,
   Kind,
   doneActionParent,
-  active
-}: InvitationAcceptedProps & { result: InvitationResult | null }) => {
+  active,
+  screenName
+}: InvitationAcceptedProps) => {
   const disabled = !active;
   const { t } = useTranslation('os');
 
   const doneButton = (
     <Content>
       <Button
-        {...(onDone && { onClick: () => onDone(result) })}
+        {...(onDone && { onClick: () => onDone?.() })}
         disabled={disabled}
         data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
         data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
       >
-        <span className='grow'>{t('done label')}</span>
+        <span className='grow'>{t('dismiss label')}</span>
       </Button>
     </Content>
   );
 
   return (
     <>
-      <Heading>{t('welcome message')}</Heading>
+      <Heading>
+        {t('welcome message')}
+        {screenName ? ', ' + screenName : ''}
+      </Heading>
       {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
     </>
   );
 };
 
 const InvitationAcceptedContent = (
-  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable }
+  props: InvitationAcceptedProps & {
+    activeInvitation: AuthenticatingInvitationObservable;
+    onDone?: (result: InvitationResult) => any;
+  }
 ) => {
+  const { onDone } = props;
   const { result } = useInvitationStatus(props.activeInvitation);
-  return <PureInvitationAcceptedContent {...props} result={result} />;
+  const identity = useIdentity();
+  return (
+    <PureInvitationAcceptedContent
+      {...props}
+      screenName={identity?.profile?.displayName}
+      onDone={() => onDone?.(result)}
+    />
+  );
 };
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
