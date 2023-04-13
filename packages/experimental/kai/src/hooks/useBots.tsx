@@ -19,6 +19,7 @@ export type BotDef = {
   };
 };
 
+// TODO(burdon): Factor out module defs.
 export const botDefs: BotDef[] = [
   {
     module: {

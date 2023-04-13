@@ -6,25 +6,26 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
+import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
-import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
 
-import { frameModules } from '../../frames';
-import { AppState, AppStateProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
+import { AppState, AppStateProvider, configProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';
 import { ShellProvider } from '../ShellProvider';
 
 /**
  * Main app container.
  */
-export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
+export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
-    client: new MetagraphClientFake([...botModules, ...frameModules])
+    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
   };
 
   return (
@@ -34,15 +35,17 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
     >
       <ErrorProvider>
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
-              <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
-                <ShellProvider>
-                  <Outlet />
-                  {children}
-                </ShellProvider>
-              </AppStateProvider>
+              <FrameRegistryContextProvider frameDefs={frameDefs}>
+                <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
+                  <ShellProvider>
+                    <Outlet />
+                    {children}
+                  </ShellProvider>
+                </AppStateProvider>
+              </FrameRegistryContextProvider>
             </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>

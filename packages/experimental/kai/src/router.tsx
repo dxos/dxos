@@ -13,7 +13,7 @@ import { SettingsPage, SpacePage } from './pages';
 /**
  * Main app routes.
  */
-export const createRouter = (initialState: AppState = {}, children?: ReactNode): Router =>
+export const createRouter = (initialState: Partial<AppState> = {}, children?: ReactNode): Router =>
   createBrowserRouter([
     {
       path: '/',
@@ -23,8 +23,6 @@ export const createRouter = (initialState: AppState = {}, children?: ReactNode):
           path: '/settings',
           element: <SettingsPage />
         },
-        // TODO(wittjosiah): Factor out appbar to a layout.
-        // TODO(wittjosiah): Use search params to reduce the number of routes?
         {
           path: '/:spaceKey',
           element: <SpacePage />

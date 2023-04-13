@@ -5,14 +5,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { useFrameRegistry } from '@dxos/kai-frames';
 import { getSize, List, ListItem, ListItemEndcap, mx } from '@dxos/react-components';
 
-import { createPath, useAppRouter, useFrames } from '../../hooks';
+import { createPath, useAppRouter, useAppState } from '../../hooks';
 
 export const FrameList = () => {
-  const { space } = useAppRouter();
-  const { frames, active: activeFrames } = useFrames();
-  const { frame: currentFrame } = useAppRouter();
+  const { space, frame: currentFrame } = useAppRouter();
+  const { frames: activeFrames } = useAppState();
+  const frameRegistry = useFrameRegistry();
   if (!space) {
     return null;
   }
@@ -21,8 +22,8 @@ export const FrameList = () => {
   return (
     <div className='is-full'>
       <List labelId='objects'>
-        {Array.from(activeFrames)
-          .map((frameId) => frames.get(frameId)!)
+        {activeFrames
+          .map((frameId) => frameRegistry.getFrameDef(frameId)!)
           .filter(Boolean)
           .map(({ module: { id, displayName }, runtime: { Icon } }) => (
             <ListItem

@@ -10,3 +10,4 @@ export * from './ScrollContainer';
 export * from './Stack';
 export * from './Table';
 export * from './Tile';
+export * from './Toolbar';

@@ -5,14 +5,13 @@
 import { useParams } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { useFrameRegistry, FrameDef } from '@dxos/kai-frames';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { FrameDef } from '../registry';
-import { defaultFrameId, useFrames } from './useFrames';
-
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {
+  DMG = 'metagraph',
   FRAME = 'frame',
   BOTS = 'bots'
 }
@@ -67,20 +66,14 @@ export type AppRoute = {
  * App Route:
  *  /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
  */
-// TODO(burdon): Should not create new space here -- instead on check for profile, initial space.
-// TODO(burdon): Better abstraction for app state hierarchy (and router paths).
 export const useAppRouter = (): AppRoute => {
   const { spaceKey, section, frame, objectId } = useParams();
   const spaces = useSpaces({ all: true });
   const space = spaceKey ? findSpace(spaces, spaceKey) : undefined;
 
-  const { frames, active: activeFrames } = useFrames();
+  const frameRegistry = useFrameRegistry();
   const frameId = frame && decodeFrame(frame);
-  const frameDef = frameId
-    ? activeFrames.find((id) => id === frameId)
-      ? frames.get(frameId)
-      : frames.get(defaultFrameId)
-    : undefined;
+  const frameDef = frameId ? frameRegistry.getFrameDef(frameId) : undefined;
 
   return { space, section, frame: frameDef, objectId };
 };

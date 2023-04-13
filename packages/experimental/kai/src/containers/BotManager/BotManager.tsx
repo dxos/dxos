@@ -8,11 +8,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { TableCellProps, TableColumn, Table } from '@dxos/mosaic';
+import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
 import { Button, getSize, mx, Select } from '@dxos/react-components';
 
-import { Toolbar } from '../../components';
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 5_000;
@@ -30,12 +29,13 @@ type BotRecord = {
 const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotRecord>[] => [
   {
     Header: 'state',
-    accessor: (record) =>
-      record.state === 'running' ? (
+    Cell: ({ value }: any) =>
+      value === 'running' ? (
         <Robot className={mx(getSize(6), 'text-green-500')} />
       ) : (
         <Ghost className={mx(getSize(6), 'text-gray-400')} />
       ),
+    accessor: (record) => record.state,
     width: 48
   },
   {
@@ -150,7 +150,7 @@ export const BotManager = () => {
 
   return (
     <div className='flex flex-1 flex-col px-2 overflow-hidden'>
-      <Toolbar className='shrink-0 justify-between'>
+      <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
           <Select value={botId} onValueChange={setBotId}>
             {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (

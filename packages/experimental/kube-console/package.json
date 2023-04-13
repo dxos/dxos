@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-console",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
   "description": "KUBE Console.",
   "homepage": "https://dxos.org",
@@ -24,6 +24,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/kai-frames": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/metagraph": "workspace:*",

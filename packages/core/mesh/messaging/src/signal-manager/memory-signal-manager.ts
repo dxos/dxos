@@ -169,12 +169,10 @@ export class MemorySignalManager implements SignalManager {
   async subscribeMessages(peerId: PublicKey) {
     log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
+  }
 
-    return {
-      unsubscribe: async () => {
-        log('unsubscribing', { peerId });
-        this._context.connections.delete(peerId);
-      }
-    };
+  async unsubscribeMessages(peerId: PublicKey) {
+    log('unsubscribing', { peerId });
+    this._context.connections.delete(peerId);
   }
 }
