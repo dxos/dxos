@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, Download, EyeSlash, PaperPlaneTilt, Plus } from '@phosphor-icons/react';
+import { DotsThreeVertical, Download, EyeSlash, FilePlus, PaperPlaneTilt, Plus, Upload } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Tooltip, useFileDownload } from '@dxos/react-appkit';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import {
   Button,
+  Dialog,
   DropdownMenu,
   DropdownMenuItem,
   getSize,
@@ -27,7 +29,7 @@ import { useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
-import { backupSpace } from '../../util';
+import { backupSpace, restoreSpace } from '../../util';
 import { Separator } from '../Separator';
 import { DocumentTreeItem } from './DocumentTreeItem';
 
@@ -40,6 +42,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const identity = useIdentity();
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
   const download = useFileDownload();
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
@@ -132,11 +135,10 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
               <Download className={getSize(4)} />
               <span>{t('download all docs in space label')}</span>
             </DropdownMenuItem>
-            {/* todo(thure): Implement */}
-            {/* <DropdownMenuItem className='flex items-center gap-2'> */}
-            {/*  <Upload className={getSize(4)} /> */}
-            {/*  <span>{t('upload all docs in space label')}</span> */}
-            {/* </DropdownMenuItem> */}
+            <DropdownMenuItem className='flex items-center gap-2' onClick={() => setRestoreDialogOpen(true)}>
+              <Upload className={getSize(4)} />
+              <span>{t('upload all docs in space label')}</span>
+            </DropdownMenuItem>
           </DropdownMenu>
         </TooltipRoot>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
@@ -160,6 +162,28 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
           </TreeBranch>
         )}
       </TreeItemBody>
+      <Dialog
+        open={restoreDialogOpen}
+        onOpenChange={setRestoreDialogOpen}
+        title={t('confirm restore title')}
+        slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+      >
+        <p className='mlb-4'>{t('confirm restore body')}</p>
+        <FileUploader
+          types={['zip']}
+          classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
+          dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+          handleChange={(backupFile: File) =>
+            restoreSpace(space, backupFile).finally(() => setRestoreDialogOpen(false))
+          }
+        >
+          <FilePlus weight='duotone' className={getSize(8)} />
+          <span>{t('upload file message')}</span>
+        </FileUploader>
+        <Button className='block is-full' onClick={() => setRestoreDialogOpen?.(false)}>
+          {t('cancel label', { ns: 'appkit' })}
+        </Button>
+      </Dialog>
     </TreeItem>
   );
 });
