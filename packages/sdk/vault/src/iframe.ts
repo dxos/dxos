@@ -5,7 +5,7 @@
 import { StrictMode } from 'react';
 
 import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
-import { IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
+import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ClientContext } from '@dxos/react-client';
@@ -50,13 +50,15 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
         channel: 'dxos:app',
         onOrigin: async (origin) => {
           iframeRuntime.origin = origin;
-          iframeRuntime.shell && (await startShell(config, iframeRuntime.shell, iframeRuntime.services, origin));
         }
       }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
 
     await iframeRuntime.start();
+    iframeRuntime.shell &&
+      iframeRuntime.origin &&
+      (await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
@@ -90,4 +92,24 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));
     });
   }
+};
+
+/**
+ * Resets client storage directly via the host and renders message on completion.
+ */
+export const forceClientReset = async () => {
+  const config = new Config(Defaults());
+
+  // TODO(wittjosiah): This doesn't work with WebFS adapter because files aren't loaded yet.
+  // const services = new ClientServicesHost({ config });
+  // await services.reset();
+
+  const client = new Client({ config, services: fromHost(config) });
+  await client.initialize();
+  await client.reset();
+
+  // TODO(wittjosiah): Make this look nicer.
+  const message = document.createElement('div');
+  message.textContent = 'Client storage has been reset. Return to the app and reload.';
+  document.body.appendChild(message);
 };

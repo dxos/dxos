@@ -14,10 +14,10 @@ import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { captureException } from '@dxos/sentry';
 
+import '../style.css';
+
 import { AppState } from './hooks';
 import { createRouter } from './router';
-
-import '../style.css';
 
 void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
 
@@ -25,15 +25,13 @@ const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
 // TODO(wittjosiah): Migrate to ES Modules.
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-const initialState: AppState = {
+const initialState: Partial<AppState> = {
   // @ts-ignore
   dev: bool(import.meta.env.VITE_DEV),
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA),
-  chat: false,
-  fullscreen: false
+  pwa: bool(import.meta.env.VITE_PWA)
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 

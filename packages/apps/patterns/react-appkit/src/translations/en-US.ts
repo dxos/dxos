@@ -30,8 +30,12 @@ export const appkit = {
   'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
-  'fatal error label': 'Runtime error',
-  'fatal error message': 'Something went wrong that requires the app to be reloaded.',
+  'fatal error label_one': 'The app encountered an error',
+  'fatal error label_other': 'The app encountered some errors',
+  'fatal error message': 'Reloading the app might fix the issue. If it doesn’t, consider resetting the app.',
+  'reset dialog label': 'Reload or reset',
+  'reset dialog message':
+    'If you’re encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',
   'caught error message': 'Something went wrong; check the console for details.',
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',
@@ -95,5 +99,7 @@ export const appkit = {
   'list item input label': 'List item title',
   'list item input placeholder': 'Enter text…',
   'new list item input label': 'New list item title',
-  'new list item input placeholder': 'Enter text…'
+  'new list item input placeholder': 'Enter text…',
+  'reset client label': 'Reset',
+  'reset client confirm label': 'Yes, confirm reset'
 };

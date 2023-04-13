@@ -28,26 +28,35 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 This guide will walk you through creating and deploying a `react` app.
 
-Initialize an empty folder with `npm init` like this:
+Ensure `node -v` is at version 18 or higher (recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
+
+First, create a new empty folder
+
+```bash
+mkdir hello
+cd hello
+```
+
+Initialize the app with `npm init` like this:
 
 ```bash
 npm init @dxos@latest
 ```
 
-Then:
+::: note
+If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node versions are out of date. Ensure `node -v` is 18 or higher and `npm -v` is 9 or higher.
+:::
+
+Then, use your favorite package manager such as `yarn`, `npm` or `pnpm`:
 
 ```bash
 pnpm install
 pnpm serve
 ```
 
-::: note
-Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
-:::
+This will start the development server and print its URL 🚀.
 
-This will start the development server 🚀.
-
-You should be able to open two windows pointed at the dev server and see reactive updates like in the video below.
+Now it should be possible to open two windows to that URL and see reactive updates like in the video below.
 
 <video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video> <video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 

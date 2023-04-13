@@ -100,6 +100,7 @@ export class ServiceContext {
     this.identityManager._traceParent = this._instanceId;
 
     this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitations._traceParent = this._instanceId;
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
@@ -135,13 +136,6 @@ export class ServiceContext {
     log('closed');
 
     log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
-  }
-
-  async reset() {
-    log('resetting...');
-    await this.close();
-    await this.storage.reset();
-    log('reset');
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {

@@ -35,7 +35,6 @@ export default defineConfig({
         manualChunks: {
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
-          monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
@@ -45,7 +44,6 @@ export default defineConfig({
   plugins: [
     mkcert(),
 
-    // TODO(burdon): Document.
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
@@ -56,6 +54,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
@@ -66,6 +65,9 @@ export default defineConfig({
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
+
+    // HALO.
+    VaultPlugin(),
 
     ReactPlugin(),
 

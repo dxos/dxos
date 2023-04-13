@@ -6,6 +6,10 @@ import urlJoin from 'url-join';
 
 import { log } from '@dxos/log';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Factor out.
 export const invitationCodeFromUrl = (text: string) => {
   try {
     const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
@@ -17,6 +21,10 @@ export const invitationCodeFromUrl = (text: string) => {
   }
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Factor out.
 export const createInvitationUrl = (path: string, invitationCode: string) => {
   const { origin, pathname } = window.location;
   return urlJoin(origin, pathname, `/#${path}`, `?invitation=${invitationCode}`);

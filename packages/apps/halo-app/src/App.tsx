@@ -9,13 +9,13 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import {
   appkitTranslations,
   ClientFallback,
   ErrorProvider,
   Fallback,
-  FatalError,
+  ResetDialog,
   ServiceWorkerToast,
   useTelemetry
 } from '@dxos/react-appkit';
@@ -41,13 +41,7 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
-// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
-const configOverride: ConfigProto = window.location.hostname.includes('localhost')
-  ? {}
-  : {
-      runtime: { client: { remoteSource: `https://${window.location.hostname}/vault.html` } }
-    };
-const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
@@ -112,7 +106,7 @@ export const App = withProfiler(() => {
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
-        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+        <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <MetagraphProvider>
               <HashRouter>
