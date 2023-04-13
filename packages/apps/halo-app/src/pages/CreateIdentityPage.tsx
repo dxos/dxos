@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { log } from '@dxos/log';
 import { SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
@@ -28,7 +29,10 @@ const CreateIdentityPage = () => {
 
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createIdentity({ displayName }).then(redirect, (_rejection) => setPending(false));
+    void client.halo.createIdentity({ displayName }).then(redirect, (rejection) => {
+      log.catch(rejection);
+      setPending(false);
+    });
   }, [displayName, redirect]);
 
   useEffect(() => {
