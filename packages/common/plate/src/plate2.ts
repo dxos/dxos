@@ -3,7 +3,7 @@
 //
 import callsite from 'callsite';
 
-import { InquirableZodType, z } from '..';
+import { InquirableZodType, z } from '.';
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -80,7 +80,12 @@ export class Plate<I = any, TSlots extends Slots<I> = {}> {
     const stack = callsite();
     const templateFile = stack[1].getFileName();
     return async (context: Context<I, TSlots>) => {
-      return results([new FileEffect()]);
+      return results([
+        new FileEffect({
+          path: templateFile,
+          content: ''
+        })
+      ]);
     };
   }
 
