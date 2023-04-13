@@ -10,7 +10,7 @@ Type: "6"
 Type: "dxos:app"
 
 ### [`DEFAULT_CLIENT_ORIGIN`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L10)
-Type: "https://halo.dxos.org/vault.html" | "http://localhost:3967/vault.html"
+Type: "https://halo.dxos.org/vault.html"
 
 ### [`DEFAULT_SHELL_CHANNEL`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L8)
 Type: "dxos:shell"
@@ -18,7 +18,7 @@ Type: "dxos:shell"
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/client/types/ConvertVisitors)
 
-### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L13)
+### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L12)
 Type: "1"
 
 ### [`Expando`]()
@@ -53,7 +53,7 @@ Type: unique symbol
 ### [`db`]()
 Type: unique symbol
 
-### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L15)
+### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L14)
 Type: ConfigProto
 
 ### [`iframeServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L73)
