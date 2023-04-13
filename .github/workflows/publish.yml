@@ -62,6 +62,7 @@ jobs:
           DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           DX_SENTRY_DESTINATION: ${{ secrets.VAULT_SENTRY_DESTINATION }}
           DX_TELEMETRY_API_KEY: ${{ secrets.VAULT_SEGMENT_API_KEY }}
+          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
 
       - name: Publish to NPM
         run: |
@@ -75,6 +76,7 @@ jobs:
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
+          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
 
       - name: Gather Artifacts
         run: |
