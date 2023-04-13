@@ -4,7 +4,8 @@
 
 import { StrictMode } from 'react';
 
-import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
+import { Trigger } from '@dxos/async';
+import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
 import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -37,7 +38,25 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   );
 };
 
-export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
+export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise<void> => {
+  // Handle reset path.
+  const reset = window.location.hash === '#reset';
+  if (reset) {
+    return forceClientReset();
+  }
+
+  // Coordinate initialization with parent window.
+  const trigger = new Trigger();
+  window.addEventListener('message', async (event) => {
+    const { channel, payload } = event.data;
+    if (channel === DEFAULT_INTERNAL_CHANNEL && payload === 'init') {
+      trigger.wake();
+      window.parent.postMessage({ channel, payload }, event.origin);
+    }
+  });
+  await trigger.wait();
+
+  // Start iframe runtime.
   const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
@@ -97,7 +116,7 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
 /**
  * Resets client storage directly via the host and renders message on completion.
  */
-export const forceClientReset = async () => {
+const forceClientReset = async () => {
   const config = new Config(Defaults());
 
   // TODO(wittjosiah): This doesn't work with WebFS adapter because files aren't loaded yet.
