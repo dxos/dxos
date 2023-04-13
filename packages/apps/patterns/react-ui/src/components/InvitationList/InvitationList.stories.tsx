@@ -18,8 +18,15 @@ import { defaultSurface } from '../../styles';
 import { InvitationList } from './InvitationList';
 
 export default {
-  component: InvitationList
+  component: InvitationList,
+  actions: { argTypesRegex: '^on.*' }
 };
+
+export const Normal = () => {
+  return <InvitationList>
+    
+  </InvitationList>
+}
 
 export const Default = {
   decorators: [

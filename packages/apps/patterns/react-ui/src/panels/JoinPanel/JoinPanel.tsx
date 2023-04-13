@@ -73,8 +73,6 @@ export const JoinPanel = ({
     'finishingJoiningHalo'
   ].some(joinState?.matches);
 
-  console.log({ displayAvatar, identity });
-
   return (
     <Panel>
       <JoinHeading

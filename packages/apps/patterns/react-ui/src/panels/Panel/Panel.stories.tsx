@@ -6,15 +6,16 @@ import React from 'react';
 
 import '@dxosTheme';
 
+import { Avatar, Pulse } from '@dxos/react-components';
+
+import { HaloRing } from '../../components/HaloRing';
 import { Button } from './Button';
 import { CloseButton } from './CloseButton';
 import { Content } from './Content';
 import { Heading } from './Heading';
+import { Input } from './Input';
 import { Panel } from './Panel';
 import { Title } from './Title';
-import { HelpButton } from './HelpButton';
-import { HelpContent } from './HelpContent';
-import { Pulse } from '@dxos/react-components';
 
 export default {
   component: Panel,
@@ -39,19 +40,59 @@ export const Default = (props: any) => {
   );
 };
 
-export const Joining = (props: any) => {
+export const JoiningPanel = (props: any) => {
   return (
     <Panel {...props} className='min-is-[260px] max-is-[320px]'>
       <Title>Joining space</Title>
       <CloseButton />
-      <Content>
-        <Pulse />
+      <Content className='text-center'>
+        <HaloRing>
+          <Pulse />
+        </HaloRing>
       </Content>
       <Heading>Choose an option to continue</Heading>
       <Content>
         <Button>New identity</Button>
         <Button>Join device</Button>
         <Button>Recover identity</Button>
+      </Content>
+    </Panel>
+  );
+};
+
+export const InputPanel = (props: any) => {
+  return (
+    <Panel {...props} className='min-is-[260px] max-is-[320px]'>
+      <Title>Creating identity</Title>
+      <CloseButton />
+      <Content className='text-center'>
+        <HaloRing>
+          <Pulse />
+        </HaloRing>
+      </Content>
+      <Content>
+        <Input slots={{ input: { className: 'text-center' } }} label={<Heading>Enter a display name</Heading>} />
+        <Button>Continue</Button>
+        <Button variant='ghost'>Back</Button>
+      </Content>
+    </Panel>
+  );
+};
+
+export const Welcome = (props: any) => {
+  return (
+    <Panel {...props} className='min-is-[260px] max-is-[320px]'>
+      <Title></Title>
+      <CloseButton />
+      <Content className='text-center'>
+        <HaloRing>
+          <Avatar labelId='' fallbackValue={'cafebabe'} />
+        </HaloRing>
+      </Content>
+      <Content>
+        <Heading>Welcome, User</Heading>
+        <Button>Dismiss</Button>
+        <Button variant='ghost'>Back</Button>
       </Content>
     </Panel>
   );
