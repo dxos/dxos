@@ -4,8 +4,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
-import { useSpace } from '@dxos/react-client';
-import { getSize, mx, useId, useTranslation } from '@dxos/react-components';
+import { Identity, useSpace } from '@dxos/react-client';
+import { Avatar, getSize, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { InvitationEmoji } from '../../components';
 import { Title, CloseButton, Content } from '../Panel';
@@ -16,6 +16,7 @@ import { HaloRing } from '../../components/HaloRing';
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;
   titleId: string;
+  identity?: Identity | null;
   joinState?: JoinState;
   onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
@@ -25,7 +26,7 @@ export interface JoinSpaceHeadingProps {
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   (
-    { mode, titleId, joinState, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
+    { mode, titleId, joinState, onExit, exitActionParent, preventExit, identity }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>
   ) => {
     const { t } = useTranslation('os');
@@ -52,7 +53,13 @@ export const JoinHeading = forwardRef(
           {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         </Title>
         <Content className='flex items-center justify-center gap-2'>
-          <HaloRing loading={!invitationId}>{invitationId && <InvitationEmoji {...{ invitationId }} />}</HaloRing>
+          <HaloRing loading={!invitationId && !identity} status={identity || invitationId ? 'active' : 'inactive'}>
+            {invitationId ? (
+              <InvitationEmoji {...{ invitationId }} />
+            ) : identity ? (
+              <Avatar fallbackValue={identity?.identityKey?.toHex()} labelId='' />
+            ) : null}
+          </HaloRing>
           {name && <p id={nameId}>{name}</p>}
         </Content>
       </div>

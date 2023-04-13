@@ -4,32 +4,31 @@
 
 import React, { cloneElement } from 'react';
 
-import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { InvitationResult, useInvitationStatus, useIdentity } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-components';
 
 import { Content, Button, Heading } from '../../Panel';
 import { ViewState, ViewStateProps } from './ViewState';
 
-export interface InvitationAcceptedProps extends ViewStateProps {
+export interface InvitationAcceptedComponentProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
   screenName?: string;
   doneActionParent?: Parameters<typeof cloneElement>[0];
-  onDone?: () => void;
+  onDone?: () => any;
 }
 
-const PureInvitationAcceptedContent = ({
+const InvitationAcceptedComponent = ({
   onDone,
   Kind,
   doneActionParent,
   active,
   screenName
-}: InvitationAcceptedProps) => {
+}: InvitationAcceptedComponentProps) => {
   const disabled = !active;
   const { t } = useTranslation('os');
 
   const doneButton = (
-    <Content>
+    <Content className='absolute inset-x-0 bottom-0'>
       <Button
         {...(onDone && { onClick: () => onDone?.() })}
         disabled={disabled}
@@ -42,46 +41,33 @@ const PureInvitationAcceptedContent = ({
   );
 
   return (
-    <>
-      <Heading>
+    <div role='none' className='h-full relative'>
+      <Heading className='mbs-0'>
         {t('welcome message')}
         {screenName ? ', ' + screenName : ''}
       </Heading>
       {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-    </>
+    </div>
   );
 };
 
-const InvitationAcceptedContent = (
-  props: InvitationAcceptedProps & {
-    activeInvitation: AuthenticatingInvitationObservable;
-    onDone?: (result: InvitationResult) => any;
-  }
-) => {
-  const { onDone } = props;
-  const { result } = useInvitationStatus(props.activeInvitation);
-  const identity = useIdentity();
-  return (
-    <PureInvitationAcceptedContent
-      {...props}
-      screenName={identity?.profile?.displayName}
-      onDone={() => onDone?.(result)}
-    />
-  );
-};
+export interface InvitationAcceptedProps extends Omit<InvitationAcceptedComponentProps, 'onDone'> {
+  onDone?: (result: InvitationResult | null) => any;
+}
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { Kind, doneActionParent: _doneActionParent, onDone: _onDone, ...viewStateProps } = props;
+  const { Kind, doneActionParent: _doneActionParent, onDone, ...viewStateProps } = props;
   const activeInvitation =
     viewStateProps.joinState?.context[Kind.toLowerCase() as 'halo' | 'space'].invitationObservable;
-
+  const invitationStatus = useInvitationStatus(activeInvitation);
+  const identity = useIdentity();
   return (
     <ViewState {...viewStateProps}>
-      {!activeInvitation ? (
-        <PureInvitationAcceptedContent {...props} result={null} />
-      ) : (
-        <InvitationAcceptedContent {...props} activeInvitation={activeInvitation} />
-      )}
+      <InvitationAcceptedComponent
+        {...props}
+        screenName={identity?.profile?.displayName}
+        onDone={() => onDone?.(invitationStatus?.result)}
+      />
     </ViewState>
   );
 };

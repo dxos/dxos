@@ -7,7 +7,7 @@ import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { useId, useThemeContext } from '@dxos/react-components';
 
-import { Panel, Title, Heading, Content } from '../Panel';
+import { Panel } from '../Panel';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
@@ -64,9 +64,27 @@ export const JoinPanel = ({
     }
   }, [joinState.value, hasIosKeyboard]);
 
+  const displayAvatar = [
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
+      }
+    },
+    'finishingJoiningHalo'
+  ].some(joinState?.matches);
+
+  console.log({ displayAvatar, identity });
+
   return (
     <Panel>
-      <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
+      <JoinHeading
+        {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }}
+        {...(displayAvatar
+          ? {
+              identity
+            }
+          : {})}
+      />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1200%]' aria-live='polite'>
           <AdditionMethodSelector
