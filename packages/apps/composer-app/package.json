@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
   "description": "DXOS composer application.",
   "homepage": "https://dxos.org",
@@ -27,6 +27,7 @@
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",
     "isomorphic-fetch": "^3.0.0",
+    "jszip": "^3.10.1",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -100,13 +99,10 @@
       "path": "../chess-app"
     },
     {
-      "path": "../framebox"
+      "path": "../kai-frames"
     },
     {
-      "path": "../gem-core"
-    },
-    {
-      "path": "../gem-spore"
+      "path": "../kai-sandbox"
     },
     {
       "path": "../kai-types"

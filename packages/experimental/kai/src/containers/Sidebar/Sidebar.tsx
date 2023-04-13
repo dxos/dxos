@@ -3,10 +3,11 @@
 //
 
 import {
+  AppWindow,
   CaretCircleDoubleDown,
   CaretLeft,
-  Info as CaretUpDown,
-  FrameCorners,
+  Info,
+  Graph,
   PlusCircle,
   Robot,
   UserPlus,
@@ -22,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { scheduleTaskInterval } from '@dxos/async';
 import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
+import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
@@ -35,13 +37,12 @@ import {
   createPath,
   getIcon,
   defaultFrameId,
-  objectMeta,
   Section,
   SearchResults,
   useAppRouter,
   useTheme,
-  useFrames,
-  useAppReducer
+  useAppReducer,
+  useAppState
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
@@ -218,14 +219,15 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     }
   }, [space]);
 
-  const { active: activeFrames } = useFrames();
-
+  const { frames: activeFrames } = useAppState();
+  // const frameRegistry = useFrameRegistry();
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
 
+    // TODO(burdon): Hack.
     // Check if Frame which we are try to focus in is installed, and install it if necessary.
     const id = path?.split('/')[3].split('_').join('.');
-    // TODO(mykola): Reconcile with FrameRegistry
+    // TODO(mykola): Reconcile with FrameRegistry.
     if (id) {
       const activate = !activeFrames.find((frameId) => frameId === id);
       if (activate) {
@@ -267,31 +269,33 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       <div
         role='none'
         className={mx(
-          'flex flex-col h-full overflow-hidden min-bs-full bg-sidebar-bg',
+          'flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg',
           theme.panel === 'flat' && 'border-r'
         )}
       >
-        {/* Space Selector */}
+        {/* Header */}
         <div className='flex flex-col shrink-0'>
-          <div className={mx('flex items-center h-[40px]', theme.classes.header)}>
-            <div className='flex w-full items-center'>
-              <div className='flex justify-center px-3'>
+          <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
+            <div className='flex overflow-hidden grow items-center'>
+              <div className='flex shrink-0 px-3'>
                 <Icon className={getSize(8)} weight='duotone' data-testid='sidebar.spaceIcon' />
               </div>
+              <div className='truncate text-lg'>{space.properties.name ?? 'Space'}</div>
+            </div>
+
+            <div className='flex shrink-0 items-center'>
               <Button
                 variant='ghost'
-                className='flex w-full p-0'
+                className='flex p-0 px-1'
                 data-testid='sidebar.showSpaceList'
                 onClick={() => setShowSpaceList((show) => !show)}
               >
-                <div className='px-2 text-lg'>{space.properties.name ?? 'Space'}</div>
-                <CaretUpDown className={getSize(4)} />
+                <Info className={getSize(5)} />
+              </Button>
+              <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
+                {displayState === 'show' && <CaretLeft className={getSize(6)} />}
               </Button>
             </div>
-
-            <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
-              {displayState === 'show' && <CaretLeft className={getSize(6)} />}
-            </Button>
           </div>
         </div>
 
@@ -358,12 +362,24 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 )}
 
                 {/* Frame-specific plugin. */}
-                {Plugin && <Suspense>{<Plugin />}</Suspense>}
+                {/* TODO(burdon): Plugin spec (space, onSelect). */}
+                {Plugin && (
+                  <Suspense>
+                    {
+                      <Plugin
+                        space={space}
+                        onSelect={(objectId: string) => {
+                          onNavigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
+                        }}
+                      />
+                    }
+                  </Suspense>
+                )}
 
                 {/* Frame registry dialog. */}
                 <div className='flex px-4 items-center'>
                   <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
-                    <FrameCorners className={getSize(6)} />
+                    <AppWindow className={getSize(6)} />
                   </Button>
                   {/* TODO(burdon): Put inside button? */}
                   <span className='w-full pl-2'>Frames</span>
@@ -399,12 +415,22 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             onSelect={focusOnMember}
           />
 
+          <Separator />
+
           <Link
             className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
             to={createPath({ spaceKey: space.key, section: Section.BOTS })}
           >
             <Robot className={getSize(6)} />
             <div className='pl-2'>Bots</div>
+          </Link>
+
+          <Link
+            className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
+            to={createPath({ spaceKey: space.key, section: Section.DMG })}
+          >
+            <Graph className={getSize(6)} />
+            <div className='pl-2'>Metagraph</div>
           </Link>
 
           <Separator />

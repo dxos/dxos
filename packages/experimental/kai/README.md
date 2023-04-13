@@ -12,7 +12,7 @@ pnpm nx serve kai
 To run with automatic identity creation and simplified invitation flows:
 
 ```bash
-VITE_DEV=1 pnpm nx serve kai
+DX_VAULT=false VITE_DEV=1 pnpm nx serve kai
 ```
 
 ## Deployment

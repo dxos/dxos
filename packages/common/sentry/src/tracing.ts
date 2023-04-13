@@ -22,10 +22,14 @@ export const configureTracing = () => {
       op: 'dxos'
     });
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', finish);
+      window.addEventListener('beforeunload', () => {
+        finish();
+      });
     }
     if (typeof process !== 'undefined') {
-      process.on('exit', finish);
+      process.on('exit', () => {
+        finish();
+      });
     }
 
     SENTRY_INITIALIZED.wake();
@@ -33,8 +37,12 @@ export const configureTracing = () => {
 };
 
 export const finish = () => {
-  for (const span of SPAN_MAP.values()) {
-    span.finish();
+  for (const span of Array.from(SPAN_MAP.values()).reverse()) {
+    try {
+      span.finish();
+    } catch (err) {
+      log.warn('Failed to finish span', err);
+    }
   }
   TX.finish();
 };

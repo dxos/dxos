@@ -5,6 +5,7 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
@@ -27,7 +28,8 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
       (identity) => {
         joinSend({ type: 'selectIdentity', identity });
       },
-      (_error) => {
+      (error) => {
+        log.catch(error);
         setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
       }
     );

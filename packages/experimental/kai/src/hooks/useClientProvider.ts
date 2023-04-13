@@ -8,13 +8,15 @@ import { schema as chessSchema } from '@dxos/chess-app';
 import { Client, fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
-import { schema as frameboxSchema } from '@dxos/framebox';
+import { schema as sandboxSchema } from '@dxos/kai-sandbox';
 import { schema } from '@dxos/kai-types';
 import { Generator } from '@dxos/kai-types/testing';
 
+export const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+
 export const useClientProvider = (dev: boolean) => {
   return useCallback(async () => {
-    const config = new Config(await Dynamics(), await Envs(), Defaults());
+    const config = await configProvider();
     const client = new Client({
       config,
       services: config.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config)
@@ -32,9 +34,10 @@ export const useClientProvider = (dev: boolean) => {
     }
 
     // TODO(burdon): Document.
+    // TODO(burdon): Make modular (via registry).
     client.addSchema(schema);
     client.addSchema(chessSchema);
-    client.addSchema(frameboxSchema);
+    client.addSchema(sandboxSchema);
 
     if (dev && client.halo.identity.get() && client.spaces.get().length === 0) {
       const space = await client.createSpace();

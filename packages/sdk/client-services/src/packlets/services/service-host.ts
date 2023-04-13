@@ -109,8 +109,7 @@ export class ClientServicesHost {
       },
 
       onReset: async () => {
-        assert(this._serviceContext, 'service host is closed');
-        await this._serviceContext.reset();
+        await this.reset();
       }
     });
 
@@ -235,5 +234,12 @@ export class ClientServicesHost {
     log('closed', { deviceKey });
 
     log.trace('dxos.sdk.client-services-host', trace.end({ id: this._instanceId }));
+  }
+
+  async reset() {
+    log('resetting...');
+    await this._serviceContext?.close();
+    await this._storage!.reset();
+    log('reset');
   }
 }

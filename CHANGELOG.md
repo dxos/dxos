@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.37](https://github.com/dxos/dxos/compare/v0.1.36...v0.1.37) (2023-04-13)
+
+
+### Features
+
+* Add ability to use multiple signal servers ([#2933](https://github.com/dxos/dxos/issues/2933)) ([78ddbb3](https://github.com/dxos/dxos/commit/78ddbb36037898ae98ea43880a521b2840e9a57e))
+* Add Invitations tracing ([#2986](https://github.com/dxos/dxos/issues/2986)) ([68f7fbb](https://github.com/dxos/dxos/commit/68f7fbb3143c3235a4f2d8d30fcbfd24f1071e68))
+* Add self-check on ipfs upload ([#2981](https://github.com/dxos/dxos/issues/2981)) ([a1644a1](https://github.com/dxos/dxos/commit/a1644a19b8ba4973229fd9c7f5125364b7b067b3))
+* **bare-template:** add error boundary ([#3011](https://github.com/dxos/dxos/issues/3011)) ([e183047](https://github.com/dxos/dxos/commit/e183047ac9bdbdaa831e2fada6e969fee7b3940d))
+* **composer-app:** Import to / export from Space ([#2958](https://github.com/dxos/dxos/issues/2958)) ([774c3dd](https://github.com/dxos/dxos/commit/774c3dde5ceecfdaddcf8fd6ef416997132d1c98))
+* **composer-app:** Restore from backup ([#3015](https://github.com/dxos/dxos/issues/3015)) ([4397591](https://github.com/dxos/dxos/commit/439759172508ac8bf03e3aa445632605fda87a24))
+* Metagraph panel ([#2973](https://github.com/dxos/dxos/issues/2973)) ([72f5465](https://github.com/dxos/dxos/commit/72f54654d7b1cd06295197142d4c05b91b62be4e))
+* **react-appkit:** Affordance for resetting client ([#2994](https://github.com/dxos/dxos/issues/2994)) ([a6bfbf7](https://github.com/dxos/dxos/commit/a6bfbf75d14d9e45c7c19b2a090acf98c418b732))
+* **react-appkit:** Persistent status & warning in corner, invokes Reset dialog ([#2998](https://github.com/dxos/dxos/issues/2998)) ([3e4f5db](https://github.com/dxos/dxos/commit/3e4f5dbae437e5eb995cb0000a568a74a68df63d))
+* **vault:** reset storage ([#3009](https://github.com/dxos/dxos/issues/3009)) ([41339e7](https://github.com/dxos/dxos/commit/41339e7dcdabf200c23936f581ca49df3e8031a1))
+
+
+### Bug Fixes
+
+* add chrome extension devtools to docs ([#2990](https://github.com/dxos/dxos/issues/2990)) ([677bac1](https://github.com/dxos/dxos/commit/677bac1b1eb59f3a61ca75e0919d21c2c219b90d))
+* **client:** revert default remote source ([#2988](https://github.com/dxos/dxos/issues/2988)) ([85ed9c5](https://github.com/dxos/dxos/commit/85ed9c5f2c5fdc9848a3d306bbfed74626f0a3bd))
+* **composer-app:** Typo ([#2996](https://github.com/dxos/dxos/issues/2996)) ([da61156](https://github.com/dxos/dxos/commit/da61156fe697f290da0d45b5e7ebc2650f5e9097))
+* Debounce & storage issues ([#2969](https://github.com/dxos/dxos/issues/2969)) ([d0d6f5c](https://github.com/dxos/dxos/commit/d0d6f5c11588a637696c86653490a53334f90895))
+* do not show non localhost urls after publish for now ([#2989](https://github.com/dxos/dxos/issues/2989)) ([5779b24](https://github.com/dxos/dxos/commit/5779b24f166c0ba3b436bc9c92e39d1727f0c54d))
+* docs cleanup and improved printing of urls in publish cmd to sup… ([#3010](https://github.com/dxos/dxos/issues/3010)) ([f87f7ef](https://github.com/dxos/dxos/commit/f87f7ef3289a36b325409e7d655813dcdacd46b6))
+* Mute invitation warnings ([#2985](https://github.com/dxos/dxos/issues/2985)) ([d480c8c](https://github.com/dxos/dxos/commit/d480c8c197c9417e5c2bb5e4b740d94404f7aef2))
+* print urls after publish command better ([#2997](https://github.com/dxos/dxos/issues/2997)) ([a2d78db](https://github.com/dxos/dxos/commit/a2d78db326adce50cd4e37906b1678154a6082cb))
+* **react-ui:** don't swallow create identity error ([#2987](https://github.com/dxos/dxos/issues/2987)) ([76b77c0](https://github.com/dxos/dxos/commit/76b77c0da5eff57fb5b2a931aeeb29748af5df73))
+* remove incomplete doc ([#3008](https://github.com/dxos/dxos/issues/3008)) ([f13a6f7](https://github.com/dxos/dxos/commit/f13a6f7fe0927c4de04f989bfb0a5bdf0d41094b))
+* **rpc-tunnel:** add exception for ios chrome ([#3004](https://github.com/dxos/dxos/issues/3004)) ([4c1a43f](https://github.com/dxos/dxos/commit/4c1a43ff51dde57f3a9984e9f759017bc6c83e5a))
+* **vault:** avoid double-initializing client services ([#3007](https://github.com/dxos/dxos/issues/3007)) ([f22d90c](https://github.com/dxos/dxos/commit/f22d90c952f1655c5410b26ab6a9d89d9eee4164))
+
 ## [0.1.36](https://github.com/dxos/dxos/compare/v0.1.35...v0.1.36) (2023-04-07)
 
 

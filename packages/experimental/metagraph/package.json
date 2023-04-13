@@ -1,6 +1,6 @@
 {
   "name": "@dxos/metagraph",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
   "description": "Decentralized metagraph (DMG).",
   "homepage": "https://dxos.org",
