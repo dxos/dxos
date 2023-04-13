@@ -19,8 +19,10 @@ export const composer = {
   'export to github label': 'Export to Github',
   'import from github label': 'Import from Github',
   'confirm import title': 'Overwrite this document’s content?',
+  'confirm restore title': 'Overwrite files in this space?',
   'confirm import body':
     'Importing will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
+  'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
   'upload file message': 'Drag file here or click to browse',
   'space settings label': 'Settings',
   'space name label': 'Space name',

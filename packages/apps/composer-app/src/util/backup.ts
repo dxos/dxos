@@ -5,6 +5,8 @@
 import JSZip from 'jszip';
 
 import { Space } from '@dxos/client';
+import { log } from '@dxos/log';
+import { YText } from '@dxos/text-model';
 
 import { ComposerDocument } from '../proto';
 
@@ -60,4 +62,29 @@ export const backupSpace = async (space: Space, defaultDocumentTitle: string): P
     items!.file(docBackup.fileName, document?.content.content?.toString() ?? '');
   });
   return backupPackage.generateAsync({ type: 'blob' });
+};
+
+export const restoreSpace = async (space: Space, backupBlob: Blob) => {
+  const backupPackage = await JSZip.loadAsync(backupBlob);
+  const backupString = await backupPackage.file('composer-space-backup.json')?.async('string');
+  try {
+    const backup = JSON.parse(backupString!) as SpaceBackup;
+    await Promise.all(
+      backup.items.map(async ({ fileName, origin = {} }) => {
+        const { id, title } = origin;
+        const extantDoc = id ? space.db.getObjectById<ComposerDocument>(id) : undefined;
+        const targetDoc = extantDoc ?? space.db.add(new ComposerDocument());
+        const docContent = await backupPackage.file(`items/${fileName}`)?.async('string');
+        if (targetDoc && targetDoc.content.content) {
+          targetDoc.content.content.delete(0, targetDoc.content.content.length);
+          (targetDoc.content.content as YText).insert(0, docContent ?? '');
+          if (title) {
+            targetDoc.title = title;
+          }
+        }
+      })
+    );
+  } catch (err) {
+    log.catch(err);
+  }
 };
