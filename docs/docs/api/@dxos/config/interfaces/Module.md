@@ -17,6 +17,9 @@ Type: <code>Uint8Array</code>
 Options:
   - proto3_optional = true
 
+### [deps]()
+Type: <code>[Module](/api/@dxos/config/interfaces/Module)[]</code>
+
 ### [description]()
 Type: <code>string</code>
 

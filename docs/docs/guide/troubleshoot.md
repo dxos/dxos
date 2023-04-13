@@ -12,11 +12,11 @@ You may occasionally need to reset the storage state behind [`HALO`](./platform/
 This procedure clears all storage for all apps using ECHO and HALO on the machine.
 :::
 
-- navigate a browser to `halo.dxos.org` (or wherever the [vault](./glossary.md#vault) was configured to be - by default it's `halo.dxos.org`)
-- open developer tools in the browser
-- go to the `Application` tab developer tools, and locate the Storage node. 
-- click `Clear site data`
-- go back to your app and reload, the storage should be re-created
+*   navigate a browser to `halo.dxos.org` (or wherever the [vault](./glossary.md#vault) was configured to be - by default it's `halo.dxos.org`)
+*   open developer tools in the browser
+*   go to the `Application` tab developer tools, and locate the Storage node.
+*   click `Clear site data`
+*   go back to your app and reload, the storage should be re-created
 
 ### `EINVALIDPACKAGENAME` when initializing a new app
 
