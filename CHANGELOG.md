@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.38](https://github.com/dxos/dxos/compare/v0.1.37...v0.1.38) (2023-04-14)
+
+
+### Features
+
+* **react-client,composer-app:** Show loading spaces as disabled ([#3025](https://github.com/dxos/dxos/issues/3025)) ([d7fd21c](https://github.com/dxos/dxos/commit/d7fd21c6fcec472ceb943532b9647031b68bb465))
+
+
+### Bug Fixes
+
+* conform READMEs with discord ([#3027](https://github.com/dxos/dxos/issues/3027)) ([d6f700d](https://github.com/dxos/dxos/commit/d6f700d3e0fb3aff073d3ad55f8c0c49ae1890e1))
+* more custom readme gotchas ([#3028](https://github.com/dxos/dxos/issues/3028)) ([53471f8](https://github.com/dxos/dxos/commit/53471f85c45223ea24b126c3a18f06fe14a49d05))
+* **react-ui:** Sidebar no longer blocks pointer events ([#3023](https://github.com/dxos/dxos/issues/3023)) ([4d6feca](https://github.com/dxos/dxos/commit/4d6fecafa004ace69228184dd302578225d939fc))
+
 ## [0.1.37](https://github.com/dxos/dxos/compare/v0.1.36...v0.1.37) (2023-04-13)
 
 
