@@ -95,8 +95,7 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // TODO(mykola): Disabled for now. Figure out, why it fails on CI.
-    ...(process.env.NODE_ENV === 'production' && false 
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
           ? [
           sentryVitePlugin({
             org: 'dxos',
