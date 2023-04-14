@@ -29,8 +29,7 @@ Shown below are two sessions of an application using ECHO to replicate state pee
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
-- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
+- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
 
 ## Contributions
 

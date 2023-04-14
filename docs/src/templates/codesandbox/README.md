@@ -1,11 +1,9 @@
-# @dxos/chess-app
-
-Chess app.
+# dxos-codesandbox-template
 
 ## Installation
 
 ```bash
-pnpm i @dxos/chess-app
+pnpm i dxos-codesandbox-template
 ```
 
 ## DXOS Resources

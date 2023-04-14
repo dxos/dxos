@@ -18,15 +18,14 @@ import template from "@dxos/bare-template";
 const results = await template.execute({
   /* ExecuteDirectoryOptions */
 });
-Promise.all(results.map((file) => file.save()));
+await results.save();
 ```
 
 ## DXOS Resources
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
-- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
+- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
 
 ## Contributions
 
