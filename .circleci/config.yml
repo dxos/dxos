@@ -51,6 +51,34 @@ aliases:
 
 jobs:
   #
+  # https://nx.dev/recipes/ci/monorepo-ci-circle-ci
+  #
+  agent:
+      docker:
+        - *docker_image
+      resource_class: xlarge
+      parameters:
+        ordinal:
+          type: integer
+      environment:
+        DX_ENVIRONMENT: circleci
+      working_directory: /mnt/ramdisk/work
+      steps:
+        - *ram_cache_configure
+        - checkout
+        - *ram_cache_restore
+        - run: pnpm install --prefer-offline
+        - run: pnpm install-playwright
+        - *ram_cache_save
+        - run: pnpm check-dependencies
+        - run:
+            command: npx nx-cloud start-agent
+            no_output_timeout: 60m
+            environment:
+              # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
+              NODE_OPTIONS: --max_old_space_size=10240
+
+  #
   # NOTE: This job is required to complete before ALL PRs can be merged to main.
   #
   check:
@@ -93,22 +121,25 @@ jobs:
   e2e:
     docker:
       - *docker_image
-    # TODO(wittjosiah): Using because of kai bundling memory usage.
-    resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
+    working_directory: /mnt/ramdisk/work
     steps:
+      - *ram_cache_configure
       - checkout
-      - *cache_restore
-      - run: pnpm install
+      - *ram_cache_restore
+      - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
-      - *cache_save
+      - *ram_cache_save
       - nx/set-shas
+      - run: pnpm check-dependencies
+      - run: npx nx-cloud start-ci-run
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
-          environment:
-            # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=10240
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
+      # NOTE: The e2e target cannot run in parallel due to port collisions.
+      - run: |
+          pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1 &&
+          pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
+      - run: npx nx-cloud stop-all-agents
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
@@ -156,6 +187,9 @@ jobs:
           environment:
             NODE_ENV: production
 
+  #
+  # Monitoring @dxos/messaging package in npm.
+  #
   messaging_monitor:
     docker:
       - *docker_image
@@ -194,6 +228,12 @@ workflows:
           - << pipeline.parameters.run_daily_workflow >>
           - << pipeline.parameters.run_hourly_workflow >>
     jobs:
+      - agent:
+          context:
+            - Github
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3, 4]
       - check:
           context:
             - Github
