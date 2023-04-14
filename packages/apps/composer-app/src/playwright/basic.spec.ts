@@ -18,12 +18,8 @@ test.describe('Basic test', () => {
     host = new AppManager(browser, true);
 
     await host.init();
-    // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //   https://github.com/microsoft/playwright/issues/2973
-    guest = browserName === 'chromium' ? new AppManager(browser, true) : host;
-    if (browserName === 'chromium') {
-      await guest.init();
-    }
+    guest = new AppManager(browser, true);
+    await guest.init();
   });
 
   test.describe('Solo tests', () => {
@@ -57,9 +53,6 @@ test.describe('Basic test', () => {
 
   test.describe('Collab tests', () => {
     test('guest joins host’s space', async ({ browserName }) => {
-      if (browserName !== 'chromium') {
-        return;
-      }
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
       await guest.joinSpace();
