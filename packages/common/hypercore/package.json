@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.1.37",
+  "version": "0.1.39",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
