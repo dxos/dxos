@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ridoculous",
-  "version": "0.1.38",
+  "version": "0.1.39",
   "private": true,
   "description": "Markdown processing CLI and library.",
   "homepage": "https://dxos.org",
