@@ -10,14 +10,14 @@ import { Client, ClientServicesProxy, fromIFrame } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
-import { MaybePromise } from '@dxos/util';
+import { MaybePromise, Provider } from '@dxos/util';
 
 import { TestBuilder } from '../testing';
 import { IFrameProxyRuntime, WorkerRuntime } from '../vault';
 
 chai.use(chaiAsPromised);
 
-const setup = (getConfig: () => MaybePromise<Config>) => {
+const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   const workerRuntime = new WorkerRuntime(getConfig);
 
   const systemPorts = createLinkedPorts();
@@ -30,6 +30,7 @@ const setup = (getConfig: () => MaybePromise<Config>) => {
     shellPort: shellPorts[1]
   });
   const clientProxy = new IFrameProxyRuntime({
+    config: getConfig,
     systemPort: systemPorts[0],
     windowAppPort: proxyWindowPorts[0],
     workerAppPort: workerProxyPorts[0],
@@ -58,8 +59,9 @@ describe('Shared worker', () => {
     });
 
     const promise = Promise.all([
-      workerRuntime.start().catch(() => {}), // This error should be propagated to client.initialize() call.
-      clientProxy.open('*')
+      // This error should be propagated to client.initialize() call.
+      workerRuntime.start().catch(() => {}),
+      clientProxy.open('*').catch(() => {})
     ]);
 
     await expect(client.initialize()).to.be.rejectedWith('Test error');
