@@ -60,7 +60,7 @@ export namespace Remark {
         let symbol = findReflection(pkage, (node) => node.name === symbolName);
         if (!symbol) {
           console.warn(
-            `problem in file ${vfile.path}: symbol ${symbol} of package ${packageName} not found while processing apidoc directive`
+            `problem in file ${vfile.path}: symbol ${symbolName} of package ${packageName} not found while processing apidoc directive`
           );
           return tree;
         }

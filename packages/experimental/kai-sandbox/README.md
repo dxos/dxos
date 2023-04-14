@@ -1,11 +1,11 @@
-# @dxos/react-client
+# @dxos/kai-sandbox
 
-React client API
+Frame sandbox
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-client
+pnpm i @dxos/kai-sandbox
 ```
 
 ## Usage
@@ -41,7 +41,7 @@ createRoot(document.getElementById('root')!)
 
 - [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
 - [📖 Developer Guide](https://docs.dxos.org/guide/echo/react)
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/react-client)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/kai-sandbox)
 
 ## Storybooks
 
@@ -53,11 +53,10 @@ The [Space Invitation Story](./stories/space-invitations.stories.tsx) demonstrat
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
-- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
+- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
 
 ## Contributions
 
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
 
 License: [MIT](./LICENSE) Copyright 2022 © DXOS
