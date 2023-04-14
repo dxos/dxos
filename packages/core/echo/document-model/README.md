@@ -1,6 +1,6 @@
 # @dxos/document-model
 
-ECHO document model.
+ECHO object model.
 
 ## Installation
 
