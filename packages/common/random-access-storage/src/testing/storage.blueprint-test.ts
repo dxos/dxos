@@ -248,7 +248,10 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
     });
 
     test('reset', async () => {
-      if (testGroupName === StorageType.RAM) {
+      if (
+        testGroupName === StorageType.RAM || // RAM storage does not persist data.
+        testGroupName === StorageType.IDB // IDB is blocked by testing IDB.
+      ) {
         return;
       }
       const filename = randomText();
