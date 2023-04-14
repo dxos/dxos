@@ -6,14 +6,14 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-
 import { AppManager } from './app-manager';
 
 test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
+  // TODO(wittjosiah): Currently not running in Firefox.
+  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser, browserName }) => {
     host = new AppManager(browser, true);
 
@@ -60,7 +60,6 @@ test.describe('Basic test', () => {
         host.shell.getAuthCode(),
         guest.shell.acceptSpaceInvitation(invitationCode)
       ]);
-      await sleep(1000);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
       await host.page.getByRole('link').last().click();
