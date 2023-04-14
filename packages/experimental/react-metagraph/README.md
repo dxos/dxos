@@ -1,11 +1,11 @@
-# @dxos/chess-app
+# @dxos/react-metagraph
 
-Chess app.
+React Metagraph API
 
 ## Installation
 
 ```bash
-pnpm i @dxos/chess-app
+pnpm i @dxos/react-metagraph
 ```
 
 ## DXOS Resources
