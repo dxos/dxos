@@ -1,36 +1,27 @@
-# @dxos/react-appkit
+# @dxos/client
 
-DXOS opinions for building React applications
+Core DXOS Client API.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-appkit
+pnpm i @dxos/client
 ```
 
 ## Usage
 
-### Sentry & Telemetry
-
-Put the following in the entrypoint of an app:
+Create a client object like this:
 
 ```ts
-import { initializeAppTelemetry } from "@dxos/react-appkit/telemetry";
-initializeAppTelemetry(namespace, new Config(Defaults()));
+import { Client } from "@dxos/client";
+const client = new Client();
 ```
 
-Config is required to provide environment variables to the initialization.
-It reads from the following variables:
+## Documentation
 
-- DX_SENTRY_DESTINATION
-- DX_TELEMETRY_API_KEY
-- DX_IPDATA_API_KEY
-
-To hook up navigation and click telemetry events in an app, with the react-router context:
-
-```ts
-useTelemetry({ namespace });
-```
+- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
+- [📖 Developer Guide](https://docs.dxos.org/guide/echo/)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 
 ## DXOS Resources
 
