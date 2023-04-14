@@ -2,7 +2,7 @@
   "name": "@dxos/document-model",
   "version": "0.1.37",
   "private": false,
-  "description": "ECHO document model.",
+  "description": "ECHO object model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

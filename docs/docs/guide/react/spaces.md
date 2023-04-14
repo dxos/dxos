@@ -79,18 +79,6 @@ Arguments:
 `options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
 :::
 
-:::apidoc[@dxos/react-client.useOrCreateFirstSpace]
-### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L30)
-
-Returns the first space in the current spaces array. If none exist,  `undefined`
-will be returned at first, then the hook will re-run and return a space once
-it has been created. Requires a ClientProvider somewhere in the parent tree.
-
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
-
-Arguments: none
-:::
-
 ### Example
 
 ```tsx{13,16,20} file=./snippets/use-spaces.tsx#L5-
