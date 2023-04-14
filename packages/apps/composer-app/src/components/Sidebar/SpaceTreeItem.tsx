@@ -9,7 +9,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { SpaceState } from '@dxos/client';
 import { Tooltip, useFileDownload } from '@dxos/react-appkit';
-import { observer, ShellLayout, Space, useIdentity, useObservable, useQuery } from '@dxos/react-client';
+import { useMulticastObservable } from '@dxos/react-async';
+import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import {
   Button,
   defaultDisabled,
@@ -46,7 +47,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
   const download = useFileDownload();
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
-  const spaceSate = useObservable(space.state);
+  const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
 
   const handleCreate = useCallback(async () => {
