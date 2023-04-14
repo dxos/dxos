@@ -48,8 +48,6 @@ export const ManageSpacePage = ({
     }
   }, [space]);
 
-  const handleRemove = useCallback((id: string) => space?.removeInvitation(id), [space]);
-
   return (
     <>
       <HeadingWithActions
@@ -75,7 +73,7 @@ export const ManageSpacePage = ({
       <InvitationList
         invitations={invitations}
         createInvitationUrl={createInvitationUrl}
-        onClickRemove={handleRemove}
+        onClickRemove={(invitation) => invitation.cancel()}
       />
     </>
   );
