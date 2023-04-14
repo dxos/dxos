@@ -185,7 +185,10 @@ parameters:
 workflows:
   default:
     when:
-      equal: [ webhook, << pipeline.trigger_source >> ]
+      not:
+        or:
+          - << pipeline.parameters.run_daily_workflow >>
+          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - check:
           context:
@@ -199,7 +202,10 @@ workflows:
 
   deploy:
     when:
-      equal: [ webhook, << pipeline.trigger_source >> ]
+      not:
+        or:
+          - << pipeline.parameters.run_daily_workflow >>
+          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - publish:
           filters:
