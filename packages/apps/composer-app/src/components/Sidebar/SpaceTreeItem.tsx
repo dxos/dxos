@@ -79,7 +79,12 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     spaceKey === abbreviateKey(space.key) && setOpen(true);
   }, [spaceKey]);
 
-  const spaceDisplayName = (space.properties.name?.length ?? 0) > 0 ? space.properties.name : t('untitled space title');
+  const spaceDisplayName =
+    (space.properties.name?.length ?? 0) > 0
+      ? space.properties.name
+      : disabled
+      ? t('loading space title')
+      : t('untitled space title');
 
   return (
     <TreeItem
