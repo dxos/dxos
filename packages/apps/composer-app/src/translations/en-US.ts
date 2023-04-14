@@ -9,6 +9,7 @@ export const composer = {
   'create document label': 'Create new document',
   'untitled document title': 'Untitled document',
   'untitled space title': 'Untitled space',
+  'loading space title': 'Loading space…',
   'first run message': 'Choose a document or create one to get started',
   'loading document message': 'Loading document…',
   'no spaces message': 'Create or join a space to start creating documents',
