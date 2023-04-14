@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.39](https://github.com/dxos/dxos/compare/v0.1.38...v0.1.39) (2023-04-14)
+
+
+### Bug Fixes
+
+* Ice config ([#3032](https://github.com/dxos/dxos/issues/3032)) ([d59204f](https://github.com/dxos/dxos/commit/d59204ff2fea165aeea933151cfb30df96df8df9))
+
 ## [0.1.38](https://github.com/dxos/dxos/compare/v0.1.37...v0.1.38) (2023-04-14)
 
 
