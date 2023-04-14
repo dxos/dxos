@@ -7,15 +7,19 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { SpaceState } from '@dxos/client';
 import { Tooltip, useFileDownload } from '@dxos/react-appkit';
+import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import {
   Button,
+  defaultDisabled,
   Dialog,
   DropdownMenu,
   DropdownMenuItem,
   getSize,
   Input,
+  mx,
   TooltipContent,
   TooltipRoot,
   TooltipTrigger,
@@ -43,6 +47,8 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const hasActiveDocument = !!(docKey && documents.map(({ id }) => id).indexOf(docKey) >= 0);
   const download = useFileDownload();
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const spaceSate = useMulticastObservable(space.state);
+  const disabled = spaceSate !== SpaceState.READY;
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new ComposerDocument());
@@ -73,7 +79,12 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     spaceKey === abbreviateKey(space.key) && setOpen(true);
   }, [spaceKey]);
 
-  const spaceDisplayName = (space.properties.name?.length ?? 0) > 0 ? space.properties.name : t('untitled space title');
+  const spaceDisplayName =
+    (space.properties.name?.length ?? 0) > 0
+      ? space.properties.name
+      : disabled
+      ? t('loading space title')
+      : t('untitled space title');
 
   return (
     <TreeItem
@@ -81,7 +92,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
       open={open}
       onOpenChange={setOpen}
       slots={{
-        root: { className: 'mbe-2' },
+        root: { className: mx('mbe-2', disabled && defaultDisabled), ...(disabled && { 'aria-disabled': true }) },
         ...(hasActiveDocument &&
           !open && { openTriggerIcon: { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' } })
       }}
