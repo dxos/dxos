@@ -1,11 +1,9 @@
-# @dxos/chess-app
-
-Chess app.
+# @dxos/messaging-monitor
 
 ## Installation
 
 ```bash
-pnpm i @dxos/chess-app
+pnpm i @dxos/messaging-monitor
 ```
 
 ## DXOS Resources

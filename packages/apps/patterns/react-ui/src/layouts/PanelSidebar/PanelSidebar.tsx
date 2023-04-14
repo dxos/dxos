@@ -75,7 +75,21 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
 
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
-      <DialogPrimitive.Root open={domShow} modal={!isLg}>
+      <DialogPrimitive.Root open={domShow} modal={false}>
+        {/* todo(thure): Why does DialogPrimitive.Overlay not render any element here? */}
+        {!isLg && (
+          <div
+            role='none'
+            className={mx(
+              defaultOverlay,
+              'transition-opacity duration-200 ease-in-out',
+              transitionShow ? 'opacity-100' : 'opacity-0',
+              domShow ? 'block' : 'hidden'
+            )}
+            onClick={internalHide}
+          />
+        )}
+
         {/* Sidebar. */}
         <DialogPrimitive.Content
           onOpenAutoFocus={(event) => isLg && event.preventDefault()}
@@ -91,18 +105,6 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
           {slots?.content?.children}
         </DialogPrimitive.Content>
-
-        {/* TODO(burdon): Simple comment required. */}
-        {!isLg && (
-          <DialogPrimitive.Overlay
-            className={mx(
-              defaultOverlay,
-              'transition-opacity duration-200 ease-in-out',
-              transitionShow ? 'opacity-100' : 'opacity-0'
-            )}
-            onClick={internalHide}
-          />
-        )}
 
         {/* Main content. */}
         <div
