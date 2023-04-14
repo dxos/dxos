@@ -30,7 +30,15 @@ export type IFrameHostRuntimeParams = {
  */
 export class IFrameHostRuntime {
   private readonly _configProvider: Config | Provider<Promise<Config>>;
-  private readonly _transportFactory = createWebRTCTransportFactory();
+  private readonly _transportFactory = createWebRTCTransportFactory({
+    iceServers: [
+      { urls: 'stun:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'turn:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'stun:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'turn:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' }
+    ]
+  });
+
   private readonly _ready = new Trigger<Error | undefined>();
 
   private readonly _appPort: RpcPort;

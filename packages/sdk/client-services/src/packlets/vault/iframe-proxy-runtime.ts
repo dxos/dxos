@@ -27,7 +27,14 @@ export class IFrameProxyRuntime {
   private readonly _shellPort?: RpcPort;
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
   private readonly _shellRuntime?: ShellRuntimeImpl;
-  private readonly _transportService = new WebRTCTransportService();
+  private readonly _transportService = new WebRTCTransportService({
+    iceServers: [
+      { urls: 'stun:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'turn:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'stun:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
+      { urls: 'turn:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' }
+    ]
+  });
 
   constructor({ systemPort, workerAppPort, windowAppPort, shellPort }: IFrameProxyRuntimeParams) {
     this._systemPort = systemPort;
