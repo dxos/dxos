@@ -1,11 +1,11 @@
-# @dxos/chess-app
+# @dxos/kai-types
 
-Chess app.
+Data types defined by Kai and experimental bots.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/chess-app
+pnpm i @dxos/kai-types
 ```
 
 ## DXOS Resources
