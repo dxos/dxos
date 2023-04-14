@@ -322,24 +322,38 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
         identity: () => null
       }),
       resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
-        halo: (context, event) =>
-          event.type === 'resetHaloInvitation'
-            ? {
-                ...context.halo,
-                invitation: undefined,
-                invitationObservable: undefined,
-                invitationSubscribable: undefined
-              }
-            : context.halo,
-        space: (context, event) =>
-          event.type === 'resetSpaceInvitation'
-            ? {
-                ...context.space,
-                invitation: undefined,
-                invitationObservable: undefined,
-                invitationSubscribable: undefined
-              }
-            : context.space
+        halo: (context, event) => {
+          if (event.type !== 'resetHaloInvitation') {
+            return context.halo;
+          }
+
+          if (context.halo.invitationObservable) {
+            void context.halo.invitationObservable.cancel();
+          }
+
+          return {
+            ...context.halo,
+            invitation: undefined,
+            invitationObservable: undefined,
+            invitationSubscribable: undefined
+          };
+        },
+        space: (context, event) => {
+          if (event.type !== 'resetSpaceInvitation') {
+            return context.space;
+          }
+
+          if (context.space.invitationObservable) {
+            void context.space.invitationObservable.cancel();
+          }
+
+          return {
+            ...context.space,
+            invitation: undefined,
+            invitationObservable: undefined,
+            invitationSubscribable: undefined
+          };
+        }
       }),
       setInvitation: assign<JoinMachineContext, SetInvitationEvent>({
         halo: (context, event) =>
@@ -397,6 +411,7 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
     },
     [client]
   );
+
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
@@ -414,6 +429,7 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
     },
     [client]
   );
+
   return useMachine(joinMachine, {
     ...options,
     actions: {

@@ -325,11 +325,35 @@ message CancelInvitationRequest {
   string invitation_id = 1;
 }
 
+message InvitationMethod {
+  oneof kind {
+    Invitation created = 1;
+    Invitation accepted = 2;
+  }
+}
+
+message QueryInvitationsResponse {
+  enum Action {
+    ADDED = 0;
+    REMOVED = 1;
+  }
+
+  enum Type {
+    CREATED = 0;
+    ACCEPTED = 1;
+  }
+
+  Action action = 1;
+  Type type = 2;
+  repeated Invitation invitations = 3;
+}
+
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
+  rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
 }
 
 //
