@@ -55,7 +55,9 @@ Examples of ways to run different test workloads:
 | `pnpm nx test network-manager --tags flaky` | Runs the tests for `network-manager` which were tagged as flaky |
 | `pnpm nx test echo-db --watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
 | `pnpm nx test echo-db --environments nodejs,webkit` | Runs the tests for `echo-db` in `nodejs` and `webkit` environments |
+| `pnpm nx test echo-db --inspect` | Attach to the VSCode debugger |
 | `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
+| `pnpm nx e2e halo-app --inspect` | Runs tests with playwright inspector |
 
 ## Adding new dependencies
 
@@ -133,6 +135,29 @@ Packages may also declare scripts in their `package.json` `scripts` field as is 
 The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
 In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
 
+## CI
+
+### CircleCI
+- The main CI engine for the repo is CircleCI
+- The config for CircleCI can be found at `.circleci/config.yml`
+
+#### Running jobs locally
+
+- CircleCI has a cli which can be used to validate the config as well as to run jobs locally
+- Install instructions can be found here: https://circleci.com/docs/local-cli/
+- Here is a relevant tutorial about local execution: https://circleci.com/blog/local-pipeline-development/
+
+The `check` job can be run as such:
+
+```bash
+circleci local execute check
+```
+
+### Github Actions
+- Github Actions are used for compatibility purposes
+- Release Please publishes a Github action, plus releases are published to Github, so release creation is done as an action
+- Likewise PR title validation is an existing Github action
+
 ## Branch Diagram
 
 ![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
@@ -163,7 +188,21 @@ Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix
 
 Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
 
-### Helpful aliases
+### ESLint errors in vscode
+
+To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
+
+```json
+  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
+```
+
+Alternatively to autofix all lint errors on save add the following config:
+
+```json
+  "editor.codeActionsOnSave": {"source.fixAll": true}
+```
+
+## Helpful aliases
 
 ```bash
 alias px="pnpm -w nx"
@@ -175,15 +214,7 @@ More custom shell aliases can be included in your shell config via:
 source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 ```
 
-### ESLint errors in vscode
-
-To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
-
-```json
-  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
-```
-
-### Storybook
+## Storybook
 
 ```
 Cannot GET /` when running 'pnpm run storybook'
@@ -197,7 +228,7 @@ pnpm run storybook --no-manager-cache
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
 
-### Mobile development
+## Mobile development
 
 Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough. For example, you may want other devices on your local network to be able to access your dev server (particularly useful when debugging issues on mobile devices). In this case you would be accessing the app via the ip address of your host machine rather than `localhost`. IP addresses are not a secure context unless they are served with https and a certificate. The apps in this repo are setup to serve the dev server with https when `HTTPS=true`. What follows are instructions on how to setup the certificate for your devices to make this work as expected:
 
@@ -223,7 +254,7 @@ Modern browsers treat `localhost` as a secure context, allowing secure apis such
 
 Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there. Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
 
-### Proxying using https://srv.us
+## Proxying using https://srv.us
 
 `srv.us` is easier to setup but will lead to longer loading times.
 
@@ -234,7 +265,7 @@ Given this, the recommended setup is to run `serve` from the repo root and keep 
 
 > NOTE: The amount of files that are needed to be loaded (more then 800 in dev mode) is causing srv.us to bottlenek. On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
 
-### Creating and running Bots
+## Creating and running Bots
 
 NOTE: Bots are rapidly evolving experimental features with limited documentation.
 
