@@ -79,14 +79,19 @@ export class WebFS implements Storage {
   private async _delete(path: string): Promise<void> {
     await Promise.all(
       Array.from(this._getFiles(path)).map(async ([path, file]) => {
-        await file.destroy().catch((err: any) => log.catch(err));
+        await file.destroy().catch((err: any) => log.warn(err));
         this._files.delete(path);
       })
     );
   }
 
   async reset() {
-    await this._delete('');
+    await this._initialize();
+    for await (const filename of await (this._root as any).keys()) {
+      assert(typeof filename === 'string');
+      this._files.delete(filename);
+      await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) => log.warn(err));
+    }
     this._root = undefined;
   }
 

@@ -5,6 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { File, Storage, StorageType } from '../common';
@@ -243,6 +244,44 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
         await file.write(0, buffer);
         await file.del(0, -1);
         expect((await file.stat()).size).toBe(buffer.length);
+      }
+    });
+
+    test('reset', async () => {
+      if (testGroupName === StorageType.RAM) {
+        return;
+      }
+      const filename = randomText();
+      const buffer = Buffer.from(randomText());
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        await file.write(0, buffer);
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        expect(await file.read(0, buffer.length)).toStrictEqual(buffer);
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        await asyncTimeout(storage.reset(), 1_000);
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        await expect(async () => {
+          await file.read(0, buffer.length);
+        }).rejects.toThrow();
       }
     });
 
