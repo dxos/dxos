@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "sass:map";
 @import './tailwind-colors.scss';
 @import './palette.scss';
@@ -10,7 +11,13 @@
 }
 
 #message-container .message {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+html[data-theme=light] {
+  .hint-container {
+    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  }
 }
 
 /**
@@ -154,7 +161,12 @@ html[data-theme=dark] {
  */
 
 code {
-  background-color: $zinc-200;
+  background-color: color.adjust($zinc-200, $lightness: 3%);
+}
+
+a code, p a code {
+  color: $emerald-500;
+  font-weight: 600;
 }
 
 div[class^="language-"] {
@@ -175,6 +187,14 @@ div[class^="language-error"] code {
 // Code highlight v height adjustment for font
 div[class*=language-] .highlight-lines {
   line-height: 1.376;
+}
+
+div[class*=language-] > button.copy-code-button:not(.fancy) {
+  top: auto;
+  bottom: 0;
+  right: 0;
+  margin: 0.5em;
+  border-radius: 0.25em;
 }
 
 html[data-theme=light] {
