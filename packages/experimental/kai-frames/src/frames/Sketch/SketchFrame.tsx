@@ -4,7 +4,7 @@
 
 import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
@@ -49,8 +49,31 @@ export const SketchFrame = observer(() => {
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
 
-  const { space, objectId } = useFrameContext();
+  const { space, frame, objectId, fullscreen, onStateChange } = useFrameContext();
   const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
+
+  // Fullscreen
+  useEffect(() => {
+    const params = new URLSearchParams(document.location.search);
+    const fullscreen = !!params.get('frame.fullscreen');
+    if(fullscreen) {
+      onStateChange?.({ fullscreen: true })
+    }
+  }, [])
+
+  // Auto-create
+  useEffect(() => {
+    if(space && !sketch && fullscreen) {
+      const obj = space.db.add(new Sketch())
+
+      // TODO(dmaretskyi): `setTimeout`, otherwise react-router freaks out.
+      setTimeout(() => {
+        onStateChange?.({ space, frame, objectId: obj.id }) // TODO(dmaretskyi): `space` and `frame` is required for navigation
+      })
+    }
+  }, [space, fullscreen])
+
+  // Rendering
   useSubscription(() => {
     if (sketch) {
       setTimeout(async () => {
@@ -59,6 +82,7 @@ export const SketchFrame = observer(() => {
       });
     }
   }, [sketch]);
+  
   if (!sketch) {
     return null;
   }
