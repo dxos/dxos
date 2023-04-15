@@ -25,12 +25,12 @@ const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }:
 });
 
 const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath =>
-  ({
-    drawMode: true,
-    strokeWidth: width,
-    strokeColor: color,
-    paths: points
-  } as CanvasPath);
+({
+  drawMode: true,
+  strokeWidth: width,
+  strokeColor: color,
+  paths: points
+} as CanvasPath);
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
@@ -56,14 +56,15 @@ export const SketchFrame = observer(() => {
   useEffect(() => {
     const params = new URLSearchParams(document.location.search);
     const fullscreen = !!params.get('frame.fullscreen');
-    if(fullscreen) {
+    if (fullscreen) {
       onStateChange?.({ fullscreen: true })
     }
   }, [])
 
   // Auto-create
   useEffect(() => {
-    if(space && !sketch && fullscreen) {
+    console.log({ space, sketch, fullscreen })
+    if (space && !sketch && fullscreen) {
       const obj = space.db.add(new Sketch())
 
       // TODO(dmaretskyi): `setTimeout`, otherwise react-router freaks out.
@@ -82,7 +83,7 @@ export const SketchFrame = observer(() => {
       });
     }
   }, [sketch]);
-  
+
   if (!sketch) {
     return null;
   }
@@ -145,55 +146,75 @@ export const SketchFrame = observer(() => {
   // https://www.npmjs.com/package/react-sketch-canvas
   // https://www.npmjs.com/package/react-color
 
-  return (
-    <div className='flex flex-col bs-full'>
-      <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
-        <ReactSketchCanvas
-          ref={canvasRef}
-          className='shadow-1'
-          style={{}} // Replace defaults.
-          width={`${dimensions.width}px`}
-          height={`${dimensions.height}px`}
-          strokeWidth={strokeWidth}
-          strokeColor={strokeColor}
-          withTimestamp={true}
-          onStroke={handleStroke}
-        />
-      </div>
-
-      {/* TODO(burdon): Vertical unless mobile. */}
-      <div className='flex shrink-0 p-2'>
-        <div className='flex items-center mr-4'>
-          <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
-        </div>
-
-        <div className='flex items-center'>
-          {sizes.map(({ weight, width }, i) => (
-            <div key={i} onClick={() => setStrokeWidth(width)}>
-              <ScribbleLoop
-                weight={weight}
-                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-selection-bg')}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className='flex-1' />
-
-        <div className='flex items-center'>
-          <Button variant='ghost' title='Clear' onClick={handleClear}>
-            <Trash className={getSize(6)} />
-          </Button>
-          <Button variant='ghost' title='Download' onClick={handleDownload}>
-            <DownloadSimple className={getSize(6)} />
-          </Button>
-          <Button variant='ghost' title='Upload to IPFS' onClick={handleUpload}>
-            <UploadSimple className={getSize(6)} />
-          </Button>
+  if (fullscreen) {
+    return (
+      <div className='flex flex-col bs-full'>
+        <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
+          <ReactSketchCanvas
+            ref={canvasRef}
+            // className='shadow-1'
+            style={{}} // Replace defaults.
+            width={`100%`}
+            height={`100%`}
+            strokeWidth={strokeWidth}
+            strokeColor={strokeColor}
+            withTimestamp={true}
+            onStroke={handleStroke}
+          />
         </div>
       </div>
-    </div>
-  );
+    )
+  } else {
+    return (
+      <div className='flex flex-col bs-full'>
+        <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
+          <ReactSketchCanvas
+            ref={canvasRef}
+            className='shadow-1'
+            style={{}} // Replace defaults.
+            width={`${dimensions.width}px`}
+            height={`${dimensions.height}px`}
+            strokeWidth={strokeWidth}
+            strokeColor={strokeColor}
+            withTimestamp={true}
+            onStroke={handleStroke}
+          />
+        </div>
+
+        {/* TODO(burdon): Vertical unless mobile. */}
+        <div className='flex shrink-0 p-2'>
+          <div className='flex items-center mr-4'>
+            <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
+          </div>
+
+          <div className='flex items-center'>
+            {sizes.map(({ weight, width }, i) => (
+              <div key={i} onClick={() => setStrokeWidth(width)}>
+                <ScribbleLoop
+                  weight={weight}
+                  className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-selection-bg')}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className='flex-1' />
+
+          <div className='flex items-center'>
+            <Button variant='ghost' title='Clear' onClick={handleClear}>
+              <Trash className={getSize(6)} />
+            </Button>
+            <Button variant='ghost' title='Download' onClick={handleDownload}>
+              <DownloadSimple className={getSize(6)} />
+            </Button>
+            <Button variant='ghost' title='Upload to IPFS' onClick={handleUpload}>
+              <UploadSimple className={getSize(6)} />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 });
 
 export default SketchFrame;
