@@ -88,7 +88,6 @@ export class WebFS implements Storage {
   async reset() {
     await this._initialize();
     for await (const filename of await (this._root as any).keys()) {
-      assert(typeof filename === 'string');
       this._files.delete(filename);
       await this._root!.removeEntry(filename, { recursive: true }).catch((err: any) => log.warn(err));
     }
