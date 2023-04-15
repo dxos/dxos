@@ -9,12 +9,11 @@ import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
 import { File, Sketch } from '@dxos/kai-types';
-import { data, observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
+import { observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';
 import { KioskInvitationQr } from '../../components';
-import { sleep } from '@dxos/async';
+import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
@@ -27,12 +26,12 @@ const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }:
 });
 
 const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath =>
-({
-  drawMode: true,
-  strokeWidth: width,
-  strokeColor: color,
-  paths: points
-} as CanvasPath);
+  ({
+    drawMode: true,
+    strokeWidth: width,
+    strokeColor: color,
+    paths: points
+  } as CanvasPath);
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
@@ -50,7 +49,7 @@ export const SketchFrame = observer(() => {
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
-  
+
   const { space, frame, objectId, fullscreen, onStateChange } = useFrameContext();
   const members = useMembers(space?.key);
 
@@ -61,9 +60,9 @@ export const SketchFrame = observer(() => {
     const params = new URLSearchParams(document.location.search);
     const fullscreen = !!params.get('frame.fullscreen');
     if (fullscreen) {
-      onStateChange?.({ fullscreen: true })
+      onStateChange?.({ fullscreen: true });
     }
-  }, [])
+  }, []);
 
   // Auto-create
   useEffect(() => {
@@ -72,10 +71,10 @@ export const SketchFrame = observer(() => {
 
       // TODO(dmaretskyi): `setTimeout`, otherwise react-router freaks out.
       setTimeout(() => {
-        onStateChange?.({ space, frame, objectId: obj.id }) // TODO(dmaretskyi): `space` and `frame` is required for navigation
-      })
+        onStateChange?.({ space, frame, objectId: obj.id }); // TODO(dmaretskyi): `space` and `frame` is required for navigation
+      });
     }
-  }, [space, fullscreen])
+  }, [space, fullscreen]);
 
   // Rendering
   useSubscription(() => {
@@ -148,7 +147,7 @@ export const SketchFrame = observer(() => {
 
   const handleReset = async () => {
     window.location.reload();
-  }
+  };
 
   // TODO(burdon): Erase mode: eraseMode.
   // TODO(burdon): Undo.
@@ -163,8 +162,8 @@ export const SketchFrame = observer(() => {
             ref={canvasRef}
             // className='shadow-1'
             style={{}} // Replace defaults.
-            width={`100%`}
-            height={`100%`}
+            width={'100%'}
+            height={'100%'}
             strokeWidth={strokeWidth}
             strokeColor={strokeColor}
             withTimestamp={true}
@@ -180,17 +179,14 @@ export const SketchFrame = observer(() => {
 
         <div className='fixed bottom-0 z-10 overflow-hidden w-full pointer-events-none flex flex-row'>
           {members
-            .filter(member => member.presence === SpaceMember.PresenceState.ONLINE)
+            .filter((member) => member.presence === SpaceMember.PresenceState.ONLINE)
             .slice(1)
-            .map(member => (
-              <div 
-                className='w-2 h-2 m-2 bg-black rounded-full'
-                key={member.identity.identityKey.toHex()}
-              />
-          ))}
+            .map((member) => (
+              <div className='w-2 h-2 m-2 bg-black rounded-full' key={member.identity.identityKey.toHex()} />
+            ))}
         </div>
       </div>
-    )
+    );
   } else {
     return (
       <div className='flex flex-col bs-full'>
