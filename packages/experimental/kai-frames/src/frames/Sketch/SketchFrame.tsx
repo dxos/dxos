@@ -4,12 +4,12 @@
 
 import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
 import { File, Sketch } from '@dxos/kai-types';
-import { observer } from '@dxos/react-client';
+import { observer, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';
@@ -51,7 +51,7 @@ export const SketchFrame = observer(() => {
 
   const { space, objectId } = useFrameContext();
   const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
-  useEffect(() => {
+  useSubscription(() => {
     if (sketch) {
       setTimeout(async () => {
         await canvasRef.current.resetCanvas();
