@@ -3292,6 +3292,7 @@ importers:
       monaco-editor: ^0.25.0
       node-fetch: ^2.6.0
       postcss: ^8.4.21
+      qrcode.react: ^3.1.0
       react: ^18.2.0
       react-big-calendar: ^1.5.2
       react-color: ^2.19.3
@@ -3361,6 +3362,7 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.isequal: 4.5.0
       node-fetch: 2.6.7
+      qrcode.react: 3.1.0_react@18.2.0
       react: 18.2.0
       react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
       react-color: 2.19.3_react@18.2.0

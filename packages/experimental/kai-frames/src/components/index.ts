@@ -4,3 +4,4 @@
 
 export * from './FilePreview';
 export * from './Presenter';
+export * from './KioskInvitationQr';

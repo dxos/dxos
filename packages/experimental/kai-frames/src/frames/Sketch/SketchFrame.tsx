@@ -9,10 +9,12 @@ import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
 import { File, Sketch } from '@dxos/kai-types';
-import { observer, useSubscription } from '@dxos/react-client';
+import { data, observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';
+import { KioskInvitationQr } from '../../components';
+import { sleep } from '@dxos/async';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
 
@@ -48,8 +50,10 @@ export const SketchFrame = observer(() => {
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
-
+  
   const { space, frame, objectId, fullscreen, onStateChange } = useFrameContext();
+  const members = useMembers(space?.key);
+
   const sketch = objectId ? space!.db.getObjectById<Sketch>(objectId) : undefined;
 
   // Fullscreen
@@ -63,9 +67,8 @@ export const SketchFrame = observer(() => {
 
   // Auto-create
   useEffect(() => {
-    console.log({ space, sketch, fullscreen })
     if (space && !sketch && fullscreen) {
-      const obj = space.db.add(new Sketch())
+      const obj = space.db.query(Sketch.filter()).objects[0] ?? space.db.add(new Sketch());
 
       // TODO(dmaretskyi): `setTimeout`, otherwise react-router freaks out.
       setTimeout(() => {
@@ -123,7 +126,9 @@ export const SketchFrame = observer(() => {
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
 
   const handleClear = () => {
-    sketch!.paths = [];
+    // TODO(dmaretskyi): Assigning an array is broken in ECHO.
+    sketch!.paths.splice(0, sketch!.paths.length);
+    // sketch!.paths = [];
   };
 
   const handleDownload = async () => {
@@ -141,6 +146,10 @@ export const SketchFrame = observer(() => {
     await space?.db.add(file);
   };
 
+  const handleReset = async () => {
+    window.location.reload();
+  }
+
   // TODO(burdon): Erase mode: eraseMode.
   // TODO(burdon): Undo.
   // https://www.npmjs.com/package/react-sketch-canvas
@@ -148,7 +157,7 @@ export const SketchFrame = observer(() => {
 
   if (fullscreen) {
     return (
-      <div className='flex flex-col bs-full'>
+      <div className='relative flex flex-col bs-full' onClick={handleClear} onDoubleClick={handleReset}>
         <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
           <ReactSketchCanvas
             ref={canvasRef}
@@ -161,6 +170,24 @@ export const SketchFrame = observer(() => {
             withTimestamp={true}
             onStroke={handleStroke}
           />
+        </div>
+
+        <div className='fixed z-10 flex flex-col h-full flex-1 items-center place-items-center justify-center overflow-auto overflow-hidden w-full opacity-25 pointer-events-none'>
+          <div className='flex w-1/2'>
+            <KioskInvitationQr space={space} />
+          </div>
+        </div>
+
+        <div className='fixed bottom-0 z-10 overflow-hidden w-full pointer-events-none flex flex-row'>
+          {members
+            .filter(member => member.presence === SpaceMember.PresenceState.ONLINE)
+            .slice(1)
+            .map(member => (
+              <div 
+                className='w-2 h-2 m-2 bg-black rounded-full'
+                key={member.identity.identityKey.toHex()}
+              />
+          ))}
         </div>
       </div>
     )
