@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ConfigProto } from '@dxos/config';
 import { TableColumn, Table } from '@dxos/mosaic';
-import { Button, getSize } from '@dxos/react-components';
+import { Button, CompactQrCode, getSize } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
@@ -47,9 +47,17 @@ const columns: (host: string | undefined) => TableColumn<Module>[] = (host) => {
       accessor: ({ name }) => name,
       width: 40,
       Cell: ({ value }: { value: string[] }) => (
-        <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
-          <ArrowSquareOut className={getSize(6)} />
-        </a>
+        <div className='flex items-center'>
+          <CompactQrCode
+            {...{
+              copyLabel: 'copy space invite code short label',
+              value: `https://${value}.${host}`
+            }}
+          />
+          <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
+            <ArrowSquareOut className={getSize(6)} />
+          </a>
+        </div>
       )
     },
     {

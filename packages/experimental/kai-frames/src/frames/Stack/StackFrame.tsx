@@ -28,7 +28,7 @@ export const StackFrame = observer(() => {
   };
 
   return (
-    <div className='flex flex-1 justify-center overflow-y-auto w-full'>
+    <div className='flex flex-1 w-full justify-center overflow-y-auto'>
       <div className='flex flex-col flex-1 md:max-w-[800px]'>
         <div className='flex flex-col w-full md:mt-4 pt-2 bg-paper-bg shadow-1'>
           {/* Editable title. */}
