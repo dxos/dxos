@@ -44,7 +44,12 @@ export const StackFooter: FC<StackRowProps & { id: string; ContextMenu?: FC<{ se
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   return (
-    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} {...rest}>
+    <StackRow
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(t), transition }}
+      {...rest}
+      showControls={true}
+    >
       <div className='h-[50vh]' />
     </StackRow>
   );

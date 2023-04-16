@@ -48,7 +48,7 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
       slots={{ content: { className: 'z-50', align: 'end' } }}
       trigger={
         <div className='flex'>
-          <Button variant='ghost' className='p-0'>
+          <Button variant='ghost' density='fine' className='p-0'>
             <DotsThreeCircle className={getSize(6)} />
           </Button>
         </div>

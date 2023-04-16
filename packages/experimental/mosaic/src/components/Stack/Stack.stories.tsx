@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretCircleRight, Plus, Trash, X } from '@phosphor-icons/react';
+import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { FC, useState } from 'react';
 
@@ -57,9 +57,9 @@ const StackSection: FC<{ section: Item<TestData>; onSelect?: () => void }> = ({ 
       <div className='flex text-sm text-zinc-600'>{section.data?.description}</div>
       <div className='flex text-xs text-zinc-500 items-center'>
         <div className='pr-2 cursor-pointer' onClick={() => onSelect?.()}>
-          <CaretCircleRight className={getSize(4)} />
+          <Info className={getSize(4)} />
         </div>
-        {section.id}
+        <span className='text-orange-800'>{section.id}</span>
       </div>
     </div>
   );
