@@ -128,7 +128,7 @@ export class InvitationHostExtension extends RpcExtension<{ InvitationHostServic
 
 type InvitationGuestExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
-  onOpen: () => void;
+  onOpen: (ctx: Context) => void;
   onError: (error: Error) => void;
 };
 
@@ -171,23 +171,23 @@ export class InvitationGuestExtension extends RpcExtension<{ InvitationHostServi
     await super.onOpen(context);
 
     try {
-      log.info('begin options')
+      log('begin options')
       await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));    
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log.info('end options')
+      log('end options')
       if(this._remoteOptions?.role !== Options.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, { expected: Options.Role.HOST, remoteOptions: this._remoteOptions });
       }
 
-      this._callbacks.onOpen();
+      this._callbacks.onOpen(this._ctx);
     } catch (err: any) {
-      log.info('openError', err)
+      log('openError', err)
       this._callbacks.onError(err);
     }
   }
 
   override async onClose() {
-    log.info('onClose')
+    log('onClose')
     await this._ctx.dispose();
   }
 }

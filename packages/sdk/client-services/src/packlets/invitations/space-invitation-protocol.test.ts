@@ -125,7 +125,7 @@ describe('services/space-invitations-protocol', () => {
     ).to.equal(2); // own halo + newly joined space.
   });
 
-  test.only('cancels invitation', async () => {
+  test('cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const hostConnected = new Trigger<Invitation>();

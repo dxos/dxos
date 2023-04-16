@@ -6,34 +6,26 @@ import assert from 'node:assert';
 
 import { PushStream, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AUTHENTICATION_CODE_LENGTH,
+  AuthenticatingInvitationObservable, AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY,
-  AuthenticatingInvitationObservable
+  ON_CLOSE_DELAY
 } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { schema, trace } from '@dxos/protocols';
+import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
-  AuthenticationRequest,
-  AuthenticationResponse,
-  IntroductionRequest,
-  IntroductionResponse,
-  AdmissionRequest,
-  AdmissionResponse,
-  InvitationHostService
+  AuthenticationResponse
 } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { InvitationProtocol } from './invitation-protocol';
-import { InvitationGuestExtension, InvitationHostExtension } from './invitation-extension';
 import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
+import { InvitationGuestExtension, InvitationHostExtension } from './invitation-extension';
+import { InvitationProtocol } from './invitation-protocol';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -274,12 +266,19 @@ export class InvitationsHandler {
 
     const authenticated = new Trigger<string>();
 
+    let currentState: Invitation.State;
     const stream = new PushStream<Invitation>();
+    const setState = (newData: Partial<Invitation>) => {
+      assert(newData.state !== undefined);
+      currentState = newData.state;
+      stream.next({ ...invitation, ...newData });
+    };
+
     const ctx = new Context({
       onError: (err) => {
         if (err instanceof TimeoutError) {
           log('timeout', { ...protocol.toJSON() });
-          stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+          setState({ state: Invitation.State.TIMEOUT });
         } else {
           log.warn('auth failed', err);
           stream.error(err);
@@ -297,7 +296,14 @@ export class InvitationsHandler {
       let connectionCount = 0;
 
       const extension = new InvitationGuestExtension({
-        onOpen: () => {
+        onOpen: (extensionCtx) => {
+          extensionCtx.onDispose(async () => {
+            log('extension disposed', { currentState });
+            if(currentState !== Invitation.State.SUCCESS) {
+              stream.error(new Error('Remote peer disconnected.'))
+            }
+          });
+
           scheduleTask(ctx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
@@ -313,7 +319,7 @@ export class InvitationsHandler {
               scheduleTask(ctx, () => ctx.raise(new TimeoutError(timeout)), timeout);
 
               log('connected', { ...protocol.toJSON() });
-              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
+              setState({ state: Invitation.State.CONNECTED });
 
               // 1. Introduce guest to host.
               log('introduce', { ...protocol.toJSON() });
@@ -330,11 +336,11 @@ export class InvitationsHandler {
               if (isAuthenticationRequired(invitation)) {
                 for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
                   log('guest waiting for authentication code...');
-                  stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
+                  setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
                   const authCode = await authenticated.wait({ timeout });
 
                   log('sending authentication request');
-                  stream.next({ ...invitation, state: Invitation.State.AUTHENTICATING });
+                  setState({ state: Invitation.State.AUTHENTICATING });
                   const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
                   if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
                     break;
@@ -351,7 +357,7 @@ export class InvitationsHandler {
                 }
               } else {
                 // Notify that introduction is complete even if auth is not required.
-                stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
+                setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
               }
 
               // 3. Send admission credentials to host (with local space keys).
@@ -364,12 +370,12 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              stream.next({ ...invitation, ...result, state: Invitation.State.SUCCESS });
+              setState({ ...result, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
-                stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+                setState({ state: Invitation.State.TIMEOUT });
               } else {
                 log('auth failed', err);
                 stream.error(err);
@@ -386,7 +392,7 @@ export class InvitationsHandler {
           }
           if (err instanceof TimeoutError) {
             log('timeout', { ...protocol.toJSON() });
-            stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+            setState({ state: Invitation.State.TIMEOUT });
           } else {
             log('auth failed', err);
             stream.error(err);
@@ -410,14 +416,14 @@ export class InvitationsHandler {
       });
       ctx.onDispose(() => swarmConnection.close());
 
-      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+      setState({ state: Invitation.State.CONNECTING });
     });
 
     const observable = new AuthenticatingInvitationObservable({
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        setState({ state: Invitation.State.CANCELLED });
         await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {
