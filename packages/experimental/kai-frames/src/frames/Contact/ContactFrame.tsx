@@ -18,12 +18,12 @@ const sort = ({ name: a1, email: a2 }: Contact, { name: b1, email: b2 }: Contact
 // TODO(burdon): Recent messages.
 // TODO(burdon): Tasks.
 export const ContactFrame = () => {
-  const selectedRef = useRef<HTMLDivElement>(null);
   const { space, frame, objectId } = useFrameContext();
   const router = useFrameRouter();
 
   const contacts = useQuery(space, Contact.filter()).sort(sort);
 
+  const selectedRef = useRef<HTMLDivElement>(null);
   const selected = objectId ? space?.db.getObjectById<Contact>(objectId) : undefined;
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth' });

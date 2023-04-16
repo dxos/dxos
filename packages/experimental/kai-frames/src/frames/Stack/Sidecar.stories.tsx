@@ -8,13 +8,13 @@ import { DocumentStack } from '@dxos/kai-types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { TestFrameContainer } from '../../testing';
-import StackFrame from './StackFrame';
+import Sidecar from './Sidecar';
 import { StackFrameRuntime } from './defs';
 
 import '@dxosTheme';
 
 export default {
-  component: StackFrame,
+  component: Sidecar,
   parameters: {
     layout: 'fullscreen'
   }
@@ -25,11 +25,8 @@ export default {
 export const Default = {
   decorators: [ClientSpaceDecorator()],
   render: () => (
-    <TestFrameContainer<DocumentStack>
-      onCreate={StackFrameRuntime.onCreate!}
-      slots={{ root: { className: 'w-[700px]' } }}
-    >
-      <StackFrame />
+    <TestFrameContainer<DocumentStack> onCreate={StackFrameRuntime.onCreate!}>
+      <Sidecar />
     </TestFrameContainer>
   )
 };

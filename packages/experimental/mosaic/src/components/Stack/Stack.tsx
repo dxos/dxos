@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, MouseSensor, useSensor } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { FC } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 
 import { DragEndEvent, mx } from '@dxos/react-components';
 
-import { StackFooter, StackSectionContainer } from './StackSection';
+import { StackFooter, DraggableStackRow } from './StackSection';
 import { StackSectionContext } from './context';
 
 const footerId = '__footer';
@@ -29,19 +29,40 @@ export type StackSlots = {
 
 export type StackProps<T extends SectionType> = {
   sections?: T[];
-  StackSection?: FC<{ section: T }>;
+  selected?: string;
+  onSelect?: (section?: T) => void;
+  StackSection?: FC<{ section: T; onSelect?: () => void }>;
   ContextMenu?: FC<{ section?: T }>;
+  ActionButton?: FC<{ section?: T }>;
   onMoveSection?: (id: string, from: number, to: number) => void;
+  showFooter?: boolean;
   slots?: StackSlots;
 };
 
 export const Stack = <T extends SectionType>({
   sections = [],
+  selected,
+  onSelect,
   StackSection = DefaultStackSection<T>,
   ContextMenu,
+  ActionButton,
   onMoveSection,
+  showFooter = true,
   slots = {}
 }: StackProps<T>) => {
+  const selectedRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected) {
+      selectedRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selected]);
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 8 // Move 10px before activating.
+    }
+  });
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (onMoveSection && active && over && active.id !== over.id) {
@@ -57,7 +78,7 @@ export const Stack = <T extends SectionType>({
 
   return (
     <div className={mx('flex flex-col overflow-x-hidden', slots?.root?.className)}>
-      <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
+      <DndContext modifiers={[restrictToVerticalAxis]} sensors={[mouseSensor]} onDragEnd={handleDragEnd}>
         <SortableContext
           strategy={verticalListSortingStrategy}
           items={[
@@ -71,24 +92,27 @@ export const Stack = <T extends SectionType>({
             {sections.map((section, i) => {
               return (
                 <StackSectionContext.Provider key={section.id} value={{ section }}>
-                  <StackSectionContainer
-                    section={section}
-                    ContextMenu={ContextMenu}
-                    slots={{
-                      root: {
-                        className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className)
-                      }
-                    }}
-                  >
-                    <div className={mx('flex flex-col w-full overflow-x-hidden')}>
-                      <StackSection section={section} />
-                    </div>
-                  </StackSectionContainer>
+                  <div ref={section.id === selected ? selectedRef : undefined}>
+                    <DraggableStackRow
+                      section={section}
+                      ContextMenu={ContextMenu}
+                      ActionButton={ActionButton}
+                      slots={{
+                        root: {
+                          className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className)
+                        }
+                      }}
+                    >
+                      <div className={mx('flex flex-col w-full overflow-x-hidden')}>
+                        <StackSection section={section} onSelect={() => onSelect?.(section)} />
+                      </div>
+                    </DraggableStackRow>
+                  </div>
                 </StackSectionContext.Provider>
               );
             })}
 
-            <StackFooter id={footerId} ContextMenu={ContextMenu} slots={{ root: slots?.section }} />
+            {showFooter && <StackFooter id={footerId} ContextMenu={ContextMenu} slots={{ root: slots?.section }} />}
           </div>
         </SortableContext>
       </DndContext>
