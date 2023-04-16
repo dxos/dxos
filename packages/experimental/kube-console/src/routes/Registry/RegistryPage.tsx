@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ConfigProto } from '@dxos/config';
 import { TableColumn, Table } from '@dxos/mosaic';
-import { Button, CompactQrCode, getSize } from '@dxos/react-components';
+import { Button, CompactQrCode, getSize, useTranslation } from '@dxos/react-components';
 import { alphabetical, alphabeticalByKey } from '@dxos/util';
 
 import { Toolbar } from '../../components';
@@ -25,7 +25,7 @@ type Module = {
   tags: string[];
 };
 
-const columns: (host: string | undefined) => TableColumn<Module>[] = (host) => {
+const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t, host) => {
   const columns: TableColumn<Module>[] = [
     {
       Header: 'module',
@@ -51,6 +51,7 @@ const columns: (host: string | undefined) => TableColumn<Module>[] = (host) => {
           <CompactQrCode
             {...{
               copyLabel: 'copy space invite code short label',
+              displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
               value: `https://${value}.${host}`
             }}
           />
@@ -94,6 +95,7 @@ export const RegistryPage = () => {
   const [config, setConfig] = useState<ConfigProto>({});
   const [modules, setModules] = useState<Module[]>([]);
   const sortedModules = modules.sort(alphabeticalByKey('name'));
+  const { t } = useTranslation('appkit');
 
   useEffect(() => {
     void handleRefresh();
@@ -116,7 +118,7 @@ export const RegistryPage = () => {
 
       {/* TODO(burdon): Theme. */}
       <Table
-        columns={columns(config.runtime?.kube?.host)}
+        columns={columns(t, config.runtime?.kube?.host)}
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
