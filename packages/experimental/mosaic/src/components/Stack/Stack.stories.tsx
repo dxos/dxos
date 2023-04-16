@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, Trash, X } from '@phosphor-icons/react';
+import { CaretCircleRight, Plus, Trash, X } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { FC, useState } from 'react';
 
+import { getSize } from '@dxos/react-components';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
@@ -52,9 +53,12 @@ const sectionMenuActions = (section?: any): StackAction[][] => {
 const StackSection: FC<{ section: Item<TestData>; onSelect?: () => void }> = ({ section, onSelect }) => {
   return (
     <div className='flex flex-col w-full space-y-2'>
-      <div className='text-xl'>{section.data?.title}</div>
-      <div className='text-sm text-zinc-600'>{section.data?.description}</div>
-      <div className='text-xs text-zinc-500' onClick={() => onSelect?.()}>
+      <div className='flex text-xl'>{section.data?.title}</div>
+      <div className='flex text-sm text-zinc-600'>{section.data?.description}</div>
+      <div className='flex text-xs text-zinc-500 items-center'>
+        <div className='pr-2 cursor-pointer' onClick={() => onSelect?.()}>
+          <CaretCircleRight className={getSize(4)} />
+        </div>
         {section.id}
       </div>
     </div>
