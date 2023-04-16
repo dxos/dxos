@@ -33,6 +33,7 @@ import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { InvitationProtocol } from './invitation-protocol';
 import { InvitationGuestExtension, InvitationHostExtension } from './invitation-extension';
+import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -220,6 +221,18 @@ export class InvitationsHandler {
               }
             }
           });
+        },
+        onError: (err) => {
+          if(err instanceof InvalidInvitationExtensionRoleError) {
+            return;
+          }
+          if (err instanceof TimeoutError) {
+            log('timeout', { ...protocol.toJSON() });
+            stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+          } else {
+            log.error('failed', err);
+            stream.error(err);
+          }
         }
       });
       extension._traceParent = this._traceParent;
@@ -366,6 +379,18 @@ export class InvitationsHandler {
               await ctx.dispose();
             }
           });
+        },
+        onError: (err) => {
+          if(err instanceof InvalidInvitationExtensionRoleError) {
+            return;
+          }
+          if (err instanceof TimeoutError) {
+            log('timeout', { ...protocol.toJSON() });
+            stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+          } else {
+            log('auth failed', err);
+            stream.error(err);
+          }
         }
       });
 

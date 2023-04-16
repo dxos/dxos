@@ -13,6 +13,16 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
+message Options {
+  enum Role {
+    GUEST = 0;
+    HOST = 1;
+  }
+
+  /// Role of the peer.
+  Role role = 1;
+}
+
 message IntroductionRequest {
   /// Guest's profile.
   optional halo.credentials.ProfileDocument profile = 1;
@@ -87,13 +97,17 @@ message AdmissionResponse {
 
 /// Host service for two peers exchanging an invitation.
 // TODO(wittjosiah): Handle invitations where guest is the initiatating peer.
+// TODO(dmaretskyi): Rename to InvitationExtensionService.
 service InvitationHostService {
-  /// Introduce guest to the host.
+  /// Both peers must call this method before any other.
+  rpc Options(Options) returns (google.protobuf.Empty);
+
+  /// Introduce guest to the host. Only on the host.
   rpc Introduce(IntroductionRequest) returns (IntroductionResponse);
 
-  /// Authenticate request.
+  /// Authenticate request. Only on the host.
   rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
-  /// Process admission credentials.
+  /// Process admission credentials. Only on the host.
   rpc Admit(AdmissionRequest) returns (AdmissionResponse);
 }
