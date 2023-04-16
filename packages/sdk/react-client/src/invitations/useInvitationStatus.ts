@@ -87,7 +87,9 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
           action.status === Invitation.State.CANCELLED ||
           action.status === Invitation.State.TIMEOUT) && {
           haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt
-        })
+        }),
+        observable:
+          action.status === Invitation.State.CONNECTING ? action.observable ?? prev.observable : prev.observable
       } as InvitationReducerState;
     },
     null,
@@ -103,41 +105,47 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   // Handle unmount
 
   useEffect(() => {
-    const subscription = state.observable?.subscribe(
-      (invitation: Invitation) => {
-        switch (invitation.state) {
-          case Invitation.State.CONNECTED:
-          case Invitation.State.READY_FOR_AUTHENTICATION:
-          case Invitation.State.AUTHENTICATING: {
-            dispatch({
-              status: invitation.state
-            });
-            break;
-          }
-
-          case Invitation.State.SUCCESS: {
-            dispatch({
-              status: invitation.state,
-              result: {
-                spaceKey: invitation.spaceKey || null,
-                identityKey: invitation.identityKey || null,
-                swarmKey: invitation.swarmKey || null
-              }
-            });
-            break;
-          }
-
-          case Invitation.State.CANCELLED:
-          case Invitation.State.TIMEOUT: {
-            dispatch({ status: invitation.state, haltedAt: state.status });
-            break;
-          }
+    console.log('sub');
+    const update = (invitation: Invitation) => {
+      console.log('update');
+      switch (invitation.state) {
+        case Invitation.State.CONNECTED:
+        case Invitation.State.READY_FOR_AUTHENTICATION:
+        case Invitation.State.AUTHENTICATING: {
+          dispatch({
+            status: invitation.state
+          });
+          break;
         }
-      },
-      (err: Error) => {
-        dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
+
+        case Invitation.State.SUCCESS: {
+          dispatch({
+            status: invitation.state,
+            result: {
+              spaceKey: invitation.spaceKey || null,
+              identityKey: invitation.identityKey || null,
+              swarmKey: invitation.swarmKey || null
+            }
+          });
+          break;
+        }
+
+        case Invitation.State.CANCELLED:
+        case Invitation.State.TIMEOUT: {
+          dispatch({ status: invitation.state, haltedAt: state.status });
+          break;
+        }
       }
-    );
+    };
+
+    const subscription = state.observable?.subscribe(update, (err: Error) => {
+      dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
+    });
+
+    const currentState = state.observable?.get();
+    if (currentState) {
+      update(currentState);
+    }
 
     return () => subscription?.unsubscribe();
   }, [state.observable, state.status]);

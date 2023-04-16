@@ -4,7 +4,7 @@ runtime:
   client:
     remoteSource: http://localhost:3967/vault.html
     storage:
-      persistent: true
+      persistent: false
 
   services:
     signal:
