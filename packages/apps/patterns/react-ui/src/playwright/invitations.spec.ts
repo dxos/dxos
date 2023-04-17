@@ -109,7 +109,7 @@ test.describe('Invitations', () => {
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
       // Wait for invitation to connect before cancelling it.
-      await sleep(100);
+      await sleep(500);
       await manager.cancelInvitation('device', 'host', manager.peer(0));
 
       // Wait for cancellation to propagate.
@@ -177,6 +177,8 @@ test.describe('Invitations', () => {
         manager.acceptInvitation(2, 'device', invitation2)
       ]);
       await manager.authenticateInvitation('device', authCode1, manager.peer(1));
+      // Helps to ensure both auth codes are fully input (especially in webkit).
+      await sleep(10);
       await manager.authenticateInvitation('device', authCode2, manager.peer(2));
       await manager.doneInvitation('device', manager.peer(1));
       await manager.doneInvitation('device', manager.peer(2));
@@ -296,7 +298,7 @@ test.describe('Invitations', () => {
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
       // Wait for invitation to connect before cancelling it.
-      await sleep(100);
+      await sleep(500);
       await manager.cancelInvitation('space', 'host', manager.peer(0));
 
       // Wait for cancellation to propagate.
@@ -369,6 +371,8 @@ test.describe('Invitations', () => {
       await sleep(100);
       const [authCode2] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(2, 'space', invitation2)]);
       await manager.authenticateInvitation('space', authCode1, manager.peer(1));
+      // Helps to ensure both auth codes are fully input (especially in webkit).
+      await sleep(10);
       await manager.authenticateInvitation('space', authCode2, manager.peer(2));
       await manager.doneInvitation('space', manager.peer(1));
       await manager.doneInvitation('space', manager.peer(2));
