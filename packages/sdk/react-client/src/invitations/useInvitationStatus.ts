@@ -105,9 +105,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
   // Handle unmount
 
   useEffect(() => {
-    console.log('sub');
     const update = (invitation: Invitation) => {
-      console.log('update');
       switch (invitation.state) {
         case Invitation.State.CONNECTED:
         case Invitation.State.READY_FOR_AUTHENTICATION:

@@ -31,7 +31,10 @@ export const IdentityListItem = ({
           ...(presence === SpaceMember.PresenceState.OFFLINE && {
             status: 'inactive',
             description: (
-              <p className='font-system-normal text-xs text-neutral-700 dark:text-neutral-300'>
+              <p
+                className='font-system-normal text-xs text-neutral-700 dark:text-neutral-300'
+                data-testid='identity-list-item.description'
+              >
                 {t('identity offline description')}
               </p>
             )
