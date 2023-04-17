@@ -18,7 +18,7 @@ const defaults = {
       }
     },
     services: {
-      signal: [
+      signaling: [
         {
           server: 'wss://kube.dxos.org/.well-known/dx/signal'
         }

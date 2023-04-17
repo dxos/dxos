@@ -23,7 +23,7 @@ export const testConfigWithLocalSignal = new Config({
   version: 1,
   runtime: {
     services: {
-      signal: [
+      signaling: [
         {
           // TODO(burdon): Port numbers and global consts?
           server: 'ws://localhost:4000/.well-known/dx/signal'

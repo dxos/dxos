@@ -70,7 +70,7 @@ test('Runtime and module config', () => {
     {
       runtime: {
         services: {
-          signal: [
+          signaling: [
             {
               server: 'ws://localhost:4000'
             }
@@ -96,7 +96,7 @@ test('Runtime and module config', () => {
     },
     runtime: {
       services: {
-        signal: [
+        signaling: [
           {
             server: 'ws://localhost:4000'
           }
