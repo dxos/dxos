@@ -112,7 +112,7 @@ importers:
       raf: ^3.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
-      rollup: ^3.9.1
+      rollup: ^3.20.4
       semver: ^7.3.8
       serve: ^14.1.2
       syncpack: ^8.2.4
@@ -215,7 +215,7 @@ importers:
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      rollup: 3.9.1
+      rollup: 3.20.4
       semver: 7.3.8
       serve: 14.1.2
       syncpack: 8.2.4
@@ -4747,7 +4747,7 @@ importers:
       remark-mdx-frontmatter: ^2.1.1
       remark-parse-frontmatter: ^1.0.3
       remark-unwrap-texts: ^1.0.3
-      rollup: ^3.9.1
+      rollup: ^3.20.4
       tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
@@ -4775,7 +4775,7 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@dxos/config': link:../../packages/sdk/config
-      '@mdx-js/rollup': 2.1.5_rollup@3.9.1
+      '@mdx-js/rollup': 2.1.5_rollup@3.20.4
       '@react-pdf/renderer': 3.0.1_react@18.2.0
       '@tailwindcss/aspect-ratio': 0.4.2_tailwindcss@3.2.7
       '@tailwindcss/typography': 0.5.8_tailwindcss@3.2.7
@@ -4793,7 +4793,7 @@ importers:
       remark-mdx-frontmatter: 2.1.1
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
-      rollup: 3.9.1
+      rollup: 3.20.4
       tailwindcss: 3.2.7_postcss@8.4.21
       tailwindcss-logical: 3.0.0_ee22xw2qfzolowrlqapvox2wrq
       tailwindcss-radix: 2.8.0
@@ -9755,14 +9755,14 @@ packages:
       '@types/react': 18.0.21
       react: 18.2.0
 
-  /@mdx-js/rollup/2.1.5_rollup@3.9.1:
+  /@mdx-js/rollup/2.1.5_rollup@3.20.4:
     resolution: {integrity: sha512-l90rSiwnEf6PnjH8uRXjZ1W0rR8p1fp1YIiDuA3uF7SOfxMQ98uymaIwI6BsX+8BC2dcWij7Racwp++JkvdOLQ==}
     peerDependencies:
       rollup: '>=2'
     dependencies:
       '@mdx-js/mdx': 2.1.5
       '@rollup/pluginutils': 4.2.1
-      rollup: 3.9.1
+      rollup: 3.20.4
       source-map: 0.7.4
       vfile: 5.3.6
     transitivePeerDependencies:
@@ -16039,7 +16039,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -33577,6 +33577,14 @@ packages:
       fsevents: 2.3.2
     dev: true
 
+  /rollup/3.20.4:
+    resolution: {integrity: sha512-n7J4tuctZXUErM9Uc916httwqmTc63zzCr2+TLCiSCpfO/Xuk3g/marGN1IlRJZi+QF3XMYx75PxXRfZDVgaRw==}
+    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
   /rollup/3.9.1:
     resolution: {integrity: sha512-GswCYHXftN8ZKGVgQhTFUJB/NBXxrRGgO2NCy6E8s1rwEJ4Q9/VttNqcYfEvx4dTo4j58YqdC3OVztPzlKSX8w==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
@@ -37087,7 +37095,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
