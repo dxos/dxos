@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Messenger } from './messenger';
 import {
@@ -16,7 +17,7 @@ import {
 import { Message } from './signal-methods';
 
 export type TestBuilderOptions = {
-  signalHosts?: string[];
+  signalHosts?: Runtime.Services.Signal[];
   messageDisruption?: (msg: Message) => Message[];
 };
 
