@@ -10,7 +10,7 @@ import { debounce } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { useKeyStore } from '@dxos/react-client';
-import { Button, getSize, mx, Select } from '@dxos/react-components';
+import { Button, getSize, Input, mx, Select } from '@dxos/react-components';
 
 import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
@@ -86,6 +86,7 @@ export const BotManager = () => {
   const { space } = useAppRouter();
   const botClient = useBotClient(space!);
   const [keyMap] = useKeyStore(Object.keys(botKeys));
+  const [localOverride, setLocalOverride] = useState<string>('');
 
   useEffect(() => {
     void refresh();
@@ -162,7 +163,8 @@ export const BotManager = () => {
               </Select.Item>
             ))}
           </Select>
-          <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
+          <Input label="Local target override" placeholder='ws://localhost:7400' value={localOverride} onChange={e => setLocalOverride(e.target.value)} />
+          <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap), localOverride)}>
             Start
           </Button>
         </div>
