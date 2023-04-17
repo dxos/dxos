@@ -2,16 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
+import faker from 'faker';
 import React from 'react';
 
-import { DocumentStack } from '@dxos/kai-types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { TestFrameContainer } from '../../testing';
-import Sidecar from './Sidecar';
+import { Sidecar, Section, SidecarStack } from './Sidecar';
 import { StackFrameRuntime } from './defs';
 
 import '@dxosTheme';
+
+const actions = ['summarize', 'translate', 'list people', 'convert to records', 'shorten', 'extend'];
+
+const sections: Section[] = Array.from({ length: 16 }).map(() => ({
+  text: faker.lorem.sentences(2 + faker.datatype.number(4)),
+  actions: faker.random.arrayElements(actions, faker.datatype.number(3))
+}));
 
 export default {
   component: Sidecar,
@@ -25,8 +32,8 @@ export default {
 export const Default = {
   decorators: [ClientSpaceDecorator()],
   render: () => (
-    <TestFrameContainer<DocumentStack> onCreate={StackFrameRuntime.onCreate!}>
-      <Sidecar />
+    <TestFrameContainer onCreate={StackFrameRuntime.onCreate!} slots={{ root: { className: 'w-[500px]' } }}>
+      <SidecarStack sections={sections} />
     </TestFrameContainer>
   )
 };

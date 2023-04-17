@@ -2,18 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Trash } from '@phosphor-icons/react';
+import { Article, Image, Trash } from '@phosphor-icons/react';
 import React, { FC } from 'react';
+import urlJoin from 'url-join';
 
-import { Document, DocumentStack } from '@dxos/kai-types';
-import { TypedObject, useIdentity } from '@dxos/react-client';
+import { Document, DocumentStack, File } from '@dxos/kai-types';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 
+import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
-import { CustomStackMenuAction } from '../Stack';
+import { CustomStackMenuAction, FileSelector } from '../Stack';
 
 // TODO(burdon): Generalize with Stack.
-export const sectionActions = (section?: DocumentStack.Section) => {
+export const sectionActions = (config: Config, section?: DocumentStack.Section) => {
   const insert = (stack: DocumentStack, section: DocumentStack.Section | undefined, object: TypedObject) => {
     const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
@@ -26,6 +29,18 @@ export const sectionActions = (section?: DocumentStack.Section) => {
         label: 'New slide',
         Icon: Article,
         onAction: (stack, section) => insert(stack, section, new DocumentStack.Section({ object: new Document() }))
+      },
+      {
+        id: File.type.name,
+        label: 'Image',
+        Icon: Image,
+        Dialog: FileSelector,
+        onAction: (stack, section, object) => {
+          const url = urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object!.cid);
+          const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
+          const document = new Document({ content: new Text(`![${object?.name}](${url})`, TextKind.PLAIN) });
+          stack.sections.splice(idx, 0, new DocumentStack.Section({ object: document }));
+        }
       }
     ]
   ];
@@ -48,20 +63,39 @@ export const sectionActions = (section?: DocumentStack.Section) => {
 };
 
 export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }) => {
+  const config = useConfig();
   const identity = useIdentity();
   const { space } = useFrameContext();
   const object = section.object;
 
-  return (
-    <Composer
-      identity={identity}
-      space={space}
-      text={object.content}
-      slots={{
-        editor: {
-          spellCheck: false // TODO(burdon): Config.
-        }
-      }}
-    />
-  );
+  // TODO(burdon): Handle image.
+  console.log(object.__typename);
+
+  switch (object.__typename) {
+    case Document.type.name: {
+      return (
+        <Composer
+          identity={identity}
+          space={space}
+          text={object.content}
+          slots={{
+            editor: {
+              spellCheck: false // TODO(burdon): Config.
+            }
+          }}
+        />
+      );
+    }
+
+    case File.type.name: {
+      return (
+        <div className='flex w-full h-[400px]'>
+          <FilePreview url={urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid)} image />
+        </div>
+      );
+    }
+
+    default:
+      return null;
+  }
 };

@@ -6,7 +6,7 @@ import { Article, Image, ListChecks, Table as TableIcon, Trash } from '@phosphor
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
-import { TypedObject, Space } from '@dxos/client';
+import { TypedObject, Space, Config } from '@dxos/client';
 import { Contact, Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
@@ -21,7 +21,7 @@ import { getColumnType } from '../Table';
 import { ActionDialog, CustomStackMenuAction } from './CustomActionMenu';
 
 // TODO(burdon): Generalize with Presenter.
-export const sectionActions = (section?: DocumentStack.Section) => {
+export const sectionActions = (config: Config, section?: DocumentStack.Section) => {
   const insert = (stack: DocumentStack, section: DocumentStack.Section | undefined, object: TypedObject) => {
     const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
@@ -51,7 +51,11 @@ export const sectionActions = (section?: DocumentStack.Section) => {
         id: File.type.name,
         label: 'Image',
         Icon: Image,
-        Dialog: FileSelector
+        Dialog: FileSelector,
+        onAction: (stack, section, object) => {
+          const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
+          stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
+        }
       }
     ]
   ];
@@ -147,18 +151,13 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
 // TODO(burdon): onSelect.
 //  const router = useFrameRouter();
 //  router({ space, frame, objectId });
-export const FileSelector: ActionDialog = ({ stack, section, onClose }) => {
+export const FileSelector: ActionDialog = ({ stack, section, onAction, onClose }) => {
   const { space } = useFrameContext();
-  const insert = (stack: DocumentStack, section: DocumentStack.Section | undefined, object: TypedObject) => {
-    const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
-    stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
-  };
-
   const handleSelect = (objectId?: string) => {
     if (objectId) {
       const object = space!.db.getObjectById<File>(objectId);
       if (object) {
-        insert(stack, section, object);
+        onAction(stack, section, object);
       }
     }
 
