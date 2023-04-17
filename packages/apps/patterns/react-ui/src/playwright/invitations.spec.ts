@@ -14,6 +14,13 @@ import { InvitationsManager } from './invitations-manager';
 test.describe('Invitations', () => {
   let manager: InvitationsManager;
 
+  // TODO(wittjosiah): Storybook takes a bit to be ready for testing against.
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(60_000);
+    manager = new InvitationsManager(browser);
+    await manager.init();
+  });
+
   test.beforeEach(async ({ browser }) => {
     manager = new InvitationsManager(browser);
     await manager.init();
@@ -61,6 +68,8 @@ test.describe('Invitations', () => {
     });
 
     test('invalid & max auth code retries reached, retry invitation', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -98,7 +107,7 @@ test.describe('Invitations', () => {
       // Wait for timeout to fire.
       await waitForExpect(async () => {
         expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 100);
+      }, 500);
     });
 
     test('invitation cancelled by host', async () => {
@@ -115,7 +124,7 @@ test.describe('Invitations', () => {
       // Wait for cancellation to propagate.
       await waitForExpect(async () => {
         expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 100);
+      }, 500);
     });
 
     test('invitation cancelled by guest & retry', async () => {
@@ -159,6 +168,8 @@ test.describe('Invitations', () => {
     });
 
     test('multiple concurrent invitations', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation1 = await manager.createInvitation(0, 'device');
@@ -178,7 +189,7 @@ test.describe('Invitations', () => {
       ]);
       await manager.authenticateInvitation('device', authCode1, manager.peer(1));
       // Helps to ensure both auth codes are fully input (especially in webkit).
-      await sleep(10);
+      await sleep(100);
       await manager.authenticateInvitation('device', authCode2, manager.peer(2));
       await manager.doneInvitation('device', manager.peer(1));
       await manager.doneInvitation('device', manager.peer(2));
@@ -222,6 +233,8 @@ test.describe('Invitations', () => {
     });
 
     test('invalid & retry auth code', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -285,7 +298,7 @@ test.describe('Invitations', () => {
       // Wait for timeout to fire.
       await waitForExpect(async () => {
         expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 100);
+      }, 500);
     });
 
     test('invitation cancelled by host', async () => {
@@ -304,7 +317,7 @@ test.describe('Invitations', () => {
       // Wait for cancellation to propagate.
       await waitForExpect(async () => {
         expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 100);
+      }, 500);
     });
 
     test('invitation cancelled by guest & retry', async () => {
@@ -356,6 +369,8 @@ test.describe('Invitations', () => {
     });
 
     test('multiple concurrent invitations', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -372,7 +387,7 @@ test.describe('Invitations', () => {
       const [authCode2] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(2, 'space', invitation2)]);
       await manager.authenticateInvitation('space', authCode1, manager.peer(1));
       // Helps to ensure both auth codes are fully input (especially in webkit).
-      await sleep(10);
+      await sleep(100);
       await manager.authenticateInvitation('space', authCode2, manager.peer(2));
       await manager.doneInvitation('space', manager.peer(1));
       await manager.doneInvitation('space', manager.peer(2));
