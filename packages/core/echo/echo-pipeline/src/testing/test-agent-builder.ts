@@ -34,7 +34,7 @@ export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
   () =>
     new NetworkManager({
-      signalManager: new WebsocketSignalManager([signalUrl]),
+      signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
       transportFactory: createWebRTCTransportFactory()
     });
 
