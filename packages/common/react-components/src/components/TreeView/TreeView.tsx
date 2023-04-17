@@ -135,7 +135,9 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
                 <span className={slots.title?.className}>{item.title}</span>
                 {!item.items && item.value !== undefined && (
                   // eslint-disable-next-line no-octal-escape
-                  <span className={slots.value?.className ?? 'pl-2 empty:after:content-["\00a0"]'}>{String(item.value)}</span>
+                  <span className={slots.value?.className ?? 'pl-2 empty:after:content-["\00a0"]'}>
+                    {String(item.value)}
+                  </span>
                 )}
               </div>
             )}
