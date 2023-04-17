@@ -161,7 +161,7 @@ export const SketchFrame = observer(() => {
           <ReactSketchCanvas
             ref={canvasRef}
             // className='shadow-1'
-            canvasColor="transparent"
+            canvasColor='transparent'
             // style={{ background: 'transparent' }} // Replace defaults.
             width={'100%'}
             height={'100%'}
