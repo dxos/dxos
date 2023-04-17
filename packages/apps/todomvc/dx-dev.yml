@@ -8,4 +8,4 @@ runtime:
 
   services:
     signal:
-      server: ws://localhost:8888/.well-known/dx/signal
+      - server: ws://localhost:8888/.well-known/dx/signal

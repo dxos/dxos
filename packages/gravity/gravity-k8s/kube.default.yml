@@ -18,7 +18,7 @@ runtime:
       server: 'https://kube.dxos.org/ipfs/api'
       gateway: 'https://kube.dxos.org/ipfs/gateway'
     signal:
-      server: 'wss://kube.dxos.org/.well-known/dx/signal'
+      - server: 'wss://kube.dxos.org/.well-known/dx/signal'
     ice:
       - urls: 'stun:kube.dxos.org:3478'
       - urls: 'turn:kube.dxos.org:3478'
