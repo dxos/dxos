@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 import { useClientServices } from '@dxos/react-client';
@@ -10,6 +10,7 @@ import { Button, TreeView, TreeViewItem } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
+import { Fallback } from '@dxos/react-appkit';
 
 // TODO(burdon): Restructure sections (panels).
 // TODO(burdon): Sections as hook.
@@ -58,8 +59,10 @@ export const RootContainer = () => {
       </div>
 
       <div className='flex flex-1 flex-col overflow-hidden bg-white'>
-        <ErrorBoundary>
-          <Outlet />
+        <ErrorBoundary key={pathname}>
+          <Suspense fallback={<Fallback message='Loading...' />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </div>
     </div>
