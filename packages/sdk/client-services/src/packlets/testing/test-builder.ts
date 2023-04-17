@@ -23,10 +23,12 @@ export const testConfigWithLocalSignal = new Config({
   version: 1,
   runtime: {
     services: {
-      signal: {
-        // TODO(burdon): Port numbers and global consts?
-        server: 'ws://localhost:4000/.well-known/dx/signal'
-      }
+      signal: [
+        {
+          // TODO(burdon): Port numbers and global consts?
+          server: 'ws://localhost:4000/.well-known/dx/signal'
+        }
+      ]
     }
   }
 });
@@ -56,11 +58,11 @@ export class TestBuilder {
    * Get network manager using local shared memory or remote signal manager.
    */
   get networkManager() {
-    const signalServer = this._config.get('runtime.services.signal.server');
-    if (signalServer) {
+    const signals = this._config.get('runtime.services.signal');
+    if (signals) {
       return new NetworkManager({
         log: true,
-        signalManager: new WebsocketSignalManager([signalServer]),
+        signalManager: new WebsocketSignalManager(signals),
         transportFactory: createWebRTCTransportFactory({
           iceServers: this._config.get('runtime.services.ice')
         })

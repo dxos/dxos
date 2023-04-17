@@ -12,7 +12,6 @@ import {
   NetworkManager,
   NetworkManagerOptions
 } from '@dxos/network-manager';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { LocalClientServices } from './local-client-services';
 
@@ -31,11 +30,11 @@ export const fromHost = (config: Config = new Config()): ClientServicesProvider 
  */
 // TODO(burdon): Move to client-services and remove dependencies from here.
 const createNetworkManager = (config: Config, options: Partial<NetworkManagerOptions> = {}): NetworkManager => {
-  const signalServers = config.get('runtime.services.signal')?.map((signal: Runtime.Services.Signal) => signal.servers);
-  if (signalServers) {
+  const signals = config.get('runtime.services.signal');
+  if (signals) {
     const {
       log = true,
-      signalManager = new WebsocketSignalManager(signalServers),
+      signalManager = new WebsocketSignalManager(signals),
       transportFactory = createWebRTCTransportFactory({
         iceServers: config.get('runtime.services.ice')
       })

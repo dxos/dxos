@@ -18,9 +18,11 @@ const defaults = {
       }
     },
     services: {
-      signal: {
-        server: 'wss://kube.dxos.org/.well-known/dx/signal'
-      },
+      signal: [
+        {
+          server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        }
+      ],
       ice: [
         {
           urls: 'stun:kube.dxos.org:3478',

@@ -47,7 +47,7 @@ describe('Messenger', () => {
   });
 
   test('Message between peers', async () => {
-    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -68,7 +68,7 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message 3 peers', async () => {
-    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -115,7 +115,7 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message routing', async () => {
-    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -165,7 +165,7 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Unsubscribe listener', async () => {
-    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -234,7 +234,7 @@ describe('Messenger', () => {
     .timeout(1_000);
 
   test('re-entrant message', async () => {
-    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -270,7 +270,7 @@ describe('Messenger', () => {
   }).timeout(1_000);
 
   test('Message with broken signal server', async () => {
-    const builder = new TestBuilder({ signalHosts: ['ws://broken.kube', broker.url()] });
+    const builder = new TestBuilder({ signalHosts: [{ server: 'ws://broken.kube' }, { server: broker.url() }] });
     afterTest(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
@@ -303,7 +303,10 @@ describe('Messenger', () => {
         return [];
       };
 
-      const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: unreliableConnection });
+      const builder = new TestBuilder({
+        signalHosts: [{ server: broker.url() }],
+        messageDisruption: unreliableConnection
+      });
       afterTest(() => builder.close());
       const peer1 = builder.createPeer();
       await peer1.open();
@@ -332,7 +335,7 @@ describe('Messenger', () => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: Message) => [data, data];
 
-      const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: doublingMessage });
+      const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }], messageDisruption: doublingMessage });
       afterTest(() => builder.close());
       const peer1 = builder.createPeer();
       await peer1.open();
@@ -362,7 +365,7 @@ describe('Messenger', () => {
 
       range(100).map(async () => {
         const peerId = PublicKey.random();
-        const newLocal = new WebsocketSignalManager(['wss://dev.kube.dxos.org/.well-known/dx/signal']);
+        const newLocal = new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]);
         await newLocal.open();
         const messenger = new Messenger({ signalManager: newLocal });
 

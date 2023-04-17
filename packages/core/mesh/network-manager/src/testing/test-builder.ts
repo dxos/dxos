@@ -6,6 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -21,10 +22,10 @@ import {
 import { TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
-export const TEST_SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [{ server: 'ws://localhost:4000/.well-known/dx/signal' }];
 
 export type TestBuilderOptions = {
-  signalHosts?: string[];
+  signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
 };
 

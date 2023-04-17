@@ -8,9 +8,9 @@ const client = new Client({
   config: new Config({
     runtime: {
       services: {
-        signal: {
+        signal: [{
           server: 'wss://kube.dxos.org/.well-known/dx/signal'
-        }
+        }]
       }
     }
   })
