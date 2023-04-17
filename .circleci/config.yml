@@ -93,6 +93,8 @@ jobs:
   e2e:
     docker:
       - *docker_image
+    # TODO(wittjosiah): Using because of kai bundling memory usage.
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
@@ -105,7 +107,7 @@ jobs:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=6144
+            NODE_OPTIONS: --max_old_space_size=10240
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
       - *codecov_upload
       - *store_test_results
@@ -136,6 +138,8 @@ jobs:
   publish:
     docker:
       - *docker_image
+    # TODO(wittjosiah): Using because of kai bundling memory usage.
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
@@ -146,7 +150,7 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=6144
+            NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
