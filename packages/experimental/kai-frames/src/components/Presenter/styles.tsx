@@ -11,7 +11,9 @@ export const defaultClasses = {
   li: 'text-[60px] pl-6',
   p: 'text-[60px]',
   // TODO(burdon): Colorize.
-  pre: 'w-full text-[40px] my-[16px] p-[32px] bg-zinc-100'
+  pre: 'w-full text-[40px] my-[16px] p-[32px] bg-zinc-100',
+  img: 'absolute w-[50%] right-[25%] top-0 bottom-0'
 };
 
-export const defaultStyles = 'px-32 py-20 bg-white leading-relaxed font-mono';
+export const defaultPadding = 'px-32 py-20';
+export const defaultStyles = 'overflow-hidden bg-white leading-relaxed font-mono';

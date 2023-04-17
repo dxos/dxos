@@ -69,7 +69,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
   const object = section.object;
 
   // TODO(burdon): Handle image.
-  console.log(object.__typename);
+  // console.log(object.__typename);
 
   switch (object.__typename) {
     case Document.type.name: {

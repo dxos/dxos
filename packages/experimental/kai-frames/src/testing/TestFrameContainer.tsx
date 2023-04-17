@@ -9,7 +9,7 @@ import { Space, TypedObject, useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 
-import { FrameContextProvider, FrameRegistryContextProvider } from '../hooks';
+import { FrameContextProvider, FrameContextType, FrameRegistryContextProvider } from '../hooks';
 
 export type TestFrameContainerSlots = {
   root?: {
@@ -22,11 +22,13 @@ export type TestFrameContainerSlots = {
 export const TestFrameContainer = <T extends TypedObject>({
   children,
   onCreate,
-  slots
+  slots,
+  state = {}
 }: {
   children: ReactNode;
   onCreate: (space: Space) => Promise<T>;
   slots?: TestFrameContainerSlots;
+  state?: Partial<FrameContextType>;
 }) => {
   const metagraphContext = {
     client: new MetagraphClientFake([])
@@ -53,7 +55,9 @@ export const TestFrameContainer = <T extends TypedObject>({
       <FrameRegistryContextProvider>
         <div className={mx('flex w-full h-[100vh] overflow-hidden justify-center bg-paper-1-bg')}>
           <div className={mx('flex w-full h-full justify-center bg-white', slots?.root?.className)}>
-            <FrameContextProvider state={{ space: spaces[0], objectId: object!.id }}>{children}</FrameContextProvider>
+            <FrameContextProvider state={{ space: spaces[0], objectId: object!.id, ...state }}>
+              {children}
+            </FrameContextProvider>
           </div>
         </div>
       </FrameRegistryContextProvider>
