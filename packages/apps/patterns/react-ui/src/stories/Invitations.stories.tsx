@@ -4,10 +4,11 @@
 
 import '@dxosTheme';
 import { faker } from '@faker-js/faker';
-import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode } from '@phosphor-icons/react';
+import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Space, SpaceProxy, useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Space, SpaceProxy, useClient, useIdentity, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, getSize, Group } from '@dxos/react-components';
 
@@ -96,6 +97,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
 const render = ({ id }: { id: number }) => {
   const client = useClient();
+  const networkStatus = useNetworkStatus().state;
   const identity = useIdentity();
   const [panel, setPanel] = useState<PanelType>();
 
@@ -138,6 +140,22 @@ const render = ({ id }: { id: number }) => {
         <Planet weight='fill' className={getSize(6)} />
       </Button>
       {/* </Tooltip> */}
+      {/* <ToolTip content='Toggle Network'> */}
+      <Button
+        onClick={() =>
+          client.mesh.setConnectionState(
+            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE
+          )
+        }
+        data-testid='invitations.toggle-network'
+      >
+        {networkStatus === ConnectionState.ONLINE ? (
+          <WifiHigh weight='fill' className={getSize(6)} />
+        ) : (
+          <WifiSlash weight='fill' className={getSize(6)} />
+        )}
+      </Button>
+      {/* </ToolTip> */}
     </ButtonGroup>
   );
 
@@ -152,7 +170,11 @@ const render = ({ id }: { id: number }) => {
   return (
     <div className='flex flex-col p-4 flex-1 min-w-0' data-testid={`peer-${id}`}>
       <Group label={{ children: header }} className='mbe-2'>
-        {identity ? <IdentityListItem identity={identity} /> : <div className='text-center'>No identity</div>}
+        {identity ? (
+          <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+        ) : (
+          <div className='text-center'>No identity</div>
+        )}
       </Group>
       {identity || panel ? <Panel id={id} panel={panel} setPanel={setPanel} /> : null}
     </div>
