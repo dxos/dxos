@@ -46,8 +46,8 @@ export const SketchFrame = observer(() => {
   const ipfsClient = useIpfsClient();
   const download = useFileDownload();
   const canvasRef = useRef<any>();
-  const [strokeColor, setStrokeColor] = useState('#333');
-  const [strokeWidth, setStrokeWidth] = useState(4);
+  const [strokeColor, setStrokeColor] = useState('#B80000');
+  const [strokeWidth, setStrokeWidth] = useState(16);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
 
   const { space, frame, objectId, fullscreen, onStateChange } = useFrameContext();
@@ -156,12 +156,13 @@ export const SketchFrame = observer(() => {
 
   if (fullscreen) {
     return (
-      <div className='relative flex flex-col bs-full' onClick={handleClear} onDoubleClick={handleReset}>
-        <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
+      <div className='relative flex flex-col bs-full bg-white' onClick={handleClear} onDoubleClick={handleReset}>
+        <div className='flex z-10 flex-col flex-1 items-center justify-center overflow-auto'>
           <ReactSketchCanvas
             ref={canvasRef}
             // className='shadow-1'
-            style={{}} // Replace defaults.
+            canvasColor="transparent"
+            // style={{ background: 'transparent' }} // Replace defaults.
             width={'100%'}
             height={'100%'}
             strokeWidth={strokeWidth}
@@ -171,8 +172,8 @@ export const SketchFrame = observer(() => {
           />
         </div>
 
-        <div className='fixed z-10 flex flex-col h-full flex-1 items-center place-items-center justify-center overflow-auto overflow-hidden w-full opacity-25 pointer-events-none'>
-          <div className='flex w-1/2'>
+        <div className='fixed flex flex-col h-full flex-1 items-center place-items-center justify-center overflow-auto overflow-hidden w-full opacity-50 pointer-events-none'>
+          <div className='flex w-3/4'>
             <KioskInvitationQr space={space} />
           </div>
         </div>
@@ -182,7 +183,7 @@ export const SketchFrame = observer(() => {
             .filter((member) => member.presence === SpaceMember.PresenceState.ONLINE)
             .slice(1)
             .map((member) => (
-              <div className='w-2 h-2 m-2 bg-black rounded-full' key={member.identity.identityKey.toHex()} />
+              <div className='w-4 h-4 m-4 bg-black rounded-full' key={member.identity.identityKey.toHex()} />
             ))}
         </div>
       </div>
