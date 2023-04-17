@@ -9,6 +9,7 @@ import { useSpaces } from '@dxos/react-client';
 
 import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
+import { Planet } from '@phosphor-icons/react';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -30,6 +31,7 @@ export const SpaceSelector = () => {
   return (
     <PublicKeySelector
       keys={spaces.map((space) => space.key)}
+      Icon={Planet}
       defaultValue={space?.key}
       placeholder={'Select space'}
       onChange={handleSelect}
