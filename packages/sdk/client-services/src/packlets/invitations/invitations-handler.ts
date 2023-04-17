@@ -6,24 +6,23 @@ import assert from 'node:assert';
 
 import { PushStream, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable, AUTHENTICATION_CODE_LENGTH,
+  AuthenticatingInvitationObservable,
+  AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
+import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import {
-  AuthenticationResponse
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { InvitationGuestExtension, InvitationHostExtension } from './invitation-extension';
 import { InvitationProtocol } from './invitation-protocol';
 
@@ -215,7 +214,7 @@ export class InvitationsHandler {
           });
         },
         onError: (err) => {
-          if(err instanceof InvalidInvitationExtensionRoleError) {
+          if (err instanceof InvalidInvitationExtensionRoleError) {
             return;
           }
           if (err instanceof TimeoutError) {
@@ -299,8 +298,8 @@ export class InvitationsHandler {
         onOpen: (extensionCtx) => {
           extensionCtx.onDispose(async () => {
             log('extension disposed', { currentState });
-            if(currentState !== Invitation.State.SUCCESS) {
-              stream.error(new Error('Remote peer disconnected.'))
+            if (currentState !== Invitation.State.SUCCESS) {
+              stream.error(new Error('Remote peer disconnected.'));
             }
           });
 
@@ -387,7 +386,7 @@ export class InvitationsHandler {
           });
         },
         onError: (err) => {
-          if(err instanceof InvalidInvitationExtensionRoleError) {
+          if (err instanceof InvalidInvitationExtensionRoleError) {
             return;
           }
           if (err instanceof TimeoutError) {

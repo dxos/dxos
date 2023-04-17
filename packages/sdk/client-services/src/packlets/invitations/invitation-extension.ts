@@ -6,20 +6,21 @@ import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import {
   AdmissionRequest,
-  AdmissionResponse, AuthenticationRequest,
+  AdmissionResponse,
+  AuthenticationRequest,
   AuthenticationResponse,
   IntroductionRequest,
-  IntroductionResponse, InvitationHostService,
+  IntroductionResponse,
+  InvitationHostService,
   Options
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
-import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
-
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
@@ -37,7 +38,10 @@ type InvitationHostExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationHostExtension extends RpcExtension<{ InvitationHostService: InvitationHostService }, { InvitationHostService: InvitationHostService }> {
+export class InvitationHostExtension extends RpcExtension<
+  { InvitationHostService: InvitationHostService },
+  { InvitationHostService: InvitationHostService }
+> {
   /**
    * @internal
    */
@@ -109,10 +113,13 @@ export class InvitationHostExtension extends RpcExtension<{ InvitationHostServic
     await super.onOpen(context);
 
     try {
-      await this.rpc.InvitationHostService.options({ role: Options.Role.HOST });    
+      await this.rpc.InvitationHostService.options({ role: Options.Role.HOST });
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      if(this._remoteOptions?.role !== Options.Role.GUEST) {
-        throw new InvalidInvitationExtensionRoleError(undefined, { expected: Options.Role.GUEST, remoteOptions: this._remoteOptions });
+      if (this._remoteOptions?.role !== Options.Role.GUEST) {
+        throw new InvalidInvitationExtensionRoleError(undefined, {
+          expected: Options.Role.GUEST,
+          remoteOptions: this._remoteOptions
+        });
       }
 
       this._callbacks.onOpen();
@@ -135,8 +142,10 @@ type InvitationGuestExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationGuestExtension extends RpcExtension<{ InvitationHostService: InvitationHostService }, { InvitationHostService: InvitationHostService }> {
-
+export class InvitationGuestExtension extends RpcExtension<
+  { InvitationHostService: InvitationHostService },
+  { InvitationHostService: InvitationHostService }
+> {
   private _ctx = new Context();
   private _remoteOptions?: Options;
   private _remoteOptionsTrigger = new Trigger();
@@ -152,7 +161,7 @@ export class InvitationGuestExtension extends RpcExtension<{ InvitationHostServi
     });
   }
 
-  protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }>  {
+  protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
     return {
       InvitationHostService: {
         options: async (options) => {
@@ -160,10 +169,16 @@ export class InvitationGuestExtension extends RpcExtension<{ InvitationHostServi
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
         },
-        introduce: () => { throw new Error('Method not allowed.'); },
-        authenticate: () => { throw new Error('Method not allowed.'); },
-        admit: () => { throw new Error('Method not allowed.'); },
-      },
+        introduce: () => {
+          throw new Error('Method not allowed.');
+        },
+        authenticate: () => {
+          throw new Error('Method not allowed.');
+        },
+        admit: () => {
+          throw new Error('Method not allowed.');
+        }
+      }
     };
   }
 
@@ -171,23 +186,26 @@ export class InvitationGuestExtension extends RpcExtension<{ InvitationHostServi
     await super.onOpen(context);
 
     try {
-      log('begin options')
-      await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));    
+      log('begin options');
+      await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('end options')
-      if(this._remoteOptions?.role !== Options.Role.HOST) {
-        throw new InvalidInvitationExtensionRoleError(undefined, { expected: Options.Role.HOST, remoteOptions: this._remoteOptions });
+      log('end options');
+      if (this._remoteOptions?.role !== Options.Role.HOST) {
+        throw new InvalidInvitationExtensionRoleError(undefined, {
+          expected: Options.Role.HOST,
+          remoteOptions: this._remoteOptions
+        });
       }
 
       this._callbacks.onOpen(this._ctx);
     } catch (err: any) {
-      log('openError', err)
+      log('openError', err);
       this._callbacks.onError(err);
     }
   }
 
   override async onClose() {
-    log('onClose')
+    log('onClose');
     await this._ctx.dispose();
   }
 }
