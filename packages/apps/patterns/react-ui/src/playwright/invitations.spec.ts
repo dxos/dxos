@@ -4,7 +4,6 @@
 
 import { test } from '@playwright/test';
 import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -53,6 +52,8 @@ test.describe('Invitations', () => {
     });
 
     test('invalid & retry auth code', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -104,10 +105,7 @@ test.describe('Invitations', () => {
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
 
-      // Wait for timeout to fire.
-      await waitForExpect(async () => {
-        expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 500);
+      expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
     test('invitation cancelled by host', async () => {
@@ -117,14 +115,10 @@ test.describe('Invitations', () => {
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
-      // Wait for invitation to connect before cancelling it.
-      await sleep(500);
+      expect(await manager.readyToAuthenticate('device', manager.peer(1))).to.be.true;
       await manager.cancelInvitation('device', 'host', manager.peer(0));
 
-      // Wait for cancellation to propagate.
-      await waitForExpect(async () => {
-        expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 500);
+      expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
     test('invitation cancelled by guest & retry', async () => {
@@ -153,12 +147,11 @@ test.describe('Invitations', () => {
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
-      // Wait for invitation to connect before going offline.
-      await sleep(500);
-      await manager.setConnectionState(0, ConnectionState.OFFLINE);
-      // Wait for network failure to propagate.
-      await sleep(500);
-      await manager.setConnectionState(0, ConnectionState.ONLINE);
+      expect(await manager.readyToAuthenticate('device', manager.peer(1))).to.be.true;
+      await manager.toggleNetworkStatus(0);
+      expect(await manager.getNetworkStatus(0)).to.equal(ConnectionState.OFFLINE);
+      await manager.toggleNetworkStatus(0);
+      expect(await manager.getNetworkStatus(0)).to.equal(ConnectionState.ONLINE);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
       const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('device', manager.peer(1))]);
@@ -173,22 +166,24 @@ test.describe('Invitations', () => {
 
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
-      const invitation1 = await manager.createInvitation(0, 'device');
-      const invitation2 = await manager.createInvitation(0, 'device');
-
       await manager.openPanel(1, 'identity');
       await manager.openPanel(2, 'identity');
+
+      // TODO(wittjosiah): Improve auth code fetching to make it easier to disambiguate them.
+      const invitation1 = await manager.createInvitation(0, 'device');
       const [authCode1] = await Promise.all([
         manager.getAuthCode(),
         manager.acceptInvitation(1, 'device', invitation1)
       ]);
-      // Prevent auth code from being reused.
-      await sleep(100);
+
+      const invitation2 = await manager.createInvitation(0, 'device');
       const [authCode2] = await Promise.all([
         manager.getAuthCode(),
         manager.acceptInvitation(2, 'device', invitation2)
       ]);
+
       await manager.authenticateInvitation('device', authCode1, manager.peer(1));
+      // TODO(wittjosiah): Managing focus in tests is flaky.
       // Helps to ensure both auth codes are fully input (especially in webkit).
       await sleep(100);
       await manager.authenticateInvitation('device', authCode2, manager.peer(2));
@@ -257,6 +252,8 @@ test.describe('Invitations', () => {
     });
 
     test('invalid & max auth code retries reached, retry invitation', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -296,10 +293,7 @@ test.describe('Invitations', () => {
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
 
-      // Wait for timeout to fire.
-      await waitForExpect(async () => {
-        expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 500);
+      expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
     test('invitation cancelled by host', async () => {
@@ -311,14 +305,10 @@ test.describe('Invitations', () => {
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
-      // Wait for invitation to connect before cancelling it.
-      await sleep(500);
+      expect(await manager.readyToAuthenticate('space', manager.peer(1))).to.be.true;
       await manager.cancelInvitation('space', 'host', manager.peer(0));
 
-      // Wait for cancellation to propagate.
-      await waitForExpect(async () => {
-        expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
-      }, 500);
+      expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
     test('invitation cancelled by guest & retry', async () => {
@@ -354,12 +344,11 @@ test.describe('Invitations', () => {
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
-      // Wait for invitation to connect before going offline.
-      await sleep(500);
-      await manager.setConnectionState(0, ConnectionState.OFFLINE);
-      // Wait for network failure to propagate.
-      await sleep(500);
-      await manager.setConnectionState(0, ConnectionState.ONLINE);
+      expect(await manager.readyToAuthenticate('space', manager.peer(1))).to.be.true;
+      await manager.toggleNetworkStatus(0);
+      expect(await manager.getNetworkStatus(0)).to.equal(ConnectionState.OFFLINE);
+      await manager.toggleNetworkStatus(0);
+      expect(await manager.getNetworkStatus(0)).to.equal(ConnectionState.ONLINE);
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
       const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('space', manager.peer(1))]);
@@ -374,19 +363,20 @@ test.describe('Invitations', () => {
       test.slow();
 
       await manager.createIdentity(0);
-      await manager.createSpace(0);
-      await manager.openPanel(0, 0);
-      const invitation1 = await manager.createInvitation(0, 'space');
-      const invitation2 = await manager.createInvitation(0, 'space');
-
       await manager.createIdentity(1);
       await manager.createIdentity(2);
+
+      await manager.createSpace(0);
+      await manager.openPanel(0, 0);
       await manager.openPanel(1, 'join');
       await manager.openPanel(2, 'join');
+
+      const invitation1 = await manager.createInvitation(0, 'space');
       const [authCode1] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(1, 'space', invitation1)]);
-      // Prevent auth code from being reused.
-      await sleep(100);
+
+      const invitation2 = await manager.createInvitation(0, 'space');
       const [authCode2] = await Promise.all([manager.getAuthCode(), manager.acceptInvitation(2, 'space', invitation2)]);
+
       await manager.authenticateInvitation('space', authCode1, manager.peer(1));
       // Helps to ensure both auth codes are fully input (especially in webkit).
       await sleep(100);
