@@ -4,8 +4,7 @@
 
 import { StrictMode } from 'react';
 
-import { Trigger } from '@dxos/async';
-import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
+import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
 import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -44,17 +43,6 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise
   if (reset) {
     return forceClientReset();
   }
-
-  // Coordinate initialization with parent window.
-  const trigger = new Trigger();
-  window.addEventListener('message', async (event) => {
-    const { channel, payload } = event.data;
-    if (channel === DEFAULT_INTERNAL_CHANNEL && payload === 'init') {
-      trigger.wake();
-      window.parent.postMessage({ channel, payload }, event.origin);
-    }
-  });
-  await trigger.wait();
 
   // Start iframe runtime.
   const shellDisabled = window.location.hash === '#disableshell';
