@@ -49,3 +49,9 @@ export class DataCorruptionError extends SystemError {
     super('DATA_CORRUPTION', message, context);
   }
 }
+
+export class InvalidInvitationExtensionRoleError extends SystemError {
+  constructor(message?: string, context?: any) {
+    super('INVALID_INVITATION_EXTENSION_ROLE', message, context);
+  }
+}
