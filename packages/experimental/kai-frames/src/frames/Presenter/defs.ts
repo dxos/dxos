@@ -18,7 +18,7 @@ export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 // prettier-ignore
 const defaultSlides = [
   [
-    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmRBSbjK3Y4rHE1WEbxd6bhe1PhJoueiGmaZhz2B9YAA6B)'
+    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmRZKZTjHSdYz4u2Zu64r1hCExJ1kNTMDuRJWyQjvgEXsN)'
   ].join('\n'),
   [
     '# DXOS',
@@ -68,15 +68,16 @@ const defaultSlides = [
     '- Verifiable credentials',
     '- Resource access control',
     '- Universal keychain',
-    '![HALO](https://dev.kube.dxos.org/ipfs/gateway/QmUwp3B5yv2rQe5E4CRDwc2b56UPBwFoJZnquVYEgesLLE)'
+    '![HALO](https://dev.kube.dxos.org/ipfs/gateway/QmQ4mvUsnJ5ajv9Apespk95LW2qGQG6z9cFP1Y1uiTuPxv)'
   ].join('\n'),
   [
     '# MESH',
     '- Resilient P2P networks',
+    '- WebRTC, Websockets, TCP',
     '- Signaling, ICE (STUN/TURN)',
-    '- Protobuf Services RPCs',
-    '- MST',
-    '![MESH](https://dev.kube.dxos.org/ipfs/gateway/QmSJrJNJ8bzFhW21pbhE4vuUkWRJ8aqEwdeYteFmayruw3)'
+    '- Protobuf Service RPCs',
+    '- Presences',
+    '![MESH](https://dev.kube.dxos.org/ipfs/gateway/QmaJcvRfUBdfkUCXyZCtibABSR16tVcUzCNBaoSKzv5Mtp)'
   ].join('\n'),
   [
     '# KUBE',
@@ -86,7 +87,7 @@ const defaultSlides = [
     '- Resolvers (compute agents)',
     '- Storage (IPFS)',
     '- Extensible',
-    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/QmQ28xXSuPjXEZtY4pPTuoWQw78G3YKzoDo6NE5wJgYmQU)'
+    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/QmdagBsa7wRWoNDYyL8Ks7tSNr3vSSHc1RCAFizuKG4t4G)'
   ].join('\n'),
   [
     '# DMG',
@@ -94,7 +95,7 @@ const defaultSlides = [
     '- App registry',
     '- Service registry',
     '- Git, NPM, Docker',
-    '![DMG](https://dev.kube.dxos.org/ipfs/gateway/QmdvVq8BYvTD62EgLDApsMJTvfBvzud1DyZeFATotm5VSL)'
+    '![META](https://dev.kube.dxos.org/ipfs/gateway/QmTTp66sqj2eQzjgMpnJUcFrvhJSbv9Xvi9bsfHSU1C4in)'
   ].join('\n'),
   [
     '# Join us!',
