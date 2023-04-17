@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
-import { observer } from '@dxos/react-client';
+import { observer, useConfig } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
@@ -14,6 +14,7 @@ import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
 
 export const StackFrame = observer(() => {
+  const config = useConfig();
   const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {
@@ -64,7 +65,7 @@ export const StackFrame = observer(() => {
             onMoveSection={handleMoveSection}
             StackSection={StackSection}
             ContextMenu={({ section }) => (
-              <CustomActionMenu actions={sectionActions(section)} stack={stack} section={section} />
+              <CustomActionMenu actions={sectionActions(config, section)} stack={stack} section={section} />
             )}
           />
         </div>

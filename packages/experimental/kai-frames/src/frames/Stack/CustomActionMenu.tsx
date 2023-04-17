@@ -6,7 +6,7 @@ import React, { FC, useState } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
 import { DocumentStack } from '@dxos/kai-types';
-import { StackMenu, StackMenuAction } from '@dxos/mosaic';
+import { StackMenu, StackAction } from '@dxos/mosaic';
 
 // TODO(burdon): Factor out to mosaic (with generic context).
 export type ActionDialog = FC<{
@@ -17,7 +17,7 @@ export type ActionDialog = FC<{
   onClose: () => void;
 }>;
 
-export type CustomStackMenuAction = StackMenuAction & {
+export type CustomStackAction = StackAction & {
   Dialog?: ActionDialog;
   onAction?: (stack: DocumentStack, section?: DocumentStack.Section, object?: TypedObject) => void;
 };
@@ -26,10 +26,10 @@ export type CustomStackMenuAction = StackMenuAction & {
 export const CustomActionMenu: FC<{
   stack: DocumentStack;
   section?: DocumentStack.Section;
-  actions: CustomStackMenuAction[][];
+  actions: CustomStackAction[][];
 }> = ({ stack, section, actions }) => {
   const [action, setAction] = useState<any>();
-  const handleAction = (action: CustomStackMenuAction, section: DocumentStack.Section) => {
+  const handleAction = (action: CustomStackAction, section: DocumentStack.Section) => {
     if (action.Dialog) {
       setAction(action);
     } else if (action.onAction) {

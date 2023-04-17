@@ -18,7 +18,7 @@ import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
 import { FilePlugin, imageTypes } from '../File';
 import { getColumnType } from '../Table';
-import { ActionDialog, CustomStackMenuAction } from './CustomActionMenu';
+import { ActionDialog, CustomStackAction } from './CustomActionMenu';
 
 // TODO(burdon): Generalize with Presenter.
 export const sectionActions = (config: Config, section?: DocumentStack.Section) => {
@@ -27,7 +27,7 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
   };
 
-  const actions: CustomStackMenuAction[][] = [
+  const actions: CustomStackAction[][] = [
     [
       {
         id: Document.type.name,

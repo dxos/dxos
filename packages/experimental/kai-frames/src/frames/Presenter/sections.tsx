@@ -13,7 +13,7 @@ import { Composer } from '@dxos/react-composer';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
-import { CustomStackMenuAction, FileSelector } from '../Stack';
+import { CustomStackAction, FileSelector } from '../Stack';
 
 // TODO(burdon): Generalize with Stack.
 export const sectionActions = (config: Config, section?: DocumentStack.Section) => {
@@ -22,7 +22,7 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
     stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
   };
 
-  const actions: CustomStackMenuAction[][] = [
+  const actions: CustomStackAction[][] = [
     [
       {
         id: Document.type.name,
