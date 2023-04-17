@@ -4,14 +4,39 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry } from '@dxos/react-appkit';
-import { SpaceState, useIdentity, useSpaces } from '@dxos/react-client';
-import { defaultOsButtonColors, mx, useButtonShadow } from '@dxos/react-components';
-import { PanelSidebarProvider, ShellProvider } from '@dxos/react-ui';
+import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
+import { Button, defaultOsButtonColors, mx, Toast, useButtonShadow, useTranslation } from '@dxos/react-components';
+import { PanelSidebarProvider, ShellProvider, useShell } from '@dxos/react-ui';
 
-import { SidebarContent, SidebarToggle } from '../../components';
-import { OctokitProvider } from '../../components/OctokitProvider';
+import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
 import { namespace, abbreviateKey, getPath } from '../../router';
+
+const InvitationToast = ({
+  invitation,
+  spaceKey
+}: {
+  invitation: CancellableInvitationObservable;
+  spaceKey: PublicKey;
+}) => {
+  const { status } = useInvitationStatus(invitation);
+  const shell = useShell();
+  const { t } = useTranslation('composer');
+  const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
+  return status === Invitation.State.READY_FOR_AUTHENTICATION ? (
+    <Toast
+      title={t('invitation ready for auth code message')}
+      initiallyOpen
+      actionTriggers={[
+        {
+          altText: 'View',
+          trigger: <Button onClick={handleViewInvitations}>{t('view invitations label')}</Button>
+        }
+      ]}
+    />
+  ) : null;
+};
 
 export const DocumentLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
@@ -22,6 +47,7 @@ export const DocumentLayout = () => {
   const { spaceKey } = useParams();
   const spaces = useSpaces({ all: true });
   const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY);
+  const invitations = useSpaceInvitations(space?.key);
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -53,6 +79,10 @@ export const DocumentLayout = () => {
           <SidebarToggle />
         </PanelSidebarProvider>
       </OctokitProvider>
+      {space &&
+        invitations.map((invitation) => {
+          return <InvitationToast invitation={invitation} spaceKey={space.key} key={invitation.get().invitationId} />;
+        })}
     </ShellProvider>
   );
 };

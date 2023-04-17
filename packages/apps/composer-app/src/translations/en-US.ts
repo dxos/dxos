@@ -47,5 +47,7 @@ export const composer = {
   'github branch name placeholder': 'update-readme',
   'github commit message label': 'Updated README.md',
   'download all docs in space label': 'Download backup',
-  'upload all docs in space label': 'Upload backup'
+  'upload all docs in space label': 'Upload backup',
+  'invitation ready for auth code message': 'An invitation is ready for its authentication code',
+  'view invitations label': 'View'
 };
