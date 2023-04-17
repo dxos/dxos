@@ -72,6 +72,9 @@ export type TreeViewSlots = {
   title?: {
     className?: string;
   };
+  value?: {
+    className?: string;
+  };
 };
 
 export type TreeViewProps = {
@@ -128,11 +131,11 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
               </div>
             )}
             {Element || (
-              <div style={{ lineHeight: 1.6 }}>
+              <div className='flex flex-nowrap' style={{ lineHeight: 1.6 }}>
                 <span className={slots.title?.className}>{item.title}</span>
                 {!item.items && item.value !== undefined && (
                   // eslint-disable-next-line no-octal-escape
-                  <span className='pl-2 empty:after:content-["\00a0"]'>{String(item.value)}</span>
+                  <span className={slots.value?.className ?? 'pl-2 empty:after:content-["\00a0"]'}>{String(item.value)}</span>
                 )}
               </div>
             )}
