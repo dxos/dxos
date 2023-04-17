@@ -8,8 +8,8 @@ runtime:
 
   services:
     signal:
-      - servers: wss://kube.dxos.org/.well-known/dx/signal
-      - servers: wss://dev.kube.dxos.org/.well-known/dx/signal
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
 
     ice:
       - urls: stun:kube.dxos.org:3478
