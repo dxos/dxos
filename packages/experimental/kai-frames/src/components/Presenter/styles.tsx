@@ -9,10 +9,9 @@ export const defaultClasses = {
   h3: 'text-[80px] text-blue-600',
   ul: 'list-dash ml-12',
   li: 'text-[60px] pl-6',
-  p: 'text-[60px]',
-  // TODO(burdon): Colorize.
+  p: 'text-[60px] pb-12',
   pre: 'w-full text-[40px] my-[16px] p-[32px] bg-zinc-100',
-  img: 'absolute w-[50%] right-[25%] top-0 bottom-0'
+  img: 'absolute right-0 top-0 bottom-0'
 };
 
 export const defaultPadding = 'px-32 py-20';

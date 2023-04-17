@@ -12,14 +12,18 @@ import { FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 
-// TODO(burdon): Import.
+// TODO(burdon): Create script to upload IPFS images and update template.
+
+// TODO(burdon): Convert to JSON file.
 // prettier-ignore
 const defaultSlides = [
   [
-    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/)'
+    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmRBSbjK3Y4rHE1WEbxd6bhe1PhJoueiGmaZhz2B9YAA6B)'
   ].join('\n'),
   [
     '# DXOS',
+    'An alternative to the cloud for realtime collaborative applications.',
+    '### Technology',
     '- `ECHO`: Decentralized data',
     '- `HALO`: Decentralized identity',
     '- `MESH`: Decentralized networks',
@@ -60,25 +64,36 @@ const defaultSlides = [
   [
     '# HALO',
     '- Decentralized identity',
-    '- ',
+    '- Humans, agents, servers',
+    '- Verifiable credentials',
+    '- Resource access control',
+    '- Universal keychain',
     '![HALO](https://dev.kube.dxos.org/ipfs/gateway/QmUwp3B5yv2rQe5E4CRDwc2b56UPBwFoJZnquVYEgesLLE)'
   ].join('\n'),
   [
     '# MESH',
     '- Resilient P2P networks',
-    '- ',
+    '- Signaling, ICE (STUN/TURN)',
+    '- Protobuf Services RPCs',
+    '- MST',
     '![MESH](https://dev.kube.dxos.org/ipfs/gateway/QmSJrJNJ8bzFhW21pbhE4vuUkWRJ8aqEwdeYteFmayruw3)'
   ].join('\n'),
   [
     '# KUBE',
     '- Decentralized infrastructure',
-    '- ',
-    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/)'
+    '- Publishing/hosting',
+    '- Signaling, ICE, DNS',
+    '- Resolvers (compute agents)',
+    '- Storage (IPFS)',
+    '- Extensible',
+    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/QmQ28xXSuPjXEZtY4pPTuoWQw78G3YKzoDo6NE5wJgYmQU)'
   ].join('\n'),
   [
     '# DMG',
-    '- Decentralized Metagraph',
-    '- ',
+    '- Permissionless metadata graph',
+    '- App registry',
+    '- Service registry',
+    '- Git, NPM, Docker',
     '![DMG](https://dev.kube.dxos.org/ipfs/gateway/QmdvVq8BYvTD62EgLDApsMJTvfBvzud1DyZeFATotm5VSL)'
   ].join('\n'),
   [
