@@ -59,7 +59,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
   return {
     send: async (data) => {
       if (!origin) {
-        log.warn('no origin set', { channel });
+        log('no origin set', { channel });
         return;
       }
 
