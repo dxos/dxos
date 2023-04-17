@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
 
 void (async () => {
-  const client = new Client();
+  const client = new Client({
+    config: new Config({ runtime: { client: { remoteSource: 'http://localhost:3967/vault.html' } } })
+  });
   await client.initialize();
 
   if (!client.halo.identity) {

@@ -10,6 +10,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
@@ -42,15 +43,15 @@ export class WebsocketSignalManager implements SignalManager {
 
   // prettier-ignore
   constructor(
-    private readonly _hosts: string[]
+    private readonly _hosts: Runtime.Services.Signal[]
   ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
-      const server = new SignalClient(host, async (message) => this.onMessage.emit(message), async (data) => this.swarmEvent.emit(data));
+      const server = new SignalClient(host.server, async (message) => this.onMessage.emit(message), async (data) => this.swarmEvent.emit(data));
       server._traceParent = this._instanceId;
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
-      this._servers.set(host, server);
+      this._servers.set(host.server, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
     }
   }

@@ -33,6 +33,6 @@ runtime:
       server: http://localhost:9003/ipfs/api
     publisher:
       server: ws://localhost:9003/.well-known/dx/deploy
-    signal:
-      server: ws://localhost:9003/.well-known/dx/signal
+    signaling:
+      - server: ws://localhost:9003/.well-known/dx/signal
 version: 1

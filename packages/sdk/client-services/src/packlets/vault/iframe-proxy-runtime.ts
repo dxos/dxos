@@ -3,6 +3,8 @@
 //
 
 import { iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client';
+import { RemoteServiceConnectionError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { WebRTCTransportService } from '@dxos/network-manager';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -54,7 +56,7 @@ export class IFrameProxyRuntime {
         }
       },
       port: this._systemPort,
-      timeout: 200
+      timeout: 1000
     });
 
     this._workerAppPort.subscribe((msg) => this._windowAppPort.send(msg));
@@ -70,8 +72,14 @@ export class IFrameProxyRuntime {
   }
 
   async open(origin: string) {
-    await this._systemRpc.open();
-    await this._systemRpc.rpc.WorkerService.start({ origin });
+    try {
+      await this._systemRpc.open();
+      await this._systemRpc.rpc.WorkerService.start({ origin });
+    } catch (err) {
+      log.catch(err);
+      throw new RemoteServiceConnectionError('Failed to connect to worker');
+    }
+
     await this._shellRuntime?.open();
   }
 
