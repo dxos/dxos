@@ -75,7 +75,7 @@ export class IFrameHostRuntime {
     log('starting...');
     try {
       this._config = await getAsyncValue(this._configProvider);
-      const signals = this._config.get('runtime.services.signal');
+      const signals = this._config.get('runtime.services.signaling');
       this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,

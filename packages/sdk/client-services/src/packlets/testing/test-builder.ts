@@ -58,7 +58,7 @@ export class TestBuilder {
    * Get network manager using local shared memory or remote signal manager.
    */
   get networkManager() {
-    const signals = this._config.get('runtime.services.signal');
+    const signals = this._config.get('runtime.services.signaling');
     if (signals) {
       return new NetworkManager({
         log: true,

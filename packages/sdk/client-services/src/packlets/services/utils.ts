@@ -30,7 +30,7 @@ export const fromHost = (config: Config = new Config()): ClientServicesProvider 
  */
 // TODO(burdon): Move to client-services and remove dependencies from here.
 const createNetworkManager = (config: Config, options: Partial<NetworkManagerOptions> = {}): NetworkManager => {
-  const signals = config.get('runtime.services.signal');
+  const signals = config.get('runtime.services.signaling');
   if (signals) {
     const {
       log = true,

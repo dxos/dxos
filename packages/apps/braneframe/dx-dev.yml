@@ -5,5 +5,5 @@ runtime:
     remoteSource: http://localhost:3967/vault.html
 
   services:
-    signal:
+    signaling:
       - server: ws://localhost:8888/.well-known/dx/signal

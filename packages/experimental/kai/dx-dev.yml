@@ -7,7 +7,7 @@ runtime:
       persistent: false
 
   services:
-    signal:
+    signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
       - server: wss://dev.kube.dxos.org/.well-known/dx/signal
 

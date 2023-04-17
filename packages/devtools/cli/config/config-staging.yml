@@ -10,7 +10,7 @@ runtime:
     ipfs:
       server: "http://staging.kube.dxos.org:5001/"
       gateway: "http://staging.kube.dxos.org:8888/ipfs"
-    signal:
+    signaling:
       - server: 'wss://staging.kube.dxos.org/.well-known/dx/signal'
       - server: 'wss://dx.dev.kube.dxos.org/.well-known/dx/signal'
     ice:

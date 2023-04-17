@@ -7,7 +7,7 @@ runtime:
       path: './dxos_client_storage'
 
   services:
-    signal:
+    signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: stun:kube.dxos.org:3478

@@ -336,7 +336,7 @@ message Runtime {
     optional AppServer app = 2;
     optional Dxns dxns = 3;
     optional Ipfs ipfs = 4;
-    repeated Signal signal = 5;
+    repeated Signal signaling = 5;
     repeated Ice ice = 6;
     optional Machine machine = 7;
     optional BotHost bot = 8;

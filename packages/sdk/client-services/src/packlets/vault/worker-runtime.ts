@@ -48,7 +48,7 @@ export class WorkerRuntime {
     log('starting...');
     try {
       this._config = await this._configProvider();
-      const signals = this._config.get('runtime.services.signal');
+      const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
         networkManager: new NetworkManager({

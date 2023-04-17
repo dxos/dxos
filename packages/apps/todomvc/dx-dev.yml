@@ -7,5 +7,5 @@ runtime:
       persistent: false
 
   services:
-    signal:
+    signaling:
       - server: ws://localhost:8888/.well-known/dx/signal

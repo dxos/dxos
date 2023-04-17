@@ -9,7 +9,7 @@ runtime:
     kube:
       endpoints:
         services: 'https://kube.dx.ninja/.well-known'
-    signal:
+    signaling:
       - server: wss://kube.dx.ninja/.well-known/dx/signal
     ipfs:
       server: https://kube.dx.ninja/ipfs/api

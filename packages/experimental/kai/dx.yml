@@ -30,7 +30,7 @@ runtime:
 
   # TODO(burdon): Are these provided by KUBE?
   services:
-    signal:
+    signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
