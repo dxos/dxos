@@ -22,12 +22,6 @@ export default {
   actions: { argTypesRegex: '^on.*' }
 };
 
-export const Normal = () => {
-  return <InvitationList>
-    
-  </InvitationList>
-}
-
 export const Default = {
   decorators: [
     (Story: StoryFn) => {
