@@ -67,7 +67,10 @@ const start = async () => {
   });
 
   await server.open();
-  log.info('listening', { rpcPort });
+  log.info('listening', { 
+    rpcPort,
+    url: 'ws://localhost:' + rpcPort
+  });
 
   let bot: Bot | undefined;
   // TODO(burdon): Reconcile this subscription with the ECHO db.query.

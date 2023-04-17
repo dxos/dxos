@@ -14,7 +14,7 @@ const defaults = {
     client: {
       storage: {
         persistent: true,
-        path: './dxos_client_storage'
+        path: process.env.DX_BOT_STORAGE ?? './dxos_client_storage'
       }
     },
     services: {
