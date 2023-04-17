@@ -144,20 +144,21 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    // TODO(wittjosiah): This is flaky and regularly fails CI.
-    test.skip('recover from network failure during invitation', async () => {
+    test('recover from network failure during invitation', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
 
       await manager.openPanel(1, 'identity');
       await manager.acceptInvitation(1, 'device', invitation);
-      await sleep(100);
+      // Wait for invitation to connect before going offline.
+      await sleep(500);
       await manager.setConnectionState(0, ConnectionState.OFFLINE);
-      await sleep(100);
+      // Wait for network failure to propagate.
+      await sleep(500);
       await manager.setConnectionState(0, ConnectionState.ONLINE);
-      // TODO(wittjosiah): Requires attempting an action to discover the network failure.
-      await manager.authenticateInvitation('device', '00000', manager.peer(1));
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('device', manager.peer(1));
       const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('device', manager.peer(1))]);
@@ -342,8 +343,9 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
     });
 
-    // TODO(wittjosiah): This is flaky and regularly fails CI.
-    test.skip('recover from network failure during invitation', async () => {
+    test('recover from network failure during invitation', async () => {
+      test.slow();
+
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
@@ -352,12 +354,12 @@ test.describe('Invitations', () => {
       await manager.createIdentity(1);
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation);
-      await sleep(100);
+      // Wait for invitation to connect before going offline.
+      await sleep(500);
       await manager.setConnectionState(0, ConnectionState.OFFLINE);
-      await sleep(100);
+      // Wait for network failure to propagate.
+      await sleep(500);
       await manager.setConnectionState(0, ConnectionState.ONLINE);
-      // TODO(wittjosiah): Requires attempting an action to discover the network failure.
-      await manager.authenticateInvitation('space', '00000', manager.peer(1));
       await manager.resetInvitation(manager.peer(1));
       await manager.invitationInputContinue('space', manager.peer(1));
       const [authCode] = await Promise.all([manager.getAuthCode(), manager.clearAuthCode('space', manager.peer(1))]);
