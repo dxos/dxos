@@ -16,7 +16,7 @@ export const Title = (props: TitleProps) => {
   return (
     <BaseHeading
       className={mx(
-        'font-body font-system-normal text-neutral-650 dark:text-neutral-300 text-sm text-center grow plb-2.5 pbe-0 mbe-2.5 select-none',
+        'font-body font-system-normal text-neutral-650 dark:text-neutral-300 text-sm text-center select-none',
         className
       )}
       {...restProps}

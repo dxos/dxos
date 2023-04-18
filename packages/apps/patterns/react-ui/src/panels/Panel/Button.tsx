@@ -15,7 +15,7 @@ export const Button = (props: ButtonProps) => {
   return (
     <BaseButton
       className={mx(
-        'text-base p-4 block w-full mlb-2',
+        'text-base p-4 block w-full',
         before ? 'flex flex-row justify-start text-left gap-3 pli-4' : 'pli-8',
         className
       )}
