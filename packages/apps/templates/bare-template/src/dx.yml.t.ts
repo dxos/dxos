@@ -17,7 +17,7 @@ export default defineTemplate<typeof config>(({ input }) => {
       storage:
         persistent: true
     services:
-      signal:
+      signaling:
         server: wss://kube.dxos.org/.well-known/dx/signal
       ice:
         - urls: turn:kube.dxos.org:3478

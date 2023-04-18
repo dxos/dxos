@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Contact, DocumentStack, Message } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
-import { observer } from '@dxos/react-client';
+import { observer, useConfig } from '@dxos/react-client';
 import { Button } from '@dxos/react-components';
 
 import { AddressSection, CardProps } from '../../cards';
@@ -14,6 +14,7 @@ import { formatShortDate, sortMessage } from '../Message';
 import { sectionActions, StackSection, CustomActionMenu } from '../Stack';
 
 export const ContactStack = observer(({ space, object }: CardProps<Contact>) => {
+  const config = useConfig();
   const name = object.name ?? object.email;
   const [stack, setStack] = useState<DocumentStack>();
   useEffect(() => {
@@ -84,7 +85,7 @@ export const ContactStack = observer(({ space, object }: CardProps<Contact>) => 
             sections={stack.sections}
             StackSection={StackSection}
             ContextMenu={({ section }) => (
-              <CustomActionMenu actions={sectionActions(section)} stack={stack} section={section} />
+              <CustomActionMenu actions={sectionActions(config, section)} stack={stack} section={section} />
             )}
           />
         </div>

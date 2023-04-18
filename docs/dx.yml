@@ -19,8 +19,8 @@ runtime:
     mode: local
 
   services:
-    signal:
-      server: wss://kube.dxos.org/.well-known/dx/signal
+    signaling:
+      - server: wss://kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: stun:dev.kube.dxos.org:3478
       - urls: turn:dev.kube.dxos.org:3478
