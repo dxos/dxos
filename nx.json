@@ -1,7 +1,6 @@
 {
   // https://nx.dev/reference/nx-json
   "extends": "nx/presets/npm.json",
-  "npmScope": "dxos",
   "affected": {
     "defaultBase": "main"
   },
