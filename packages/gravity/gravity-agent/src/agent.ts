@@ -9,6 +9,7 @@ import { Client, ClientServicesProvider, PublicKey, fromHost } from '@dxos/clien
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
+import { Peer } from '@dxos/test';
 
 import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
 
@@ -22,7 +23,7 @@ export type AgentParams = {
 /**
  * Test agent.
  */
-export class Agent implements AgentContext {
+export class Agent implements AgentContext, Peer {
   private readonly _config: Config;
   private readonly _client: Client;
   private readonly _spec: AgentSpec;
