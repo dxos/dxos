@@ -13,8 +13,14 @@ export class ShellManager {
     return (scope || this.page).getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).isVisible();
   }
 
-  invitationFailed(scope?: Scope) {
-    return (scope || this.page).getByTestId('invitation-rescuer-reset').isVisible();
+  async invitationFailed(scope?: Scope, timeout = 3000) {
+    const peer = scope || this.page;
+    try {
+      await peer.locator('[data-testid=invitation-rescuer-reset]:not([disabled])').waitFor({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async inputInvitation(type: 'device' | 'space', invitation: string, scope?: Scope) {
@@ -33,6 +39,18 @@ export class ShellManager {
         .click();
     } else {
       await (scope || this.page).getByTestId('cancel-invitation').nth(0).click();
+    }
+  }
+
+  async readyToAuthenticate(type: 'device' | 'space', scope?: Scope, timeout = 3000) {
+    const peer = scope || this.page;
+    try {
+      await peer
+        .locator(`[data-testid=${type === 'device' ? 'halo' : 'space'}-auth-code-input]:not([disabled])`)
+        .waitFor({ timeout });
+      return true;
+    } catch {
+      return false;
     }
   }
 

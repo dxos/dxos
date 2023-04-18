@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { TypedObject } from '@dxos/client';
+import { data, DocumentModel, TypedObject, TextModel } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -12,7 +12,7 @@ import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 import { DetailsTable, JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-
+import { Cube, TextT } from '@phosphor-icons/react';
 // TODO(burdon): Factor out.
 
 const textFilter = (text?: string) => {
@@ -28,7 +28,7 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: TypedObject) => doc.__typename;
+const getItemType = (doc: TypedObject) => doc.toJSON()['@model'] === TextModel.meta.type ? 'Text' : doc.__typename;
 const getItemDetails = (item: TypedObject) => ({
   id: truncateKey(item.id),
   type: item.__typename,
@@ -36,11 +36,24 @@ const getItemDetails = (item: TypedObject) => ({
   properties: <JsonView data={item.toJSON()} />
 });
 
+const getObjectIcon = (item: TypedObject) => {
+  const model = item.toJSON()['@model'];
+  switch (model) {
+    case DocumentModel.meta.type:
+      return Cube;
+    case TextModel.meta.type:
+      return TextT;
+    default:
+      return undefined;
+  }
+}
+
 const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   id: item.id,
   title: getItemType(item) || 'Unknown type',
-  value: item
-});
+  value: item,
+  Icon: getObjectIcon(item),
+})
 
 const ItemsPanel = () => {
   const { space } = useDevtoolsState();
@@ -63,6 +76,11 @@ const ItemsPanel = () => {
           {/* TODO(burdon): Convert to list with new API. */}
           <TreeView
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
+            slots={{
+              value: {
+                className: 'overflow-hidden text-gray-400 truncate pl-2'
+              }
+            }}
             onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.id}
           />

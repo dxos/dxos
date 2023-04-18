@@ -50,11 +50,8 @@ Type: <code>[Publisher](/api/@dxos/config/interfaces/Publisher)</code>
 Options:
   - proto3_optional = true
 
-### [signal]()
-Type: <code>[Signal](/api/@dxos/config/interfaces/Signal)</code>
-
-Options:
-  - proto3_optional = true
+### [signaling]()
+Type: <code>[Signal](/api/@dxos/config/interfaces/Signal)[]</code>
 
 ### [supervisor]()
 Type: <code>[Supervisor](/api/@dxos/config/interfaces/Supervisor)</code>

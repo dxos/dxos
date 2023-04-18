@@ -22,7 +22,8 @@ export const MyComponent = () => {
 
 The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
 
-The `{ login: true }` tells HALO to log the user in using the HALO application. Omitting this enables the developer to receive `null` from this hook when the user has no existing HALO identity on this device.
+The `{ login: true }` tells HALO to log the user in using the [HALO vault](../typescript/vault).
+When `login` is set to `true` it will signal the HALO vault to open it's shell and allow the user to create an identity.
 
 ::: note
 When using `{ login: true }` the hook will fire twice. Once with `null`, and then again with an identity when one has been established.

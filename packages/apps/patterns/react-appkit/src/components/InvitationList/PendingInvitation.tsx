@@ -3,7 +3,7 @@
 //
 
 import { ProhibitInset, XCircle } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
@@ -25,7 +25,7 @@ import { Tooltip } from '../Tooltip';
 export interface PendingInvitationProps {
   wrapper: CancellableInvitationObservable;
   createInvitationUrl: (invitation: string) => string;
-  onClickRemove: (id: string) => void;
+  onClickRemove: (invitation: CancellableInvitationObservable) => void;
 }
 
 const PendingInvitationSkeleton = ({ message }: { message: string }) => {
@@ -35,11 +35,6 @@ const PendingInvitationSkeleton = ({ message }: { message: string }) => {
 export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove }: PendingInvitationProps) => {
   const { t } = useTranslation('appkit');
   const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
-
-  const handleRemove = useCallback(() => {
-    const id = wrapper.get().invitationId;
-    id && onClickRemove(id);
-  }, []);
 
   return (
     <div role='group' className={mx(defaultGroup({ elevation: 'group' }), 'mbe-2')}>
@@ -79,11 +74,11 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                 status === Invitation.State.SUCCESS ? (
                   <>
                     <Tooltip content={t('remove label')} tooltipLabelsTrigger>
-                      <Button className='flex md:hidden gap-1 items-center' onClick={handleRemove}>
+                      <Button className='flex md:hidden gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
                         <XCircle className={getSize(5)} />
                       </Button>
                     </Tooltip>
-                    <Button className='hidden md:flex gap-1 items-center' onClick={handleRemove}>
+                    <Button className='hidden md:flex gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
                       <XCircle className={getSize(5)} />
                       <span>{t('remove label')}</span>
                     </Button>

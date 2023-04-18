@@ -1,5 +1,5 @@
 # Class `HaloProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:24]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:23]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -123,19 +123,6 @@ Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity
 Arguments: 
 
 `recoveryKey`: <code>Uint8Array</code>
-
-### [removeInvitation(id)]()
-
-
-
-Removes device invitation.
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`id`: <code>string</code>
 
 ### [toJSON()]()
 

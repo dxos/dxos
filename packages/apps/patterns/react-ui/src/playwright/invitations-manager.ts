@@ -34,7 +34,7 @@ export class InvitationsManager extends ShellManager {
 
     const { page } = await setupPage(this._browser, {
       url: storybookUrl('invitations--default'),
-      waitFor: (page) => page.getByTestId('invitations.identity-header').nth(0).isVisible()
+      waitFor: (page) => page.getByTestId('invitations.identity-header').first().isVisible()
     });
 
     this.page = page;
@@ -44,9 +44,24 @@ export class InvitationsManager extends ShellManager {
 
   // Getters
 
+  peer(id: number) {
+    return this.page.getByTestId(`peer-${id}`);
+  }
+
+  async getNetworkStatus(id: number) {
+    const selector = this.peer(id).getByTestId('identity-list-item.description').first();
+
+    try {
+      await selector.waitFor({ timeout: 500 });
+      return ConnectionState.OFFLINE;
+    } catch {
+      return ConnectionState.ONLINE;
+    }
+  }
+
   async getDisplayName(id: number) {
     // TODO(wittjosiah): Update id.
-    return this.peer(id).getByTestId('identity-list-item').nth(0).textContent();
+    return this.peer(id).getByTestId('identity-list-item').first().textContent();
   }
 
   async getSpaceName(id: number, nth: number) {
@@ -54,15 +69,15 @@ export class InvitationsManager extends ShellManager {
     return this.peer(id).getByTestId('space-list-item').nth(nth).textContent();
   }
 
+  async getAuthCode(): Promise<string> {
+    this._authCode = new Trigger<string>();
+    return await this._authCode.wait();
+  }
+
   // Actions
 
-  async setConnectionState(id: number, state: ConnectionState) {
-    await this.page.evaluate(
-      ({ id, state }) => {
-        (window as any)[`peer${id}client`].mesh.setConnectionState(state);
-      },
-      { id, state }
-    );
+  async toggleNetworkStatus(id: number) {
+    await this.peer(id).getByTestId('invitations.toggle-network').click();
   }
 
   async openPanel(id: number, panel: PanelType) {
@@ -135,15 +150,6 @@ export class InvitationsManager extends ShellManager {
     }
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
     await this.page.keyboard.press('Enter');
-  }
-
-  async getAuthCode(): Promise<string> {
-    this._authCode = new Trigger<string>();
-    return await this._authCode.wait();
-  }
-
-  peer(id: number) {
-    return this.page.getByTestId(`peer-${id}`);
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {

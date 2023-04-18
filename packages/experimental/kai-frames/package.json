@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-frames",
-  "version": "0.1.39",
+  "version": "0.1.40",
   "private": true,
   "description": "Frame components.",
   "homepage": "https://dxos.org",
@@ -57,6 +57,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isequal": "^4.5.0",
     "node-fetch": "^2.6.0",
+    "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-big-calendar": "^1.5.2",
     "react-color": "^2.19.3",

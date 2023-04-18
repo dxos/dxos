@@ -27,7 +27,7 @@ describe('Signal Integration Test', () => {
   });
 
   const setupPeer = async ({ peerId, topic = PublicKey.random() }: { peerId: PublicKey; topic?: PublicKey }) => {
-    const signalManager = new WebsocketSignalManager([broker.url()]);
+    const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
     await signalManager.open();
     afterTest(() => signalManager.close());
 

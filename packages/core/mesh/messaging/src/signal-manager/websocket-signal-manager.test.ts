@@ -29,9 +29,9 @@ describe('WebSocketSignalManager', () => {
     );
 
   test('join swarm with two brokers', async () => {
-    const client1 = new WebsocketSignalManager([broker1.url(), broker2.url()]);
-    const client2 = new WebsocketSignalManager([broker1.url()]);
-    const client3 = new WebsocketSignalManager([broker2.url()]);
+    const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
+    const client2 = new WebsocketSignalManager([{ server: broker1.url() }]);
+    const client3 = new WebsocketSignalManager([{ server: broker2.url() }]);
     await openAndClose(client1, client2, client3);
 
     const [topic, peer1, peer2, peer3] = PublicKey.randomSequence();
@@ -51,8 +51,8 @@ describe('WebSocketSignalManager', () => {
     .retries(2);
 
   test('works with one broken server', async () => {
-    const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
-    const client2 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
+    const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
+    const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     await openAndClose(client1, client2);
 
     const [topic, peer1, peer2] = PublicKey.randomSequence();
@@ -69,8 +69,8 @@ describe('WebSocketSignalManager', () => {
     .retries(2);
 
   test('join two swarms with a broken signal server', async () => {
-    const client1 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
-    const client2 = new WebsocketSignalManager(['ws://broken.server/signal', broker1.url()]);
+    const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
+    const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
     await openAndClose(client1, client2);
 
     const [topic1, topic2, peer1, peer2] = PublicKey.randomSequence();

@@ -4,7 +4,7 @@
 
 import sortKeys from 'sort-keys';
 
-import { Client, ClientServices, PublicKey, Space } from '@dxos/client';
+import { Client, ClientServices, PublicKey, Space, SpaceState } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-bots';
 import { log } from '@dxos/log';
@@ -74,6 +74,10 @@ const start = async () => {
   const onUpdate = async (spaces: Space[]) => {
     if (spaces.length) {
       const space = spaces[0];
+      if (space.state.get() !== SpaceState.READY) {
+        return;
+      }
+
       log.info('joined', { space: space.key });
       if (!bot) {
         bot = createBot(process.env.DX_BOT_NAME);
