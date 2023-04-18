@@ -25,6 +25,7 @@ export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
+export { TextModel } from '@dxos/text-model';
 export { ApiError } from '@dxos/errors';
 
 export {

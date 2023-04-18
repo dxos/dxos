@@ -75,14 +75,14 @@ export class IFrameHostRuntime {
     log('starting...');
     try {
       this._config = await getAsyncValue(this._configProvider);
-      const signalServer = this._config.get('runtime.services.signal.server');
+      const signals = this._config.get('runtime.services.signaling');
       this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,
         networkManager: new NetworkManager({
           log: true,
-          signalManager: signalServer
-            ? new WebsocketSignalManager([signalServer])
+          signalManager: signals
+            ? new WebsocketSignalManager(signals)
             : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
           transportFactory: this._transportFactory
         })

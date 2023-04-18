@@ -49,7 +49,7 @@ export const createPath = ({
     }
   }
 
-  return '/' + parts.join('/');
+  return '/' + parts.join('/') + document.location.search;
 };
 
 export const createInvitationPath = (invitation: Invitation) =>

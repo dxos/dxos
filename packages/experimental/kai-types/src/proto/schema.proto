@@ -141,11 +141,30 @@ message Document {
   string tag = 3;
 }
 
+// TODO(burdon): How to model grounding? Scope/vector, etc?
+message Dialogue {
+  option (object) = true;
+
+  message Message {
+    enum Type {
+      SYSTEM = 0;
+      USER = 1;
+      AGENT = 2;
+    }
+
+    Type type = 1;
+    string text = 2;
+  }
+
+  repeated Message messages = 1;
+}
+
 message DocumentStack {
   option (object) = true;
 
+  // Sections may belong to different stacks.
   message Section {
-    option (object) = true; // TODO(burdon): REMOVE (but requires id property).
+    option (object) = true;
     Source source = 1; // TODO(burdon): Metadata from resolver.
     dxos.schema.TypedObject object = 2;
   }

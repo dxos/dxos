@@ -38,6 +38,18 @@ export class InvalidConfigError extends ApiError {
   }
 }
 
+/**
+ * Explicit failure to connect with remote client services.
+ */
+export class RemoteServiceConnectionError extends ApiError {
+  constructor(message?: string, context?: any) {
+    super('REMOTE_SERVICE_CONNECTION_ERROR', message, context);
+  }
+}
+
+/**
+ * Failed to open a connection to remote client services.
+ */
 export class RemoteServiceConnectionTimeout extends ApiError {
   constructor(message?: string, context?: any) {
     super('REMOTE_SERVICE_CONNECTION_TIMEOUT', message, context);
@@ -47,5 +59,11 @@ export class RemoteServiceConnectionTimeout extends ApiError {
 export class DataCorruptionError extends SystemError {
   constructor(message?: string, context?: any) {
     super('DATA_CORRUPTION', message, context);
+  }
+}
+
+export class InvalidInvitationExtensionRoleError extends SystemError {
+  constructor(message?: string, context?: any) {
+    super('INVALID_INVITATION_EXTENSION_ROLE', message, context);
   }
 }

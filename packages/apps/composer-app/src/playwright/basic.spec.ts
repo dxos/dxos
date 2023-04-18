@@ -4,6 +4,7 @@
 
 import { test } from '@playwright/test';
 import { expect } from 'chai';
+import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
 
 import { AppManager } from './app-manager';
@@ -18,12 +19,8 @@ test.describe('Basic test', () => {
     host = new AppManager(browser, true);
 
     await host.init();
-    // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //   https://github.com/microsoft/playwright/issues/2973
-    guest = browserName === 'chromium' ? new AppManager(browser, true) : host;
-    if (browserName === 'chromium') {
-      await guest.init();
-    }
+    guest = new AppManager(browser, true);
+    await guest.init();
   });
 
   test.describe('Solo tests', () => {
@@ -55,11 +52,12 @@ test.describe('Basic test', () => {
     });
   });
 
+  // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
+  //   https://github.com/microsoft/playwright/issues/2973
   test.describe('Collab tests', () => {
     test('guest joins host’s space', async ({ browserName }) => {
-      if (browserName !== 'chromium') {
-        return;
-      }
+      test.skip(platform() !== 'darwin' && browserName === 'webkit');
+
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
       await guest.joinSpace();
@@ -76,7 +74,9 @@ test.describe('Basic test', () => {
       });
     });
 
-    test('guest can see same documents on join', async () => {
+    test('guest can see same documents on join', async ({ browserName }) => {
+      test.skip(platform() !== 'darwin' && browserName === 'webkit');
+
       const hostLinks = await Promise.all([
         host.getDocumentLinks().nth(0).getAttribute('href'),
         host.getDocumentLinks().nth(1).getAttribute('href')
@@ -89,7 +89,9 @@ test.describe('Basic test', () => {
       expect(hostLinks[1]).to.equal(guestLinks[1]);
     });
 
-    test('host and guest can see each others’ presence when same document is in focus', async () => {
+    test('host and guest can see each others’ presence when same document is in focus', async ({ browserName }) => {
+      test.skip(platform() !== 'darwin' && browserName === 'webkit');
+
       await Promise.all([
         host.getDocumentLinks().nth(0).click(),
         guest.getDocumentLinks().nth(0).click(),
@@ -108,7 +110,9 @@ test.describe('Basic test', () => {
       });
     });
 
-    test('host and guest can see each others’ changes in same document', async () => {
+    test('host and guest can see each others’ changes in same document', async ({ browserName }) => {
+      test.skip(platform() !== 'darwin' && browserName === 'webkit');
+
       const parts = [
         'Lorem ipsum dolor sit amet,',
         ' consectetur adipiscing elit,',

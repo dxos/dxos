@@ -12,8 +12,6 @@ import { ClientServicesProvider, ClientServices, clientServiceBundle } from './s
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
  */
-// TODO(burdon): Separate construction of port from availability of services.
-// TODO(burdon): Create `@dxos/client-proxy` package with thin-client only dependencies (for code-splitting).
 export class ClientServicesProxy implements ClientServicesProvider {
   private readonly _proxy: ProtoRpcPeer<ClientServices>;
 
@@ -45,7 +43,11 @@ export class ClientServicesProxy implements ClientServicesProvider {
   }
 
   async open() {
-    await asyncTimeout(this._proxy.open(), this._timeout, new RemoteServiceConnectionTimeout());
+    await asyncTimeout(
+      this._proxy.open(),
+      this._timeout,
+      new RemoteServiceConnectionTimeout('Failed to establish dxrpc connection', { timeout: this._timeout })
+    );
   }
 
   async close() {

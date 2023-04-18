@@ -4,7 +4,7 @@
 
 import { CaretRight } from '@phosphor-icons/react';
 import React, { useContext } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
@@ -24,8 +24,10 @@ const SpacePage = () => {
   const { space, frame, objectId } = useAppRouter();
   const spaces = useSpaces();
   const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
+  const [searchParams] = useSearchParams();
+  const spaceInvitationCode = searchParams.get('spaceInvitationCode');
 
-  if (!space && spaces.length > 0) {
+  if (!space && spaces.length > 0 && !spaceInvitationCode) {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
   }
 

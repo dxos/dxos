@@ -24,7 +24,9 @@ export class Keyring implements Signer {
     private readonly _storage: Directory = createStorage({
       type: StorageType.RAM
     }).createDirectory('keyring')
-  ) {}
+  ) {
+    assert(subtleCrypto, 'SubtleCrypto not available in this environment.');
+  }
 
   async sign(key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
     const keyPair = await this._getKey(key);
