@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './test-builder';
-export * from './test-peer';
+export * from './builder';
+export * from './peer';

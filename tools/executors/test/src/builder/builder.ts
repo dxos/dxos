@@ -2,22 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TestPeer } from './test-peer';
+import { Peer } from './peer';
 
-type CreatePeerOpts<T extends TestPeer> = {
+type CreatePeerOpts<T extends Peer> = {
   factory: () => T;
 };
 
-export class TestBuilder {
-  private readonly _peers = new Set<TestPeer>();
+export class Builder {
+  private readonly _peers = new Set<Peer>();
 
-  createPeer<T extends TestPeer>(opts: CreatePeerOpts<T>): T {
+  createPeer<T extends Peer>(opts: CreatePeerOpts<T>): T {
     const peer = opts.factory();
     this._peers.add(peer);
     return peer;
   }
 
-  *createPeers<T extends TestPeer>(opts: CreatePeerOpts<T>): Generator<T> {
+  *createPeers<T extends Peer>(opts: CreatePeerOpts<T>): Generator<T> {
     while (true) {
       yield this.createPeer(opts);
     }

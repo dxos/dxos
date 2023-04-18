@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export interface TestPeer {
+export interface Peer {
   destroy: () => Promise<void>;
 }
