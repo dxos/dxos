@@ -6,8 +6,8 @@ runtime:
       persistent: false
 
   services:
-    signal:
-      server: ws://localhost/.well-known/dx/signal
+    signaling:
+      - server: ws://localhost/.well-known/dx/signal
     ice:
       - urls: stun:kube.dxos.org:3478
         username: dxos

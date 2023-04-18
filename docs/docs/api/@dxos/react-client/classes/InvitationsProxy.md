@@ -1,12 +1,12 @@
 # Class `InvitationsProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/invitations/invitations-proxy.d.ts:3]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/invitations/invitations-proxy.d.ts:4]()</sub>
 
 
 
 
 
 ## Constructors
-### [constructor(_invitationsService, _getContext)]()
+### [constructor(_invitationsService, _getInvitationContext)]()
 
 
 
@@ -16,10 +16,18 @@ Arguments:
 
 `_invitationsService`: <code>InvitationsService</code>
 
-`_getContext`: <code>function</code>
+`_getInvitationContext`: <code>function</code>
 
 
 ## Properties
+### [accepted]()
+Type: <code>MulticastObservable&lt;[AuthenticatingInvitationObservable](/api/@dxos/react-client/classes/AuthenticatingInvitationObservable)[]&gt;</code>
+
+### [created]()
+Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)[]&gt;</code>
+
+### [isOpen]()
+Type: <code>boolean</code>
 
 
 ## Methods
@@ -32,6 +40,14 @@ Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/clas
 Arguments: 
 
 `invitation`: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
+
+### [close()]()
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
 
 ### [createInvitation(\[options\])]()
 
@@ -48,5 +64,13 @@ Arguments:
 
 
 Returns: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
+
+Arguments: none
+
+### [open()]()
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none

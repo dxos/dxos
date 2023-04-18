@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { RemoteServiceConnectionError, RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -13,7 +13,12 @@ import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
-import { DEFAULT_CLIENT_CHANNEL, DEFAULT_CLIENT_ORIGIN, DEFAULT_SHELL_CHANNEL } from './config';
+import {
+  DEFAULT_CLIENT_CHANNEL,
+  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_INTERNAL_CHANNEL,
+  DEFAULT_SHELL_CHANNEL
+} from './config';
 import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
 
@@ -32,6 +37,7 @@ export type IFrameClientServicesProxyOptions = {
   source: string;
   channel: string;
   shell: boolean | string;
+  vault: string;
   timeout: number;
 };
 
@@ -56,10 +62,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     source = DEFAULT_CLIENT_ORIGIN,
     channel = DEFAULT_CLIENT_CHANNEL,
     shell = DEFAULT_SHELL_CHANNEL,
+    vault = DEFAULT_INTERNAL_CHANNEL,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
-    this._options = { source, channel, shell, timeout };
+    this._options = { source, channel, shell, vault, timeout };
   }
 
   get proxy() {
@@ -156,12 +163,30 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     );
 
     if (!this._iframe) {
-      const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
-      this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
       const res = await fetch(source);
       if (res.status >= 400) {
-        throw new RemoteServiceConnectionTimeout();
+        throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
       }
+
+      // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
+      const trigger = new Trigger();
+      const handler = (event: MessageEvent) => {
+        const { channel, payload } = event.data;
+        if (channel === this._options.vault && payload === 'loaded') {
+          trigger.wake();
+        }
+      };
+      window.addEventListener('message', handler);
+
+      const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
+      this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
+
+      await asyncTimeout(
+        trigger.wait(),
+        this._options.timeout,
+        new RemoteServiceConnectionTimeout('Vault failed to load')
+      );
+      window.removeEventListener('message', handler);
     }
 
     return createIFramePort({ origin: source.origin, iframe: this._iframe, channel });

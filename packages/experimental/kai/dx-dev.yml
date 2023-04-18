@@ -4,12 +4,13 @@ runtime:
   client:
     remoteSource: http://localhost:3967/vault.html
     storage:
-      persistent: true
+      persistent: false
 
   services:
-    signal:
-      server: wss://kube.dxos.org/.well-known/dx/signal
-#      server: wss://kube.dx.ninja/.well-known/dx/signal
+    signaling:
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
+
     ice:
       - urls: stun:kube.dxos.org:3478
         username: dxos

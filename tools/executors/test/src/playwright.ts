@@ -127,7 +127,7 @@ const getProject = (browser: BrowserType | MobileType): Project => {
 export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   testDir: '.',
   outputDir: process.env.OUTPUT_PATH,
-  timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : 30_000,
+  timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter:

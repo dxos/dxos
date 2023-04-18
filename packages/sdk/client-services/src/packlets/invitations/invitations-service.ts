@@ -4,10 +4,16 @@
 
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  AuthenticationRequest,
+  Invitation,
+  InvitationsService,
+  QueryInvitationsResponse
+} from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationProtocol } from './invitation-protocol';
 import { InvitationsHandler } from './invitations-handler';
@@ -18,6 +24,10 @@ import { InvitationsHandler } from './invitations-handler';
 export class InvitationsServiceImpl implements InvitationsService {
   private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
+  private readonly _invitationCreated = new Event<Invitation>();
+  private readonly _invitationAccepted = new Event<Invitation>();
+  private readonly _removedCreated = new Event<Invitation>();
+  private readonly _removedAccepted = new Event<Invitation>();
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
@@ -31,160 +41,61 @@ export class InvitationsServiceImpl implements InvitationsService {
     };
   }
 
-  createInvitation(invitation: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next, close }) => {
-      const handler = this._getHandler(invitation);
-      log('stream opened', this.getLoggingContext());
+  createInvitation(options: Invitation): Stream<Invitation> {
+    let invitation: CancellableInvitationObservable;
 
-      let invitationId: string;
-      const observable = this._invitationsHandler.createInvitation(handler, invitation);
-      observable.subscribe(
+    const existingInvitation = this._createInvitations.get(options.invitationId);
+    if (existingInvitation) {
+      invitation = existingInvitation;
+    } else {
+      const handler = this._getHandler(options);
+      invitation = this._invitationsHandler.createInvitation(handler, options);
+      this._createInvitations.set(invitation.get().invitationId, invitation);
+      this._invitationCreated.emit(invitation.get());
+    }
+
+    return new Stream<Invitation>(({ next, close }) => {
+      invitation.subscribe(
         (invitation) => {
-          switch (invitation.state) {
-            case Invitation.State.CONNECTING: {
-              assert(invitation.invitationId);
-              invitationId = invitation.invitationId;
-              this._createInvitations.set(invitation.invitationId, observable);
-              invitation.state = Invitation.State.CONNECTING;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.CONNECTED: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.CONNECTED;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.READY_FOR_AUTHENTICATION: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.READY_FOR_AUTHENTICATION;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.AUTHENTICATING: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.AUTHENTICATING;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.SUCCESS: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.SUCCESS;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.CANCELLED: {
-              assert(invitationId);
-              invitation.invitationId = invitationId;
-              invitation.state = Invitation.State.CANCELLED;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.TIMEOUT: {
-              assert(invitationId);
-              invitation.invitationId = invitationId;
-              invitation.state = Invitation.State.TIMEOUT;
-              next(invitation);
-              break;
-            }
-          }
+          next(invitation);
         },
         (err: Error) => {
           close(err);
         },
         () => {
           close();
+          this._createInvitations.delete(invitation.get().invitationId);
         }
       );
-
-      return (err?: Error) => {
-        const context = this.getLoggingContext();
-        if (err) {
-          log.warn('stream closed', { ...context, err });
-        } else {
-          log('stream closed', context);
-        }
-
-        this._createInvitations.delete(invitation.invitationId!);
-      };
     });
   }
 
-  acceptInvitation(invitation: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next, close }) => {
-      log('stream opened', this.getLoggingContext());
-      const handler = this._getHandler(invitation);
+  acceptInvitation(options: Invitation): Stream<Invitation> {
+    let invitation: AuthenticatingInvitationObservable;
 
-      let invitationId: string;
-      const observable = this._invitationsHandler.acceptInvitation(handler, invitation);
-      observable.subscribe(
+    const existingInvitation = this._acceptInvitations.get(options.invitationId);
+    if (existingInvitation) {
+      invitation = existingInvitation;
+    } else {
+      const handler = this._getHandler(options);
+      invitation = this._invitationsHandler.acceptInvitation(handler, options);
+      this._acceptInvitations.set(invitation.get().invitationId, invitation);
+      this._invitationAccepted.emit(invitation.get());
+    }
+
+    return new Stream<Invitation>(({ next, close }) => {
+      invitation.subscribe(
         (invitation) => {
-          switch (invitation.state) {
-            case Invitation.State.CONNECTING: {
-              assert(invitation.invitationId);
-              invitationId = invitation.invitationId;
-              this._acceptInvitations.set(invitation.invitationId, observable);
-              invitation.state = Invitation.State.CONNECTING;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.CONNECTED: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.CONNECTED;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.READY_FOR_AUTHENTICATION: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.READY_FOR_AUTHENTICATION;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.AUTHENTICATING: {
-              assert(invitation.invitationId);
-              invitation.state = Invitation.State.AUTHENTICATING;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.SUCCESS: {
-              invitation.state = Invitation.State.SUCCESS;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.CANCELLED: {
-              assert(invitationId);
-              invitation.invitationId = invitationId;
-              invitation.state = Invitation.State.CANCELLED;
-              next(invitation);
-              break;
-            }
-            case Invitation.State.TIMEOUT: {
-              assert(invitationId);
-              invitation.invitationId = invitationId;
-              invitation.state = Invitation.State.TIMEOUT;
-              next(invitation);
-              break;
-            }
-          }
+          next(invitation);
         },
         (err: Error) => {
           close(err);
         },
         () => {
           close();
+          this._acceptInvitations.delete(invitation.get().invitationId);
         }
       );
-
-      return (err?: Error) => {
-        const context = this.getLoggingContext();
-        if (err) {
-          log.warn('stream closed', { ...context, err });
-        } else {
-          log('stream closed', context);
-        }
-
-        this._acceptInvitations.delete(invitation.invitationId!);
-      };
     });
   }
 
@@ -200,13 +111,71 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
-    log('cancelling...');
+    log('deleting...');
     assert(invitationId);
-    const observable = this._createInvitations.get(invitationId) ?? this._acceptInvitations.get(invitationId);
-    if (!observable) {
-      log.warn('invalid invitation', { invitationId });
+    const created = this._createInvitations.get(invitationId);
+    const accepted = this._acceptInvitations.get(invitationId);
+    if (created) {
+      await created.cancel();
+      this._createInvitations.delete(invitationId);
+      this._removedCreated.emit(created.get());
+    } else if (accepted) {
+      await accepted.cancel();
+      this._acceptInvitations.delete(invitationId);
+      this._removedAccepted.emit(accepted.get());
     } else {
-      await observable?.cancel();
+      log.warn('invalid invitation', { invitationId });
     }
+  }
+
+  queryInvitations(): Stream<QueryInvitationsResponse> {
+    return new Stream<QueryInvitationsResponse>(({ next, ctx }) => {
+      // Push added invitations to the stream.
+      this._invitationCreated.on(ctx, (invitation) => {
+        next({
+          action: QueryInvitationsResponse.Action.ADDED,
+          type: QueryInvitationsResponse.Type.CREATED,
+          invitations: [invitation]
+        });
+      });
+
+      this._invitationAccepted.on(ctx, (invitation) => {
+        next({
+          action: QueryInvitationsResponse.Action.ADDED,
+          type: QueryInvitationsResponse.Type.ACCEPTED,
+          invitations: [invitation]
+        });
+      });
+
+      // Push removed invitations to the stream.
+      this._removedCreated.on(ctx, (invitation) => {
+        next({
+          action: QueryInvitationsResponse.Action.REMOVED,
+          type: QueryInvitationsResponse.Type.CREATED,
+          invitations: [invitation]
+        });
+      });
+
+      this._removedAccepted.on(ctx, (invitation) => {
+        next({
+          action: QueryInvitationsResponse.Action.REMOVED,
+          type: QueryInvitationsResponse.Type.ACCEPTED,
+          invitations: [invitation]
+        });
+      });
+
+      // Push existing invitations to the stream.
+      next({
+        action: QueryInvitationsResponse.Action.ADDED,
+        type: QueryInvitationsResponse.Type.CREATED,
+        invitations: Array.from(this._createInvitations.values()).map((invitation) => invitation.get())
+      });
+
+      next({
+        action: QueryInvitationsResponse.Action.ADDED,
+        type: QueryInvitationsResponse.Type.ACCEPTED,
+        invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get())
+      });
+    });
   }
 }

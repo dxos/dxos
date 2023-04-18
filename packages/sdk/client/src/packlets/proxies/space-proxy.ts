@@ -71,7 +71,6 @@ export interface Space {
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
-  removeInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -110,7 +109,6 @@ export class SpaceProxy implements Space {
    */
   _initialized = false;
 
-  private readonly _invitationsUpdate = new Event<CancellableInvitationObservable[]>();
   private readonly _membersUpdate = new Event<SpaceMember[]>();
 
   private readonly _db!: EchoDatabase;
@@ -121,7 +119,6 @@ export class SpaceProxy implements Space {
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
-  private readonly _invitations = MulticastObservable.from(this._invitationsUpdate, []);
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   // TODO(dmaretskyi): Cache properties in the metadata.
@@ -210,7 +207,7 @@ export class SpaceProxy implements Space {
    * @inheritdoc
    */
   get invitations() {
-    return this._invitations;
+    return this._invitationProxy.created;
   }
 
   /**
@@ -266,6 +263,8 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initializing = true;
 
+    await this._invitationProxy.open();
+
     await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('ready');
     this._databaseInitialized.wake();
@@ -312,6 +311,7 @@ export class SpaceProxy implements Space {
   async _destroy() {
     log('destroying...');
     await this._ctx.dispose();
+    await this._invitationProxy.close();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
@@ -366,21 +366,7 @@ export class SpaceProxy implements Space {
    */
   createInvitation(options?: Partial<Invitation>) {
     log('create invitation', options);
-    const invitation = this._invitationProxy.createInvitation(options);
-    this._invitationsUpdate.emit([...this._invitations.get(), invitation]);
-
-    return invitation;
-  }
-
-  /**
-   * Remove invitation from space.
-   */
-  removeInvitation(id: string) {
-    log('remove invitation', { id });
-    const invitations = this._invitations.get();
-    const index = invitations.findIndex((invitation) => invitation.get().invitationId === id);
-    void invitations[index]?.cancel();
-    this._invitationsUpdate.emit([...invitations.slice(0, index), ...invitations.slice(index + 1)]);
+    return this._invitationProxy.createInvitation(options);
   }
 
   /**

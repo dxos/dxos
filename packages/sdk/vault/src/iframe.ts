@@ -37,7 +37,14 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   );
 };
 
-export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
+export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise<void> => {
+  // Handle reset path.
+  const reset = window.location.hash === '#reset';
+  if (reset) {
+    return forceClientReset();
+  }
+
+  // Start iframe runtime.
   const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
@@ -97,7 +104,7 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker) => {
 /**
  * Resets client storage directly via the host and renders message on completion.
  */
-export const forceClientReset = async () => {
+const forceClientReset = async () => {
   const config = new Config(Defaults());
 
   // TODO(wittjosiah): This doesn't work with WebFS adapter because files aren't loaded yet.

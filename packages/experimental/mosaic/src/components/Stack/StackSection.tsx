@@ -11,7 +11,7 @@ import { getSize } from '@dxos/react-components';
 
 import { StackRow, StackRowProps } from './StackRow';
 
-export const StackSectionContainer: FC<StackRowProps & { section: any }> = ({ section, ...rest }) => {
+export const DraggableStackRow: FC<StackRowProps & { section: any }> = ({ section, ...rest }) => {
   // https://docs.dndkit.com/presets/sortable/usesortable
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: section.id });
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
@@ -44,7 +44,12 @@ export const StackFooter: FC<StackRowProps & { id: string; ContextMenu?: FC<{ se
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   return (
-    <StackRow ref={setNodeRef} style={{ transform: CSS.Transform.toString(t), transition }} {...rest}>
+    <StackRow
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(t), transition }}
+      {...rest}
+      showControls={true}
+    >
       <div className='h-[50vh]' />
     </StackRow>
   );

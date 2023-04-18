@@ -41,7 +41,7 @@ interface CompactQrCodeSlots {
 }
 
 export interface CompactQrCodeProps extends SharedQrCodeProps {
-  displayQrLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  displayQrLabel: undefined | string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   copyLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   slots?: CompactQrCodeSlots;
 }
@@ -92,9 +92,11 @@ export const CompactQrCode = ({
   return (
     <>
       <ButtonGroup className='inline-flex grow md:hidden'>
-        <span className='sr-only' id={labelId}>
-          {displayQrLabel}
-        </span>
+        {displayQrLabel && (
+          <span className='sr-only' id={labelId}>
+            {displayQrLabel}
+          </span>
+        )}
         <Popover
           openTrigger={
             <Button
