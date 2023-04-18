@@ -103,6 +103,12 @@ export const markdownDarktheme = {
   '.dark & .cm-selectionMatch': {
     background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44'
   },
+  '& .cm-content': {
+    caretColor: 'black'
+  },
+  '.dark & .cm-content': {
+    caretColor: cursor
+  },
   '& .cm-cursor': {
     borderLeftColor: 'black'
   },
