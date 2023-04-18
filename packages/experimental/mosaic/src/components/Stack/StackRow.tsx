@@ -18,13 +18,26 @@ export type StackRowProps = {
   children?: ReactNode;
   DragHandle?: ReactNode;
   ContextMenu?: FC<{ section?: any }>;
+  ActionButton?: FC<{ section?: any }>;
+  showControls?: boolean;
   style?: any;
   slots?: StackRowSlots;
 };
 
+// TODO(burdon): Hide context/drag menu if mobile.
 export const StackRow = forwardRef(
   (
-    { section, children, DragHandle, ContextMenu, dragging, style, slots = {} }: StackRowProps,
+    {
+      section,
+      children,
+      DragHandle,
+      ContextMenu,
+      ActionButton,
+      dragging,
+      showControls,
+      style,
+      slots = {}
+    }: StackRowProps,
     ref: ForwardedRef<HTMLDivElement>
   ) => {
     return (
@@ -37,18 +50,31 @@ export const StackRow = forwardRef(
           dragging && 'border-t border-b relative z-10'
         )}
       >
-        <div className={mx('md:flex invisible shrink-0 w-24 h-[32px] items-center')}>
+        <div className={mx('hidden md:flex shrink-0 w-24 h-[32px] items-center', !showControls && 'invisible')}>
           {!dragging && (
             // TODO(burdon): Don't hide menu when selected.
             // TODO(burdon): Menu popup triggers scrollbar.
-            <div className={mx('flex group-hover:visible ml-6 -mt-0.5 text-gray-400')}>
-              <div className='flex w-8'>{ContextMenu && <ContextMenu section={section} />}</div>
-              <div className='flex w-8'>{DragHandle}</div>
+            <div className={mx('flex group-hover:visible ml-4 text-gray-400')}>
+              <div className='flex justify-center w-8'>{ContextMenu && <ContextMenu section={section} />}</div>
+              <div className='flex justify-center w-8'>{DragHandle}</div>
             </div>
           )}
         </div>
 
-        <div className='flex flex-col flex-1 overflow-hidden mr-2 md:mr-16'>{children}</div>
+        <div className='flex flex-col grow overflow-hidden'>{children}</div>
+
+        <div
+          className={mx(
+            'hidden md:flex shrink-0 group-hover:visible w-20 h-[32px] justify-end items-center',
+            !showControls && 'invisible'
+          )}
+        >
+          {ActionButton && (
+            <div className='flex justify-center mr-2'>
+              <ActionButton />
+            </div>
+          )}
+        </div>
       </section>
     );
   }

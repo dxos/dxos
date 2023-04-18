@@ -10,7 +10,7 @@ import highlight from 'rehype-highlight';
 
 import { mx } from '@dxos/react-components';
 
-import { defaultClasses, defaultStyles } from './styles';
+import { defaultClasses, defaultPadding, defaultStyles } from './styles';
 
 /**
  * Compute CSS properties to transform DIV to be full screen.
@@ -61,7 +61,7 @@ export type PresenterProps = {
 
 export const Presenter = ({
   content = '',
-  className,
+  className, // TODO(burdon): Change to slots.
   classes = defaultClasses,
   topLeft,
   topRight,
@@ -89,12 +89,14 @@ export const Presenter = ({
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div
-      ref={containerRef}
-      className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-gray-800')}
-    >
+    <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-black')}>
       {width && height && (
-        <div className={mx('flex flex-col absolute transition', defaultStyles)} style={props}>
+        <div
+          // TODO(burdon): Full bleed app.
+          className={mx('flex flex-col absolute transition', content[0] === '#' && defaultPadding, defaultStyles)}
+          style={props}
+        >
+          {/* TODO(burdon): Wrap images. */}
           <ReactMarkdown rehypePlugins={[[highlight], [addClasses, classes]]}>{content}</ReactMarkdown>
         </div>
       )}
