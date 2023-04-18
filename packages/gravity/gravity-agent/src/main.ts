@@ -17,14 +17,12 @@ import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 import { testStateMachineFactory } from './statemachine';
+import { parseYamlWithSchema } from './utils';
 
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
   filter: 'info',
 });
-
-const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => codec.fromObject(yaml.load(yamlSource));
-
 const main = () => {
   yargs(hideBin(process.argv))
     .scriptName('agent')
