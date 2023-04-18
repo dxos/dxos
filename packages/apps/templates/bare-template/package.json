@@ -9,8 +9,8 @@
   "main": "dist/src/config.t.js",
   "types": "dist/src/config.t.d.ts",
   "scripts": {
-    "build": "tsc && plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build": "pnpm tsc && pnpm copy-resources",
+    "copy-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
     "clean": "rm -rf test/out",
     "gen": "test/generate",
     "tsc": "tsc"
