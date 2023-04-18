@@ -9,20 +9,37 @@ import { Button, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, getSize 
 
 import { StackSectionContext } from './context';
 
-export type StackMenuAction = {
+export type StackAction = {
   id: string;
   label: string;
   Icon: FC<any>;
 };
 
 export type StackMenuProps = {
-  actions?: StackMenuAction[][];
-  onAction?: (action: StackMenuAction, section?: any) => void; // TODO(burdon): Type.
+  actions?: StackAction[][];
+  onAction?: (action: StackAction, section?: any) => void; // TODO(burdon): Type.
+};
+
+export const StackAction = ({
+  action,
+  onAction
+}: {
+  action: StackAction;
+  onAction?: (action: StackAction, section?: any) => void;
+}) => {
+  const { section } = useContext(StackSectionContext);
+  const { Icon } = action;
+
+  return (
+    <Button variant='ghost' onClick={() => onAction?.(action, section)}>
+      <Icon />
+    </Button>
+  );
 };
 
 export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
   const { section } = useContext(StackSectionContext);
-  const handleAction = (action: StackMenuAction) => {
+  const handleAction = (action: StackAction) => {
     onAction?.(action, section);
   };
 
@@ -31,7 +48,7 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
       slots={{ content: { className: 'z-50', align: 'end' } }}
       trigger={
         <div className='flex'>
-          <Button variant='ghost' className='p-0'>
+          <Button variant='ghost' density='fine' className='p-0'>
             <DotsThreeCircle className={getSize(6)} />
           </Button>
         </div>

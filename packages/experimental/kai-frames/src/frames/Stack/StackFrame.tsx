@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
-import { observer } from '@dxos/react-client';
+import { observer, useConfig } from '@dxos/react-client';
 import { Input } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
@@ -14,6 +14,7 @@ import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
 
 export const StackFrame = observer(() => {
+  const config = useConfig();
   const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {
@@ -28,7 +29,7 @@ export const StackFrame = observer(() => {
   };
 
   return (
-    <div className='flex flex-1 justify-center overflow-y-auto w-full'>
+    <div className='flex flex-1 w-full justify-center overflow-y-auto'>
       <div className='flex flex-col flex-1 md:max-w-[800px]'>
         <div className='flex flex-col w-full md:mt-4 pt-2 bg-paper-bg shadow-1'>
           {/* Editable title. */}
@@ -64,7 +65,7 @@ export const StackFrame = observer(() => {
             onMoveSection={handleMoveSection}
             StackSection={StackSection}
             ContextMenu={({ section }) => (
-              <CustomActionMenu actions={sectionActions(section)} stack={stack} section={section} />
+              <CustomActionMenu actions={sectionActions(config, section)} stack={stack} section={section} />
             )}
           />
         </div>
