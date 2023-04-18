@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:50]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:49]()</sub>
 
 
 
@@ -148,19 +148,6 @@ Arguments:
 `channel`: <code>string</code>
 
 `message`: <code>any</code>
-
-### [removeInvitation(id)]()
-
-
-
-Remove invitation from space.
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`id`: <code>string</code>
 
 ### [waitUntilReady()]()
 

@@ -34,7 +34,7 @@ Type: <code>undefined | [EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</
 Database reference if bound.
 
 ### [content]()
-Type: <code>undefined | YText | YXmlFragment</code>
+Type: <code>undefined | YXmlFragment | YText</code>
 
 ### [doc]()
 Type: <code>undefined | Doc</code>
@@ -48,7 +48,7 @@ ID accessor.
 Type: <code>undefined | TextKind</code>
 
 ### [model]()
-Type: <code>undefined | TextModel</code>
+Type: <code>undefined | [TextModel](/api/@dxos/client/classes/TextModel)</code>
 
 ### [text]()
 Type: <code>string</code>
