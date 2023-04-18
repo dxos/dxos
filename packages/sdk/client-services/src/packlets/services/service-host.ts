@@ -20,6 +20,7 @@ import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
+import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
@@ -202,6 +203,8 @@ export class ClientServicesHost {
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
+
+      LoggingService: new LoggingServiceImpl(),
 
       // TODO(burdon): Move to new protobuf definitions.
       TracingService: new TracingServiceImpl(this._config),

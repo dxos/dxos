@@ -37,7 +37,7 @@ const CONFIG: Config =
  * For running apps in the browser normally.
  */
 const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
-  if (!shouldLog(config, entry.level, entry.meta?.file ?? '')) {
+  if (!shouldLog(entry, config.filters)) {
     return;
   }
 
@@ -94,7 +94,7 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
  * For running unit tests in the headless browser.
  */
 const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
-  if (!shouldLog(config, entry.level, entry.meta?.file ?? '')) {
+  if (!shouldLog(entry, config.filters)) {
     return;
   }
 

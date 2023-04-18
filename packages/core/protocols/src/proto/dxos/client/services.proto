@@ -401,7 +401,7 @@ message QueryLogsRequest {
   }
 
   /// Explicitly specify all desired log levels.
-  repeated Filter filter = 1;
+  repeated Filter filters = 1;
 }
 
 message LogEntry {

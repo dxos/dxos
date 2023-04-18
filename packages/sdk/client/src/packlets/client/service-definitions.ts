@@ -7,6 +7,7 @@ import {
   DevicesService,
   IdentityService,
   InvitationsService,
+  LoggingService,
   NetworkService,
   SpacesService,
   SystemService
@@ -31,6 +32,8 @@ export type ClientServices = {
   DataService: DataService;
 
   NetworkService: NetworkService;
+
+  LoggingService: LoggingService;
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;
@@ -59,6 +62,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
   NetworkService: schema.getService('dxos.client.services.NetworkService'),
+  LoggingService: schema.getService('dxos.client.services.LoggingService'),
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
