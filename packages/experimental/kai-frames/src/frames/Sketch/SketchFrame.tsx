@@ -206,7 +206,7 @@ export const SketchFrame = observer(() => {
         </div>
 
         {/* TODO(burdon): Vertical unless mobile. */}
-        <div className='flex shrink-0 p-2'>
+        <div className='flex shrink-0 px-8 p-2'>
           <div className='flex items-center mr-4'>
             <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
           </div>

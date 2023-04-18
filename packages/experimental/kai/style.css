@@ -37,6 +37,9 @@ body {
 .hljs-tag {
   @apply text-teal-500;
 }
+.hljs-built_in {
+  @apply text-red-500;
+}
 
 /**
  * TODO(burdon): Custom RBC style.
