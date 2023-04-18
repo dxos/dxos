@@ -139,7 +139,9 @@ jobs:
       - run: |
           pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1 &&
           pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
-      - run: npx nx-cloud stop-all-agents
+      - run:
+          command: npx nx-cloud stop-all-agents
+          when: always
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
