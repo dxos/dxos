@@ -48,7 +48,7 @@ ID accessor.
 Type: <code>undefined | TextKind</code>
 
 ### [model]()
-Type: <code>undefined | TextModel</code>
+Type: <code>undefined | [TextModel](/api/@dxos/react-client/classes/TextModel)</code>
 
 ### [text]()
 Type: <code>string</code>

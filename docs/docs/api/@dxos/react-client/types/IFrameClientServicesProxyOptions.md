@@ -20,3 +20,7 @@ Type: <code>string</code>
 
 ### [timeout]()
 Type: <code>number</code>
+
+
+### [vault]()
+Type: <code>string</code>
