@@ -136,9 +136,7 @@ jobs:
       - run: npx nx-cloud start-ci-run
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       # NOTE: The e2e target cannot run in parallel due to port collisions.
-      - run: |
-          pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=4 &&
-          pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=4 --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
       - run:
           command: npx nx-cloud stop-all-agents
           when: always
