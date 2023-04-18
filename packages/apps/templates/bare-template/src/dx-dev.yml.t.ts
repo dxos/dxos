@@ -8,6 +8,10 @@ export default defineTemplate<typeof config>(() => {
   runtime:
     client:
       remoteSource: http://localhost:3967/vault.html
+    services:
+      signaling: [
+        server: wss://kube.dxos.org/.well-known/dx/signal
+      ]
   `;
   // TODO(wittjosiah): Use local signal in monorepo.
   // ${monorepo && text`services:
