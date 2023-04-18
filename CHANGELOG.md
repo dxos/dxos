@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.40](https://github.com/dxos/dxos/compare/v0.1.39...v0.1.40) (2023-04-18)
+
+
+### Features
+
+* **composer-app:** Pop a toast when an invitation is ready for an auth code. ([#3039](https://github.com/dxos/dxos/issues/3039)) ([a7768f1](https://github.com/dxos/dxos/commit/a7768f11660d88b9b37bdf082e2c622d4ad51527))
+* **config:** Add multiple signal servers in config ([#2984](https://github.com/dxos/dxos/issues/2984)) ([cb57591](https://github.com/dxos/dxos/commit/cb575918a83f497d9e914e4a3d98c4003cb5a1be))
+* Improve devtools UX ([#3052](https://github.com/dxos/dxos/issues/3052)) ([e5b26e1](https://github.com/dxos/dxos/commit/e5b26e1d1238e4f04099ffc25dba99e6821053b8))
+* Polish sketch demo ([#3046](https://github.com/dxos/dxos/issues/3046)) ([ebb595a](https://github.com/dxos/dxos/commit/ebb595a7391ee23cb68071c747390f0b0fce4d47))
+* Role exchange for invitation extension ([#3042](https://github.com/dxos/dxos/issues/3042)) ([2a467c9](https://github.com/dxos/dxos/commit/2a467c94ebf80d07df0e580a543dc304236fbfdd))
+* Sketch kiosk mode ([#3041](https://github.com/dxos/dxos/issues/3041)) ([7888356](https://github.com/dxos/dxos/commit/7888356cdd48d6faa4c5980358d8af9272f63b5e))
+* Stack scrolling ([#3043](https://github.com/dxos/dxos/issues/3043)) ([a76074b](https://github.com/dxos/dxos/commit/a76074b1bc6e8d78acea9bdc57a444574c2af020))
+
+
+### Bug Fixes
+
+* **composer-app,react-ui:** Restore Webkit tests ([#3038](https://github.com/dxos/dxos/issues/3038)) ([96c0dad](https://github.com/dxos/dxos/commit/96c0dad036bb05f4bb7c76245c9ce1fb8d5cd595))
+* Fix webFS reset ([#3036](https://github.com/dxos/dxos/issues/3036)) ([e21b3b6](https://github.com/dxos/dxos/commit/e21b3b6c393a78bc6cb2a7d6dcdb0a320ff6a932))
+* Proper error message when crypto is not available ([#3049](https://github.com/dxos/dxos/issues/3049)) ([521db38](https://github.com/dxos/dxos/commit/521db38ef47244446df4139ae88113809aab8711))
+* proper path to copy proto files ([#3054](https://github.com/dxos/dxos/issues/3054)) ([5cf74c7](https://github.com/dxos/dxos/commit/5cf74c76b9796e4b4a61af19f746b8b84285cfd7))
+* proto sync action ([#2926](https://github.com/dxos/dxos/issues/2926)) ([74fba84](https://github.com/dxos/dxos/commit/74fba84aea160209436b1f67c3a194cfa645ae56))
+* Sketch frame ([#3040](https://github.com/dxos/dxos/issues/3040)) ([75fb41e](https://github.com/dxos/dxos/commit/75fb41e40dee01ddec1bd8f592ea651769b01b00))
+
 ## [0.1.39](https://github.com/dxos/dxos/compare/v0.1.38...v0.1.39) (2023-04-14)
 
 
