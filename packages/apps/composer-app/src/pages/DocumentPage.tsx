@@ -339,7 +339,9 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   }, [octokit, docGhId, editorRef.current, content]);
 
   const exportGhFileContent = useCallback(async () => {
-    if (octokit && docGhId && 'path' in docGhId && content && ghBranchValue && ghMessageValue) {
+    if (octokit && docGhId && 'path' in docGhId && content) {
+      const branchName = ghBranchValue || t('github branch name placeholder');
+      const commitMessage = ghMessageValue || t('github commit message placeholder');
       setExportViewState('pending');
       try {
         const { owner, repo, path, ref } = docGhId as GhFileIdentifier;
@@ -357,15 +359,15 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         await octokit.rest.git.createRef({
           owner,
           repo,
-          ref: `refs/heads/${ghBranchValue}`,
+          ref: `refs/heads/${branchName}`,
           sha: baseSha
         });
         await octokit.rest.repos.createOrUpdateFileContents({
           owner,
           repo,
           path,
-          message: ghMessageValue,
-          branch: ghBranchValue,
+          message: commitMessage,
+          branch: branchName,
           sha: fileSha,
           content: btoa(content.toString())
         });
@@ -374,9 +376,9 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         } = await octokit.rest.pulls.create({
           owner,
           repo,
-          head: ghBranchValue,
+          head: branchName,
           base: ref,
-          title: ghMessageValue
+          title: commitMessage
         });
         setGhResponseUrl(prUrl);
         setExportViewState('response');
@@ -389,7 +391,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
       log.error('Not prepared to export to Github file when requested.');
       setGhResponseUrl(null);
     }
-  }, [octokit, docGhId, content, ghBranchValue, ghMessageValue]);
+  }, [octokit, docGhId, content, ghBranchValue, ghMessageValue, t]);
 
   const exportGhIssueContent = useCallback(async () => {
     if (octokit && docGhId && 'issueNumber' in docGhId && content) {
