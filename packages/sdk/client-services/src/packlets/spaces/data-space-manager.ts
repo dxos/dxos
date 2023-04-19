@@ -71,7 +71,7 @@ export class DataSpaceManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) { }
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {
