@@ -27,12 +27,14 @@ These are in addition to another orthogonal dimension of complexity, the way we 
 ### 1. Static chrome (v1)
 
 Large screens are split vertically into `sidebar` and `content` areas.
+```
 .------------.
 |    |     o |
 |    |       |
 |    |       |
 |    |       |
 '------------'
+```
 Small screens turn the `sidebar` into a slide-over element that hides by default.
 
 The HALO button (o) is in one of the corners and can be used to access the DXOS Shell.
