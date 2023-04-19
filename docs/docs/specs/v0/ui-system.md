@@ -18,6 +18,7 @@ packages/ui/aurora-theme
 
 ## Aurora X
 > Other big pieces that are congruent with Aurora and separately packaged. e.g.: aurora-composer, aurora-datagrid.
+> These are always provided in pure form, and with an "optional" ECHO adapter if necessary.
 @dxos/aurora-* 
 packages/ui/aurora-*
 
