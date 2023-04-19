@@ -15,7 +15,6 @@ import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 
-import { TracingServiceImpl } from '../deprecated';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
@@ -52,6 +51,7 @@ export class ClientServicesHost {
   private readonly _resourceLock?: VaultResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
+  private readonly _loggingService: LoggingServiceImpl;
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -114,6 +114,8 @@ export class ClientServicesHost {
       }
     });
 
+    this._loggingService = new LoggingServiceImpl();
+
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService
@@ -174,6 +176,8 @@ export class ClientServicesHost {
     log('opening...', { lockKey: this._resourceLock?.lockKey });
     await this._resourceLock?.acquire();
 
+    await this._loggingService.open();
+
     // TODO(wittjosiah): Make re-entrant.
     // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
@@ -204,10 +208,9 @@ export class ClientServicesHost {
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
-      LoggingService: new LoggingServiceImpl(),
+      LoggingService: this._loggingService,
 
       // TODO(burdon): Move to new protobuf definitions.
-      TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
         config: this._config,
@@ -231,6 +234,7 @@ export class ClientServicesHost {
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
     this._serviceRegistry.setServices({ SystemService: this._systemService });
+    await this._loggingService.close();
     await this._serviceContext.close();
     this._open = false;
     this._statusUpdate.emit();

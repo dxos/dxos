@@ -11,18 +11,21 @@ import { LoggingService, LogEntry, QueryLogsRequest } from '@dxos/protocols/prot
  * Logging service used to spy on logs of the host.
  */
 export class LoggingServiceImpl implements LoggingService {
-  private readonly _active = new Set<Event<LogEntry>>();
+  private readonly _logs = new Event<NaturalLogEntry>();
 
-  constructor() {
+  async open() {
     log.runtimeConfig.processors.push(this._logProcessor);
   }
 
+  async close() {
+    const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
+    log.runtimeConfig.processors.splice(index, 1);
+  }
+
   queryLogs(request: QueryLogsRequest): Stream<LogEntry> {
-    const logs = new Event<LogEntry>();
-    this._active.add(logs);
     const filters = request.filters?.length ? request.filters : undefined;
     return new Stream<LogEntry>(({ ctx, next }) => {
-      const handler = (entry: LogEntry) => {
+      const handler = (entry: NaturalLogEntry) => {
         // Prevent logging feedback loop from logging service.
         if (
           entry.meta?.file.includes('logging-service') ||
@@ -32,37 +35,23 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
-        if (shouldLog(transformLogEntry(entry), filters)) {
+        if (shouldLog(entry, filters)) {
           next(jsonify(entry));
         }
       };
 
       ctx.onDispose(() => {
-        this._active.delete(logs);
+        this._logs.off(handler);
       });
 
-      logs.on(handler);
+      this._logs.on(handler);
     });
   }
 
   private _logProcessor: LogProcessor = (_config, entry) => {
-    this._active.forEach((event) => event.emit(entry));
+    this._logs.emit(entry);
   };
 }
-
-const transformLogEntry = (entry: LogEntry): NaturalLogEntry => {
-  return {
-    level: entry.level,
-    message: entry.message,
-    context: entry.context,
-    meta: entry.meta && {
-      file: entry.meta.file,
-      line: entry.meta.line,
-      scope: entry.meta.scope
-    },
-    error: entry.error && new Error(entry.error.message, { cause: entry.error.stack })
-  };
-};
 
 /**
  * Recursively converts an object into a JSON-compatible object.
