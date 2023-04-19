@@ -18,17 +18,37 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/braneframe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/composer-app/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/apps/composer-extension/package.json",
+          "path": "packages/apps/halo-app/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/apps/halo-app/package.json",
+          "path": "packages/apps/patterns/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-icons/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-ui/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -64,11 +84,6 @@
         {
           "type": "json",
           "path": "packages/apps/todomvc/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/types/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -133,11 +148,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/observable-object/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -153,6 +163,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/react-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/sentry/package.json",
           "jsonpath": "$.version"
         },
@@ -163,12 +178,12 @@
         },
         {
           "type": "json",
-          "path": "packages/common/timeframe/package.json",
+          "path": "packages/common/test-builder/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/common/timeouts/package.json",
+          "path": "packages/common/timeframe/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -358,11 +373,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai-framework/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/kai-sandbox/package.json",
           "jsonpath": "$.version"
         },
@@ -418,22 +428,7 @@
         },
         {
           "type": "json",
-          "path": "packages/gravity/kube-publishing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/sdk/client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/client-protocol/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -458,57 +453,7 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/react-shell/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/sdk/vault/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/aurora/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/aurora-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/aurora-theme/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/aurora-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/primitives/react-hooks/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/primitives/react-input/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/primitives/react-list/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-appkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -596,6 +541,7 @@
           "path": "tools/x/package.json",
           "jsonpath": "$.version"
         }
+        "packages/sdk/client/src/version.ts"
       ]
     }
   }

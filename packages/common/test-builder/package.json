@@ -15,8 +15,8 @@
     "dist",
     "src"
   ],
+  "dependencies": {},
   "publishConfig": {
     "access": "public"
-  },
-  "dependencies": {}
+  }
 }
