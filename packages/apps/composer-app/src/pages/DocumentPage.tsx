@@ -47,15 +47,24 @@ import {
 } from '@dxos/react-components';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/react-composer';
 
-import { useOctokitContext } from '../components/OctokitProvider';
+import { useOctokitContext } from '../components';
 import { ComposerDocument } from '../proto';
 
-type GhFileIdentifier = {
+type GhSharedProps = {
   owner: string;
   repo: string;
+};
+
+type GhFileIdentifier = GhSharedProps & {
   ref: string;
   path: string;
 };
+
+type GhIssueIdentifier = GhSharedProps & {
+  issueNumber: number;
+};
+
+type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
 const turndownService = new TurndownService({
   headingStyle: 'atx',
@@ -190,7 +199,7 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Composer
   );
 });
 
-type ExportViewState = 'init' | 'pending' | 'response' | null;
+type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
 const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
@@ -202,10 +211,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
   const [ghBindOpen, setGhBindOpen] = useState(false);
-  const [ghFileValue, setGhFileValue] = useState('');
+  const [ghUrlValue, setGhUrlValue] = useState('');
   const [ghBranchValue, setGhBranchValue] = useState('');
   const [ghMessageValue, setGhMessageValue] = useState('');
-  const [ghPrValue, setGhPrValue] = useState<string | null>(null);
+  const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(null);
 
   const content = document?.content.content;
 
@@ -235,7 +244,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     [content]
   );
 
-  const docGhFileId = useMemo<GhFileIdentifier | null>(() => {
+  const docGhId = useMemo<GhIdentifier | null>(() => {
     try {
       const extantFileId = JSON.parse(document.github);
       if (extantFileId) {
@@ -248,100 +257,176 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
     }
   }, [document.github]);
 
-  const ghFileId = useMemo<GhFileIdentifier | null>(() => {
+  const ghId = useMemo<GhIdentifier | null>(() => {
     try {
-      const url = new URL(ghFileValue);
-      const [_, owner, repo, _blob, ref, ...pathParts] = url.pathname.split('/');
-      const path = pathParts.join('/');
-      const ext = pathParts[pathParts.length - 1].split('.')[1];
-
-      return ext === 'md'
-        ? {
-            owner,
-            repo,
-            ref,
-            path
-          }
-        : null;
+      const url = new URL(ghUrlValue);
+      const [_, owner, repo, type, ...rest] = url.pathname.split('/');
+      if (type === 'blob') {
+        const [ref, ...pathParts] = rest;
+        const path = pathParts.join('/');
+        const ext = pathParts[pathParts.length - 1].split('.')[1];
+        return ext === 'md'
+          ? {
+              owner,
+              repo,
+              ref,
+              path
+            }
+          : null;
+      } else if (type === 'issues') {
+        const [issueNumberString] = rest;
+        return {
+          owner,
+          repo,
+          issueNumber: parseInt(issueNumberString)
+        };
+      } else {
+        return null;
+      }
     } catch (e) {
       return null;
     }
-  }, [ghFileValue]);
+  }, [ghUrlValue]);
 
   const importGhFileContent = useCallback(async () => {
-    if (octokit && docGhFileId && content && editorRef.current?.view && editorRef.current?.state?.doc) {
+    if (
+      octokit &&
+      docGhId &&
+      'path' in docGhId &&
+      content &&
+      editorRef.current?.view &&
+      editorRef.current?.state?.doc
+    ) {
       try {
-        const { owner, repo, path } = docGhFileId;
+        const { owner, repo, path } = docGhId as GhFileIdentifier;
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: content.toString().length, insert: atob(data.content) }
+            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: atob(data.content) }
           });
         } else {
           log.error('Did not receive file with content from Github.');
         }
       } catch (err) {
-        log.error('Failed to import from Github', err);
+        log.error('Failed to import from Github file', err);
       }
     } else {
-      log.error('Not prepared to import when requested.');
+      log.error('Not prepared to import from Github file when requested.');
     }
-  }, [octokit, docGhFileId, editorRef.current, content]);
+  }, [octokit, docGhId, editorRef.current, content]);
 
-  const exportGhFileContent = useCallback(
-    async ({ branchName, commitMessage }: { branchName: string; commitMessage: string }) => {
-      if (octokit && docGhFileId && content) {
-        setExportViewState('pending');
-        try {
-          const { owner, repo, path, ref } = docGhFileId;
-          const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
-          if (Array.isArray(fileData) || fileData.type !== 'file') {
-            log.error('Attempted to export to a destination in Github that is not a file.');
-            return;
-          }
-          const { sha: fileSha } = fileData;
-          const {
-            data: {
-              object: { sha: baseSha }
-            }
-          } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
-          await octokit.rest.git.createRef({
-            owner,
-            repo,
-            ref: `refs/heads/${branchName}`,
-            sha: baseSha
-          });
-          await octokit.rest.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            path,
-            message: commitMessage,
-            branch: branchName,
-            sha: fileSha,
-            content: btoa(content.toString())
-          });
-          const {
-            data: { html_url: prUrl }
-          } = await octokit.rest.pulls.create({
-            owner,
-            repo,
-            head: branchName,
-            base: ref,
-            title: commitMessage
-          });
-          setGhPrValue(prUrl);
-          setExportViewState('response');
-        } catch (err) {
-          log.error('Failed to export to Github', err);
-          setGhPrValue(null);
-        }
-      } else {
-        log.error('Not prepared to export when requested.');
-        setGhPrValue(null);
+  const importGhIssueContent = useCallback(async () => {
+    if (
+      octokit &&
+      docGhId &&
+      'issueNumber' in docGhId &&
+      content &&
+      editorRef.current?.view &&
+      editorRef.current?.state?.doc
+    ) {
+      try {
+        const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
+        const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
+        editorRef.current.view.dispatch({
+          changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' }
+        });
+      } catch (err) {
+        log.error('Failed to import from Github issue', err);
       }
-    },
-    [octokit, docGhFileId, content]
-  );
+    } else {
+      log.error('Not prepared to import from Github issue when requested.');
+    }
+  }, [octokit, docGhId, editorRef.current, content]);
+
+  const exportGhFileContent = useCallback(async () => {
+    if (octokit && docGhId && 'path' in docGhId && content && ghBranchValue && ghMessageValue) {
+      setExportViewState('pending');
+      try {
+        const { owner, repo, path, ref } = docGhId as GhFileIdentifier;
+        const { data: fileData } = await octokit.rest.repos.getContent({ owner, repo, path });
+        if (Array.isArray(fileData) || fileData.type !== 'file') {
+          log.error('Attempted to export to a destination in Github that is not a file.');
+          return;
+        }
+        const { sha: fileSha } = fileData;
+        const {
+          data: {
+            object: { sha: baseSha }
+          }
+        } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
+        await octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${ghBranchValue}`,
+          sha: baseSha
+        });
+        await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path,
+          message: ghMessageValue,
+          branch: ghBranchValue,
+          sha: fileSha,
+          content: btoa(content.toString())
+        });
+        const {
+          data: { html_url: prUrl }
+        } = await octokit.rest.pulls.create({
+          owner,
+          repo,
+          head: ghBranchValue,
+          base: ref,
+          title: ghMessageValue
+        });
+        setGhResponseUrl(prUrl);
+        setExportViewState('response');
+      } catch (err) {
+        log.error('Failed to export to Github file', err);
+        setExportViewState('create-pr');
+        setGhResponseUrl(null);
+      }
+    } else {
+      log.error('Not prepared to export to Github file when requested.');
+      setGhResponseUrl(null);
+    }
+  }, [octokit, docGhId, content, ghBranchValue, ghMessageValue]);
+
+  const exportGhIssueContent = useCallback(async () => {
+    if (octokit && docGhId && 'issueNumber' in docGhId && content) {
+      setExportViewState(null);
+      try {
+        const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
+        const {
+          data: { html_url: issueUrl }
+        } = await octokit.rest.issues.update({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          body: content.toString()
+        });
+        setGhResponseUrl(issueUrl);
+        setExportViewState('response');
+      } catch (err) {
+        setExportViewState(null);
+        log.error('Failed to export to Github issue');
+      }
+    } else {
+      log.error('Not prepared to export to Github issue when requested.');
+    }
+  }, [octokit, docGhId, content]);
+
+  const handleGhExport = useCallback(() => {
+    return (
+      docGhId &&
+      ('issueNumber' in docGhId ? exportGhIssueContent() : 'path' in docGhId ? setExportViewState('create-pr') : null)
+    );
+  }, [exportGhIssueContent, exportGhFileContent, docGhId]);
+
+  const handleGhImport = useCallback(() => {
+    return (
+      docGhId && ('issueNumber' in docGhId ? importGhIssueContent() : 'path' in docGhId ? importGhFileContent() : null)
+    );
+  }, [importGhIssueContent, importGhFileContent, docGhId]);
 
   const dropdownMenuContent = (
     <>
@@ -356,13 +441,13 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
       {octokit && (
         <>
           <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
-          {docGhFileId ? (
+          {docGhId ? (
             <>
               <DropdownMenuItem
                 className='flex items-center gap-2'
                 onClick={() => {
                   document.github = '';
-                  setGhFileValue('');
+                  setGhUrlValue('');
                 }}
               >
                 <LinkBreak className={getSize(4)} />
@@ -372,7 +457,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
                 <FileArrowDown className={getSize(4)} />
                 <span>{t('import from github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setExportViewState('init')}>
+              <DropdownMenuItem className='flex items-center gap-2' onClick={handleGhExport}>
                 <FileArrowUp className={getSize(4)} />
                 <span>{t('export to github label')}</span>
               </DropdownMenuItem>
@@ -426,7 +511,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         title={t('bind to file in github label')}
         open={ghBindOpen}
         onOpenChange={(nextOpen) => {
-          document.github = JSON.stringify(ghFileId);
+          document.github = JSON.stringify(ghId);
           setGhBindOpen(nextOpen);
         }}
         closeTriggers={[
@@ -439,10 +524,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
           label={t('paste url to file in github label')}
           description={t('paste url to file in github description')}
           placeholder={t('paste url to file in github placeholder')}
-          value={ghFileValue}
-          onChange={({ target: { value } }) => setGhFileValue(value)}
-          {...(ghFileValue.length > 0 &&
-            !ghFileId && {
+          value={ghUrlValue}
+          onChange={({ target: { value } }) => setGhUrlValue(value)}
+          {...(ghUrlValue.length > 0 &&
+            !ghId && {
               validationValence: 'error',
               validationMessage: t('error github markdown path message')
             })}
@@ -458,7 +543,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
             key='done'
             variant='primary'
             className='bg-warning-600 dark:bg-warning-600 hover:bg-warning-700 dark:hover:bg-warning-700'
-            onClick={importGhFileContent}
+            onClick={handleGhImport}
           >
             {t('import from github label')}
           </Button>
@@ -470,7 +555,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         title={t('confirm export title')}
         open={!!exportViewState}
         onOpenChange={(nextOpen) => {
-          setExportViewState(nextOpen ? 'init' : null);
+          setExportViewState(nextOpen ? 'create-pr' : null);
         }}
       >
         {exportViewState === 'response' ? (
@@ -480,15 +565,15 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
                 {...{
                   t,
                   i18nKey: 'export to github success message',
-                  values: { linkText: ghPrValue },
+                  values: { linkText: ghResponseUrl },
                   components: {
                     resultStyle: <span className='text-success-600 dark:text-success-300'>_</span>,
                     prLink: (
                       <a
-                        href={ghPrValue!}
+                        href={ghResponseUrl!}
                         target='_blank'
                         rel='noreferrer'
-                        className='text-primary-600 dark:text-primary-600 hover:text-primary-700 dark:hover:text-primary-500'
+                        className='text-primary-600 dark:text-primary-300 hover:text-primary-700 dark:hover:text-primary-400'
                       >
                         _
                       </a>
@@ -523,11 +608,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
             />
             <div role='none' className='flex justify-end gap-2'>
               <Button onClick={() => setExportViewState(null)}>{t('close label', { ns: 'os' })}</Button>
-              <Button
-                disabled={exportViewState === 'pending'}
-                variant='primary'
-                onClick={() => exportGhFileContent({ branchName: ghBranchValue, commitMessage: ghMessageValue })}
-              >
+              <Button disabled={exportViewState === 'pending'} variant='primary' onClick={() => exportGhFileContent()}>
                 {t('continue label', { ns: 'os' })}
               </Button>
             </div>
