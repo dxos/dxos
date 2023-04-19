@@ -68,6 +68,7 @@ Things to think about:
 - how to expand `getTreeNodes` lazily / in a timely manner without losing too much fidelity in the Tree
 
 Some of the first plugins:
+
 0. the spaces plugin - which provides a list of root nodes representing accessible ECHO spaces
 1. the markdown plugin - which provides a plain text editor for the content area and fills the Tree with document and folder nodes
 2. the filesystem plugin - which provides import / export to folders on disk
