@@ -15,7 +15,9 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/node-std": "workspace:*"
+  },
   "publishConfig": {
     "access": "public"
   }
