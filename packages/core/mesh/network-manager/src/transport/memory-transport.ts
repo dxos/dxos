@@ -73,6 +73,10 @@ export class MemoryTransport implements Transport {
         log('sending signal');
         void this.options.sendSignal({
           payload: { transportId: this._instanceId.toHex() }
+        }).catch(err => {
+          if (!this._destroyed) {
+            this.errors.raise(err);
+          }
         });
     });
     } else {
