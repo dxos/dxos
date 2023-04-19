@@ -1,0 +1,44 @@
+{
+  "sourceRoot": "packages/common/test-builder/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/test-builder/src/index.ts",
+        "outputPath": "packages/common/test-builder/dist/types",
+        "tsConfig": "packages/common/test-builder/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/test-builder/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/test-builder/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/test-builder/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}
