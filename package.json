@@ -47,6 +47,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/swc-log-plugin": "workspace:*",
     "@dxos/test": "workspace:*",
+    "@dxos/test-builder": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@mdx-js/react": "^2.1.3",
