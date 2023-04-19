@@ -32,18 +32,18 @@ describe('Agent', () => {
   });
 
   // TODO(burdon): Skipped since hangs on closing.
-  test.skip('creates a space', async () => {
+  test('creates a space', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
+    await agent.client!.halo.createIdentity();
     const space = await agent.client!.createSpace();
     expect(space.key).to.exist;
     expect(space.properties).to.exist;
     await agent.destroy();
   });
 
-  // TODO(burdon): Skipped since hangs on closing.
-  test.skip('tests two agents', async () => {
+  test('tests two agents', async () => {
     const config: ConfigProto = { version: 1 };
     const swarmKey = PublicKey.random();
 
