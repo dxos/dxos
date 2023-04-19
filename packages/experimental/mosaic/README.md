@@ -1,2 +1,3 @@
-# Grid
+# Mosaic
 
+DXOS mosaic package
