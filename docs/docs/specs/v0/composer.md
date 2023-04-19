@@ -66,7 +66,7 @@ Things to think about:
 - how to expand `getTreeNodes` lazily / in a timely manner without losing too much fidelity in the Tree
 
 Some of the first plugins:
-0. the spaces plugin - which provides a list of nodes representing accessible ECHO spaces
+0. the spaces plugin - which provides a list of root nodes representing accessible ECHO spaces
 1. the markdown plugin - which provides a plain text editor for the content area and fills the Tree with document and folder nodes
 2. the filesystem plugin - which provides import / export to folders on disk
 3. the github plugin - which provides nodes representing github issues and assets
@@ -81,6 +81,8 @@ Most of this will be discovered by experimentation with `static chrome` (v1) plu
 
 The core assumptions of this model can be that the screen receives elements (views) horizontally in a "stack" from left to right. This way, an activity bar stacks before a sidebar, followed by the content area, and possibly other "areas" further to the right if that becomes relevant. This might be the way to enable deep drilldown into complex data.
 
-Views can be informed in general by the state of the views to the left. There is almost no statically defined chrome in Composer, except some paradigm for managing the views themselves (possibly through the HALO button).
+Views can be informed in general by the state of the views to the left. There is almost no statically defined chrome in Composer, except some paradigm for managing the views themselves (through the HALO button).
 
-The HALO button can become "the only piece of chrome the app needs", and encapsulate pop-over shell panels that contain a plugin store, space navigation and access control, profile and presence management, etc. Plugins are discovered, installed, and managed in the shell.
+The HALO button can become "the only piece of chrome the app needs", and encapsulate a pop-over shell with panels that contain a plugin store, space navigation and access control, profile and presence management, etc. Plugins are discovered, installed, and managed entirely in the shell.
+
+This is not a model we need to develop for now.
