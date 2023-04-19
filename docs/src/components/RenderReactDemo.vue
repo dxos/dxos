@@ -63,7 +63,7 @@
 
   // TODO(wittjosiah): Prevent from importing during ssr.
   const { Client, fromHost, Invitation, PublicKey } = await import('@dxos/client');
-  const { TestBuilder } = await import('@dxos/client-services/testing');
+  const { performInvitation, TestBuilder } = await import('@dxos/client-services/testing');
   const { ClientProvider, useSpaces } = await import('@dxos/react-client');
 
   // Note rollup dynamic import limitations.
@@ -120,39 +120,10 @@
   }
 
   if (props.createSpace) {
-    const space = await clients[0].echo.createSpace();
+    const space = await clients[0].createSpace();
     log('space created', { key: space.key });
-
-    await Promise.all(
-      clients.slice(1).map(async (client) => {
-        const success1 = new Trigger<Invitation>();
-        const success2 = new Trigger<Invitation>();
-
-        const observable1 = space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-        log('invitation created');
-        observable1.subscribe({
-          onConnecting: (invitation) => {
-            const observable2 = client.echo.acceptInvitation(invitation);
-            log('invitation accepted');
-
-            observable2.subscribe({
-              onSuccess: (invitation: Invitation) => {
-                success2.wake(invitation);
-                log('invitation success2');
-              },
-              onError: (err: Error) => raise(err)
-            });
-          },
-          onSuccess: (invitation) => {
-            success1.wake(invitation);
-            log('invitation success1');
-          },
-          onError: (err) => raise(err)
-        });
-
-        await Promise.all([success1.wait(), success2.wait()]);
-      })
-    );
+    await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client })));
+    log('invitations completed');
   }
 
   const handleAirplaneToggle = async (event) => {
