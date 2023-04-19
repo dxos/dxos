@@ -1,6 +1,6 @@
 {
-  "name": "test-builder",
-  "version": "1.0.0",
+  "name": "@dxos/test-builder",
+  "version": "0.1.40",
   "description": "This package defines general purpose test builder ",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
