@@ -31,10 +31,20 @@ This is an unlisted page which may be useful for testing new docs functionality.
 ``` -->
 
 <script setup>
-  import { Sandpack } from 'sandpack-vue3';
+  import {
+    SandpackProvider,
+    SandpackCodeEditor,
+    SandpackPreview
+  } from 'sandpack-vue3';
 </script>
 
 
-<Sandpack
-  template="vite-react-ts"
-/>
+<SandpackProvider theme="dark" template="vite-react-ts">
+  <SandpackPreview class="codebox codebox-start"/>
+  <SandpackCodeEditor
+    class="codebox codebox-end"
+    showTabs
+    showInlineErrors
+    wrapContent
+  />
+</SandpackProvider>
