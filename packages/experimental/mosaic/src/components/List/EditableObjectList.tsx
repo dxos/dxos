@@ -120,12 +120,13 @@ export const EditableObjectList = <T extends Object>({
 
       {/* TODO(burdon): Not aligned with list. */}
       {onCreate && (
-        <div className='flex pl-3'>
+        <div className='flex items-center pl-3'>
           <ListItemEndcap>
             <Button variant='ghost' onClick={handleCreate}>
               <Plus className={getSize(6)} />
             </Button>
           </ListItemEndcap>
+          <span className='ml-1 text-sm'>New item</span>
         </div>
       )}
     </div>
