@@ -80,13 +80,15 @@ type Action = {
 
 type TreeNode<T = any> = {
   id: string;
+  data?: T;
   label: string;
   icon?: React.FC;
-  data?: T;
   actions?: Action[];
   loading?: boolean;
   disabled?: boolean;
   children?: TreeNode[];
+  labelEditable?: boolean;
+  onLabelChanged?(value: string): any;
 };
 
 ```
