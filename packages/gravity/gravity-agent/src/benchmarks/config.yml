@@ -3,10 +3,21 @@ version: 1
 runtime:
   client:
     storage:
-      persistent: true
-      storageType: WEBFS
+      persistent: false
+      # enum StorageDriver {
+      #   RAM = 0;
+      #   IDB = 1;
+      #   CHROME = 2;
+      #   FIREFOX = 3;
+      #   NODE = 4;
+      #   WEBFS = 5;
 
-services:
+      #   // Key storage only
+      #   LEVELJS = 11;
+      #   JSONDOWN = 12;
+      # }
+      storageType: 0
+
   services:
     signaling:
       - server: ws://localhost/.well-known/dx/signal

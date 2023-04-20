@@ -7,11 +7,10 @@ import yaml from 'js-yaml';
 
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { ConfigProto } from '@dxos/config';
-import { schema } from '@dxos/protocols';
 
 export const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => {
   return codec.fromObject(yaml.load(yamlSource));
 };
 
 export const loadConfig = (configFilepath: string): ConfigProto =>
-  parseYamlWithSchema(schema.getCodecForType('dxos.config.Config'), fs.readFileSync(configFilepath).toString());
+  yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
