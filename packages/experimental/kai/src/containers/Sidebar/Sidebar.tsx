@@ -26,7 +26,7 @@ import { Context } from '@dxos/context';
 import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
@@ -42,7 +42,9 @@ import {
   useAppRouter,
   useTheme,
   useAppReducer,
-  useAppState
+  useAppState,
+  optionsKeys,
+  bool
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
@@ -57,13 +59,12 @@ export type SidebarProps = {
   onNavigate: (path: string) => void;
 };
 
-const flag = false;
-
 // TODO(burdon): Remove observer?
 // TODO(burdon): Split into sub-components.
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
+  const [options] = useKeyStore(optionsKeys);
   const { setActiveFrame } = useAppReducer();
   const shell = useShell();
 
@@ -350,15 +351,15 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         {/* Search */}
         {!showSpaceList && (
           <div className='flex flex-col overflow-hidden space-y-2'>
-            {(flag && <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />) || (
-              <div className='mt-4' />
-            )}
+            {(bool(options.get('experimental.search')) && (
+              <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+            )) || <div className='mt-2' />}
 
             {/* Items if not actively searching. */}
             {!showSearchResults && (
               <div className='overflow-y-scroll space-y-4'>
                 {/* Frame list filter. */}
-                {flag && <FrameList />}
+                {bool(options.get('experimental.frames')) && <FrameList />}
 
                 {/* Generic object list. */}
                 {!Plugin && frame?.runtime.filter && (
@@ -381,7 +382,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 )}
 
                 {/* Frame registry dialog. */}
-                {flag && (
+                {bool(options.get('experimental.frames')) && (
                   <div className='flex px-4 items-center'>
                     <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
                       <AppWindow className={getSize(6)} />
@@ -421,25 +422,25 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             onSelect={focusOnMember}
           />
 
-          {flag && (
-            <>
-              <Separator />
-              <Link
-                className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
-                to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-              >
-                <Robot className={getSize(6)} />
-                <div className='pl-2'>Bots</div>
-              </Link>
+          <Separator />
+          {bool(options.get('experimental.bots')) && (
+            <Link
+              className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
+              to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+            >
+              <Robot className={getSize(6)} />
+              <div className='pl-2'>Bots</div>
+            </Link>
+          )}
 
-              <Link
-                className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
-                to={createPath({ spaceKey: space.key, section: Section.DMG })}
-              >
-                <Graph className={getSize(6)} />
-                <div className='pl-2'>Metagraph</div>
-              </Link>
-            </>
+          {bool(options.get('experimental.metagraph')) && (
+            <Link
+              className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
+              to={createPath({ spaceKey: space.key, section: Section.DMG })}
+            >
+              <Graph className={getSize(6)} />
+              <div className='pl-2'>Metagraph</div>
+            </Link>
           )}
 
           <Separator />
