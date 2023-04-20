@@ -17,6 +17,9 @@
     "src",
     "vuepress.config.ts"
   ],
+  "exclude": [
+    "src/templates/codesandbox/src/main.tsx"
+  ],
   "references": [
     {
       "path": "../packages/apps/patterns/react-appkit"
