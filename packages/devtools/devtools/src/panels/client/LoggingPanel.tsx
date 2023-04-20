@@ -1,15 +1,33 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 import React, { useEffect, useRef, useState } from 'react';
 
 import { levels } from '@dxos/log';
+import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices, useStream } from '@dxos/react-client';
-import { Button, Input } from '@dxos/react-components';
+import { Button, ButtonGroup, Input } from '@dxos/react-components';
+
+import { MasterTable } from '../../components';
 
 const defaultEntry = { level: LogLevel.DEBUG, message: '' };
+
+const MAX_LOGS = 2000;
+
+const columns: TableColumn<LogEntry>[] = [
+  {
+    Header: 'Level',
+    width: 30,
+    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0]
+  },
+  {
+    Header: 'Message',
+    width: 200,
+    accessor: 'message'
+  }
+];
 
 // TODO(wittjosiah): Virtualization.
 // TODO(wittjosiah): Sticky auto-scrolling.
@@ -19,7 +37,9 @@ const LoggingPanel = () => {
     return null;
   }
 
+  const [stickyScrolling, setStickyScrolling] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const logsRef = useRef<HTMLDivElement | null>(null);
   const [request, setRequest] = useState<QueryLogsRequest>({});
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
   const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
@@ -30,8 +50,30 @@ const LoggingPanel = () => {
       return;
     }
 
-    setLogs((logs) => logs.concat([logEntry]));
+    setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
   }, [logEntry]);
+
+  useEffect(() => {
+    if (!logsRef.current) {
+      return;
+    }
+
+    const container = logsRef.current;
+    const handler = () => {
+      setStickyScrolling(container.scrollHeight - container.scrollTop - container.clientHeight < 50);
+    };
+
+    container.addEventListener('scroll', handler);
+    return () => container.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!logsRef.current || !stickyScrolling) {
+      return;
+    }
+
+    logsRef.current.scrollTop = logsRef.current.scrollHeight;
+  }, [logs]);
 
   const handleQueryLogs = () => {
     const filtersString = inputRef.current?.value;
@@ -55,13 +97,17 @@ const LoggingPanel = () => {
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
-      <Input label='Filters' ref={inputRef} />
-      <Button onClick={handleQueryLogs}>Set</Button>
-      <Button onClick={() => setLogs([])}>Clear</Button>
-      <div>
-        {logs.map((log, i) => (
-          <p key={i}>{log.message}</p>
-        ))}
+      <div className='p-2 border-b'>
+        <div className='flex items-end gap-2 w-[600px]'>
+          <Input label='Filters' ref={inputRef} slots={{ root: { className: 'grow' } }} />
+          <ButtonGroup>
+            <Button onClick={handleQueryLogs}>Set Filters</Button>
+            <Button onClick={() => setLogs([])}>Clear Logs</Button>
+          </ButtonGroup>
+        </div>
+      </div>
+      <div className='flex flex-1 overflow-hidden'>
+        <MasterTable<LogEntry> columns={columns} data={logs} slots={{ body: { ref: logsRef } }} />
       </div>
     </div>
   );
