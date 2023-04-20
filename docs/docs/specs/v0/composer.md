@@ -65,6 +65,18 @@ type Plugin = {
     };
   };
 };
+
+type Effect = () => MaybePromise<any>;
+
+type Action = {
+  id: string;
+  label: string;
+  icon?: React.FC;
+  invoke(state: ComposerState): MaybePromise<{
+    state: ComposerState;
+    effects: Effect[];
+  }>;
+};
 ```
 
 In order to populate the tree, plugins are first asked to present their lists of children without a `parent` node (or a stand-in root node value). This generates the first level items in the Tree. Then, for each node ad-nauseum, plugins are asked to return more children until the tree reaches a steady state. This allows plugins to add nodes to each other's nodes.
