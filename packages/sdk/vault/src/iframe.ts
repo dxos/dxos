@@ -52,7 +52,7 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise
   if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
     console.log('Running DXOS vault in compatibility mode.');
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
-      configProvider: config,
+      config,
       appPort: createIFramePort({
         channel: 'dxos:app',
         onOrigin: async (origin) => {
@@ -80,6 +80,7 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise
     }
 
     const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
+      config,
       // TODO(dmaretskyi): Extract channel names to config.ts.
       systemPort: portMuxer.createWorkerPort({ channel: 'dxos:system' }),
       workerAppPort: portMuxer.createWorkerPort({ channel: 'dxos:app' }),
