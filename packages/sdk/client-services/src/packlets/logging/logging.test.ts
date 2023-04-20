@@ -6,16 +6,21 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { log, LogLevel } from '@dxos/log';
-import { LogEntry, LoggingService } from '@dxos/protocols/proto/dxos/client/services';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { beforeEach, describe, test } from '@dxos/test';
 
 import { LoggingServiceImpl } from './logging-service';
 
 describe('LoggingService', () => {
-  let loggingService: LoggingService;
+  let loggingService: LoggingServiceImpl;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     loggingService = new LoggingServiceImpl();
+    await loggingService.open();
+  });
+
+  afterEach(async () => {
+    await loggingService.close();
   });
 
   test('queryLogs streams logs', async () => {
