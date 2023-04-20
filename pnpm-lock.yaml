@@ -243,6 +243,8 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/telemetry': workspace:*
+      '@dxos/vault': workspace:*
+      '@stackblitz/sdk': ^1.9.0
       '@types/eslint': ^8.4.6
       '@types/markdown-it': ^12.2.3
       '@types/markdown-it-container': ^2.0.5
@@ -251,6 +253,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/recursive-readdir': ^2.2.0
+      '@vitejs/plugin-react': ^3.0.1
       '@vuepress/bundler-vite': 2.0.0-beta.61
       '@vuepress/client': 2.0.0-beta.61
       '@vuepress/plugin-register-components': 2.0.0-beta.61
@@ -290,6 +293,8 @@ importers:
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/react-components': link:../packages/common/react-components
       '@dxos/telemetry': link:../packages/common/telemetry
+      '@dxos/vault': link:../packages/sdk/vault
+      '@stackblitz/sdk': 1.9.0
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3
       '@types/markdown-it-container': 2.0.5
@@ -298,6 +303,7 @@ importers:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@types/recursive-readdir': 2.2.1
+      '@vitejs/plugin-react': 3.1.0_vite@4.2.0
       '@vuepress/bundler-vite': 2.0.0-beta.61_odkjkoia5xunhxkdrka32ib6vi
       '@vuepress/client': 2.0.0-beta.61
       '@vuepress/plugin-register-components': 2.0.0-beta.61
@@ -668,7 +674,7 @@ importers:
       '@codemirror/commands': 6.2.2
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/language': 6.6.0
-      '@codemirror/language-data': 6.1.0
+      '@codemirror/language-data': 6.1.0_252h5dwvsiu2pnu2vr7ql3rya4
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
@@ -691,7 +697,7 @@ importers:
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
       '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
       '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      codemirror: 6.0.1
+      codemirror: 6.0.1_@lezer+common@1.0.2
       lib0: 0.2.65
       lodash.get: 4.4.2
       prosemirror-model: 1.19.0
@@ -7534,15 +7540,6 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete/6.4.2:
-    resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
-    dependencies:
-      '@codemirror/language': 6.6.0
-      '@codemirror/state': 6.2.0
-      '@codemirror/view': 6.9.2
-      '@lezer/common': 1.0.2
-    dev: false
-
   /@codemirror/autocomplete/6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e:
     resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
     peerDependencies:
@@ -7573,20 +7570,23 @@ packages:
       '@lezer/cpp': 1.1.0
     dev: false
 
-  /@codemirror/lang-css/6.1.1:
+  /@codemirror/lang-css/6.1.1_i3aqn63zftbgivbr4riltn5mqe:
     resolution: {integrity: sha512-P6jdNEHyRcqqDgbvHYyC9Wxkek0rnG3a9aVSRi4a7WrjPbQtBTaOmvYpXmm13zZMAatO4Oqpac+0QZs7sy+LnQ==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/css': 1.1.1
+    transitivePeerDependencies:
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-html/6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
-      '@codemirror/lang-css': 6.1.1
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -7606,7 +7606,7 @@ packages:
   /@codemirror/lang-javascript/6.1.4:
     resolution: {integrity: sha512-OxLf7OfOZBTMRMi6BO/F72MNGmgOd9B0vetOLvHsDACFXayBzW8fm8aWnDM0yuy68wTK03MBf4HbjSBNRG5q7A==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/state': 6.2.0
@@ -7643,12 +7643,16 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python/6.1.2:
+  /@codemirror/lang-python/6.1.2_252h5dwvsiu2pnu2vr7ql3rya4:
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@lezer/python': 1.1.2
+    transitivePeerDependencies:
+      - '@codemirror/state'
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust/6.0.1:
@@ -7658,14 +7662,17 @@ packages:
       '@lezer/rust': 1.0.0
     dev: false
 
-  /@codemirror/lang-sql/6.4.0:
+  /@codemirror/lang-sql/6.4.0_i3aqn63zftbgivbr4riltn5mqe:
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/highlight': 1.1.3
       '@lezer/lr': 1.3.3
+    transitivePeerDependencies:
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-wast/6.0.1:
@@ -7676,34 +7683,40 @@ packages:
       '@lezer/lr': 1.3.3
     dev: false
 
-  /@codemirror/lang-xml/6.0.2:
+  /@codemirror/lang-xml/6.0.2_@codemirror+view@6.9.2:
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/common': 1.0.2
       '@lezer/xml': 1.0.1
+    transitivePeerDependencies:
+      - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data/6.1.0:
+  /@codemirror/language-data/6.1.0_252h5dwvsiu2pnu2vr7ql3rya4:
     resolution: {integrity: sha512-g9V23fuLRI9AEbpM6bDy1oquqgpFlIDHTihUhL21NPmxp+x67ZJbsKk+V71W7/Bj8SCqEO1PtqQA/tDGgt1nfw==}
     dependencies:
       '@codemirror/lang-cpp': 6.0.2
-      '@codemirror/lang-css': 6.1.1
+      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/lang-json': 6.0.1
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2
+      '@codemirror/lang-python': 6.1.2_252h5dwvsiu2pnu2vr7ql3rya4
       '@codemirror/lang-rust': 6.0.1
-      '@codemirror/lang-sql': 6.4.0
+      '@codemirror/lang-sql': 6.4.0_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-wast': 6.0.1
-      '@codemirror/lang-xml': 6.0.2
+      '@codemirror/lang-xml': 6.0.2_@codemirror+view@6.9.2
       '@codemirror/language': 6.6.0
       '@codemirror/legacy-modes': 6.3.1
+    transitivePeerDependencies:
+      - '@codemirror/state'
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/language/6.6.0:
@@ -12694,8 +12707,8 @@ packages:
       lodash.values: 4.3.0
     dev: true
 
-  /@stackblitz/sdk/1.8.2:
-    resolution: {integrity: sha512-3aTg0Tb9dNs1huPkpdYxPEX/yc8A28eZneUMOEJzOLi7EJwl5onr9gCAVjIOkN4WLYu1iBSiJiGBYT629bZIJQ==}
+  /@stackblitz/sdk/1.9.0:
+    resolution: {integrity: sha512-3m6C7f8pnR5KXys/Hqx2x6ylnpqOak6HtnZI6T5keEO0yT+E4Spkw37VEbdwuC+2oxmjdgq6YZEgiKX7hM1GmQ==}
     dev: true
 
   /@stayradiated/eslint-plugin-prefer-arrow-functions/4.4.0_eslint@8.25.0:
@@ -16039,7 +16052,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -19334,16 +19347,18 @@ packages:
     resolution: {integrity: sha512-LuO8/7LW6XuR5ERn1yavXAfodGRhuY2yP60JTZIw5yNYMCE5lUVbk3NFUCJxjnphQH+Xemp5hOGb1LgUXm00Xw==}
     dev: true
 
-  /codemirror/6.0.1:
+  /codemirror/6.0.1_@lezer+common@1.0.2:
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/commands': 6.2.2
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /codesandbox-import-util-types/2.2.3:
@@ -37095,7 +37110,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.2.0
+      vite: 4.2.0_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -37374,7 +37389,7 @@ packages:
       vuepress-webpack:
         optional: true
     dependencies:
-      '@stackblitz/sdk': 1.8.2
+      '@stackblitz/sdk': 1.9.0
       '@vuepress/client': 2.0.0-beta.61
       '@vuepress/shared': 2.0.0-beta.61
       '@vuepress/utils': 2.0.0-beta.61

@@ -7,7 +7,7 @@ import React, { KeyboardEventHandler, useState } from 'react';
 import type { Space } from '@dxos/client';
 import { useQuery } from '@dxos/react-client';
 
-import { Task } from '../proto';
+import { Task } from './proto';
 
 const TaskList = ({ space }: { space: Space }) => {
   const tasks = useQuery(space, Task.filter());
