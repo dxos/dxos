@@ -41,9 +41,15 @@ Small screens turn the `sidebar` into a slide-over element that hides by default
 
 The HALO button (o) is in one of the corners and can be used to access the DXOS Shell.
 
-The sidebar presents a tree of nodes which can be populated by plugins.
+The sidebar presents a `tree` of nodes which can be populated by plugins.
 
-The content area can be filled by plugins, and can sense the state of the tree view (selection, nodes, etc).
+The `tree` is a logical first solution to the problem of organization and represents a model users and developers are very familiar with and have grown to expect, having found the same model in almost all nearby and competitive products: Notion, Quip, Dropbox Paper, Google Docs, VSCode, Obsidian, ... etc.
+
+Plugins provide components that can fill the content area fully, one at a time, and can sense the state of the tree view (selection, nodes, etc).
+
+Search happens via an overlay [Cmd+K experience](https://cmdk.paco.me/) where a box pops over all the surfaces and presents a fuzzy-search with autocomplete which can be used to locate objects to navigate to, or actions and commands to invoke.
+
+#### Plugin interfaces
 
 ```ts
 type MaybePromise<T> = T | Promise<T>;
@@ -66,16 +72,13 @@ type Plugin = {
   };
 };
 
-type Effect = () => MaybePromise<any>;
+type Effect = (state: ComposerState) => MaybePromise<ComposerState>;
 
 type Action = {
   id: string;
   label: string;
   icon?: React.FC;
-  invoke(state: ComposerState): MaybePromise<{
-    state: ComposerState;
-    effects: Effect[];
-  }>;
+  invoke(state: ComposerState): MaybePromise<Effect | Effect[]>;
 };
 
 type TreeNode<T = any> = {
@@ -91,6 +94,20 @@ type TreeNode<T = any> = {
   onLabelChanged?(value: string): any;
 };
 
+type ComposerState = {
+  location: string;
+  surfaces: {
+    tree: {
+      selection: TreeNode[];
+      nodes: TreeNode[];
+    };
+    sidebar: {
+      isOpen: boolean; // is the sidebar currently open
+      isPinned: boolean; // whether the sidebar will autohide
+    };
+  };
+  plugins: Plugin[];
+};
 ```
 
 In order to populate the tree, plugins are first asked to present their lists of children without a `parent` node (or a stand-in root node value). This generates the first level items in the Tree. Then, for each node ad-nauseum, plugins are asked to return more children until the tree reaches a steady state. This allows plugins to add nodes to each other's nodes.
@@ -111,11 +128,56 @@ Some of the first plugins:
 
 If a stack with custom tiles (frames) is required, that is just an extension of the stacks plugin, where the `Stack` returned from `getComponent` is endowed with more kinds of frames statically.
 
+#### How Kai relates to this model
+
+In v1 (static chrome) Kai can take advantage of the composer chrome to get ahead on compatibility with mobile screens, take advantage of the magic search box, and reduce boilerplate. Kai can re-implement itself as a specific expression of the `<Composer />` element with custom values for the sidebar content and list of plugins.
+
+```tsx
+const Kai = () => (
+  <Composer
+    sidebar={<KaiSidebar />}
+    plugins={[
+      new FramesPlugin(),
+      new ChessPlugin(),
+      new NotesPlugin(),
+      new EmailPlugin(),
+      new StacksPlugin({ // with custom frames that regular Stacks doesn't know about
+        frames: [
+          new ImageFrame(),
+          new MapFrame()
+        ]
+      })
+      // ... etc
+    ]}
+  />
+);
+```
+
+The current frames list can be implemented using Composer's `tree` surface where the "installed frames" are the root level items in the tree with no children. This list can be provided by the `FramesPlugin.provides.tree.getTreeNodes()` API. To replace the content area with a specific frame, the appropriate plugin can return it's `Frame` from e.g.: `ChessPlugin.provides.content.getComponent(selection)` API which is given the current selection from the `tree`. Routing state and updates to the URL will be handled by the Composer element internally.
+
+The `<KaiSidebar />` is equally free to avoid using a `Tree` entirely and can replace that content with any form of accordion or stacked views desired. This sidebar can use a context hook like `useComposerState` to get access to the current UI state which includes the list of loaded plugins and their APIs.
+
+Kai plugins are free to extend the base `Composer.Plugin` while at the same time expanding their behavior with things Composer can't do.
+
+In this example, Kai ignores the `tree` extensibility surface, and prescribes a different one for rendering a flat list of content items below the list of frames in the sidebar.
+
+```tsx
+interface KaiPlugin extends Plugin {
+  provides: Omit<Plugin['provides'], 'tree'> & {
+    contentList: {
+      getItems(): ListItem[];
+    };
+  };
+}
+```
+
+Dynamic loading of components / frames / routes in Kai should likely be unnecessary (because bundle size is adequately low) with this model and can be achieved "for free" later when Composer develops the `dynamic loading with ESM` capability for plugins.
+
 ### 2. Dynamic chrome (v2)
 
 Most of this will be discovered by experimentation with `static chrome` (v1) plugins to find the wishlists of plugin developers.
 
-The core assumptions of this model can be that the screen receives elements (views) horizontally in a "stack" from left to right. This way, an activity bar stacks before a sidebar, followed by the content area, and possibly other "areas" further to the right if that becomes relevant. This might be the way to enable deep drilldown into complex data.
+The core assumptions of this model can be that the screen receives large, screen-dividing elements (views/surfaces) horizontally in a "stack" from left to right. This way, an activity bar stacks before a sidebar, followed by the content area, and possibly other "areas" further to the right if that becomes relevant. This might be the way to enable deep drilldown into complex data.
 
 Views can be informed in general by the state of the views to the left. There is almost no statically defined chrome in Composer, except some paradigm for managing the views themselves (through the HALO button).
 
