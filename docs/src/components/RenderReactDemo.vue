@@ -1,9 +1,9 @@
 <template>
   <div class="demo-controls">
-    <div role="none">
-      <input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />
-      <label>Toggle Replication</label>
-    </div>
+    <label
+      ><input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />Toggle
+      Replication</label
+    >
     <div role="separator" />
     <form v-if="forkable" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
       <input type="hidden" name="parameters" :value="parameters" />
@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<style scoped>
+<style>
 .demo-controls {
   display: flex;
   align-items: center;
@@ -42,6 +42,41 @@
 .peers > div {
   flex: 1 0 0;
   width: v-bind('peerWidth');
+}
+
+.task-list > h2 {
+  display: block;
+  margin-block: 0 0.5rem;
+  font-size: inherit;
+}
+
+.task-list > input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.task-list > [role='list'] > [role='listitem'] {
+  display: flex;
+  align-items: center;
+  margin-block: 0.5rem;
+  gap: 0.5rem;
+}
+
+.task-list > [role='list'] > [role='listitem'] > input,
+.task-list > [role='list'] > [role='listitem'] > button {
+  flex: 0 0 auto;
+}
+
+.task-list > [role='list'] > [role='listitem'] > p {
+  margin: 0;
+  flex: 1 0 0;
+}
+
+.task-list > [role='list'] > [role='listitem'] > button {
+  height: 1.2rem;
+  width: 1.2rem;
+  padding: 0;
 }
 </style>
 
