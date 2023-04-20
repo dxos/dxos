@@ -21,6 +21,9 @@ const defaults = {
       signaling: [
         {
           server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        },
+        {
+          server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
         }
       ],
       ice: [

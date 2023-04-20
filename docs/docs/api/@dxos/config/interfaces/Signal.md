@@ -14,9 +14,6 @@ Options:
 ### [server]()
 Type: <code>string</code>
 
-Options:
-  - proto3_optional = true
-
 ### [status]()
 Type: <code>string</code>
 
