@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { asyncTimeout } from '@dxos/async';
 import { Expando, SpaceProxy } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { describe, test, afterTest } from '@dxos/test';
@@ -39,14 +40,17 @@ describe('Multiple invitations', () => {
       }
       const space = peers[index].client.getSpace(key);
       expect(space).to.exist;
-      await space!.waitUntilReady();
+      await asyncTimeout(space!.waitUntilReady(), 2_000);
       expect((space?.db.getObjectById(expandoId) as Expando).toJSON()).to.include(data);
 
-      await Promise.all(
-        performInvitation({
-          host: space as SpaceProxy,
-          guest: peers[index + 1].client
-        })
+      await asyncTimeout(
+        Promise.all(
+          performInvitation({
+            host: space as SpaceProxy,
+            guest: peers[index + 1].client
+          })
+        ),
+        1_000
       );
     }
   })
