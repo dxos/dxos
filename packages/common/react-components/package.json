@@ -58,6 +58,7 @@
     "tailwindcss-radix": "^2.8.0"
   },
   "devDependencies": {
+    "@fluent-blocks/colors": "^9.2.0",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.merge": "^4.6.6",
     "@types/react": "^18.0.21",

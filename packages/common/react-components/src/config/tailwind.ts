@@ -10,6 +10,8 @@ import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
 
+import { colorPlugin } from './color-plugin';
+
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
@@ -443,6 +445,20 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
+        palettes: {
+          pprimary: {
+            keyColor: '#00e0e0',
+            darkCp: 1,
+            lightCp: 1,
+            hueTorsion: (-73.5 * Math.PI) / 180
+          },
+          pneutral: {
+            keyColor: '#707076',
+            darkCp: 0.8,
+            lightCp: 0.88,
+            hueTorsion: 0
+          }
+        },
         colors: {
           ...configPalettes,
           slate: tailwindColors.slate,
@@ -619,7 +635,7 @@ export const tailwindConfig = ({
       ...extensions
     )
   },
-  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
+  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix(), colorPlugin],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {
