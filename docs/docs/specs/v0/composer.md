@@ -107,6 +107,8 @@ type ComposerState = {
     };
   };
   plugins: Plugin[];
+  client: Client;
+  // etc
 };
 ```
 
@@ -154,6 +156,8 @@ const Kai = () => (
 ```
 
 The current frames list can be implemented using Composer's `tree` surface where the "installed frames" are the root level items in the tree with no children. This list can be provided by the `FramesPlugin.provides.tree.getTreeNodes()` API. To replace the content area with a specific frame, the appropriate plugin can return it's `Frame` from e.g.: `ChessPlugin.provides.content.getComponent(selection)` API which is given the current selection from the `tree`. Routing state and updates to the URL will be handled by the Composer element internally.
+
+Content items for every frame could exist as second level items in the tree under their respective frame nodes.
 
 The `<KaiSidebar />` is equally free to avoid using a `Tree` entirely and can replace that content with any form of accordion or stacked views desired. This sidebar can use a context hook like `useComposerState` to get access to the current UI state which includes the list of loaded plugins and their APIs.
 
