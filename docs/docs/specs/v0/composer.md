@@ -9,6 +9,7 @@ A developer-first, peer-to-peer knowledge management system.
 3. Developers can extend Composer with custom data sources and visual surfaces
 
 ## Extensibility
+
 > "Composer Chrome" refers to the total composer UI organization and all affordances surrounding the content the users interact with - all UI which is not the content itself.
 
 Two levels of complexity are proposed in sequence:
@@ -23,10 +24,10 @@ These are in addition to another orthogonal dimension of complexity, the way we 
 
 **Dynamic plugins**, where the app knows how to load plugins via ESM `import` calls in the browser at runtime.
 
-
 ### 1. Static chrome (v1)
 
 Large screens are split vertically into `sidebar` and `content` areas.
+
 ```
 .------------.
 |    |     o |
@@ -35,6 +36,7 @@ Large screens are split vertically into `sidebar` and `content` areas.
 |    |       |
 '------------'
 ```
+
 Small screens turn the `sidebar` into a slide-over element that hides by default.
 
 The HALO button (o) is in one of the corners and can be used to access the DXOS Shell.
@@ -44,25 +46,31 @@ The sidebar presents a tree of nodes which can be populated by plugins.
 The content area can be filled by plugins, and can sense the state of the tree view (selection, nodes, etc).
 
 ```ts
-
 type MaybePromise<T> = T | Promise<T>;
 
-interface Plugin {
-  // plugins can provide TreeNodes to the Tree
-  getTreeNodes(parent: TreeNode): MaybePromise<TreeNode[]>;
-  // plugins can provide actions to TreeNodes
-  getTreeNodeActions(parent: TreeNode): MaybePromise<Action[]>;
-
-  // plugins can provide a UI for the content area
-  // content area components access the rest of the UI state via context
-  getComponent(selection: TreeNode[]): MaybePromise<React.FC>;
-}
-
+type Plugin = {
+  meta: {
+    // serializable, could be stored in a space.
+    id: string;
+    name: string;
+    description: string;
+  };
+  provides: {
+    tree: {
+      getTreeNodes(parent: TreeNode): Observable<TreeNode[]>;
+      getTreeNodeActions(parent: TreeNode): Observable<Action[]>;
+    };
+    content: {
+      getComponent(selection: TreeNode[]): MaybePromise<React.FC>;
+    };
+  };
+};
 ```
 
 In order to populate the tree, plugins are first asked to present their lists of children without a `parent` node (or a stand-in root node value). This generates the first level items in the Tree. Then, for each node ad-nauseum, plugins are asked to return more children until the tree reaches a steady state. This allows plugins to add nodes to each other's nodes.
 
 Things to think about:
+
 - how to do paging of large result sets
 - how to detect circular / infinite trees and deal with them
 - how to expand `getTreeNodes` lazily / in a timely manner without losing too much fidelity in the Tree
@@ -76,7 +84,6 @@ Some of the first plugins:
 4. the stacks plugin - which provides a stack editor for the content area and import / export actions to github
 
 If a stack with custom tiles (frames) is required, that is just an extension of the stacks plugin, where the `Stack` returned from `getComponent` is endowed with more kinds of frames statically.
-
 
 ### 2. Dynamic chrome (v2)
 
