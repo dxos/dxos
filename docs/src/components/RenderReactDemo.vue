@@ -2,14 +2,14 @@
   <div class="demo-controls">
     <label>
       <input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />
-      Toggle Replication
+      Disable <a href="/guide/platform/">ECHO replication</a>
     </label>
     <div role="separator" />
     <form v-if="forkable" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
       <input type="hidden" name="parameters" :value="parameters" />
-      <input type="submit" class="showcase-fork" value="CSB" />
+      <input type="submit" class="showcase-fork" value="CSB" title="Fork to CodeSandbox" />
     </form>
-    <button v-if="forkable" @click="handleStackblitz">Blitz</button>
+    <button v-if="forkable" @click="handleStackblitz" title="Fork to Stackblitz">Blitz</button>
   </div>
   <div class="peers">
     <div v-for="i in peerCount" ref="peers"></div>
