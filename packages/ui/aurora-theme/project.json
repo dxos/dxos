@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/common/react-components/src",
+  "sourceRoot": "packages/ui/aurora-theme/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/common/react-components/src/index.ts",
-        "outputPath": "packages/common/react-components/dist/types",
-        "tsConfig": "packages/common/react-components/tsconfig.json"
+        "main": "packages/ui/aurora-theme/src/index.ts",
+        "outputPath": "packages/ui/aurora-theme/dist/types",
+        "tsConfig": "packages/ui/aurora-theme/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -32,9 +32,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/react-components/src/index.ts"
+          "packages/ui/aurora-theme/src/index.ts"
         ],
-        "outputPath": "packages/common/react-components/dist/lib",
+        "outputPath": "packages/ui/aurora-theme/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -50,11 +50,11 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/react-components/src/esbuild-plugin.ts",
-          "packages/common/react-components/src/plugin.ts",
-          "packages/common/react-components/src/theme.css"
+          "packages/ui/aurora-theme/src/esbuild-plugin.ts",
+          "packages/ui/aurora-theme/src/plugin.ts",
+          "packages/ui/aurora-theme/src/theme.css"
         ],
-        "outputPath": "packages/common/react-components/dist/plugin",
+        "outputPath": "packages/ui/aurora-theme/dist/plugin",
         "platforms": [
           "node"
         ]
@@ -68,26 +68,12 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/react-components/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/aurora-theme/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nrwl/storybook:storybook",
-      "options": {
-        "config": {
-          "configFolder": "packages/common/react-components/.storybook"
-        },
-        "uiFramework": "@storybook/react"
-      }
     }
   },
   "implicitDependencies": [

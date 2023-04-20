@@ -1,4 +1,10 @@
-# DXOS design system
+# DXOS Aurora
+
+**This readme is to be rewritten.**
+
+The docs below are for this package’s predecessor.
+
+---
 
 The `react-components` package is the single source of truth for DXOS’s lower-level design system.
 
