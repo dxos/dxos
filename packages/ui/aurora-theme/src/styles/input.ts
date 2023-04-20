@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ThemeContextValue } from '../components';
+import {ThemeVariant} from "../props";
 import { Density, MessageValence } from '../props';
 import { mx } from '../util';
 import { coarseBlockSize, defaultCoarse, defaultFine, fineBlockSize } from './density';
@@ -18,7 +18,7 @@ export const defaultInput = (
     density?: Density;
     validationValence?: MessageValence;
   } = {},
-  themeVariant: ThemeContextValue['themeVariant'] = 'app'
+  themeVariant: ThemeVariant = 'app'
 ) => {
   const { disabled, validationValence } = props;
   return mx(
@@ -41,7 +41,7 @@ export const subduedInput = (
     density?: Density;
     validationValence?: MessageValence;
   } = {},
-  themeVariant: ThemeContextValue['themeVariant'] = 'app'
+  themeVariant: ThemeVariant = 'app'
 ) => {
   return mx(
     'bg-transparent text-current',

@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ThemeContextValue } from '../components';
-import { MessageValence } from '../props';
+import {MessageValence, ThemeVariant} from '../props';
 
 export const successText = 'text-xs font-medium text-success-550 dark:text-success-300';
 export const infoText = 'text-xs font-medium text-info-550 dark:text-info-300';
@@ -31,7 +30,7 @@ export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
 export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
-export const inputValence = (valence?: MessageValence, themeVariant: ThemeContextValue['themeVariant'] = 'app') => {
+export const inputValence = (valence?: MessageValence, themeVariant: ThemeVariant = 'app') => {
   switch (valence) {
     case 'success':
       return successInputValence;

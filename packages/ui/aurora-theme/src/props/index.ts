@@ -6,3 +6,4 @@ export * from './Density';
 export * from './Elevation';
 export * from './MessageValence';
 export * from './Size';
+export * from './ThemeVariant';

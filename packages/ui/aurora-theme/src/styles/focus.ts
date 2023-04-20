@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ThemeVariant } from '../components';
+import {ThemeVariant} from "../props";
 
 /**
  * @deprecated use {@link themeVariantFocus} instead.
