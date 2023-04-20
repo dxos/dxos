@@ -1,9 +1,9 @@
 <template>
   <div class="demo-controls">
-    <label
-      ><input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />Toggle
-      Replication</label
-    >
+    <label>
+      <input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />
+      Toggle Replication
+    </label>
     <div role="separator" />
     <form v-if="forkable" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
       <input type="hidden" name="parameters" :value="parameters" />
@@ -44,7 +44,8 @@
   width: v-bind('peerWidth');
 }
 
-.task-list > h2 {
+// TODO(wittjosiah): This is not generalized.
+.task-list > p [role="heading"] {
   display: block;
   margin-block: 0 0.5rem;
   font-size: inherit;

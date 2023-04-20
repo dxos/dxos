@@ -25,7 +25,7 @@ const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number })
 
   return (
     <div className='task-list'>
-      <h2>{`Client ${clientIndex + 1}`}</h2>
+      <p role='heading'>{`Client ${clientIndex + 1}`}</p>
       <input
         aria-label='Create new item'
         placeholder='New item'

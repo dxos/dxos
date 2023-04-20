@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { ClientProvider, Config, Space } from '@dxos/react-client';
 
-import { schema } from '../../../demos/proto';
 import Demo from './Demo';
+import { schema } from './proto';
 
 const config = new Config({
   runtime: {
