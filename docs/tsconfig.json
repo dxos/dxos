@@ -31,9 +31,6 @@
       "path": "../packages/common/log"
     },
     {
-      "path": "../packages/common/react-components"
-    },
-    {
       "path": "../packages/common/telemetry"
     },
     {
@@ -56,6 +53,9 @@
     },
     {
       "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../packages/ui/aurora"
     },
     {
       "path": "../tools/apidoc"

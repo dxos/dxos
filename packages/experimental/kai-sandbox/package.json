@@ -42,7 +42,7 @@
     "yjs": "^13.5.44"
   },
   "devDependencies": {
-    "@dxos/react-components": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

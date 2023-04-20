@@ -28,13 +28,13 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../ui/aurora"
     },
     {
       "path": "../client"

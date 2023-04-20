@@ -12,6 +12,7 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -19,7 +20,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

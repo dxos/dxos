@@ -14,6 +14,7 @@
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -34,7 +35,6 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-icons": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
     "@dxos/react-ui": "workspace:*",

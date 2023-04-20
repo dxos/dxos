@@ -21,9 +21,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -43,6 +40,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/aurora"
     },
     {
       "path": "../patterns/react-appkit"

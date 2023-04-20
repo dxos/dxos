@@ -18,7 +18,7 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
