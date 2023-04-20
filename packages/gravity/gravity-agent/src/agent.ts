@@ -9,7 +9,7 @@ import { Client, ClientServicesProvider, PublicKey, fromHost } from '@dxos/clien
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
-import { Peer } from '@dxos/test';
+import { Peer } from '@dxos/test-builder';
 
 import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
 
