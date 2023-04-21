@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-icons"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -97,6 +94,9 @@
     },
     {
       "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-icons"
     },
     {
       "path": "../chess-app"

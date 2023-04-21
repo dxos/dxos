@@ -562,28 +562,6 @@ importers:
       vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
 
-  packages/apps/patterns/react-icons:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addons': 7.0.0-beta.48
-      '@storybook/api': 7.0.0-beta.48
-      '@storybook/components': 7.0.0-beta.48
-      '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/theming': 7.0.0-beta.48
-      react: ^18.2.0
-      react-dom: ^18.2.0
-    devDependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/components': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
   packages/apps/quickstart:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -2765,7 +2743,7 @@ importers:
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-icons': link:../../apps/patterns/react-icons
+      '@dxos/react-icons': link:../../ui/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -3394,7 +3372,7 @@ importers:
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-icons': link:../../apps/patterns/react-icons
+      '@dxos/react-icons': link:../../ui/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -4468,6 +4446,28 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       vite: 4.2.0
 
+  packages/ui/react-icons:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@storybook/addons': 7.0.0-beta.48
+      '@storybook/api': 7.0.0-beta.48
+      '@storybook/components': 7.0.0-beta.48
+      '@storybook/core-events': 7.0.0-beta.48
+      '@storybook/theming': 7.0.0-beta.48
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    devDependencies:
+      '@dxos/aurora': link:../aurora
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/components': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/core-events': 7.0.0-beta.48
+      '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
   tools/apidoc:
     specifiers:
       '@dxos/plate': workspace:*
@@ -4804,7 +4804,7 @@ importers:
       '@dxos/gem-spore': link:../../packages/experimental/gem-spore
       '@dxos/log': link:../../packages/common/log
       '@dxos/react-client': link:../../packages/sdk/react-client
-      '@dxos/react-icons': link:../../packages/apps/patterns/react-icons
+      '@dxos/react-icons': link:../../packages/ui/react-icons
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@types/react-dom': 18.0.6
       clsx: 1.2.1

@@ -78,7 +78,7 @@
     "react-appkit": "packages/ui/react-appkit",
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",
-    "react-icons": "packages/apps/patterns/react-icons",
+    "react-icons": "packages/ui/react-icons",
     "react-metagraph": "packages/experimental/react-metagraph",
     "react-shell": "packages/sdk/react-shell",
     "ridoculous": "tools/ridoculous",

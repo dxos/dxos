@@ -33,11 +33,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/patterns/react-icons/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/quickstart/package.json",
           "jsonpath": "$.version"
         },
@@ -454,6 +449,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {
