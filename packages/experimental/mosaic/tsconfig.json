@@ -18,19 +18,25 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
     }
   ],
   "ts-node": {

@@ -17,7 +17,7 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../ui/aurora"
     }
   ]
 }

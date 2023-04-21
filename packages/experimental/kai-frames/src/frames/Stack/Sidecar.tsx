@@ -5,10 +5,10 @@
 import { CaretDoubleLeft, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { Button, getSize } from '@dxos/aurora';
 import { DocumentStack } from '@dxos/kai-types';
 import { ScrollContainer } from '@dxos/mosaic';
 import { observer } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 

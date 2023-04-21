@@ -163,11 +163,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-components/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/sentry/package.json",
           "jsonpath": "$.version"
         },
@@ -449,6 +444,16 @@
         {
           "type": "json",
           "path": "packages/sdk/vault/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-theme/package.json",
           "jsonpath": "$.version"
         },
         {

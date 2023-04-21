@@ -5,17 +5,11 @@
 import { Gear, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Button, defaultInlineSeparator, getSize, mx, buttonStyles, useTranslation } from '@dxos/aurora';
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
-import {
-  Button,
-  defaultInlineSeparator,
-  getSize,
-  Popover,
-  mx,
-  buttonStyles,
-  useTranslation
-} from '@dxos/react-components';
+
+import { Popover } from '../Popover';
 
 export interface SpaceMenuProps {
   space: Space;

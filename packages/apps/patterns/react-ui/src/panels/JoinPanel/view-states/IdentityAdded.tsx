@@ -5,9 +5,10 @@
 import { CaretLeft, CaretRight, Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
+import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
 import type { Identity } from '@dxos/client';
+import { Avatar } from '@dxos/react-appkit';
 import { InvitationResult } from '@dxos/react-client';
-import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { JoinPanelMode } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';

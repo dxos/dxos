@@ -6,11 +6,13 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { useMediaQuery } from '@dxos/aurora';
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
 import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
+  ThemeProvider,
   appkitTranslations,
   ClientFallback,
   ErrorProvider,
@@ -19,7 +21,6 @@ import {
   ServiceWorkerToast
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider, useMediaQuery } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 

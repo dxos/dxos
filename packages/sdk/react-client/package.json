@@ -33,7 +33,7 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/react-components": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@faker-js/faker": "^7.6.0",
     "@testing-library/dom": "^8.17.1",
@@ -54,7 +54,7 @@
     "react-dom": "*"
   },
   "optionalDependencies": {
-    "@dxos/react-components": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@faker-js/faker": "^7.6.0",
     "yjs": "^13.5.44"

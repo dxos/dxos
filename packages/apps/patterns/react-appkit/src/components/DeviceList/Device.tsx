@@ -4,8 +4,12 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
-import { Avatar, Group, Tag, useTranslation } from '@dxos/react-components';
+
+import { Avatar } from '../Avatar';
+import { Group } from '../Group';
+import { Tag } from '../Tag';
 
 export interface DeviceProps {
   publicKey: PublicKey;

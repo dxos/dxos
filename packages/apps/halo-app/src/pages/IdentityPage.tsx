@@ -5,6 +5,8 @@
 import { Activity, Eraser } from '@phosphor-icons/react';
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
+import { useTranslation, Button, getSize, defaultGroup } from '@dxos/aurora';
+import { Input, Avatar } from '@dxos/react-appkit';
 import {
   BASE_TELEMETRY_PROPERTIES,
   getTelemetryIdentifier,
@@ -12,7 +14,6 @@ import {
   storeTelemetryDisabled
 } from '@dxos/react-appkit/telemetry';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 

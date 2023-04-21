@@ -5,19 +5,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { defaultGroup, hover, defaultFocus, useTranslation, defaultDisabled, mx } from '@dxos/aurora';
 import { Space } from '@dxos/client';
-import {
-  Avatar,
-  defaultGroup,
-  hover,
-  defaultFocus,
-  useTranslation,
-  defaultDisabled,
-  Group,
-  Heading,
-  mx
-} from '@dxos/react-components';
 import { humanize } from '@dxos/util';
+
+import { Avatar } from '../Avatar';
+import { Group } from '../Group';
+import { Heading } from '../Heading';
 
 export interface SpaceListProps {
   spaces?: Array<Space>;

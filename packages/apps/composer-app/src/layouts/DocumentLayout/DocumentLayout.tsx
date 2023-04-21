@@ -4,10 +4,10 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { Button, defaultOsButtonColors, mx, useButtonShadow, useTranslation } from '@dxos/aurora';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
-import { useTelemetry } from '@dxos/react-appkit';
+import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
-import { Button, defaultOsButtonColors, mx, Toast, useButtonShadow, useTranslation } from '@dxos/react-components';
 import { PanelSidebarProvider, ShellProvider, useShell } from '@dxos/react-ui';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';

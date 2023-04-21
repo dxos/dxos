@@ -10,7 +10,7 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
@@ -49,7 +49,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
@@ -96,7 +97,7 @@ export default defineConfig({
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-          ? [
+      ? [
           sentryVitePlugin({
             org: 'dxos',
             project: 'devtools-extension',

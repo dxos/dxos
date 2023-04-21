@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { defaultDescription, mx, useTranslation } from '@dxos/react-components';
+import { defaultDescription, mx, useTranslation } from '@dxos/aurora';
 
 export const FirstRunPage = () => {
   const { t } = useTranslation('composer');

@@ -10,8 +10,9 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
+import { getSize, mx } from '@dxos/aurora';
+import { Input } from '@dxos/react-appkit';
 import { useConfig, useKeyStore } from '@dxos/react-client';
-import { getSize, Input, mx } from '@dxos/react-components';
 
 import { botKeys, useAppState } from '../hooks';
 

@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Heading, Loading, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/aurora';
+import { Heading, Loading } from '@dxos/react-appkit';
 import { useModules } from '@dxos/react-metagraph';
 
 import { AppList, AppProps } from '../components';

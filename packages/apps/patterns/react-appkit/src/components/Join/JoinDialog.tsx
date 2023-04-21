@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Dialog, DialogProps, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/aurora';
 
+import { Dialog, DialogProps } from '../Dialog';
 import { JoinPanel, JoinPanelProps } from './JoinPanel';
 
 export interface JoinSpaceDialogProps extends JoinPanelProps {

@@ -6,22 +6,18 @@ import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-ic
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Tooltip } from '@dxos/react-appkit';
-import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import {
-  Avatar,
   Button,
   DensityProvider,
-  Dialog,
   ElevationProvider,
   getSize,
-  Input,
   mx,
   ThemeContext,
-  TreeRoot,
   useId,
   useTranslation
-} from '@dxos/react-components';
+} from '@dxos/aurora';
+import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
+import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { PanelSidebarContext, useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';
