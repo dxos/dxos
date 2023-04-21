@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
       "path": "../../apps/patterns/react-icons"
     },
     {
@@ -92,6 +89,9 @@
     },
     {
       "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     },
     {
       "path": "../gem-core"

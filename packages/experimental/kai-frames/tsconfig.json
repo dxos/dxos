@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
       "path": "../../apps/patterns/react-composer"
     },
     {
@@ -77,6 +74,9 @@
     },
     {
       "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/react-appkit"
     },
     {
       "path": "../chess-app"

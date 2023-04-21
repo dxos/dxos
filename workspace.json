@@ -74,7 +74,7 @@
     "protocols": "packages/core/protocols",
     "quickstart": "packages/apps/quickstart",
     "random-access-storage": "packages/common/random-access-storage",
-    "react-appkit": "packages/apps/patterns/react-appkit",
+    "react-appkit": "packages/ui/react-appkit",
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",
     "react-composer": "packages/apps/patterns/react-composer",

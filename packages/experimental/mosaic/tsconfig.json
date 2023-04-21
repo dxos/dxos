@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
       "path": "../../apps/patterns/react-ui"
     },
     {
@@ -37,6 +34,9 @@
     },
     {
       "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ],
   "ts-node": {

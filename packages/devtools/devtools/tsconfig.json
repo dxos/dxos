@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
       "path": "../../apps/patterns/react-composer"
     },
     {
@@ -103,6 +100,9 @@
     },
     {
       "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }
