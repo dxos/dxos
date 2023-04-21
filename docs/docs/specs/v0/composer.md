@@ -8,6 +8,14 @@ A developer-first, peer-to-peer knowledge management system.
 2. Users can work on folders of markdown files
 3. Developers can extend Composer with custom data sources and visual surfaces
 
+## Non-goals
+
+1. Cross-application extensibility at the UI level
+
+Although we intend to exercise scenarios where multiple applications share the same ECHO space and interoperate on ECHO objects, for the extensibility model described here, implementing support for multiple applications sharing plugins is out of scope.  
+
+i.e. Composer should not have to support it's plugins running in Kai, and vice-versa, although the intention is to keep the Kai extensibility model within reach of Composer's such that experiments in Kai can move to Composer's design incrementally over time, through breaking changes and major version bumps.
+
 ## Extensibility
 
 > `Application Chrome` refers to all UI elements and organization which are not user-generated content.
