@@ -29,22 +29,11 @@ import { useOutletContext, useParams } from 'react-router-dom';
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
+import { Button, getSize, mx, useTranslation, ThemeContext, Trans } from '@dxos/aurora';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useFileDownload } from '@dxos/react-appkit';
+import { useFileDownload, DropdownMenu, Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
-import {
-  Button,
-  DropdownMenu,
-  getSize,
-  Input,
-  mx,
-  useTranslation,
-  ThemeContext,
-  Dialog,
-  DropdownMenuItem,
-  Trans
-} from '@dxos/react-components';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/react-composer';
 
 import { useOctokitContext } from '../components';

@@ -5,7 +5,8 @@
 import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
-import { CompoundButton, getSize, useTranslation } from '@dxos/react-components';
+import { getSize, useTranslation } from '@dxos/aurora';
+import { CompoundButton } from '@dxos/react-appkit';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 

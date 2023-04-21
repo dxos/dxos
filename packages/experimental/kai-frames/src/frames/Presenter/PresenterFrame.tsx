@@ -5,9 +5,9 @@
 import { Eye, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { Button, getSize } from '@dxos/aurora';
 import { Presentation } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { DeckContainer } from './DeckContainer';

@@ -8,10 +8,11 @@ import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
+import { getSize } from '@dxos/aurora';
 import { Serializer } from '@dxos/echo-schema';
 import { useFileDownload } from '@dxos/kai-frames';
+import { DropdownMenuItem } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
-import { DropdownMenuItem, getSize } from '@dxos/react-components';
 
 import { createPath, defaultFrameId, useAppRouter, useGenerator } from '../../hooks';
 

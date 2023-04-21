@@ -8,9 +8,8 @@ import { Outlet } from 'react-router-dom';
 
 import { fromHost } from '@dxos/client-services';
 import { Defaults, Envs } from '@dxos/config';
-import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider, Config } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
 
 const Fullscreen: FC<PropsWithChildren> = ({ children }) => {

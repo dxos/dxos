@@ -4,6 +4,8 @@
   "projects": {
     "apidoc": "tools/apidoc",
     "async": "packages/common/async",
+    "aurora": "packages/ui/aurora",
+    "aurora-theme": "packages/ui/aurora-theme",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
     "bot-lab": "packages/experimental/bot-lab",
@@ -75,7 +77,6 @@
     "react-appkit": "packages/apps/patterns/react-appkit",
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",
-    "react-components": "packages/common/react-components",
     "react-composer": "packages/apps/patterns/react-composer",
     "react-icons": "packages/apps/patterns/react-icons",
     "react-metagraph": "packages/experimental/react-metagraph",

@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 // TODO(burdon): Factor out as hook.
 export const styles = {

@@ -5,9 +5,10 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { getSize, mx } from '@dxos/aurora';
 import { useFrameRegistry, FrameDef } from '@dxos/kai-frames';
 import { ScrollContainer } from '@dxos/mosaic';
-import { getSize, mx, Dialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-appkit';
 
 import { useAppReducer, createPath, useAppRouter, useAppState } from '../../hooks';
 

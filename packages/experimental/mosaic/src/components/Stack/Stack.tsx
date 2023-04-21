@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DndContext, MouseSensor, useSensor } from '@dnd-kit/core';
+import { DndContext, MouseSensor, useSensor, DragEndEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { FC, useEffect, useRef } from 'react';
 
-import { DragEndEvent, mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { StackFooter, DraggableStackRow } from './StackSection';
 import { StackSectionContext } from './context';

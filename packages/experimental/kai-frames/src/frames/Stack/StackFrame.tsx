@@ -6,8 +6,8 @@ import React from 'react';
 
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
+import { Input } from '@dxos/react-appkit';
 import { observer, useConfig } from '@dxos/react-client';
-import { Input } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { CustomActionMenu } from './CustomActionMenu';

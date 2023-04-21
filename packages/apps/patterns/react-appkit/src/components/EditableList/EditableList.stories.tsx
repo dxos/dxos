@@ -4,9 +4,10 @@
 
 import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentPropsWithoutRef } from 'react';
 
-import { ThemeProvider, useId, randomString, arrayMove } from '@dxos/react-components';
+import { ThemeProvider, useId, randomString } from '@dxos/aurora';
 
 import { appkitTranslations } from '../../translations';
+import { arrayMove } from '../../util';
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 
 export default {

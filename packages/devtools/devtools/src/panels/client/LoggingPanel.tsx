@@ -4,11 +4,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Button, ButtonGroup } from '@dxos/aurora';
 import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { Input } from '@dxos/react-appkit';
 import { useClientServices, useStream } from '@dxos/react-client';
-import { Button, ButtonGroup, Input } from '@dxos/react-components';
 
 import { MasterTable } from '../../components';
 

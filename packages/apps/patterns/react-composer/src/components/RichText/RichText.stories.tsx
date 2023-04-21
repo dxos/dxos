@@ -5,10 +5,10 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 
+import { mx, useId } from '@dxos/aurora';
 import { PublicKey } from '@dxos/client';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
-import { mx, useId } from '@dxos/react-components';
 
 import { Replicator, useYjsModel } from '../../testing';
 import { RichTextComposer, RichTextComposerProps } from './RichText';

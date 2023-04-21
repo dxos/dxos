@@ -5,7 +5,9 @@
 import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-components';
+import { useTranslation, Button, getSize, mx, useTranslationsContext } from '@dxos/aurora';
+
+import { Toast } from '../Toast';
 
 export interface NeedRefreshToastProps {
   variant: 'needRefresh';

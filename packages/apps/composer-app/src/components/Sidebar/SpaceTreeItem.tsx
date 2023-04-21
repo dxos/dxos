@@ -7,28 +7,25 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { Button, defaultDisabled, getSize, mx, useTranslation } from '@dxos/aurora';
 import { SpaceState } from '@dxos/client';
-import { Tooltip, useFileDownload } from '@dxos/react-appkit';
-import { useMulticastObservable } from '@dxos/react-async';
-import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import {
-  Button,
-  defaultDisabled,
+  Tooltip,
+  useFileDownload,
   Dialog,
   DropdownMenu,
   DropdownMenuItem,
-  getSize,
   Input,
-  mx,
   TooltipContent,
   TooltipRoot,
   TooltipTrigger,
   TreeBranch,
   TreeItem,
   TreeItemBody,
-  TreeItemHeading,
-  useTranslation
-} from '@dxos/react-components';
+  TreeItemHeading
+} from '@dxos/react-appkit';
+import { useMulticastObservable } from '@dxos/react-async';
+import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { useShell } from '@dxos/react-ui';
 
 import { ComposerDocument } from '../../proto';

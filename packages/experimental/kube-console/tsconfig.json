@@ -52,9 +52,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -89,6 +86,12 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../gem-core"

@@ -4,8 +4,9 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
+import { mx } from '@dxos/aurora';
 import type { Space } from '@dxos/client';
-import { Avatar, mx } from '@dxos/react-components';
+import { Avatar } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(

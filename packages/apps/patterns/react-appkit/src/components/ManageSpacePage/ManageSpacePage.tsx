@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 
+import { Button, getSize, useTranslation } from '@dxos/aurora';
 import type { Identity } from '@dxos/client';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
-import { Button, getSize, useTranslation } from '@dxos/react-components';
 
 import { useSafeSpaceKey } from '../../hooks';
 import { HeadingWithActions } from '../HeadingWithActions';

@@ -5,8 +5,8 @@
 import '@dxosTheme';
 import React, { useMemo } from 'react';
 
+import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/client';
-import { Button } from '@dxos/react-components';
 
 import { ClientSpaceDecorator } from '../testing';
 import { observer } from './observer';

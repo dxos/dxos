@@ -6,9 +6,9 @@ import { Plus, Rocket } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { Button, getSize, useTranslation } from '@dxos/aurora';
 import { Invitation, Space } from '@dxos/client';
 import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
-import { Button, getSize, useTranslation } from '@dxos/react-components';
 import { MaybePromise } from '@dxos/util';
 
 import { HeadingWithActions } from '../HeadingWithActions';

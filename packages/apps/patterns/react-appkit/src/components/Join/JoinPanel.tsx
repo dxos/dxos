@@ -4,6 +4,7 @@
 
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
+import { useTranslation } from '@dxos/aurora';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -11,7 +12,6 @@ import {
   InvitationEncoder
 } from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
-import { useTranslation } from '@dxos/react-components';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';

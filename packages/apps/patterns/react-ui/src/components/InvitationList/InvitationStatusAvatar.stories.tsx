@@ -4,8 +4,8 @@
 import { StoryFn } from '@storybook/react';
 import React from 'react';
 
+import { mx, ThemeContext } from '@dxos/aurora';
 import { Invitation } from '@dxos/client';
-import { mx, ThemeContext } from '@dxos/react-components';
 
 import { defaultSurface } from '../../styles';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';

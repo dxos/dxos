@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithoutRef } from 'react';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/aurora';
 
 import { toEmoji } from '../../util';
 
