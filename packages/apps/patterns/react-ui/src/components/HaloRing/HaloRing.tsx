@@ -9,13 +9,14 @@ import { Pulse, getSize, mx } from '@dxos/react-components';
 export type HaloRingProps = PropsWithChildren & {
   loading?: boolean;
   status?: 'active' | 'inactive' | undefined;
+  className?: string;
 };
 
 export const HaloRing = (props: HaloRingProps) => {
-  const { loading, children, status } = { ...props };
+  const { loading, className, children, status } = { ...props };
   const w = 12;
   return (
-    <div className={mx(getSize(w), 'rounded-full relative inline-block')}>
+    <div className={mx(getSize(w), 'rounded-full relative inline-block m-auto', className)}>
       <div
         className={mx(
           'opacity-50 rounded-full border-2 w-full h-full absolute',

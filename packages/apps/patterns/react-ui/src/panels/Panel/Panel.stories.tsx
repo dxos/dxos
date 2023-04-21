@@ -30,11 +30,11 @@ export const Default = (props: any) => {
       <Content>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus enim, id tempor sem. Curabitur sapien
         justo, pulvinar mattis lobortis non, blandit at nisi.
-      </Content>
-      <Heading>Choose an option to continue</Heading>
-      <Content>
-        <Button>Proceed</Button>
-        <Button variant='ghost'>Cancel</Button>
+        <Heading>Choose an option to continue</Heading>
+        <Actions>
+          <Button>Proceed</Button>
+          <Button variant='ghost'>Cancel</Button>
+        </Actions>
       </Content>
     </Panel>
   );
@@ -74,19 +74,19 @@ export const WithMaxie = (props: any) => {
 
 export const JoiningPanel = (props: any) => {
   return (
-    <Panel {...props} className='min-is-[260px] max-is-[320px]'>
-      <Title>Joining space</Title>
-      <CloseButton />
-      <Content className='text-center'>
+    <Panel {...props} title='Joining space' className='min-is-[260px] max-is-[320px]'>
+      <Content>
         <HaloRing>
           <Pulse />
         </HaloRing>
-      </Content>
-      <Heading>Choose an option to continue</Heading>
-      <Content>
-        <Button>New identity</Button>
-        <Button>Join device</Button>
-        <Button>Recover identity</Button>
+
+        <Heading>Choose an option to continue</Heading>
+
+        <Actions>
+          <Button>New identity</Button>
+          <Button>Join device</Button>
+          <Button>Recover identity</Button>
+        </Actions>
       </Content>
     </Panel>
   );
@@ -94,18 +94,16 @@ export const JoiningPanel = (props: any) => {
 
 export const InputPanel = (props: any) => {
   return (
-    <Panel {...props} className='min-is-[260px] max-is-[320px]'>
-      <Title>Creating identity</Title>
-      <CloseButton />
+    <Panel {...props} title='Creating identity' className='min-is-[260px] max-is-[320px]'>
       <Content className='text-center'>
         <HaloRing>
           <Pulse />
         </HaloRing>
-      </Content>
-      <Content>
         <Input slots={{ input: { className: 'text-center' } }} label={<Heading>Enter a display name</Heading>} />
-        <Button>Continue</Button>
-        <Button variant='ghost'>Back</Button>
+        <Actions>
+          <Button>Continue</Button>
+          <Button variant='ghost'>Back</Button>
+        </Actions>
       </Content>
     </Panel>
   );
@@ -113,18 +111,16 @@ export const InputPanel = (props: any) => {
 
 export const Welcome = (props: any) => {
   return (
-    <Panel {...props} className='min-is-[260px] max-is-[320px]'>
-      <Title></Title>
-      <CloseButton />
+    <Panel {...props} title='' className='min-is-[260px] max-is-[320px]'>
       <Content className='text-center'>
         <HaloRing>
           <Avatar labelId='' fallbackValue={'cafebabe'} />
         </HaloRing>
-      </Content>
-      <Content>
         <Heading>Welcome, User</Heading>
-        <Button>Dismiss</Button>
-        <Button variant='ghost'>Back</Button>
+        <Actions>
+          <Button>Dismiss</Button>
+          <Button variant='ghost'>Back</Button>
+        </Actions>
       </Content>
     </Panel>
   );

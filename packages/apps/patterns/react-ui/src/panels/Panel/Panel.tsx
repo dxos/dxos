@@ -31,7 +31,7 @@ export const Panel = (props: PanelProps) => {
         )}
       >
         <Bar center={<Title>{title}</Title>} right={<CloseButton />} />
-        <div className='p-4 pbs-0'>{children}</div>
+        <div className='p-4 pbs-2'>{children}</div>
       </div>
     </DensityProvider>
   );
