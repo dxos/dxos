@@ -1,0 +1,27 @@
+@startuml
+!theme superhero
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "IFrame A"      as frameA
+entity      "Shared Worker" as worker
+autonumber 1.1
+
+== App starts ==
+appA -> frameA:       <i>open</i>
+frameA -> appA:       Loaded
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Init Message Channels
+appA -> frameA:       Init App Origin
+frameA -> appA:       Forward Message Channel
+frameA -> worker:     Open System & Shell Message Channels
+appA -> worker:       Open App Client Message Channel
+
+...afterward...
+autonumber inc A
+== App runs ==
+appA -> worker:       Client RPC
+worker -> appA:       Client RPC
+appA -> frameA:       Shell Controls
+frameA -> appA:       Shell Callback
+@enduml
