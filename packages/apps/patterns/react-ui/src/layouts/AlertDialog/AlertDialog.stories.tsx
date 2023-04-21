@@ -18,10 +18,9 @@ export default {
 export const Default = (props: any) => {
   return (
     <AlertDialog {...props}>
-      <Panel>
-        <Title>Hello</Title>
-        <Heading>You have been warned</Heading>
+      <Panel title='Hello'>
         <Content>
+          <Heading>You have been warned</Heading>
           <Button>OK</Button>
         </Content>
       </Panel>

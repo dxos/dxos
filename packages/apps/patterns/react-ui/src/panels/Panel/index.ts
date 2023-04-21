@@ -9,3 +9,4 @@ export * from './Content';
 export * from './Title';
 export * from './Heading';
 export * from './Input';
+export * from './Actions';

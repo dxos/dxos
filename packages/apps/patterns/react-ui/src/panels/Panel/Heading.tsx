@@ -11,7 +11,10 @@ export type HeadingProps = PropsWithChildren & BaseHeadingProps & {};
 export const Heading = (props: HeadingProps) => {
   const { children, className, ...restProps } = props;
   return (
-    <BaseHeading className={mx('font-body font-system-medium text-base text-center mlb-2', className)} {...restProps}>
+    <BaseHeading
+      className={mx('font-body font-system-medium dark:text-white text-base text-center mlb-2', className)}
+      {...restProps}
+    >
       {children}
     </BaseHeading>
   );
