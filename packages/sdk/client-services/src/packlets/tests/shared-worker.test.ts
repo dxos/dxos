@@ -21,23 +21,20 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   const workerRuntime = new WorkerRuntime(getConfig);
 
   const systemPorts = createLinkedPorts();
-  const workerProxyPorts = createLinkedPorts();
-  const proxyWindowPorts = createLinkedPorts();
+  const appPorts = createLinkedPorts();
   const shellPorts = createLinkedPorts();
   void workerRuntime.createSession({
     systemPort: systemPorts[1],
-    appPort: workerProxyPorts[1],
+    appPort: appPorts[1],
     shellPort: shellPorts[1]
   });
   const clientProxy = new IFrameProxyRuntime({
     config: getConfig,
     systemPort: systemPorts[0],
-    windowAppPort: proxyWindowPorts[0],
-    workerAppPort: workerProxyPorts[0],
     shellPort: shellPorts[0]
   });
   const client = new Client({
-    services: new ClientServicesProxy(proxyWindowPorts[1])
+    services: new ClientServicesProxy(appPorts[0])
   });
 
   return { workerRuntime, clientProxy, client };

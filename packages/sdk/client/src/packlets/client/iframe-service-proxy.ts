@@ -11,7 +11,7 @@ import { trace } from '@dxos/protocols';
 import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
-import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
+import { createIFrame, createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
@@ -52,6 +52,8 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   private readonly _options: IFrameClientServicesProxyOptions;
   private _iframe?: HTMLIFrameElement;
+  private _appPort!: RpcPort;
+  private _shellPort?: RpcPort;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
   private _shellController?: ShellController;
@@ -68,7 +70,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     logFilter = 'error,warn',
-    timeout = 1000
+    timeout = 3000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
     this._options = { source, channel, shell, vault, logFilter, timeout };
@@ -103,14 +105,16 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   async open() {
-    log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
-
-    if (!this._clientServicesProxy) {
-      this._clientServicesProxy = new ClientServicesProxy(await this._getIFramePort(this._options.channel));
+    if (this._clientServicesProxy) {
+      return;
     }
 
-    if (!this._shellController && typeof this._options.shell === 'string') {
-      this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
+    log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
+
+    await this._initializePorts();
+
+    if (this._shellPort) {
+      this._shellController = new ShellController(this._shellPort);
       this._iframe!.setAttribute('style', shellStyles);
       this._iframe!.setAttribute('data-testid', 'dxos-shell');
       this._shellController.contextUpdate.on(({ display, spaceKey }) => {
@@ -124,6 +128,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       window.addEventListener('keydown', this._handleKeyDown);
     }
 
+    this._clientServicesProxy = new ClientServicesProxy(this._appPort);
     await this._clientServicesProxy.open();
 
     this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs({
@@ -181,7 +186,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.end({ id: this._instanceId }));
   }
 
-  private async _getIFramePort(channel: string): Promise<RpcPort> {
+  private async _initializePorts() {
     // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
     //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
     const source = new URL(
@@ -195,28 +200,59 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
       }
 
+      let interval: NodeJS.Timer | undefined;
+      const loaded = new Trigger();
+      const ready = new Trigger<MessagePort>();
+
       // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
-      const trigger = new Trigger();
       const handler = (event: MessageEvent) => {
         const { channel, payload } = event.data;
-        if (channel === this._options.vault && payload === 'loaded') {
-          trigger.wake();
+        if (channel !== this._options.vault) {
+          return;
+        }
+
+        if (payload === 'loaded') {
+          loaded.wake();
+        } else if (payload?.command === 'init') {
+          ready.wake(payload.port);
         }
       };
-      window.addEventListener('message', handler);
 
-      const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
-      this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
+      try {
+        window.addEventListener('message', handler);
 
-      await asyncTimeout(
-        trigger.wait(),
-        this._options.timeout,
-        new RemoteServiceConnectionTimeout('Vault failed to load')
-      );
-      window.removeEventListener('message', handler);
+        const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
+        this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
+
+        await asyncTimeout(
+          loaded.wait(),
+          this._options.timeout,
+          new RemoteServiceConnectionTimeout('Vault failed to load')
+        );
+
+        interval = setInterval(() => {
+          this._iframe?.contentWindow?.postMessage({ channel: this._options.vault, payload: 'init' }, '*');
+        }, 50);
+
+        const port = await asyncTimeout(
+          ready.wait(),
+          this._options.timeout,
+          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort')
+        );
+
+        this._appPort = createWorkerPort({ port });
+        if (typeof this._options.shell === 'string') {
+          this._shellPort = createIFramePort({
+            origin: source.origin,
+            channel: this._options.shell,
+            iframe: this._iframe
+          });
+        }
+      } finally {
+        interval && clearInterval(interval);
+        window.removeEventListener('message', handler);
+      }
     }
-
-    return createIFramePort({ origin: source.origin, iframe: this._iframe, channel });
   }
 
   private async _handleKeyDown(event: KeyboardEvent) {
