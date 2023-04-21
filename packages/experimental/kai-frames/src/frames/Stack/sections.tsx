@@ -11,7 +11,7 @@ import { Contact, Document, DocumentStack, File, Table, TaskList } from '@dxos/k
 import { Table as TableComponent } from '@dxos/mosaic';
 import { Dialog } from '@dxos/react-appkit';
 import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
-import { Composer } from '@dxos/react-composer';
+import { Composer } from '@dxos/aurora-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';

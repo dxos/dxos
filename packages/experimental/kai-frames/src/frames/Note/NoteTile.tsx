@@ -10,7 +10,7 @@ import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { DropdownMenu, DropdownMenuItem, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import { Composer } from '@dxos/react-composer';
+import { Composer } from '@dxos/aurora-composer';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },

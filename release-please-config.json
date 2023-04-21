@@ -33,11 +33,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/patterns/react-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/patterns/react-icons/package.json",
           "jsonpath": "$.version"
         },
@@ -444,6 +439,11 @@
         {
           "type": "json",
           "path": "packages/ui/aurora/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-composer/package.json",
           "jsonpath": "$.version"
         },
         {

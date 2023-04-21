@@ -9,7 +9,7 @@ import urlJoin from 'url-join';
 import { Document, DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
-import { Composer } from '@dxos/react-composer';
+import { Composer } from '@dxos/aurora-composer';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';

@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-composer"
-    },
-    {
       "path": "../../apps/patterns/react-icons"
     },
     {
@@ -91,6 +88,9 @@
     },
     {
       "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
     },
     {
       "path": "../../ui/aurora-theme"

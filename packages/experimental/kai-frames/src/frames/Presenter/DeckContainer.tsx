@@ -7,7 +7,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Text } from '@dxos/echo-schema';
 import { Presentation } from '@dxos/kai-types';
 import { useSubscription } from '@dxos/react-client';
-import { TextKind } from '@dxos/react-composer';
+import { TextKind } from '@dxos/aurora-composer';
 
 import { Deck, DeckProps } from '../../components';
 import { useFrameRouter, useFrameContext } from '../../hooks';

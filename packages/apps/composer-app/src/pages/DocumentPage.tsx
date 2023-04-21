@@ -34,7 +34,7 @@ import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useFileDownload, DropdownMenu, Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
-import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/react-composer';
+import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
 
 import { useOctokitContext } from '../components';
 import { ComposerDocument } from '../proto';

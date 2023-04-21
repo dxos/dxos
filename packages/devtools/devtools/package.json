@@ -47,11 +47,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-composer": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/plexus": "workspace:*",
-    "@dxos/react-composer": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
