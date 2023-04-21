@@ -55,7 +55,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "docs/src/proto/gen"
+        "docs/src/demos/proto/gen"
       ]
     },
     "prerelease": {
