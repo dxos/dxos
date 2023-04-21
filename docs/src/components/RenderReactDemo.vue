@@ -44,7 +44,7 @@
   width: v-bind('peerWidth');
 }
 
-// TODO(wittjosiah): This is not generalized.
+/* TODO(wittjosiah): This is not generalized. */
 .task-list > p [role="heading"] {
   display: block;
   margin-block: 0 0.5rem;

@@ -201,7 +201,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   }
 
   /**
-   * Creates a new <paragrapgh> element with the given text content and inserts it at the given index.
+   * Creates a new `&lt;paragraph&gt;` element with the given text content and inserts it at the given index.
    *
    * Throws if the `Text` instance is plain text.
    */
