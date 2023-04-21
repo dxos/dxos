@@ -1,11 +1,11 @@
-# @dxos/react-ui
+# @dxos/react-shell
 
 A React component library for DXOS’s OS experiences
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-ui
+pnpm i @dxos/react-shell
 ```
 
 ## DXOS Resources

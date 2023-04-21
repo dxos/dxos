@@ -1,11 +1,11 @@
-# @dxos/react-composer
+# @dxos/aurora-composer
 
 Document editing experience within a DXOS shell.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-composer
+pnpm i @dxos/aurora-composer
 ```
 
 ## DXOS Resources

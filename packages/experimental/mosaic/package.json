@@ -20,7 +20,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@radix-ui/react-scroll-area": "^1.0.3",

@@ -3,7 +3,7 @@
 //
 
 // https://tailwindcss.com/docs/configuration
-// TODO(burdon): Create TS plugin for re-use (see @dxos/react-ui).
+// TODO(burdon): Create TS plugin for re-use (see @dxos/react-shell).
 
 const tailwindcss = require('tailwindcss/plugin');
 

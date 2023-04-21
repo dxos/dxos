@@ -294,7 +294,7 @@ importers:
       '@dxos/keys': link:../packages/common/keys
       '@dxos/log': link:../packages/common/log
       '@dxos/protocols': link:../packages/core/protocols
-      '@dxos/react-appkit': link:../packages/apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../packages/ui/react-appkit
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/vault': link:../packages/sdk/vault
@@ -345,7 +345,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
@@ -369,9 +369,9 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
@@ -393,6 +393,7 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -403,8 +404,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vault': workspace:*
@@ -433,16 +433,16 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-composer': link:../patterns/react-composer
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -490,7 +490,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -528,11 +528,11 @@ importers:
       '@dxos/metagraph': link:../../experimental/metagraph
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-metagraph': link:../../experimental/react-metagraph
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -561,321 +561,6 @@ importers:
       vite: 4.2.0_@types+node@18.11.9
       vite-plugin-pwa: 0.14.1_vite@4.2.0
       workbox-window: 6.5.4
-
-  packages/apps/patterns/react-appkit:
-    specifiers:
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/modifiers': ^6.0.0
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
-      '@dxos/async': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/telemetry': workspace:*
-      '@dxos/util': workspace:*
-      '@headlessui/react': ^1.7.3
-      '@phosphor-icons/react': ^2.0.5
-      '@radix-ui/react-alert-dialog': ^1.0.3
-      '@radix-ui/react-avatar': ^1.0.2
-      '@radix-ui/react-checkbox': ^1.0.3
-      '@radix-ui/react-collapsible': ^1.0.2
-      '@radix-ui/react-collection': ^1.0.2
-      '@radix-ui/react-compose-refs': ^1.0.0
-      '@radix-ui/react-context': ^1.0.0
-      '@radix-ui/react-dialog': ^1.0.3
-      '@radix-ui/react-dropdown-menu': ^2.0.4
-      '@radix-ui/react-navigation-menu': ^1.1.2
-      '@radix-ui/react-popover': ^1.0.5
-      '@radix-ui/react-portal': ^1.0.2
-      '@radix-ui/react-primitive': ^1.0.2
-      '@radix-ui/react-select': ^1.2.1
-      '@radix-ui/react-slot': ^1.0.1
-      '@radix-ui/react-toast': ^1.1.3
-      '@radix-ui/react-toolbar': ^1.0.3
-      '@radix-ui/react-tooltip': ^1.0.5
-      '@radix-ui/react-use-controllable-state': ^1.0.0
-      '@types/lodash.throttle': ^4.1.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      jdenticon: ^3.2.0
-      localforage: ^1.10.0
-      lodash.merge: ^4.6.2
-      lodash.throttle: ^4.1.1
-      qrcode.react: ^3.1.0
-      rci: ^0.0.3
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      url-join: ^5.0.0
-      vite: ^4.2.0
-    dependencies:
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/async': link:../../../common/async
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/log': link:../../../common/log
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/sentry': link:../../../common/sentry
-      '@dxos/telemetry': link:../../../common/telemetry
-      '@dxos/util': link:../../../common/util
-      '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-avatar': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-checkbox': 1.0.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-collapsible': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-collection': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-dropdown-menu': 2.0.4_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-navigation-menu': 1.1.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-popover': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-portal': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-select': 1.2.1_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-slot': 1.0.1_react@18.2.0
-      '@radix-ui/react-toast': 1.1.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-toolbar': 1.0.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-tooltip': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      jdenticon: 3.2.0
-      localforage: 1.10.0
-      lodash.merge: 4.6.2
-      lodash.throttle: 4.1.1
-      qrcode.react: 3.1.0_react@18.2.0
-      rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
-      url-join: 5.0.0
-    devDependencies:
-      '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/lodash.throttle': 4.1.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      vite: 4.2.0
-
-  packages/apps/patterns/react-composer:
-    specifiers:
-      '@codemirror/autocomplete': ^6.4.2
-      '@codemirror/commands': ^6.2.2
-      '@codemirror/lang-markdown': ^6.1.0
-      '@codemirror/language': ^6.6.0
-      '@codemirror/language-data': ^6.1.0
-      '@codemirror/lint': ^6.2.0
-      '@codemirror/search': ^6.3.0
-      '@codemirror/state': ^6.2.0
-      '@codemirror/theme-one-dark': ^6.1.1
-      '@codemirror/view': ^6.9.2
-      '@dxos/aurora': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/text-model': workspace:*
-      '@dxos/util': workspace:*
-      '@lezer/common': ^1.0.2
-      '@lezer/highlight': ^1.1.3
-      '@lezer/markdown': ^1.0.2
-      '@tiptap/core': 2.0.0-beta.220
-      '@tiptap/extension-collaboration': 2.0.0-beta.220
-      '@tiptap/extension-collaboration-cursor': 2.0.0-beta.220
-      '@tiptap/extension-heading': 2.0.0-beta.220
-      '@tiptap/extension-list-item': 2.0.0-beta.220
-      '@tiptap/extension-placeholder': 2.0.0-beta.220
-      '@tiptap/pm': 2.0.0-beta.220
-      '@tiptap/react': 2.0.0-beta.220
-      '@tiptap/starter-kit': 2.0.0-beta.220
-      '@types/lodash.get': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      codemirror: ^6.0.1
-      lib0: ^0.2.65
-      lodash.get: ^4.4.2
-      prosemirror-model: ^1.19.0
-      prosemirror-state: ^1.4.2
-      prosemirror-view: ^1.30.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      y-codemirror.next: ^0.3.2
-      y-prosemirror: ~1.0.20
-      y-protocols: ^1.0.5
-      yjs: ^13.5.44
-    dependencies:
-      '@codemirror/autocomplete': 6.4.2
-      '@codemirror/commands': 6.2.2
-      '@codemirror/lang-markdown': 6.1.0
-      '@codemirror/language': 6.6.0
-      '@codemirror/language-data': 6.1.0
-      '@codemirror/lint': 6.2.0
-      '@codemirror/search': 6.3.0
-      '@codemirror/state': 6.2.0
-      '@codemirror/theme-one-dark': 6.1.1
-      '@codemirror/view': 6.9.2
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/log': link:../../../common/log
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/util': link:../../../common/util
-      '@lezer/common': 1.0.2
-      '@lezer/highlight': 1.1.3
-      '@lezer/markdown': 1.0.2
-      '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      '@tiptap/extension-collaboration': 2.0.0-beta.220_ynezejixgkllukncpjhwuvpzpq
-      '@tiptap/extension-collaboration-cursor': 2.0.0-beta.220_esdptbacmf7cqkdw5oju3chb2u
-      '@tiptap/extension-heading': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
-      '@tiptap/extension-list-item': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
-      '@tiptap/extension-placeholder': 2.0.0-beta.220_ohumfzynigfck3hzagxvh2a4ky
-      '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
-      '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
-      '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      codemirror: 6.0.1
-      lib0: 0.2.65
-      lodash.get: 4.4.2
-      prosemirror-model: 1.19.0
-      prosemirror-state: 1.4.2
-      prosemirror-view: 1.30.1
-      y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
-      y-protocols: 1.0.5
-      yjs: 13.5.44
-    devDependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-services': link:../../../sdk/client-services
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/text-model': link:../../../core/echo/text-model
-      '@types/lodash.get': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/apps/patterns/react-icons:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addons': 7.0.0-beta.48
-      '@storybook/api': 7.0.0-beta.48
-      '@storybook/components': 7.0.0-beta.48
-      '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/theming': 7.0.0-beta.48
-      react: ^18.2.0
-      react-dom: ^18.2.0
-    devDependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/components': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      '@storybook/core-events': 7.0.0-beta.48
-      '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/apps/patterns/react-ui:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/util': workspace:*
-      '@faker-js/faker': ^7.6.0
-      '@phosphor-icons/react': ^2.0.5
-      '@radix-ui/react-accordion': ^1.1.1
-      '@radix-ui/react-alert-dialog': ^1.0.3
-      '@radix-ui/react-dialog': ^1.0.3
-      '@radix-ui/react-radio-group': ^1.1.2
-      '@react-hook/async': ^3.1.1
-      '@types/debug': ^4.1.7
-      '@types/lodash.toarray': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      '@xstate/react': ^3.2.1
-      debug: ^4.3.3
-      lodash.toarray: ^4.4.0
-      qrcode.react: ^3.1.0
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      url-join: ^5.0.0
-      vite: ^4.2.0
-      xstate: ^4.37.0
-    dependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-appkit': link:../react-appkit
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/util': link:../../../common/util
-      '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
-      '@react-hook/async': 3.1.1_react@18.2.0
-      '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
-      debug: 4.3.4
-      lodash.toarray: 4.4.0
-      qrcode.react: 3.1.0_react@18.2.0
-      url-join: 5.0.0
-      xstate: 4.37.1
-    devDependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client-services': link:../../../sdk/client-services
-      '@dxos/log': link:../../../common/log
-      '@dxos/react-async': link:../../../common/react-async
-      '@faker-js/faker': 7.6.0
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/debug': 4.1.7
-      '@types/lodash.toarray': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.2.0
 
   packages/apps/quickstart:
     specifiers:
@@ -913,7 +598,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
@@ -954,7 +639,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
@@ -975,9 +660,9 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
@@ -1031,7 +716,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
@@ -1113,7 +798,7 @@ importers:
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/client': link:../../../sdk/client
-      '@dxos/react-appkit': link:../../patterns/react-appkit
+      '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
@@ -1152,7 +837,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/util': link:../../common/util
       '@sentry/react': 7.42.0_react@18.2.0
@@ -2506,6 +2191,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -2527,8 +2213,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
@@ -2571,7 +2256,7 @@ importers:
       '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -2587,11 +2272,11 @@ importers:
       react-vis: 1.11.12_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/plexus': link:../../experimental/plexus
-      '@dxos/react-composer': link:../../apps/patterns/react-composer
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -2624,7 +2309,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@emotion/react': ^11.9.0
@@ -2669,7 +2354,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2953,6 +2638,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
@@ -2976,10 +2662,9 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-composer': workspace:*
       '@dxos/react-icons': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -3035,6 +2720,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
@@ -3054,13 +2740,12 @@ importers:
       '@dxos/node-std': link:../../common/node-std
       '@dxos/plexus': link:../plexus
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-composer': link:../../apps/patterns/react-composer
-      '@dxos/react-icons': link:../../apps/patterns/react-icons
+      '@dxos/react-icons': link:../../ui/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -3205,6 +2890,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -3226,9 +2912,8 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-composer': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -3297,6 +2982,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
@@ -3313,12 +2999,11 @@ importers:
       '@dxos/node-std': link:../../common/node-std
       '@dxos/plexus': link:../plexus
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
@@ -3614,7 +3299,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-icons': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -3684,12 +3369,12 @@ importers:
       '@dxos/mosaic': link:../mosaic
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-icons': link:../../apps/patterns/react-icons
+      '@dxos/react-icons': link:../../ui/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -3773,7 +3458,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-scroll-area': ^1.0.3
@@ -3809,8 +3494,8 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
@@ -4339,6 +4024,79 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
+  packages/sdk/react-shell:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.6.0
+      '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-accordion': ^1.1.1
+      '@radix-ui/react-alert-dialog': ^1.0.3
+      '@radix-ui/react-dialog': ^1.0.3
+      '@radix-ui/react-radio-group': ^1.1.2
+      '@react-hook/async': ^3.1.1
+      '@types/debug': ^4.1.7
+      '@types/lodash.toarray': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      '@xstate/react': ^3.2.1
+      debug: ^4.3.3
+      lodash.toarray: ^4.4.0
+      qrcode.react: ^3.1.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      url-join: ^5.0.0
+      vite: ^4.2.0
+      xstate: ^4.37.0
+    dependencies:
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/client': link:../client
+      '@dxos/config': link:../config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-client': link:../react-client
+      '@dxos/util': link:../../common/util
+      '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
+      '@react-hook/async': 3.1.1_react@18.2.0
+      '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
+      debug: 4.3.4
+      lodash.toarray: 4.4.0
+      qrcode.react: 3.1.0_react@18.2.0
+      url-join: 5.0.0
+      xstate: 4.37.1
+    devDependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client-services': link:../client-services
+      '@dxos/log': link:../../common/log
+      '@dxos/react-async': link:../../common/react-async
+      '@faker-js/faker': 7.6.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/debug': 4.1.7
+      '@types/lodash.toarray': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.1.0_vite@4.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.2.0
+
   packages/sdk/vault:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -4349,7 +4107,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@fastify/cors': ^8.2.1
@@ -4379,9 +4137,9 @@ importers:
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../react-shell
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
       '@fastify/cors': 8.2.1
@@ -4433,6 +4191,111 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.2.0
 
+  packages/ui/aurora-composer:
+    specifiers:
+      '@codemirror/autocomplete': ^6.4.2
+      '@codemirror/commands': ^6.2.2
+      '@codemirror/lang-markdown': ^6.1.0
+      '@codemirror/language': ^6.6.0
+      '@codemirror/language-data': ^6.1.0
+      '@codemirror/lint': ^6.2.0
+      '@codemirror/search': ^6.3.0
+      '@codemirror/state': ^6.2.0
+      '@codemirror/theme-one-dark': ^6.1.1
+      '@codemirror/view': ^6.9.2
+      '@dxos/aurora': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
+      '@lezer/common': ^1.0.2
+      '@lezer/highlight': ^1.1.3
+      '@lezer/markdown': ^1.0.2
+      '@tiptap/core': 2.0.0-beta.220
+      '@tiptap/extension-collaboration': 2.0.0-beta.220
+      '@tiptap/extension-collaboration-cursor': 2.0.0-beta.220
+      '@tiptap/extension-heading': 2.0.0-beta.220
+      '@tiptap/extension-list-item': 2.0.0-beta.220
+      '@tiptap/extension-placeholder': 2.0.0-beta.220
+      '@tiptap/pm': 2.0.0-beta.220
+      '@tiptap/react': 2.0.0-beta.220
+      '@tiptap/starter-kit': 2.0.0-beta.220
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      codemirror: ^6.0.1
+      lib0: ^0.2.65
+      lodash.get: ^4.4.2
+      prosemirror-model: ^1.19.0
+      prosemirror-state: ^1.4.2
+      prosemirror-view: ^1.30.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      y-codemirror.next: ^0.3.2
+      y-prosemirror: ~1.0.20
+      y-protocols: ^1.0.5
+      yjs: ^13.5.44
+    dependencies:
+      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/commands': 6.2.2
+      '@codemirror/lang-markdown': 6.1.0
+      '@codemirror/language': 6.6.0
+      '@codemirror/language-data': 6.1.0
+      '@codemirror/lint': 6.2.0
+      '@codemirror/search': 6.3.0
+      '@codemirror/state': 6.2.0
+      '@codemirror/theme-one-dark': 6.1.1
+      '@codemirror/view': 6.9.2
+      '@dxos/aurora': link:../aurora
+      '@dxos/debug': link:../../common/debug
+      '@dxos/log': link:../../common/log
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/util': link:../../common/util
+      '@lezer/common': 1.0.2
+      '@lezer/highlight': 1.1.3
+      '@lezer/markdown': 1.0.2
+      '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
+      '@tiptap/extension-collaboration': 2.0.0-beta.220_ynezejixgkllukncpjhwuvpzpq
+      '@tiptap/extension-collaboration-cursor': 2.0.0-beta.220_esdptbacmf7cqkdw5oju3chb2u
+      '@tiptap/extension-heading': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
+      '@tiptap/extension-list-item': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
+      '@tiptap/extension-placeholder': 2.0.0-beta.220_ohumfzynigfck3hzagxvh2a4ky
+      '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
+      '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
+      '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
+      codemirror: 6.0.1
+      lib0: 0.2.65
+      lodash.get: 4.4.2
+      prosemirror-model: 1.19.0
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.30.1
+      y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
+      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-protocols: 1.0.5
+      yjs: 13.5.44
+    devDependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/text-model': link:../../core/echo/text-model
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
   packages/ui/aurora-theme:
     specifiers:
       '@fontsource/fira-code': ^4.5.12
@@ -4467,6 +4330,143 @@ importers:
       esbuild: 0.16.17
       esbuild-style-plugin: 1.6.1
       vite: 4.2.0
+
+  packages/ui/react-appkit:
+    specifiers:
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/async': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
+      '@dxos/util': workspace:*
+      '@headlessui/react': ^1.7.3
+      '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-alert-dialog': ^1.0.3
+      '@radix-ui/react-avatar': ^1.0.2
+      '@radix-ui/react-checkbox': ^1.0.3
+      '@radix-ui/react-collapsible': ^1.0.2
+      '@radix-ui/react-collection': ^1.0.2
+      '@radix-ui/react-compose-refs': ^1.0.0
+      '@radix-ui/react-context': ^1.0.0
+      '@radix-ui/react-dialog': ^1.0.3
+      '@radix-ui/react-dropdown-menu': ^2.0.4
+      '@radix-ui/react-navigation-menu': ^1.1.2
+      '@radix-ui/react-popover': ^1.0.5
+      '@radix-ui/react-portal': ^1.0.2
+      '@radix-ui/react-primitive': ^1.0.2
+      '@radix-ui/react-select': ^1.2.1
+      '@radix-ui/react-slot': ^1.0.1
+      '@radix-ui/react-toast': ^1.1.3
+      '@radix-ui/react-toolbar': ^1.0.3
+      '@radix-ui/react-tooltip': ^1.0.5
+      '@radix-ui/react-use-controllable-state': ^1.0.0
+      '@types/lodash.throttle': ^4.1.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      jdenticon: ^3.2.0
+      localforage: ^1.10.0
+      lodash.merge: ^4.6.2
+      lodash.throttle: ^4.1.1
+      qrcode.react: ^3.1.0
+      rci: ^0.0.3
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.4.0
+      url-join: ^5.0.0
+      vite: ^4.2.0
+    dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/async': link:../../common/async
+      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
+      '@dxos/util': link:../../common/util
+      '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-avatar': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-checkbox': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-collapsible': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-collection': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-dropdown-menu': 2.0.4_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-navigation-menu': 1.1.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-popover': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-portal': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-select': 1.2.1_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-slot': 1.0.1_react@18.2.0
+      '@radix-ui/react-toast': 1.1.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-toolbar': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-tooltip': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      jdenticon: 3.2.0
+      localforage: 1.10.0
+      lodash.merge: 4.6.2
+      lodash.throttle: 4.1.1
+      qrcode.react: 3.1.0_react@18.2.0
+      rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
+      url-join: 5.0.0
+    devDependencies:
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.throttle': 4.1.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.1.0_vite@4.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      vite: 4.2.0
+
+  packages/ui/react-icons:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@storybook/addons': 7.0.0-beta.48
+      '@storybook/api': 7.0.0-beta.48
+      '@storybook/components': 7.0.0-beta.48
+      '@storybook/core-events': 7.0.0-beta.48
+      '@storybook/theming': 7.0.0-beta.48
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    devDependencies:
+      '@dxos/aurora': link:../aurora
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/components': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      '@storybook/core-events': 7.0.0-beta.48
+      '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   tools/apidoc:
     specifiers:
@@ -4804,7 +4804,7 @@ importers:
       '@dxos/gem-spore': link:../../packages/experimental/gem-spore
       '@dxos/log': link:../../packages/common/log
       '@dxos/react-client': link:../../packages/sdk/react-client
-      '@dxos/react-icons': link:../../packages/apps/patterns/react-icons
+      '@dxos/react-icons': link:../../packages/ui/react-icons
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@types/react-dom': 18.0.6
       clsx: 1.2.1
@@ -15301,7 +15301,7 @@ packages:
   /@types/lodash.throttle/4.1.7:
     resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
-      '@types/lodash': 4.14.186
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.toarray/4.4.7:
@@ -16090,7 +16090,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.21.3
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.0_@types+node@18.11.9
+      vite: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: true

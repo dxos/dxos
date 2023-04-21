@@ -43,7 +43,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fastify/cors": "^8.2.1",

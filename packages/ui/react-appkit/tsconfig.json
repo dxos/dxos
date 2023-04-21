@@ -5,23 +5,39 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node"
     ]
   },
   "exclude": [
+    "*.t.ts",
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "../../composer-app/src/pwa.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/telemetry"
     },
     {
       "path": "../../common/util"
@@ -33,10 +49,10 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/client-services"
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -45,10 +61,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vault"
+      "path": "../aurora"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../aurora-theme"
     }
   ]
 }

@@ -8,7 +8,7 @@ import { Button, defaultOsButtonColors, mx, useButtonShadow, useTranslation } fr
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
-import { PanelSidebarProvider, ShellProvider, useShell } from '@dxos/react-ui';
+import { PanelSidebarProvider, ShellProvider, useShell } from '@dxos/react-shell';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
 import { namespace, abbreviateKey, getPath } from '../../router';

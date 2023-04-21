@@ -40,7 +40,7 @@
       "path": "../../ui/aurora-theme"
     },
     {
-      "path": "../patterns/react-appkit"
+      "path": "../../ui/react-appkit"
     }
   ]
 }

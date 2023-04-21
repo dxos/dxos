@@ -48,7 +48,7 @@ design system packages your project uses, e.g.:
 ```
 './node_modules/@dxos/react-components/dist/**/*.mjs',
 './node_modules/@dxos/react-appkit/dist/**/*.mjs',
-'./node_modules/@dxos/react-composer/dist/**/*.mjs',
+'./node_modules/@dxos/aurora-composer/dist/**/*.mjs',
 ```
 
 #### 2. Reference the basic stylesheet
