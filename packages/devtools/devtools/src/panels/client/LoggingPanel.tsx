@@ -97,7 +97,11 @@ const LoggingPanel = () => {
         </div>
       </div>
       <div className='flex flex-1 overflow-hidden'>
-        <MasterTable<LogEntry> columns={columns} data={logs} slots={{ body: { ref: logsRef } }} />
+        <MasterTable<LogEntry>
+          columns={columns}
+          data={logs}
+          slots={{ body: { className: 'max-h-screen', ref: logsRef } }}
+        />
       </div>
     </div>
   );
