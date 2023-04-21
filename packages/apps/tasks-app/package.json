@@ -20,7 +20,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",

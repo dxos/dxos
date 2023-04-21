@@ -5,7 +5,7 @@
 import React, { FC, PropsWithChildren } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { ShellProvider as NaturalShellProvider } from '@dxos/react-ui';
+import { ShellProvider as NaturalShellProvider } from '@dxos/react-shell';
 
 import { createPath, defaultFrameId, useAppRouter } from '../../hooks';
 

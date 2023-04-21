@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/patterns/react-icons/src",
+  "sourceRoot": "packages/ui/react-icons/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/patterns/react-icons/src/index.ts",
-        "outputPath": "packages/apps/patterns/react-icons/dist/types",
-        "tsConfig": "packages/apps/patterns/react-icons/tsconfig.json"
+        "main": "packages/ui/react-icons/src/index.ts",
+        "outputPath": "packages/ui/react-icons/dist/types",
+        "tsConfig": "packages/ui/react-icons/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/patterns/react-icons/src/index.ts"
+          "packages/ui/react-icons/src/index.ts"
         ],
-        "outputPath": "packages/apps/patterns/react-icons/dist/lib",
+        "outputPath": "packages/ui/react-icons/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/patterns/react-icons/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-icons/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -49,7 +49,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/apps/patterns/react-icons/.storybook"
+          "configFolder": "packages/ui/react-icons/.storybook"
         },
         "uiFramework": "@storybook/react"
       }

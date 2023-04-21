@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
+const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -43,8 +43,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension]
     }),

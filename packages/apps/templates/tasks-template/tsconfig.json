@@ -30,7 +30,7 @@
       "path": "../../../ui/aurora"
     },
     {
-      "path": "../../patterns/react-appkit"
+      "path": "../../../ui/react-appkit"
     },
     {
       "path": "../bare-template"

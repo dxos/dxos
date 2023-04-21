@@ -11,7 +11,7 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
-import { osTranslations, Shell } from '@dxos/react-ui';
+import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mobileAndTabletCheck } from './util';

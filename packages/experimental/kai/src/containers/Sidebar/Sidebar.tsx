@@ -28,7 +28,7 @@ import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
 import { FrameObjectList, FrameRegistryDialog } from '../../containers';

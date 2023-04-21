@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/patterns/react-appkit/src",
+  "sourceRoot": "packages/ui/react-appkit/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/patterns/react-appkit/src/index.ts",
-        "outputPath": "packages/apps/patterns/react-appkit/dist/types",
-        "tsConfig": "packages/apps/patterns/react-appkit/tsconfig.json"
+        "main": "packages/ui/react-appkit/src/index.ts",
+        "outputPath": "packages/ui/react-appkit/dist/types",
+        "tsConfig": "packages/ui/react-appkit/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/patterns/react-appkit/src/index.ts",
-          "packages/apps/patterns/react-appkit/src/telemetry/index.ts"
+          "packages/ui/react-appkit/src/index.ts",
+          "packages/ui/react-appkit/src/telemetry/index.ts"
         ],
-        "outputPath": "packages/apps/patterns/react-appkit/dist/lib",
+        "outputPath": "packages/ui/react-appkit/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -34,7 +34,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/patterns/react-appkit/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-appkit/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -47,7 +47,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/apps/patterns/react-appkit/src/proto/gen"
+        "packages/ui/react-appkit/src/proto/gen"
       ]
     },
     "storybook": {
@@ -59,7 +59,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/apps/patterns/react-appkit/.storybook"
+          "configFolder": "packages/ui/react-appkit/.storybook"
         },
         "uiFramework": "@storybook/react"
       }

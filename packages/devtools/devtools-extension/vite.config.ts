@@ -12,7 +12,7 @@ import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
-import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
+import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 import packageJson from './package.json';
 
@@ -51,9 +51,9 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
