@@ -4,8 +4,9 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
+import { Button, defaultDescription, getSize, mx, useId, useTranslation } from '@dxos/aurora';
+import { Heading } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client';
-import { Button, defaultDescription, getSize, Heading, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { InvitationEmoji } from '../../components';
 import { defaultSurface } from '../../styles';

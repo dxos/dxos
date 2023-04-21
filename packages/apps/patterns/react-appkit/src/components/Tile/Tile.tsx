@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
-import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
+import { Group } from '../Group';
 
 export type Tile<T = TypedObject> = {
   canRender: (data: TypedObject) => boolean;

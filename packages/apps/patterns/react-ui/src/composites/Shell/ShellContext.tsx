@@ -13,6 +13,7 @@ import React, {
   useState
 } from 'react';
 
+import { mx } from '@dxos/aurora';
 import {
   IFrameClientServicesProxy,
   type PublicKey,
@@ -23,7 +24,6 @@ import {
 } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
 
 import { Shell } from './Shell';
 

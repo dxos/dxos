@@ -6,7 +6,8 @@ import { AddressBook, DeviceMobileCamera, DiamondsFour, Planet, SignOut } from '
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { NavMenu as NaturalNavMenu, NavMenuSeparatorProps, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/aurora';
+import { NavMenu as NaturalNavMenu, NavMenuSeparatorProps } from '@dxos/react-appkit';
 
 const iconAttributes = { className: 'h-5 w-5' };
 

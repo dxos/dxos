@@ -6,9 +6,9 @@ import { Clipboard } from '@phosphor-icons/react';
 import React, { Component, PropsWithChildren, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { Button } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { Tooltip } from '@dxos/react-appkit';
-import { Alert, Button } from '@dxos/react-components';
+import { Tooltip, Alert } from '@dxos/react-appkit';
 import { captureException } from '@dxos/sentry';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {

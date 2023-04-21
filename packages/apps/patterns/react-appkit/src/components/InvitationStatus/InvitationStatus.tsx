@@ -4,8 +4,8 @@
 
 import React, { ComponentProps, useMemo } from 'react';
 
+import { strongShimmer, getSize, mx, useTranslation } from '@dxos/aurora';
 import { Invitation } from '@dxos/client';
-import { strongShimmer, getSize, mx, useTranslation } from '@dxos/react-components';
 
 const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import '@dxosTheme';
 

@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -21,7 +22,6 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -42,6 +42,7 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",

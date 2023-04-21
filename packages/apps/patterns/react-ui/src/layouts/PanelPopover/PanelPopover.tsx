@@ -4,7 +4,8 @@
 
 import React, { ComponentProps } from 'react';
 
-import { mx, Popover } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
+import { Popover } from '@dxos/react-appkit';
 
 import { defaultSurface, defaultArrow } from '../../styles';
 

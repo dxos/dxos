@@ -5,7 +5,7 @@
 import React, { MutableRefObject, useMemo } from 'react';
 import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 // TODO(burdon): Think about re-exports.
 export type TableCellProps<T extends object = {}> = CellProps<T>;

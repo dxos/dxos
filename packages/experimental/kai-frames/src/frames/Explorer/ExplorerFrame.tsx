@@ -5,9 +5,9 @@
 import { AsteriskSimple, Graph, Leaf, Tree } from '@phosphor-icons/react';
 import React, { FC, useMemo, useState } from 'react';
 
+import { getSize, mx, Button } from '@dxos/aurora';
 import { GraphModel } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
-import { getSize, mx, Button } from '@dxos/react-components';
 
 import { GraphComponent } from './GraphComponent';
 import { PlexusComponent } from './PlexusComponent';

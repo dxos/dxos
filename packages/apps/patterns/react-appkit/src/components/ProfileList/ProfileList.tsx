@@ -3,10 +3,14 @@
 //
 import React from 'react';
 
+import { useTranslation, defaultDisabled, defaultGroup, mx } from '@dxos/aurora';
 import type { Identity } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
-import { useTranslation, Tag, Avatar, defaultDisabled, defaultGroup, Group, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
+
+import { Avatar } from '../Avatar';
+import { Group } from '../Group';
+import { Tag } from '../Tag';
 
 export interface ProfileListProps {
   identities: Identity[];

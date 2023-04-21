@@ -5,7 +5,7 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import React, { ComponentPropsWithoutRef, PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { defaultDialogContent, defaultOverlay } from '../../styles';
 

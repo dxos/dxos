@@ -29,9 +29,6 @@
       "path": "../../../common/react-async"
     },
     {
-      "path": "../../../common/react-components"
-    },
-    {
       "path": "../../../common/util"
     },
     {
@@ -57,6 +54,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/aurora"
     }
   ]
 }

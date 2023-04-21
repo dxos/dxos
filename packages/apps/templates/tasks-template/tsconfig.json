@@ -21,13 +21,13 @@
       "path": "../../../common/plate"
     },
     {
-      "path": "../../../common/react-components"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/aurora"
     },
     {
       "path": "../../patterns/react-appkit"

@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/react-components"
+      "path": "../../../ui/aurora"
     }
   ]
 }

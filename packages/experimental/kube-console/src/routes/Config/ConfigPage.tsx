@@ -5,8 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { ConfigProto } from '@dxos/config';
+import { JsonTree } from '@dxos/react-appkit';
 import { useConfig } from '@dxos/react-client';
-import { JsonTree } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';

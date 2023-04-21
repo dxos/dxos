@@ -5,9 +5,46 @@
 import { Root as PortalRoot } from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import { Portal as TooltipPortal } from '@radix-ui/react-tooltip';
-import React, { ComponentProps, ReactNode, useState } from 'react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import type {
+  TooltipContentProps,
+  TooltipTriggerProps,
+  TooltipProps as RadixTooltipProps
+} from '@radix-ui/react-tooltip';
+import React, { ComponentProps, ReactNode, useState, forwardRef } from 'react';
 
-import { TooltipContent, TooltipTrigger, TooltipRoot, defaultTooltip, mx, useId } from '@dxos/react-components';
+import { defaultTooltip, mx, useId } from '@dxos/aurora';
+
+type TooltipRootProps = RadixTooltipProps;
+
+export const TooltipRoot = TooltipPrimitive.Root;
+
+export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+  ({ children, className, ...props }, forwardedRef) => {
+    return (
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Content
+          forceMount
+          {...props}
+          className={mx(
+            'inline-flex items-center rounded-md plb-2 pli-3',
+            'shadow-lg bg-white dark:bg-neutral-800',
+            defaultTooltip,
+            className
+          )}
+          ref={forwardedRef}
+        >
+          <TooltipPrimitive.Arrow className='fill-white dark:fill-neutral-800' />
+          {children}
+        </TooltipPrimitive.Content>
+      </TooltipPrimitive.Portal>
+    );
+  }
+);
+
+export const TooltipTrigger = TooltipPrimitive.Trigger;
+
+export type { TooltipContentProps, TooltipTriggerProps, TooltipRootProps };
 
 type TooltipSlots = {
   content?: Omit<ComponentProps<typeof TooltipContent>, 'children'>;

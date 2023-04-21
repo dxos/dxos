@@ -4,7 +4,7 @@
 
 import React, { FC, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 export type StackRowSlots = {
   root?: {
