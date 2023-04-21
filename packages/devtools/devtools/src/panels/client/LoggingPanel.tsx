@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { levels } from '@dxos/log';
+import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices, useStream } from '@dxos/react-client';
@@ -76,23 +76,13 @@ const LoggingPanel = () => {
   }, [logs]);
 
   const handleQueryLogs = () => {
-    const filtersString = inputRef.current?.value;
+    const filtersString = inputRef.current?.value ?? '';
     if (!filtersString) {
       setRequest({});
       return;
     }
 
-    const filters = filtersString.split(',').reduce((acc, filter) => {
-      const parts = filter.split(':');
-      if (parts.length === 1) {
-        acc.push({ level: levels[parts[0]] });
-      } else if (parts.length === 2) {
-        acc.push({ level: levels[parts[1]], pattern: parts[0] });
-      }
-      return acc;
-    }, [] as QueryLogsRequest.Filter[]);
-
-    setRequest({ filters });
+    setRequest({ filters: parseFilter(filtersString) });
   };
 
   return (
