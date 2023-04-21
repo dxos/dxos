@@ -2,7 +2,7 @@
   <div class="demo-controls">
     <label>
       <input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />
-      Disable <a href="/guide/platform/">ECHO replication</a>
+      Disable <a href="/guide/platform/">replication</a> (go offline)
     </label>
     <div role="separator" />
     <vue-custom-tooltip v-if="forkable" label="Fork to Stackblitz">
