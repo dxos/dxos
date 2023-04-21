@@ -244,7 +244,7 @@ message GetNetworkPeersResponse {
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
-   dxos.keys.PublicKey topic = 1;
+    dxos.keys.PublicKey topic = 1;
     optional string label = 2;
   }
 
@@ -291,17 +291,4 @@ message SubscribeToSwarmInfoRequest {}
 
 message SubscribeToSwarmInfoResponse {
   repeated dxos.devtools.swarm.SwarmInfo data = 1;
-}
-
-//
-// TracingService
-//
-
-service TracingService {
-  rpc SetTracingOptions(SetTracingOptionsRequest) returns (google.protobuf.Empty);
-  rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream dxos.rpc.RpcMessage);
-}
-
-message SetTracingOptionsRequest {
-  bool enable = 1;
 }
