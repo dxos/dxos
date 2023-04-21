@@ -3,10 +3,12 @@
 //
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 import { RemoteServiceConnectionError, RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, parseFilter } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -38,6 +40,7 @@ export type IFrameClientServicesProxyOptions = {
   channel: string;
   shell: boolean | string;
   vault: string;
+  logFilter: string;
   timeout: number;
 };
 
@@ -50,6 +53,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   private readonly _options: IFrameClientServicesProxyOptions;
   private _iframe?: HTMLIFrameElement;
   private _clientServicesProxy?: ClientServicesProxy;
+  private _loggingStream?: Stream<LogEntry>;
   private _shellController?: ShellController;
   private _spaceProvider?: Provider<PublicKey | undefined>;
 
@@ -63,10 +67,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     channel = DEFAULT_CLIENT_CHANNEL,
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
+    logFilter = 'error,warn',
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
-    this._options = { source, channel, shell, vault, timeout };
+    this._options = { source, channel, shell, vault, logFilter, timeout };
   }
 
   get proxy() {
@@ -120,6 +125,27 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     }
 
     await this._clientServicesProxy.open();
+
+    this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs({
+      filters: parseFilter(this._options.logFilter)
+    });
+    this._loggingStream.subscribe((entry) => {
+      switch (entry.level) {
+        case LogLevel.DEBUG:
+          log.debug(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.INFO:
+          log.info(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.WARN:
+          log.warn(`[vault] ${entry.message}`, entry.context);
+          break;
+        case LogLevel.ERROR:
+          log.error(`[vault] ${entry.message}`, entry.context);
+          break;
+      }
+    });
+
     await this._shellController?.open();
     if (!this._shellController) {
       return;
@@ -144,6 +170,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   async close() {
     window.removeEventListener('keydown', this._handleKeyDown);
     await this._shellController?.close();
+    await this._loggingStream?.close();
     await this._clientServicesProxy?.close();
     this._shellController = undefined;
     this._clientServicesProxy = undefined;
