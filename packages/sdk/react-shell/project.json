@@ -70,9 +70,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/sdk/react-shell/.storybook"
-        },
+        "configDir": "packages/sdk/react-shell/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

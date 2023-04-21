@@ -284,7 +284,7 @@ const run = async () => {
   // TODO(burdon): Parse options using yargs.
   const toolbox = new Toolbox({ verbose: false });
   await toolbox.init();
-  await toolbox.updateWorkspace();
+  // await toolbox.updateWorkspace();
   await toolbox.updateReleasePlease();
   await toolbox.updateRootPackage();
   await toolbox.updateProjects();

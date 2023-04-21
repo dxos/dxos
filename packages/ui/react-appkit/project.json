@@ -58,9 +58,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/ui/react-appkit/.storybook"
-        },
+        "configDir": "packages/ui/react-appkit/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

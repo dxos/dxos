@@ -21,9 +21,7 @@
       },
       "executor": "@nrwl/storybook:build",
       "options": {
-        "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
-        },
+        "configDir": "packages/devtools/devtools/.storybook",
         "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
         "uiFramework": "@storybook/react"
       },
@@ -81,9 +79,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
-        },
+        "configDir": "packages/devtools/devtools/.storybook",
         "uiFramework": "@storybook/react"
       }
     }
