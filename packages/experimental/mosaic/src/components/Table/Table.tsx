@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { MutableRefObject, useMemo } from 'react';
 import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
 import { mx } from '@dxos/aurora';
@@ -33,8 +33,9 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
 export type TableSlots = {
-  root?: { className: string };
-  header?: { className: string };
+  root?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
+  header?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
+  body?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
   row?: { className: string };
   cell?: { className: string };
   selected?: { className: string };
@@ -71,11 +72,11 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
   );
 
   return (
-    <div className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
+    <div ref={slots.root?.ref} className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         {/* TODO(burdon): Header is transparent. */}
-        <div className='thead sticky top-0'>
+        <div ref={slots.header?.ref} className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
             <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b'>
@@ -99,7 +100,7 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-auto'>
+        <div ref={slots.body?.ref} className={mx('tbody overflow-y-auto', slots.body?.className)}>
           {rows.map((row) => {
             prepareRow(row);
 
