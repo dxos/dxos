@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/plexus": "workspace:*",

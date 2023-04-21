@@ -91,6 +91,9 @@
       "path": "../../ui/aurora"
     },
     {
+      "path": "../../ui/aurora-theme"
+    },
+    {
       "path": "../gem-core"
     },
     {

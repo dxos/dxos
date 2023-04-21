@@ -42,6 +42,7 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",

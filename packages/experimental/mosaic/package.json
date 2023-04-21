@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.21",

@@ -58,6 +58,9 @@
       "path": "../../ui/aurora"
     },
     {
+      "path": "../../ui/aurora-theme"
+    },
+    {
       "path": "../devtools"
     }
   ]

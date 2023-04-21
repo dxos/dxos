@@ -71,6 +71,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-theme": "workspace:*",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.4.0",
     "@swc-node/register": "1.5.4",
