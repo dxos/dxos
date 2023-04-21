@@ -239,6 +239,7 @@ Not a concept in this extensibility model (succeeded by any `Component` employin
 - extensibility model is pure of (decoupled from) ECHO types and schema (with exception of maybe `Client` itself).
 - new unit of registration and packaging (Plugin) is 1-n with Frames (Components) instead of 1-1 with them.
 - replacement of a "new concept" `Frame` with any old React Component which uses the `useAppState` context hook.
+- introduction of abstract concept of `extensibility surfaces` and made statically concrete two: `tree` and `content` surfaces.
 - replacement of <FrameContainer> with the `Content area` extensibility surface.
 - unification of `useAppRouter` and `useAppState` (and all other forms of application state into one).
 - replacement of `React.lazy` loading of specific JSX modules containing Frames with static linking for v1, and with `ESM import` loading of Plugins in v2 version of the model.
