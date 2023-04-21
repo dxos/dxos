@@ -5,9 +5,10 @@
 import { Chat, Chats, List, User } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
 import { Message } from '@dxos/kai-types';
+import { DropdownMenu } from '@dxos/react-appkit';
 import { ShellLayout, useQuery } from '@dxos/react-client';
-import { Button, DensityProvider, DropdownMenu, getSize, mx } from '@dxos/react-components';
 import { useShell } from '@dxos/react-ui';
 
 import { useAppReducer, useAppRouter, useAppState } from '../../hooks';

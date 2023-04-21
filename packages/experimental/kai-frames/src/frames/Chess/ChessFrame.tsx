@@ -9,7 +9,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { useQuery, observer } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 import { useFrameContext } from '../../hooks';
 

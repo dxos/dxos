@@ -6,7 +6,7 @@ import { ArrowCircleRight, Buildings, UserCirclePlus } from '@phosphor-icons/rea
 import React from 'react';
 
 import { Organization } from '@dxos/kai-types';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 import { AddressSection, Card, CardProps, CardRow } from './Card';
 

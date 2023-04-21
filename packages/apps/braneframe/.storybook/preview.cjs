@@ -3,7 +3,7 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/react-components';
+import { ThemeProvider } from '@dxos/react-appkit';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },

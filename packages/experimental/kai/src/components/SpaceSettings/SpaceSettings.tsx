@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
 import { observer } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 import { icons, themes } from '../../hooks';
 

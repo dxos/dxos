@@ -15,7 +15,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     ${
       dxosUi &&
       text`
-    // This includes css styles from @dxos/react-components.
+    // This includes css styles from @dxos/aurora-theme.
     // This must precede all other style imports in the app.
     import '@dxosTheme';`
     }

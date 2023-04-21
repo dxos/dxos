@@ -5,10 +5,11 @@
 import { Archive, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { getSize, mx } from '@dxos/aurora';
 import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
+import { List, ListItem, ListItemEndcap, ListItemHeading, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, mx, Input } from '@dxos/react-components';
 
 import { TaskList } from './TaskList';
 

@@ -7,12 +7,13 @@ import '@dxosTheme';
 import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
+import { mx, ThemeContext } from '@dxos/aurora';
 import { CancellableInvitationObservable, Client, Invitation } from '@dxos/client';
 import { TestBuilder } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
+import { Loading } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
-import { Loading, mx, ThemeContext } from '@dxos/react-components';
 
 import { defaultSurface } from '../../styles';
 import { InvitationList } from './InvitationList';

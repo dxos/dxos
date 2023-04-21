@@ -5,11 +5,11 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 
+import { useId } from '@dxos/aurora';
 import { PublicKey, Text } from '@dxos/client';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { observer, useIdentity, useQuery, useSpace } from '@dxos/react-client';
 import { ClientSpaceDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
-import { useId } from '@dxos/react-components';
 
 import { ComposerDocument, schema } from '../../testing';
 import { Composer, ComposerProps } from './Composer';

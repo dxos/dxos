@@ -8,7 +8,7 @@ import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } f
 import type { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { mx, useTranslation, useId, getSize, strongShimmer } from '@dxos/react-components';
+import { mx, useTranslation, useId, getSize, strongShimmer } from '@dxos/aurora';
 
 import { defaultSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet, humanize, range } from '@dxos/util';
 

@@ -232,6 +232,7 @@ importers:
       '@dxos/apidoc': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -279,6 +280,7 @@ importers:
       '@dxos/apidoc': link:../tools/apidoc
       '@dxos/async': link:../packages/common/async
       '@dxos/aurora': link:../packages/ui/aurora
+      '@dxos/aurora-theme': link:../packages/ui/aurora-theme
       '@dxos/client': link:../packages/sdk/client
       '@dxos/client-services': link:../packages/sdk/client-services
       '@dxos/config': link:../packages/sdk/config
@@ -326,6 +328,7 @@ importers:
   packages/apps/braneframe:
     specifiers:
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -368,6 +371,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@sentry/vite-plugin': 0.4.0
       '@types/node': 18.11.9
       '@types/react': 18.0.21
@@ -381,6 +385,7 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -444,6 +449,7 @@ importers:
       showdown: 2.1.0
       turndown: 7.1.1
     devDependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/vault': link:../../sdk/vault
       '@octokit/openapi-types': 16.0.0
@@ -799,6 +805,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
@@ -830,6 +837,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-appkit': link:../react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
       '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
@@ -976,6 +984,7 @@ importers:
   packages/apps/tasks-app-2:
     specifiers:
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -1015,6 +1024,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/cli': link:../../devtools/cli
       '@storybook/addon-essentials': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-interactions': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -3739,6 +3749,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -3775,6 +3786,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y

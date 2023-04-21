@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {

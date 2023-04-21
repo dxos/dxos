@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, mx, useId, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx, useId, useTranslation } from '@dxos/aurora';
 
 import { invitationStatusValue } from '../../util';
 import { CopyButton } from '../Clipboard';

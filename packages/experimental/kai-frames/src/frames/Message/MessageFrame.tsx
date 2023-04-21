@@ -7,7 +7,7 @@ import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext, useFrameRegistry } from '../../hooks';

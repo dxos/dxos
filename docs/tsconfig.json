@@ -58,6 +58,9 @@
       "path": "../packages/ui/aurora"
     },
     {
+      "path": "../packages/ui/aurora-theme"
+    },
+    {
       "path": "../tools/apidoc"
     }
   ],

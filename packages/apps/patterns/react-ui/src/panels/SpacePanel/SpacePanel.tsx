@@ -7,7 +7,7 @@ import React, { cloneElement, useCallback, useReducer } from 'react';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/aurora';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';

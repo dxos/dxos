@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphRenderer, GraphRendererOptions } from '@dxos/gem-spore';
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { TreeProjector, TreeProjectorOptions } from './tree-projector';
 import { useTimeout } from './util';

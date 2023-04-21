@@ -38,6 +38,7 @@
     "turndown": "^7.1.1"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@octokit/openapi-types": "^16.0.0",

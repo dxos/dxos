@@ -7,7 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 import { useMetagraph } from '@dxos/react-metagraph';
 import { alphabeticalByKey } from '@dxos/util';
 

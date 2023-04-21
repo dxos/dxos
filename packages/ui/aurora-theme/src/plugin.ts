@@ -18,7 +18,13 @@ export interface VitePluginTailwindOptions {
 }
 
 /** These will automatically be included in tailwind content array unless otherwise specified */
-const knownPeerPackages = ['@dxos/react-components', '@dxos/react-appkit', '@dxos/react-ui', '@dxos/react-list'];
+const knownPeerPackages = [
+  '@dxos/aurora',
+  '@dxos/aurora-theme',
+  '@dxos/react-appkit',
+  '@dxos/react-ui',
+  '@dxos/react-list'
+];
 
 const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {
   const [, shortName] = packageName.split('/');

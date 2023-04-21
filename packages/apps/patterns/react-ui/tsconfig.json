@@ -55,6 +55,9 @@
     },
     {
       "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../react-appkit"
     }
   ]
 }

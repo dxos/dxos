@@ -11,7 +11,7 @@ interface PrngFactory {
 
 const Alea: PrngFactory = alea as unknown as PrngFactory;
 
-const prng = new Alea('@dxos/react-components');
+const prng = new Alea('@dxos/aurora');
 
 export const randomString = (n = 4) =>
   prng()

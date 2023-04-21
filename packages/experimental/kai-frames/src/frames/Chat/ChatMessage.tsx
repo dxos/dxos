@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import hash from 'string-hash';
 
 import { Message } from '@dxos/kai-types';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 // TODO(burdon): Avatars.
 const colors = [

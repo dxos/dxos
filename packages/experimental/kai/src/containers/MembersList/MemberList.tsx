@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/aurora';
 
 export const MemberList: FC<{
   identityKey: PublicKey;

@@ -9,9 +9,8 @@ import { Outlet } from 'react-router-dom';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
-import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-ui';
 

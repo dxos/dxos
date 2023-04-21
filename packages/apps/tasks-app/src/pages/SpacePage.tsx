@@ -6,8 +6,8 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import type { Space } from '@dxos/client';
+import { Loading } from '@dxos/react-appkit';
 import { useQuery, observer } from '@dxos/react-client';
-import { Loading } from '@dxos/react-components';
 
 import { TaskList as TaskListComponent } from '../components/TaskList';
 import { Task, TaskList } from '../proto';

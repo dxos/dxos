@@ -5,7 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useRef, useEffect } from 'react';
 
-import { Button, getSize, Loading } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/aurora';
+import { Loading } from '@dxos/react-appkit';
 
 import { setCaretPosition } from '../utils/setCaretPosition';
 import { CheckboxItem } from './CheckboxItem';

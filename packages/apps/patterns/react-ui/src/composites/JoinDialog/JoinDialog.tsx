@@ -5,7 +5,7 @@
 import { Action, Cancel } from '@radix-ui/react-alert-dialog';
 import React from 'react';
 
-import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
+import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
 
 import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
 import { JoinPanel, JoinPanelProps } from '../../panels';

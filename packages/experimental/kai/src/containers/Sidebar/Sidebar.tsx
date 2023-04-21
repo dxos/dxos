@@ -27,7 +27,7 @@ import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx } from '@dxos/react-components';
+import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';

@@ -10,7 +10,7 @@ import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
 import { File, Sketch } from '@dxos/kai-types';
 import { observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 import { KioskInvitationQr } from '../../components';
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';

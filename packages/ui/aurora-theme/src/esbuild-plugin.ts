@@ -22,7 +22,7 @@ export const ThemePlugins = (options: {
     {
       name: 'esbuild-plugin-dxos-ui-theme-resolvers',
       setup: async (build) => {
-        const fontsDir = join(options.outdir, 'node_modules/@dxos/react-components/fonts');
+        const fontsDir = join(options.outdir, 'node_modules/@dxos/aurora-theme/fonts');
         try {
           await mkdir(fontsDir);
         } catch (_err) {}

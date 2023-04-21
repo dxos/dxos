@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Document } from '@dxos/kai-types';
+import { Input } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
-import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { useFrameContext } from '../../hooks';

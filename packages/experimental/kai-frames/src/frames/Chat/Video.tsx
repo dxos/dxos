@@ -11,7 +11,7 @@ import { PublicKey, Space } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useConfig, useIdentity, useMembers } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 import { ComplexMap } from '@dxos/util';
 
 // https://www.npmjs.com/package/simple-peer#api

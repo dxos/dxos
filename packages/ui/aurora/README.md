@@ -24,14 +24,15 @@ project’s Vite config (`vite.config.ts`) to use it, e.g.:
 
 ```ts
 // ...
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 // ...
 export default defineConfig({
   // ...
   plugins: [
     // ...
     ThemePlugin({content: [
-        resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
+resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         './index.html', './src/**/*.{js,ts,jsx,tsx}'
       ]}),
     // ...
@@ -79,7 +80,8 @@ void build({
     content: [
       resolve(__dirname, '../index.html'),
       resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-      resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
+      resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
+resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
       // other sources to scan
     ]
   })

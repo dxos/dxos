@@ -23,7 +23,7 @@ import {
 } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { Shell } from './Shell';
 

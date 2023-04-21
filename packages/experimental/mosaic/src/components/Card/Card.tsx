@@ -4,7 +4,7 @@
 
 import React, { ReactNode } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 // TODO(burdon): Remove.
 import { styles } from './util';

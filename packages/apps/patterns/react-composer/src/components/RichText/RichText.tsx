@@ -11,7 +11,7 @@ import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/re
 import StarterKit from '@tiptap/starter-kit';
 import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';

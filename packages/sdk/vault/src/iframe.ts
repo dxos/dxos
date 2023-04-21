@@ -8,8 +8,8 @@ import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/clien
 import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
+import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations, Shell } from '@dxos/react-ui';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 

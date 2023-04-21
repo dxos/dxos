@@ -5,9 +5,10 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
+import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
 import { AuthenticatingInvitationObservable } from '@dxos/client';
+import { Input } from '@dxos/react-appkit';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';

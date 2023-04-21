@@ -14,7 +14,8 @@ import React, {
   useState
 } from 'react';
 
-import { defaultOverlay, mx, useMediaQuery, useTranslation } from '@dxos/react-components';
+import { mx, useMediaQuery, useTranslation } from '@dxos/aurora';
+import { defaultOverlay } from '@dxos/react-appkit';
 
 export type PanelSidebarState = 'show' | 'hide';
 
