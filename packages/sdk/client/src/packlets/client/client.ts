@@ -16,13 +16,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
-import {
-  Invitation,
-  LogEntry,
-  LogLevel,
-  SystemStatus,
-  SystemStatusResponse
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { TextModel } from '@dxos/text-model';
 
 import { DXOS_VERSION } from '../../version';
@@ -73,7 +67,6 @@ export class Client {
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
   private _initialized = false;
-  private _loggingStream?: Stream<LogEntry>;
   private _statusStream?: Stream<SystemStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
@@ -225,22 +218,7 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
-    assert(this._services.services.LoggingService, 'LoggingService is not available.');
     assert(this._services.services.SystemService, 'SystemService is not available.');
-
-    this._loggingStream = this._services.services.LoggingService.queryLogs({
-      filters: [{ level: LogLevel.WARN }, { level: LogLevel.ERROR }]
-    });
-    this._loggingStream.subscribe((entry) => {
-      switch (entry.level) {
-        case LogLevel.WARN:
-          log.warn(`[vault] ${entry.message}`, entry.context);
-          break;
-        case LogLevel.ERROR:
-          log.error(`[vault] ${entry.message}`, entry.context);
-          break;
-      }
-    });
 
     const trigger = new Trigger<Error | undefined>();
     this._statusStream = this._services.services.SystemService.queryStatus();
@@ -290,7 +268,6 @@ export class Client {
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
-    this._loggingStream!.close();
     await this._services.close();
 
     this._initialized = false;
