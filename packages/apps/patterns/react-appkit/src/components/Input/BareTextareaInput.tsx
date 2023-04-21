@@ -4,9 +4,8 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useThemeContext } from '../../hooks';
-import { defaultInput, subduedInput } from '../../styles';
-import { mx } from '../../util';
+import { useButtonShadow, useDensityContext, useThemeContext, defaultInput, subduedInput, mx } from '@dxos/aurora';
+
 import { TextareaProps } from './InputProps';
 
 export type BareTextareaInputProps = ComponentPropsWithRef<'textarea'> &

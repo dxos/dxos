@@ -7,8 +7,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
-import { defaultActive, defaultFocus, hover, getSize } from '../../styles';
-import { mx } from '../../util';
+import { defaultActive, defaultFocus, hover, getSize, mx } from '@dxos/aurora';
 
 export interface PopoverSlots {
   content?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;

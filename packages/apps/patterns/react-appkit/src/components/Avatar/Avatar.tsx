@@ -17,10 +17,7 @@ import React, {
   useMemo
 } from 'react';
 
-import { useId } from '../../hooks';
-import { Size } from '../../props';
-import { getSize } from '../../styles';
-import { mx } from '../../util';
+import { useId, Size, getSize, mx } from '@dxos/aurora';
 
 export interface AvatarSlots {
   root?: Omit<ComponentProps<typeof AvatarPrimitive.Root>, 'children'>;

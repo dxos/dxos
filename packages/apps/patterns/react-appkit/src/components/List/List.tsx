@@ -22,12 +22,20 @@ import React, {
   ReactNode
 } from 'react';
 
-import { useDensityContext, useId, useThemeContext } from '../../hooks';
-import { Density } from '../../props';
-import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus } from '../../styles';
-import { mx } from '../../util';
+import {
+  useDensityContext,
+  useId,
+  useThemeContext,
+  coarseBlockSize,
+  fineBlockSize,
+  getSize,
+  themeVariantFocus,
+  Density,
+  DensityProvider,
+  mx
+} from '@dxos/aurora';
+
 import { Checkbox, CheckboxProps } from '../Checkbox';
-import { DensityProvider } from '../DensityProvider';
 import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';
 
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role

@@ -5,9 +5,8 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused } from '../../hooks';
-import { staticInput } from '../../styles';
-import { mx } from '../../util';
+import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused, staticInput, mx } from '@dxos/aurora';
+
 import { InputProps } from './InputProps';
 
 const bareInputStyleProps = {

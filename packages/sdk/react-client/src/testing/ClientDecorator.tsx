@@ -7,7 +7,6 @@ import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { TestBuilder } from '@dxos/client-services/testing';
-import { Loading } from '@dxos/react-components';
 
 import { ClientProvider } from '../client';
 
@@ -31,7 +30,7 @@ export const ClientDecorator =
     return (
       <div className='flex place-content-evenly'>
         {[...Array(count)].map((_, index) => (
-          <ClientProvider key={index} services={services} fallback={() => <Loading label='Loading…' />}>
+          <ClientProvider key={index} services={services} fallback={() => <p>Loading</p>}>
             <Story args={{ id: index, count, ...context.args }} />
           </ClientProvider>
         ))}

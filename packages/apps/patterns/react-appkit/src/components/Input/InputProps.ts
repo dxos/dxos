@@ -4,7 +4,7 @@
 
 import { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from 'react';
 
-import { Density, Elevation, MessageValence } from '../../props';
+import type { Density, Elevation, MessageValence } from '@dxos/aurora';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 

@@ -5,8 +5,7 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useState } from 'react';
 
-import { getSize } from '../../styles';
-import { mx } from '../../util';
+import { getSize, mx } from '@dxos/aurora';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
@@ -135,7 +134,7 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
                 <span className={slots.title?.className}>{item.title}</span>
                 {!item.items && item.value !== undefined && (
                   // eslint-disable-next-line no-octal-escape
-                  <span className={slots.value?.className ?? 'pl-2 empty:after:content-["\00a0"]'}>
+                  <span className={slots.value?.className ?? 'pl-2 empty:after:content-[" "]'}>
                     {String(item.value)}
                   </span>
                 )}

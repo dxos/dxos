@@ -2,20 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DragEndEvent } from '@dnd-kit/core';
 import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
-  List,
-  ListItem,
-  DragEndEvent,
-  ListItemHeading,
-  Input,
-  ListItemEndcap,
-  ListItemDragHandle,
-  ListProps,
-  InputProps,
-  ListItemProps,
   mx,
   Button,
   getSize,
@@ -23,10 +14,20 @@ import {
   defaultDescription,
   ButtonProps,
   Density,
-  useListDensity,
   DensityProvider
-} from '@dxos/react-components';
+} from '@dxos/aurora';
 
+import { Input, InputProps } from '../Input';
+import {
+  List,
+  ListItem,
+  ListItemHeading,
+  ListItemEndcap,
+  ListItemDragHandle,
+  ListProps,
+  ListItemProps,
+  useListDensity
+} from '../List';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {

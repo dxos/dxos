@@ -6,7 +6,6 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Input } from '@dxos/react-components';
 
 import { useClient } from '../client';
 import { observer, useSpace } from '../echo';
@@ -50,11 +49,10 @@ export const ClientSpace = {
 
     return (
       <div className='flex-1 min-w-0 p-4'>
-        <Input
-          label='Name'
-          value={space.properties.name}
-          onChange={(event) => (space.properties.name = event.target.value)}
-        />
+        <label>
+          Name{' '}
+          <input value={space.properties.name} onChange={(event) => (space.properties.name = event.target.value)} />
+        </label>
       </div>
     );
   }),

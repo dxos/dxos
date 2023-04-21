@@ -6,11 +6,8 @@ import { QrCode as QrCodeIcon, CopySimple } from '@phosphor-icons/react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
 
-import { useId } from '../../hooks';
-import { Size } from '../../props';
-import { getSize } from '../../styles';
-import { mx } from '../../util';
-import { Button, ButtonGroup, ButtonProps } from '../Button';
+import { mx, Button, ButtonGroup, ButtonProps, getSize, Size, useId } from '@dxos/aurora';
+
 import { Popover } from '../Popover';
 import { TooltipContent, TooltipContentProps, TooltipRoot, TooltipTrigger } from '../Tooltip';
 

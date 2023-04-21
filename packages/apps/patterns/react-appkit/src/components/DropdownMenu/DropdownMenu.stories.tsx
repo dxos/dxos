@@ -19,7 +19,8 @@ import {
 import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import React, { ReactNode } from 'react';
 
-import { Button } from '../Button';
+import { Button } from '@dxos/aurora';
+
 import {
   DropdownMenu,
   DropdownMenuItem,

@@ -4,9 +4,8 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useThemeContext, useDensityContext } from '../../hooks';
-import { defaultInput, subduedInput } from '../../styles';
-import { mx } from '../../util';
+import { useButtonShadow, useThemeContext, useDensityContext, defaultInput, subduedInput, mx } from '@dxos/aurora';
+
 import { InputProps, InputSize } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {

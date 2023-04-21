@@ -5,19 +5,14 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
+import { Button, useTranslation } from '@dxos/aurora';
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { Config } from '@dxos/config';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogProps,
-  DropdownMenu,
-  DropdownMenuItem,
-  useTranslation
-} from '@dxos/react-components';
 import { getAsyncValue, Provider } from '@dxos/util';
 
+import { Alert } from '../Alert';
+import { Dialog, DialogProps } from '../Dialog';
+import { DropdownMenu, DropdownMenuItem } from '../DropdownMenu';
 import { Tooltip } from '../Tooltip';
 
 // TODO(burdon): Factor out.

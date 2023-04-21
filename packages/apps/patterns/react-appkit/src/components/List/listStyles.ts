@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Density } from '../../props';
-import { densityBlockSize, getSize } from '../../styles';
-import { mx } from '../../util';
+import { Density, densityBlockSize, getSize, mx } from '@dxos/aurora';
 
 export const defaultListItemEndcap = ({ density = 'coarse' }: { density?: Density }) =>
   mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-start justify-center');

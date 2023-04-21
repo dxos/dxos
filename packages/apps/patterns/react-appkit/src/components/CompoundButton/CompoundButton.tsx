@@ -4,10 +4,16 @@
 
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import { useButtonShadow, useId, useThemeContext } from '../../hooks';
-import { defaultDescription, primaryDescription } from '../../styles';
-import { mx } from '../../util';
-import { ButtonProps, buttonStyles } from '../Button';
+import {
+  useButtonShadow,
+  useId,
+  useThemeContext,
+  defaultDescription,
+  primaryDescription,
+  mx,
+  ButtonProps,
+  buttonStyles
+} from '@dxos/aurora';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;

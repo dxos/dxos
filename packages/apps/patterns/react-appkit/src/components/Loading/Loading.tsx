@@ -4,8 +4,7 @@
 
 import React, { ComponentProps } from 'react';
 
-import { useId } from '../../hooks';
-import { mx } from '../../util';
+import { useId, mx } from '@dxos/aurora';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 

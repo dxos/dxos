@@ -5,7 +5,8 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '../Button';
+import { Button } from '@dxos/aurora';
+
 import { Toast } from './Toast';
 
 export default {

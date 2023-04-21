@@ -5,10 +5,9 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { defaultFocus, hover, defaultActive } from '../../styles';
-import { mx } from '../../util';
+import { defaultFocus, hover, defaultActive, Button, mx } from '@dxos/aurora';
+
 import { Avatar } from '../Avatar';
-import { Button } from '../Button';
 import { Popover } from './Popover';
 
 export default {

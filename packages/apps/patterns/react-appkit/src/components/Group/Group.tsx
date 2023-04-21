@@ -4,11 +4,8 @@
 
 import React, { ReactNode } from 'react';
 
-import { useId } from '../../hooks';
-import { Elevation } from '../../props';
-import { defaultGroup } from '../../styles';
-import { mx } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
+import { useId, Elevation, defaultGroup, mx, ElevationProvider } from '@dxos/aurora';
+
 import { Heading, HeadingProps } from '../Heading';
 
 export interface GroupProps extends React.ComponentProps<'div'> {
