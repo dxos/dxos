@@ -22,7 +22,7 @@ const knownPeerPackages = [
   '@dxos/aurora',
   '@dxos/aurora-theme',
   '@dxos/react-appkit',
-  '@dxos/react-ui',
+  '@dxos/react-shell',
   '@dxos/react-list'
 ];
 

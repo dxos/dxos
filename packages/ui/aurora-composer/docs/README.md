@@ -1,4 +1,4 @@
-# @dxos/react-composer
+# @dxos/aurora-composer
 
 Document editing experience within a DXOS shell.
 
@@ -20,8 +20,8 @@ subgraph apps [apps]
 
   subgraph patterns [patterns]
     style patterns fill:transparent
-    dxos/react-composer("@dxos/react-composer"):::root
-    click dxos/react-composer "dxos/dxos/tree/main/packages/apps/patterns/react-composer/docs"
+    dxos/aurora-composer("@dxos/aurora-composer"):::root
+    click dxos/aurora-composer "dxos/dxos/tree/main/packages/ui/aurora-composer/docs"
   end
 end
 
@@ -178,9 +178,9 @@ dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-composer --> dxos/react-components
+dxos/aurora-composer --> dxos/react-components
 dxos/react-components --> dxos/react-client
-dxos/react-composer --> dxos/vite-plugin
+dxos/aurora-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```
 

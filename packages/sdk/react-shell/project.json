@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/patterns/react-ui/src",
+  "sourceRoot": "packages/sdk/react-shell/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/patterns/react-ui/src/index.ts",
-        "outputPath": "packages/apps/patterns/react-ui/dist/types",
-        "tsConfig": "packages/apps/patterns/react-ui/tsconfig.json"
+        "main": "packages/sdk/react-shell/src/index.ts",
+        "outputPath": "packages/sdk/react-shell/dist/types",
+        "tsConfig": "packages/sdk/react-shell/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/patterns/react-ui/src/index.ts",
-          "packages/apps/patterns/react-ui/src/testing/index.ts"
+          "packages/sdk/react-shell/src/index.ts",
+          "packages/sdk/react-shell/src/testing/index.ts"
         ],
-        "outputPath": "packages/apps/patterns/react-ui/dist/lib",
+        "outputPath": "packages/sdk/react-shell/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -32,16 +32,16 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/patterns/react-ui",
-        "outputPath": "tmp/playwright/packages/apps/patterns/react-ui",
-        "playwrightConfigPath": "packages/apps/patterns/react-ui/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/patterns/react-ui",
+        "coveragePath": "coverage/packages/sdk/react-shell",
+        "outputPath": "tmp/playwright/packages/sdk/react-shell",
+        "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/sdk/react-shell",
         "serve": "react-ui:storybook",
         "testPatterns": [
-          "packages/apps/patterns/react-ui/src/playwright/**/*.spec.{ts,js}"
+          "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/patterns/react-ui/src/**/*"
+          "packages/sdk/react-shell/src/**/*"
         ]
       },
       "outputs": [
@@ -55,7 +55,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/patterns/react-ui/src/**/*.{js,jsx,ts,tsx}"
+          "packages/sdk/react-shell/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -71,7 +71,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/apps/patterns/react-ui/.storybook"
+          "configFolder": "packages/sdk/react-shell/.storybook"
         },
         "uiFramework": "@storybook/react"
       }
