@@ -12,13 +12,13 @@
       "node"
     ]
   },
+  "exclude": [
+    "src/templates/codesandbox/src/main.tsx"
+  ],
   "include": [
     "docs",
     "src",
     "vuepress.config.ts"
-  ],
-  "exclude": [
-    "src/templates/codesandbox/src/main.tsx"
   ],
   "references": [
     {

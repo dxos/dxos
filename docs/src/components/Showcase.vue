@@ -22,6 +22,10 @@
 </template>
 
 <style scoped>
+.showcase-preview {
+  margin-top: 2rem;
+}
+
 .showcase-loading {
   display: flex;
   justify-content: center;

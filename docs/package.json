@@ -17,6 +17,7 @@
     "typedoc": "typedoc"
   },
   "devDependencies": {
+    "@adamdehaven/vue-custom-tooltip": "^2.6.0",
     "@dxos/apidoc": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

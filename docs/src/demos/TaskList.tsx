@@ -13,11 +13,11 @@ const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number })
   const tasks = useQuery(space, Task.filter());
   const [input, setInput] = useState<HTMLInputElement>();
 
-  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = async (event) => {
+  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && input) {
       const task = new Task({ title: input.value });
       input.value = '';
-      await space.db.add(task);
+      space.db.add(task);
     }
   };
 
@@ -25,7 +25,7 @@ const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number })
 
   return (
     <div className='task-list'>
-      <p role='heading'>{`Client ${clientIndex + 1}`}</p>
+      <p role='heading'>{`Peer ${clientIndex + 1}`}</p>
       <input
         aria-label='Create new item'
         placeholder='New item'
