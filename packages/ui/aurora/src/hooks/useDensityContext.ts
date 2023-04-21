@@ -4,8 +4,9 @@
 
 import { useContext } from 'react';
 
+import { Density } from '@dxos/aurora-theme';
+
 import { DensityContext } from '../components';
-import { Density } from '../props';
 
 export const useDensityContext = (propsDensity?: Density) => {
   const { density } = useContext(DensityContext);

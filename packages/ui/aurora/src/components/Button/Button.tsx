@@ -4,8 +4,9 @@
 
 import React, { forwardRef } from 'react';
 
+import { mx } from '@dxos/aurora-theme';
+
 import { useButtonShadow, useDensityContext, useThemeContext } from '../../hooks';
-import { mx } from '../../util';
 import { ButtonProps } from './ButtonProps';
 import { buttonStyles } from './buttonStyles';
 

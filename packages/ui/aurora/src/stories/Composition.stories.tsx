@@ -6,9 +6,9 @@ import '@dxosTheme';
 import { PaperPlane } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, DensityProvider, ElevationProvider, Input } from '../components';
-import { defaultGroup, getSize } from '../styles';
-import { mx } from '../util';
+import { defaultGroup, getSize, mx } from '@dxos/aurora-theme';
+
+import { Button, DensityProvider, ElevationProvider } from '../components';
 
 export default {
   component: DensityProvider
@@ -17,13 +17,14 @@ export default {
 const ScenarioContent = (_props: {}) => (
   <>
     <Button>Text</Button>
-    <Input
-      label='excluded'
-      variant='subdued'
-      labelVisuallyHidden
-      placeholder='Type something'
-      defaultValue='Editable text'
-    />
+    {/* todo(thure): Restore an Input here */}
+    {/* <Input */}
+    {/*  label='excluded' */}
+    {/*  variant='subdued' */}
+    {/*  labelVisuallyHidden */}
+    {/*  placeholder='Type something' */}
+    {/*  defaultValue='Editable text' */}
+    {/* /> */}
     <Button>
       <PaperPlane className={getSize(6)} />
     </Button>

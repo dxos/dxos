@@ -4,7 +4,7 @@
 
 import { ComponentPropsWithRef } from 'react';
 
-import { Density, Elevation } from '../../props';
+import { Density, Elevation } from '@dxos/aurora-theme';
 
 export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';

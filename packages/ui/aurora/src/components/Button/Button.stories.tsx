@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
 import { DensityProvider } from '../DensityProvider';
-import { Group } from '../Group';
+import { ElevationProvider } from '../ElevationProvider';
 import { Button } from './Button';
 import { ButtonProps } from './ButtonProps';
 
@@ -16,18 +16,22 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <Group label={{ children: null, className: 'sr-only' }} elevation='base' className='flex flex-col gap-4 mbe-4'>
-      <div className='flex gap-4'>{children}</div>
-      <DensityProvider density='fine'>
+    <div role='group' className='flex flex-col gap-4 mbe-4'>
+      <ElevationProvider elevation='base'>
         <div className='flex gap-4'>{children}</div>
-      </DensityProvider>
-    </Group>
-    <Group label={{ children: null, className: 'sr-only' }} elevation='group' className='flex flex-col gap-4'>
-      <div className='flex gap-4'>{children}</div>
-      <DensityProvider density='fine'>
+        <DensityProvider density='fine'>
+          <div className='flex gap-4'>{children}</div>
+        </DensityProvider>
+      </ElevationProvider>
+    </div>
+    <div role='group' className='flex flex-col gap-4'>
+      <ElevationProvider elevation='group'>
         <div className='flex gap-4'>{children}</div>
-      </DensityProvider>
-    </Group>
+        <DensityProvider density='fine'>
+          <div className='flex gap-4'>{children}</div>
+        </DensityProvider>
+      </ElevationProvider>
+    </div>
   </>
 );
 

@@ -2,8 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultDisabled, hover, defaultActive, osActive, focus, buttonFine, buttonCoarse } from '../../styles';
-import { mx } from '../../util';
+import {
+  defaultDisabled,
+  hover,
+  defaultActive,
+  osActive,
+  focus,
+  buttonFine,
+  buttonCoarse,
+  mx
+} from '@dxos/aurora-theme';
+
 import { ThemeContextValue } from '../ThemeProvider';
 import { ButtonProps } from './ButtonProps';
 

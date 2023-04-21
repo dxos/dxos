@@ -4,8 +4,9 @@
 
 import { useContext } from 'react';
 
+import { Elevation } from '@dxos/aurora-theme';
+
 import { ElevationContext } from '../components';
-import { Elevation } from '../props';
 import { useThemeContext } from './useThemeContext';
 
 export const useElevationContext = () => useContext(ElevationContext);

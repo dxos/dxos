@@ -4,8 +4,9 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { useButtonShadow } from '../../hooks/';
-import { mx } from '../../util';
+import { mx } from '@dxos/aurora-theme';
+
+import { useButtonShadow } from '../../hooks';
 import { ElevationProvider } from '../ElevationProvider';
 
 export interface ButtonGroupProps extends ComponentProps<'div'> {

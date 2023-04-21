@@ -15,8 +15,7 @@
     },
     "compile": {
       "dependsOn": [
-        "compile-lib",
-        "compile-node"
+        "compile-lib"
       ],
       "executor": "nx:run-commands",
       "options": {
@@ -37,26 +36,6 @@
         "outputPath": "packages/ui/aurora/dist/lib",
         "platforms": [
           "browser"
-        ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/ui/aurora/src/esbuild-plugin.ts",
-          "packages/ui/aurora/src/plugin.ts",
-          "packages/ui/aurora/src/theme.css"
-        ],
-        "outputPath": "packages/ui/aurora/dist/plugin",
-        "platforms": [
-          "node"
         ]
       },
       "outputs": [

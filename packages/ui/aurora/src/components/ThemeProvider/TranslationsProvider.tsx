@@ -6,8 +6,6 @@ import i18Next, { Resource } from 'i18next';
 import React, { ReactNode, useEffect, createContext, useState, Suspense } from 'react';
 import { initReactI18next } from 'react-i18next';
 
-import { Loading } from '../Loading';
-
 const initialLng = 'en-US';
 const initialNs = 'dxos-common';
 
@@ -39,12 +37,7 @@ export const TranslationsContext = createContext({
   appNs: initialNs
 });
 
-export const TranslationsProvider = ({
-  fallback = <Loading label={resources[initialLng][initialNs]['loading translations']} />,
-  resourceExtensions,
-  children,
-  appNs
-}: TranslationsProviderProps) => {
+export const TranslationsProvider = ({ fallback, resourceExtensions, children, appNs }: TranslationsProviderProps) => {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     setLoaded(false);
