@@ -5,9 +5,9 @@
 import { CaretLeft, Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
+import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateProps } from './ViewState';
 

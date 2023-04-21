@@ -6,11 +6,11 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { useMediaQuery } from '@dxos/aurora';
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { EditableObjectList } from '@dxos/mosaic';
 import { Space, useConfig, useQuery } from '@dxos/react-client';
-import { useMediaQuery } from '@dxos/react-components';
 
 import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';

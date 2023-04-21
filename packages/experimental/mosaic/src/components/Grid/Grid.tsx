@@ -8,7 +8,7 @@ import React, { FC, useEffect, useMemo, useReducer, useRef, useState } from 'rea
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Event } from '@dxos/async';
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { Layout, Item, Point, Location, serializeLocation, parseLocation } from '../../layout';
 import { Cell, CellSlots } from '../Cell';

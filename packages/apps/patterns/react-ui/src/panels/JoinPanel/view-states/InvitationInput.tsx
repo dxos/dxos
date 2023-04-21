@@ -5,7 +5,8 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Input } from '@dxos/react-appkit';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 

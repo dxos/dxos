@@ -9,7 +9,7 @@ import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
@@ -43,7 +43,8 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, consoleThemeExtension]

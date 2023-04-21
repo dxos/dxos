@@ -6,9 +6,8 @@ import React from 'react';
 import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/client';
-import { Menubar, Separator, SpaceLink } from '@dxos/react-appkit';
+import { Menubar, Separator, SpaceLink, Loading } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
-import { Loading } from '@dxos/react-components';
 import { IdentityPopover } from '@dxos/react-ui';
 
 import { Main } from '../components';

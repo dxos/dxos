@@ -9,8 +9,8 @@ import urlJoin from 'url-join';
 import { TypedObject, Space, Config } from '@dxos/client';
 import { Contact, Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
+import { Dialog } from '@dxos/react-appkit';
 import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
-import { Dialog } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { TaskList as TaskListComponent } from '../../cards';

@@ -6,10 +6,11 @@ import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
+import { Trigger } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
+import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
 // eslint-disable-next-line
@@ -25,51 +26,50 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
+    const port = new Trigger<RpcPort>();
+    const messageHandler = async (event: MessageEvent) => {
+      if (event.data.type !== 'init') {
+        return;
+      }
+
+      port.wake(createWorkerPort({ port: event.data.port, channel: Channels.TWO }));
+    };
+
     if (worker) {
-      const parentPort = createIFramePort({ channel: Channels.ONE });
-      const workerPort = createWorkerPort({
-        port: worker.port,
-        channel: Channels.ONE
-      });
-
-      parentPort.subscribe(async (msg) => {
-        await workerPort.send(msg);
-      });
-
-      workerPort.subscribe(async (msg) => {
-        await parentPort.send(msg);
-      });
+      port.wake(createWorkerPort({ port: worker.port, channel: Channels.ONE }));
     } else {
-      const port = await createIFramePort({
-        iframe: iframeRef.current!,
-        origin: 'http://127.0.0.1:5173',
-        channel: Channels.ONE
-      });
-      const client = createProtoRpcPeer({
-        requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
-        },
-        exposed: {},
-        handlers: {},
-        port
-      });
-      await client.open();
-
-      const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
-      stream.subscribe(
-        (msg) => {
-          setValue(msg.data);
-        },
-        (error) => {
-          if (error) {
-            setError(error.message);
-          }
-          setClosed(true);
-        }
-      );
+      window.addEventListener('message', messageHandler);
     }
 
+    const client = createProtoRpcPeer({
+      requested: {
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      },
+      exposed: {},
+      handlers: {},
+      port: await port.wait()
+    });
+    await client.open();
+
+    const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
+    stream.subscribe(
+      (msg) => {
+        setValue(msg.data);
+      },
+      (error) => {
+        if (error) {
+          setError(error.message);
+        }
+        setClosed(true);
+      }
+    );
+
     setClosed(false);
+
+    return () => {
+      stream.close();
+      window.removeEventListener('message', messageHandler);
+    };
   }, []);
 
   return (
@@ -101,7 +101,10 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
+    const workerForParent = IN_IFRAME ? new SharedWorker() : undefined;
     const worker = IN_IFRAME ? new SharedWorker() : undefined;
+
+    IN_IFRAME && window.parent.postMessage({ type: 'init', port: workerForParent.port }, '*', [workerForParent.port]);
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

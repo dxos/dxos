@@ -5,8 +5,10 @@
 import React, { PropsWithChildren } from 'react';
 
 import { Identity as IdentityType } from '@dxos/client';
-import { Avatar, Popover } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
+
+import { Avatar } from '../Avatar';
+import { Popover } from '../Popover';
 
 export interface ProfileMenuProps {
   identity: IdentityType;

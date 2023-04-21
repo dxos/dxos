@@ -5,7 +5,8 @@
 import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, List, ListItem, Button, Input, ListItemEndcap, mx } from '@dxos/react-components';
+import { getSize, Button, mx } from '@dxos/aurora';
+import { List, ListItem, Input, ListItemEndcap } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.
 export type Object = { id: string };

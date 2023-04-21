@@ -3,9 +3,9 @@
 //
 import React, { useEffect } from 'react';
 
+import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { DensityProvider, useId, useThemeContext } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';

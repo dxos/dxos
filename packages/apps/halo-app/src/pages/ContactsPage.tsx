@@ -5,8 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { HeadingWithActions } from '@dxos/react-appkit';
-import { useTranslation, Button, getSize, defaultDisabled, Group, mx } from '@dxos/react-components';
+import { useTranslation, Button, getSize, defaultDisabled, mx } from '@dxos/aurora';
+import { HeadingWithActions, Group } from '@dxos/react-appkit';
 
 const ContactsPage = () => {
   const { t } = useTranslation('halo');

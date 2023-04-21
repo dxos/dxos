@@ -7,10 +7,11 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { Button, ButtonGroup, getSize } from '@dxos/aurora';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Group } from '@dxos/react-appkit';
 import { Space, SpaceProxy, useClient, useIdentity, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, getSize, Group } from '@dxos/react-components';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { DevicesPanel, JoinPanel, SpacePanel } from '../panels';

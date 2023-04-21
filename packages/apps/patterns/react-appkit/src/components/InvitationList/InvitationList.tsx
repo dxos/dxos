@@ -4,9 +4,10 @@
 
 import React from 'react';
 
+import { defaultDisabled, useTranslation, mx } from '@dxos/aurora';
 import { CancellableInvitationObservable } from '@dxos/client';
-import { defaultDisabled, Group, useTranslation, mx } from '@dxos/react-components';
 
+import { Group } from '../Group';
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
 export interface InvitationListProps {

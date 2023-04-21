@@ -5,9 +5,12 @@
 import React, { useState, useCallback } from 'react';
 
 import { Trigger } from '@dxos/async';
+import { Button, useTranslation } from '@dxos/aurora';
 import { SystemStatus } from '@dxos/client';
 import { ClientContextProps } from '@dxos/react-client';
-import { Button, Heading, Loading, useTranslation } from '@dxos/react-components';
+
+import { Heading } from '../Heading';
+import { Loading } from '../Loading';
 
 export const Fallback = ({ message }: { message: string }) => {
   return (

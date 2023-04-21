@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 export type DetailsTableSlots = {
   label?: string;

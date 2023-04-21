@@ -5,7 +5,7 @@
 import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
-import { ThemeContext, useId, useThemeContext } from '@dxos/react-components';
+import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
 
 import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { SpacePanel, SpacePanelProps } from '../../panels';

@@ -54,9 +54,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -94,6 +91,12 @@
     },
     {
       "path": "../../sdk/vault"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../chess-app"

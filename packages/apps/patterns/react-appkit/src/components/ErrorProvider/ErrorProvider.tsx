@@ -5,8 +5,8 @@
 import { Circle, Warning } from '@phosphor-icons/react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
+import { valenceColorText, useTranslation, Button, getSize, DensityProvider } from '@dxos/aurora';
 import { SystemStatus, ClientContext } from '@dxos/react-client';
-import { valenceColorText, useTranslation, Button, getSize, DensityProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { ResetDialog } from '../ResetDialog';

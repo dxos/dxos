@@ -3,8 +3,9 @@
 //
 import React from 'react';
 
+import { mx, useTranslation } from '@dxos/aurora';
 import { Identity, SpaceMember } from '@dxos/client';
-import { Avatar, mx, useTranslation } from '@dxos/react-components';
+import { Avatar } from '@dxos/react-appkit';
 
 export const IdentityListItem = ({
   identity,

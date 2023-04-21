@@ -19,10 +19,10 @@ import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
+import { getSize, mx } from '@dxos/aurora';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Markers, GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
-import { getSize, mx } from '@dxos/react-components';
 
 import '@dxosTheme';
 

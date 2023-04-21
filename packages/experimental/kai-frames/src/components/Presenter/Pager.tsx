@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/aurora';
 
 export type PagerProps = {
   index?: number;

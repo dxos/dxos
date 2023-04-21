@@ -5,21 +5,15 @@
 import { ProhibitInset, XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Button, defaultGroup, getSize, useTranslation, mx } from '@dxos/aurora';
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import {
-  Avatar,
-  Button,
-  CompactQrCode,
-  defaultGroup,
-  getSize,
-  Loading,
-  useTranslation,
-  mx
-} from '@dxos/react-components';
 
+import { Avatar } from '../Avatar';
 import { HeadingWithActions } from '../HeadingWithActions';
 import { InvitationStatus } from '../InvitationStatus';
+import { Loading } from '../Loading';
+import { CompactQrCode } from '../QrCode';
 import { Tooltip } from '../Tooltip';
 
 export interface PendingInvitationProps {
