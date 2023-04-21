@@ -12,6 +12,9 @@
       "node"
     ]
   },
+  "exclude": [
+    "src/templates/codesandbox/src/main.tsx"
+  ],
   "include": [
     "docs",
     "src",
@@ -56,6 +59,9 @@
     },
     {
       "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../packages/sdk/vault"
     },
     {
       "path": "../tools/apidoc"
