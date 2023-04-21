@@ -5,9 +5,9 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useId, useThemeContext } from '@dxos/react-components';
+import { useId, useThemeContext, useTranslation } from '@dxos/react-components';
 
-import { Panel } from '../Panel';
+import { Panel, Content, Maxie, MaxieItem, Padding } from '../Panel';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
@@ -34,7 +34,7 @@ export const JoinPanel = ({
   const identity = useIdentity();
   const titleId = useId('joinPanel__title');
   const { hasIosKeyboard } = useThemeContext();
-
+  const { t } = useTranslation('os');
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
@@ -73,192 +73,255 @@ export const JoinPanel = ({
     'finishingJoiningHalo'
   ].some(joinState?.matches);
 
+  const isChoosingIdentityMethod = joinState.matches({ choosingIdentity: 'choosingAuthMethod' });
+
+  const isCreatingIdentity = joinState.matches({ choosingIdentity: 'creatingIdentity' });
+
+  const isRecoveringIdentity = joinState.matches({ choosingIdentity: 'recoveringIdentity' });
+
+  const isAcceptingInvitation = joinState.matches({
+    choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' }
+  });
+
+  const isFailingOrConnectingHaloInvitation = [
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
+      }
+    },
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
+      }
+    }
+  ].some(joinState.matches);
+
+  const isFailingOrConnectingSpaceInvitation = [
+    {
+      acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
+    },
+    {
+      acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
+    }
+  ].some(joinState.matches);
+
+  const isAuthenticatingHaloInvitation = [
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
+      }
+    },
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
+      }
+    },
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: {
+          acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+        }
+      }
+    }
+  ].some(joinState.matches);
+
+  const isHaloAuthenticationFailed = joinState.matches({
+    acceptingHaloInvitation: {
+      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
+    }
+  });
+
+  const isAuthenticatingSpaceInvitation = [
+    {
+      acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
+    },
+    {
+      acceptingSpaceInvitation: {
+        acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode'
+      }
+    },
+    {
+      acceptingSpaceInvitation: {
+        acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
+      }
+    }
+  ].some(joinState.matches);
+
+  const isSpaceAuthenticationFailed = joinState.matches({
+    acceptingSpaceInvitation: {
+      acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
+    }
+  });
+
+  const isHaloInvitationSuccessful = [
+    {
+      choosingIdentity: {
+        acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
+      }
+    },
+    'finishingJoiningHalo'
+  ].some(joinState.matches);
+
+  const isSpaceInvitationSuccessful = joinState.matches('finishingJoiningSpace');
+
+  const isIdentityAdded = joinState.matches({
+    choosingIdentity: 'confirmingAddedIdentity'
+  });
+
+  const isEnteringInvitationCode = joinState.matches({
+    acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
+  });
+
   return (
-    <Panel>
-      <JoinHeading
-        {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }}
-        {...(displayAvatar
-          ? {
-              identity
-            }
-          : {})}
-      />
-      <div role='none' className='is-full overflow-hidden'>
-        <div role='none' className='flex is-[1200%]' aria-live='polite'>
-          <AdditionMethodSelector
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'choosingAuthMethod' })
-            }}
-          />
-          <IdentityInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'creatingIdentity' }),
-              method: 'create identity'
-            }}
-          />
-          <IdentityInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'recoveringIdentity' }),
-              method: 'recover identity'
-            }}
-          />
-          <InvitationInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({
-                choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' }
-              }),
-              Kind: 'Halo'
-            }}
-          />
-          <InvitationRescuer
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
-                  }
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
-                  }
-                }
-              ].some(joinState.matches),
-              Kind: 'Halo'
-            }}
-          />
-          <InvitationAuthenticator
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
-                  }
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
-                  }
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: {
-                      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
-                    }
-                  }
-                }
-              ].some(joinState.matches),
-              Kind: 'Halo',
-              ...(joinState.matches({
-                acceptingHaloInvitation: {
-                  acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
-                }
-              }) && { failed: true })
-            }}
-          />
-          <InvitationAccepted
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
-                  }
-                },
-                'finishingJoiningHalo'
-              ].some(joinState.matches),
-              Kind: 'Halo',
-              doneActionParent,
-              onDone
-            }}
-          />
-          <IdentityAdded
-            {...{
-              joinState,
-              joinSend,
-              mode,
-              active: joinState.matches({
-                choosingIdentity: 'confirmingAddedIdentity'
-              }),
-              doneActionParent,
-              onDone
-            }}
-          />
-          <InvitationInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({
-                acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
-              }),
-              Kind: 'Space'
-            }}
-          />
-          <InvitationRescuer
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
-                },
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
-                }
-              ].some(joinState.matches),
-              Kind: 'Space'
-            }}
-          />
-          <InvitationAuthenticator
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
-                },
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' }
-                },
-                {
-                  acceptingSpaceInvitation: {
-                    acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
-                  }
-                }
-              ].some(joinState.matches),
-              Kind: 'Space',
-              ...(joinState.matches({
-                acceptingSpaceInvitation: {
-                  acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
-                }
-              }) && { failed: true })
-            }}
-          />
-          <InvitationAccepted
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches('finishingJoiningSpace'),
-              Kind: 'Space',
-              doneActionParent,
-              onDone
-            }}
-          />
-        </div>
-      </div>
+    <Panel
+      title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
+      onClose={!preventExit && mode !== 'halo-only' ? onExit : undefined}
+      slots={{
+        closeButton: {
+          'data-testid': 'join-exit'
+        },
+        content: { padded: false }
+      }}
+    >
+      <Content>
+        <JoinHeading
+          {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }}
+          {...(displayAvatar
+            ? {
+                identity
+              }
+            : {})}
+        />
+        <Maxie>
+          <MaxieItem active={isChoosingIdentityMethod}>
+            <AdditionMethodSelector
+              {...{
+                active: isChoosingIdentityMethod,
+                joinState,
+                joinSend
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isCreatingIdentity}>
+            <IdentityInput
+              {...{
+                active: isCreatingIdentity,
+                joinState,
+                joinSend,
+                method: 'create identity'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isRecoveringIdentity}>
+            <IdentityInput
+              {...{
+                active: isRecoveringIdentity,
+                joinState,
+                joinSend,
+                method: 'recover identity'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isAcceptingInvitation}>
+            <InvitationInput
+              {...{
+                active: isAcceptingInvitation,
+                joinState,
+                joinSend,
+                Kind: 'Halo'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isFailingOrConnectingHaloInvitation}>
+            <InvitationRescuer
+              {...{
+                active: isFailingOrConnectingHaloInvitation,
+                joinState,
+                joinSend,
+                Kind: 'Halo'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isAuthenticatingHaloInvitation}>
+            <InvitationAuthenticator
+              {...{
+                active: isAuthenticatingHaloInvitation,
+                joinState,
+                joinSend,
+                Kind: 'Halo',
+                ...(isHaloAuthenticationFailed && { failed: true })
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isHaloInvitationSuccessful}>
+            <InvitationAccepted
+              {...{
+                active: isHaloInvitationSuccessful,
+                joinState,
+                joinSend,
+                Kind: 'Halo',
+                doneActionParent,
+                onDone
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isIdentityAdded}>
+            <IdentityAdded
+              {...{
+                active: isIdentityAdded,
+                joinState,
+                joinSend,
+                mode,
+                doneActionParent,
+                onDone
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isEnteringInvitationCode}>
+            <InvitationInput
+              {...{
+                active: isEnteringInvitationCode,
+                joinState,
+                joinSend,
+                Kind: 'Space'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isFailingOrConnectingSpaceInvitation}>
+            <InvitationRescuer
+              {...{
+                active: isFailingOrConnectingSpaceInvitation,
+                joinState,
+                joinSend,
+                Kind: 'Space'
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isAuthenticatingSpaceInvitation}>
+            <InvitationAuthenticator
+              {...{
+                active: isAuthenticatingSpaceInvitation,
+                joinState,
+                joinSend,
+                Kind: 'Space',
+                ...(isSpaceAuthenticationFailed && { failed: true })
+              }}
+            />
+          </MaxieItem>
+          <MaxieItem active={isSpaceInvitationSuccessful}>
+            <InvitationAccepted
+              {...{
+                active: isSpaceInvitationSuccessful,
+                joinState,
+                joinSend,
+                Kind: 'Space',
+                doneActionParent,
+                onDone
+              }}
+            />
+          </MaxieItem>
+        </Maxie>
+      </Content>
     </Panel>
   );
 };

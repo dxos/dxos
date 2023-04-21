@@ -46,12 +46,6 @@ export const JoinHeading = forwardRef(
 
     return (
       <div role='none' className={mx('relative')} ref={ref}>
-        {!preventExit &&
-          mode !== 'halo-only' &&
-          (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
-        <Title className={mode === 'halo-only' ? (preventExit ? 'sr-only' : 'opacity-100') : ''} id={titleId}>
-          {t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
-        </Title>
         <Content className='flex items-center justify-center gap-2'>
           <HaloRing loading={!invitationId && !identity} status={identity || invitationId ? 'active' : 'inactive'}>
             {invitationId ? (

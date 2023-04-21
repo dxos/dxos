@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, Check } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
 import type { Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 import { Avatar, getSize, mx, useTranslation } from '@dxos/react-components';
-import { Content, Button, Heading } from '../../Panel';
 
+import { Actions, Button, Heading, Content } from '../../Panel';
 import { JoinPanelMode } from '../JoinPanelProps';
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { ViewStateProps } from './ViewState';
 
 export interface IdentityAddedProps extends ViewStateProps, DoneProps {
   mode?: JoinPanelMode;
@@ -53,25 +53,27 @@ export const IdentityAdded = ({
   const { t } = useTranslation('os');
 
   return (
-    <ViewState {...viewStateProps}>
+    <Content>
       <Heading className='mbs-0'>{t('identity added label')}</Heading>
-      <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar
-          size={20}
-          fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
-          label={
-            <p className={mx('text-lg', !addedIdentity?.profile?.displayName && 'font-mono')}>
-              {addedIdentity?.profile?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
-            </p>
-          }
-          variant='circle'
-          status='active'
-        />
-      </div>
+
+      <Avatar
+        size={20}
+        fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
+        label={
+          <p className={mx('text-lg', !addedIdentity?.profile?.displayName && 'font-mono')}>
+            {addedIdentity?.profile?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
+          </p>
+        }
+        variant='circle'
+        status='active'
+      />
+
       {mode === 'halo-only' ? (
-        <Done onDone={onDone} doneActionParent={doneActionParent} {...viewStateProps} />
+        <Actions>
+          <Done onDone={onDone} doneActionParent={doneActionParent} {...viewStateProps} />
+        </Actions>
       ) : (
-        <div className='flex gap-2'>
+        <Actions>
           <Button
             disabled={disabled || !addedIdentity}
             className='grow flex items-center gap-2 pli-2 order-2'
@@ -90,8 +92,8 @@ export const IdentityAdded = ({
             <CaretLeft weight='bold' className={getSize(4)} />
             <span>{t('deselect identity label')}</span>
           </Button>
-        </div>
+        </Actions>
       )}
-    </ViewState>
+    </Content>
   );
 };

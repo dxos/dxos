@@ -9,15 +9,13 @@ import '@dxosTheme';
 import { Avatar, Pulse } from '@dxos/react-components';
 
 import { HaloRing } from '../../components/HaloRing';
+import { Actions } from './Actions';
 import { Button } from './Button';
-import { CloseButton } from './CloseButton';
 import { Content } from './Content';
 import { Heading } from './Heading';
 import { Input } from './Input';
 import { Maxie, MaxieItem } from './Maxie';
 import { Panel } from './Panel';
-import { Title } from './Title';
-import { Actions } from './Actions';
 
 export default {
   component: Panel,
@@ -27,6 +25,38 @@ export default {
 export const Default = (props: any) => {
   return (
     <Panel {...props} className='min-is-[260px] max-is-[320px]' title='Panel title that is long'>
+      <Content>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus enim, id tempor sem. Curabitur sapien
+        justo, pulvinar mattis lobortis non, blandit at nisi.
+        <Heading>Choose an option to continue</Heading>
+        <Actions>
+          <Button>Proceed</Button>
+          <Button variant='ghost'>Cancel</Button>
+        </Actions>
+      </Content>
+    </Panel>
+  );
+};
+
+export const NoTitleNoClose = (props: any) => {
+  return (
+    <Panel {...props} className='min-is-[260px] max-is-[320px]' onClose={null}>
+      <Content>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus enim, id tempor sem. Curabitur sapien
+        justo, pulvinar mattis lobortis non, blandit at nisi.
+        <Heading>Choose an option to continue</Heading>
+        <Actions>
+          <Button>Proceed</Button>
+          <Button variant='ghost'>Cancel</Button>
+        </Actions>
+      </Content>
+    </Panel>
+  );
+};
+
+export const NoClose = (props: any) => {
+  return (
+    <Panel {...props} className='min-is-[260px] max-is-[320px]' title={'Yallo world'} onClose={null}>
       <Content>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus enim, id tempor sem. Curabitur sapien
         justo, pulvinar mattis lobortis non, blandit at nisi.
@@ -62,7 +92,7 @@ export const WithMaxie = (props: any) => {
             nisi. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean id maximus enim, id tempor sem.
             Curabitur sapien justo, pulvinar mattis lobortis non, blandit at nisi.
             <Actions>
-              <Button onClick={() => setState(0)}>Proceed 2 </Button>
+              <Button onClick={() => setState(0)}>Proceed 2</Button>
               <Button variant='ghost'>Cancel</Button>
             </Actions>
           </Content>

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { getSize, useTranslation } from '@dxos/react-components';
 
-import { Heading, Content, Button } from '../../Panel';
+import { Heading, Actions, Button, Content } from '../../Panel';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export type AdditionMethodSelectorProps = ViewStateProps;
@@ -24,10 +24,9 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
     // slots: { label: { className: 'text-sm' } }
   };
   return (
-    <ViewState {...viewStateProps}>
+    <Content padded>
       <Heading className='mbs-0'>{t('addition method selector title')}</Heading>
-      {/* <div role='none' className='flex flex-col gap-1 grow'> */}
-      <Content>
+      <Actions>
         <Button
           {...sharedButtonProps}
           // description={t('create identity description')}
@@ -58,7 +57,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
         >
           {t('recover identity label')}
         </Button>
-      </Content>
-    </ViewState>
+      </Actions>
+    </Content>
   );
 };

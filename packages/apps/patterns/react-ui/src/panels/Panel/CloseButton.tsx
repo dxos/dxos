@@ -9,6 +9,7 @@ import { Button, ButtonProps, mx, getSize } from '@dxos/react-components';
 
 export type CloseButtonProps = ButtonProps & {
   label?: string;
+  'data-testid'?: string;
 };
 
 export const CloseButton = (props: CloseButtonProps) => {

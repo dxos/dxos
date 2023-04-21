@@ -10,3 +10,5 @@ export * from './Title';
 export * from './Heading';
 export * from './Input';
 export * from './Actions';
+export * from './Maxie';
+export * from './Padding';

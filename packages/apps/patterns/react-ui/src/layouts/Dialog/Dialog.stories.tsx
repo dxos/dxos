@@ -5,8 +5,8 @@
 import React from 'react';
 
 import '@dxosTheme';
-import { Dialog } from './Dialog';
 import { Panel, Heading, Content, Button, Actions } from '../../panels/Panel';
+import { Dialog } from './Dialog';
 
 export default {
   component: Dialog,

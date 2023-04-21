@@ -7,7 +7,7 @@ import React from 'react';
 import '@dxosTheme';
 import { Pulse } from '@dxos/react-components';
 
-import { Panel, Title, Content, Heading, Button } from '../../panels/Panel';
+import { Panel, Content, Heading, Button } from '../../panels/Panel';
 import { AlertDialog } from './AlertDialog';
 
 export default {

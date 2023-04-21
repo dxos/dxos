@@ -7,8 +7,8 @@ import React, { ComponentPropsWithoutRef, useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-components';
 
-import { Heading, Content, Button, Input } from '../../Panel';
-import { ViewState, ViewStateProps } from './ViewState';
+import { Heading, Actions, Content, Button, Input } from '../../Panel';
+import { ViewStateProps } from './ViewState';
 
 export interface IdentityCreatorProps extends ViewStateProps {
   method: 'recover identity' | 'create identity';
@@ -33,28 +33,28 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
     );
   };
   return (
-    <ViewState {...viewStateProps}>
-      <Content className='mbs-0'>
-        <Input
-          disabled={disabled}
-          label={
-            <Heading className='mbs-0'>
-              {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-            </Heading>
-          }
-          placeholder='Type here'
-          onChange={({ target: { value } }) => setInputValue(value)}
-          slots={{
-            input: {
-              className: 'text-center',
-              autoFocus: true,
-              'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-              onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-            } as ComponentPropsWithoutRef<'input'>
-          }}
-          {...(validationMessage.length && { validationValence: 'error', validationMessage })}
-          data-testid='identity-input'
-        />
+    <Content padded>
+      <Input
+        disabled={disabled}
+        label={
+          <Heading className='mbs-0'>
+            {t(isRecover ? 'recover identity input label' : 'new identity input label')}
+          </Heading>
+        }
+        placeholder='Type here'
+        onChange={({ target: { value } }) => setInputValue(value)}
+        slots={{
+          input: {
+            className: 'text-center',
+            autoFocus: true,
+            'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
+          } as ComponentPropsWithoutRef<'input'>
+        }}
+        {...(validationMessage.length && { validationValence: 'error', validationMessage })}
+        data-testid='identity-input'
+      />
+      <Actions>
         <Button
           disabled={disabled}
           onClick={handleNext}
@@ -70,7 +70,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         >
           <span>{t('back label')}</span>
         </Button>
-      </Content>
-    </ViewState>
+      </Actions>
+    </Content>
   );
 };
