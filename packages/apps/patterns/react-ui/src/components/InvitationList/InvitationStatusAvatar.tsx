@@ -4,8 +4,8 @@
 
 import React, { ComponentPropsWithoutRef } from 'react';
 
-import { Invitation } from '@dxos/client';
 import { getSize, mx, Size } from '@dxos/aurora';
+import { Invitation } from '@dxos/client';
 
 import { inactiveStrokeColor, activeStrokeColor, resolvedStrokeColor } from '../../styles';
 import { invitationStatusValue } from '../../util';

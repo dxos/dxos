@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {ThemeVariant} from "../props";
-import { Density, MessageValence } from '../props';
+import { ThemeVariant, Density, MessageValence } from '../props';
 import { mx } from '../util';
 import { coarseBlockSize, defaultCoarse, defaultFine, fineBlockSize } from './density';
 import { defaultDisabled } from './disabled';

@@ -6,9 +6,9 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
 
+import { Button, getSize, mx, useId, useTranslation } from '@dxos/aurora';
 import { CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, mx, useId, useTranslation } from '@dxos/aurora';
 
 import { invitationStatusValue } from '../../util';
 import { CopyButton } from '../Clipboard';

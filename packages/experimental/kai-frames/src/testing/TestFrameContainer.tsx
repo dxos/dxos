@@ -4,9 +4,9 @@
 
 import React, { ReactNode, useEffect, useState } from 'react';
 
+import { mx } from '@dxos/aurora';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { Space, TypedObject, useSpaces } from '@dxos/react-client';
-import { mx } from '@dxos/aurora';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 
 import { FrameContextProvider, FrameContextType, FrameRegistryContextProvider } from '../hooks';

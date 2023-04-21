@@ -8,9 +8,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
+import { Button, getSize, mx } from '@dxos/aurora';
 import { File, Sketch } from '@dxos/kai-types';
 import { observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/aurora';
 
 import { KioskInvitationQr } from '../../components';
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';

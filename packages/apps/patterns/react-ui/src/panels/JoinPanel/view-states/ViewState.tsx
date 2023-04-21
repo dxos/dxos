@@ -5,10 +5,10 @@
 import { CheckCircle, HourglassSimple, X } from '@phosphor-icons/react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
+import { mx, useTranslation, useId, getSize, strongShimmer } from '@dxos/aurora';
 import type { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { mx, useTranslation, useId, getSize, strongShimmer } from '@dxos/aurora';
 
 import { defaultSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';

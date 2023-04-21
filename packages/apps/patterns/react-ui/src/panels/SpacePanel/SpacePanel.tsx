@@ -5,9 +5,9 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback, useReducer } from 'react';
 
+import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/aurora';
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/aurora';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';

@@ -3,4 +3,3 @@
 //
 
 export * from './mx';
-// Do not export `withLogical`.

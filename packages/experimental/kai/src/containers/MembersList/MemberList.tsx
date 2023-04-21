@@ -5,9 +5,9 @@
 import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { getSize, mx } from '@dxos/aurora';
 import { SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { getSize, mx } from '@dxos/aurora';
 
 export const MemberList: FC<{
   identityKey: PublicKey;

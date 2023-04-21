@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import {ThemeVariant} from "../props";
+import { ThemeVariant } from '../props';
 
-export const hover = (
-  { disabled }: { disabled?: boolean } = {},
-  themeVariant: ThemeVariant = 'app'
-) => {
+export const hover = ({ disabled }: { disabled?: boolean } = {}, themeVariant: ThemeVariant = 'app') => {
   return (
     !disabled &&
     (themeVariant === 'os'

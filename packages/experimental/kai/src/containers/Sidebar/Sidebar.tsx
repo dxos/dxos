@@ -21,13 +21,13 @@ import React, { useContext, useEffect, useState, Suspense, useCallback } from 'r
 import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
+import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
 import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { objectMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
