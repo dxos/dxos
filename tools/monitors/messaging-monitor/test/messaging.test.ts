@@ -36,7 +36,7 @@ const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
 };
 
 const createPeer = async (params: Parameters<Messenger['listen']>[0]) => {
-  const signalManager = new WebsocketSignalManager([SIGNAL_SERVER]);
+  const signalManager = new WebsocketSignalManager([{ server: SIGNAL_SERVER }]);
   const messenger = new Messenger({ signalManager });
   await signalManager.open();
   const handle = await messenger.listen(params);
