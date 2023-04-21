@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="793.75px" preserveAspectRatio="none" style="width:694px;height:793px;background:#000000;" version="1.1" viewBox="0 0 694 793" width="694.7917px" zoomAndPan="magnify"><defs/><g><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="42.7083" x2="42.7083" y1="68.7174" y2="449.6745"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="42.7083" x2="42.7083" y1="449.6745" y2="503.8086"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="42.7083" x2="42.7083" y1="503.8086" y2="726.5625"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="286.4583" x2="286.4583" y1="68.7174" y2="449.6745"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="286.4583" x2="286.4583" y1="449.6745" y2="503.8086"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="286.4583" x2="286.4583" y1="503.8086" y2="726.5625"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="620.3125" x2="620.3125" y1="68.7174" y2="449.6745"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="620.3125" x2="620.3125" y1="449.6745" y2="503.8086"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="620.3125" x2="620.3125" y1="503.8086" y2="726.5625"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="20.8333" y="60.5611">App A</text><ellipse cx="42.7083" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="30.2083" x2="55.2083" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="20.8333" y="742.3319">App A</text><ellipse cx="42.7083" cy="767.1549" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="30.2083" x2="55.2083" y1="781.7383" y2="781.7383"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="56.25" x="255.2083" y="60.5611">IFrame A</text><ellipse cx="286.4583" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="273.9583" x2="298.9583" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="56.25" x="255.2083" y="742.3319">IFrame A</text><ellipse cx="286.4583" cy="767.1549" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="273.9583" x2="298.9583" y1="781.7383" y2="781.7383"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="96.875" x="569.2708" y="60.5611">Shared Worker</text><ellipse cx="620.8333" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="608.3333" x2="633.3333" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="96.875" x="569.2708" y="742.3319">Shared Worker</text><ellipse cx="620.8333" cy="767.1549" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="608.3333" x2="633.3333" y1="781.7383" y2="781.7383"/><rect fill="#4E5D6C" height="3.125" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" width="672.3958" x="10.4167" y="105.1595"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="682.8125" y1="105.1595" y2="105.1595"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="682.8125" y1="108.2845" y2="108.2845"/><rect fill="#4E5D6C" height="33.3008" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:2.0833333333333335;" width="106.25" x="293.4896" y="89.5508"/><text fill="#ABB6C2" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="77.0833" x="304.9479" y="110.5286">App starts</text><polygon fill="#DF691A" points="273.9583,160.319,284.375,164.4857,273.9583,168.6523,278.125,164.4857" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="280.2083" y1="164.4857" y2="164.4857"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="154.246">1.1</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="33.3333" x="91.6667" y="154.246">open</text><polygon fill="#DF691A" points="54.1667,199.8698,43.75,204.0365,54.1667,208.2031,50,204.0365" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="47.9167" x2="285.4167" y1="204.0365" y2="204.0365"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="65.625" y="193.7968">1.2</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="47.9167" x="102.0833" y="193.7968">Loaded</text><polygon fill="#DF691A" points="608.3333,239.4206,618.75,243.5872,608.3333,247.7539,612.5,243.5872" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="286.4583" x2="614.5833" y1="243.5872" y2="243.5872"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="298.9583" y="233.3476">1.3</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="53.125" x="335.4167" y="233.3476">connect</text><polygon fill="#DF691A" points="297.9167,278.9714,287.5,283.138,297.9167,287.3047,293.75,283.138" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="291.6667" x2="619.7917" y1="283.138" y2="283.138"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="309.375" y="272.8984">1.4</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="146.875" x="345.8333" y="272.8984">Init Message Channels</text><polygon fill="#DF691A" points="273.9583,318.5221,284.375,322.6888,273.9583,326.8555,278.125,322.6888" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="280.2083" y1="322.6888" y2="322.6888"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="312.4491">1.5</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="90.625" x="91.6667" y="312.4491">Init App Origin</text><polygon fill="#DF691A" points="54.1667,358.0729,43.75,362.2396,54.1667,366.4063,50,362.2396" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="47.9167" x2="285.4167" y1="362.2396" y2="362.2396"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="65.625" y="351.9999">1.6</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="171.875" x="102.0833" y="351.9999">Forward Message Channel</text><polygon fill="#DF691A" points="608.3333,397.6237,618.75,401.7904,608.3333,405.957,612.5,401.7904" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="286.4583" x2="614.5833" y1="401.7904" y2="401.7904"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="298.9583" y="391.5507">1.7</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="262.5" x="335.4167" y="391.5507">Open System &amp; Shell Message Channels</text><polygon fill="#DF691A" points="608.3333,437.1745,618.75,441.3411,608.3333,445.5078,612.5,441.3411" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="614.5833" y1="441.3411" y2="441.3411"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="431.1015">1.8</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="223.9583" x="91.6667" y="431.1015">Open App Client Message Channel</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="62.5" x="300.5208" y="481.0689">afterward</text><rect fill="#4E5D6C" height="3.125" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" width="672.3958" x="10.4167" y="529.834"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="682.8125" y1="529.834" y2="529.834"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="682.8125" y1="532.959" y2="532.959"/><rect fill="#4E5D6C" height="33.3008" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:2.0833333333333335;" width="94.7917" x="299.2188" y="514.2253"/><text fill="#ABB6C2" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="65.625" x="310.6771" y="535.203">App runs</text><polygon fill="#DF691A" points="608.3333,584.9935,618.75,589.1602,608.3333,593.3268,612.5,589.1602" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="614.5833" y1="589.1602" y2="589.1602"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="578.9205">2.1</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="65.625" x="91.6667" y="578.9205">Client RPC</text><polygon fill="#DF691A" points="54.1667,624.5443,43.75,628.7109,54.1667,632.8776,50,628.7109" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="47.9167" x2="619.7917" y1="628.7109" y2="628.7109"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="65.625" y="618.4713">2.2</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="65.625" x="102.0833" y="618.4713">Client RPC</text><polygon fill="#DF691A" points="273.9583,664.0951,284.375,668.2617,273.9583,672.4284,278.125,668.2617" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="280.2083" y1="668.2617" y2="668.2617"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="658.0221">2.3</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="89.5833" x="91.6667" y="658.0221">Shell Controls</text><polygon fill="#DF691A" points="54.1667,703.6458,43.75,707.8125,54.1667,711.9792,50,707.8125" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="47.9167" x2="285.4167" y1="707.8125" y2="707.8125"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="65.625" y="697.5728">2.4</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="89.5833" x="102.0833" y="697.5728">Shell Callback</text><!--MD5=[fd8f0e0e1fa94ffc17d44a39991297a7]
+@startuml
+!theme superhero
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "IFrame A"      as frameA
+entity      "Shared Worker" as worker
+autonumber 1.1
+
+== App starts ==
+appA -> frameA:       <i>open</i>
+frameA -> appA:       Loaded
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Init Message Channels
+appA -> frameA:       Init App Origin
+frameA -> appA:       Forward Message Channel
+frameA -> worker:     Open System & Shell Message Channels
+appA -> worker:       Open App Client Message Channel
+
+...afterward...
+autonumber inc A
+== App runs ==
+appA -> worker:       Client RPC
+worker -> appA:       Client RPC
+appA -> frameA:       Shell Controls
+frameA -> appA:       Shell Callback
+@enduml
+
+@startuml
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #f0ad4e
+    LineColor #e58748
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #DF691A-#e58748
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #4E5D6C
+    FontColor #5bc0de
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #4E5D6C
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #FFF
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #3e4a56-#4E5D6C
+	FontColor #DF691A
+	BorderColor #4E5D6C
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A    
+		LineColor #DF691A
+		LineThickness 1.0
+		FontColor #b25415
+	}
+	server {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	}
+	arrow {
+		FontColor #b25415
+		LineColor #b25415
+	}
+	group {
+		BackGroundColor #abb6c2
+		LineColor #bcc5ce
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+		LineColor #DF691A
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #7ccde5
+		BackGroundColor #5bc0de
+	}
+	separator {
+		LineColor #4E5D6C
+		BackGroundColor #4E5D6C-#717d89
+		FontColor #FFF
+	}
+	milestone {
+		FontColor #5bc0de
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #4E5D6C
+		LineColor #717d89
+	}
+	timeline {
+		BackgroundColor #4E5D6C
+		FontColor #FFF
+	}
+	closed {
+		BackgroundColor #f3bd71
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName       "Verdana"
+skinparam defaultFontSize       12
+skinparam dpi                   100
+skinparam shadowing             false
+skinparam roundcorner           8
+skinparam ParticipantPadding    40
+skinparam BoxPadding            40
+skinparam Padding               5
+skinparam ArrowColor            #4E5D6C
+skinparam stereotype {
+    CBackgroundColor #3e4a56
+    CBorderColor #717d89
+    ABackgroundColor #5F8F00
+    ABorderColor #4a934a
+    IBackgroundColor #AE423F
+    IBorderColor #e17572
+    EBackgroundColor #C08A3E
+    EBorderColor #f3bd71
+    NBackgroundColor #499AB2
+    NBorderColor #7ccde5
+}
+skinparam title {
+	FontColor	                 #DF691A
+	BorderColor	                 #717d89
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #3e4a56-#4E5D6C
+}
+
+skinparam legend {
+	BackgroundColor #4E5D6C
+	BorderColor #717d89
+	FontColor #abb6c2
+}
+
+skinparam swimlane {
+	BorderColor #5bc0de
+	BorderThickness 2
+	TitleBackgroundColor  #3e4a56-#4E5D6C
+	TitleFontColor #DF691A
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BarColor #5cb85c
+	StartColor #5bc0de
+	EndColor #5bc0de
+	DiamondBackgroundColor #3e4a56
+  	DiamondBorderColor #717d89
+  	DiamondFontColor #FFF
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #DF691A
+	FontColor #FFF
+}
+
+
+skinparam sequence {
+	BorderColor #DF691A
+	TitleFontColor #DF691A
+	BackgroundColor transparent
+	StartColor #DF691A
+	EndColor #DF691A
+	BoxBackgroundColor transparent
+	BoxBorderColor #4E5D6C
+	BoxFontColor #4E5D6C
+	DelayFontColor #4E5D6C
+	LifeLineBorderColor #4E5D6C
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #717d89
+	GroupBackgroundColor #4E5D6C
+	GroupBorderColor #4E5D6C
+	GroupFontColor #4E5D6C
+	GroupHeaderFontColor #5bc0de
+	GroupHeaderBackgroundColor transparent
+	DividerBackgroundColor #4E5D6C
+    DividerBorderColor #4E5D6C
+    DividerBorderThickness 2
+    DividerFontColor #abb6c2
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #4E5D6C
+	ReferenceFontColor #4E5D6C
+	ReferenceHeaderFontColor #5bc0de
+	ReferenceHeaderBackgroundColor #4E5D6C
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #DF691A
+	FontColor #DF691A
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam agent {
+	BackgroundColor #f0ad4e
+	BorderColor #C08A3E
+	FontColor #4E5D6C
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #5bc0de
+	BorderColor #7ccde5
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #4E5D6C
+	BorderColor #717d89
+	FontColor #abb6c2
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam interface {
+	BackgroundColor  #e17572
+	BorderColor  #d9534f
+	FontColor #4E5D6C
+}
+
+
+skinparam storage {
+	BackgroundColor #f0ad4e
+  	BorderColor #f3bd71
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor  #4E5D6C
+	BorderColor #abb6c2
+	FontColor #abb6c2
+}
+
+
+skinparam cloud {
+	BackgroundColor #abb6c2-black
+	BorderColor #abb6c2
+	FontColor #4E5D6C
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	HeaderBackgroundColor #b25415
+	StereotypeFontColor #4E5D6C
+	BorderThickness 1
+	AttributeFontColor #4E5D6C
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	StereotypeFontColor #4E5D6C
+	BorderThickness 1
+	AttributeFontColor #FFF
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BorderThickness 2
+	StereotypeFontColor #DF691A
+}
+
+
+skinparam rectangle {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BackgroundColor #3e4a56
+	BorderThickness 2
+	StereotypeFontColor #DF691A
+}
+
+
+skinparam package {
+	BackgroundColor #4E5D6C
+  	BorderColor #DF691A
+	FontColor #DF691A
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #3e4a56
+  	BorderColor #f0ad4e
+	FontColor #f0ad4e
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #3e4a56
+  	BorderColor #5bc0de
+	FontColor #5bc0de
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	StartColor #5bc0de
+	EndColor #5bc0de
+	AttributeFontColor #FFF
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam card {
+	BackgroundColor #5bc0de
+	BorderColor #7ccde5
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #717d89
+	BorderColor #abb6c2
+	FontColor #abb6c2
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "IFrame A"      as frameA
+entity      "Shared Worker" as worker
+autonumber 1.1
+
+== App starts ==
+appA -> frameA:       <i>open</i>
+frameA -> appA:       Loaded
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Init Message Channels
+appA -> frameA:       Init App Origin
+frameA -> appA:       Forward Message Channel
+frameA -> worker:     Open System & Shell Message Channels
+appA -> worker:       Open App Client Message Channel
+
+...afterward...
+autonumber inc A
+== App runs ==
+appA -> worker:       Client RPC
+worker -> appA:       Client RPC
+appA -> frameA:       Shell Controls
+frameA -> appA:       Shell Callback
+@enduml
+
+PlantUML version 1.2022.6(Tue Jun 21 13:34:49 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

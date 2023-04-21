@@ -16,8 +16,6 @@ import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 export type IFrameProxyRuntimeParams = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
-  workerAppPort: RpcPort;
-  windowAppPort: RpcPort;
   shellPort?: RpcPort;
 };
 
@@ -27,23 +25,16 @@ export type IFrameProxyRuntimeParams = {
 export class IFrameProxyRuntime {
   private readonly _configProvider: IFrameProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
-  private readonly _windowAppPort: RpcPort;
-  private readonly _workerAppPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private _config!: Config;
   private _transportService!: BridgeService;
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
   private _shellRuntime?: ShellRuntimeImpl;
 
-  constructor({ config, systemPort, workerAppPort, windowAppPort, shellPort }: IFrameProxyRuntimeParams) {
+  constructor({ config, systemPort, shellPort }: IFrameProxyRuntimeParams) {
     this._configProvider = config;
     this._systemPort = systemPort;
-    this._windowAppPort = windowAppPort;
-    this._workerAppPort = workerAppPort;
     this._shellPort = shellPort;
-
-    this._workerAppPort.subscribe((msg) => this._windowAppPort.send(msg));
-    this._windowAppPort.subscribe((msg) => this._workerAppPort.send(msg));
 
     if (this._shellPort) {
       this._shellRuntime = new ShellRuntimeImpl(this._shellPort);

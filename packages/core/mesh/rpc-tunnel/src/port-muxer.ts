@@ -29,7 +29,7 @@ export class PortMuxer {
     }
   }
 
-  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe'>) {
+  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe' | 'channel'> & { channel: string }) {
     if (!this._messagePort) {
       throw new Error('Message port is required to create worker ports');
     }
