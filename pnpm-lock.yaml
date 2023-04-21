@@ -345,7 +345,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
@@ -371,7 +371,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
@@ -404,7 +404,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vault': workspace:*
@@ -442,7 +442,7 @@ importers:
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -490,7 +490,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -532,7 +532,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-metagraph': link:../../experimental/react-metagraph
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -583,79 +583,6 @@ importers:
       '@storybook/theming': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-
-  packages/apps/patterns/react-ui:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/util': workspace:*
-      '@faker-js/faker': ^7.6.0
-      '@phosphor-icons/react': ^2.0.5
-      '@radix-ui/react-accordion': ^1.1.1
-      '@radix-ui/react-alert-dialog': ^1.0.3
-      '@radix-ui/react-dialog': ^1.0.3
-      '@radix-ui/react-radio-group': ^1.1.2
-      '@react-hook/async': ^3.1.1
-      '@types/debug': ^4.1.7
-      '@types/lodash.toarray': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      '@xstate/react': ^3.2.1
-      debug: ^4.3.3
-      lodash.toarray: ^4.4.0
-      qrcode.react: ^3.1.0
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      url-join: ^5.0.0
-      vite: ^4.2.0
-      xstate: ^4.37.0
-    dependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-appkit': link:../../../ui/react-appkit
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/util': link:../../../common/util
-      '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
-      '@react-hook/async': 3.1.1_react@18.2.0
-      '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
-      debug: 4.3.4
-      lodash.toarray: 4.4.0
-      qrcode.react: 3.1.0_react@18.2.0
-      url-join: 5.0.0
-      xstate: 4.37.1
-    devDependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client-services': link:../../../sdk/client-services
-      '@dxos/log': link:../../../common/log
-      '@dxos/react-async': link:../../../common/react-async
-      '@faker-js/faker': 7.6.0
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/debug': 4.1.7
-      '@types/lodash.toarray': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.2.0
 
   packages/apps/quickstart:
     specifiers:
@@ -734,7 +661,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
@@ -757,7 +684,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/sentry': link:../../common/sentry
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
@@ -2308,7 +2235,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
@@ -2371,7 +2298,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/plexus': link:../../experimental/plexus
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -2404,7 +2331,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@emotion/react': ^11.9.0
@@ -2449,7 +2376,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2759,7 +2686,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-icons': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -2840,7 +2767,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-icons': link:../../apps/patterns/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -3008,7 +2935,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -3098,7 +3025,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
@@ -3394,7 +3321,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-icons': workspace:*
       '@dxos/react-metagraph': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -3469,7 +3396,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-icons': link:../../apps/patterns/react-icons
       '@dxos/react-metagraph': link:../react-metagraph
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -3553,7 +3480,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-scroll-area': ^1.0.3
@@ -3590,7 +3517,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
@@ -4119,6 +4046,79 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
+  packages/sdk/react-shell:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.6.0
+      '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-accordion': ^1.1.1
+      '@radix-ui/react-alert-dialog': ^1.0.3
+      '@radix-ui/react-dialog': ^1.0.3
+      '@radix-ui/react-radio-group': ^1.1.2
+      '@react-hook/async': ^3.1.1
+      '@types/debug': ^4.1.7
+      '@types/lodash.toarray': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      '@xstate/react': ^3.2.1
+      debug: ^4.3.3
+      lodash.toarray: ^4.4.0
+      qrcode.react: ^3.1.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      url-join: ^5.0.0
+      vite: ^4.2.0
+      xstate: ^4.37.0
+    dependencies:
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/client': link:../client
+      '@dxos/config': link:../config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-client': link:../react-client
+      '@dxos/util': link:../../common/util
+      '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
+      '@react-hook/async': 3.1.1_react@18.2.0
+      '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
+      debug: 4.3.4
+      lodash.toarray: 4.4.0
+      qrcode.react: 3.1.0_react@18.2.0
+      url-join: 5.0.0
+      xstate: 4.37.1
+    devDependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client-services': link:../client-services
+      '@dxos/log': link:../../common/log
+      '@dxos/react-async': link:../../common/react-async
+      '@faker-js/faker': 7.6.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/debug': 4.1.7
+      '@types/lodash.toarray': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.1.0_vite@4.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.2.0
+
   packages/sdk/vault:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -4129,7 +4129,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@fastify/cors': ^8.2.1
@@ -4161,7 +4161,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/react-shell': link:../react-shell
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
       '@fastify/cors': 8.2.1

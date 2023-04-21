@@ -12,7 +12,7 @@ import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/react-shell';
 
 import { AppState, AppStateProvider, configProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
 import kaiTranslations from '../../translations';

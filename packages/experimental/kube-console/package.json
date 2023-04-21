@@ -37,7 +37,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-icons": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",

@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -28,6 +25,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-shell"
     },
     {
       "path": "../../ui/aurora"

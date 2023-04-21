@@ -9,7 +9,7 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-
 import { Button, getSize, mx } from '@dxos/aurora';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
-import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { AppMenu, BotManager, FrameContainer, MetagraphPanel, Sidebar } from '../containers';
 import { Section, createPath, defaultFrameId, useAppRouter, useAppState, useTheme } from '../hooks';

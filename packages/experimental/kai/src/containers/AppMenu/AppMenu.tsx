@@ -9,7 +9,7 @@ import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
 import { Message } from '@dxos/kai-types';
 import { DropdownMenu } from '@dxos/react-appkit';
 import { ShellLayout, useQuery } from '@dxos/react-client';
-import { useShell } from '@dxos/react-ui';
+import { useShell } from '@dxos/react-shell';
 
 import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Actions } from './Actions';

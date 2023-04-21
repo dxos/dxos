@@ -38,11 +38,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/patterns/react-ui/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/quickstart/package.json",
           "jsonpath": "$.version"
         },
@@ -429,6 +424,11 @@
         {
           "type": "json",
           "path": "packages/sdk/react-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-shell/package.json",
           "jsonpath": "$.version"
         },
         {

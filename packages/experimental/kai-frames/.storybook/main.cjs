@@ -31,7 +31,7 @@ module.exports = {
 resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/react-list/dist/**/*.mjs'),
-            resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.mjs')
+            resolve(__dirname, '../node_modules/@dxos/react-shell/dist/**/*.mjs')
           ]
         })
       ]

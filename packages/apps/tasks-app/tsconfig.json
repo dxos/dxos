@@ -42,6 +42,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../ui/aurora"
     },
     {
@@ -49,9 +52,6 @@
     },
     {
       "path": "../../ui/react-appkit"
-    },
-    {
-      "path": "../patterns/react-ui"
     }
   ]
 }

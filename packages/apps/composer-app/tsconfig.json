@@ -49,6 +49,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../sdk/vault"
     },
     {
@@ -62,9 +65,6 @@
     },
     {
       "path": "../../ui/react-appkit"
-    },
-    {
-      "path": "../patterns/react-ui"
     }
   ]
 }

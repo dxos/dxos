@@ -80,7 +80,7 @@
     "react-client": "packages/sdk/react-client",
     "react-icons": "packages/apps/patterns/react-icons",
     "react-metagraph": "packages/experimental/react-metagraph",
-    "react-ui": "packages/apps/patterns/react-ui",
+    "react-shell": "packages/sdk/react-shell",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/core/mesh/rpc",
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
