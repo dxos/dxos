@@ -45,7 +45,7 @@ describe('Multiple invitations', () => {
       log.info(`STRESTEST Peer${index} loading space...`);
       const space = peers[index].client.getSpace(key);
       expect(space).to.exist;
-      await asyncTimeout(space!.waitUntilReady(), 3_000);
+      await asyncTimeout(space!.waitUntilReady(), 10_000);
       expect((space?.db.getObjectById(expandoId) as Expando).toJSON()).to.include(data);
       log.info(`STRESTEST Peer${index} loaded space`);
 

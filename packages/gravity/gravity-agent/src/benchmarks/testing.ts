@@ -2,12 +2,52 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'path';
+import { ConfigProto } from '@dxos/config';
+import { PublicKey } from '@dxos/keys';
 
 import { Agent } from '../agent';
-import { loadConfig } from '../utils';
+
+const CONFIG: ConfigProto = {
+  version: 1,
+  runtime: {
+    client: {
+      storage: {
+        persistent: true,
+        storageType: 5,
+        path: 'dxos/storage'
+      }
+    },
+    services: {
+      signaling: [
+        {
+          server: 'ws://localhost/.well-known/dx/signal'
+        }
+      ],
+      ice: [
+        {
+          urls: 'stun:kube.dxos.org:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        },
+        {
+          urls: 'turn:kube.dxos.org:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        },
+        {
+          urls: 'stun:dev.kube.dxos.org:3478'
+        },
+        {
+          urls: 'turn:dev.kube.dxos.org:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        }
+      ]
+    }
+  }
+};
 
 export const testPeerFactory = (): Agent => {
-  const config = loadConfig(join(__dirname, 'config.yml'));
+  const config = CONFIG && { runtime: { client: { storage: { path: PublicKey.random().toString() } } } };
   return new Agent({ config });
 };

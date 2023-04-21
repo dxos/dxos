@@ -1,10 +1,10 @@
 //
 // Copyright 2022 DXOS.org
 //
-import fs from 'fs';
 import yaml from 'js-yaml';
-import { join } from 'path';
-import process from 'process';
+import fs from 'node:fs';
+import { join } from 'node:path';
+import process from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 

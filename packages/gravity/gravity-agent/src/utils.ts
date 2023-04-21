@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import fs from 'fs';
 import yaml from 'js-yaml';
+import fs from 'node:fs';
 
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { ConfigProto } from '@dxos/config';
