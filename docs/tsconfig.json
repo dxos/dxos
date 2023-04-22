@@ -22,9 +22,6 @@
   ],
   "references": [
     {
-      "path": "../packages/apps/patterns/react-appkit"
-    },
-    {
       "path": "../packages/common/async"
     },
     {
@@ -65,6 +62,9 @@
     },
     {
       "path": "../packages/ui/aurora-theme"
+    },
+    {
+      "path": "../packages/ui/react-appkit"
     },
     {
       "path": "../tools/apidoc"

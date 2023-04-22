@@ -5,23 +5,28 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node"
     ]
   },
   "exclude": [
+    "*.t.ts",
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/debug"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-async"
     },
     {
       "path": "../../common/util"
@@ -31,6 +36,12 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
@@ -45,10 +56,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vault"
-    },
-    {
-      "path": "../../ui/react-appkit"
+      "path": "../aurora"
     }
   ]
 }

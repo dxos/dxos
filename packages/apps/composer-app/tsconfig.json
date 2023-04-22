@@ -49,22 +49,22 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../sdk/vault"
     },
     {
       "path": "../../ui/aurora"
     },
     {
+      "path": "../../ui/aurora-composer"
+    },
+    {
       "path": "../../ui/aurora-theme"
     },
     {
-      "path": "../patterns/react-appkit"
-    },
-    {
-      "path": "../patterns/react-composer"
-    },
-    {
-      "path": "../patterns/react-ui"
+      "path": "../../ui/react-appkit"
     }
   ]
 }

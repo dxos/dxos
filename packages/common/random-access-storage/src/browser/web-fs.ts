@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Directory, File, Storage, StorageType, getFullPath } from '../common';
 
 /**
- *
+ * Web file systems.
  */
 export class WebFS implements Storage {
   readonly type = StorageType.WEBFS;

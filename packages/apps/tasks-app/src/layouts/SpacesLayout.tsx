@@ -7,7 +7,7 @@ import { Outlet } from 'react-router-dom';
 
 import { Menubar, Separator } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import { IdentityPopover } from '@dxos/react-ui';
+import { IdentityPopover } from '@dxos/react-shell';
 
 import { Main } from '../components';
 

@@ -26,7 +26,7 @@ import {
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
-import { useShell } from '@dxos/react-ui';
+import { useShell } from '@dxos/react-shell';
 
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';

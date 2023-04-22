@@ -18,7 +18,7 @@ import {
 } from '@dxos/aurora';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useShell } from '@dxos/react-ui';
+import { PanelSidebarContext, useShell } from '@dxos/react-shell';
 
 import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
