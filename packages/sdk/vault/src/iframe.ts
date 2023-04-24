@@ -85,12 +85,13 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
       config,
+      origin,
       appPort: createWorkerPort({ port: messageChannel.port2 }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
 
     await iframeRuntime.start();
-    if (iframeRuntime.shell && iframeRuntime.origin) {
+    if (iframeRuntime.shell) {
       await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin);
     }
 
