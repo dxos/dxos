@@ -6,7 +6,7 @@ export const sampleCode = `// Example frame component.
 
 import React, { useState } from 'react'
 import { useQuery, useSpaces } from '@dxos/react-client'
-import { Button } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
 import { Task } from '@dxos/kai-types'
 
 export const TestFrame = () => {

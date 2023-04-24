@@ -9,9 +9,9 @@ import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_C
 import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
+import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations, Shell } from '@dxos/react-ui';
+import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mobileAndTabletCheck } from './util';
@@ -85,12 +85,13 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
       config,
+      origin,
       appPort: createWorkerPort({ port: messageChannel.port2 }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
 
     await iframeRuntime.start();
-    if (iframeRuntime.shell && iframeRuntime.origin) {
+    if (iframeRuntime.shell) {
       await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin);
     }
 

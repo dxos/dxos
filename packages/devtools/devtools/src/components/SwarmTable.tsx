@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { Button } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 import { BooleanIcon } from './BooleanIcon';

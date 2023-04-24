@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import Inspect from 'vite-plugin-inspect';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
@@ -56,7 +56,8 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
@@ -102,11 +103,8 @@ export default defineConfig({
         injectTo: 'head-prepend',
         // prettier-ignore
         families: [
-          'Roboto',
-          'Roboto Mono',
           'DM Sans',
-          'DM Mono',
-          'Montserrat'
+          'DM Mono'
         ]
       },
 

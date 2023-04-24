@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { SingleInputStep } from '@dxos/react-appkit';
+import { Heading, SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');

@@ -86,9 +86,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/apps/halo-app/.storybook"
-        },
+        "configDir": "packages/apps/halo-app/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

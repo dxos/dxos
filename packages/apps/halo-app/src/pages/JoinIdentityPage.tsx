@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useTranslation } from '@dxos/aurora';
 import type { Invitation } from '@dxos/client';
-import { JoinPanel } from '@dxos/react-appkit';
+import { Heading, JoinPanel } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 import { invitationCodeFromUrl } from '../util';
 

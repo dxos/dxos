@@ -6,7 +6,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import React, { FC } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { Bounds, Item } from '../../layout';
 import { GridLensModel } from '../Grid';

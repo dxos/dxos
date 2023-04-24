@@ -10,6 +10,10 @@
 Type: <code>string</code>
 
 
+### [logFilter]()
+Type: <code>string</code>
+
+
 ### [shell]()
 Type: <code>boolean | string</code>
 

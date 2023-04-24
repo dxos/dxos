@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plexus",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "Graph navigator.",
   "homepage": "https://dxos.org",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.21",
     "@types/d3": "^7.1.0",
@@ -43,7 +43,7 @@
     "string-hash": "~1.1.3",
     "tailwindcss": "~3.2.7",
     "typescript": "^4.8.4",
-    "vite": "^4.2.0",
+    "vite": "^4.3.0",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-inspect": "^0.7.15",
     "vite-plugin-pwa": "^0.14.1",

@@ -5,12 +5,12 @@
 import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
+import { Button, getSize } from '@dxos/aurora';
 import { Text } from '@dxos/client';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useQuery, useSubscription } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { NoteTile } from './NoteTile';

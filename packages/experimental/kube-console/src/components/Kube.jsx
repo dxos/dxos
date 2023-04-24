@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as THREE from 'three';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 export const defaultConfig = {
   radius: 800,

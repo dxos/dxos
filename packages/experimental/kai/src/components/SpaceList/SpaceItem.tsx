@@ -5,9 +5,10 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
+import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
 import { Space } from '@dxos/client';
+import { Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { getIcon } from '../../hooks';
 import { Intent, IntentAction } from '../../util';

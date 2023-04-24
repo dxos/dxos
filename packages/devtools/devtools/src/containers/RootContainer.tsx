@@ -5,12 +5,12 @@
 import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
+import { Button } from '@dxos/aurora';
+import { TreeView, TreeViewItem, Fallback } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
-import { Button, TreeView, TreeViewItem } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
-import { Fallback } from '@dxos/react-appkit';
 
 // TODO(burdon): Restructure sections (panels).
 // TODO(burdon): Sections as hook.
