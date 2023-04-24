@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-components';
 
-import { Button, Content, Heading, Input } from '../../Panel';
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { Button, Content, Heading, Input, Actions } from '../../Panel';
+import { ViewStateProps } from './ViewState';
 
 export interface InvitationInputProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
@@ -34,24 +33,23 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
     });
 
   return (
-    <ViewState {...viewStateProps}>
-      <Content className='mbs-0'>
-        <Input
-          disabled={disabled}
-          label={<Heading className='mbs-0'>{t('invitation input label')}</Heading>}
-          value={inputValue}
-          onChange={({ target: { value } }) => setInputValue(value)}
-          slots={{
-            input: {
-              className: 'text-center',
-              autoFocus: true,
-              'data-autofocus': `inputting${Kind}InvitationCode`,
-              'data-testid': `${Kind.toLowerCase()}-invitation-input`,
-              onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-            } as ComponentPropsWithoutRef<'input'>
-          }}
-        />
-
+    <Content className='mbs-0'>
+      <Input
+        disabled={disabled}
+        label={<Heading className='mbs-0'>{t('invitation input label')}</Heading>}
+        value={inputValue}
+        onChange={({ target: { value } }) => setInputValue(value)}
+        slots={{
+          input: {
+            className: 'text-center',
+            autoFocus: true,
+            'data-autofocus': `inputting${Kind}InvitationCode`,
+            'data-testid': `${Kind.toLowerCase()}-invitation-input`,
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
+          } as ComponentPropsWithoutRef<'input'>
+        }}
+      />
+      <Actions>
         <Button
           disabled={disabled}
           onClick={handleNext}
@@ -68,7 +66,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
             <span>{t('back label')}</span>
           </Button>
         )}
-      </Content>
-    </ViewState>
+      </Actions>
+    </Content>
   );
 };

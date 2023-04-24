@@ -426,3 +426,4 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
 
 export type { JoinMachine, JoinState, JoinSend, JoinEvent, JoinMachineContext };
 export { joinMachine, useJoinMachine };
+export type JoinState2 = ReturnType<typeof useJoinMachine>['0'];
