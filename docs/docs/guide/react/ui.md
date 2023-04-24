@@ -39,7 +39,7 @@ export default defineConfig({
       ]
     })
   ]
-})
+});
 ```
 
 The content array should contain globs that match any other code which will contain `tailwind` css classes.
