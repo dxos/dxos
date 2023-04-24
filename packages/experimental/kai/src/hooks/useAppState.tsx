@@ -28,6 +28,16 @@ export const defaultFrames = [
   // 'dxos.module.frame.explorer'
 ];
 
+// TODO(burdon): Factor out.
+export const bool = (value?: string) => value === 'true' || value === '1';
+
+export const optionsKeys = [
+  'experimental.search',
+  'experimental.frames',
+  'experimental.bots',
+  'experimental.metagraph'
+];
+
 export type AppState = {
   // Debug info.
   debug?: boolean;
@@ -53,7 +63,7 @@ const defaultAppState: AppState = {
 };
 
 type ActionType = {
-  type: 'set-active-frame' | 'set-fullscreen' | 'set-chat';
+  type: 'set-active-frame' | 'set-fullscreen' | 'set-chat' | 'set-experimental';
 };
 
 type SetFrameAction = ActionType & {

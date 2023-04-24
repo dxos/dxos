@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
 import highlight from 'rehype-highlight';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
 
 import { defaultClasses, defaultPadding, defaultStyles } from './styles';
 

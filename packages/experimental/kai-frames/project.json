@@ -37,6 +37,22 @@
         "{options.outputFile}"
       ]
     },
+    "preview": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "kai:bundle",
+        "staticFilePath": "packages/experimental/kai/out/kai"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "kai:bundle"
+      }
+    },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    },
     "storybook": {
       "configurations": {
         "ci": {

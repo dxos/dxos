@@ -20,7 +20,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../ui/aurora"
     },
     {
       "path": "../gem-core"

@@ -7,7 +7,7 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Message } from '@dxos/kai-types';
-import { Input } from '@dxos/react-components';
+import { Input } from '@dxos/react-appkit';
 
 import { ChatMessage } from './ChatMessage';
 

@@ -25,9 +25,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -52,16 +49,22 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../sdk/vault"
     },
     {
-      "path": "../patterns/react-appkit"
+      "path": "../../ui/aurora"
     },
     {
-      "path": "../patterns/react-composer"
+      "path": "../../ui/aurora-composer"
     },
     {
-      "path": "../patterns/react-ui"
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }

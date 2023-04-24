@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../devtools/cli"
     },
     {
@@ -34,7 +31,13 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../patterns/react-appkit"
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }

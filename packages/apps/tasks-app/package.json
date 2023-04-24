@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-app",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "DXOS tasks application.",
   "homepage": "https://dxos.org",
@@ -12,6 +12,7 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -19,8 +20,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",
@@ -29,6 +29,7 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/react": "^18.0.21",

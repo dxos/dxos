@@ -4,8 +4,8 @@
 
 import React, { useEffect } from 'react';
 
+import { Loading } from '@dxos/react-appkit';
 import { Expando, useQuery, useIdentity, useSpaces } from '@dxos/react-client';
-import { Loading } from '@dxos/react-components';
 
 export const Counter = () => {
   const identity = useIdentity({ login: true });

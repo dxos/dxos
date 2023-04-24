@@ -4,7 +4,7 @@
 
 import React, { ComponentProps, forwardRef, useEffect, useState } from 'react';
 
-import { mx, defaultInput } from '@dxos/react-components';
+import { mx, defaultInput } from '@dxos/aurora';
 
 export type InputProps = ComponentProps<'input'>;
 

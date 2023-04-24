@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -14,6 +14,7 @@
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -32,7 +33,6 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
@@ -47,11 +47,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/plexus": "workspace:*",
-    "@dxos/react-composer": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

@@ -13,9 +13,10 @@ import {
   IdentityPanel,
   ItemsPanel,
   KeyringPanel,
+  LoggingPanel,
   MembersPanel,
-  SpacesPanel,
   SignalPanel,
+  SpacesPanel,
   SwarmPanel
 } from '../panels';
 
@@ -37,6 +38,10 @@ export const useRoutes = () => {
             {
               path: '/client/config',
               element: <ConfigPanel />
+            },
+            {
+              path: '/client/logs',
+              element: <LoggingPanel />
             }
           ]
         },

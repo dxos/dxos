@@ -33,26 +33,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/patterns/react-appkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-icons/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-ui/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/quickstart/package.json",
           "jsonpath": "$.version"
         },
@@ -159,11 +139,6 @@
         {
           "type": "json",
           "path": "packages/common/react-async/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/react-components/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -448,7 +423,37 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/react-shell/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/vault/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -8,10 +8,9 @@ import { Outlet } from 'react-router-dom';
 
 import { fromHost } from '@dxos/client-services';
 import { Defaults, Envs } from '@dxos/config';
-import { appkitTranslations, ErrorProvider, ResetDialog } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider, Config } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/react-shell';
 
 const Fullscreen: FC<PropsWithChildren> = ({ children }) => {
   return <div className='flex flex-col overflow-hidden absolute left-0 right-0 top-0 bottom-0'>{children}</div>;

@@ -1,5 +1,5 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:16]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:17]()</sub>
 
 
 Proxy to host client service via iframe.

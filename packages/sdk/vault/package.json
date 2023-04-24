@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vault",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "DXOS web browser vault",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,14 +36,14 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fastify/cors": "^8.2.1",
@@ -59,6 +59,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/debug": "^4.1.7",
     "@types/lodash.defaultsdeep": "^4.6.6",

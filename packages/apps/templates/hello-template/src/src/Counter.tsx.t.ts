@@ -8,7 +8,7 @@ export default defineTemplate(
       : text/* javascript */ `
     import React, { useEffect } from 'react';
 
-    import { Loading } from '@dxos/react-components';
+    import { Loading } from '@dxos/react-appkit';
     import { useQuery, Expando, useIdentity, useSpaces } from '@dxos/react-client';
 
     export const Counter = () => {

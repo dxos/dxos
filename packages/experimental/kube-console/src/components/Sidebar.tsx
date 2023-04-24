@@ -5,8 +5,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { List, ListItemEndcap } from '@dxos/react-appkit';
 import { useConfig } from '@dxos/react-client';
-import { List, ListItemEndcap } from '@dxos/react-components';
 import { DXOS } from '@dxos/react-icons';
 
 import { Toolbar } from '../components';

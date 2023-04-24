@@ -59,10 +59,14 @@ message Module {
   optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
   optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos:type/frame' vs. 'dxos.type.frame')
 
+  // TODO(burdon): Developer info message.
+
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
   optional bytes bundle = 6;
+
+  // TODO(burdon): Remove.
   optional bool tunnel = 7;
 
   repeated Module deps = 10;  // TODO(burdon): E.g., types.

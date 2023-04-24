@@ -11,7 +11,7 @@ import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-import { PanelSidebarContext } from '@dxos/react-ui';
+import { PanelSidebarContext } from '@dxos/react-shell';
 
 import '@dxosTheme';
 
