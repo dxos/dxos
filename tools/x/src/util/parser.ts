@@ -49,7 +49,7 @@ export class LogParser {
   // TODO(burdon): (End of report).
   static failedTasks = /Failed tasks:/;
 
-  // packages/apps/patterns/react-appkit/src/hooks/useTelemetry.ts:8:32 - error TS2307: Cannot find module '@dxos/react-async' or its corresponding type declarations.
+  // packages/ui/react-appkit/src/hooks/useTelemetry.ts:8:32 - error TS2307: Cannot find module '@dxos/react-async' or its corresponding type declarations.
   static buildError = /^(\S+) - error (\S+): (.+)/;
 
   // TODO(burdon): Change mocha reporter?

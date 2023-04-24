@@ -6,8 +6,8 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import hash from 'string-hash';
 
+import { Button, getSize, mx } from '@dxos/aurora';
 import { Message } from '@dxos/kai-types';
-import { Button, getSize, mx } from '@dxos/react-components';
 
 // TODO(burdon): Avatars.
 const colors = [

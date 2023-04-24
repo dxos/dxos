@@ -4,7 +4,7 @@
 
 const colors = require('tailwindcss/colors');
 
-const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
+const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
 const primary = colors.sky;

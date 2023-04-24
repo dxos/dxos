@@ -22,9 +22,6 @@
   ],
   "references": [
     {
-      "path": "../packages/apps/patterns/react-appkit"
-    },
-    {
       "path": "../packages/common/async"
     },
     {
@@ -32,9 +29,6 @@
     },
     {
       "path": "../packages/common/log"
-    },
-    {
-      "path": "../packages/common/react-components"
     },
     {
       "path": "../packages/common/telemetry"
@@ -62,6 +56,15 @@
     },
     {
       "path": "../packages/sdk/vault"
+    },
+    {
+      "path": "../packages/ui/aurora"
+    },
+    {
+      "path": "../packages/ui/aurora-theme"
+    },
+    {
+      "path": "../packages/ui/react-appkit"
     },
     {
       "path": "../tools/apidoc"

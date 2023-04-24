@@ -6,10 +6,10 @@ import { Article, Image, Trash } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { Composer } from '@dxos/aurora-composer';
 import { Document, DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
-import { Composer } from '@dxos/react-composer';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';

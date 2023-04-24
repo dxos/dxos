@@ -17,11 +17,11 @@ import {
   ErrorProvider,
   Fallback,
   ResetDialog,
-  ServiceWorkerToast
+  ServiceWorkerToast,
+  ThemeProvider
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';

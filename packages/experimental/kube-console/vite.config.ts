@@ -9,7 +9,7 @@ import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
@@ -43,8 +43,9 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, consoleThemeExtension]
     }),
@@ -59,7 +60,7 @@ export default defineConfig({
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
-        families: ['Roboto', 'Roboto Mono', 'DM Sans', 'DM Mono', 'Montserrat']
+        families: ['DM Sans', 'DM Mono']
       },
 
       custom: {
@@ -77,7 +78,7 @@ export default defineConfig({
     // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     /*
-    ...(process.env.NODE_ENV === 'production'
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
             org: 'dxos',

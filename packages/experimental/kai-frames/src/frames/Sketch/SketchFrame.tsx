@@ -8,11 +8,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
+import { Button, getSize, mx } from '@dxos/aurora';
 import { File, Sketch } from '@dxos/kai-types';
 import { observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
-import { KioskInvitationQr } from '../../components';
+import { InvitationQRCode } from '../../components';
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
@@ -174,7 +174,7 @@ export const SketchFrame = observer(() => {
 
         <div className='fixed flex flex-col h-full flex-1 items-center place-items-center justify-center overflow-auto overflow-hidden w-full opacity-50 pointer-events-none'>
           <div className='flex w-3/4'>
-            <KioskInvitationQr space={space} />
+            <InvitationQRCode space={space} />
           </div>
         </div>
 

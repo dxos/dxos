@@ -4,7 +4,8 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 
-import { ListItem, ListItemProps, mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora';
+import { ListItem, ListItemProps } from '@dxos/react-appkit';
 
 // TODO(burdon): Move to react-appkit?
 // Removes need for class overrides in console.

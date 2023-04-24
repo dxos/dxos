@@ -18,6 +18,7 @@ const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
 export type IFrameHostRuntimeParams = {
   config: Config | Provider<MaybePromise<Config>>;
+  origin: string;
   appPort: RpcPort;
   shellPort?: RpcPort;
 };
@@ -43,10 +44,11 @@ export class IFrameHostRuntime {
   private _shellRuntime?: ShellRuntimeImpl;
 
   @logInfo
-  public origin?: string;
+  public origin: string;
 
-  constructor({ config, appPort, shellPort }: IFrameHostRuntimeParams) {
+  constructor({ config, origin, appPort, shellPort }: IFrameHostRuntimeParams) {
     this._configProvider = config;
+    this.origin = origin;
     this._appPort = appPort;
     this._shellPort = shellPort;
 

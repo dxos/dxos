@@ -5,7 +5,8 @@
 import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, List, ListItem, Button, Input, ListItemEndcap, mx } from '@dxos/react-components';
+import { getSize, Button, mx } from '@dxos/aurora';
+import { List, ListItem, Input, ListItemEndcap } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.
 export type Object = { id: string };
@@ -120,12 +121,13 @@ export const EditableObjectList = <T extends Object>({
 
       {/* TODO(burdon): Not aligned with list. */}
       {onCreate && (
-        <div className='flex pl-3'>
+        <div className='flex items-center pl-3'>
           <ListItemEndcap>
             <Button variant='ghost' onClick={handleCreate}>
               <Plus className={getSize(6)} />
             </Button>
           </ListItemEndcap>
+          <span className='ml-1 text-sm'>New item</span>
         </div>
       )}
     </div>

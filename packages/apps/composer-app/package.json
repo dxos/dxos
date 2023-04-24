@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "DXOS composer application.",
   "homepage": "https://dxos.org",
@@ -12,6 +12,8 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-composer": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -20,9 +22,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
-    "@dxos/react-composer": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
@@ -38,6 +38,7 @@
     "turndown": "^7.1.1"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@octokit/openapi-types": "^16.0.0",

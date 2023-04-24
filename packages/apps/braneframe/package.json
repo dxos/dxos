@@ -1,6 +1,6 @@
 {
   "name": "@dxos/braneframe",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "Braneframe - a DXOS application",
   "homepage": "https://dxos.org",
@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -16,8 +17,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",
@@ -26,6 +26,7 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

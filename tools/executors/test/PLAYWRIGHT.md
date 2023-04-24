@@ -12,6 +12,6 @@ It also means that sometimes when making changes, the manager class can be updat
 3. Avoid arbitrary `sleep` calls (or `waitForExpect`) as much as possible.
 If these are needed it may be indicative that the test is ill-conceived.
 As an alternative, wait for something in the DOM/browser to change to indicate that correct conditions are met to continue.
-If something is not exposed in the UI of that app that is trying to be tested, this test maybe belongs elsewhere - either at a lower level unit test or a sandbox with a more arbitrary ui (e.g., [Invitations.stories.tsx](../../../packages/apps/patterns/react-ui/src/stories/Invitations.stories.tsx)).
+If something is not exposed in the UI of that app that is trying to be tested, this test maybe belongs elsewhere - either at a lower level unit test or a sandbox with a more arbitrary ui (e.g., [Invitations.stories.tsx](../../../packages/sdk/react-shell/src/stories/Invitations.stories.tsx)).
 
 > NOTE: Currently one expection to the above is dealing with focus which we've found to be quite flaky in tests and sometimes requiring `sleep` calls to improve reliability.
