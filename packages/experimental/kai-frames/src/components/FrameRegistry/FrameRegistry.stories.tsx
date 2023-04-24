@@ -10,6 +10,7 @@ import { MetagraphProvider } from '@dxos/react-metagraph';
 
 import { frameDefs } from '../../frames';
 import { FrameRegistryContextProvider, useFrameRegistry } from '../../hooks';
+import { FullscreenDecorator } from '../../testing';
 import { FrameRegistry } from './FrameRegistry';
 
 import '@dxosTheme';
@@ -52,6 +53,6 @@ const TestContainer = () => {
 };
 
 export const Default = {
-  decorators: [ClientSpaceDecorator()],
+  decorators: [FullscreenDecorator('items-center'), ClientSpaceDecorator()],
   render: () => <TestContainer />
 };

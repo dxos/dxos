@@ -38,7 +38,7 @@ const FrameTile: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col w-[180px] h-[100px] border-0 rounded px-3 py-2',
+        'flex flex-col w-[200px] h-[200px] border-0 rounded px-3 py-2',
         'cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
         active && 'border-selection-border !bg-selection-bg',
         slots.tile?.className
@@ -64,9 +64,9 @@ export const FrameRegistry: FC<{
   onSelect?: (frameId: string) => void;
 }> = ({ slots = {}, frames = [], selected = [], onSelect }) => {
   return (
-    <div className={mx('flex flex-1 overflow-hidden p-4 bg-zinc-200', slots.root?.className)}>
+    <div className={mx('flex flex-1 overflow-hidden bg-zinc-200', slots.root?.className)}>
       <ScrollContainer horizontal>
-        <div className='flex __flex-wrap gap-8'>
+        <div className='flex p-8 gap-8'>
           {frames.sort(sorter).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
             <FrameTile
               key={id!}
