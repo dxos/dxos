@@ -2,19 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  AppWindow,
-  CaretCircleDoubleDown,
-  CaretLeft,
-  Info,
-  Graph,
-  PlusCircle,
-  Robot,
-  UserPlus,
-  WifiHigh,
-  WifiSlash,
-  X
-} from '@phosphor-icons/react';
+import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
@@ -30,26 +18,26 @@ import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/
 import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-shell';
 
-import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
+import { SpaceListAction } from '../../components';
 import { FrameObjectList, FrameRegistryDialog } from '../../containers';
 import {
+  Section,
+  SearchResults,
+  bool,
   createInvitationPath,
   createPath,
   getIcon,
-  defaultFrameId,
-  Section,
-  SearchResults,
+  optionsKeys,
   useAppRouter,
   useTheme,
   useAppReducer,
-  useAppState,
-  optionsKeys,
-  bool
+  useAppState
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
+import { SpacePanel } from './SpacePanel';
 
 const Separator = () => {
   return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
@@ -141,15 +129,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
   };
 
-  const handleCreateSpace = async () => {
-    const space = await client.createSpace();
-    onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
-  };
-
-  const handleJoinSpace = () => {
-    void shell.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space!.key });
-  };
-
+  // TODO(burdon): Factor out intention handlers?
   const handleSpaceListAction = (intent: Intent<SpaceListAction>) => {
     const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
     assert(space);
@@ -162,7 +142,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
       case IntentAction.SPACE_SHARE: {
         if (intent.data.modifier) {
-          const swarmKey = PublicKey.random();
+          const swarmKey = PublicKey.random(); // TODO(burdon): Factor out.
           const observable = space.createInvitation({
             swarmKey,
             type: Invitation.Type.MULTIUSE,
@@ -304,48 +284,11 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         {/* Spaces */}
         {showSpaceList && (
-          <div className='flex flex-col w-full overflow-y-auto bg-white border-b'>
-            <div className='flex justify-center my-4'>
-              <SpaceSettings space={space} />
-            </div>
-
-            <div className='border-t border-b'>
-              <SpaceList spaces={spaces} selected={space.key} onAction={handleSpaceListAction} />
-            </div>
-
-            <div className='flex flex-col px-4 py-2'>
-              <Button
-                variant='ghost'
-                className='flex p-0 justify-start'
-                title='Create new space'
-                data-testid='sidebar.createSpace'
-                onClick={handleCreateSpace}
-              >
-                <PlusCircle className={getSize(6)} />
-                <span className='pl-2'>Create space</span>
-              </Button>
-              <Button
-                variant='ghost'
-                className='flex p-0 justify-start'
-                title='Join a space'
-                data-testid='sidebar.joinSpace'
-                onClick={handleJoinSpace}
-              >
-                <CaretCircleDoubleDown className={getSize(6)} />
-                <span className='pl-2'>Join space</span>
-              </Button>
-              <Button
-                variant='ghost'
-                className='flex p-0 justify-start'
-                title='Close settings'
-                data-testid='sidebar.closeSettings'
-                onClick={() => setShowSpaceList(false)}
-              >
-                <X className={getSize(6)} />
-                <span className='pl-2'>Close</span>
-              </Button>
-            </div>
-          </div>
+          <SpacePanel
+            onAction={handleSpaceListAction}
+            onNavigate={onNavigate}
+            onClose={() => setShowSpaceList(false)}
+          />
         )}
 
         {/* Search */}
