@@ -147,7 +147,11 @@ export class SignalClient implements SignalMethods {
     private readonly _host: string,
     private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
     private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>
-  ) {}
+  ) {
+    if (!this._host.startsWith('wss://') && !this._host.startsWith('ws://')) {
+      throw new Error(`Signal server requires a websocket URL. Provided: ${this._host}`);
+    }
+  }
 
   open() {
     log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
