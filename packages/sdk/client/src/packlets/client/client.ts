@@ -82,6 +82,14 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol !== 'https:' &&
+      !window.location.origin.includes('localhost')
+    ) {
+      console.warn(`DXOS Client will not work in non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`);
+    }
+
     this._config = config ?? new Config();
     // TODO(wittjosiah): Useful default when not in browser?
     this._services = services ?? fromIFrame(this._config);
