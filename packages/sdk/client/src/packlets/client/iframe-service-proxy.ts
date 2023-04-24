@@ -151,10 +151,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       }
     });
 
-    await this._shellController?.open();
     if (!this._shellController) {
       return;
     }
+
+    await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.
     const searchParams = new URLSearchParams(window.location.search);
