@@ -64,6 +64,8 @@ html[data-theme=light] {
 
       .description {
         max-width: 25rem;
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .actions {
@@ -223,6 +225,7 @@ html[data-theme=dark] {
   }
 }
 
+// dark and light video versions
 video.dark {
   display: none;
 }
@@ -236,10 +239,33 @@ html[data-theme=dark] {
   }
 }
 
+// showcase component
 .peer-a {
   color: $orange-500;
 }
 
 .peer-b {
   color: $violet-500;
+}
+
+// discord button
+.home.project .hero-info-wrapper {
+  html[data-theme=dark] & {
+    .action-button.discord {
+      background-color: #6A5ACD;
+      color: var(--white);
+      &:hover {
+        background-color: #7a6bdb;
+      }
+    }
+  }
+  html[data-theme=light] & {
+    .action-button.discord {
+      background-color: #7289DA;
+      color: white;
+      &:hover {
+        background-color: #8b9fe9;
+      }
+    }
+  }
 }
