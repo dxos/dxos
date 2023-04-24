@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.41](https://github.com/dxos/dxos/compare/v0.1.40...v0.1.41) (2023-04-24)
+
+
+### Features
+
+* **client-services:** logging service ([#3050](https://github.com/dxos/dxos/issues/3050)) ([57e722e](https://github.com/dxos/dxos/commit/57e722e6a5a30512a5b41ca09e78549e0e4a18d1))
+* **composer-app:** Github issues ([#3066](https://github.com/dxos/dxos/issues/3066)) ([e983c9e](https://github.com/dxos/dxos/commit/e983c9ed5f30a9a7bf02e9b14d841191d9af0d74))
+* **devtools:** logs panel ([#3071](https://github.com/dxos/dxos/issues/3071)) ([15f554f](https://github.com/dxos/dxos/commit/15f554f066a6f70b915f3e60069e9491b6261273))
+* Experimental feature options ([#3079](https://github.com/dxos/dxos/issues/3079)) ([e5703d4](https://github.com/dxos/dxos/commit/e5703d4aa239edb9f61ef296664170904ff84c3b))
+
+
+### Bug Fixes
+
+* Catch errors when loading spaces ([#3070](https://github.com/dxos/dxos/issues/3070)) ([2bb8e00](https://github.com/dxos/dxos/commit/2bb8e00140094df98265e192cccb823c79bddc95))
+* **client-services:** use ice config ([#3034](https://github.com/dxos/dxos/issues/3034)) ([ca6aafc](https://github.com/dxos/dxos/commit/ca6aafc556518d90be74a22fc2ea61fb9fc522a8))
+* **docs:** make tasks demo functional again ([#3072](https://github.com/dxos/dxos/issues/3072)) ([e7998f3](https://github.com/dxos/dxos/commit/e7998f3295d337717b22befd3e0bf1116a33f671))
+* iOS caret & theme color ([#3063](https://github.com/dxos/dxos/issues/3063)) ([4f68b68](https://github.com/dxos/dxos/commit/4f68b68e2d8dcf97c9a39140b36aac4a6bcce3c5))
+
 ## [0.1.40](https://github.com/dxos/dxos/compare/v0.1.39...v0.1.40) (2023-04-18)
 
 
