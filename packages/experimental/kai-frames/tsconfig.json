@@ -76,6 +76,9 @@
       "path": "../../ui/aurora-composer"
     },
     {
+      "path": "../../ui/aurora-theme"
+    },
+    {
       "path": "../../ui/react-appkit"
     },
     {
