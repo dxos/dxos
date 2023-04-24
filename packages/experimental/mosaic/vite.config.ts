@@ -103,11 +103,8 @@ export default defineConfig({
         injectTo: 'head-prepend',
         // prettier-ignore
         families: [
-          'Roboto',
-          'Roboto Mono',
           'DM Sans',
-          'DM Mono',
-          'Montserrat'
+          'DM Mono'
         ]
       },
 

@@ -53,7 +53,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
@@ -108,6 +107,17 @@ export default defineConfig({
         families: [
           'DM Sans',
           'DM Mono'
+        ]
+      },
+
+      custom: {
+        preload: false,
+        injectTo: 'head-prepend',
+        families: [
+          {
+            name: 'Sharp Sans',
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
+          }
         ]
       }
     }),

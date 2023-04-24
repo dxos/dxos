@@ -3,21 +3,27 @@
 //
 
 import { QRCodeSVG } from 'qrcode.react';
-import React, { useEffect } from 'react';
+import React, { FC, useEffect } from 'react';
 import urlJoin from 'url-join';
 
 import { Invitation, Space } from '@dxos/client';
 import { useSpaceInvitation } from '@dxos/react-client';
 
-export type KioskInvitationQrProps = {
-  space?: Space;
+// TODO(burdon): Factor out.
+const createInvitationUrl = (invitationCode: string) => {
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/?spaceInvitationCode=${invitationCode}`);
 };
 
-export const KioskInvitationQr = ({ space }: KioskInvitationQrProps) => {
+/**
+ * Experiment for direct invitations.
+ * @deprecated
+ */
+export const InvitationQRCode: FC<{ space?: Space }> = ({ space }) => {
   const { connect, ...params } = useSpaceInvitation(space?.key);
-
   useEffect(() => {
     if (space) {
+      // TODO(burdon): Disconnect?
       connect(
         space.createInvitation({
           type: Invitation.Type.MULTIUSE,
@@ -31,8 +37,6 @@ export const KioskInvitationQr = ({ space }: KioskInvitationQrProps) => {
     return null;
   }
 
-  console.log(createInvitationUrl(params.invitationCode));
-
   return (
     <QRCodeSVG
       value={createInvitationUrl(params.invitationCode)}
@@ -42,9 +46,4 @@ export const KioskInvitationQr = ({ space }: KioskInvitationQrProps) => {
       height={'100%'}
     />
   );
-};
-
-const createInvitationUrl = (invitationCode: string) => {
-  const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/?spaceInvitationCode=${invitationCode}`);
 };

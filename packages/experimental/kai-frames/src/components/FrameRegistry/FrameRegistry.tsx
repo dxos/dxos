@@ -5,8 +5,9 @@
 import React, { FC } from 'react';
 
 import { getSize, mx } from '@dxos/aurora';
-import { FrameDef } from '@dxos/kai-frames';
 import { ScrollContainer } from '@dxos/mosaic';
+
+import { FrameDef } from '../../registry';
 
 // Rank last if tags.
 // TODO(burdon): Create sections (e.g., Community).
@@ -55,6 +56,7 @@ const FrameTile: FC<{
   );
 };
 
+// TODO(burdon): Reconcile with kai.
 export const FrameRegistry: FC<{
   slots?: FrameRegistrySlots;
   frames?: FrameDef<any>[];
@@ -62,9 +64,9 @@ export const FrameRegistry: FC<{
   onSelect?: (frameId: string) => void;
 }> = ({ slots = {}, frames = [], selected = [], onSelect }) => {
   return (
-    <div className={mx('flex flex-col flex-1 overflow-hidden py-4', slots.root?.className)}>
-      <ScrollContainer vertical>
-        <div className='flex flex-wrap gap-3'>
+    <div className={mx('flex flex-1 overflow-hidden p-4 bg-zinc-200', slots.root?.className)}>
+      <ScrollContainer horizontal>
+        <div className='flex __flex-wrap gap-8'>
           {frames.sort(sorter).map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
             <FrameTile
               key={id!}

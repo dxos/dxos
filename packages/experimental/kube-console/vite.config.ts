@@ -60,7 +60,7 @@ export default defineConfig({
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
-        families: ['Roboto', 'Roboto Mono', 'DM Sans', 'DM Mono', 'Montserrat']
+        families: ['DM Sans', 'DM Mono']
       },
 
       custom: {
