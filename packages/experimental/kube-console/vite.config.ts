@@ -78,7 +78,7 @@ export default defineConfig({
     // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     /*
-    ...(process.env.NODE_ENV === 'production'
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
             org: 'dxos',
