@@ -23,7 +23,7 @@ export const InvitationQRCode: FC<{ space?: Space }> = ({ space }) => {
   const { connect, ...params } = useSpaceInvitation(space?.key);
   useEffect(() => {
     if (space) {
-      // TODO(burdon): Disconnect?
+      // TODO(burdon): Disconnect on exit?
       connect(
         space.createInvitation({
           type: Invitation.Type.MULTIUSE,
