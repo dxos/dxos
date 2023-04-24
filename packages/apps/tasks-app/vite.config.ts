@@ -68,7 +68,7 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
             org: 'dxos',
