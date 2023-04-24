@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
@@ -14,7 +15,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
 // NOTE: Vite requires uncompiled JS.
-import { osThemeExtension, consoleThemeExtension } from './theme-extensions';
+import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 /**
@@ -27,7 +28,16 @@ export default defineConfig({
   },
 
   build: {
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          faker: ['faker'],
+          highlighter: ['react-syntax-highlighter'],
+          vendor: ['react', 'react-dom', 'react-router-dom']
+        }
+      }
+    }
   },
 
   plugins: [
@@ -42,15 +52,48 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
-      extensions: [osThemeExtension, consoleThemeExtension]
+      extensions: [osThemeExtension, kaiThemeExtension]
     }),
 
     ReactPlugin(),
+
+    // To reset, unregister service worker using devtools.
+    VitePWA({
+      // TODO(wittjosiah): Remove.
+      selfDestroying: true,
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30000000
+      },
+      includeAssets: ['favicon.ico'],
+      manifest: {
+        name: 'DXOS Kai',
+        short_name: 'Kai',
+        description: 'DXOS Kai Demo',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'icons/icon-32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-256.png',
+            sizes: '256x256',
+            type: 'image/png'
+          }
+        ]
+      }
+    }),
 
     /**
      * Bundle fonts.
@@ -60,35 +103,36 @@ export default defineConfig({
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
-        families: ['DM Sans', 'DM Mono']
+        // prettier-ignore
+        families: [
+          'DM Sans',
+          'DM Mono'
+        ]
       },
 
       custom: {
-        preload: true,
+        preload: false,
         injectTo: 'head-prepend',
         families: [
           {
             name: 'Sharp Sans',
-            src: './node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
           }
         ]
       }
     }),
 
-    // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    /*
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
+    ...(process.env.NODE_ENV === 'production'
       ? [
           sentryVitePlugin({
             org: 'dxos',
-            project: 'console',
-            include: './out/console',
+            project: 'kai',
+            include: './out/kai',
             authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
           })
         ]
       : []),
-    */
 
     // https://www.bundle-buddy.com/rollup
     {

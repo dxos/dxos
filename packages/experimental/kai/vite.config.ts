@@ -106,22 +106,8 @@ export default defineConfig({
         injectTo: 'head-prepend',
         // prettier-ignore
         families: [
-          'Roboto',
-          'Roboto Mono',
           'DM Sans',
-          'DM Mono',
-          'Montserrat'
-        ]
-      },
-
-      custom: {
-        preload: false,
-        injectTo: 'head-prepend',
-        families: [
-          {
-            name: 'Sharp Sans',
-            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
-          }
+          'DM Mono'
         ]
       }
     }),
