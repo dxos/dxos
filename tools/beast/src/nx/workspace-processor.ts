@@ -16,6 +16,8 @@ type WorkspaceProcessorOptions = {
 
 /**
  * Process packages in workspace.
+ *
+ * @deprecated Nx deprecated the workspace.json file.
  */
 export class WorkspaceProcessor {
   private readonly _projectsByName = new Map<string, Project>();
