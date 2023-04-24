@@ -61,9 +61,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/chess-app/.storybook"
-        },
+        "configDir": "packages/experimental/chess-app/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

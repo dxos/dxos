@@ -45,9 +45,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/mosaic/.storybook"
-        },
+        "configDir": "packages/experimental/mosaic/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

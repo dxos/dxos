@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { useClient } from '../client';
 import { observer, useSpace } from '../echo';
 import { ClientDecorator } from './ClientDecorator';
-import { ClientSpaceDecorator } from './ClientSpaceDecorator';
+import { setupPeersInSpace } from './ClientSpaceDecorator';
 
 export default {
   title: 'testing/decorators'
@@ -30,31 +30,36 @@ const JsonPanel = ({ value }: { value: any }) => (
   </pre>
 );
 
-export const Client = {
-  render: () => {
-    const client = useClient();
+const ClientStory = () => {
+  const client = useClient();
 
-    return <JsonPanel value={client.toJSON()} />;
-  },
+  return <JsonPanel value={client.toJSON()} />;
+};
+
+export const WithClient = {
+  render: () => <ClientStory />,
   decorators: [ClientDecorator({ count: 2 })]
 };
 
-export const ClientSpace = {
-  render: observer(({ spaceKey }: { spaceKey: PublicKey }) => {
-    const space = useSpace(spaceKey);
+const ClientSpace = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
+  const space = useSpace(spaceKey);
 
-    if (!space) {
-      return null;
-    }
+  if (!space) {
+    return <>null</>;
+  }
 
-    return (
-      <div className='flex-1 min-w-0 p-4'>
-        <label>
-          Name{' '}
-          <input value={space.properties.name} onChange={(event) => (space.properties.name = event.target.value)} />
-        </label>
-      </div>
-    );
-  }),
-  decorators: [ClientSpaceDecorator({ count: 2 })]
+  return (
+    <div className='flex-1 min-w-0 p-4'>
+      <label>
+        Name <input value={space.properties.name} onChange={(event) => (space.properties.name = event.target.value)} />
+      </label>
+    </div>
+  );
+});
+
+const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
+
+export const WithClientSpace = {
+  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
+  decorators: [ClientDecorator({ clients })]
 };

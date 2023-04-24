@@ -30,16 +30,3 @@ index 4b7ef0f023042622abb1cb48ee8eccea17456165..a7cd25919bc23b7b53769a4f47ae9e5e
                  process.exit(exitCode);
              });
              process.on('SIGINT', () => handleTermination(128 + 2));
-diff --git a/src/utils/inline.js b/src/utils/inline.js
-index bf2f3664c1d854369b8936f7bac47570404a0e6f..82a432a47e19805814d888e40d532a97c87d8bd8 100644
---- a/src/utils/inline.js
-+++ b/src/utils/inline.js
-@@ -54,7 +54,7 @@ function postProcessInlinedDependencies(outputPath, parentOutputPath, inlineGrap
- exports.postProcessInlinedDependencies = postProcessInlinedDependencies;
- function readBasePathAliases(context) {
-     var _a;
--    const tsConfigPath = (0, path_1.join)(context.root, 'tsconfig.base.json');
-+    const tsConfigPath = (0, path_1.join)(context.root, 'tsconfig.json');
-     return ((_a = (0, devkit_1.readJsonFile)(tsConfigPath)) === null || _a === void 0 ? void 0 : _a['compilerOptions']['paths']) || {};
- }
- function emptyInlineGraph() {
