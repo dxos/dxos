@@ -48,9 +48,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/kodama/.storybook"
-        },
+        "configDir": "packages/experimental/kodama/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

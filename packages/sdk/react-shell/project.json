@@ -36,7 +36,7 @@
         "outputPath": "tmp/playwright/packages/sdk/react-shell",
         "playwrightConfigPath": "packages/sdk/react-shell/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/sdk/react-shell",
-        "serve": "react-ui:storybook",
+        "serve": "react-shell:storybook",
         "testPatterns": [
           "packages/sdk/react-shell/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -70,9 +70,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/sdk/react-shell/.storybook"
-        },
+        "configDir": "packages/sdk/react-shell/.storybook",
         "uiFramework": "@storybook/react"
       }
     }
