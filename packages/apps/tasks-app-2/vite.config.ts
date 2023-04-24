@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import react from '@vitejs/plugin-react';
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { resolve } from 'node:path';
 
 // https://vitejs.dev/config/
@@ -36,7 +36,8 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs')
       ]
     })
   ]

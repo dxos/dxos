@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
@@ -57,10 +57,11 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
@@ -105,28 +106,14 @@ export default defineConfig({
         injectTo: 'head-prepend',
         // prettier-ignore
         families: [
-          'Roboto',
-          'Roboto Mono',
           'DM Sans',
-          'DM Mono',
-          'Montserrat'
-        ]
-      },
-
-      custom: {
-        preload: false,
-        injectTo: 'head-prepend',
-        families: [
-          {
-            name: 'Sharp Sans',
-            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
-          }
+          'DM Mono'
         ]
       }
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
             org: 'dxos',

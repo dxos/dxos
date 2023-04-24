@@ -6,9 +6,8 @@ import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Config, Dynamics, Defaults } from '@dxos/config';
-import { GenericFallback, ServiceWorkerToastContainer, appkitTranslations } from '@dxos/react-appkit';
+import { GenericFallback, ServiceWorkerToastContainer, appkitTranslations, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 
 import { Welcome } from './Welcome';
 

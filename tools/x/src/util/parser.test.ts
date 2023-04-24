@@ -18,11 +18,11 @@ Done compiling TypeScript files for project "signal".
 > nx run react-appkit:build
 
 Compiling TypeScript files for project "react-appkit"...
-packages/apps/patterns/react-appkit/src/hooks/useTelemetry.ts:8:32 - error TS2307: Cannot find module '@dxos/react-async' or its corresponding type declarations.
+packages/ui/react-appkit/src/hooks/useTelemetry.ts:8:32 - error TS2307: Cannot find module '@dxos/react-async' or its corresponding type declarations.
 
 8 import { useAsyncEffect } from '@dxos/react-async';
                                  ~~~~~~~~~~~~~~~~~~~
-packages/apps/patterns/react-appkit/src/hooks/useSafeSpaceKey.ts:13:90 - error TS2307: Cannot find module './base-properties' or its corresponding type declarations.
+packages/ui/react-appkit/src/hooks/useSafeSpaceKey.ts:13:90 - error TS2307: Cannot find module './base-properties' or its corresponding type declarations.
 
 13 import { DX_ENVIRONMENT, DX_RELEASE, BASE_PROPERTIES, getIdentifier, DX_TELEMETRY } from './base-properties';
 

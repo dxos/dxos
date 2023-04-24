@@ -8,8 +8,8 @@ import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Contact, Project } from '@dxos/kai-types';
 import { tags } from '@dxos/kai-types/testing';
 import { Toolbar } from '@dxos/mosaic';
+import { Select } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
-import { Select } from '@dxos/react-components';
 
 import { ProjectCard, ContactCard } from '../../cards';
 import { useFrameContext } from '../../hooks';

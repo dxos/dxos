@@ -76,7 +76,7 @@ const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   const { level, message, meta, error } = entry;
-  if (!shouldLog(config, level, meta?.file ?? '')) {
+  if (!shouldLog(entry, config.filters)) {
     return;
   }
 

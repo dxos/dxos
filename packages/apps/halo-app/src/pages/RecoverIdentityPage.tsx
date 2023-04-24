@@ -5,9 +5,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { SingleInputStep } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/aurora';
+import { Heading, SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');

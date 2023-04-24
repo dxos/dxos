@@ -5,7 +5,7 @@
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
-import { ShellManager as NaturalShellManager } from '@dxos/react-ui/testing';
+import { ShellManager as NaturalShellManager } from '@dxos/react-shell/testing';
 
 export class ShellManager extends NaturalShellManager {
   private _invitationCode = new Trigger<string>();

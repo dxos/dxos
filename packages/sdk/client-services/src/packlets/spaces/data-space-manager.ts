@@ -86,9 +86,13 @@ export class DataSpaceManager {
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     for (const spaceMetadata of this._metadataStore.spaces) {
-      log('load space', { spaceMetadata });
-      const space = await this._constructSpace(spaceMetadata);
-      space.initializeDataPipelineAsync();
+      try {
+        log('load space', { spaceMetadata });
+        const space = await this._constructSpace(spaceMetadata);
+        space.initializeDataPipelineAsync();
+      } catch (err) {
+        log.error('Error loading space', { spaceMetadata, err });
+      }
     }
 
     this._isOpen = true;

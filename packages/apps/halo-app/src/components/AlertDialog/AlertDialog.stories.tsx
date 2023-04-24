@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
 
 import { AlertDialog } from './AlertDialog';
 

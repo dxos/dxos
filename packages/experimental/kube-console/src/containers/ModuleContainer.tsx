@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { PanelSidebarProvider } from '@dxos/react-ui';
+import { PanelSidebarProvider } from '@dxos/react-shell';
 
 import { Sidebar } from '../components';
 import { useModules } from '../hooks';

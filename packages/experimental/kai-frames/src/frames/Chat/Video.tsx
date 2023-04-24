@@ -7,11 +7,11 @@ import assert from 'assert';
 import React, { FC, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 
+import { Button, getSize, mx } from '@dxos/aurora';
 import { PublicKey, Space } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useConfig, useIdentity, useMembers } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 import { ComplexMap } from '@dxos/util';
 
 // https://www.npmjs.com/package/simple-peer#api

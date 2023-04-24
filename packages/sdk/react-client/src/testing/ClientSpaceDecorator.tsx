@@ -12,7 +12,6 @@ import { EchoSchema, Invitation, PublicKey, Space } from '@dxos/client';
 import { TestBuilder } from '@dxos/client-services/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Loading } from '@dxos/react-components';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
@@ -24,7 +23,7 @@ const services = () => testBuilder.createLocal();
 const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
   return (
     <ClientProvider
-      fallback={() => <Loading label='Loading…' />}
+      fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.name.firstName() });
@@ -92,7 +91,7 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
   return (
     <div className='flex' style={{ display: 'flex' }}>
       <ClientProvider
-        fallback={() => <Loading label='Loading…' />}
+        fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
           await client.halo.createIdentity({ displayName: faker.name.firstName() });

@@ -5,6 +5,7 @@
 export * from './config';
 export * from './context';
 export * from './log';
+export { parseFilter } from './options';
 export * from './processors';
 export * from './scope';
 

@@ -5,9 +5,9 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 
+import { Button, getSize, mx } from '@dxos/aurora';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext, useFrameRegistry } from '../../hooks';

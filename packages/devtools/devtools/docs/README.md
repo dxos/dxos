@@ -159,7 +159,7 @@ subgraph apps [apps]
   subgraph patterns [patterns]
     style patterns fill:transparent
     dxos/react-appkit("@dxos/react-appkit"):::def
-    click dxos/react-appkit "dxos/dxos/tree/main/packages/apps/patterns/react-appkit/docs"
+    click dxos/react-appkit "dxos/dxos/tree/main/packages/ui/react-appkit/docs"
   end
 end
 
@@ -264,7 +264,7 @@ dxos/telemetry --> dxos/sentry
 | [`@dxos/protocol-plugin-rpc`](../../../core/mesh/protocol-plugin-rpc/docs/README.md) |  |
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/react-appkit`](../../../apps/patterns/react-appkit/docs/README.md) | &check; |
+| [`@dxos/react-appkit`](../../../ui/react-appkit/docs/README.md) | &check; |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-client`](../../../sdk/react-client/docs/README.md) | &check; |
 | [`@dxos/react-components-deprecated`](../../../deprecated/react-components/docs/README.md) | &check; |

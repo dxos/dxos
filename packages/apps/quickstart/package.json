@@ -1,6 +1,6 @@
 {
   "name": "@dxos/quickstart",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "quickstart",
   "homepage": "https://dxos.org",
@@ -15,17 +15,18 @@
     "storybook": "start-storybook -p 9009 --no-open"
   },
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/cli": "workspace:*",
     "@storybook/addon-essentials": "7.0.0-beta.48",
     "@storybook/addon-interactions": "7.0.0-beta.48",

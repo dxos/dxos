@@ -17,10 +17,10 @@ import {
   Fallback,
   ResetDialog,
   ServiceWorkerToast,
-  useTelemetry
+  useTelemetry,
+  ThemeProvider
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 

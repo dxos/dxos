@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-console",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "KUBE Console.",
   "homepage": "https://dxos.org",
@@ -14,6 +14,7 @@
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -34,10 +35,9 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-icons": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
@@ -71,6 +71,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-theme": "workspace:*",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.4.0",
     "@swc-node/register": "1.5.4",

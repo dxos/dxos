@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { ElevationProvider, mx } from '@dxos/react-components';
+import { ElevationProvider, mx } from '@dxos/aurora';
 
 export const Toolbar: FC<{ children?: ReactNode; className?: string }> = ({ children, className }) => {
   return (

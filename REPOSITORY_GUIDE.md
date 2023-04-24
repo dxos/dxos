@@ -59,6 +59,10 @@ Examples of ways to run different test workloads:
 | `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
 | `pnpm nx e2e halo-app --inspect` | Runs tests with playwright inspector |
 
+### Playwright
+
+Playwright tests are written using these [guidelines](./tools/executors/test/PLAYWRIGHT.md).
+
 ## Adding new dependencies
 
 Currently, you must manually edit the individual `package.json` files to add packages. When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.

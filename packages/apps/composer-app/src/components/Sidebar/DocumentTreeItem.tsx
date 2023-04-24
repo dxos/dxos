@@ -6,17 +6,10 @@ import { Article, ArticleMedium, Circle } from '@phosphor-icons/react';
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { buttonStyles, getSize, mx, useTranslation } from '@dxos/aurora';
+import { ListItemEndcap, TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import {
-  buttonStyles,
-  getSize,
-  ListItemEndcap,
-  mx,
-  TreeItem,
-  TreeItemHeading,
-  useTranslation
-} from '@dxos/react-components';
-import { TextKind } from '@dxos/react-composer';
+import { TextKind } from '@dxos/aurora-composer';
 
 import { ComposerDocument } from '../../proto';
 

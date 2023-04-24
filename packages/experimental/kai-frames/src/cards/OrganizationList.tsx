@@ -5,10 +5,11 @@
 import { Buildings, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { getSize, mx } from '@dxos/aurora';
 import { Space } from '@dxos/client';
 import { Address, Organization } from '@dxos/kai-types';
+import { List, ListItem, Input, ListItemEndcap, ListItemHeading } from '@dxos/react-appkit';
 import { useQuery, observer } from '@dxos/react-client';
-import { getSize, List, ListItem, Input, ListItemEndcap, mx, ListItemHeading } from '@dxos/react-components';
 
 export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());

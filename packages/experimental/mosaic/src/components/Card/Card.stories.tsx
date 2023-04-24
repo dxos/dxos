@@ -10,7 +10,7 @@ import React from 'react';
 // storybook config (files and modules)
 // dxosTheme import
 
-import { Button, DensityProvider, getSize } from '@dxos/react-components';
+import { Button, DensityProvider, getSize } from '@dxos/aurora';
 import '@dxosTheme';
 
 import { Card } from './Card';
