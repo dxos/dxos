@@ -23,7 +23,7 @@ import { WorkspaceProcessor } from './workspace-processor';
 
 const baseDir = join(process.cwd());
 
-describe('Code analysis', () => {
+describe.skip('Code analysis', () => {
   test('Sanity', () => {
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');

@@ -51,6 +51,10 @@ const successfulInvitation = async ({
     case Invitation.Kind.SPACE:
       expect(guestInvitation!.spaceKey).to.exist;
       expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
+
+      expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey!)).to.exist;
+      expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey!)).to.exist;
+
       break;
 
     case Invitation.Kind.DEVICE:

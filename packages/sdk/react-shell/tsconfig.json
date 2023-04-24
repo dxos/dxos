@@ -45,6 +45,9 @@
       "path": "../../ui/aurora"
     },
     {
+      "path": "../../ui/aurora-theme"
+    },
+    {
       "path": "../../ui/react-appkit"
     },
     {
