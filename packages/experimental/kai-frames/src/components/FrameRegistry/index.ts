@@ -3,4 +3,3 @@
 //
 
 export * from './FrameRegistry';
-export * from './FrameRegistryDialog';

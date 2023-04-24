@@ -20,6 +20,7 @@ export const MetagraphContext: Context<MetagraphContextType | undefined> = creat
 
 export const MetagraphProvider: FC<{ children?: ReactNode; value?: MetagraphContextType }> = ({ children, value }) => {
   const config = useConfig();
+
   return (
     <MetagraphContext.Provider value={value ?? { client: new MetagraphClient(config) }}>
       {children}
