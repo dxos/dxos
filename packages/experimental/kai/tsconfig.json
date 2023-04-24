@@ -18,18 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
-      "path": "../../apps/patterns/react-composer"
-    },
-    {
-      "path": "../../apps/patterns/react-icons"
-    },
-    {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -52,9 +40,6 @@
     },
     {
       "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/react-components"
     },
     {
       "path": "../../common/sentry"
@@ -93,7 +78,25 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../sdk/vault"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-icons"
     },
     {
       "path": "../chess-app"

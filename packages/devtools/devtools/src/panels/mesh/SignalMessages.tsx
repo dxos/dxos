@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { TableColumn } from '@dxos/mosaic';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Searchbar, Select } from '@dxos/react-components';
+import { Searchbar, Select } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
 
 import { MasterTable } from '../../components';

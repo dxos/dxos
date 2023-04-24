@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { Button, defaultGroup, useTranslation, Trans, getSize, mx } from '@dxos/aurora';
 import { Client, Space } from '@dxos/client';
-import { AuthChoices } from '@dxos/react-appkit';
+import { AuthChoices, Avatar, Heading } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 // TODO(burdon): Use @dxos/react-icons.

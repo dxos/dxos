@@ -41,7 +41,7 @@ This template provides some opinions for app development:
 | `phosphor-icons` | A solid icons library |
 | `@dxos/client` | ECHO, HALO, KUBE configuration support |
 | `@dxos/react-components` | UI components for React |
-| `@dxos/react-ui` | UI flows for managing HALO identity and ECHO spaces |
+| `@dxos/react-shell` | UI flows for managing HALO identity and ECHO spaces |
 
 ## Turn features on or off
 

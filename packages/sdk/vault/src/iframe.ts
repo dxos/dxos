@@ -4,14 +4,15 @@
 
 import { StrictMode } from 'react';
 
-import { Client, ClientServicesProvider, ClientServicesProxy } from '@dxos/client';
+import { Trigger } from '@dxos/async';
+import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
 import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
+import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations, Shell } from '@dxos/react-ui';
-import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
+import { osTranslations, Shell } from '@dxos/react-shell';
+import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mobileAndTabletCheck } from './util';
 
@@ -37,7 +38,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   );
 };
 
-export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise<void> => {
+export const startIFrameRuntime = async (createWorker: () => SharedWorker): Promise<void> => {
   // Handle reset path.
   const reset = window.location.hash === '#reset';
   if (reset) {
@@ -48,52 +49,94 @@ export const startIFrameRuntime = async (getWorker: () => SharedWorker): Promise
   const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
+  const appReady = new Trigger<string>();
+  window.addEventListener('message', (event) => {
+    if (event.source !== window.parent) {
+      return;
+    }
+
+    const { channel, payload } = event.data;
+    if (channel !== DEFAULT_INTERNAL_CHANNEL) {
+      return;
+    }
+
+    if (payload === 'init') {
+      appReady.wake(event.origin);
+    }
+  });
+
   // TODO(wittjosiah): Remove mobile check once we can inspect shared workers in iOS Safari.
   if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
     console.log('Running DXOS vault in compatibility mode.');
-    const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
-      configProvider: config,
-      appPort: createIFramePort({
-        channel: 'dxos:app',
-        onOrigin: async (origin) => {
-          iframeRuntime.origin = origin;
+
+    const origin = await appReady.wait();
+    const messageChannel = new MessageChannel();
+    window.parent.postMessage(
+      {
+        channel: DEFAULT_INTERNAL_CHANNEL,
+        payload: {
+          command: 'init',
+          port: messageChannel.port1
         }
-      }),
+      },
+      origin,
+      [messageChannel.port1]
+    );
+
+    const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
+      config,
+      origin,
+      appPort: createWorkerPort({ port: messageChannel.port2 }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
 
     await iframeRuntime.start();
-    iframeRuntime.shell &&
-      iframeRuntime.origin &&
-      (await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin));
+    if (iframeRuntime.shell) {
+      await startShell(config, iframeRuntime.shell, iframeRuntime.services, iframeRuntime.origin);
+    }
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    const portMuxer = new PortMuxer(getWorker().port);
+    const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
+    createWorker().port.onmessage = (event) => {
+      const { command, payload } = event.data;
+      if (command === 'init') {
+        ports.wake(payload);
+      }
+    };
 
-    let shellClientProxy: ClientServicesProvider;
+    const { systemPort, shellPort, appPort } = await ports.wait();
+    const origin = await appReady.wait();
+    window.parent.postMessage(
+      {
+        channel: DEFAULT_INTERNAL_CHANNEL,
+        payload: {
+          command: 'init',
+          port: appPort
+        }
+      },
+      origin,
+      [appPort]
+    );
+
+    let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled) {
-      shellClientProxy = new ClientServicesProxy(portMuxer.createWorkerPort({ channel: 'dxos:shell' }));
+      shellClientProxy = new ClientServicesProxy(createWorkerPort({ port: shellPort }));
       void shellClientProxy.open();
     }
 
     const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
-      // TODO(dmaretskyi): Extract channel names to config.ts.
-      systemPort: portMuxer.createWorkerPort({ channel: 'dxos:system' }),
-      workerAppPort: portMuxer.createWorkerPort({ channel: 'dxos:app' }),
-      windowAppPort: createIFramePort({
-        channel: 'dxos:app',
-        onOrigin: async (origin) => {
-          await iframeRuntime.open(origin);
-          if (shellClientProxy && iframeRuntime.shell) {
-            await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
-          }
-        }
-      }),
+      config,
+      systemPort: createWorkerPort({ port: systemPort }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
     });
+
+    await iframeRuntime.open(origin);
+    if (shellClientProxy && iframeRuntime.shell) {
+      await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
+    }
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));

@@ -39,13 +39,13 @@ Type: "dxos:type/schema"
 ### [`TypedObject`]()
 Type: TypedObjectConstructor
 
-### [`appServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L90)
+### [`appServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L92)
 Type: ServiceBundle&lt;[AppServiceBundle](/api/@dxos/client/types/AppServiceBundle)&gt;
 
 ### [`base`]()
 Type: unique symbol
 
-### [`clientServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L54)
+### [`clientServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L56)
 Type: ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;
 
 Services supported by host.
@@ -59,7 +59,7 @@ Type: unique symbol
 ### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L15)
 Type: ConfigProto
 
-### [`iframeServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L73)
+### [`iframeServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L75)
 Type: ServiceBundle&lt;[IframeServiceBundle](/api/@dxos/client/types/IframeServiceBundle)&gt;
 
 ### [`proxy`]()
@@ -68,8 +68,8 @@ Type: unique symbol
 ### [`schema`]()
 Type: unique symbol
 
-### [`shellServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L98)
+### [`shellServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L100)
 Type: ServiceBundle&lt;[ShellServiceBundle](/api/@dxos/client/types/ShellServiceBundle)&gt;
 
-### [`workerServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L82)
+### [`workerServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L84)
 Type: ServiceBundle&lt;[WorkerServiceBundle](/api/@dxos/client/types/WorkerServiceBundle)&gt;

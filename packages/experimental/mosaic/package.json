@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mosaic",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "Card layout and navigation.",
   "homepage": "https://dxos.org",
@@ -18,8 +18,9 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
-    "@dxos/react-components": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/aurora": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@radix-ui/react-scroll-area": "^1.0.3",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.21",

@@ -5,10 +5,11 @@
 import { User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { getSize, mx } from '@dxos/aurora';
 import { Space } from '@dxos/client';
 import { Address, Contact } from '@dxos/kai-types';
+import { List, ListItem, ListItemEndcap, ListItemHeading, Input } from '@dxos/react-appkit';
 import { useQuery, observer } from '@dxos/react-client';
-import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, Input, mx } from '@dxos/react-components';
 
 export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());

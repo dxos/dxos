@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -42,21 +42,16 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_SENTRY_DESTINATION',
-        'DX_TELEMETRY_API_KEY',
-        'DX_VAULT'
-      ]
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
     ThemePlugin({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),
@@ -86,7 +81,7 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
+    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
             org: 'dxos',
@@ -122,13 +117,7 @@ export default defineConfig({
     format: 'es',
     plugins: [
       ConfigPlugin({
-        env: [
-          'DX_ENVIRONMENT',
-          'DX_IPDATA_API_KEY',
-          'DX_SENTRY_DESTINATION',
-          'DX_TELEMETRY_API_KEY',
-          'DX_VAULT'
-        ]
+        env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
       })
     ]
   }
