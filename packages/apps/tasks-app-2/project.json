@@ -39,9 +39,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/common/react-components/.storybook"
-        },
+        "configDir": "packages/common/react-components/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

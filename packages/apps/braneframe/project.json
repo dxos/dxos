@@ -79,9 +79,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/apps/braneframe/.storybook"
-        },
+        "configDir": "packages/apps/braneframe/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

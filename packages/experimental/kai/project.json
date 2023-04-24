@@ -117,9 +117,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/kai/.storybook"
-        },
+        "configDir": "packages/experimental/kai/.storybook",
         "uiFramework": "@storybook/react"
       }
     },
