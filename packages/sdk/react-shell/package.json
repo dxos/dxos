@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
