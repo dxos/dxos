@@ -3,8 +3,8 @@
 //
 
 import { LogConfig, LogLevel, LogOptions } from './config';
-import { LogContext, LogMetadata } from './context';
-import { getConfig } from './options';
+import { LogContext, LogMetadata, LogProcessor } from './context';
+import { getConfig, DEFAULT_PROCESSORS } from './options';
 
 /**
  * Logging function.
@@ -29,6 +29,7 @@ interface LogMethods {
  */
 interface Log extends LogMethods, LogFunction {
   config: (options: LogOptions) => void;
+  addProcessor: (processor: LogProcessor) => void;
   runtimeConfig: LogConfig;
 }
 
@@ -41,6 +42,15 @@ const createLog = (): LogImp => {
 
   log._config = getConfig();
   Object.defineProperty(log, 'runtimeConfig', { get: () => log._config });
+
+  log.addProcessor = (processor: LogProcessor) => {
+    if (DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
+      DEFAULT_PROCESSORS.push(processor);
+    }
+    if (log._config.processors.filter((p) => p === processor).length === 0) {
+      log._config.processors.push(processor);
+    }
+  };
 
   // Set config.
   log.config = (options: LogOptions) => {
