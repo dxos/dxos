@@ -2,9 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Recycle, X } from '@phosphor-icons/react';
 import assert from 'assert';
-import React from 'react';
+import React, { FC } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/echo-schema';
 import { FrameRuntime } from '@dxos/kai-frames';
 import { EditableObjectList } from '@dxos/mosaic';
@@ -52,12 +55,26 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
 
   const handleSelect = (objectId: string) => {
     const object = objects.find((object) => object.id === objectId);
-    onAction?.(object!, ObjectAction.SELECT);
+    if (object) {
+      onAction?.(object, ObjectAction.SELECT);
+    }
   };
 
   const Icon = frame!.runtime.Icon;
 
-  const Action = () => null;
+  const Action: FC<{ object: T }> = ({ object }) => {
+    const Icon = object.__deleted ? Recycle : X;
+
+    return (
+      <Button
+        variant='ghost'
+        title={object.__deleted ? 'Delete' : 'Restore'}
+        onClick={() => onAction?.(object, object.__deleted ? ObjectAction.RESTORE : ObjectAction.DELETE)}
+      >
+        <Icon className={getSize(4)} />
+      </Button>
+    );
+  };
 
   // TODO(burdon): Create hint if list is empty.
   return (

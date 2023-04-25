@@ -96,7 +96,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     if (observable) {
       const href = createInvitationPath(observable.get());
       const url = new URL(href, window.origin);
-      console.log(url);
+      console.log(url); // Log for test automation.
       void clipboardCopy(url.toString());
     }
   }, [observable]);
@@ -127,7 +127,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleObjectAction = (object: TypedObject, action: ObjectAction) => {
     switch (action) {
       case ObjectAction.SELECT: {
-        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
         break;
       }
       case ObjectAction.DELETE: {

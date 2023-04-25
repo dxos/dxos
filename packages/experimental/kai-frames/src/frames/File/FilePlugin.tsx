@@ -69,7 +69,7 @@ export const FilePlugin: FC<FileListProps> = ({ space, disableDownload, fileType
   };
 
   const DownloadAction = ({ object }: { object: File }) => (
-    <Button onClick={() => handleDownload(object)}>
+    <Button variant='ghost' onClick={() => handleDownload(object)}>
       <DownloadSimple className={getSize(6)} />
     </Button>
   );
