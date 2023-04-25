@@ -8,16 +8,32 @@ import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 import { EchoObject } from './object';
 import { isTypedObject, TypedObject } from './typed-object';
 
-// TODO(burdon): Composite filter (e.g., with options).
-// [Type.filter(), { title: 'foo' }, SHOW_DELETED];
-
 // TODO(burdon): Test suite.
-// TODO(burdon): Sort option.
 // TODO(burdon): Reconcile with echo-db/database/selection.
+
+// TODO(burdon): Multi-sort option.
+export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
+
+// TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
+
 export type OperatorFilter<T extends TypedObject> = (object: T) => boolean;
 
 export type Filter<T extends TypedObject> = PropertyFilter | OperatorFilter<T>;
+
+export const filterDeleted = (option: ShowDeletedOption) => (object: TypedObject) => {
+  if (object.__deleted) {
+    if (option === undefined || option === ShowDeletedOption.HIDE_DELETED) {
+      return false;
+    }
+  } else {
+    if (option === ShowDeletedOption.SHOW_DELETED_ONLY) {
+      return false;
+    }
+  }
+
+  return true;
+};
 
 // NOTE: `__phantom` property forces TS type check.
 export type TypeFilter<T extends TypedObject> = { __phantom: T } & Filter<T>;
@@ -80,15 +96,15 @@ const match = (object: EchoObject, filter: Filter<any>, options: QueryOptions = 
   }
 
   // TODO(burdon): Convert to filter.
-  if (object.__deleted) {
-    if (options?.deleted === undefined || options?.deleted === ShowDeletedOption.HIDE_DELETED) {
-      return false;
-    }
-  } else {
-    if (options?.deleted === ShowDeletedOption.SHOW_DELETED_ONLY) {
-      return false;
-    }
-  }
+  // if (object.__deleted) {
+  //   if (options?.deleted === undefined || options?.deleted === ShowDeletedOption.HIDE_DELETED) {
+  //     return false;
+  //   }
+  // } else {
+  //   if (options?.deleted === ShowDeletedOption.SHOW_DELETED_ONLY) {
+  //     return false;
+  //   }
+  // }
 
   if (typeof filter === 'function') {
     return filter(object);
