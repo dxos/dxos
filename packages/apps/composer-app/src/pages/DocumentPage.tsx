@@ -31,7 +31,7 @@ import TurndownService from 'turndown';
 
 import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useFileDownload, DropdownMenu, Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
@@ -101,7 +101,7 @@ const DocumentPageContent = observer(
           />
           {children}
         </div>
-        <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
           <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
             <DropdownMenu
               trigger={

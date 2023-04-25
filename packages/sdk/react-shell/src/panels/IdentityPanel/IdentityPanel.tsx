@@ -4,6 +4,7 @@
 import React from 'react';
 
 import { Button, DensityProvider, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 import type { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
@@ -25,7 +26,7 @@ export const IdentityPanel = ({
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
       <DensityProvider density='fine'>
         <div className='flex flex-col gap-2 justify-center items-center'>
           <Avatar

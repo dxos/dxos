@@ -15,7 +15,7 @@ import {
   useThemeContext,
   useTranslation
 } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { PanelSidebarContext, useShell } from '@dxos/react-shell';
@@ -75,7 +75,7 @@ const SidebarContent = () => {
   };
 
   return (
-    <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
           <Dialog
@@ -193,7 +193,7 @@ const SidebarToggle = () => {
     </Button>
   );
   return (
-    <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
       <div
         role='none'
         className={mx(
