@@ -39,7 +39,6 @@ export class WebsocketSignalManager implements SignalManager {
   }>();
 
   private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   // prettier-ignore
   constructor(
@@ -48,7 +47,6 @@ export class WebsocketSignalManager implements SignalManager {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       const server = new SignalClient(host.server, async (message) => this.onMessage.emit(message), async (data) => this.swarmEvent.emit(data));
-      server._traceParent = this._instanceId;
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host.server, server);
@@ -62,13 +60,14 @@ export class WebsocketSignalManager implements SignalManager {
       return;
     }
     log('open signal manager', { hosts: this._hosts });
-    log.trace('dxos.mesh.websocket-signal-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
     this._initContext();
 
     [...this._servers.values()].forEach((server) => server.open());
 
     this._opened = true;
+    log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -80,7 +79,6 @@ export class WebsocketSignalManager implements SignalManager {
     await this._ctx.dispose();
 
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
-    log.trace('dxos.mesh.websocket-signal-manager', trace.end({ id: this._instanceId }));
   }
 
   getStatus(): SignalStatus[] {
