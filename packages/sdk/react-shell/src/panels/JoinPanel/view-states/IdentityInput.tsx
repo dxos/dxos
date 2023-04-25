@@ -5,7 +5,8 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';

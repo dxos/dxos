@@ -5,7 +5,8 @@
 import * as ToastPrimitive from '@radix-ui/react-toast';
 import React, { cloneElement, ComponentProps, ReactHTMLElement, ReactNode, useState } from 'react';
 
-import { defaultDescription, defaultFocus, mx, Button, ElevationProvider } from '@dxos/aurora';
+import { Button, ElevationProvider } from '@dxos/aurora';
+import { defaultDescription, defaultFocus, mx } from '@dxos/aurora-theme';
 
 export interface ToastSlots {
   root?: Omit<ComponentProps<typeof ToastPrimitive.Root>, 'children'>;

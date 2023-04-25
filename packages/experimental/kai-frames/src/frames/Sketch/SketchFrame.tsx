@@ -8,7 +8,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { File, Sketch } from '@dxos/kai-types';
 import { observer, SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
 

@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",

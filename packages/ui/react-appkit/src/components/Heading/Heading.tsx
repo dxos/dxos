@@ -4,7 +4,7 @@
 
 import React, { createElement, PropsWithChildren, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export interface HeadingProps extends React.ComponentProps<'h1'> {
   level?: 1 | 2 | 3 | 4 | 5 | 6;

@@ -4,7 +4,7 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Radix.
 //  https://www.radix-ui.com/docs/primitives/components/toolbar

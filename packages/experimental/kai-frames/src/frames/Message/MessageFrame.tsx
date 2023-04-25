@@ -5,7 +5,8 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
 

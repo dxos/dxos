@@ -33,6 +33,7 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "chess.js": "1.0.0-alpha.0",
@@ -43,7 +44,6 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
-    "@dxos/aurora": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@types/chess.js": "^0.13.4",
     "@types/react": "^18.0.21",

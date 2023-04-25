@@ -5,7 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, useTranslation, getSize } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable } from '@dxos/client';
 import { Heading, DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';

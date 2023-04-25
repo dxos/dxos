@@ -7,7 +7,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { FC, useEffect, useRef } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { StackFooter, DraggableStackRow } from './StackSection';
 import { StackSectionContext } from './context';

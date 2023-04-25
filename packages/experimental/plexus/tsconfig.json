@@ -24,7 +24,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../gem-core"

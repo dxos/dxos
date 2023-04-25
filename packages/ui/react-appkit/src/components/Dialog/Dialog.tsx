@@ -8,7 +8,8 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
-import { defaultDescription, defaultFocus, hover, getSize, mx, ElevationProvider } from '@dxos/aurora';
+import { ElevationProvider } from '@dxos/aurora';
+import { defaultDescription, defaultFocus, hover, getSize, mx } from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 import { defaultOverlay } from './dialogStyles';

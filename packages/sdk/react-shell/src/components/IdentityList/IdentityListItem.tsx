@@ -3,7 +3,8 @@
 //
 import React from 'react';
 
-import { mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { Identity, SpaceMember } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 

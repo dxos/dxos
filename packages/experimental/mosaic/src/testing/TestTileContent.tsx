@@ -5,7 +5,7 @@
 import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 

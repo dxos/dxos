@@ -22,18 +22,8 @@ import React, {
   ReactNode
 } from 'react';
 
-import {
-  useDensityContext,
-  useId,
-  useThemeContext,
-  coarseBlockSize,
-  fineBlockSize,
-  getSize,
-  themeVariantFocus,
-  Density,
-  DensityProvider,
-  mx
-} from '@dxos/aurora';
+import { useDensityContext, useId, useThemeContext, Density, DensityProvider } from '@dxos/aurora';
+import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus, mx } from '@dxos/aurora-theme';
 
 import { Checkbox, CheckboxProps } from '../Checkbox';
 import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';

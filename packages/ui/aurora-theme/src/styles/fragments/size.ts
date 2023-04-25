@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Size } from '../props';
-import { mx } from '../util';
+import { Size } from '@dxos/aurora-types';
+
+import { mx } from '../../util';
 
 export const sizeWidthMap = new Map<Size, string>([
   [0, 'w-0'],

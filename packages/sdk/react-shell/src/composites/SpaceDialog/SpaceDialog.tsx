@@ -6,6 +6,7 @@ import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
 import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 
 import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { SpacePanel, SpacePanelProps } from '../../panels';
@@ -25,7 +26,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
         titleId
       }}
     >
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
         <SpacePanel
           {...{
             ...spacePanelProps,

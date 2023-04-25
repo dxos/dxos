@@ -4,7 +4,8 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
-import { useId, useThemeContext, defaultDescription, valenceColorText, mx } from '@dxos/aurora';
+import { useId, useThemeContext } from '@dxos/aurora';
+import { defaultDescription, valenceColorText, mx } from '@dxos/aurora-theme';
 
 import { BarePinInput } from './BarePinInput';
 import { BareTextInput } from './BareTextInput';

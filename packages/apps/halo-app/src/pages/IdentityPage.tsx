@@ -5,7 +5,8 @@
 import { Activity, Eraser } from '@phosphor-icons/react';
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { useTranslation, Button, getSize, defaultGroup } from '@dxos/aurora';
+import { useTranslation, Button } from '@dxos/aurora';
+import { getSize, defaultGroup } from '@dxos/aurora-theme';
 import { Input, Avatar } from '@dxos/react-appkit';
 import {
   BASE_TELEMETRY_PROPERTIES,

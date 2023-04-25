@@ -4,7 +4,8 @@
 
 import React, { ComponentProps } from 'react';
 
-import { useId, mx } from '@dxos/aurora';
+import { useId } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 

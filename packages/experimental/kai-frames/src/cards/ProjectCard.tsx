@@ -5,7 +5,7 @@
 import { Archive, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
 import { List, ListItem, ListItemEndcap, ListItemHeading, Input } from '@dxos/react-appkit';

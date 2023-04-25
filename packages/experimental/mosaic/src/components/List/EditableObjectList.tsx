@@ -5,7 +5,8 @@
 import { Circle, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, Button, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { List, ListItem, Input, ListItemEndcap } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.

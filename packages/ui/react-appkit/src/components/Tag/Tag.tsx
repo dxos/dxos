@@ -4,7 +4,8 @@
 
 import React, { ComponentProps, PropsWithChildren, ReactNode } from 'react';
 
-import { MessageValence, mx } from '@dxos/aurora';
+import { MessageValence } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export interface TagProps extends ComponentProps<'span'> {
   valence?: MessageValence;

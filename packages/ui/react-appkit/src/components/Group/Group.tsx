@@ -4,7 +4,8 @@
 
 import React, { ReactNode } from 'react';
 
-import { useId, Elevation, defaultGroup, mx, ElevationProvider } from '@dxos/aurora';
+import { useId, Elevation, ElevationProvider } from '@dxos/aurora';
+import { defaultGroup, mx } from '@dxos/aurora-theme';
 
 import { Heading, HeadingProps } from '../Heading';
 

@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { Input, InputProps } from '../Input';
 

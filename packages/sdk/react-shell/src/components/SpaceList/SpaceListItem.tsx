@@ -4,7 +4,7 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import type { Space } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
