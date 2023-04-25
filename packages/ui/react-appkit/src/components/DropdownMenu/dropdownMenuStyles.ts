@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { themeVariantSubduedFocus, ThemeContextValue, mx } from '@dxos/aurora';
+import { ThemeContextValue } from '@dxos/aurora';
+import { themeVariantSubduedFocus, mx } from '@dxos/aurora-theme';
 
 export const defaultDropdownMenuItem = (themeVariant: ThemeContextValue['themeVariant']) => {
   return mx(

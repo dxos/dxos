@@ -5,15 +5,15 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
+import { useButtonShadow } from '@dxos/aurora';
 import {
   defaultFocus,
   hover,
   defaultInlineSeparator,
-  useButtonShadow,
   mx,
   defaultAppButtonColors,
   primaryAppButtonColors
-} from '@dxos/aurora';
+} from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 

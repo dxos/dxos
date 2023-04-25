@@ -15,12 +15,22 @@ export const osTheme: Theme = {
   button: buttonOsStyles
 };
 
-export const tx = <P extends Record<string, any>>(path: string, defaultClassName: string, styleProps: P): string => {
+export const tx = <P extends Record<string, any>>(
+  path: string,
+  defaultClassName: string,
+  styleProps: P,
+  ...options: any[]
+): string => {
   const result: Theme | ComponentFunction<P> = get(theme, path);
-  return typeof result === 'function' ? result(styleProps) : defaultClassName;
+  return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };
 
-export const osTx = <P extends Record<string, any>>(path: string, defaultClassName: string, styleProps: P): string => {
+export const osTx = <P extends Record<string, any>>(
+  path: string,
+  defaultClassName: string,
+  styleProps: P,
+  ...options: any[]
+): string => {
   const result: Theme | ComponentFunction<P> = get(osTheme, path);
-  return typeof result === 'function' ? result(styleProps) : defaultClassName;
+  return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };

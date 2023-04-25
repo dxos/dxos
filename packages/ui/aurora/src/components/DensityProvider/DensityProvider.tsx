@@ -4,7 +4,7 @@
 
 import React, { createContext, PropsWithChildren } from 'react';
 
-import { Density } from '@dxos/aurora-theme';
+import { Density } from '@dxos/aurora-types';
 
 export interface DensityContextValue {
   density?: Density;

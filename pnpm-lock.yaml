@@ -2516,7 +2516,7 @@ importers:
 
   packages/experimental/chess-app:
     specifiers:
-      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -2532,6 +2532,7 @@ importers:
       typescript: ^4.8.4
       vite: ^4.2.0
     dependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       chess.js: 1.0.0-alpha.0
@@ -2541,7 +2542,6 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/aurora': link:../../ui/aurora
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/chess.js': 0.13.4
       '@types/react': 18.0.21
@@ -3538,7 +3538,7 @@ importers:
   packages/experimental/plexus:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
       '@dxos/node-std': workspace:*
@@ -3571,6 +3571,7 @@ importers:
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/node-std': link:../../common/node-std
@@ -3584,7 +3585,6 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
-      '@dxos/aurora': link:../../ui/aurora
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/d3': 7.4.0
@@ -4212,6 +4212,7 @@ importers:
       '@codemirror/theme-one-dark': ^6.1.1
       '@codemirror/view': ^6.9.2
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -4263,6 +4264,7 @@ importers:
       '@codemirror/theme-one-dark': 6.1.1
       '@codemirror/view': 6.9.2
       '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
       '@dxos/react-async': link:../../common/react-async
@@ -4465,7 +4467,7 @@ importers:
 
   packages/ui/react-icons:
     specifiers:
-      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@storybook/addons': 7.0.0-beta.48
       '@storybook/api': 7.0.0-beta.48
@@ -4475,7 +4477,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
     devDependencies:
-      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@storybook/addons': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/api': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y

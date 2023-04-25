@@ -4,7 +4,8 @@
 
 import React, { useCallback, KeyboardEvent, useMemo, ChangeEvent } from 'react';
 
-import { Button, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { GroupProps } from '../Group';
 import { Input, InputProps } from '../Input';

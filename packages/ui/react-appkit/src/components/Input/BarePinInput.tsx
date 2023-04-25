@@ -5,7 +5,8 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused, staticInput, mx } from '@dxos/aurora';
+import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused } from '@dxos/aurora';
+import { staticInput, mx } from '@dxos/aurora-theme';
 
 import { InputProps } from './InputProps';
 

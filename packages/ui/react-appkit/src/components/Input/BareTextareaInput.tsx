@@ -4,7 +4,8 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useThemeContext, defaultInput, subduedInput, mx } from '@dxos/aurora';
+import { useButtonShadow, useDensityContext, useThemeContext } from '@dxos/aurora';
+import { defaultInput, subduedInput, mx } from '@dxos/aurora-theme';
 
 import { TextareaProps } from './InputProps';
 

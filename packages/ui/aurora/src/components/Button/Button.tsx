@@ -16,12 +16,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         {...rootSlot}
-        className={tx('button', 'aurora__button', {
-          variant,
-          disabled: rootSlot.disabled,
-          density: propsDensity ?? density,
-          elevation: propsElevation ?? elevation
-        })}
+        className={tx(
+          'button',
+          'aurora__button',
+          {
+            variant,
+            disabled: rootSlot.disabled,
+            density: propsDensity ?? density,
+            elevation: propsElevation ?? elevation
+          },
+          rootSlot.className
+        )}
         {...(rootSlot.disabled && { disabled: true })}
       >
         {children}

@@ -3,4 +3,5 @@
 //
 
 export * from './fragments';
+export * from './components';
 export * from './theme';

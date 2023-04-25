@@ -13,7 +13,8 @@ import type {
 } from '@radix-ui/react-tooltip';
 import React, { ComponentProps, ReactNode, useState, forwardRef } from 'react';
 
-import { defaultTooltip, mx, useId } from '@dxos/aurora';
+import { useId } from '@dxos/aurora';
+import { defaultTooltip, mx } from '@dxos/aurora-theme';
 
 type TooltipRootProps = RadixTooltipProps;
 

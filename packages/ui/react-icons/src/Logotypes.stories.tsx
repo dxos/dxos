@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 

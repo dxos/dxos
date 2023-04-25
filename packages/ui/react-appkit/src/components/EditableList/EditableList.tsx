@@ -6,16 +6,8 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
-import {
-  mx,
-  Button,
-  getSize,
-  useTranslation,
-  defaultDescription,
-  ButtonProps,
-  Density,
-  DensityProvider
-} from '@dxos/aurora';
+import { Button, useTranslation, ButtonProps, Density, DensityProvider } from '@dxos/aurora';
+import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
 import { Input, InputProps } from '../Input';
 import {
