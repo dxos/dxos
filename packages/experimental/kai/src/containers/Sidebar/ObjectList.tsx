@@ -57,13 +57,15 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
 
   const Icon = frame!.runtime.Icon;
 
+  const Action = () => null;
+
   // TODO(burdon): Create hint if list is empty.
   return (
     <EditableObjectList<T>
       objects={objects}
       selected={objectId}
       Icon={Icon}
-      // action={action}
+      Action={Action}
       getTitle={(object) => (frameDef.title ? object[frameDef.title] : undefined)}
       onSelect={handleSelect}
       onCreate={frameDef.onCreate ? handleCreate : undefined}
