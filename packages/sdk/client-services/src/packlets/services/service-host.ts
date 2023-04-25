@@ -66,8 +66,6 @@ export class ClientServicesHost {
   private _opening = false;
   private _open = false;
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   constructor({
     config,
     modelFactory = createDefaultModelFactory(),
@@ -165,8 +163,8 @@ export class ClientServicesHost {
     if (this._open) {
       return;
     }
-
-    log.trace('dxos.sdk.client-services-host', trace.begin({ id: this._instanceId }));
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
 
     assert(this._config, 'config not set');
     assert(this._storage, 'storage not set');
@@ -224,6 +222,7 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
+    log.trace('dxos.sdk.client-services-host.open', trace.end({ id: traceId }));
   }
 
   async close() {
@@ -239,14 +238,16 @@ export class ClientServicesHost {
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
-
-    log.trace('dxos.sdk.client-services-host', trace.end({ id: this._instanceId }));
   }
 
   async reset() {
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
+
     log('resetting...');
     await this._serviceContext?.close();
     await this._storage!.reset();
     log('reset');
+    log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
   }
 }

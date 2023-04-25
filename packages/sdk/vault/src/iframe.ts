@@ -6,7 +6,7 @@ import { StrictMode } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
-import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
+import { ClientServicesHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
@@ -150,13 +150,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 const forceClientReset = async () => {
   const config = new Config(Defaults());
 
-  // TODO(wittjosiah): This doesn't work with WebFS adapter because files aren't loaded yet.
-  // const services = new ClientServicesHost({ config });
-  // await services.reset();
-
-  const client = new Client({ config, services: fromHost(config) });
-  await client.initialize();
-  await client.reset();
+  const services = new ClientServicesHost({ config });
+  await services.reset();
 
   // TODO(wittjosiah): Make this look nicer.
   const message = document.createElement('div');

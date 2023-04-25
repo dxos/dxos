@@ -42,7 +42,7 @@ export const trace: Trace = {
       span: {
         command: 'end',
         id,
-        status,
+        status: status ?? 'ok',
         data
       }
     };

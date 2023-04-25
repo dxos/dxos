@@ -60,7 +60,6 @@ export class DataSpaceManager {
 
   private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -81,7 +80,7 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     log('open');
-    log.trace('dxos.echo.data-space-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.echo.data-space-manager.open', trace.begin({ id: this._instanceId }));
     await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
@@ -97,6 +96,7 @@ export class DataSpaceManager {
 
     this._isOpen = true;
     this.updated.emit();
+    log.trace('dxos.echo.data-space-manager.open', trace.end({ id: this._instanceId }));
   }
 
   @synchronized
@@ -107,7 +107,6 @@ export class DataSpaceManager {
     for (const space of this._spaces.values()) {
       await space.close();
     }
-    log.trace('dxos.echo.data-space-manager', trace.end({ id: this._instanceId }));
   }
 
   /**
