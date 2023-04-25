@@ -60,7 +60,7 @@ export const SpacePanel = ({ onAction, onNavigate, onClose }: SpacePanelProps) =
         {/* TODO(burdon): Not aligned with buttons. Checkbox not part of Aurora? */}
         <div className='flex px-0.5 py-1 items-center'>
           <Checkbox
-            labelId={'sidebar.showDeleted'}
+            labelId='sidebar.showDeleted'
             checked={showDeletedObjects}
             onCheckedChange={setShowDeletedObjects}
           />
