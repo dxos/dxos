@@ -94,7 +94,7 @@ export class ServiceContext {
       this.keyring,
       this.feedStore,
       this.spaceManager
-    );s
+    );
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
