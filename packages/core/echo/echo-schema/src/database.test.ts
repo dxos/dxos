@@ -18,7 +18,7 @@ import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
 describe('EchoDatabase', () => {
-  test.only('adding and querying objects', async () => {
+  test('adding and querying objects', async () => {
     const db = await createDatabase();
 
     const n = 10;
@@ -32,7 +32,7 @@ describe('EchoDatabase', () => {
     expect(objects).toHaveLength(n);
   });
 
-  test.only('removing and querying objects', async () => {
+  test('removing and querying objects', async () => {
     const db = await createDatabase();
 
     const n = 10;
@@ -41,6 +41,7 @@ describe('EchoDatabase', () => {
       db.add(obj);
     }
     await db.flush();
+
     const { objects } = db.query();
     expect(objects).toHaveLength(n);
 
@@ -56,8 +57,13 @@ describe('EchoDatabase', () => {
     }
 
     {
-      const { objects } = db.query(() => true, { deleted: ShowDeletedOption.SHOW_DELETED });
+      const { objects } = db.query([], { deleted: ShowDeletedOption.SHOW_DELETED });
       expect(objects).toHaveLength(n);
+    }
+
+    {
+      const { objects } = db.query([], { deleted: ShowDeletedOption.SHOW_DELETED_ONLY });
+      expect(objects).toHaveLength(r);
     }
   });
 
