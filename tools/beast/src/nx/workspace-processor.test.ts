@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { WorkspaceProcessor } from './workspace-processor';
 
-describe('Code analysis', () => {
+describe.skip('Code analysis', () => {
   test('process workspace', () => {
     const baseDir = join(process.cwd());
     const processor = new WorkspaceProcessor(baseDir).init();

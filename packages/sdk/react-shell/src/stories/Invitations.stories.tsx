@@ -97,7 +97,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   }
 };
 
-const render = ({ id }: { id: number }) => {
+const Invitations = ({ id }: { id: number }) => {
   const client = useClient();
   const networkStatus = useNetworkStatus().state;
   const identity = useIdentity();
@@ -184,6 +184,6 @@ const render = ({ id }: { id: number }) => {
 };
 
 export const Default = {
-  render,
+  render: (args: { id: number }) => <Invitations {...args} />,
   decorators: [ClientDecorator({ count: 3 })]
 };
