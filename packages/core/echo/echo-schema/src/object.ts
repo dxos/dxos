@@ -113,7 +113,6 @@ export abstract class EchoObject<T extends Model = any> {
     // TODO(dmaretskyi): Snapshot and unbind local state machine.
     this._stateMachine = undefined;
     this._item = item;
-
     this._afterBind();
   }
 

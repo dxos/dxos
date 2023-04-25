@@ -4,7 +4,7 @@
 
 import { ItemID } from '@dxos/protocols';
 
-import { Item } from '../item';
+import { Item } from './item';
 
 export type OneOrMultiple<T> = T | T[];
 
