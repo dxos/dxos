@@ -19,12 +19,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../aurora-theme"
-    },
-    {
-      "path": "../aurora-types"
-    }
-  ]
+  "references": []
 }

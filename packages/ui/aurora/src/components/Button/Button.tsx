@@ -4,26 +4,24 @@
 
 import React, { forwardRef } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
-
-import { useButtonShadow, useDensityContext, useThemeContext } from '../../hooks';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { ButtonProps } from './ButtonProps';
-import { buttonStyles } from './buttonStyles';
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, density: propsDensity, elevation, variant = 'default', ...rootSlot }, ref) => {
-    const { themeVariant } = useThemeContext();
-    const shadow = useButtonShadow();
-    const density = useDensityContext(propsDensity);
+  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', ...rootSlot }, ref) => {
+    const { tx } = useThemeContext();
+    const elevation = useElevationContext();
+    const density = useDensityContext();
     return (
       <button
         ref={ref}
         {...rootSlot}
-        className={mx(
-          buttonStyles({ density, variant, disabled: rootSlot.disabled }, themeVariant),
-          !rootSlot.disabled && (variant === 'default' || variant === 'primary') && shadow,
-          rootSlot.className
-        )}
+        className={tx('button', 'aurora__button', {
+          variant,
+          disabled: rootSlot.disabled,
+          density: propsDensity ?? density,
+          elevation: propsElevation ?? elevation
+        })}
         {...(rootSlot.disabled && { disabled: true })}
       >
         {children}

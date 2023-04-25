@@ -7,6 +7,7 @@
     "aurora": "packages/ui/aurora",
     "aurora-composer": "packages/ui/aurora-composer",
     "aurora-theme": "packages/ui/aurora-theme",
+    "aurora-types": "packages/ui/aurora-types",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
     "bot-lab": "packages/experimental/bot-lab",

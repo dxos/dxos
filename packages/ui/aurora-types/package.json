@@ -1,0 +1,17 @@
+{
+  "name": "@dxos/aurora-types",
+  "version": "0.1.41",
+  "description": "Types for DXOS Aurora and its themes.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

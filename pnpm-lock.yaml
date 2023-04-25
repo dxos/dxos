@@ -4175,6 +4175,7 @@ importers:
   packages/ui/aurora:
     specifiers:
       '@dxos/aurora-theme': workspace:*
+      '@dxos/aurora-types': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -4185,11 +4186,12 @@ importers:
       react-i18next: ^11.18.6
       vite: ^4.2.0
     dependencies:
-      '@dxos/aurora-theme': link:../aurora-theme
       alea: 1.0.1
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/aurora-types': link:../aurora-types
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -4304,14 +4306,17 @@ importers:
 
   packages/ui/aurora-theme:
     specifiers:
+      '@dxos/aurora-types': workspace:*
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
       '@tailwindcss/forms': ^0.5.3
+      '@types/lodash.get': ^4.4.7
       '@types/lodash.merge': ^4.6.6
       autoprefixer: ^10.4.12
       esbuild: ^0.16.14
       esbuild-style-plugin: ^1.6.1
+      lodash.get: ^4.4.2
       lodash.merge: ^4.6.2
       postcss: ^8.4.21
       tailwind-merge: ^1.10.0
@@ -4325,6 +4330,7 @@ importers:
       '@fontsource/space-grotesk': 4.5.10
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.7
       autoprefixer: 10.4.13_postcss@8.4.21
+      lodash.get: 4.4.2
       lodash.merge: 4.6.2
       postcss: 8.4.21
       tailwind-merge: 1.10.0
@@ -4332,10 +4338,15 @@ importers:
       tailwindcss-logical: 3.0.0_gbtt6ss3tbiz4yjtvdr6fbrj44
       tailwindcss-radix: 2.8.0
     devDependencies:
+      '@dxos/aurora-types': link:../aurora-types
+      '@types/lodash.get': 4.4.7
       '@types/lodash.merge': 4.6.7
       esbuild: 0.16.17
       esbuild-style-plugin: 1.6.1
       vite: 4.2.0
+
+  packages/ui/aurora-types:
+    specifiers: {}
 
   packages/ui/react-appkit:
     specifiers:
@@ -23593,7 +23604,7 @@ packages:
     resolution: {integrity: sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==}
     engines: {node: '>= 4.0'}
     os: [darwin]
-    deprecated: fsevents 1 will break on node v14+ and could be using insecure binaries. Upgrade to fsevents 2.
+    deprecated: The v1 package contains DANGEROUS / INSECURE binaries. Upgrade to safe fsevents v2
     requiresBuild: true
     dependencies:
       bindings: 1.5.0
