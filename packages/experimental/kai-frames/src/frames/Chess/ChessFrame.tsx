@@ -7,7 +7,8 @@ import assert from 'assert';
 import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { useQuery, observer } from '@dxos/react-client';
 

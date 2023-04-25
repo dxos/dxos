@@ -4,7 +4,8 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { useId, useButtonShadow, MessageValence, alertValence, mx } from '@dxos/aurora';
+import { useId, useButtonShadow, MessageValence } from '@dxos/aurora';
+import { alertValence, mx } from '@dxos/aurora-theme';
 
 export interface AlertSlots {
   root?: Omit<ComponentProps<'div'>, 'children'>;

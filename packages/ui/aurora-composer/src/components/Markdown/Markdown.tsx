@@ -31,7 +31,8 @@ import {
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
-import { useThemeContext, configPalettes } from '@dxos/aurora';
+import { useThemeContext } from '@dxos/aurora';
+import { configPalettes } from '@dxos/aurora-theme';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 

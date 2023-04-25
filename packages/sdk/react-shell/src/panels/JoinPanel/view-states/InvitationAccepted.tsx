@@ -5,7 +5,8 @@
 import { CaretLeft, Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 

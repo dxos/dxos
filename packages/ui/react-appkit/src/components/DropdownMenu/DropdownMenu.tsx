@@ -9,7 +9,8 @@ import {
 } from '@radix-ui/react-dropdown-menu';
 import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
 
-import { useThemeContext, dataDisabled, mx } from '@dxos/aurora';
+import { useThemeContext } from '@dxos/aurora';
+import { dataDisabled, mx } from '@dxos/aurora-theme';
 
 import { defaultDropdownMenuItem } from './dropdownMenuStyles';
 

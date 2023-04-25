@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Elevation } from '../props';
-import { mx } from '../util';
+import { Elevation } from '@dxos/aurora-types';
+
+import { mx } from '../../util';
 
 const elevationClassNameMap = new Map<Elevation, string>([
   ['base', 'shadow-none'],

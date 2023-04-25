@@ -5,7 +5,8 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, getSize, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { ConfigProto } from '@dxos/config';
 import { TableColumn, Table } from '@dxos/mosaic';
 import { CompactQrCode } from '@dxos/react-appkit';

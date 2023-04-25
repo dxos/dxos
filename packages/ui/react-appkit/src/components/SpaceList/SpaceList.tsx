@@ -5,7 +5,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { defaultGroup, hover, defaultFocus, useTranslation, defaultDisabled, mx } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { defaultGroup, hover, defaultFocus, defaultDisabled, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { humanize } from '@dxos/util';
 

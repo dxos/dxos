@@ -5,7 +5,7 @@
 import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 

@@ -7,7 +7,7 @@ import * as d3 from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { useSvgContext } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphRenderer, GraphRendererOptions } from '@dxos/gem-spore';
 

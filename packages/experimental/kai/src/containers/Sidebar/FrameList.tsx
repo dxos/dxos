@@ -5,7 +5,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { useFrameRegistry } from '@dxos/kai-frames';
 import { List, ListItem, ListItemEndcap } from '@dxos/react-appkit';
 

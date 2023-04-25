@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
 import { Address } from '@dxos/kai-types';

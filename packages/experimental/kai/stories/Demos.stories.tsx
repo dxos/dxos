@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React, { ComponentProps, FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { range, MinMax } from '@dxos/kai-types';
 
 import '@dxosTheme';

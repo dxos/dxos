@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 

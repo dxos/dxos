@@ -4,7 +4,7 @@
 
 import React, { ComponentProps } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export const PanelSeparator = ({ className, ...props }: ComponentProps<'span'>) => {
   return (

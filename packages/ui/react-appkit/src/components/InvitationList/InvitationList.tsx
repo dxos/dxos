@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { defaultDisabled, useTranslation, mx } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { defaultDisabled, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable } from '@dxos/client';
 
 import { Group } from '../Group';

@@ -7,7 +7,8 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup, getSize } from '@dxos/aurora';
+import { Button, ButtonGroup } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { Group } from '@dxos/react-appkit';
 import { Space, SpaceProxy, useClient, useIdentity, useNetworkStatus, useSpaces } from '@dxos/react-client';

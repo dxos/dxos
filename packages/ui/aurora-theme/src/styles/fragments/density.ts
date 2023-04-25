@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Density } from '../props';
+import { Density } from '@dxos/aurora-types';
 
 export const coarseBlockSize = 'min-bs-[40px]';
 export const coarseTextPadding = 'pli-3';

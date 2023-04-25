@@ -5,7 +5,7 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/echo-schema';
 import { Searchbar } from '@dxos/react-appkit';
 

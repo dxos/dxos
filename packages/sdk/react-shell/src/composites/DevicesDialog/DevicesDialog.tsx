@@ -6,6 +6,7 @@ import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
 import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 
 import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
@@ -25,7 +26,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
         titleId
       }}
     >
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
         <DevicesPanel
           {...{
             ...devicesDialogProps,

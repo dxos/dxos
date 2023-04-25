@@ -4,7 +4,8 @@
 import { StoryFn } from '@storybook/react';
 import React from 'react';
 
-import { mx, ThemeContext } from '@dxos/aurora';
+import { ThemeContext, useThemeContext } from '@dxos/aurora';
+import { mx, osTx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
 import { defaultSurface } from '../../styles';
@@ -30,8 +31,9 @@ export default {
 export const Default = {
   decorators: [
     (Story: StoryFn) => {
+      const themeContext = useThemeContext();
       return (
-        <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
           <div
             className={mx(defaultSurface, 'max-is-md mli-auto rounded-md p-2 backdrop-blur-md flex flex-wrap gap-4')}
           >

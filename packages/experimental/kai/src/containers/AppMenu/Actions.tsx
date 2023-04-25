@@ -8,7 +8,7 @@ import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Serializer } from '@dxos/echo-schema';
 import { useFileDownload } from '@dxos/kai-frames';
 import { DropdownMenuItem } from '@dxos/react-appkit';

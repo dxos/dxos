@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx } from '../util';
+import { mx } from '../../util';
 
 export const defaultActive = mx(
   'radix-state-open:outline-2 radix-state-open:outline-offset-1 radix-state-open:outline-primary-300 radix-state-open:outline-offset-transparent dark:radix-state-open:outline-primary-400 dark:radix-state-open:outline-offset-transparent',

@@ -5,7 +5,8 @@
 import { UserPlus, X } from '@phosphor-icons/react';
 import React, { cloneElement, useReducer } from 'react';
 
-import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 

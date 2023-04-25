@@ -448,6 +448,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/aurora-types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-appkit/package.json",
           "jsonpath": "$.version"
         },

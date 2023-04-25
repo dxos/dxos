@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Play, PushPin } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { List, ListItem, ListItemCollapsibleContent, ListItemEndcap, ListItemHeading } from './List';
 

@@ -5,7 +5,8 @@
 import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation, Button, getSize, mx, useTranslationsContext } from '@dxos/aurora';
+import { useTranslation, Button, useTranslationsContext } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Toast } from '../Toast';
 

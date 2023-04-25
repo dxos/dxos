@@ -7,7 +7,8 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, PlusCircle } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button, ButtonGroup, getSize } from '@dxos/aurora';
+import { Button, ButtonGroup } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { PublicKey, ShellLayout } from '@dxos/client';
 import { Group, TooltipRoot, TooltipContent, TooltipTrigger } from '@dxos/react-appkit';
 import { useClient, useSpace, useSpaces } from '@dxos/react-client';

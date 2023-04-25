@@ -6,7 +6,8 @@ import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { ReactNode } from 'react';
 
-import { Button, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type SelectItemProps = SelectPrimitive.SelectItemProps;
 

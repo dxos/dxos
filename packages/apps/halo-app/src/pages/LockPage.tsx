@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button, defaultGroup, useTranslation, Trans, getSize, mx } from '@dxos/aurora';
+import { Button, useTranslation, Trans } from '@dxos/aurora';
+import { defaultGroup, getSize, mx } from '@dxos/aurora-theme';
 import { Client, Space } from '@dxos/client';
 import { AuthChoices, Avatar, Heading } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';

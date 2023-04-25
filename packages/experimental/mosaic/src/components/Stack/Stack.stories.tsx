@@ -6,7 +6,7 @@ import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { FC, useState } from 'react';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
