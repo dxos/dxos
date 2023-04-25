@@ -217,7 +217,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     await this._services.open();
 
@@ -258,6 +258,7 @@ export class Client {
     await this._mesh._open();
 
     this._initialized = true;
+    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -279,8 +280,6 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
-
-    log.trace('dxos.sdk.client', trace.end({ id: this._instanceId }));
   }
 
   /**

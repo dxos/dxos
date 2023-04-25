@@ -69,7 +69,6 @@ export class ServiceContext {
     public readonly networkManager: NetworkManager,
     public readonly modelFactory: ModelFactory
   ) {
-    networkManager._traceParent = this._instanceId;
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -89,30 +88,27 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager
     });
-    this.spaceManager._traceParent = this._instanceId;
 
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.keyring,
       this.feedStore,
       this.spaceManager
-    );
-    this.identityManager._traceParent = this._instanceId;
+      );
 
-    this.invitations = new InvitationsHandler(this.networkManager);
-    this.invitations._traceParent = this._instanceId;
+      this.invitations = new InvitationsHandler(this.networkManager);
 
-    // TODO(burdon): _initialize called in multiple places.
-    // TODO(burdon): Call _initialize on success.
-    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
-      this.keyring,
-      () => this.identityManager.identity ?? failUndefined(),
-      this._acceptIdentity.bind(this)
-    ));
-  }
+      // TODO(burdon): _initialize called in multiple places.
+      // TODO(burdon): Call _initialize on success.
+      this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
+        this.keyring,
+        () => this.identityManager.identity ?? failUndefined(),
+        this._acceptIdentity.bind(this)
+        ));
+      }
 
   async open() {
-    log.trace('dxos.sdk.service-context', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     log('opening...');
     await this.networkManager.open();
@@ -122,6 +118,7 @@ export class ServiceContext {
       await this._initialize();
     }
     log('opened');
+    log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -134,8 +131,6 @@ export class ServiceContext {
     await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
-
-    log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
@@ -182,7 +177,6 @@ export class ServiceContext {
       this.feedStore,
       this.snapshotStore
     );
-    this.dataSpaceManager._traceParent = this._instanceId;
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {

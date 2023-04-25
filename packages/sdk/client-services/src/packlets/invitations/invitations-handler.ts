@@ -59,7 +59,6 @@ export class InvitationsHandler {
   /**
    * @internal
    */
-  public _traceParent?: string;
   constructor(private readonly _networkManager: NetworkManager) {}
 
   createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
@@ -186,10 +185,7 @@ export class InvitationsHandler {
           scheduleTask(ctx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
-              log.trace(
-                'dxos.sdk.invitations-handler.host.onOpen',
-                trace.begin({ id: traceId, parentId: this._traceParent })
-              );
+              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await success.wait({ timeout });
@@ -226,7 +222,6 @@ export class InvitationsHandler {
           }
         }
       });
-      extension._traceParent = this._traceParent;
 
       return extension;
     };
@@ -306,10 +301,7 @@ export class InvitationsHandler {
           scheduleTask(ctx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
-              log.trace(
-                'dxos.sdk.invitations-handler.guest.onOpen',
-                trace.begin({ id: traceId, parentId: this._traceParent })
-              );
+              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
               // TODO(burdon): Bug where guest may create multiple connections.
               if (++connectionCount > 1) {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
