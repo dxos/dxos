@@ -114,7 +114,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.halo-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.halo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -127,6 +127,12 @@ export class HaloProxy implements Halo {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
     identityStream.subscribe((data) => {
+      // Set tracing identity. For early stage debugging.
+      data.identity &&
+        log.trace('dxos.halo.identity', {
+          identityKey: data.identity.identityKey,
+          displayName: data.identity.profile?.displayName
+        });
       this._identityChanged.emit(data.identity ?? null);
     });
 
@@ -148,6 +154,7 @@ export class HaloProxy implements Halo {
 
     // this._subscriptions.add(() => contactsStream.close());
 
+    log.trace('dxos.sdk.halo-proxy.open', trace.end({ id: this._instanceId }));
     await Promise.all([gotIdentity]);
   }
 
@@ -163,7 +170,6 @@ export class HaloProxy implements Halo {
     this._identityChanged.emit(null);
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
-    log.trace('dxos.sdk.halo-proxy', trace.end({ id: this._instanceId }));
   }
 
   /**

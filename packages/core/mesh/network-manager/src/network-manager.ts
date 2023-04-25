@@ -82,17 +82,14 @@ export class NetworkManager {
   public readonly topicsUpdated = new Event<void>();
 
   private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
-    (signalManager as any)._traceParent = this._instanceId;
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
-    this._messenger._traceParent = this._instanceId;
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts)
@@ -132,9 +129,10 @@ export class NetworkManager {
   }
 
   async open() {
-    log.trace('dxos.mesh.network-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
+    log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -146,7 +144,6 @@ export class NetworkManager {
 
     await this._messenger.close();
     await this._signalManager.close();
-    log.trace('dxos.mesh.network-manager', trace.end({ id: this._instanceId }));
   }
 
   /**

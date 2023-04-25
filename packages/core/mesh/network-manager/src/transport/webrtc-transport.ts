@@ -34,13 +34,9 @@ export class WebRTCTransport implements Transport {
   readonly errors = new ErrorStream();
 
   private readonly _instanceId = PublicKey.random().toHex();
-  private readonly _performance = {
-    bytesSent: 0,
-    bytesReceived: 0
-  };
 
   constructor(private readonly params: WebRTCTransportParams) {
-    log.trace('dxos.mesh.webrtc-transport', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
@@ -82,6 +78,7 @@ export class WebRTCTransport implements Transport {
 
       await this.destroy();
     });
+    log.trace('dxos.mesh.webrtc-transport.constructor', trace.end({ id: this._instanceId }));
   }
 
   async destroy() {
@@ -91,10 +88,6 @@ export class WebRTCTransport implements Transport {
     this._peer!.destroy();
     this.closed.emit();
     log('closed');
-    log.trace(
-      'dxos.mesh.webrtc-transport',
-      trace.end({ id: this._instanceId, data: { performance: this._performance } })
-    );
   }
 
   signal(signal: Signal) {

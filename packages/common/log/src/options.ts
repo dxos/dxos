@@ -18,6 +18,10 @@ export const processors: { [index: string]: LogProcessor } = {
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
 };
 
+const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+
+export const DEFAULT_PROCESSORS = [IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
+
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
   if (typeof filter === 'number') {
     return [{ level: filter }];
@@ -31,8 +35,6 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
     return level ? { level: parseLogLevel(level), pattern } : { level: parseLogLevel(pattern) };
   });
 };
-
-const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
 
 export const getConfig = (_options?: LogOptions): LogConfig => {
   let options: LogOptions = defaultsDeep(
@@ -49,13 +51,10 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
   // TODO(burdon): Verbose option.
   // console.log(JSON.stringify(options, undefined, 2));
   options = defaultsDeep({}, loadOptions(options.file), options);
-
-  const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
-
   return {
     options,
     filters: parseFilter(options.filter ?? LogLevel.INFO),
-    processors: [options.processor ? processors[options.processor] : defaultProcessor],
+    processors: options.processor ? [processors[options.processor]] : DEFAULT_PROCESSORS,
     prefix: options.prefix
   };
 };

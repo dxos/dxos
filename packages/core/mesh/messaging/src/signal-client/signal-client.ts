@@ -129,7 +129,6 @@ export class SignalClient implements SignalMethods {
   public _reconciled = new Event();
 
   private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   private readonly _performance = {
     sentMessages: 0,
@@ -154,7 +153,8 @@ export class SignalClient implements SignalMethods {
   }
 
   open() {
-    log.trace('dxos.mesh.signal-client', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
+
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;
     }
@@ -194,6 +194,7 @@ export class SignalClient implements SignalMethods {
 
     this._setState(SignalState.CONNECTING);
     this._createClient();
+    log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -209,7 +210,6 @@ export class SignalClient implements SignalMethods {
     this._client = undefined;
     this._setState(SignalState.CLOSED);
     log('closed');
-    log.trace('dxos.mesh.signal-client', trace.end({ id: this._instanceId, data: { performance: this._performance } }));
   }
 
   getStatus(): SignalStatus {

@@ -81,6 +81,10 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
+    log.trace(
+      'dxos.mesh.swarm.constructor',
+      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } })
+    );
     log('creating swarm', { peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
@@ -99,10 +103,7 @@ export class Swarm {
       })
       .catch((error) => log.catch(error));
 
-    log.trace(
-      'dxos.mesh.swarm',
-      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } })
-    );
+    log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
 
   get connections() {
@@ -135,7 +136,6 @@ export class Swarm {
     await this._topology.destroy();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
     log('destroyed');
-    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
   }
 
   async setTopology(topology: Topology) {
@@ -283,7 +283,6 @@ export class Swarm {
           }
         }
       );
-      peer._traceParent = this._instanceId;
       this._peers.set(peerId, peer);
     }
 

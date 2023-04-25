@@ -59,10 +59,6 @@ export class Connection {
   readonly errors = new ErrorStream();
 
   public _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
-  public _performance = {
-    signalsSent: 0
-  };
 
   constructor(
     public readonly topic: PublicKey,
@@ -93,8 +89,9 @@ export class Connection {
   // TODO(burdon): Make async?
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
+    log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+
     this._changeState(ConnectionState.CONNECTING);
-    log.trace('dxos.mesh.connection', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
     this._protocol.initialize().catch((err) => {
@@ -111,16 +108,14 @@ export class Connection {
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) => {
-        this._performance.signalsSent++;
-        await this._signalMessaging.signal({
+      sendSignal: async (signal) =>
+        this._signalMessaging.signal({
           author: this.ownId,
           recipient: this.remoteId,
           sessionId: this.sessionId,
           topic: this.topic,
           data: { signal }
-        });
-      }
+        })
     });
 
     this._transport.connected.once(() => {
@@ -144,6 +139,8 @@ export class Connection {
     }
 
     this._bufferedSignals = [];
+
+    log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
   }
 
   @synchronized
@@ -171,10 +168,6 @@ export class Connection {
 
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
-    log.trace(
-      'dxos.mesh.connection',
-      trace.end({ id: this._instanceId, status: 'ok', data: { performance: this._performance } })
-    );
   }
 
   async signal(msg: SignalMessage) {
