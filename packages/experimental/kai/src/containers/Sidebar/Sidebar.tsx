@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash, X } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
@@ -128,6 +128,13 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
   const handleSelectObject = (objectId: string) => {
     onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+  };
+
+  const handleDeleteObject = (objectId: string) => {
+    const object = space?.db.getObjectById(objectId);
+    if (object) {
+      space?.db.remove(object); // TODO(burdon): Remove cast everywhere.
+    }
   };
 
   // TODO(burdon): Factor out intention handlers?
@@ -307,7 +314,12 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
                 {/* Generic object list. */}
                 {!Plugin && frame?.runtime.filter && (
-                  <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />
+                  <FrameObjectList
+                    frameDef={frame.runtime}
+                    Action={X}
+                    onSelect={handleSelectObject}
+                    onAction={handleDeleteObject}
+                  />
                 )}
 
                 {/* Frame-specific plugin. */}

@@ -50,7 +50,7 @@ export class EchoDatabase {
   }
 
   // TODO(burdon): Return type via generic?
-  getObjectById<T extends EchoObject>(id: string): T | undefined {
+  getObjectById<T extends TypedObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
@@ -66,7 +66,7 @@ export class EchoDatabase {
    * Add object to th database.
    * Restores the object if it was deleted.
    */
-  add<T extends EchoObject>(obj: T): T {
+  add<T extends TypedObject>(obj: T): T {
     log('save', { id: obj.id, type: (obj as any).__typename });
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
