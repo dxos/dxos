@@ -15,7 +15,7 @@ const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
 
 /**
- *
+ * Array of complex or scalar values.
  */
 export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {

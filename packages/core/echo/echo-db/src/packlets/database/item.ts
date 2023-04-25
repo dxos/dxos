@@ -31,7 +31,7 @@ import { MutationInQueue, MutationQueue } from './ordering';
  * The state of the model is formed from the following components (in order):
  * - The custom snapshot from the initial state.
  * - The snapshot mutations from the initial state.
- * - The mutatation queue.
+ * - The mutation queue.
  * - Optimistic mutations.
  */
 // TODO(dmaretskyi): Rename to ObjectState.

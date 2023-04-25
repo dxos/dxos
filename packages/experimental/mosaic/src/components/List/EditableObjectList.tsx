@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, Plus } from '@phosphor-icons/react';
+import { Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Button } from '@dxos/aurora';
@@ -29,18 +29,14 @@ export type EditableObjectListProps<T extends Object> = {
   selected?: string;
   getTitle: (object: T) => string;
   Icon: FC<any>;
-  Action?: FC<any>;
+  Action?: FC<{ object: T }>;
   slots?: EditableObjectListSlots;
   onSelect?: (id: string) => void;
-  onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
   onCreate?: () => Promise<string | undefined>;
 };
 
 // TODO(burdon): Replace with react-components list.
-// TODO(burdon): onCreate, onUpdate title.
-// TODO(burdon): Focus on create.
-// TODO(burdon): Delete.
 export const EditableObjectList = <T extends Object>({
   objects,
   selected,
@@ -49,7 +45,6 @@ export const EditableObjectList = <T extends Object>({
   Action,
   slots = {},
   onSelect,
-  onAction,
   onUpdate,
   onCreate
 }: EditableObjectListProps<T>) => {
@@ -61,8 +56,6 @@ export const EditableObjectList = <T extends Object>({
       }
     }
   };
-
-  const ActionIcon = Action ?? Circle;
 
   return (
     <div role='none' className={mx('is-full', slots.root?.className)}>
@@ -106,12 +99,10 @@ export const EditableObjectList = <T extends Object>({
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
 
-              {onAction && (
+              {Action && (
                 <ListItemEndcap asChild>
                   <div className='flex justify-center items-center'>
-                    <Button variant='ghost' className='p-0' onClick={() => onAction?.(object.id)}>
-                      <ActionIcon className={getSize(6)} />
-                    </Button>
+                    <Action object={object} />
                   </div>
                 </ListItemEndcap>
               )}
