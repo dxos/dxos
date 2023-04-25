@@ -21,20 +21,6 @@ export type OperatorFilter<T extends TypedObject> = (object: T) => boolean;
 
 export type Filter<T extends TypedObject> = PropertyFilter | OperatorFilter<T>;
 
-export const filterDeleted = (option: ShowDeletedOption) => (object: TypedObject) => {
-  if (object.__deleted) {
-    if (option === undefined || option === ShowDeletedOption.HIDE_DELETED) {
-      return false;
-    }
-  } else {
-    if (option === ShowDeletedOption.SHOW_DELETED_ONLY) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
 // NOTE: `__phantom` property forces TS type check.
 export type TypeFilter<T extends TypedObject> = { __phantom: T } & Filter<T>;
 
@@ -44,18 +30,18 @@ export type Subscription = () => void;
  * Predicate based query.
  */
 export class Query<T extends TypedObject = TypedObject> {
-  private readonly _filters: Filter<any>[];
+  private readonly _filters: Filter<any>[] = [];
+  private _cache: T[] | undefined;
 
   constructor(
     private readonly _objects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
     filter: Filter<any> | Filter<any>[],
-    private readonly _options?: QueryOptions
+    options?: QueryOptions
   ) {
-    this._filters = Array.isArray(filter) ? filter : [filter];
+    this._filters.push(filterDeleted(options?.deleted));
+    this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
   }
-
-  private _cache: T[] | undefined;
 
   get objects(): T[] {
     if (!this._cache) {
@@ -85,27 +71,25 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 
   _match(object: T) {
-    return this._filters.every((filter) => match(object, filter, this._options));
+    return isTypedObject(object) && this._filters.every((filter) => match(object, filter));
   }
 }
 
-// TODO(burdon): Create separate test.
-const match = (object: EchoObject, filter: Filter<any>, options: QueryOptions = {}): object is TypedObject => {
-  if (!isTypedObject(object)) {
-    return false;
+const filterDeleted = (option?: ShowDeletedOption) => (object: TypedObject) => {
+  if (object.__deleted) {
+    if (option === undefined || option === ShowDeletedOption.HIDE_DELETED) {
+      return false;
+    }
+  } else {
+    if (option === ShowDeletedOption.SHOW_DELETED_ONLY) {
+      return false;
+    }
   }
 
-  // TODO(burdon): Convert to filter.
-  // if (object.__deleted) {
-  //   if (options?.deleted === undefined || options?.deleted === ShowDeletedOption.HIDE_DELETED) {
-  //     return false;
-  //   }
-  // } else {
-  //   if (options?.deleted === ShowDeletedOption.SHOW_DELETED_ONLY) {
-  //     return false;
-  //   }
-  // }
+  return true;
+};
 
+const match = (object: TypedObject, filter: Filter<any>): object is TypedObject => {
   if (typeof filter === 'function') {
     return filter(object);
   }
