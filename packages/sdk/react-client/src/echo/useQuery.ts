@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { QueryOptions } from '@testing-library/dom';
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { Space } from '@dxos/client';
+import { Space, QueryOptions } from '@dxos/client';
 import { TypedObject, Filter, Query, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {

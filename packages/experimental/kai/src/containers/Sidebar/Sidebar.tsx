@@ -314,7 +314,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                   <FrameObjectList
                     frameDef={frame.runtime}
                     showDeleted={showDeletedObjects}
-                    Action={X} // TODO(burdon): RecycleIcon if deleted (change to JSX element).
+                    Action={X} // TODO(burdon): RecycleIcon if deleted (change to JSX element and remove onAction).
                     onSelect={handleSelectObject}
                     onAction={handleDeleteObject}
                   />

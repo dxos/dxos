@@ -9,6 +9,7 @@ import { EchoObject } from './object';
 import { isTypedObject, TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
+// TODO(burdon): Reconcile with echo-db/database/selection.
 // TODO(burdon): Compound filter (e.g., with options).
 export type PropertiesFilter = Record<string, any>;
 export type OperatorFilter<T extends TypedObject> = (object: T) => boolean;

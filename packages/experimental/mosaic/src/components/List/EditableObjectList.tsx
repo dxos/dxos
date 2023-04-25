@@ -109,6 +109,7 @@ export const EditableObjectList = <T extends Object>({
               {onAction && (
                 <ListItemEndcap asChild>
                   <div className='flex justify-center items-center'>
+                    {/* TODO(burdon): Replace with JSX element. */}
                     <Button variant='ghost' className='p-0' onClick={() => onAction?.(object.id)}>
                       <ActionIcon className={getSize(6)} />
                     </Button>

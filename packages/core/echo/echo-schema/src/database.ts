@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
@@ -14,7 +14,7 @@ import { TextModel } from '@dxos/text-model';
 import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
 import { EchoObject } from './object';
-import { Filter, Query, QueryOptions, TypeFilter } from './query';
+import { Filter, Query, TypeFilter } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
