@@ -7,7 +7,7 @@ import { ItemID } from '@dxos/protocols';
 import { Item } from '../item';
 import { coerceToId, OneOrMultiple } from './util';
 
-// TODO(burdon): Are these deprecated? Item?
+// TODO(burdon): Are these deprecated? Incl. Item?
 
 //
 // Types
