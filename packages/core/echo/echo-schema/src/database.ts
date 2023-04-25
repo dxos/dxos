@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
@@ -50,7 +50,7 @@ export class EchoDatabase {
   }
 
   // TODO(burdon): Return type via generic?
-  getObjectById<T extends EchoObject>(id: string): T | undefined {
+  getObjectById<T extends TypedObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
@@ -125,7 +125,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
-  remove<T extends TypedObject>(obj: T) {
+  remove<T extends EchoObject>(obj: T) {
     this._backend.mutate({
       objects: [
         {
@@ -151,10 +151,10 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>): Query<T>;
-  query(filter?: Filter<any>): Query;
-  query(filter: Filter<any>): Query {
-    return new Query(this._objects, this._updateEvent, filter);
+  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
+  query(filter?: Filter<any>, options?: QueryOptions): Query;
+  query(filter: Filter<any>, options?: QueryOptions): Query {
+    return new Query(this._objects, this._updateEvent, filter, options);
   }
 
   /**
