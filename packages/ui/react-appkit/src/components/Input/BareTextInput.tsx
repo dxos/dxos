@@ -4,7 +4,8 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useThemeContext, useDensityContext, defaultInput, subduedInput, mx } from '@dxos/aurora';
+import { useButtonShadow, useThemeContext, useDensityContext } from '@dxos/aurora';
+import { defaultInput, subduedInput, mx } from '@dxos/aurora-theme';
 
 import { InputProps, InputSize } from './InputProps';
 

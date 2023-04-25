@@ -5,7 +5,8 @@
 import { ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { PageNumber, Pager } from './Pager';
 import { Presenter } from './Presenter';

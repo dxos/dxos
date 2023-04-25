@@ -4,7 +4,7 @@
 
 import React, { ComponentProps } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 

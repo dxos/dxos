@@ -9,7 +9,8 @@ import React, { useContext, useEffect, useState, Suspense, useCallback } from 'r
 import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { Button, DensityProvider, getSize, mx } from '@dxos/aurora';
+import { Button, DensityProvider } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { objectMeta } from '@dxos/kai-frames';

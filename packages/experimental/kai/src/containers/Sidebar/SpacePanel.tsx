@@ -5,7 +5,8 @@
 import { CaretCircleDoubleDown, PlusCircle, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { ShellLayout, useClient, useSpaces } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 

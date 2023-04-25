@@ -4,16 +4,8 @@
 
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import {
-  useButtonShadow,
-  useId,
-  useThemeContext,
-  defaultDescription,
-  primaryDescription,
-  mx,
-  ButtonProps,
-  buttonStyles
-} from '@dxos/aurora';
+import { useId, useThemeContext, ButtonProps } from '@dxos/aurora';
+import { defaultDescription, primaryDescription, mx, osTx, tx } from '@dxos/aurora-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -43,17 +35,19 @@ export const CompoundButton = ({
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
   const { themeVariant } = useThemeContext();
-  const shadow = useButtonShadow(elevation);
+  const styleProps = { ...buttonProps, variant };
+  const buttonClassName = (themeVariant === 'os' ? osTx : tx)(
+    'button',
+    'button button--compound',
+    styleProps,
+    'flex items-center gap-4 plb-2.5',
+    slots.root?.className
+  );
   return (
     <button
       {...buttonProps}
       {...slots.root}
-      className={mx(
-        buttonStyles({ ...buttonProps, variant }, themeVariant),
-        shadow,
-        'flex items-center gap-4 plb-2.5',
-        slots.root?.className
-      )}
+      className={buttonClassName}
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >

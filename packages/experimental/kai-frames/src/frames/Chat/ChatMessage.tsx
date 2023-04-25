@@ -6,7 +6,8 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import hash from 'string-hash';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Message } from '@dxos/kai-types';
 
 // TODO(burdon): Avatars.

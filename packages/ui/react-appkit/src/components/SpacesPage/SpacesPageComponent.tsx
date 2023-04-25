@@ -6,7 +6,8 @@ import { Plus, Rocket } from '@phosphor-icons/react';
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { Button, getSize, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
 

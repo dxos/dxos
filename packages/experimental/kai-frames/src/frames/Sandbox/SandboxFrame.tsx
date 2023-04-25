@@ -5,7 +5,8 @@
 import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';

@@ -6,6 +6,7 @@ import { Action, Cancel } from '@radix-ui/react-alert-dialog';
 import React from 'react';
 
 import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 
 import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
 import { JoinPanel, JoinPanelProps } from '../../panels';
@@ -20,7 +21,7 @@ export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
 
   return (
     <PanelAlertDialog {...{ slots, titleId }}>
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
         <JoinPanel
           {...{
             ...joinPanelProps,

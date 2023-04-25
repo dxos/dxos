@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { defaultDescription, mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { defaultDescription, mx } from '@dxos/aurora-theme';
 
 export const FirstRunPage = () => {
   const { t } = useTranslation('composer');

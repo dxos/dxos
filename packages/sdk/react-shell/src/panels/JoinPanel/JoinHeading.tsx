@@ -4,7 +4,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
-import { Button, defaultDescription, getSize, mx, useId, useTranslation } from '@dxos/aurora';
+import { Button, useId, useTranslation } from '@dxos/aurora';
+import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
 import { Heading } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client';
 

@@ -5,7 +5,8 @@
 import { Check, Copy } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { useClipboardContext } from './ClipboardProvider';
 

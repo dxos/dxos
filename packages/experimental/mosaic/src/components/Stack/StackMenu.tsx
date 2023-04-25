@@ -5,7 +5,8 @@
 import { DotsThreeCircle } from '@phosphor-icons/react';
 import React, { FC, useContext } from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@dxos/react-appkit';
 
 import { StackSectionContext } from './context';

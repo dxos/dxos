@@ -5,7 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useRef, useEffect } from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Loading } from '@dxos/react-appkit';
 
 import { setCaretPosition } from '../utils/setCaretPosition';

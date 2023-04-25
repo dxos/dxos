@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ThemeVariant, Density, MessageValence } from '../props';
-import { mx } from '../util';
+import { ThemeVariant, Density, MessageValence } from '@dxos/aurora-types';
+
+import { mx } from '../../util';
 import { coarseBlockSize, defaultCoarse, defaultFine, fineBlockSize } from './density';
 import { defaultDisabled } from './disabled';
 import { staticFocus, focus } from './focus';

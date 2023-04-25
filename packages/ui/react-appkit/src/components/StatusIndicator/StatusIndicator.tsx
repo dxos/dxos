@@ -5,7 +5,8 @@
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React from 'react';
 
-import { valenceColorText, mx, Button } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { valenceColorText, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 

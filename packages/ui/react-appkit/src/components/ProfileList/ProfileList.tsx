@@ -3,7 +3,8 @@
 //
 import React from 'react';
 
-import { useTranslation, defaultDisabled, defaultGroup, mx } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { defaultDisabled, defaultGroup, mx } from '@dxos/aurora-theme';
 import type { Identity } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 import { humanize } from '@dxos/util';

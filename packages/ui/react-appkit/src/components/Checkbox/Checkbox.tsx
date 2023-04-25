@@ -6,7 +6,8 @@ import { Check } from '@phosphor-icons/react';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import React, { ComponentPropsWithoutRef } from 'react';
 
-import { useThemeContext, getSize, themeVariantFocus, mx } from '@dxos/aurora';
+import { useThemeContext } from '@dxos/aurora';
+import { getSize, themeVariantFocus, mx } from '@dxos/aurora-theme';
 
 type SharedCheckboxProps = Pick<
   ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
