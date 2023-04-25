@@ -63,7 +63,7 @@ export class ServiceContext {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  // prettier-ignoxre
+  // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
@@ -89,7 +89,12 @@ export class ServiceContext {
       networkManager: this.networkManager
     });
 
-    this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
+    this.identityManager = new IdentityManager(
+      this.metadataStore,
+      this.keyring,
+      this.feedStore,
+      this.spaceManager
+    );s
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
