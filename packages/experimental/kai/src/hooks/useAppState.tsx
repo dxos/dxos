@@ -56,6 +56,9 @@ export type AppState = {
 
   // Active frames.
   frames: string[];
+
+  // Show deleted.
+  showDeletedObjects?: boolean;
 };
 
 const defaultAppState: AppState = {
@@ -63,7 +66,7 @@ const defaultAppState: AppState = {
 };
 
 type ActionType = {
-  type: 'set-active-frame' | 'set-fullscreen' | 'set-chat' | 'set-experimental';
+  type: 'set-active-frame' | 'set-fullscreen' | 'set-chat' | 'set-show-deleted-objects';
 };
 
 type SetFrameAction = ActionType & {
@@ -79,7 +82,11 @@ type SetChatAction = ActionType & {
   chat: boolean;
 };
 
-type Action = SetFrameAction | SetFullscreenAction | SetChatAction;
+type SetShowDeletedObjects = ActionType & {
+  show: boolean;
+};
+
+type Action = SetFrameAction | SetFullscreenAction | SetChatAction | SetShowDeletedObjects;
 
 const reducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
@@ -103,6 +110,11 @@ const reducer = (state: AppState, action: Action): AppState => {
       return { ...state, chat };
     }
 
+    case 'set-show-deleted-objects': {
+      const { show } = action as SetShowDeletedObjects;
+      return { ...state, showDeletedObjects: show };
+    }
+
     default: {
       throw new Error(`Invalid action: ${JSON.stringify(action)}`);
     }
@@ -111,9 +123,11 @@ const reducer = (state: AppState, action: Action): AppState => {
 
 export type AppReducer = {
   state: AppState;
+
   setFullscreen: (fullscreen: boolean) => void;
   setChat: (chat: boolean) => void;
   setActiveFrame: (id: string, active: boolean) => void;
+  setShowDeletedObjects: (show: boolean) => void;
 };
 
 const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
@@ -136,6 +150,9 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: Partial<
     },
     setActiveFrame: (id: string, active: boolean) => {
       dispatch({ type: 'set-active-frame', frameId: id, active });
+    },
+    setShowDeletedObjects: (show: boolean) => {
+      dispatch({ type: 'set-show-deleted-objects', show });
     }
   };
 

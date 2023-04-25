@@ -73,7 +73,7 @@ Values:
 
 - `ONLINE`
 
-### [`ItemFilterDeleted`]()
+### [`ShowDeletedOption`]()
 
 Controls how deleted items are filtered.
 

@@ -8,12 +8,13 @@ import React, { FC } from 'react';
 import { TypedObject } from '@dxos/echo-schema';
 import { FrameRuntime } from '@dxos/kai-frames';
 import { EditableObjectList } from '@dxos/mosaic';
-import { useQuery } from '@dxos/react-client';
+import { ShowDeletedOption, useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 
 export type FrameObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;
+  showDeleted?: boolean;
   Action?: FC<any>;
   onSelect?: (objectId: string) => void;
   onAction?: (objectId: string) => void;
@@ -22,12 +23,17 @@ export type FrameObjectListProps<T extends TypedObject> = {
 // TODO(burdon): Make component.
 export const FrameObjectList = <T extends TypedObject>({
   frameDef, // TODO(burdon): Not required.
+  showDeleted,
   Action,
   onSelect,
   onAction
 }: FrameObjectListProps<T>) => {
   const { space, frame, objectId } = useAppRouter();
-  const objects = useQuery(space, frameDef.filter?.());
+  const objects = useQuery(
+    space,
+    frameDef.filter?.(),
+    showDeleted ? { deleted: ShowDeletedOption.SHOW_DELETED } : undefined
+  );
   if (!space || !frame || !frameDef.filter) {
     return null;
   }

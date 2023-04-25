@@ -14,7 +14,7 @@ import { TextModel } from '@dxos/text-model';
 import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
 import { EchoObject } from './object';
-import { Filter, Query, TypeFilter } from './query';
+import { Filter, Query, QueryOptions, TypeFilter } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -66,7 +66,7 @@ export class EchoDatabase {
    * Add object to th database.
    * Restores the object if it was deleted.
    */
-  add<T extends TypedObject>(obj: T): T {
+  add<T extends EchoObject>(obj: T): T {
     log('save', { id: obj.id, type: (obj as any).__typename });
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
@@ -125,7 +125,7 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
-  remove<T extends TypedObject>(obj: T) {
+  remove<T extends EchoObject>(obj: T) {
     this._backend.mutate({
       objects: [
         {
@@ -151,10 +151,10 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>): Query<T>;
-  query(filter?: Filter<any>): Query;
-  query(filter: Filter<any>): Query {
-    return new Query(this._objects, this._updateEvent, filter);
+  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
+  query(filter?: Filter<any>, options?: QueryOptions): Query;
+  query(filter: Filter<any>, options?: QueryOptions): Query {
+    return new Query(this._objects, this._updateEvent, filter, options);
   }
 
   /**

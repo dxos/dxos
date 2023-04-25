@@ -38,11 +38,7 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
-import { SpacePanel } from './SpacePanel';
-
-const Separator = () => {
-  return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
-};
+import { Separator, SpacePanel } from './SpacePanel';
 
 export type SidebarProps = {
   onNavigate: (path: string) => void;
@@ -53,6 +49,7 @@ export type SidebarProps = {
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
+  const { showDeletedObjects } = useAppState();
   const [options] = useKeyStore(optionsKeys);
   const { setActiveFrame } = useAppReducer();
   const shell = useShell();
@@ -133,7 +130,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleDeleteObject = (objectId: string) => {
     const object = space?.db.getObjectById(objectId);
     if (object) {
-      space?.db.remove(object); // TODO(burdon): Remove cast everywhere.
+      space?.db.remove(object);
     }
   };
 
@@ -316,7 +313,8 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 {!Plugin && frame?.runtime.filter && (
                   <FrameObjectList
                     frameDef={frame.runtime}
-                    Action={X}
+                    showDeleted={showDeletedObjects}
+                    Action={X} // TODO(burdon): RecycleIcon if deleted (change to JSX element).
                     onSelect={handleSelectObject}
                     onAction={handleDeleteObject}
                   />

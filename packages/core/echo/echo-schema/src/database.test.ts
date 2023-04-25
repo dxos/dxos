@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect'; // TODO(burdon): Convert to chai.
+import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
 import { inspect } from 'node:util';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
+import { ShowDeletedOption } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
@@ -17,6 +18,49 @@ import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
 describe('EchoDatabase', () => {
+  test.only('adding and querying objects', async () => {
+    const db = await createDatabase();
+
+    const n = 10;
+    for (const _ of Array.from({ length: n })) {
+      const obj = new TypedObject();
+      db.add(obj);
+    }
+    await db.flush();
+
+    const { objects } = db.query();
+    expect(objects).toHaveLength(n);
+  });
+
+  test.only('removing and querying objects', async () => {
+    const db = await createDatabase();
+
+    const n = 10;
+    for (const _ of Array.from({ length: n })) {
+      const obj = new TypedObject();
+      db.add(obj);
+    }
+    await db.flush();
+    const { objects } = db.query();
+    expect(objects).toHaveLength(n);
+
+    const r = 3;
+    for (let i = 0; i < r; i++) {
+      db.remove(objects[i]);
+    }
+    await db.flush();
+
+    {
+      const { objects } = db.query();
+      expect(objects).toHaveLength(n - r);
+    }
+
+    {
+      const { objects } = db.query(() => true, { deleted: ShowDeletedOption.SHOW_DELETED });
+      expect(objects).toHaveLength(n);
+    }
+  });
+
   test('get/set properties', async () => {
     const db = await createDatabase();
 
