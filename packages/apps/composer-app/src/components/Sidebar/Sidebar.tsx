@@ -10,12 +10,12 @@ import {
   Button,
   DensityProvider,
   ElevationProvider,
-  getSize,
-  mx,
   ThemeContext,
   useId,
+  useThemeContext,
   useTranslation
 } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { PanelSidebarContext, useShell } from '@dxos/react-shell';
@@ -58,6 +58,7 @@ const SidebarContent = () => {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
+  const themeContext = useThemeContext();
 
   useEffect(() => {
     setPatValue(pat);
@@ -74,7 +75,7 @@ const SidebarContent = () => {
   };
 
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
           <Dialog
@@ -185,13 +186,14 @@ const SidebarToggle = () => {
   const { displayState, setDisplayState } = useContext(PanelSidebarContext);
   const { t } = useTranslation('os');
   const open = displayState === 'show';
+  const themeContext = useThemeContext();
   const button = (
     <Button data-testid='composer.toggleSidebar' onClick={() => setDisplayState('show')} className='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
       <div
         role='none'
         className={mx(

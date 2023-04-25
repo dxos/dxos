@@ -13,7 +13,7 @@ import React, {
   useState
 } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import {
   IFrameClientServicesProxy,
   type PublicKey,

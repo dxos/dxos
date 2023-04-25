@@ -5,8 +5,9 @@
 import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { mx, getSize, Button } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
 import { Composer } from '@dxos/aurora-composer';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { DropdownMenu, DropdownMenuItem, Input } from '@dxos/react-appkit';

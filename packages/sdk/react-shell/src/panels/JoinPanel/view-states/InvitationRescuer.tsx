@@ -5,7 +5,8 @@
 import { ArrowsClockwise, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, defaultDescription, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
 import { JoinSend, JoinState } from '../joinMachine';

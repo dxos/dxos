@@ -5,7 +5,8 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Input } from '@dxos/react-appkit';
 import { useInvitationStatus } from '@dxos/react-client';

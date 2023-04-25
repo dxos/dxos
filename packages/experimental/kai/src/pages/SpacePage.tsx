@@ -6,7 +6,8 @@ import { CaretRight } from '@phosphor-icons/react';
 import React, { useContext } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Button, getSize, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';

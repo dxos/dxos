@@ -6,7 +6,7 @@ import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
-import { defaultDescription, defaultFocus, mx } from '@dxos/aurora';
+import { defaultDescription, defaultFocus, mx } from '@dxos/aurora-theme';
 import { Input, InputProps } from '@dxos/react-appkit';
 
 export interface AlertDialogSlots {

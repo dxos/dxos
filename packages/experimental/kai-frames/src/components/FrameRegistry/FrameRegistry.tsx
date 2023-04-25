@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { ScrollContainer } from '@dxos/mosaic';
 
 import { FrameDef } from '../../registry';

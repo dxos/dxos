@@ -5,7 +5,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import React, { ComponentPropsWithoutRef, PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { defaultDialogContent, defaultOverlay } from '../../styles';
 

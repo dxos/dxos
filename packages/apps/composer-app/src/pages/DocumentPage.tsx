@@ -29,12 +29,13 @@ import { useOutletContext, useParams } from 'react-router-dom';
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
-import { Button, getSize, mx, useTranslation, ThemeContext, Trans } from '@dxos/aurora';
+import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
+import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useFileDownload, DropdownMenu, Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
-import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
 
 import { useOctokitContext } from '../components';
 import { ComposerDocument } from '../proto';
@@ -81,6 +82,7 @@ const DocumentPageContent = observer(
     setImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
   }>) => {
     const { t } = useTranslation('composer');
+    const themeContext = useThemeContext();
     return (
       <>
         <div role='none' className='mli-auto max-is-[50rem] min-bs-[80vh] border border-neutral-500/20 flex flex-col'>
@@ -99,7 +101,7 @@ const DocumentPageContent = observer(
           />
           {children}
         </div>
-        <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+        <ThemeContext.Provider value={{ ...themeContext, themeVariant: 'os' }}>
           <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
             <DropdownMenu
               trigger={

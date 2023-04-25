@@ -4,7 +4,8 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Button, defaultOsButtonColors, mx, useButtonShadow, useTranslation } from '@dxos/aurora';
+import { Button, useButtonShadow, useTranslation } from '@dxos/aurora';
+import { defaultOsButtonColors, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';

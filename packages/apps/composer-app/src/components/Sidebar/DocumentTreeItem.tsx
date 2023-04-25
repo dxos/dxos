@@ -6,10 +6,11 @@ import { Article, ArticleMedium, Circle } from '@phosphor-icons/react';
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { buttonStyles, getSize, mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { TextKind } from '@dxos/aurora-composer';
+import { getSize, mx, tx } from '@dxos/aurora-theme';
 import { ListItemEndcap, TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
-import { TextKind } from '@dxos/aurora-composer';
 
 import { ComposerDocument } from '../../proto';
 
@@ -23,7 +24,10 @@ export const DocumentTreeItem = observer(({ document, linkTo }: { document: Comp
       <TreeItemHeading asChild>
         <Link
           to={linkTo}
-          className={mx(buttonStyles({ variant: 'ghost' }), 'is-full text-base p-0 font-normal items-start gap-1')}
+          className={mx(
+            tx('button', 'tree-item__heading--link', { variant: 'ghost' }),
+            'is-full text-base p-0 font-normal items-start gap-1'
+          )}
           data-testid='composer.documentTreeItemHeading'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />

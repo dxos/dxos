@@ -363,6 +363,7 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
@@ -379,7 +380,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@sentry/vite-plugin': 0.4.0
       '@types/node': 18.11.9
       '@types/react': 18.0.21
@@ -713,6 +713,7 @@ importers:
       vite: ^4.2.0
     dependencies:
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -723,7 +724,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/cli': link:../../devtools/cli
       '@storybook/addon-essentials': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-interactions': 7.0.0-beta.48_biqbaboplfbrettd7655fr4n2y
@@ -782,6 +782,7 @@ importers:
   packages/apps/templates/tasks-template:
     specifiers:
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
       '@dxos/plate': workspace:*
@@ -797,6 +798,7 @@ importers:
       '@dxos/plate': link:../../../common/plate
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/client': link:../../../sdk/client
       '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
@@ -2241,6 +2243,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
@@ -2273,7 +2276,6 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/aurora-composer': link:../../ui/aurora-composer
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/plexus': link:../../experimental/plexus
       '@dxos/react-shell': link:../../sdk/react-shell
@@ -4034,6 +4036,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -4068,6 +4071,7 @@ importers:
       xstate: ^4.37.0
     dependencies:
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../client
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug

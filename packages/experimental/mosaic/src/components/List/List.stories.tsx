@@ -5,7 +5,7 @@
 import { Circle, X } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';

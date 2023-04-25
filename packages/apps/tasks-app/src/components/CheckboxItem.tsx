@@ -5,7 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { KeyboardEvent, forwardRef } from 'react';
 
-import { mx, getSize, defaultFocus, Button, hover } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { mx, getSize, defaultFocus, hover } from '@dxos/aurora-theme';
 
 import { Input } from './Input';
 

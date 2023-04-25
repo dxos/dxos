@@ -5,7 +5,8 @@
 import { PlusCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
 

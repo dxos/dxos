@@ -5,7 +5,7 @@
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import React, { ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type ScrollContainerSlots = {
   root?: {
