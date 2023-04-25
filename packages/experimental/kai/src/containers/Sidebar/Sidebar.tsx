@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash, X } from '@phosphor-icons/react';
+import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
@@ -20,7 +20,7 @@ import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpac
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceListAction } from '../../components';
-import { FrameObjectList, FrameRegistryDialog } from '../../containers';
+import { FrameRegistryDialog } from '../../containers';
 import {
   Section,
   SearchResults,
@@ -38,6 +38,7 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
+import { ObjectAction, ObjectList } from './ObjectList';
 import { Separator, SpacePanel } from './SpacePanel';
 
 export type SidebarProps = {
@@ -65,7 +66,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     if (space && frame && frame.runtime.filter && !objectId) {
       const { objects } = space.db.query(frame.runtime.filter());
       if (objects.length) {
-        handleSelectObject(objects[0].id);
+        handleObjectAction(objects[0].id, ObjectAction.SELECT);
       }
     }
   }, [space, frame]);
@@ -123,14 +124,20 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // Space management
   //
 
-  const handleSelectObject = (objectId: string) => {
-    onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
-  };
-
-  const handleDeleteObject = (objectId: string) => {
-    const object = space?.db.getObjectById(objectId);
-    if (object) {
-      space?.db.remove(object);
+  const handleObjectAction = (object: TypedObject, action: ObjectAction) => {
+    switch (action) {
+      case ObjectAction.SELECT: {
+        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+        break;
+      }
+      case ObjectAction.DELETE: {
+        space?.db.remove(object);
+        break;
+      }
+      case ObjectAction.RESTORE: {
+        space?.db.add(object);
+        break;
+      }
     }
   };
 
@@ -311,13 +318,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
                 {/* Generic object list. */}
                 {!Plugin && frame?.runtime.filter && (
-                  <FrameObjectList
-                    frameDef={frame.runtime}
-                    showDeleted={showDeletedObjects}
-                    Action={X} // TODO(burdon): RecycleIcon if deleted (change to JSX element and remove onAction).
-                    onSelect={handleSelectObject}
-                    onAction={handleDeleteObject}
-                  />
+                  <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
                 )}
 
                 {/* Frame-specific plugin. */}

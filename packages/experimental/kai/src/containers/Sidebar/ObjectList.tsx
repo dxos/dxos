@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import React, { FC } from 'react';
+import React from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
 import { FrameRuntime } from '@dxos/kai-frames';
@@ -12,22 +12,20 @@ import { ShowDeletedOption, useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 
-export type FrameObjectListProps<T extends TypedObject> = {
+// TODO(burdon): Generalize?
+export enum ObjectAction {
+  SELECT = 1,
+  DELETE = 2,
+  RESTORE = 3
+}
+
+export type ObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;
   showDeleted?: boolean;
-  Action?: FC<any>;
-  onSelect?: (objectId: string) => void;
-  onAction?: (objectId: string) => void;
+  onAction?: (object: T, action: ObjectAction) => void;
 };
 
-// TODO(burdon): Make component.
-export const FrameObjectList = <T extends TypedObject>({
-  frameDef, // TODO(burdon): Not required.
-  showDeleted,
-  Action,
-  onSelect,
-  onAction
-}: FrameObjectListProps<T>) => {
+export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAction }: ObjectListProps<T>) => {
   const { space, frame, objectId } = useAppRouter();
   const objects = useQuery(
     space,
@@ -41,7 +39,7 @@ export const FrameObjectList = <T extends TypedObject>({
   const handleCreate = async () => {
     assert(frameDef.onCreate);
     const object = await frameDef.onCreate(space);
-    onSelect?.(object.id);
+    onAction?.(object, ObjectAction.SELECT);
     return object.id;
   };
 
@@ -52,6 +50,11 @@ export const FrameObjectList = <T extends TypedObject>({
     }
   };
 
+  const handleSelect = (objectId: string) => {
+    const object = objects.find((object) => object.id === objectId);
+    onAction?.(object!, ObjectAction.SELECT);
+  };
+
   const Icon = frame!.runtime.Icon;
 
   // TODO(burdon): Create hint if list is empty.
@@ -60,10 +63,9 @@ export const FrameObjectList = <T extends TypedObject>({
       objects={objects}
       selected={objectId}
       Icon={Icon}
+      // action={action}
       getTitle={(object) => (frameDef.title ? object[frameDef.title] : undefined)}
-      Action={Action}
-      onSelect={onSelect}
-      onAction={onAction}
+      onSelect={handleSelect}
       onCreate={frameDef.onCreate ? handleCreate : undefined}
       onUpdate={handleUpdate}
     />
