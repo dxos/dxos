@@ -81,7 +81,6 @@ export class Peer {
 
   public initiating = false;
 
-
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,

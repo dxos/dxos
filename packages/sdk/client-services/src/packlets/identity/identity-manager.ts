@@ -52,7 +52,6 @@ export class IdentityManager {
 
   private _identity?: Identity;
 
-
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(

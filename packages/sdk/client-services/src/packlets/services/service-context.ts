@@ -63,7 +63,7 @@ export class ServiceContext {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  // prettier-ignore
+  // prettier-ignoxre
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
@@ -89,23 +89,22 @@ export class ServiceContext {
       networkManager: this.networkManager
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.spaceManager
-      );
+    this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
 
-      this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitations = new InvitationsHandler(this.networkManager);
 
-      // TODO(burdon): _initialize called in multiple places.
-      // TODO(burdon): Call _initialize on success.
-      this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
-        this.keyring,
-        () => this.identityManager.identity ?? failUndefined(),
-        this._acceptIdentity.bind(this)
-        ));
-      }
+    // TODO(burdon): _initialize called in multiple places.
+    // TODO(burdon): Call _initialize on success.
+    this._handlerFactories.set(
+      Invitation.Kind.DEVICE,
+      () =>
+        new DeviceInvitationProtocol(
+          this.keyring,
+          () => this.identityManager.identity ?? failUndefined(),
+          this._acceptIdentity.bind(this)
+        )
+    );
+  }
 
   async open() {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
