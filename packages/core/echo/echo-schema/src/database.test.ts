@@ -11,6 +11,8 @@ import { data } from './defs';
 import { createDatabase } from './testing';
 import { TypedObject } from './typed-object';
 
+// TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
+
 describe('Database', () => {
   test('adding and querying objects', async () => {
     const db = await createDatabase();
