@@ -14,8 +14,8 @@ describe('WebSocketSignalManager', () => {
   let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    broker1 = await runTestSignalServer(5001);
-    broker2 = await runTestSignalServer(5002);
+    broker1 = await runTestSignalServer({ port: 5001 });
+    broker2 = await runTestSignalServer({ port: 5002 });
   });
 
   afterAll(async () => {
