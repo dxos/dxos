@@ -11,10 +11,10 @@ import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
-import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
 import { EchoObject } from './object';
 import { Filter, Query, TypeFilter } from './query';
+import { DatabaseRouter } from './router';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -45,6 +45,9 @@ export class EchoDatabase {
     return Array.from(this._objects.values());
   }
 
+  /**
+   * @deprecated
+   */
   get router() {
     return this._router;
   }
