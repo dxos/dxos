@@ -1,0 +1,80 @@
+{
+  "sourceRoot": "packages/ui/primitives/react-list/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/ui/primitives/react-list/src/index.ts",
+        "outputPath": "packages/ui/primitives/react-list/dist/types",
+        "tsConfig": "packages/ui/primitives/react-list/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/primitives/react-list/src/index.ts"
+        ],
+        "outputPath": "packages/ui/primitives/react-list/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/primitives/react-list/src/index.ts"
+        ],
+        "outputPath": "packages/ui/primitives/react-list/dist/lib",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/primitives/react-list/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}
