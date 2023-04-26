@@ -26,7 +26,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
         titleId
       }}
     >
-      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
         <SpacePanel
           {...{
             ...spacePanelProps,

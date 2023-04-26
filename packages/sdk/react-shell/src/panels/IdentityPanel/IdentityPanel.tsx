@@ -26,7 +26,7 @@ export const IdentityPanel = ({
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
       <DensityProvider density='fine'>
         <div className='flex flex-col gap-2 justify-center items-center'>
           <Avatar

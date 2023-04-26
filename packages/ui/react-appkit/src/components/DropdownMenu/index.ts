@@ -3,4 +3,3 @@
 //
 
 export * from './DropdownMenu';
-export * from './dropdownMenuStyles';

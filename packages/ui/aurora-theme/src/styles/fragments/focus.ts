@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ThemeVariant } from '@dxos/aurora-types';
-
 /**
  * @deprecated
  */
@@ -26,29 +24,3 @@ export const osFocus =
  */
 export const staticFocus =
   'ring-2 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black';
-
-/**
- * @deprecated
- */
-export const themeVariantFocus = (themeVariant: ThemeVariant) => (themeVariant === 'os' ? osFocus : defaultFocus);
-
-/**
- * @deprecated
- */
-export const themeVariantSubduedFocus = (_themeVariant: ThemeVariant) => subduedFocus;
-
-/**
- * @deprecated
- */
-export const focus = (
-  { variant, disabled }: { variant?: 'default' | 'subdued' | 'static'; disabled?: boolean } = {},
-  themeVariant: ThemeVariant = 'app'
-) => {
-  return disabled
-    ? ''
-    : variant === 'static'
-    ? staticFocus
-    : variant === 'subdued'
-    ? themeVariantSubduedFocus(themeVariant)
-    : themeVariantFocus(themeVariant);
-};

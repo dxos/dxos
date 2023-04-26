@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { MessageValence, ThemeVariant } from '@dxos/aurora-types';
+import { MessageValence } from '@dxos/aurora-types';
 
 export const successText = 'text-xs font-medium text-success-550 dark:text-success-300';
 export const infoText = 'text-xs font-medium text-info-550 dark:text-info-300';
@@ -21,29 +21,6 @@ export const valenceColorText = (valence?: MessageValence) => {
       return errorText;
     default:
       return undefined;
-  }
-};
-
-export const neutralInputValence = '';
-export const successInputValence = 'shadow-success-500/50 dark:shadow-success-600/50';
-export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
-export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
-export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
-
-export const inputValence = (valence?: MessageValence, themeVariant: ThemeVariant = 'app') => {
-  switch (valence) {
-    case 'success':
-      return successInputValence;
-    case 'info':
-      return infoInputValence;
-    case 'warning':
-      return warningInputValence;
-    case 'error':
-      return errorInputValence;
-    default:
-      return themeVariant === 'os'
-        ? 'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent'
-        : neutralInputValence;
   }
 };
 

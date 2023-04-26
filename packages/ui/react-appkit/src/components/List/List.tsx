@@ -23,7 +23,7 @@ import React, {
 } from 'react';
 
 import { useDensityContext, useId, useThemeContext, Density, DensityProvider } from '@dxos/aurora';
-import { coarseBlockSize, fineBlockSize, getSize, themeVariantFocus, mx } from '@dxos/aurora-theme';
+import { coarseBlockSize, fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 
 import { Checkbox, CheckboxProps } from '../Checkbox';
 import { defaultListItemEndcap, defaultListItemHeading, defaultListItemMainContent } from './listStyles';
@@ -200,13 +200,9 @@ type ListItemDragHandleProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'>
 };
 
 const ListItemDragHandle = ({ className, dragHandleIconSlot = {}, ...props }: ListItemDragHandleProps) => {
-  const { themeVariant } = useThemeContext();
+  const { tx } = useThemeContext();
   return (
-    <div
-      role='button'
-      {...props}
-      className={mx('bs-10 is-5 rounded touch-none', themeVariantFocus(themeVariant), className)}
-    >
+    <div role='button' {...props} className={tx('list.dragHandle', 'list__listItem__dragHandle', {}, className)}>
       <DotsSixVertical {...dragHandleIconSlot} className={mx(getSize(5), 'mbs-2.5', dragHandleIconSlot.className)} />
     </div>
   );
@@ -218,7 +214,7 @@ type ListItemOpenTriggerProps = ListScopedProps<Omit<ComponentPropsWithoutRef<'b
 
 const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerProps>(
   ({ className, openTriggerIconSlot = {}, __listScope, ...props }: ListItemOpenTriggerProps, forwardedRef) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
     const density = useDensityContext();
     const { toggleOpenLabel } = useListContext(LIST_NAME, __listScope);
     const { open } = useListItemContext(LIST_ITEM_NAME, __listScope);
@@ -232,12 +228,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
       <Collapsible.Trigger
         ref={forwardedRef}
         {...props}
-        className={mx(
-          'is-5 rounded flex justify-center items-center',
-          density === 'fine' ? fineBlockSize : coarseBlockSize,
-          themeVariantFocus(themeVariant),
-          className
-        )}
+        className={tx('list.openTrigger', 'list__listItem__openTrigger', { density }, className)}
       >
         {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
         <Icon {...iconProps} />
