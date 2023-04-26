@@ -6,7 +6,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { useTranslation } from '@dxos/aurora';
-import { defaultGroup, hover, defaultFocus, defaultDisabled, mx } from '@dxos/aurora-theme';
+import { defaultGroup, defaultHover, defaultFocus, defaultDisabled, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { humanize } from '@dxos/util';
 
@@ -34,7 +34,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             className={mx(
               defaultGroup({ elevation: 'group', rounding: 'rounded', spacing: 'p-2' }),
               'flex items-stretch gap-2 mbe-2',
-              hover(),
+              defaultHover,
               defaultFocus
             )}
           >

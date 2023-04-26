@@ -8,7 +8,7 @@ import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'reac
 import { useButtonShadow } from '@dxos/aurora';
 import {
   defaultFocus,
-  hover,
+  defaultHover,
   defaultInlineSeparator,
   mx,
   defaultAppButtonColors,
@@ -70,7 +70,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
-            hover()
+            defaultHover
           )}
         >
           {children}
@@ -102,7 +102,7 @@ const NavMenuLinkItem = forwardRef(
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
-          hover(),
+          defaultHover,
           triggerLinkProps.className
         )}
       >
@@ -127,7 +127,7 @@ const NavMenuTooltipLinkItem = forwardRef(
               active ? primaryAppButtonColors : defaultAppButtonColors,
               active ? 'font-medium' : 'font-normal',
               defaultFocus,
-              hover(),
+              defaultHover,
               triggerLinkProps.className
             )}
           >
