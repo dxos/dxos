@@ -34,7 +34,9 @@ export type UpdateInfo = {
 /**
  * Manages cross-space databases.
  * Tracks observable mutations on objects.
+ * @deprecated
  */
+// TODO(burdon): Review.
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
