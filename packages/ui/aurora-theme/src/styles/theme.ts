@@ -14,12 +14,13 @@ import {
   listItemAppDragHandle,
   listItemOsDragHandle,
   listItemAppOpenTrigger,
-  listItemOsOpenTrigger
+  listItemOsOpenTrigger,
+  buttonGroup
 } from './components';
 
 export const theme: Theme = {
   themeName: () => 'aurora',
-  button: { root: buttonAppRoot },
+  button: { root: buttonAppRoot, group: buttonGroup },
   input: { input: inputAppInput },
   dropdownMenu: { item: dropdownMenuItem },
   list: { dragHandle: listItemAppDragHandle, openTrigger: listItemAppOpenTrigger }

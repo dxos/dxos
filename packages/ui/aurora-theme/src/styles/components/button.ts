@@ -13,7 +13,8 @@ import {
   defaultDisabled,
   osActive,
   defaultFocus,
-  osFocus
+  osFocus,
+  contentElevation
 } from '../fragments';
 
 export const primaryAppButtonColors =
@@ -53,7 +54,7 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
     'rounded-md font-medium text-sm',
     !props.disabled &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
-      (props.elevation === 'group' ? 'shadow' : props.elevation === 'chrome' ? 'shadow-none' : 'shadow-md'),
+      contentElevation({ elevation: props.elevation }),
     !props.disabled && defaultHover,
     resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
     resolvedVariant === 'default' && defaultAppButtonColors,
@@ -80,4 +81,8 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
     ...sharedButtonStyles(props),
     ...etc
   );
+};
+
+export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
+  return mx('rounded-md', contentElevation({ elevation: props.elevation }), ...etc);
 };
