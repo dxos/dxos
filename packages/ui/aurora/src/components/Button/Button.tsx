@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createContext, Scope } from '@radix-ui/react-context';
 import React, { ComponentProps, ComponentPropsWithRef, forwardRef, ReactNode } from 'react';
 
 import { Density, Elevation } from '@dxos/aurora-types';
@@ -19,9 +19,10 @@ interface ButtonProps extends ComponentPropsWithRef<'button'> {
 type ButtonGroupScopedProps<P> = P & { __buttonGroupScope?: Scope };
 type ButtonGroupContextValue = { inGroup?: boolean };
 const BUTTON_GROUP_NAME = 'ButtonGroup';
-const [createButtonGroupContext, createButtonGroupScope] = createContextScope(BUTTON_GROUP_NAME, []);
-const [ButtonGroupProvider, useButtonGroupContext] =
-  createButtonGroupContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME);
+const BUTTON_NAME = 'Button';
+const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
+  inGroup: false
+});
 
 const Button = forwardRef<HTMLButtonElement, ButtonGroupScopedProps<ButtonProps>>(
   (
@@ -35,7 +36,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonGroupScopedProps<ButtonProps>
     },
     ref
   ) => {
-    const { inGroup } = useButtonGroupContext(BUTTON_GROUP_NAME, __buttonGroupScope);
+    const { inGroup } = useButtonGroupContext(BUTTON_NAME);
     const { tx } = useThemeContext();
     const { elevation } = useElevationContext();
     const density = useDensityContext();
@@ -72,13 +73,11 @@ const ButtonGroup = ({ children, __buttonGroupScope, ...divProps }: ButtonGroupS
   const { elevation } = useElevationContext();
   return (
     <div role='none' {...divProps} className={tx('button.group', 'button-group', { elevation }, divProps.className)}>
-      <ButtonGroupProvider scope={__buttonGroupScope} inGroup>
-        {children}
-      </ButtonGroupProvider>
+      <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
     </div>
   );
 };
 
-export { Button, ButtonGroup, BUTTON_GROUP_NAME, createButtonGroupScope, useButtonGroupContext };
+export { Button, ButtonGroup, BUTTON_GROUP_NAME, useButtonGroupContext };
 
 export type { ButtonProps, ButtonGroupProps };
