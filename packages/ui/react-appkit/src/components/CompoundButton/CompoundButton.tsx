@@ -38,7 +38,7 @@ export const CompoundButton = ({
   const isOs = tx('themeName', 'aurora', {}) === 'dxos';
   const styleProps = { ...buttonProps, variant };
   const buttonClassName = tx(
-    'button',
+    'button.button',
     'button button--compound',
     styleProps,
     'flex items-center gap-4 plb-2.5',
