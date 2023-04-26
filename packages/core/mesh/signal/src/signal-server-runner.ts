@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import fs from 'fs';
 import fetch from 'node-fetch';
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import path, { dirname } from 'node:path';
@@ -43,7 +44,10 @@ export class SignalServerRunner {
 
   public startProcess(): ChildProcessWithoutNullStreams {
     log(`Starting ${this._binCommand} (cwd: ${this._cwd})`);
-    const server = spawn(this._binCommand, ['-port', this._port.toString(), ...this._signalArguments], {
+    if (this._cwd && !fs.existsSync(this._cwd)) {
+      throw new Error(`CWD not exists: ${this._cwd}`);
+    }
+    const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd
     });
 
@@ -56,7 +60,7 @@ export class SignalServerRunner {
     });
 
     server.on('error', (err) => {
-      log(`TestServer ERROR: ${err}`);
+      log.error(`TestServer ERROR: ${err}`);
     });
 
     server.on('close', (code) => {
@@ -115,7 +119,18 @@ const OS = process.platform;
  * @param port Port to start the signal server on, random by default.
  */
 // TODO(burdon): Convert to TestBuilder pattern.
-export const runTestSignalServer = async (port?: number): Promise<SignalServerRunner> => {
+export const runTestSignalServer = async ({
+  port,
+  mode = 'server'
+}: {
+  port?: number;
+
+  /**
+   * Signal binary mode, `server` is in memory implementation.
+   * @see https://github.com/dxos/kube
+   */
+  mode?: 'client' | 'server' | 'p2pserver' | 'keypair' | 'pubsubserver';
+} = {}): Promise<SignalServerRunner> => {
   if (ARCH === '32') {
     throw new Error('32 bit architecture not supported');
   }
@@ -127,7 +142,7 @@ export const runTestSignalServer = async (port?: number): Promise<SignalServerRu
 
   const server = new SignalServerRunner({
     binCommand: binPath,
-    signalArguments: ['server'],
+    signalArguments: [mode],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
     port: port ?? randomInt(10000, 50000)
   });
