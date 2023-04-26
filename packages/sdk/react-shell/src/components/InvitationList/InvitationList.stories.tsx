@@ -57,7 +57,7 @@ export const Default = {
 
       return (
         <ClientProvider client={clients[0]} fallback={() => <Loading label='Loading client…' />}>
-          <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
+          <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
             <div className={mx(defaultSurface, 'max-is-xs mli-auto rounded-md p-2 backdrop-blur-md')}>
               <Story args={{ invitations, createInvitationUrl: (code: string) => code }} />
             </div>

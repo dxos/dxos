@@ -5,8 +5,8 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused } from '@dxos/aurora';
-import { staticInput, mx } from '@dxos/aurora-theme';
+import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused, useThemeContext } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { InputProps } from './InputProps';
 
@@ -30,6 +30,7 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
     const inputFocused = useIsFocused(inputRef);
     const shadow = useButtonShadow(elevation);
     const density = useDensityContext(propsDensity);
+    const { tx } = useThemeContext();
 
     const { disabled } = inputSlot;
 
@@ -37,13 +38,16 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
       ({ state, index }) => (
         <div
           key={index}
-          className={mx(
-            staticInput({
+          className={tx(
+            'input.input',
+            'input__input--pin',
+            {
+              variant: 'static',
               focused: inputFocused && !!state,
               disabled,
               density,
               ...(validationMessage && { validationValence })
-            }),
+            },
             !disabled && variant !== 'subdued' && shadow
           )}
           data-state={state}

@@ -101,7 +101,7 @@ const DocumentPageContent = observer(
           />
           {children}
         </div>
-        <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
             <DropdownMenu
               trigger={

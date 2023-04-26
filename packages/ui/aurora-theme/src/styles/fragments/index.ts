@@ -13,4 +13,3 @@ export * from './shimmer';
 export * from './size';
 export * from './text';
 export * from './valence';
-export * from './input';

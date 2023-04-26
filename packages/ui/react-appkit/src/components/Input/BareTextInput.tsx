@@ -5,7 +5,6 @@
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useButtonShadow, useThemeContext, useDensityContext } from '@dxos/aurora';
-import { defaultInput, subduedInput, mx } from '@dxos/aurora-theme';
 
 import { InputProps, InputSize } from './InputProps';
 
@@ -24,22 +23,18 @@ export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
     { validationValence, validationMessage, variant, elevation, density: propsDensity, size, ...inputSlot },
     forwardedRef
   ) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
+    const isOs = tx('themeName', 'aurora', {}) === 'dxos';
     const shadow = useButtonShadow(elevation);
-    const density = useDensityContext(themeVariant === 'os' ? 'fine' : propsDensity);
+    const density = useDensityContext(isOs ? 'fine' : propsDensity);
     return (
       <input
         {...inputSlot}
         ref={forwardedRef}
-        className={mx(
-          (variant === 'subdued' ? subduedInput : defaultInput)(
-            {
-              density,
-              disabled: inputSlot.disabled,
-              ...(validationMessage && { validationValence })
-            },
-            themeVariant
-          ),
+        className={tx(
+          'input.input',
+          'input__textarea',
+          { variant, density, disabled: inputSlot.disabled, validationValence },
           sizeMap[size ?? 'md'],
           'block is-full',
           !inputSlot.disabled && variant !== 'subdued' && shadow,
