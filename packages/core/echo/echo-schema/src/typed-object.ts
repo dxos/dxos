@@ -360,7 +360,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   override _beforeBind() {
     assert(this._linkCache);
     for (const obj of this._linkCache.values()) {
-      this._database!.add(obj);
+      this._database!.add(obj as TypedObject);
     }
     this._linkCache = undefined;
   }
@@ -371,7 +371,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   _linkObject(obj: EchoObject) {
     if (this._database) {
-      this._database.add(obj);
+      this._database.add(obj as TypedObject);
     } else {
       assert(this._linkCache);
       this._linkCache.set(obj.id, obj);
@@ -401,7 +401,7 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 //
 
 /**
- * Base class for generated document types and dynamic objects.
+ * Base class for generated document types and expando objects.
  */
 export type TypedObject<T extends Record<string, any> = { [key: string]: any }> = TypedObjectImpl<T> & T;
 

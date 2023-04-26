@@ -4,8 +4,10 @@
 
 import { ItemID } from '@dxos/protocols';
 
-import { Item } from '../item';
+import { Item } from './item';
 import { coerceToId, OneOrMultiple } from './util';
+
+// TODO(burdon): Are these deprecated? Incl. Item?
 
 //
 // Types
@@ -34,7 +36,7 @@ export type Callable<T extends Item, R> = (entities: T[], result: R) => R;
 /**
  * Controls how deleted items are filtered.
  */
-export enum ItemFilterDeleted {
+export enum ShowDeletedOption {
   /**
    * Do not return deleted items. Default behaviour.
    */
@@ -53,7 +55,7 @@ export type QueryOptions = {
   /**
    * Controls how deleted items are filtered.
    */
-  deleted?: ItemFilterDeleted;
+  deleted?: ShowDeletedOption;
 };
 
 //
@@ -78,19 +80,20 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   }
 };
 
+// TODO(burdon): Not referenced.
 export const createQueryOptionsFilter =
-  ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Item> =>
+  ({ deleted = ShowDeletedOption.HIDE_DELETED }: QueryOptions): Predicate<Item> =>
   (entity) => {
     // if (entity.model === null) {
     //   return false;
     // }
 
     switch (deleted) {
-      case ItemFilterDeleted.HIDE_DELETED:
+      case ShowDeletedOption.HIDE_DELETED:
         return !(entity instanceof Item) || !entity.deleted;
-      case ItemFilterDeleted.SHOW_DELETED:
+      case ShowDeletedOption.SHOW_DELETED:
         return true;
-      case ItemFilterDeleted.SHOW_DELETED_ONLY:
+      case ShowDeletedOption.SHOW_DELETED_ONLY:
         return entity instanceof Item && entity.deleted;
     }
   };

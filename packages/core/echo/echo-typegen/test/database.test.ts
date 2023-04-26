@@ -11,7 +11,7 @@ import { describe, test } from '@dxos/test';
 import { Contact, Container, Task } from './proto';
 
 describe('database', () => {
-  test('saving', async () => {
+  test('creating objects', async () => {
     const database = await createDatabase();
 
     const task = new Task({ title: 'test' });

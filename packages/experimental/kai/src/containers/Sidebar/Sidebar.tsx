@@ -20,7 +20,7 @@ import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpac
 import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceListAction } from '../../components';
-import { FrameObjectList, FrameRegistryDialog } from '../../containers';
+import { FrameRegistryDialog } from '../../containers';
 import {
   Section,
   SearchResults,
@@ -38,11 +38,8 @@ import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
-import { SpacePanel } from './SpacePanel';
-
-const Separator = () => {
-  return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
-};
+import { ObjectAction, ObjectList } from './ObjectList';
+import { Separator, SpacePanel } from './SpacePanel';
 
 export type SidebarProps = {
   onNavigate: (path: string) => void;
@@ -53,6 +50,7 @@ export type SidebarProps = {
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
+  const { showDeletedObjects } = useAppState();
   const [options] = useKeyStore(optionsKeys);
   const { setActiveFrame } = useAppReducer();
   const shell = useShell();
@@ -68,7 +66,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     if (space && frame && frame.runtime.filter && !objectId) {
       const { objects } = space.db.query(frame.runtime.filter());
       if (objects.length) {
-        handleSelectObject(objects[0].id);
+        handleObjectAction(objects[0].id, ObjectAction.SELECT);
       }
     }
   }, [space, frame]);
@@ -98,7 +96,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     if (observable) {
       const href = createInvitationPath(observable.get());
       const url = new URL(href, window.origin);
-      console.log(url);
+      console.log(url); // Log for test automation.
       void clipboardCopy(url.toString());
     }
   }, [observable]);
@@ -126,8 +124,21 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // Space management
   //
 
-  const handleSelectObject = (objectId: string) => {
-    onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId }));
+  const handleObjectAction = (object: TypedObject, action: ObjectAction) => {
+    switch (action) {
+      case ObjectAction.SELECT: {
+        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
+        break;
+      }
+      case ObjectAction.DELETE: {
+        space?.db.remove(object);
+        break;
+      }
+      case ObjectAction.RESTORE: {
+        space?.db.add(object);
+        break;
+      }
+    }
   };
 
   // TODO(burdon): Factor out intention handlers?
@@ -307,7 +318,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
                 {/* Generic object list. */}
                 {!Plugin && frame?.runtime.filter && (
-                  <FrameObjectList frameDef={frame.runtime} onSelect={handleSelectObject} />
+                  <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
                 )}
 
                 {/* Frame-specific plugin. */}

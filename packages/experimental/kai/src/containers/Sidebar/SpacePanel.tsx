@@ -7,12 +7,17 @@ import React from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
+import { Checkbox } from '@dxos/react-appkit'; // TODO(burdon): Move to aurora?
 import { ShellLayout, useClient, useSpaces } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
-import { createPath, defaultFrameId, useAppRouter } from '../../hooks';
+import { createPath, defaultFrameId, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Intent } from '../../util';
+
+export const Separator = () => {
+  return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
+};
 
 export type SpacePanelProps = {
   onAction: (intent: Intent<SpaceListAction>) => void;
@@ -22,6 +27,8 @@ export type SpacePanelProps = {
 
 export const SpacePanel = ({ onAction, onNavigate, onClose }: SpacePanelProps) => {
   const client = useClient();
+  const { showDeletedObjects } = useAppState();
+  const { setShowDeletedObjects } = useAppReducer();
   const { space } = useAppRouter();
   const spaces = useSpaces();
   const shell = useShell();
@@ -50,6 +57,17 @@ export const SpacePanel = ({ onAction, onNavigate, onClose }: SpacePanelProps) =
       </div>
 
       <div className='flex flex-col px-4 py-2'>
+        {/* TODO(burdon): Not aligned with buttons. Checkbox not part of Aurora? */}
+        <div className='flex px-0.5 py-1 items-center'>
+          <Checkbox
+            labelId='sidebar.showDeleted'
+            checked={showDeletedObjects}
+            onCheckedChange={setShowDeletedObjects}
+          />
+          <span className='px-2.5 pt-0.5 text-sm'>Show deleted objects</span>
+        </div>
+        <Separator />
+
         <Button
           variant='ghost'
           className='flex p-0 justify-start'
