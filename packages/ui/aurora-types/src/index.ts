@@ -7,4 +7,3 @@ export * from './Elevation';
 export * from './MessageValence';
 export * from './Size';
 export * from './Theme';
-export * from './ThemeVariant';

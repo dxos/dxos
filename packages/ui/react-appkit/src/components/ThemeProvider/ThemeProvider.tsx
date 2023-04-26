@@ -12,24 +12,26 @@ import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/rea
 import React, { PropsWithChildren } from 'react';
 
 import { ThemeProvider as AuroraThemeProvider, ThemeProviderProps as AuroraThemeProviderProps } from '@dxos/aurora';
-import { mx, tx } from '@dxos/aurora-theme';
+import { mx, osTx, tx } from '@dxos/aurora-theme';
 
-export type ThemeProviderProps = PropsWithChildren<{
-  tooltipProviderProps?: Omit<TooltipProviderProps, 'children'>;
-  toastProviderProps?: Omit<ToastProviderProps, 'children'>;
-  toastViewportProps?: Omit<ToastViewportProps, 'children'>;
-}> &
-  AuroraThemeProviderProps;
+export type ThemeProviderProps = AuroraThemeProviderProps &
+  PropsWithChildren<{
+    themeVariant?: 'app' | 'os';
+    tooltipProviderProps?: Omit<TooltipProviderProps, 'children'>;
+    toastProviderProps?: Omit<ToastProviderProps, 'children'>;
+    toastViewportProps?: Omit<ToastViewportProps, 'children'>;
+  }>;
 
 export const ThemeProvider = ({
   children,
+  themeVariant,
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
   ...auroraThemeProviderProps
 }: ThemeProviderProps) => {
   return (
-    <AuroraThemeProvider tx={tx} {...auroraThemeProviderProps}>
+    <AuroraThemeProvider tx={themeVariant === 'os' ? osTx : tx} {...auroraThemeProviderProps}>
       <ToastProvider {...toastProviderProps}>
         <TooltipProvider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}

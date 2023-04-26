@@ -25,7 +25,7 @@ export const DocumentTreeItem = observer(({ document, linkTo }: { document: Comp
         <Link
           to={linkTo}
           className={mx(
-            tx('button', 'tree-item__heading--link', { variant: 'ghost' }),
+            tx('button.root', 'tree-item__heading--link', { variant: 'ghost' }),
             'is-full text-base p-0 font-normal items-start gap-1'
           )}
           data-testid='composer.documentTreeItemHeading'

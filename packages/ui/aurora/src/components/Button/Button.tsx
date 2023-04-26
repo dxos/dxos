@@ -17,7 +17,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...rootSlot}
         className={tx(
-          'button',
+          'button.root',
           'aurora__button',
           {
             variant,

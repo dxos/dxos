@@ -21,7 +21,7 @@ export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
 
   return (
     <PanelAlertDialog {...{ slots, titleId }}>
-      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
         <JoinPanel
           {...{
             ...joinPanelProps,

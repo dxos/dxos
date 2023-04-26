@@ -9,7 +9,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { ComponentProps, ComponentPropsWithoutRef, Fragment, ReactNode } from 'react';
 
 import { ElevationProvider } from '@dxos/aurora';
-import { defaultDescription, defaultFocus, hover, getSize, mx } from '@dxos/aurora-theme';
+import { defaultDescription, defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 import { defaultOverlay } from './dialogStyles';
@@ -131,7 +131,7 @@ export const Dialog = ({
                     className={mx(
                       'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                       defaultFocus,
-                      hover(),
+                      defaultHover,
                       slots.close?.className
                     )}
                   >

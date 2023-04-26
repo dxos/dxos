@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Density, Elevation, ComponentFunction } from '@dxos/aurora-types';
+import type { Density, Elevation, ComponentFunction, ComponentFragment } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
-  appHover,
+  defaultHover,
   buttonCoarse,
   buttonFine,
   defaultActive,
@@ -37,24 +37,24 @@ export type OsButtonStyleProps = Partial<{
   sideInset: 'be';
 }>;
 
-const sharedButtonStyles: ComponentFunction<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
-  return mx(
+const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
+  return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? buttonFine : buttonCoarse,
     // Register all radix states
     'group',
     props.disabled && defaultDisabled
-  );
+  ];
 };
 
-export const buttonAppStyles: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
+export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
     'rounded-md font-medium text-sm',
     !props.disabled &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
       (props.elevation === 'group' ? 'shadow' : props.elevation === 'chrome' ? 'shadow-none' : 'shadow-md'),
-    !props.disabled && appHover,
+    !props.disabled && defaultHover,
     resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
     resolvedVariant === 'default' && defaultAppButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
@@ -63,21 +63,21 @@ export const buttonAppStyles: ComponentFunction<AppButtonStyleProps> = (props, .
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     !props.disabled && defaultFocus,
     defaultActive,
-    sharedButtonStyles(props),
+    ...sharedButtonStyles(props),
     ...etc
   );
 };
 
-export const buttonOsStyles: ComponentFunction<OsButtonStyleProps> = (props, ...etc) => {
+export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
     'rounded font-system-medium text-xs shadow-none',
-    !props.disabled && appHover,
+    !props.disabled && defaultHover,
     resolvedVariant === 'default' && defaultOsButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
     !props.disabled && osFocus,
-    osActive(props.sideInset ?? 'be'),
-    sharedButtonStyles(props),
+    ...osActive({ side: props.sideInset ?? 'be' }),
+    ...sharedButtonStyles(props),
     ...etc
   );
 };
