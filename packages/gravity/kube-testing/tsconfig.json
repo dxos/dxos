@@ -7,8 +7,9 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
-    "outDir": "dist"
+    "module": "ES2020",
+    "outDir": "dist",
+
   },
   "exclude": [
     "/node_modules/"
@@ -20,5 +21,5 @@
     {
       "path": "../../core/mesh/signal"
     }
-  ]
+  ],
 }
