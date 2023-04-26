@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { randomInt } from '@dxos/util';
 
 interface TestBrokerOptions {
-  binPath: string;
+  binCommand: string;
   cwd: string;
   signalArguments: string[];
   port?: number;
@@ -21,7 +21,7 @@ interface TestBrokerOptions {
 
 // TODO(burdon): Convert to TestBuilder pattern.
 export class SignalServerRunner {
-  private readonly _binPath: string;
+  private readonly _binCommand: string;
   private readonly _signalArguments: string[];
   private readonly _cwd?: string;
 
@@ -31,8 +31,8 @@ export class SignalServerRunner {
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor({ binPath, cwd, signalArguments, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
-    this._binPath = binPath;
+  constructor({ binCommand: binPath, cwd, signalArguments, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
+    this._binCommand = binPath;
     this._signalArguments = signalArguments;
     this._cwd = cwd;
     this._port = port;
@@ -42,8 +42,8 @@ export class SignalServerRunner {
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
-    log(`Starting ${this._binPath} (cwd: ${this._cwd})`);
-    const server = spawn(this._binPath, ['-port', this._port.toString(), ...this._signalArguments], {
+    log(`Starting ${this._binCommand} (cwd: ${this._cwd})`);
+    const server = spawn(this._binCommand, ['-port', this._port.toString(), ...this._signalArguments], {
       cwd: this._cwd
     });
 
@@ -126,7 +126,7 @@ export const runTestSignalServer = async (port?: number): Promise<SignalServerRu
   const binPath = `./signal-test-${OS}-${ARCH}`;
 
   const server = new SignalServerRunner({
-    binPath,
+    binCommand: binPath,
     signalArguments: ['server'],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
     port: port ?? randomInt(10000, 50000)
