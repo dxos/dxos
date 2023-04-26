@@ -1,0 +1,68 @@
+{
+  "sourceRoot": "packages/gravity/kube-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gravity/kube-testing/src/index.ts",
+        "outputPath": "packages/gravity/kube-testing/dist/types",
+        "tsConfig": "packages/gravity/kube-testing/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/gravity/kube-testing/src/main.ts"
+        ],
+        "outputPath": "packages/gravity/kube-testing/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/kube-testing/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/gravity/kube-testing",
+        "environments": [
+          "nodejs"
+        ],
+        "outputPath": "tmp/mocha/packages/gravity/kube-testing",
+        "resultsPath": "test-results/packages/gravity/kube-testing",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "testPatterns": [
+          "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/kube-testing/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@dxos/kube-testing",
+  "version": "0.1.41",
+  "private": true,
+  "description": "KUBE Testing.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/signal": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
