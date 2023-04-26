@@ -4,8 +4,8 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Button, useButtonShadow, useTranslation } from '@dxos/aurora';
-import { defaultOsButtonColors, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/aurora';
+import { contentElevation, defaultOsButtonColors, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
@@ -43,7 +43,6 @@ export const DocumentLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace });
   useIdentity({ login: true });
-  const shadow = useButtonShadow('base');
 
   const { spaceKey } = useParams();
   const spaces = useSpaces({ all: true });
@@ -69,7 +68,11 @@ export const DocumentLayout = () => {
           slots={{
             content: {
               children: <SidebarContent />,
-              className: mx(defaultOsButtonColors, shadow, 'backdrop-blur overflow-visible'),
+              className: mx(
+                defaultOsButtonColors,
+                contentElevation({ elevation: 'chrome' }),
+                'backdrop-blur overflow-visible'
+              ),
               onOpenAutoFocus: (event) => event.preventDefault(),
               onCloseAutoFocus: (event) => event.preventDefault()
             },

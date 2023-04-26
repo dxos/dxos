@@ -6,7 +6,7 @@ import { Activity, Eraser } from '@phosphor-icons/react';
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 import { useTranslation, Button } from '@dxos/aurora';
-import { getSize, defaultGroup } from '@dxos/aurora-theme';
+import { getSize, group, mx } from '@dxos/aurora-theme';
 import { Input, Avatar } from '@dxos/react-appkit';
 import {
   BASE_TELEMETRY_PROPERTIES,
@@ -57,7 +57,7 @@ const IdentityPage = () => {
         variant='circle'
         fallbackValue={identityHex}
         label={identity?.profile?.displayName ?? humanize(identityHex)}
-        slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
+        slots={{ root: { className: mx(group({ elevation: 'group' }), 'p-1 rounded-full') } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}

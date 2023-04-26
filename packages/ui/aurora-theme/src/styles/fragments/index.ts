@@ -5,6 +5,7 @@
 export * from './active';
 export * from './density';
 export * from './disabled';
+export * from './elevation';
 export * from './focus';
 export * from './group';
 export * from './hover';
