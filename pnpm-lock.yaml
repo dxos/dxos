@@ -4182,6 +4182,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-context': ^1.0.0
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       alea: ^1.0.1
@@ -4191,6 +4192,7 @@ importers:
       react-i18next: ^11.18.6
       vite: ^4.3.0
     dependencies:
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
       alea: 1.0.1
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy

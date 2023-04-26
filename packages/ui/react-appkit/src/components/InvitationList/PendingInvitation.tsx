@@ -6,7 +6,7 @@ import { ProhibitInset, XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultGroup, getSize, mx } from '@dxos/aurora-theme';
+import { group, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 
@@ -32,7 +32,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
   const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
 
   return (
-    <div role='group' className={mx(defaultGroup({ elevation: 'group' }), 'mbe-2')}>
+    <div role='group' className={mx(group({ elevation: 'group' }), 'mbe-2')}>
       {wrapper.get() ? (
         <>
           <HeadingWithActions

@@ -4,8 +4,8 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { useId, useButtonShadow, MessageValence } from '@dxos/aurora';
-import { alertValence, mx } from '@dxos/aurora-theme';
+import { useId, useElevationContext, MessageValence, Elevation } from '@dxos/aurora';
+import { surfaceElevation, alertValence, mx } from '@dxos/aurora-theme';
 
 export interface AlertSlots {
   root?: Omit<ComponentProps<'div'>, 'children'>;
@@ -16,19 +16,25 @@ export interface AlertProps {
   title: ReactNode;
   assertive?: boolean;
   valence?: MessageValence;
+  elevation?: Elevation;
   children?: ReactNode;
   slots?: AlertSlots;
 }
 
-export const Alert = ({ title, children, assertive, valence, slots = {} }: AlertProps) => {
+export const Alert = ({ title, children, assertive, valence, elevation: propsElevation, slots = {} }: AlertProps) => {
   const labelId = useId('alertLabel');
-  const shadow = useButtonShadow();
+  const { elevation } = useElevationContext();
   return (
     <div
       {...slots.root}
       role={assertive ? 'alert' : 'group'}
       aria-labelledby={labelId}
-      className={mx('p-3 rounded-md max-is-full overflow-auto', shadow, alertValence(valence), slots.root?.className)}
+      className={mx(
+        'p-3 rounded-md max-is-full overflow-auto',
+        surfaceElevation({ elevation: propsElevation ?? elevation ?? 'group' }),
+        alertValence(valence),
+        slots.root?.className
+      )}
     >
       <p {...slots.title} id={labelId} className={mx('font-medium mb-2', slots.title?.className)}>
         {title}
