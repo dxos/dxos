@@ -9,17 +9,17 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
 
 describe('Signal Integration Test', () => {
-  let broker: TestBroker;
+  let broker: SignalServerRunner;
 
   beforeAll(async () => {
-    broker = await createTestBroker();
+    broker = await runTestSignalServer();
   });
 
   afterAll(() => {

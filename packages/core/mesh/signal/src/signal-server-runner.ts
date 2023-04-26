@@ -6,51 +6,43 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import fetch from 'node-fetch';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
-import * as process from 'process';
 
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { randomInt } from '@dxos/util';
 
 interface TestBrokerOptions {
+  binPath: string;
+  cwd: string;
+  signalArguments: string[];
   port?: number;
   timeout?: number;
 }
 
 // TODO(burdon): Convert to TestBuilder pattern.
-export class TestBroker {
-  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
+export class SignalServerRunner {
+  private readonly _binPath: string;
+  private readonly _signalArguments: string[];
+  private readonly _cwd?: string;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
   private readonly _port: number;
   private readonly _timeout: number;
-  private _serverProcess: ChildProcessWithoutNullStreams;
+  private _serverProcess?: ChildProcessWithoutNullStreams;
 
-  constructor({ port = 8080, timeout = 5_000 }: TestBrokerOptions = {}) {
+  constructor({ binPath, cwd, signalArguments, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
+    this._binPath = binPath;
+    this._signalArguments = signalArguments;
+    this._cwd = cwd;
     this._port = port;
     this._timeout = timeout;
-    this._serverProcess = this.startProcess();
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
-    const arch = ['x64', 'amd64', 'ppc64'].includes(process.arch)
-      ? 'amd64'
-      : ['arm64'].includes(process.arch)
-      ? 'arm64'
-      : '32';
-    if (arch === '32') {
-      throw new Error('32 bit architecture not supported');
-    }
-
-    const os = process.platform;
-    if (!['darwin', 'linux'].includes(os)) {
-      throw new Error(`Unsupported platform: ${os}`);
-    }
-
-    log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
-    const server = spawn(`./signal-test-${os}-${arch}`, ['server', '--port', this._port.toString()], {
-      cwd: this._binPath
+    log(`Starting ${this._binPath} (cwd: ${this._cwd})`);
+    const server = spawn(this._binPath, ['-port', this._port.toString(), ...this._signalArguments], {
+      cwd: this._cwd
     });
 
     server.stdout.on('data', (data) => {
@@ -58,7 +50,7 @@ export class TestBroker {
     });
 
     server.stderr.on('data', (data) => {
-      log(`TestServer stderr: ${data}`);
+      log.warn(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
@@ -78,7 +70,7 @@ export class TestBroker {
     while (waited < this._timeout) {
       try {
         const response = await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
-        console.log(`Fetching broker. Response=${JSON.stringify(response)}`);
+        log(`Fetching broker. Response=${JSON.stringify(response)}`);
         return;
       } catch (err) {
         await sleep(waitInc);
@@ -99,13 +91,21 @@ export class TestBroker {
   }
 
   public stop(): void {
-    this._serverProcess.kill('SIGINT');
+    this._serverProcess?.kill('SIGINT');
+    this._serverProcess = undefined;
   }
 
   public url(): string {
     return `ws://localhost:${this._port}/.well-known/dx/signal`;
   }
 }
+const ARCH = ['x64', 'amd64', 'ppc64'].includes(process.arch)
+  ? 'amd64'
+  : ['arm64'].includes(process.arch)
+  ? 'arm64'
+  : '32';
+
+const OS = process.platform;
 
 /**
  * Creates a test instance of the signal server with swarming disabled and starts it.
@@ -113,8 +113,22 @@ export class TestBroker {
  * @param port Port to start the signal server on, random by default.
  */
 // TODO(burdon): Convert to TestBuilder pattern.
-export const createTestBroker = async (port?: number): Promise<TestBroker> => {
-  const server = new TestBroker({ port: port ?? randomInt(10000, 50000) });
+export const runTestSignalServer = async (port?: number): Promise<SignalServerRunner> => {
+  if (ARCH === '32') {
+    throw new Error('32 bit architecture not supported');
+  }
+
+  if (!['darwin', 'linux'].includes(OS)) {
+    throw new Error(`Unsupported platform: ${OS}`);
+  }
+
+  const server = new SignalServerRunner({
+    binPath: `./signal-test-${OS}-${ARCH}`,
+    signalArguments: ['server'],
+    cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
+    port: port ?? randomInt(10000, 50000)
+  });
+  server.startProcess();
   await server.waitUntilStarted();
   return server;
 };
