@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext, Scope } from '@radix-ui/react-context';
+import { createContext } from '@radix-ui/react-context';
 import React, { ComponentProps, ComponentPropsWithRef, forwardRef, ReactNode } from 'react';
 
 import { Density, Elevation } from '@dxos/aurora-types';
@@ -16,7 +16,6 @@ interface ButtonProps extends ComponentPropsWithRef<'button'> {
   disabled?: boolean;
 }
 
-type ButtonGroupScopedProps<P> = P & { __buttonGroupScope?: Scope };
 type ButtonGroupContextValue = { inGroup?: boolean };
 const BUTTON_GROUP_NAME = 'ButtonGroup';
 const BUTTON_NAME = 'Button';
@@ -24,18 +23,8 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
   inGroup: false
 });
 
-const Button = forwardRef<HTMLButtonElement, ButtonGroupScopedProps<ButtonProps>>(
-  (
-    {
-      children,
-      density: propsDensity,
-      elevation: propsElevation,
-      variant = 'default',
-      __buttonGroupScope,
-      ...rootSlot
-    },
-    ref
-  ) => {
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', ...rootSlot }, ref) => {
     const { inGroup } = useButtonGroupContext(BUTTON_NAME);
     const { tx } = useThemeContext();
     const { elevation } = useElevationContext();
@@ -68,7 +57,7 @@ interface ButtonGroupProps extends ComponentProps<'div'> {
   children?: ReactNode;
 }
 
-const ButtonGroup = ({ children, __buttonGroupScope, ...divProps }: ButtonGroupScopedProps<ButtonGroupProps>) => {
+const ButtonGroup = ({ children, ...divProps }: ButtonGroupProps) => {
   const { tx } = useThemeContext();
   const { elevation } = useElevationContext();
   return (
