@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import fetch from 'node-fetch';
-import path, { dirname } from 'path';
+import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { assert } from 'node:console';
+import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { sleep } from '@dxos/async';
@@ -29,7 +30,7 @@ export class SignalServerRunner {
   private readonly _retriesLimit = 3;
   private readonly _port: number;
   private readonly _timeout: number;
-  private _serverProcess?: ChildProcessWithoutNullStreams;
+  private _serverProcess: ChildProcessWithoutNullStreams;
 
   constructor({ binPath, cwd, signalArguments, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
     this._binPath = binPath;
@@ -37,6 +38,8 @@ export class SignalServerRunner {
     this._cwd = cwd;
     this._port = port;
     this._timeout = timeout;
+
+    this._serverProcess = this.startProcess();
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
@@ -61,6 +64,7 @@ export class SignalServerRunner {
       log(`TestServer exited with code ${code}`);
     });
 
+    this._serverProcess = server;
     return server;
   }
 
@@ -91,8 +95,8 @@ export class SignalServerRunner {
   }
 
   public stop(): void {
-    this._serverProcess?.kill('SIGINT');
-    this._serverProcess = undefined;
+    assert(!!this._serverProcess, 'Server process is not running');
+    this._serverProcess!.kill('SIGINT');
   }
 
   public url(): string {
@@ -121,14 +125,14 @@ export const runTestSignalServer = async (port?: number): Promise<SignalServerRu
   if (!['darwin', 'linux'].includes(OS)) {
     throw new Error(`Unsupported platform: ${OS}`);
   }
+  const binPath = `./signal-test-${OS}-${ARCH}`;
 
   const server = new SignalServerRunner({
-    binPath: `./signal-test-${OS}-${ARCH}`,
+    binPath,
     signalArguments: ['server'],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
     port: port ?? randomInt(10000, 50000)
   });
-  server.startProcess();
   await server.waitUntilStarted();
   return server;
 };
