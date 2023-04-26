@@ -12,6 +12,7 @@ import { createDatabase } from './testing';
 import { TypedObject } from './typed-object';
 
 describe('Queries', () => {
+  // TODO(burdon): Factor out common dataset.
   let db: EchoDatabase;
   beforeAll(async () => {
     db = await createDatabase();
