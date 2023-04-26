@@ -4,7 +4,8 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useThemeContext } from '@dxos/aurora';
+import { useDensityContext, useElevationContext, useThemeContext } from '@dxos/aurora';
+import { contentElevation } from '@dxos/aurora-theme';
 
 import { TextareaProps } from './InputProps';
 
@@ -12,10 +13,13 @@ export type BareTextareaInputProps = ComponentPropsWithRef<'textarea'> &
   Pick<TextareaProps, 'validationMessage' | 'validationValence' | 'variant' | 'elevation' | 'density'>;
 
 export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInputProps>(
-  ({ validationValence, validationMessage, elevation, density: propsDensity, variant, ...inputSlot }, forwardedRef) => {
+  (
+    { validationValence, validationMessage, elevation: propsElevation, density: propsDensity, variant, ...inputSlot },
+    forwardedRef
+  ) => {
     const { tx } = useThemeContext();
     const isOs = tx('themeName', 'aurora', {}) === 'dxos';
-    const shadow = useButtonShadow(elevation);
+    const { elevation } = useElevationContext();
     const density = useDensityContext(isOs ? 'fine' : propsDensity);
     return (
       <textarea
@@ -26,7 +30,7 @@ export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInp
           'input__textarea',
           { variant, density, disabled: inputSlot.disabled, validationValence },
           'block is-full',
-          !inputSlot.disabled && variant !== 'subdued' && shadow,
+          !inputSlot.disabled && variant !== 'subdued' && contentElevation({ elevation: propsElevation ?? elevation }),
           inputSlot?.className
         )}
       />

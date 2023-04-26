@@ -4,7 +4,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { defaultDisabled, defaultGroup, mx } from '@dxos/aurora-theme';
+import { defaultDisabled, group, mx } from '@dxos/aurora-theme';
 import type { Identity } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
@@ -26,13 +26,7 @@ export const ProfileList = ({ identities }: ProfileListProps) => {
       {identities.map((identity) => {
         const identityHex = identity.identityKey.toHex();
         return (
-          <li
-            key={identityHex}
-            className={mx(
-              defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded' }),
-              'flex gap-2 items-center'
-            )}
-          >
+          <li key={identityHex} className={mx(group({ elevation: 'group' }), 'p-1 rounded flex gap-2 items-center')}>
             <Avatar
               variant='circle'
               fallbackValue={identityHex}

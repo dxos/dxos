@@ -6,7 +6,7 @@ import '@dxosTheme';
 import { PaperPlane } from '@phosphor-icons/react';
 import React from 'react';
 
-import { defaultGroup, getSize, mx } from '@dxos/aurora-theme';
+import { group, getSize, mx } from '@dxos/aurora-theme';
 
 import { Button, DensityProvider, ElevationProvider } from '../components';
 
@@ -33,14 +33,14 @@ const ScenarioContent = (_props: {}) => (
 
 const Scenario = (_props: {}) => (
   <>
-    <div role='row' className={mx(defaultGroup({ elevation: 'group' }), 'flex gap-1 items-center p-0 mbe-4')}>
+    <div role='row' className={mx(group({ elevation: 'group' }), 'flex gap-1 items-center p-0 mbe-4')}>
       <DensityProvider density='coarse'>
         <ElevationProvider elevation='chrome'>
           <ScenarioContent />
         </ElevationProvider>
       </DensityProvider>
     </div>
-    <div role='row' className={mx(defaultGroup({ elevation: 'group' }), 'flex gap-1 items-center p-0')}>
+    <div role='row' className={mx(group({ elevation: 'group' }), 'flex gap-1 items-center p-0')}>
       <DensityProvider density='fine'>
         <ElevationProvider elevation='chrome'>
           <ScenarioContent />

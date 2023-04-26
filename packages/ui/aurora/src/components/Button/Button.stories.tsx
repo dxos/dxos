@@ -7,8 +7,7 @@ import React, { PropsWithChildren } from 'react';
 
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
-import { Button } from './Button';
-import { ButtonProps } from './ButtonProps';
+import { Button, ButtonProps } from './Button';
 
 export default {
   component: Button
