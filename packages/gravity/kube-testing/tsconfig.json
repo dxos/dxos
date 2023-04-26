@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ES2020",
+    "module": "ESNext",
     "outDir": "dist",
 
   },
