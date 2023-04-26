@@ -68,6 +68,10 @@ const Content = () => {
     sidebarFrameDef = frameRegistry.getFrameDef('dxos.module.frame.chat');
   }
 
+  if (!space) {
+    return null;
+  }
+
   return (
     <div className='flex flex-col bs-full overflow-hidden'>
       <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>

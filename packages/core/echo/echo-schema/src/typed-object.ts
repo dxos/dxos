@@ -8,8 +8,8 @@ import { inspect, InspectOptionsStylized } from 'node:util';
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
 
+import { EchoArray } from './array';
 import { base, data, proxy, schema } from './defs';
-import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
