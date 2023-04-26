@@ -13,8 +13,8 @@ import { randomInt } from '@dxos/util';
 
 interface TestBrokerOptions {
   binCommand: string;
-  cwd: string;
   signalArguments: string[];
+  cwd?: string;
   port?: number;
   timeout?: number;
 }
@@ -31,8 +31,8 @@ export class SignalServerRunner {
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor({ binCommand: binPath, cwd, signalArguments, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
-    this._binCommand = binPath;
+  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
+    this._binCommand = binCommand;
     this._signalArguments = signalArguments;
     this._cwd = cwd;
     this._port = port;
