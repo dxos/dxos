@@ -5,7 +5,7 @@
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { useId, useThemeContext, ButtonProps } from '@dxos/aurora';
-import { defaultDescription, primaryDescription, mx, osTx, tx } from '@dxos/aurora-theme';
+import { defaultDescription, primaryDescription, mx } from '@dxos/aurora-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -34,9 +34,10 @@ export const CompoundButton = ({
 }: Omit<CompoundButtonProps, 'density'>) => {
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
-  const { themeVariant } = useThemeContext();
+  const { tx } = useThemeContext();
+  const isOs = tx('themeName', 'aurora', {}) === 'dxos';
   const styleProps = { ...buttonProps, variant };
-  const buttonClassName = (themeVariant === 'os' ? osTx : tx)(
+  const buttonClassName = tx(
     'button',
     'button button--compound',
     styleProps,
@@ -67,7 +68,7 @@ export const CompoundButton = ({
             className={mx(
               'text-xs mbe-1',
               variant === 'primary' ? primaryDescription : defaultDescription,
-              themeVariant === 'os' ? 'font-system-normal' : 'font-normal',
+              isOs ? 'font-system-normal' : 'font-normal',
               slots.description?.className
             )}
           >

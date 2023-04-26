@@ -10,9 +10,7 @@ import {
 import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
 
 import { useThemeContext } from '@dxos/aurora';
-import { dataDisabled, mx } from '@dxos/aurora-theme';
-
-import { defaultDropdownMenuItem } from './dropdownMenuStyles';
+import { mx } from '@dxos/aurora-theme';
 
 export interface DropdownMenuSlots {
   root?: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>;
@@ -28,12 +26,12 @@ export interface DropdownMenuProps {
 
 export const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
   ({ className, ...props }: DropdownMenuItemProps, forwardedRef) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
     return (
       <DropdownMenuPrimitive.Item
         ref={forwardedRef}
         {...props}
-        className={mx(defaultDropdownMenuItem(themeVariant), dataDisabled, className)}
+        className={tx('dropdownMenu.item', 'dropdownMenu__item', {}, className)}
       />
     );
   }
@@ -65,12 +63,12 @@ export const DropdownMenuLabel = ({
 
 export const DropdownMenuCheckboxItem = forwardRef<HTMLDivElement, DropdownMenuCheckboxItemProps>(
   ({ className, ...props }: DropdownMenuCheckboxItemProps, forwardedRef) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
     return (
       <DropdownMenuPrimitive.CheckboxItem
         ref={forwardedRef}
         {...props}
-        className={mx(defaultDropdownMenuItem(themeVariant), className)}
+        className={tx('dropdownMenu.item', 'dropdownMenu__item--checkbox', {}, className)}
       />
     );
   }
@@ -80,9 +78,12 @@ export const DropdownMenuSubTrigger = ({
   className,
   ...props
 }: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>) => {
-  const { themeVariant } = useThemeContext();
+  const { tx } = useThemeContext();
   return (
-    <DropdownMenuPrimitive.SubTrigger {...props} className={mx(defaultDropdownMenuItem(themeVariant), className)} />
+    <DropdownMenuPrimitive.SubTrigger
+      {...props}
+      className={tx('dropdownMenu.item', 'dropdownMenu__item--sub-trigger', {}, className)}
+    />
   );
 };
 
