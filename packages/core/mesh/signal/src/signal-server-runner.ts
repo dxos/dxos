@@ -4,7 +4,6 @@
 
 import fetch from 'node-fetch';
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
-import { assert } from 'node:console';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -95,8 +94,7 @@ export class SignalServerRunner {
   }
 
   public stop(): void {
-    assert(!!this._serverProcess, 'Server process is not running');
-    this._serverProcess!.kill('SIGINT');
+    this._serverProcess.kill('SIGINT');
   }
 
   public url(): string {
