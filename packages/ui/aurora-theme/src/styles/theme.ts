@@ -5,14 +5,33 @@ import get from 'lodash.get';
 
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
-import { buttonAppStyles, buttonOsStyles } from './components';
+import {
+  buttonAppRoot,
+  buttonOsRoot,
+  inputAppInput,
+  inputOsInput,
+  dropdownMenuItem,
+  listItemAppDragHandle,
+  listItemOsDragHandle,
+  listItemAppOpenTrigger,
+  listItemOsOpenTrigger,
+  buttonGroup
+} from './components';
 
 export const theme: Theme = {
-  button: buttonAppStyles
+  themeName: () => 'aurora',
+  button: { root: buttonAppRoot, group: buttonGroup },
+  input: { input: inputAppInput },
+  dropdownMenu: { item: dropdownMenuItem },
+  list: { dragHandle: listItemAppDragHandle, openTrigger: listItemAppOpenTrigger }
 };
 
 export const osTheme: Theme = {
-  button: buttonOsStyles
+  ...theme,
+  themeName: () => 'dxos',
+  button: { ...theme.button, root: buttonOsRoot },
+  input: { ...theme.input, input: inputOsInput },
+  list: { ...theme.list, dragHandle: listItemOsDragHandle, openTrigger: listItemOsOpenTrigger }
 };
 
 export const tx = <P extends Record<string, any>>(

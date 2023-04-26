@@ -26,7 +26,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
         titleId
       }}
     >
-      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx, themeVariant: 'os' }}>
+      <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
         <DevicesPanel
           {...{
             ...devicesDialogProps,

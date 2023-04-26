@@ -75,7 +75,7 @@ const SidebarContent = () => {
   };
 
   return (
-    <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
       <ElevationProvider elevation='chrome'>
         <DensityProvider density='fine'>
           <Dialog
@@ -193,7 +193,7 @@ const SidebarToggle = () => {
     </Button>
   );
   return (
-    <ThemeContext.Provider value={{ ...themeContext, tx: osTx, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
       <div
         role='none'
         className={mx(

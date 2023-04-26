@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button, useTranslation, Trans } from '@dxos/aurora';
-import { defaultGroup, getSize, mx } from '@dxos/aurora-theme';
+import { group, getSize, mx } from '@dxos/aurora-theme';
 import { Client, Space } from '@dxos/client';
 import { AuthChoices, Avatar, Heading } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
@@ -46,7 +46,7 @@ const LockPage = () => {
             label={identity.profile?.displayName ?? humanize(identity.identityKey)}
             slots={{
               root: {
-                className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }),
+                className: mx(group({ elevation: 'group' }), 'p-1 rounded-full'),
                 // NOTE: This is for testing Sentry hookup.
                 onClick: (event) => {
                   if (event.detail === 3) {

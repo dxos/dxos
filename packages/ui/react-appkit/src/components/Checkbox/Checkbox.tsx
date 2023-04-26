@@ -7,7 +7,7 @@ import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import React, { ComponentPropsWithoutRef } from 'react';
 
 import { useThemeContext } from '@dxos/aurora';
-import { getSize, themeVariantFocus, mx } from '@dxos/aurora-theme';
+import { getSize, mx, defaultFocus, osFocus } from '@dxos/aurora-theme';
 
 type SharedCheckboxProps = Pick<
   ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
@@ -17,7 +17,8 @@ type SharedCheckboxProps = Pick<
 export type CheckboxProps = SharedCheckboxProps & ({ labelId: string } | { id: string });
 
 export const Checkbox = (props: CheckboxProps) => {
-  const { themeVariant } = useThemeContext();
+  const { tx } = useThemeContext();
+  const isOs = tx('themeName', 'aurora', {}) === 'dxos';
   const { defaultChecked, checked, onCheckedChange, className } = props;
   return (
     <CheckboxPrimitive.Root
@@ -28,7 +29,7 @@ export const Checkbox = (props: CheckboxProps) => {
         getSize(5),
         'flex items-center justify-center rounded text-white',
         'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
-        themeVariantFocus(themeVariant),
+        isOs ? osFocus : defaultFocus,
         className
       )}
     >

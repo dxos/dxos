@@ -5,8 +5,8 @@
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
-import { useButtonShadow, useDensityContext, useForwardedRef, useIsFocused } from '@dxos/aurora';
-import { staticInput, mx } from '@dxos/aurora-theme';
+import { useElevationContext, useDensityContext, useForwardedRef, useIsFocused, useThemeContext } from '@dxos/aurora';
+import { mx, contentElevation } from '@dxos/aurora-theme';
 
 import { InputProps } from './InputProps';
 
@@ -24,12 +24,16 @@ export type BarePinInputProps = Omit<
 
 // TODO(thure): supplying a `value` prop to CodeInput does not yield correct controlled input interactivity; this may be an issue with RCI (filed as https://github.com/leonardodino/rci/issues/25).
 export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
-  ({ validationMessage, validationValence, variant, elevation, density: propsDensity, ...inputSlot }, ref) => {
+  (
+    { validationMessage, validationValence, variant, elevation: propsElevation, density: propsDensity, ...inputSlot },
+    ref
+  ) => {
     const width = getSegmentCssWidth('13px');
     const inputRef = useForwardedRef(ref);
     const inputFocused = useIsFocused(inputRef);
-    const shadow = useButtonShadow(elevation);
     const density = useDensityContext(propsDensity);
+    const { elevation } = useElevationContext();
+    const { tx } = useThemeContext();
 
     const { disabled } = inputSlot;
 
@@ -37,14 +41,17 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
       ({ state, index }) => (
         <div
           key={index}
-          className={mx(
-            staticInput({
+          className={tx(
+            'input.input',
+            'input__input--pin',
+            {
+              variant: 'static',
               focused: inputFocused && !!state,
               disabled,
               density,
               ...(validationMessage && { validationValence })
-            }),
-            !disabled && variant !== 'subdued' && shadow
+            },
+            !disabled && variant !== 'subdued' && contentElevation({ elevation: propsElevation ?? elevation })
           )}
           data-state={state}
           style={{ width, height: '100%' }}

@@ -5,14 +5,14 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { useButtonShadow } from '@dxos/aurora';
 import {
   defaultFocus,
-  hover,
+  defaultHover,
   defaultInlineSeparator,
   mx,
   defaultAppButtonColors,
-  primaryAppButtonColors
+  primaryAppButtonColors,
+  surfaceElevation
 } from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '../Tooltip';
@@ -70,7 +70,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
-            hover()
+            defaultHover
           )}
         >
           {children}
@@ -102,7 +102,7 @@ const NavMenuLinkItem = forwardRef(
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
-          hover(),
+          defaultHover,
           triggerLinkProps.className
         )}
       >
@@ -127,7 +127,7 @@ const NavMenuTooltipLinkItem = forwardRef(
               active ? primaryAppButtonColors : defaultAppButtonColors,
               active ? 'font-medium' : 'font-normal',
               defaultFocus,
-              hover(),
+              defaultHover,
               triggerLinkProps.className
             )}
           >
@@ -150,7 +150,6 @@ const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in 
 const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
 export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuProps) => {
-  const shadow = useButtonShadow();
   return (
     <NavigationMenuPrimitive.Root
       {...slots.root}
@@ -164,7 +163,7 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
       <NavigationMenuPrimitive.List
         {...slots.list}
         className={mx(
-          shadow,
+          surfaceElevation({ elevation: 'group' }),
           'relative flex gap-1 p-1',
           variant === 'vertical' ? 'flex-col items-stretch' : 'flex-row items-center',
           slots.list?.className
