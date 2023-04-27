@@ -29,7 +29,11 @@ export const Test = () => {
     return null;
   }
 
-  return <SearchPanel space={space} onSelect={() => {}} onResults={() => {}} />;
+  return (
+    <div className='flex flex-col w-[300px]'>
+      <SearchPanel space={space} onSelect={() => {}} onResults={() => {}} />
+    </div>
+  );
 };
 
 export const Default = {
