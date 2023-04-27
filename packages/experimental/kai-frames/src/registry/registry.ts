@@ -9,7 +9,7 @@ import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
 // TODO(burdon): Hack for sidebar content.
-export type PluginComponent = FC<{ space: Space; onSelect?: (objectId: string | undefined) => void } | any>;
+export type PluginProps = { space: Space; onSelect?: (objectId: string | undefined) => void };
 
 /**
  * Dynamically loaded metadata for frame.
@@ -19,14 +19,22 @@ export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
   Component: FC<any>;
 
-  // Sidebar
-  autoCreate?: boolean;
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove: sidebar should interpret plugin metadata.
+  Plugin?: FC<PluginProps>;
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Rename titleProperty; get from schema.
   title?: string;
+
   // TODO(burdon): Generalize filter.
   filter?: () => TypeFilter<T>;
+  autoCreate?: boolean;
   onCreate?: (space: Space) => Promise<T>;
-  // TODO(burdon): Rename Selector.
-  Plugin?: PluginComponent;
 };
 
 // TODO(burdon): Rename.
@@ -43,16 +51,21 @@ export type FrameDef<T extends TypedObject> = {
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
+<<<<<<< Updated upstream
   constructor(frameDefs: FrameDef<any>[] = []) {
     frameDefs.forEach((frameDef) => this.addFrameDef(frameDef));
   }
 
   get frames(): FrameDef<any>[] {
     return Array.from(this._frameMap.values());
+=======
+  constructor(frameDefs: FrameDef<any>[]) {
+    frameDefs.forEach((frameDef) => this._frameMap.set(frameDef.module.id!, frameDef));
+>>>>>>> Stashed changes
   }
 
-  addFrameDef(frameDef: FrameDef<any>) {
-    this._frameMap.set(frameDef.module.id!, frameDef);
+  get frames() {
+    return Array.from(this._frameMap.values());
   }
 
   getFrameDef(id: string) {

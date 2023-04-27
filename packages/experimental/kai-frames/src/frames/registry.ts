@@ -28,11 +28,117 @@ import { StackFrameRuntime } from './Stack';
 import { TableFrameRuntime } from './Table';
 import { TaskFrameRuntime } from './Task';
 
+export const frameModules: Module[] = [
+  {
+    id: 'dxos.module.frame.contact',
+    type: 'dxos:type/frame',
+    displayName: 'Contacts',
+    description: 'Address book.'
+  },
+  {
+    id: 'dxos.module.frame.table',
+    type: 'dxos:type/frame',
+    displayName: 'Table',
+    description: 'Generic data browser.'
+  },
+  {
+    id: 'dxos.module.frame.kanban',
+    type: 'dxos:type/frame',
+    displayName: 'Kanban',
+    description: 'Card based pipelines.'
+  },
+  {
+    id: 'dxos.module.frame.task',
+    type: 'dxos:type/frame',
+    displayName: 'Tasks',
+    description: 'Projects and task management.'
+  },
+  {
+    id: 'dxos.module.frame.inbox',
+    type: 'dxos:type/frame',
+    displayName: 'Inbox',
+    description: 'Universal message inbox.'
+  },
+  {
+    id: 'dxos.module.frame.chat',
+    type: 'dxos:type/frame',
+    displayName: 'Chat',
+    description: 'Real time messaging.'
+  },
+  {
+    id: 'dxos.module.frame.calendar',
+    type: 'dxos:type/frame',
+    displayName: 'Calendar',
+    description: 'Calendar and time management tools.'
+  },
+  {
+    id: 'dxos.module.frame.document',
+    type: 'dxos:type/frame',
+    displayName: 'Documents',
+    description: 'Realtime structured document editing.'
+  },
+  {
+    id: 'dxos.module.frame.stack',
+    type: 'dxos:type/frame',
+    displayName: 'Stacks',
+    description: 'Dynamic structured documents.'
+  },
+  {
+    id: 'dxos.module.frame.presenter',
+    type: 'dxos:type/frame',
+    displayName: 'Presenter',
+    description: 'Slide presentations.'
+  },
+  {
+    id: 'dxos.module.frame.note',
+    type: 'dxos:type/frame',
+    displayName: 'Notes',
+    description: 'Brainstorming notes.'
+  },
+  {
+    id: 'dxos.module.frame.file',
+    type: 'dxos:type/frame',
+    displayName: 'Files',
+    description: 'Distributed file sharing.'
+  },
+  {
+    id: 'dxos.module.frame.sketch',
+    type: 'dxos:type/frame',
+    displayName: 'Sketch',
+    description: 'Vector drawings.'
+  },
+  {
+    id: 'dxos.module.frame.explorer',
+    type: 'dxos:type/frame',
+    displayName: 'Explorer',
+    description: 'Graphical User Interface and Data Explorer.'
+  },
+  {
+    id: 'dxos.module.frame.maps',
+    type: 'dxos:type/frame',
+    displayName: 'Maps',
+    description: 'Community contributed street maps.'
+  },
+  {
+    id: 'dxos.module.frame.chess',
+    type: 'dxos:type/frame',
+    displayName: 'Games',
+    description: 'Peer-to-peer and engine powered games.'
+  },
+  {
+    id: 'dxos.module.frame.sandbox',
+    type: 'dxos:type/frame',
+    displayName: 'Script',
+    description: 'Frame and Bot script editor.'
+  }
+];
+
 /**
  * DMG registry modules.
  */
 export const frameModules: Module[] = [
   {
+<<<<<<< Updated upstream
     id: 'dxos.module.frame.contact',
     type: 'dxos:type/frame',
     displayName: 'Contacts',
@@ -175,6 +281,77 @@ type SearchMeta = {
 };
 
 // TODO(burdon): Bind icons (metadata).
+=======
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.contact')!,
+    runtime: ContactFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.table')!,
+    runtime: TableFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.kanban')!,
+    runtime: KanbanFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.task')!,
+    runtime: TaskFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.inbox')!,
+    runtime: MessageFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.chat')!,
+    runtime: ChatFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.calendar')!,
+    runtime: CalendarFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.document')!,
+    runtime: DocumentFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.stack')!,
+    runtime: StackFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.presenter')!,
+    runtime: PresenterFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.note')!,
+    runtime: NoteFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.file')!,
+    runtime: FileFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.sketch')!,
+    runtime: SketchFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.explorer')!,
+    runtime: ExplorerFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.maps')!,
+    runtime: MapFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.chess')!,
+    runtime: ChessFrameRuntime
+  },
+  {
+    module: frameModules.find((frameDef) => frameDef.id === 'dxos.module.frame.sandbox')!,
+    runtime: SandboxFrameRuntime
+  }
+];
+
+>>>>>>> Stashed changes
 // TODO(burdon): Inject into provider.
 // TODO(burdon): Reconcile with type and frame system.
 export const searchMeta: { [type: string]: SearchMeta } = {

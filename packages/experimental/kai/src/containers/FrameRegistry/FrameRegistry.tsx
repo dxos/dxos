@@ -55,12 +55,43 @@ const FrameTile: FC<{
   );
 };
 
+<<<<<<< Updated upstream
 export const FrameRegistry: FC<{
   slots?: FrameRegistrySlots;
   frames?: FrameDef<any>[];
   selected?: string[];
   onSelect?: (frameId: string) => void;
 }> = ({ slots = {}, frames = [], selected = [], onSelect }) => {
+=======
+// Rank last if tags.
+// TODO(burdon): Create sections (e.g., Community).
+const len = (array?: any[]) => array?.length ?? 0;
+const sorter = (
+  { module: { displayName: a, tags: t1 } }: FrameDef,
+  { module: { displayName: b, tags: t2 } }: FrameDef
+) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
+
+export const FrameRegistry: FC<{ slots?: FrameRegistrySlots; onSelect?: (frameId: string) => void }> = ({
+  slots = {},
+  onSelect
+}) => {
+  const { space } = useAppRouter();
+  const navigate = useNavigate();
+  const { frames: activeFrames } = useAppState();
+  const frameRegistry = useFrameRegistry();
+  const { setActiveFrame } = useAppReducer();
+
+  // TODO(burdon): Active should depend on objects within the Space.
+  const handleSelect = (id: string) => {
+    const active = !activeFrames.find((frameId) => frameId === id);
+    setActiveFrame(id, active); // TODO(burdon): Reconcile with navigation.
+    if (active) {
+      navigate(createPath({ spaceKey: space!.key, frame: id }));
+      onSelect?.(id);
+    }
+  };
+
+>>>>>>> Stashed changes
   return (
     <div className={mx('flex flex-col flex-1 overflow-hidden py-4', slots.root?.className)}>
       <ScrollContainer vertical>
