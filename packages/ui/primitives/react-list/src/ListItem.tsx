@@ -24,7 +24,7 @@ import React, {
 
 import { useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, useListContext } from './List';
+import { LIST_NAME, ListScopedProps, useListContext } from './List';
 
 const LIST_ITEM_NAME = 'ListItem';
 
@@ -88,7 +88,7 @@ const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemScopedProps<ListIt
   }
 );
 
-type ListItemOpenTriggerProps = CollapsibleTriggerProps;
+type ListItemOpenTriggerProps = ListItemScopedProps<CollapsibleTriggerProps>;
 
 const ListItemOpenTrigger = Collapsible.Trigger;
 
@@ -101,10 +101,13 @@ const PureListItem = forwardRef<
   ListItemProps & { id: string } & Partial<DraggableListItemContextValue>
 >(
   (
-    props: ListItemScopedProps<ListItemProps & { id: string } & Partial<DraggableListItemContextValue>>,
+    props: ListItemScopedProps<
+      ListScopedProps<ListItemProps & { id: string } & Partial<DraggableListItemContextValue>>
+    >,
     forwardedRef
   ) => {
     const {
+      __listScope,
       __listItemScope,
       children,
       selected: propsSelected,
@@ -118,7 +121,7 @@ const PureListItem = forwardRef<
       draggableListeners,
       ...listItemProps
     } = props;
-    const { selectable, collapsible } = useListContext(LIST_NAME, __listItemScope);
+    const { selectable, collapsible } = useListContext(LIST_NAME, __listScope);
 
     const [selected = false, setSelected] = useControllableState({
       prop: propsSelected,
@@ -192,18 +195,16 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
   }
 );
 
-const ListItem = forwardRef<ListItemElement, ListItemProps>(
-  (props: ListItemScopedProps<ListItemProps>, forwardedRef) => {
-    const { variant } = useListContext(LIST_NAME, props.__listItemScope);
-    const listItemId = useId('listItem');
+const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
+  const { variant } = useListContext(LIST_NAME, props.__listScope);
+  const listItemId = useId('listItem');
 
-    if (variant === 'ordered-draggable') {
-      return <DraggableListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
-    } else {
-      return <PureListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
-    }
+  if (variant === 'ordered-draggable') {
+    return <DraggableListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
+  } else {
+    return <PureListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
   }
-);
+});
 
 ListItem.displayName = LIST_ITEM_NAME;
 

@@ -4182,8 +4182,10 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
       '@dxos/react-hooks': workspace:*
+      '@dxos/react-list': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-context': ^1.0.0
+      '@radix-ui/react-slot': ^1.0.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       i18next: ^21.10.0
@@ -4193,12 +4195,14 @@ importers:
       vite: ^4.3.0
     dependencies:
       '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-slot': 1.0.1_react@18.2.0
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/aurora-types': link:../aurora-types
       '@dxos/react-hooks': link:../primitives/react-hooks
+      '@dxos/react-list': link:../primitives/react-list
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6

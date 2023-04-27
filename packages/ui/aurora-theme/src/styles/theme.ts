@@ -15,7 +15,13 @@ import {
   listItemOsDragHandle,
   listItemAppOpenTrigger,
   listItemOsOpenTrigger,
-  buttonGroup
+  buttonGroup,
+  listRoot,
+  listItemEndcap,
+  listItemHeading,
+  listItemDragHandleIcon,
+  listItemOpenTriggerIcon,
+  listItem
 } from './components';
 
 export const theme: Theme = {
@@ -23,7 +29,18 @@ export const theme: Theme = {
   button: { root: buttonAppRoot, group: buttonGroup },
   input: { input: inputAppInput },
   dropdownMenu: { item: dropdownMenuItem },
-  list: { dragHandle: listItemAppDragHandle, openTrigger: listItemAppOpenTrigger }
+  list: {
+    root: listRoot,
+    item: {
+      root: listItem,
+      endcap: listItemEndcap,
+      heading: listItemHeading,
+      dragHandle: listItemAppDragHandle,
+      dragHandleIcon: listItemDragHandleIcon,
+      openTrigger: listItemAppOpenTrigger,
+      openTriggerIcon: listItemOpenTriggerIcon
+    }
+  }
 };
 
 export const osTheme: Theme = {
@@ -31,7 +48,14 @@ export const osTheme: Theme = {
   themeName: () => 'dxos',
   button: { ...theme.button, root: buttonOsRoot },
   input: { ...theme.input, input: inputOsInput },
-  list: { ...theme.list, dragHandle: listItemOsDragHandle, openTrigger: listItemOsOpenTrigger }
+  list: {
+    ...theme.list,
+    item: {
+      ...(theme.list as Theme).item,
+      dragHandle: listItemOsDragHandle,
+      openTrigger: listItemOsOpenTrigger
+    }
+  }
 };
 
 export const tx = <P extends Record<string, any>>(

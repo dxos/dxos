@@ -8,7 +8,7 @@ import { SortableContext } from '@dnd-kit/sortable';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import omit from 'lodash.omit';
-import React, { ComponentPropsWithoutRef, forwardRef, ReactHTMLElement, ReactNode } from 'react';
+import React, { ComponentPropsWithoutRef, forwardRef, ReactHTMLElement } from 'react';
 
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
@@ -19,8 +19,6 @@ type ListScopedProps<P> = P & { __listScope?: Scope };
 type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
 interface SharedListProps {
-  labelId: string;
-  children?: ReactNode;
   selectable?: boolean;
   collapsible?: boolean;
   variant?: ListVariant;
@@ -35,7 +33,7 @@ interface DraggableListProps extends Omit<SharedListProps, 'onDragEnd' | 'listIt
   variant: 'ordered-draggable';
 }
 
-type ListProps = SharedListProps | DraggableListProps;
+type ListProps = ComponentPropsWithoutRef<typeof Primitive.ol> & (SharedListProps | DraggableListProps);
 
 // LIST
 
@@ -59,9 +57,8 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
   return (
     <ListRoot
       {...(selectable && { role: 'listbox', 'aria-multiselectable': true })}
-      aria-labelledby={props.labelId}
-      ref={forwardedRef}
       {...omit(rootProps, 'onDragEnd', 'listItemIds')}
+      ref={forwardedRef}
     >
       <ListProvider
         {...{

@@ -28,6 +28,9 @@
     },
     {
       "path": "../primitives/react-hooks"
+    },
+    {
+      "path": "../primitives/react-list"
     }
   ]
 }
