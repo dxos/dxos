@@ -31,7 +31,7 @@ import { TaskFrameRuntime } from './Task';
 /**
  * DMG registry modules.
  */
-const frameModules: Module[] = [
+export const frameModules: Module[] = [
   {
     id: 'dxos.module.frame.contact',
     type: 'dxos:type/frame',

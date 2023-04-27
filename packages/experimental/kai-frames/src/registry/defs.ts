@@ -14,7 +14,7 @@ export type PluginComponent = FC<{ space: Space; onSelect?: (objectId: string | 
 /**
  * Dynamically loaded metadata for frame.
  */
-// TODO(burdon): Remove generic type.
+// TODO(burdon): Remove generic type?
 export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
   Component: FC<any>;
@@ -38,11 +38,12 @@ export type FrameDef<T extends TypedObject> = {
 
 /**
  * In-memory registry of loaded frames.
+ * @deprecated Use metagraph.
  */
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
-  get frames() {
+  get frames(): FrameDef<any>[] {
     return Array.from(this._frameMap.values());
   }
 
