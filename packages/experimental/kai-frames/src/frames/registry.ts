@@ -9,7 +9,7 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 
 // TODO(burdon): Implement packlets for frames.
 
-import { FrameDef } from '../registry';
+import { FrameDef, FrameRuntime } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
 import { ChatFrameRuntime } from './Chat';
 import { ChessFrameRuntime } from './Chess';
@@ -29,170 +29,155 @@ import { TableFrameRuntime } from './Table';
 import { TaskFrameRuntime } from './Task';
 
 /**
- * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
+ * DMG registry modules.
  */
-// TODO(burdon): Metagraph registry with dynamic defs (loaded separately from frames).
-export const frameDefs: FrameDef<any>[] = [
+const frameModules: Module[] = [
   {
-    module: {
-      id: 'dxos.module.frame.contact',
-      type: 'dxos:type/frame',
-      displayName: 'Contacts',
-      description: 'Address book.'
-    },
-    runtime: ContactFrameRuntime
+    id: 'dxos.module.frame.contact',
+    type: 'dxos:type/frame',
+    displayName: 'Contacts',
+    description: 'Address book.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.table',
-      type: 'dxos:type/frame',
-      displayName: 'Table',
-      description: 'Generic data browser.'
-    },
-    runtime: TableFrameRuntime
+    id: 'dxos.module.frame.table',
+    type: 'dxos:type/frame',
+    displayName: 'Table',
+    description: 'Generic data browser.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.kanban',
-      type: 'dxos:type/frame',
-      displayName: 'Kanban',
-      description: 'Card based pipelines.'
-    },
-    runtime: KanbanFrameRuntime
+    id: 'dxos.module.frame.kanban',
+    type: 'dxos:type/frame',
+    displayName: 'Kanban',
+    description: 'Card based pipelines.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.task',
-      type: 'dxos:type/frame',
-      displayName: 'Tasks',
-      description: 'Projects and task management.'
-    },
-    runtime: TaskFrameRuntime
+    id: 'dxos.module.frame.task',
+    type: 'dxos:type/frame',
+    displayName: 'Tasks',
+    description: 'Projects and task management.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.inbox',
-      type: 'dxos:type/frame',
-      displayName: 'Inbox',
-      description: 'Universal message inbox.'
-    },
-    runtime: MessageFrameRuntime
+    id: 'dxos.module.frame.inbox',
+    type: 'dxos:type/frame',
+    displayName: 'Inbox',
+    description: 'Universal message inbox.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.chat',
-      type: 'dxos:type/frame',
-      displayName: 'Chat',
-      description: 'Real time messaging.'
-    },
-    runtime: ChatFrameRuntime
+    id: 'dxos.module.frame.chat',
+    type: 'dxos:type/frame',
+    displayName: 'Chat',
+    description: 'Real time messaging.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.calendar',
-      type: 'dxos:type/frame',
-      displayName: 'Calendar',
-      description: 'Calendar and time management tools.'
-    },
-    runtime: CalendarFrameRuntime
+    id: 'dxos.module.frame.calendar',
+    type: 'dxos:type/frame',
+    displayName: 'Calendar',
+    description: 'Calendar and time management tools.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.document',
-      type: 'dxos:type/frame',
-      displayName: 'Documents',
-      description: 'Realtime structured document editing.'
-    },
-    runtime: DocumentFrameRuntime
+    id: 'dxos.module.frame.document',
+    type: 'dxos:type/frame',
+    displayName: 'Documents',
+    description: 'Realtime structured document editing.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.stack',
-      type: 'dxos:type/frame',
-      displayName: 'Stacks',
-      description: 'Dynamic structured documents.'
-    },
-    runtime: StackFrameRuntime
+    id: 'dxos.module.frame.stack',
+    type: 'dxos:type/frame',
+    displayName: 'Stacks',
+    description: 'Dynamic structured documents.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.presenter',
-      type: 'dxos:type/frame',
-      displayName: 'Presenter',
-      description: 'Slide presentations.'
-    },
-    runtime: PresenterFrameRuntime
+    id: 'dxos.module.frame.presenter',
+    type: 'dxos:type/frame',
+    displayName: 'Presenter',
+    description: 'Slide presentations.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.note',
-      type: 'dxos:type/frame',
-      displayName: 'Notes',
-      description: 'Brainstorming notes.'
-    },
-    runtime: NoteFrameRuntime
+    id: 'dxos.module.frame.note',
+    type: 'dxos:type/frame',
+    displayName: 'Notes',
+    description: 'Brainstorming notes.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.file',
-      type: 'dxos:type/frame',
-      displayName: 'Files',
-      description: 'Distributed file sharing.'
-    },
-    runtime: FileFrameRuntime
+    id: 'dxos.module.frame.file',
+    type: 'dxos:type/frame',
+    displayName: 'Files',
+    description: 'Distributed file sharing.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.sketch',
-      type: 'dxos:type/frame',
-      displayName: 'Sketch',
-      description: 'Vector drawings.'
-    },
-    runtime: SketchFrameRuntime
+    id: 'dxos.module.frame.sketch',
+    type: 'dxos:type/frame',
+    displayName: 'Sketch',
+    description: 'Vector drawings.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.explorer',
-      type: 'dxos:type/frame',
-      displayName: 'Explorer',
-      description: 'Graphical User Interface and Data Explorer.'
-    },
-    runtime: ExplorerFrameRuntime
+    id: 'dxos.module.frame.explorer',
+    type: 'dxos:type/frame',
+    displayName: 'Explorer',
+    description: 'Graphical User Interface and Data Explorer.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.maps',
-      type: 'dxos:type/frame',
-      displayName: 'Maps',
-      description: 'Community contributed street maps.'
-    },
-    runtime: MapFrameRuntime
+    id: 'dxos.module.frame.maps',
+    type: 'dxos:type/frame',
+    displayName: 'Maps',
+    description: 'Community contributed street maps.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.chess',
-      type: 'dxos:type/frame',
-      displayName: 'Games',
-      description: 'Peer-to-peer and engine powered games.'
-    },
-    runtime: ChessFrameRuntime
+    id: 'dxos.module.frame.chess',
+    type: 'dxos:type/frame',
+    displayName: 'Games',
+    description: 'Peer-to-peer and engine powered games.'
   },
   {
-    module: {
-      id: 'dxos.module.frame.sandbox',
-      type: 'dxos:type/frame',
-      displayName: 'Script',
-      description: 'Frame and Bot script editor.'
-    },
-    runtime: SandboxFrameRuntime
+    id: 'dxos.module.frame.sandbox',
+    type: 'dxos:type/frame',
+    displayName: 'Script',
+    description: 'Frame and Bot script editor.'
   }
 ];
 
-export const frameModules: Module[] = frameDefs.map(({ module }) => module);
+/**
+ * Dynamic binding of DMG metadata with runtime defs.
+ */
+// TODO(burdon): Rethink frame binding (e.g., currently FrameRuntime has a single generic type).
+export const frameRuntime: { [type: string]: FrameRuntime<any> } = {
+  'dxos.module.frame.contact': ContactFrameRuntime,
+  'dxos.module.frame.table': TableFrameRuntime,
+  'dxos.module.frame.kanban': KanbanFrameRuntime,
+  'dxos.module.frame.task': TaskFrameRuntime,
+  'dxos.module.frame.inbox': MessageFrameRuntime,
+  'dxos.module.frame.chat': ChatFrameRuntime,
+  'dxos.module.frame.calendar': CalendarFrameRuntime,
+  'dxos.module.frame.document': DocumentFrameRuntime,
+  'dxos.module.frame.stack': StackFrameRuntime,
+  'dxos.module.frame.presenter': PresenterFrameRuntime,
+  'dxos.module.frame.note': NoteFrameRuntime,
+  'dxos.module.frame.file': FileFrameRuntime,
+  'dxos.module.frame.sketch': SketchFrameRuntime,
+  'dxos.module.frame.explorer': ExplorerFrameRuntime,
+  'dxos.module.frame.maps': MapFrameRuntime,
+  'dxos.module.frame.chess': ChessFrameRuntime,
+  'dxos.module.frame.sandbox': SandboxFrameRuntime
+};
 
+/**
+ * Combination of Metagraph module proto defs and runtime component defs (which would be dynamically loaded).
+ */
+export const frameDefs: FrameDef<any>[] = Object.entries(frameRuntime).map(([type, runtime]) => ({
+  module: frameModules.find((module) => module.id === type)!,
+  runtime
+}));
+
+type SearchMeta = {
+  rank: number;
+  Icon: FC<any>;
+  frame?: FrameDef<any>;
+};
+
+// TODO(burdon): Bind icons (metadata).
 // TODO(burdon): Inject into provider.
 // TODO(burdon): Reconcile with type and frame system.
-export const objectMeta: { [key: string]: { rank: number; Icon: FC<any>; frame?: FrameDef<any> } } = {
+export const searchMeta: { [type: string]: SearchMeta } = {
   'dxos.experimental.kai.Organization': {
     rank: 3,
     Icon: Buildings

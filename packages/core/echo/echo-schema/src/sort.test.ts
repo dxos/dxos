@@ -2,53 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { describe, test } from '@dxos/test';
 
 import { sortMany, sortScalar, sortObject, sortString } from './sort';
 
 const data = [
-  { idx: 1, label: 'apple' },
-  { idx: 2, label: 'Orange' },
-  { idx: 1, label: 'lemon' },
-  { idx: 2, label: 'Banana', enabled: false },
-  { idx: 2, label: 'banana', enabled: true },
-  { label: 'peach' }
+  { i: 0, idx: 1, label: 'apple' },
+  { i: 1, idx: 2, label: 'Orange' },
+  { i: 2, idx: 1, label: 'lemon' },
+  { i: 3, idx: 2, label: 'Banana', enabled: false },
+  { i: 4, idx: 2, label: 'banana', enabled: true },
+  { i: 5, label: 'peach' }
 ];
 
-describe('Queries', () => {
-  test.only('sortString', async () => {
+describe('Sort', () => {
+  test('sortString', async () => {
     {
       const items = data.map((item) => item.label);
       const results = items.sort(sortString());
-      console.log(results);
+      expect(results).to.deep.eq(['apple', 'Banana', 'banana', 'lemon', 'Orange', 'peach']);
     }
 
     {
       const items = data.map((item) => item.label);
       const results = items.sort(sortString(false));
-      console.log(results);
+      expect(results).to.deep.eq(['peach', 'Orange', 'lemon', 'Banana', 'banana', 'apple']);
     }
   });
 
-  test.only('sortScalar', async () => {
+  test('sortScalar', async () => {
     const items = data.map((item) => item.idx);
     const results = items.sort(sortScalar());
-    console.log(results);
+    expect(results).to.deep.eq([1, 1, 2, 2, 2, undefined]);
   });
 
-  test.only('sortObject', async () => {
-    const results = data.sort(sortObject('label', sortString()));
-    console.log(results);
+  test('sortObject', async () => {
+    const results = [...data].sort(sortObject('label', sortString()));
+    expect(results).to.deep.eq([data[0], data[3], data[4], data[2], data[1], data[5]]);
   });
 
-  test.only('sortMany', async () => {
-    const results = data.sort(
+  test('sortMany', async () => {
+    const results = [...data].sort(
       sortMany([
         sortObject('idx', sortScalar(true)),
         sortObject('label', sortString()),
         sortObject('enabled', sortScalar(false))
       ])
     );
-    console.log(results);
+    expect(results).to.deep.eq([data[0], data[2], data[4], data[3], data[1], data[5]]);
   });
 });

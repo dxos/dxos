@@ -4,10 +4,10 @@
 
 // TODO(burdon): Move to util.
 // TODO(burdon): Unique.
+// TODO(burdon): Options for undefined to end.
 
-type Result = -1 | 0 | 1;
 type Object = { [key: string]: any };
-type Sorter = <T extends Object>(a: T, b: T) => Result;
+type Sorter<T> = (a: T, b: T) => number;
 
 export const sortScalar =
   (natural = true) =>
@@ -22,14 +22,14 @@ export const sortString =
       : (natural ? 1 : -1) * a.localeCompare(b);
 
 export const sortObject =
-  <T extends Object>(prop: string, sorter: Sorter<T>, natural = true) =>
+  <T extends Object>(prop: string, sorter: Sorter<any>, natural = true): Sorter<any> =>
   (a: T, b: T) =>
     (natural ? 1 : -1) * sorter(a[prop], b[prop]);
 
 export const sortMany =
   <T extends Object>(sorters: Sorter<T>[]) =>
   (a: T, b: T) => {
-    const sort = (i = 0): Result => {
+    const sort = (i = 0): number => {
       const s = sorters[i](a, b);
       if (s === 0 && i < sorters.length - 1) {
         return sort(i + 1);
