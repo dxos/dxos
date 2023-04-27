@@ -43,6 +43,10 @@ export type FrameDef<T extends TypedObject> = {
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
+  constructor(frameDefs: FrameDef<any>[] = []) {
+    frameDefs.forEach((frameDef) => this.addFrameDef(frameDef));
+  }
+
   get frames(): FrameDef<any>[] {
     return Array.from(this._frameMap.values());
   }
