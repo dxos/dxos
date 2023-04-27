@@ -51,17 +51,8 @@ export type FrameDef<T extends TypedObject> = {
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
-<<<<<<< Updated upstream
   constructor(frameDefs: FrameDef<any>[] = []) {
-    frameDefs.forEach((frameDef) => this.addFrameDef(frameDef));
-  }
-
-  get frames(): FrameDef<any>[] {
-    return Array.from(this._frameMap.values());
-=======
-  constructor(frameDefs: FrameDef<any>[]) {
     frameDefs.forEach((frameDef) => this._frameMap.set(frameDef.module.id!, frameDef));
->>>>>>> Stashed changes
   }
 
   get frames() {
