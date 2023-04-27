@@ -6,19 +6,19 @@ import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { getSize } from '@dxos/aurora-theme';
+import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
 import { Searchbar } from '@dxos/react-appkit';
 
-import { SearchResults, useAppRouter, useSearch } from '../../hooks';
+import { SearchResults, useSearch } from '../../hooks';
 
 export type SearchPanelProps = {
+  space: Space;
   onResults?: (object: SearchResults) => void;
   onSelect?: (object: TypedObject) => void;
 };
 
-export const SearchPanel = ({ onResults, onSelect }: SearchPanelProps) => {
-  const { space } = useAppRouter();
-
+export const SearchPanel = ({ space, onResults, onSelect }: SearchPanelProps) => {
   // TODO(burdon): Throttle.
   const [text, setText] = useState<string>('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();

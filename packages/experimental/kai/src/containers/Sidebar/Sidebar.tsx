@@ -307,7 +307,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         {!showSpaceList && (
           <div className='flex flex-col overflow-hidden space-y-2'>
             {(bool(options.get('experimental.search')) && (
-              <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+              <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
             )) || <div className='mt-2' />}
 
             {/* Items if not actively searching. */}

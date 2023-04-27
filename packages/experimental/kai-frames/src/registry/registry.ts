@@ -44,6 +44,13 @@ export type FrameDef<T extends TypedObject> = {
   runtime: FrameRuntime<T>;
 };
 
+export type SearchMeta = {
+  rank: number;
+  Icon: FC<any>;
+  // TODO(burdon): Look-up based on type.
+  frame?: FrameDef<any>;
+};
+
 /**
  * In-memory registry of loaded frames.
  * @deprecated Use metagraph.
