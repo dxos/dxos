@@ -6,24 +6,24 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
-import { Button, useTranslation, ButtonProps, Density, DensityProvider } from '@dxos/aurora';
-import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
-
-import { Input, InputProps } from '../Input';
 import {
+  Button,
+  useTranslation,
+  ButtonProps,
+  Density,
+  DensityProvider,
   List,
   ListItem,
   ListItemHeading,
   ListItemEndcap,
-  ListItemDragHandle,
-  ListProps,
-  ListItemProps,
   useListDensity
-} from '../List';
+} from '@dxos/aurora';
+import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
+
+import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
-  listItem?: ListItemProps['slots'];
   input?: InputProps['slots'];
 }
 
@@ -42,7 +42,6 @@ export interface EditableListItemProps {
 export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
-  list?: ListProps['slots'];
   addItemInput?: InputProps['slots'];
   addItemButton?: ButtonProps;
 }
@@ -138,19 +137,18 @@ export const EditableList = ({
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
-        labelId={labelId}
         variant={variant}
         selectable={completable}
         onDragEnd={handleDragEnd}
         listItemIds={itemIdOrder ?? []}
-        slots={slots.list}
         density={density}
       >
         {children}
       </List>
       <div className='flex'>
         <DensityProvider density={density}>
-          <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
+          {/* todo(thure): Find a way to mock this? */}
+          {/* <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} /> */}
           <ListItemEndcap className='invisible' />
           <Input
             variant='subdued'
@@ -220,8 +218,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
-          onSelectedChange: onChangeCompleted,
-          slots: slots.listItem
+          onSelectedChange: onChangeCompleted
         }}
       >
         <ListItemHeading className='sr-only'>{title}</ListItemHeading>

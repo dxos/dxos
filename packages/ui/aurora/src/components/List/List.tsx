@@ -36,7 +36,7 @@ const useListDensity = ({ density, variant }: Pick<ListProps, 'density' | 'varia
   return variant === 'ordered-draggable' ? 'coarse' : contextDensity ?? 'coarse';
 };
 
-const List = ({ className, children, ...props }: ListPrimitiveProps) => {
+const List = ({ className, children, ...props }: ListProps) => {
   const { tx } = useThemeContext();
   const density = useListDensity(props);
 
@@ -71,12 +71,14 @@ type ListItemHeadingProps = ListPrimitiveItemHeadingProps;
 const ListItemHeading = ({ children, className, ...props }: ListItemHeadingProps) => {
   const { tx } = useThemeContext();
   const density = useDensityContext();
-  <ListPrimitiveItemHeading
-    {...props}
-    className={tx('list.item.heading', 'list__listItem__heading', { density }, className)}
-  >
-    {children}
-  </ListPrimitiveItemHeading>;
+  return (
+    <ListPrimitiveItemHeading
+      {...props}
+      className={tx('list.item.heading', 'list__listItem__heading', { density }, className)}
+    >
+      {children}
+    </ListPrimitiveItemHeading>
+  );
 };
 
 type ListItemDragHandleProps = ListPrimitiveItemDragHandleProps;
@@ -135,7 +137,10 @@ export {
   ListItemHeading,
   ListItemDragHandle,
   ListItemOpenTrigger,
-  ListItemCollapsibleContent
+  ListItemCollapsibleContent,
+  useListDensity,
+  useListContext,
+  useListItemContext
 };
 
 export type {

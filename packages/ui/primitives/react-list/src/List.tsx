@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext } from '@dnd-kit/sortable';
 import { createContextScope, Scope } from '@radix-ui/react-context';
@@ -18,22 +18,24 @@ type ListScopedProps<P> = P & { __listScope?: Scope };
 
 type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
-interface SharedListProps {
+type SharedListProps = {
   selectable?: boolean;
   collapsible?: boolean;
   variant?: ListVariant;
-  onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
+  onDragEnd?: (event: DragEndEvent) => void;
   listItemIds?: string[];
   toggleOpenLabel?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
-}
+};
 
-interface DraggableListProps extends Omit<SharedListProps, 'onDragEnd' | 'listItemIds' | 'variant' | 'slots'> {
+type DraggableListProps = Omit<SharedListProps, 'slots'> & {
   onDragEnd: Exclude<SharedListProps['onDragEnd'], undefined>;
   listItemIds: Exclude<SharedListProps['listItemIds'], undefined>;
   variant: 'ordered-draggable';
-}
+};
 
-type ListProps = ComponentPropsWithoutRef<typeof Primitive.ol> & (SharedListProps | DraggableListProps);
+type ListProps =
+  | (Omit<ComponentPropsWithoutRef<typeof Primitive.ol>, 'onDragEnd'> & SharedListProps)
+  | (Omit<ComponentPropsWithoutRef<typeof Primitive.ol>, 'onDragEnd'> & DraggableListProps);
 
 // LIST
 
