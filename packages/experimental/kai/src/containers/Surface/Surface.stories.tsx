@@ -14,8 +14,6 @@ import { appkitTranslations } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';
 
-// import { Surface } from './Surface';
-
 import '@dxosTheme';
 
 // TODO(burdon): Actions/App state/Routes (e.g., get/set SurfaceManager state from URL).
