@@ -9,6 +9,7 @@ import { FrameDef } from '@dxos/kai-frames';
 import { ScrollContainer } from '@dxos/mosaic';
 
 // Rank last if tags.
+// TODO(burdon): Use sorter lib.
 // TODO(burdon): Create sections (e.g., Community).
 const len = (array?: any[]) => array?.length ?? 0;
 const sorter = (

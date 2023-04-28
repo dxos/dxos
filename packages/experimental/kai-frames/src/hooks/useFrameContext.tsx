@@ -25,15 +25,10 @@ export const FrameRegistryContextProvider: FC<{ children: ReactNode; frameDefs?:
   children,
   frameDefs = []
 }) => {
-  const frameRegistry = frameDefs.reduce((registry, frameDef) => {
-    registry.addFrameDef(frameDef);
-    return registry;
-  }, new FrameRegistry());
-
   return (
     <FrameRegistryContext.Provider
       value={{
-        frameRegistry
+        frameRegistry: new FrameRegistry(frameDefs)
       }}
     >
       {children}
