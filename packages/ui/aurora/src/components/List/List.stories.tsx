@@ -3,14 +3,20 @@
 //
 
 import '@dxosTheme';
-import { DragEndEvent } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import { Play, PushPin } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { List, ListItem, ListItemCollapsibleContent, ListItemEndcap, ListItemHeading } from './List';
+import {
+  List,
+  ListItem,
+  ListItemCollapsibleContent,
+  ListItemEndcap,
+  ListItemHeading,
+  arrayMove,
+  DragEndEvent
+} from './List';
 
 export default {
   component: List
@@ -37,7 +43,7 @@ export const Default = {
       }
     };
     return (
-      <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
+      <List {...args} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
           <ListItem key={id} id={id}>
             <ListItemEndcap>
@@ -69,9 +75,9 @@ export const Collapsible = {
     );
 
     return (
-      <List {...args} labelId='excluded'>
+      <List {...args}>
         {items.map(({ id, text, body }, index) => (
-          <ListItem key={id} id={id} collapsible={index !== 2}>
+          <ListItem key={id} id={id}>
             <ListItemHeading asChild>
               <div className='flex'>
                 <p className='grow mbs-2'>{text}</p>

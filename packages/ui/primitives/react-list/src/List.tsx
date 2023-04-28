@@ -4,7 +4,7 @@
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext } from '@dnd-kit/sortable';
+import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import omit from 'lodash.omit';
@@ -50,7 +50,7 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
     __listScope,
     variant = 'ordered',
     selectable = false,
-    collapsible = false,
+    collapsible,
     toggleOpenLabel = 'Expand/collapse item',
     children,
     ...rootProps
@@ -85,6 +85,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
 
 List.displayName = LIST_NAME;
 
-export { List, createListScope, useListContext, LIST_NAME };
+export { List, createListScope, useListContext, LIST_NAME, arrayMove };
 
-export type { ListProps, ListVariant, ListScopedProps };
+export type { ListProps, ListVariant, ListScopedProps, DragEndEvent };

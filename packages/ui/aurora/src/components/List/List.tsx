@@ -25,7 +25,9 @@ import {
   LIST_NAME,
   useListContext,
   LIST_ITEM_NAME,
-  useListItemContext
+  useListItemContext,
+  arrayMove,
+  DragEndEvent
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -150,7 +152,8 @@ export {
   useListContext,
   useListItemContext,
   LIST_NAME,
-  LIST_ITEM_NAME
+  LIST_ITEM_NAME,
+  arrayMove
 };
 
 export type {
@@ -162,5 +165,6 @@ export type {
   ListItemHeadingProps,
   ListItemDragHandleProps,
   ListItemOpenTriggerProps,
-  ListItemCollapsibleContentProps
+  ListItemCollapsibleContentProps,
+  DragEndEvent
 };
