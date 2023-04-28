@@ -25,6 +25,7 @@ export const ghostButtonColors =
   'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300';
 
 export type AppButtonStyleProps = Partial<{
+  inGroup?: boolean;
   density: Density;
   elevation: Elevation;
   disabled: boolean;
@@ -32,6 +33,7 @@ export type AppButtonStyleProps = Partial<{
 }>;
 
 export type OsButtonStyleProps = Partial<{
+  inGroup?: boolean;
   density: Density;
   disabled: boolean;
   variant: 'default' | 'ghost';
@@ -51,8 +53,10 @@ const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
 export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'rounded-md font-medium text-sm',
+    'font-medium text-sm',
+    !props.inGroup && 'rounded-md',
     !props.disabled &&
+      !props.inGroup &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
       contentElevation({ elevation: props.elevation }),
     !props.disabled && defaultHover,
@@ -72,7 +76,8 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
 export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'rounded font-system-medium text-xs shadow-none',
+    'font-system-medium text-xs shadow-none',
+    !props.inGroup && 'rounded',
     !props.disabled && defaultHover,
     resolvedVariant === 'default' && defaultOsButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
@@ -84,5 +89,5 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
 };
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
-  return mx('rounded-md', contentElevation({ elevation: props.elevation }), ...etc);
+  return mx('rounded-md overflow-hidden', contentElevation({ elevation: props.elevation }), ...etc);
 };
