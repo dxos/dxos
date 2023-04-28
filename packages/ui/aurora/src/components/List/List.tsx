@@ -10,6 +10,7 @@ import { Density } from '@dxos/aurora-types';
 import {
   List as ListPrimitive,
   ListProps as ListPrimitiveProps,
+  ListScopedProps,
   ListItemHeading as ListPrimitiveItemHeading,
   ListItemHeadingProps as ListPrimitiveItemHeadingProps,
   ListItemDragHandle as ListPrimitiveItemDragHandle,
@@ -20,6 +21,7 @@ import {
   ListItemCollapsibleContentProps,
   ListItem as ListPrimitiveItem,
   ListItemProps as ListPrimitiveItemProps,
+  ListItemScopedProps,
   LIST_NAME,
   useListContext,
   LIST_ITEM_NAME,
@@ -127,7 +129,13 @@ type ListItemProps = ListPrimitiveItemProps;
 
 const ListItem = ({ className, children, ...props }: ListItemProps) => {
   // todo(thure): What to do with all the list item logic still in appkit?
-  return <ListPrimitiveItem {...props}>{children}</ListPrimitiveItem>;
+  const { tx } = useThemeContext();
+  const density = useDensityContext();
+  return (
+    <ListPrimitiveItem {...props} className={tx('list.item.root', 'list__listItem', { density }, className)}>
+      {children}
+    </ListPrimitiveItem>
+  );
 };
 
 export {
@@ -140,12 +148,16 @@ export {
   ListItemCollapsibleContent,
   useListDensity,
   useListContext,
-  useListItemContext
+  useListItemContext,
+  LIST_NAME,
+  LIST_ITEM_NAME
 };
 
 export type {
   ListProps,
+  ListScopedProps,
   ListItemProps,
+  ListItemScopedProps,
   ListItemEndcapProps,
   ListItemHeadingProps,
   ListItemDragHandleProps,

@@ -16,7 +16,12 @@ import {
   ListItem,
   ListItemHeading,
   ListItemEndcap,
-  useListDensity
+  useListDensity,
+  ListItemProps,
+  ListScopedProps,
+  ListItemDragHandle,
+  useListContext,
+  LIST_NAME
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
@@ -27,7 +32,7 @@ export interface EditableListItemSlots {
   input?: InputProps['slots'];
 }
 
-export interface EditableListItemProps {
+export type EditableListItemProps = ListItemProps & {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;
@@ -37,7 +42,7 @@ export interface EditableListItemProps {
   onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   onClickDelete?: () => void;
   slots?: EditableListItemSlots;
-}
+};
 
 export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
@@ -110,7 +115,6 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
 
 export const EditableList = ({
   children,
-  labelId,
   completable,
   variant = 'ordered-draggable',
   onClickAdd,
@@ -195,9 +199,10 @@ export const EditableList = ({
   );
 };
 
-export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>(
+export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<EditableListItemProps>>(
   (
     {
+      __listScope,
       id,
       defaultCompleted,
       completed,
@@ -207,10 +212,11 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
       onChangeTitle,
       onClickDelete,
       slots = {}
-    }: EditableListItemProps,
+    },
     forwardedRef
   ) => {
     const { t } = useTranslation('appkit');
+    const { variant } = useListContext(LIST_NAME, __listScope);
     return (
       <ListItem
         ref={forwardedRef}
@@ -221,6 +227,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           onSelectedChange: onChangeCompleted
         }}
       >
+        {variant === 'ordered-draggable' && <ListItemDragHandle />}
         <ListItemHeading className='sr-only'>{title}</ListItemHeading>
         <Input
           {...{
