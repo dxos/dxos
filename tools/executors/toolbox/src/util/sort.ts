@@ -76,7 +76,7 @@ const createValueSorter = (key: string, { map }: SortOptions) => {
  * Options enable custom sorting (e.g., partially fixed order).
  */
 export const sortJson = (src: any, options: SortOptions = {}, key = '.'): any => {
-  let out: { [key: string]: any };
+  let out: Record<string, any>;
 
   if (Array.isArray(src)) {
     let values = src.map((src, i) => sortJson(src, options, `${key}[${i}]`));

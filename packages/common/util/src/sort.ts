@@ -5,28 +5,25 @@
 // TODO(burdon): Unique.
 // TODO(burdon): Options for undefined to end.
 
-type Object = { [key: string]: any };
 type Sorter<T> = (a: T, b: T) => number;
 
 export const sortScalar =
-  (natural = true) =>
+  (inc = true) =>
   (a: any, b: any) =>
-    (natural ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
+    (inc ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
 
 export const sortString =
-  (natural = true, insensitive = true) =>
+  (inc = true, caseInsensitive = true) =>
   (a: string, b: string) =>
-    insensitive
-      ? (natural ? 1 : -1) * a.toLowerCase().localeCompare(b.toLowerCase())
-      : (natural ? 1 : -1) * a.localeCompare(b);
+    (inc ? 1 : -1) * (caseInsensitive ? a.toLowerCase().localeCompare(b.toLowerCase()) : a.localeCompare(b));
 
 export const sortObject =
-  <T extends Object>(prop: string, sorter: Sorter<any>, natural = true): Sorter<any> =>
+  <T extends Record<string, any>>(prop: string, sorter: Sorter<any>, inc = true): Sorter<any> =>
   (a: T, b: T) =>
-    (natural ? 1 : -1) * sorter(a[prop], b[prop]);
+    (inc ? 1 : -1) * sorter(a[prop], b[prop]);
 
 export const sortMany =
-  <T extends Object>(sorters: Sorter<T>[]) =>
+  <T extends Record<string, any>>(sorters: Sorter<T>[]) =>
   (a: T, b: T) => {
     const sort = (i = 0): number => {
       const s = sorters[i](a, b);
