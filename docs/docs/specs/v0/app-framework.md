@@ -2,12 +2,13 @@
 
 ## Summary
 
-- Consider the following application framework ontology:
-  - **Vault**: HALO universal app (PWA).
-  - **App**: Application Shell that manages Surfaces.
-  - **Surface**: Configurable UI Container that provides screen (AR? voice?) real-estate to Plugins.
-  - **Plugin**: App module that implements the App's functionality. 
-  - **Frame**: UI component that operates on part of the App's ECHO Graph.
+Application framework ontology:
+
+- **Vault**: HALO universal app (PWA).
+- **App**: Application Shell that manages Surfaces.
+- **Surface**: Configurable UI Container that provides screen (AR? voice?) real-estate to Plugins.
+- **Plugin**: App module that implements the App's functionality. 
+- **Frame**: UI component that operates on part of the App's ECHO Graph.
 
 ### Apps and Surfaces
 
@@ -32,7 +33,7 @@
   - Given access to a Space, the App may present to the user a set of Plugins that could be dynamically installed to satisfy the constraints of the Space's data (schemata).
 - Plugins are loosely coupled and interact with each other via typed events called Actions; Actions may cause Surfaces to dynamically change their content (i.e., swap-in a new Frame).
 
-## Example Plugins
+## Examples
 
 - **Navigator**
   - Implements a hierarchical view of the Brane.
