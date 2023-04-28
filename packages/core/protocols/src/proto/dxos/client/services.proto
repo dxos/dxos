@@ -381,6 +381,31 @@ service NetworkService {
 }
 
 //
+// Service Worker
+//
+
+enum ApplicationStatus {
+  // Before application has been cached by the service worker.
+  NOT_REGISTERED = 0;
+  // When application has been cached by the service worker and there are no known updates.
+  UP_TO_DATE = 1;
+  // When application has been cached by the service worker and there are known updates.
+  UPDATE_AVAILABLE = 2;
+}
+
+message QueryStatusResponse {
+  ApplicationStatus status = 1;
+  optional dxos.rpc.Error error = 2;
+}
+
+service ApplicationService {
+  // Update service worker and reload page.
+  rpc Update(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // Query for when update is available.
+  rpc QueryStatus(google.protobuf.Empty) returns (stream QueryStatusResponse);
+}
+
+//
 // Development Tooling
 //
 
