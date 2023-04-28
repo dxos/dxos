@@ -25,7 +25,13 @@ export default defineConfig({
         : false
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        test: resolve(__dirname, 'test.html')
+      }
+    }
   },
   resolve: {
     alias: {
@@ -51,7 +57,8 @@ export default defineConfig({
     ReactPlugin(),
     VitePWA({
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       includeAssets: ['favicon.ico'],
       manifest: {
