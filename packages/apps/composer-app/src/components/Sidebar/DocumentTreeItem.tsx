@@ -6,10 +6,10 @@ import { Article, ArticleMedium, Circle } from '@phosphor-icons/react';
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation, ListItemEndcap } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, tx } from '@dxos/aurora-theme';
-import { ListItemEndcap, TreeItem, TreeItemHeading } from '@dxos/react-appkit';
+import { TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
 import { ComposerDocument } from '../../proto';
@@ -20,7 +20,7 @@ export const DocumentTreeItem = observer(({ document, linkTo }: { document: Comp
   const active = docKey === document.id;
   const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
-    <TreeItem>
+    <TreeItem className='pis-4'>
       <TreeItemHeading asChild>
         <Link
           to={linkTo}

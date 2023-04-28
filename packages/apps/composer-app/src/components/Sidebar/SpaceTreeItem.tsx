@@ -2,7 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, Download, EyeSlash, FilePlus, PaperPlaneTilt, Plus, Upload } from '@phosphor-icons/react';
+import {
+  CaretDown,
+  CaretRight,
+  DotsThreeVertical,
+  Download,
+  EyeSlash,
+  FilePlus,
+  PaperPlaneTilt,
+  Plus,
+  Upload
+} from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -23,7 +33,8 @@ import {
   TreeBranch,
   TreeItem,
   TreeItemBody,
-  TreeItemHeading
+  TreeItemHeading,
+  TreeItemOpenTrigger
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
@@ -84,18 +95,21 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
       ? t('loading space title')
       : t('untitled space title');
 
+  const OpenTriggerIcon = open ? CaretDown : CaretRight;
+
   return (
     <TreeItem
       collapsible
       open={open}
       onOpenChange={setOpen}
-      slots={{
-        root: { className: mx('mbe-2', disabled && defaultDisabled), ...(disabled && { 'aria-disabled': true }) },
-        ...(hasActiveDocument &&
-          !open && { openTriggerIcon: { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' } })
-      }}
+      {...{ className: mx('mbe-2 block', disabled && defaultDisabled), ...(disabled && { 'aria-disabled': true }) }}
     >
       <div role='none' className='flex mis-1 items-start'>
+        <TreeItemOpenTrigger>
+          <OpenTriggerIcon
+            {...(hasActiveDocument && !open && { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' })}
+          />
+        </TreeItemOpenTrigger>
         <TreeItemHeading
           className='grow break-words pbs-1.5 text-sm font-medium'
           data-testid='composer.spaceTreeItemHeading'
@@ -164,7 +178,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
       </div>
       <TreeItemBody>
         {documents.length > 0 && (
-          <TreeBranch collapsible={false}>
+          <TreeBranch>
             {documents.map((document) => (
               <DocumentTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
             ))}
