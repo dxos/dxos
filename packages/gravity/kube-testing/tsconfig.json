@@ -8,8 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist",
-
+    "outDir": "dist"
   },
   "exclude": [
     "/node_modules/"
@@ -19,7 +18,31 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/messaging"
+    },
+    {
       "path": "../../core/mesh/signal"
+    },
+    {
+      "path": "../../core/protocols"
     }
-  ],
+  ]
 }
