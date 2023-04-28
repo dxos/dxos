@@ -58,8 +58,12 @@ message SwarmEvent {
 
 /// Goes on a Pub/Sub host topic.
 message HostEvent {
+  message AnnounceBack {
+      bytes swarm = 1;
+      SwarmEvent.PeerAvailable peer_available = 2;
+  }
   oneof event {
-    SwarmEvent.PeerAvailable peer_available = 1;
+      AnnounceBack announce_back = 1;
   }
 }
 

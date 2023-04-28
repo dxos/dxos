@@ -2,19 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-export const alphabetical = (direction = 1) => {
-  return (v1: string, v2: string) => {
-    const a = v1?.toLowerCase();
-    const b = v2?.toLowerCase();
-    return a < b ? direction * -1 : a > b ? direction : 0;
-  };
-};
+// TODO(burdon): Unique.
+// TODO(burdon): Options for undefined to end.
 
-// TODO(burdon): Specify array of [key, direction] tuples (different types).
-export const alphabeticalByKey = (key: string, direction = 1) => {
-  return (v1: any, v2: any) => {
-    const a = v1[key]?.toLowerCase();
-    const b = v2[key]?.toLowerCase();
-    return a < b ? direction * -1 : a > b ? direction : 0;
+type Object = { [key: string]: any };
+type Sorter<T> = (a: T, b: T) => number;
+
+export const sortScalar =
+  (natural = true) =>
+  (a: any, b: any) =>
+    (natural ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
+
+export const sortString =
+  (natural = true, insensitive = true) =>
+  (a: string, b: string) =>
+    insensitive
+      ? (natural ? 1 : -1) * a.toLowerCase().localeCompare(b.toLowerCase())
+      : (natural ? 1 : -1) * a.localeCompare(b);
+
+export const sortObject =
+  <T extends Object>(prop: string, sorter: Sorter<any>, natural = true): Sorter<any> =>
+  (a: T, b: T) =>
+    (natural ? 1 : -1) * sorter(a[prop], b[prop]);
+
+export const sortMany =
+  <T extends Object>(sorters: Sorter<T>[]) =>
+  (a: T, b: T) => {
+    const sort = (i = 0): number => {
+      const s = sorters[i](a, b);
+      if (s === 0 && i < sorters.length - 1) {
+        return sort(i + 1);
+      } else {
+        return s;
+      }
+    };
+
+    return sort();
   };
-};

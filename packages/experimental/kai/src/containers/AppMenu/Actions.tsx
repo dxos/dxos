@@ -31,7 +31,7 @@ export const Actions = () => {
   const client = useClient();
   const download = useFileDownload();
   const { space } = useAppRouter();
-  const generator = useGenerator();
+  const generator = useGenerator(space);
   const serializer = useMemo(() => new Serializer(), []);
 
   const handleExportSpace = async () => {
