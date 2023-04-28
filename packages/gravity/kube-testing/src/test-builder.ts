@@ -182,9 +182,10 @@ export class TestAgent {
 
   async leaveTopic(topic: PublicKey) {
     await this.signalManager.leave({ topic, peerId: this.peerId });
+    this._stats.leaveTopic(topic, this);
   }
 
-  async discoverPeers(topic: PublicKey) {
+  async discoverPeers(topic: PublicKey, timeout = 5_000) {
     const discoverdPeers: PublicKey[] = [];
     this.signalManager.swarmEvent.on(({ swarmEvent, topic: discoveredTopic }) => {
       if (discoveredTopic.equals(topic) && swarmEvent.peerAvailable) {
@@ -192,7 +193,7 @@ export class TestAgent {
       }
     });
 
-    await cancelWithContext(this._ctx, sleep(5_000));
+    await cancelWithContext(this._ctx, sleep(timeout));
 
     const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
 

@@ -19,6 +19,7 @@ type TestConfig = {
   serversPerAgent: number;
   topics: PublicKey[];
   topicsPerAgent: number;
+  discoverTimeout: number;
   repeatInterval: number;
   duration: number;
   randomSeed: string;
@@ -26,13 +27,14 @@ type TestConfig = {
 
 const testConfig: TestConfig = {
   servers: 1,
-  agents: 5,
+  agents: 20,
   serversPerAgent: 1,
   topics: [PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random()],
   topicsPerAgent: 2,
-  randomSeed: PublicKey.random().toHex(),
-  repeatInterval: 100,
-  duration: 10_000
+  discoverTimeout: 5_000,
+  repeatInterval: 0,
+  duration: 60_000,
+  randomSeed: PublicKey.random().toHex()
 };
 
 seedrandom(testConfig.randomSeed, { global: true });
@@ -67,18 +69,7 @@ const randomArraySlice = <T>(array: T[], size: number) => {
 const test = async () => {
   const builder = new TestBuilder();
   const stats = new Stats();
-  const ctx = new Context({
-    onError: (err) => {
-      if (err.name.includes('CANCELLED')) {
-        return;
-      }
-      log.catch(err);
-    }
-  });
-  ctx.onDispose(() => {
-    log.warn('Context disposed');
-    throw new Error('Context disposed');
-  });
+  const ctx = new Context();
 
   {
     log.info('Test setup...', testConfig);
@@ -140,7 +131,7 @@ const test = async () => {
     log.info('Short stats', stats.shortStats);
     fs.writeFileSync(
       `./out/results/stats${testConfig.randomSeed}.json`,
-      JSON.stringify({ testConfig, stats: stats.performance }, null, 2)
+      JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2)
     );
   }
 };
