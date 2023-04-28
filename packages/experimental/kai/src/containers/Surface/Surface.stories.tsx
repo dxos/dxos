@@ -164,21 +164,21 @@ const MainSurface = () => {
 // App content
 //
 
-const Sidebar: FC = () => {
+const Navigator: FC = () => {
   const { manager } = useContext(SurfaceManagerContext);
 
   const items = [
     { label: 'Reset' },
-    { label: 'Item 1', component: 'main-1' },
-    { label: 'Item 2', component: 'main-2' },
-    { label: 'Item 3', component: 'main-3' }
+    { label: 'Item 1', component: 'component-1' },
+    { label: 'Item 2', component: 'component-2' },
+    { label: 'Item 3', component: 'component-3' }
   ];
 
   return (
     <div className='px-2'>
       <ul>
-        {items.map(({ label, component }) => (
-          <li key={label} className='cursor-pointer' onClick={() => manager.setSurface('main', component)}>
+        {items.map(({ label, component }, i) => (
+          <li key={i} className='cursor-pointer' onClick={() => manager.setSurface('main', component)}>
             {label}
           </li>
         ))}
@@ -187,9 +187,9 @@ const Sidebar: FC = () => {
   );
 };
 
-const Main1: FC = () => <div>Item 1</div>;
-const Main2: FC = () => <div>Item 2</div>;
-const Main3: FC = () => <div>Item 3</div>;
+const Component1: FC = () => <div>Component 1</div>;
+const Component2: FC = () => <div>Component 2</div>;
+const Component3: FC = () => <div>Component 3</div>;
 
 //
 // App shell
@@ -198,15 +198,15 @@ const Main3: FC = () => <div>Item 3</div>;
 const TestApp = () => {
   // prettier-ignore
   const surfaces = {
-    'sidebar': Sidebar,
-    'main-1': Main1,
-    'main-2': Main2,
-    'main-3': Main3
+    'navigator': Navigator,
+    'component-1': Component1,
+    'component-2': Component2,
+    'component-3': Component3
   };
 
   return (
     <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[appkitTranslations, osTranslations]}>
-      <SurfaceManagerContextProvider surfaces={surfaces} state={{ sidebar: 'sidebar', main: 'main-1' }}>
+      <SurfaceManagerContextProvider surfaces={surfaces} state={{ sidebar: 'navigator', main: 'component-1' }}>
         <PanelSidebarProvider
           inlineStart
           slots={{
