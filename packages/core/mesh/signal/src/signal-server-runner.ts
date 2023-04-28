@@ -48,7 +48,8 @@ export class SignalServerRunner {
       throw new Error(`CWD not exists: ${this._cwd}`);
     }
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
-      cwd: this._cwd
+      cwd: this._cwd,
+      shell: true
     });
 
     server.stdout.on('data', (data) => {

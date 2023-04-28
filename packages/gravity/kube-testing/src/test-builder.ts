@@ -1,0 +1,184 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { WebsocketSignalManager } from '@dxos/messaging';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { SignalServerRunner } from '@dxos/signal';
+import { ComplexMap, ComplexSet } from '@dxos/util';
+
+import { runSignal } from './run-test-signal';
+
+export type Failure = {
+  error: Error;
+  action: ExchangedMessage | DiscoverdPeer;
+};
+
+export type ExchangedMessage = {
+  type: 'MESSAGE';
+  signalServers: Runtime.Services.Signal[];
+  author: PublicKey;
+  recipient: PublicKey;
+};
+
+export type DiscoverdPeer = {
+  type: 'SWARM_EVENT';
+  signalServers: Runtime.Services.Signal[];
+  topic: PublicKey;
+  peerThatDiscovering: PublicKey;
+  peerToDiscover: PublicKey;
+};
+
+export class Stats {
+  public performance = {
+    failures: [] as Failure[],
+    exchangedMessages: [] as ExchangedMessage[],
+    discoveredPeers: [] as DiscoverdPeer[]
+  };
+
+  public topics = new ComplexMap<PublicKey, ComplexSet<TestAgent>>(PublicKey.hash);
+
+  public messageListeners = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
+
+  joinTopic(topic: PublicKey, agent: TestAgent) {
+    const existingTopic = this.topics.get(topic);
+    if (existingTopic) {
+      existingTopic.add(agent);
+    } else {
+      this.topics.set(topic, new ComplexSet(TestAgent.hash, [agent]));
+    }
+  }
+
+  leaveTopic(topic: PublicKey, agent: TestAgent) {
+    const existingTopic = this.topics.get(topic);
+    if (!existingTopic) {
+      throw new Error('Topic not found');
+    }
+    existingTopic.delete(agent);
+  }
+
+  addMessageListener(agent: TestAgent) {
+    this.messageListeners.set(agent.peerId, agent);
+  }
+
+  removeMessageListener(agent: TestAgent) {
+    this.messageListeners.delete(agent.peerId);
+  }
+}
+
+export class TestBuilder {
+  private readonly _peers = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
+  private readonly _servers = new Map<string, SignalServerRunner>();
+
+  get peers() {
+    return Array.from(this._peers.values());
+  }
+
+  get servers() {
+    return Array.from(this._servers.values());
+  }
+
+  async createPeer(params: TestAgentParams) {
+    const peer = new TestAgent(params);
+    await peer.start();
+    this._peers.set(peer.peerId, peer);
+    return peer;
+  }
+
+  async createServer() {
+    const server = await runSignal();
+    await server.waitUntilStarted();
+    this._servers.set(server.url(), server);
+    return server;
+  }
+
+  async destroy() {
+    await Promise.all([...this._servers.values()].map((s) => s.stop()));
+    await Promise.all([...this._peers.values()].map((p) => p.destroy()));
+  }
+}
+
+export type TestAgentParams = {
+  signals: Runtime.Services.Signal[];
+  stats: Stats;
+};
+
+export class TestAgent {
+  public readonly signalManager;
+  public readonly peerId = PublicKey.random();
+  public readonly signalServers: Runtime.Services.Signal[];
+  private readonly _stats: Stats;
+  private readonly _ctx = new Context();
+
+  constructor({ signals, stats }: TestAgentParams) {
+    this.signalServers = signals;
+    this._stats = stats;
+    this.signalManager = new WebsocketSignalManager(signals);
+  }
+
+  async start() {
+    if (this._ctx.disposed) {
+      throw new Error('Agent already destroyed');
+    }
+
+    await this.signalManager.open();
+  }
+
+  async destroy() {
+    await this._ctx.dispose();
+    await this.signalManager.close();
+  }
+
+  static hash(agent: TestAgent) {
+    return agent.peerId.toHex();
+  }
+
+  async joinTopic(topic: PublicKey) {
+    await this.signalManager.join({ topic, peerId: this.peerId });
+    this._stats.joinTopic(topic, this);
+  }
+
+  async leaveTopic(topic: PublicKey) {
+    await this.signalManager.leave({ topic, peerId: this.peerId });
+  }
+
+  async discoverPeers(topic: PublicKey) {
+    const discoverdPeers: PublicKey[] = [];
+    this.signalManager.swarmEvent.on(({ swarmEvent, topic: discoveredTopic }) => {
+      if (discoveredTopic.equals(topic) && swarmEvent.peerAvailable) {
+        discoverdPeers.push(PublicKey.from(swarmEvent.peerAvailable.peer));
+      }
+    });
+
+    await sleep(5_000);
+
+    const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
+    log.info('expectedPeers', expectedPeers);
+
+    for (const peer of expectedPeers) {
+      const action: DiscoverdPeer = {
+        type: 'SWARM_EVENT',
+        signalServers: this.signalServers,
+        topic,
+        peerThatDiscovering: this.peerId,
+        peerToDiscover: peer
+      };
+      if (!discoverdPeers.some((p) => p.equals(peer))) {
+        this._stats.performance.failures.push({
+          error: new Error('Peer not discovered'),
+          action
+        });
+      } else {
+        this._stats.performance.discoveredPeers.push(action);
+      }
+    }
+  }
+}
+
+export const arrayContain = (container: PublicKey[], contained: PublicKey[]) => {
+  return contained.every((v) => container.some((w) => w.equals(v)));
+};
