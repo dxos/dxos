@@ -12,16 +12,18 @@
 ### Apps and Surfaces
 
 - Apps have multiple Surfaces that may be arranged by the App Shell (e.g., mobile, web, AR) and/or re-arranged by the user.
-- Surfaces contain a single root component (Frame), which may be set dynamically by the application (e.g., via Actions).
+- Surfaces are decoupled application containers that contain a single root component (Frame), which may be set dynamically by the application (e.g., via Actions).
 - The App's UX is made up ENTIRELY from Surfaces and their contained Frames.
-  - A degenerative App my contain a single Surface; a simple App may contain just two Surfaces -- e.g., "sidebar" and "main"; other Apps may have collections of possibly nested surfaces.
+  - E.g., a degenerative App my contain a single Surface; a simple App may contain just two Surfaces (e.g., "sidebar" and "main"); other Apps may have collections of possibly nested surfaces.
 - Each Surface has a current state managed by the App.
+  - The state includes the current Frame identifier as well as state specific to the Frame (e.g., currently selected item).
   - The App's state is defined by the set of all Surface states, which may be encoded (in full or in part) by a Web URL.
   - Surfaces may have chrome (e.g., the Sidebar Surface may have open/close buttons).
 
 ### Plugins and Frames
 
-- Apps contain one or more Plugins, which declare/coordinate one or more Frames.
+- Apps contain one or more Plugins, which define client-side business logic and declare one or more Frames.
+- Frames are modular UI components that may be independently published and updated. Frames may be shared across multiple Plugins.
 - Plugins have access to a logical subgraph of either the current Space, or the user's Brane (i.e., set of accessible Spaces). 
 - Plugins declare metadata (published to the DMG) that defines the scope of the dataset they operate on (e.g., Set of Schemas or Queries).
   - Depending on the surface isolation model, we may be able to constrain the scope of access.
