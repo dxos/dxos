@@ -20,7 +20,6 @@ type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
 type SharedListProps = {
   selectable?: boolean;
-  collapsible?: boolean;
   variant?: ListVariant;
   onDragEnd?: (event: DragEndEvent) => void;
   listItemIds?: string[];
@@ -41,7 +40,7 @@ type ListProps =
 
 const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 
-type ListContextValue = Pick<ListProps, 'selectable' | 'collapsible' | 'variant' | 'toggleOpenLabel'>;
+type ListContextValue = Pick<ListProps, 'selectable' | 'variant' | 'toggleOpenLabel'>;
 
 const [ListProvider, useListContext] = createListContext<ListContextValue>(LIST_NAME);
 
@@ -50,7 +49,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
     __listScope,
     variant = 'ordered',
     selectable = false,
-    collapsible,
     toggleOpenLabel = 'Expand/collapse item',
     children,
     ...rootProps
@@ -66,7 +64,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
         {...{
           scope: __listScope,
           variant,
-          collapsible,
           selectable,
           toggleOpenLabel
         }}

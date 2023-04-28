@@ -6,6 +6,7 @@ import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { ComponentPropsWithoutRef } from 'react';
 
+import { tx } from '@dxos/aurora-theme';
 import { Density } from '@dxos/aurora-types';
 import {
   List as ListPrimitive,
@@ -70,6 +71,20 @@ const ListItemEndcap = ({ children, className, asChild, ...props }: ListItemEndc
   );
 };
 
+const MockListItemOpenTrigger = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
+  const density = useDensityContext();
+  return (
+    <div
+      role='none'
+      className={tx('list.item.openTrigger', 'list__listItem__openTrigger--mock', { density }, className)}
+    />
+  );
+};
+
+const MockListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
+  return <div role='none' className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, className)} />;
+};
+
 type ListItemHeadingProps = ListPrimitiveItemHeadingProps;
 
 const ListItemHeading = ({ children, className, ...props }: ListItemHeadingProps) => {
@@ -112,7 +127,7 @@ const ListItemOpenTrigger = ({ __listItemScope, className, children, ...props }:
   return (
     <ListPrimitiveItemOpenTrigger
       {...props}
-      className={tx('list.openTrigger', 'list__listItem__openTrigger', { density }, className)}
+      className={tx('list.item.openTrigger', 'list__listItem__openTrigger', { density }, className)}
     >
       {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
       {children || (
@@ -130,7 +145,6 @@ const ListItemOpenTrigger = ({ __listItemScope, className, children, ...props }:
 type ListItemProps = ListPrimitiveItemProps;
 
 const ListItem = ({ className, children, ...props }: ListItemProps) => {
-  // todo(thure): What to do with all the list item logic still in appkit?
   const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
@@ -148,6 +162,8 @@ export {
   ListItemDragHandle,
   ListItemOpenTrigger,
   ListItemCollapsibleContent,
+  MockListItemOpenTrigger,
+  MockListItemDragHandle,
   useListDensity,
   useListContext,
   useListItemContext,

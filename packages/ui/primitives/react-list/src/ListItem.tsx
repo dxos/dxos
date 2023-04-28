@@ -36,8 +36,9 @@ interface ListItemData {
   open?: boolean;
 }
 
-type ListItemProps = Omit<ListItemData, 'id'> &
-  ComponentPropsWithRef<typeof Primitive.li> & {
+type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & ComponentPropsWithRef<
+    typeof Primitive.li
+  > & {
     defaultOpen?: boolean;
     onOpenChange?: (nextOpen: boolean) => void;
   } & {
@@ -116,12 +117,13 @@ const PureListItem = forwardRef<
       open: propsOpen,
       defaultOpen,
       onOpenChange,
+      collapsible,
       id,
       draggableAttributes,
       draggableListeners,
       ...listItemProps
     } = props;
-    const { selectable, collapsible } = useListContext(LIST_NAME, __listScope);
+    const { selectable } = useListContext(LIST_NAME, __listScope);
 
     const [selected = false, setSelected] = useControllableState({
       prop: propsSelected,
@@ -148,6 +150,8 @@ const PureListItem = forwardRef<
         {children}
       </Primitive.li>
     );
+
+    console.log('[list item collapsible]', collapsible);
 
     return (
       <ListItemProvider

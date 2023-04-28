@@ -11,11 +11,13 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import {
   List,
   ListItem,
+  ListItemOpenTrigger,
   ListItemCollapsibleContent,
   ListItemEndcap,
   ListItemHeading,
   arrayMove,
-  DragEndEvent
+  DragEndEvent,
+  MockListItemOpenTrigger
 } from './List';
 
 export default {
@@ -49,7 +51,7 @@ export const Default = {
             <ListItemEndcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
-            <ListItemHeading className='grow mbs-2'>{text}</ListItemHeading>
+            <ListItemHeading className='grow pbs-2'>{text}</ListItemHeading>
             <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
@@ -77,15 +79,12 @@ export const Collapsible = {
     return (
       <List {...args}>
         {items.map(({ id, text, body }, index) => (
-          <ListItem key={id} id={id}>
-            <ListItemHeading asChild>
-              <div className='flex'>
-                <p className='grow mbs-2'>{text}</p>
-                <ListItemEndcap>
-                  <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-                </ListItemEndcap>
-              </div>
-            </ListItemHeading>
+          <ListItem key={id} id={id} collapsible={index !== 2}>
+            {index !== 2 ? <ListItemOpenTrigger /> : <MockListItemOpenTrigger />}
+            <ListItemHeading className='grow pbs-2'>{text}</ListItemHeading>
+            <ListItemEndcap>
+              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+            </ListItemEndcap>
             {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
           </ListItem>
         ))}
@@ -94,7 +93,6 @@ export const Collapsible = {
   },
   args: {
     variant: 'unordered',
-    collapsible: true,
     toggleOpenLabel: 'Open/close storybook list item'
   }
 };
