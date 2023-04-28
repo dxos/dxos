@@ -13,7 +13,7 @@ import { Button, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { objectMeta } from '@dxos/kai-frames';
+import { searchMeta } from '@dxos/kai-frames';
 import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
@@ -113,7 +113,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleSearchSelect = (object: TypedObject) => {
     if (space) {
       // TODO(burdon): Add to search result.
-      const frame = objectMeta[object.__typename!]?.frame;
+      const frame = searchMeta[object.__typename!]?.frame;
       if (frame) {
         onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
       }
@@ -307,7 +307,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         {!showSpaceList && (
           <div className='flex flex-col overflow-hidden space-y-2'>
             {(bool(options.get('experimental.search')) && (
-              <SearchPanel onResults={handleSearchResults} onSelect={handleSearchSelect} />
+              <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
             )) || <div className='mt-2' />}
 
             {/* Items if not actively searching. */}
@@ -328,7 +328,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                     {
                       <Plugin
                         space={space}
-                        onSelect={(objectId: string) => {
+                        onSelect={(objectId: string | undefined) => {
                           onNavigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
                         }}
                       />

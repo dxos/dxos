@@ -7,7 +7,7 @@ import { FC, useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
-import { objectMeta } from '@dxos/kai-frames';
+import { searchMeta } from '@dxos/kai-frames';
 import { useQuery } from '@dxos/react-client';
 
 // TODO(burdon): Cyclic dependency.
@@ -78,7 +78,7 @@ const matchFilter = (text: string) => {
       }
 
       if (title) {
-        const meta = objectMeta[object.__typename];
+        const meta = searchMeta[object.__typename];
         if (!meta) {
           return;
         }
