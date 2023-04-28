@@ -12,11 +12,11 @@ import { createDatabase } from './testing';
 import { TypedObject } from './typed-object';
 
 describe('Queries', () => {
-  // TODO(burdon): Factor out common dataset.
   let db: EchoDatabase;
   beforeAll(async () => {
     db = await createDatabase();
 
+    // TODO(burdon): Factor out common dataset.
     const objects = [
       new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
       new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
@@ -33,9 +33,8 @@ describe('Queries', () => {
     for (const object of objects) {
       db.add(object);
     }
-    await db.flush();
 
-    return db;
+    await db.flush();
   });
 
   test('filter properties', async () => {
