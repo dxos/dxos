@@ -69,7 +69,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
               executor: '@nrwl/storybook:storybook',
               options: {
                 config: {
-                  configFolder: 'packages/common/react-components/.storybook'
+                  configFolder: 'packages/ui/aurora/.storybook'
                 },
                 uiFramework: '@storybook/react'
               }

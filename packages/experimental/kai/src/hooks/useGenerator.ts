@@ -4,11 +4,9 @@
 
 import { useMemo } from 'react';
 
+import { Space } from '@dxos/client';
 import { Generator } from '@dxos/kai-types/testing';
 
-import { useAppRouter } from '../hooks';
-
-export const useGenerator = (): Generator | undefined => {
-  const { space } = useAppRouter();
+export const useGenerator = (space: Space | undefined): Generator | undefined => {
   return useMemo(() => space && new Generator(space.db), [space]);
 };
