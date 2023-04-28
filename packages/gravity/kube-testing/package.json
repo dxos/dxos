@@ -9,15 +9,25 @@
   "author": "DXOS.org",
   "type": "module",
   "scripts": {
-    "run-tests": "node --loader ts-node/esm  ./src/main.ts"
+    "run-tests": "node ./dist/lib/node/main.cjs"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "faker": "^5.5.3",
+    "seedrandom": "^3.0.5"
   },
   "devDependencies": {
+    "@types/faker": "^5.5.9",
     "@types/node": "^18.11.9",
+    "@types/seedrandom": "^3.0.5",
     "ts-node": "10.9.1",
     "typescript": "^4.8.4"
   },
