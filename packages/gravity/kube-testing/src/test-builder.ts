@@ -3,9 +3,8 @@
 //
 
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
@@ -34,15 +33,54 @@ export type DiscoverdPeer = {
 };
 
 export class Stats {
-  public performance = {
+  private readonly _performance = {
     failures: [] as Failure[],
     exchangedMessages: [] as ExchangedMessage[],
     discoveredPeers: [] as DiscoverdPeer[]
   };
 
+  /**
+   * Flag to prevent adding new stats after test is finished.
+   */
+  private _testFinished = false;
+
   public topics = new ComplexMap<PublicKey, ComplexSet<TestAgent>>(PublicKey.hash);
 
   public messageListeners = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
+
+  get performance() {
+    return this._performance;
+  }
+
+  get shortStats() {
+    return {
+      failures: this.performance.failures.length,
+      exchangedMessages: this.performance.exchangedMessages.length,
+      discoveredPeers: this.performance.discoveredPeers.length
+    };
+  }
+
+  finishTest() {
+    this._testFinished = true;
+  }
+
+  addFailure(error: Error, action: ExchangedMessage | DiscoverdPeer) {
+    if (!this._testFinished) {
+      this.performance.failures.push({ error, action });
+    }
+  }
+
+  addExchangedMessage(message: ExchangedMessage) {
+    if (!this._testFinished) {
+      this.performance.exchangedMessages.push(message);
+    }
+  }
+
+  addDiscoveredPeer(peer: DiscoverdPeer) {
+    if (!this._testFinished) {
+      this.performance.discoveredPeers.push(peer);
+    }
+  }
 
   joinTopic(topic: PublicKey, agent: TestAgent) {
     const existingTopic = this.topics.get(topic);
@@ -97,8 +135,8 @@ export class TestBuilder {
   }
 
   async destroy() {
-    await Promise.all([...this._servers.values()].map((s) => s.stop()));
     await Promise.all([...this._peers.values()].map((p) => p.destroy()));
+    await Promise.all([...this._servers.values()].map((s) => s.stop()));
   }
 }
 
@@ -154,12 +192,14 @@ export class TestAgent {
       }
     });
 
-    await sleep(5_000);
+    await cancelWithContext(this._ctx, sleep(5_000));
 
     const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
-    log.info('expectedPeers', expectedPeers);
 
     for (const peer of expectedPeers) {
+      if (peer.equals(this.peerId)) {
+        continue;
+      }
       const action: DiscoverdPeer = {
         type: 'SWARM_EVENT',
         signalServers: this.signalServers,
@@ -168,12 +208,9 @@ export class TestAgent {
         peerToDiscover: peer
       };
       if (!discoverdPeers.some((p) => p.equals(peer))) {
-        this._stats.performance.failures.push({
-          error: new Error('Peer not discovered'),
-          action
-        });
+        this._stats.addFailure(new Error('Peer not discovered'), action);
       } else {
-        this._stats.performance.discoveredPeers.push(action);
+        this._stats.addDiscoveredPeer(action);
       }
     }
   }

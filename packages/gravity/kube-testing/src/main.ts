@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import fs from 'node:fs';
 import seedrandom from 'seedrandom';
 
+import { scheduleTaskInterval, sleep } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -16,16 +19,20 @@ type TestConfig = {
   serversPerAgent: number;
   topics: PublicKey[];
   topicsPerAgent: number;
+  repeatInterval: number;
+  duration: number;
   randomSeed: string;
 };
 
-const testConfig = {
+const testConfig: TestConfig = {
   servers: 1,
-  agents: 2,
+  agents: 5,
   serversPerAgent: 1,
-  topics: [PublicKey.random()],
-  topicsPerAgent: 1,
-  randomSeed: PublicKey.random().toHex()
+  topics: [PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random()],
+  topicsPerAgent: 2,
+  randomSeed: PublicKey.random().toHex(),
+  repeatInterval: 100,
+  duration: 10_000
 };
 
 seedrandom(testConfig.randomSeed, { global: true });
@@ -60,30 +67,82 @@ const randomArraySlice = <T>(array: T[], size: number) => {
 const test = async () => {
   const builder = new TestBuilder();
   const stats = new Stats();
-
-  await setupTest(builder, testConfig, stats);
-  log.info('Test setup complete');
-  log.info(
-    'Servers',
-    builder.servers.map((s) => s.url())
-  );
-
-  for (const peer of builder.peers) {
-    for (const topic of randomArraySlice(testConfig.topics, testConfig.topicsPerAgent)) {
-      await peer.joinTopic(topic);
+  const ctx = new Context({
+    onError: (err) => {
+      if (err.name.includes('CANCELLED')) {
+        return;
+      }
+      log.catch(err);
     }
+  });
+  ctx.onDispose(() => {
+    log.warn('Context disposed');
+    throw new Error('Context disposed');
+  });
+
+  {
+    log.info('Test setup...', testConfig);
+
+    await setupTest(builder, testConfig, stats);
+
+    log.info('Test setup complete');
+    log.info(
+      'Servers',
+      builder.servers.map((s) => s.url())
+    );
   }
 
-  await Promise.all(
-    Array.from(stats.topics.entries()).map(([topic, agents]) =>
-      Promise.all(Array.from(agents.values()).map((agent) => agent.discoverPeers(topic)))
-    )
-  );
-  
-  await builder.destroy();
+  //
+  // test
+  //
+  let testCounter = 0;
+  scheduleTaskInterval(
+    ctx,
+    async () => {
+      log.info(`${testCounter++} test iteration running...`);
+      for (const peer of builder.peers) {
+        for (const topic of randomArraySlice(testConfig.topics, testConfig.topicsPerAgent)) {
+          await cancelWithContext(ctx, peer.joinTopic(topic));
+        }
+      }
 
-  log.info('Test config', testConfig);
-  log.info('Stats', stats.performance);
+      await Promise.all(
+        Array.from(stats.topics.entries()).map(([topic, agents]) =>
+          Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic))))
+        )
+      );
+
+      await Promise.all(
+        Array.from(stats.topics.entries()).map(([topic, agents]) =>
+          Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.leaveTopic(topic))))
+        )
+      );
+      log.info('iteration finished');
+    },
+    testConfig.repeatInterval
+  );
+
+  await sleep(testConfig.duration);
+
+  //
+  // cleanup
+  //
+  {
+    stats.finishTest();
+    await ctx.dispose();
+    await builder.destroy();
+  }
+
+  //
+  // results
+  //
+  {
+    log.info('Short stats', stats.shortStats);
+    fs.writeFileSync(
+      `./out/results/stats${testConfig.randomSeed}.json`,
+      JSON.stringify({ testConfig, stats: stats.performance }, null, 2)
+    );
+  }
 };
 
 test()
