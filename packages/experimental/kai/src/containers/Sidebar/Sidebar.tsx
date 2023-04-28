@@ -328,7 +328,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                     {
                       <Plugin
                         space={space}
-                        onSelect={(objectId: string) => {
+                        onSelect={(objectId: string | undefined) => {
                           onNavigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
                         }}
                       />

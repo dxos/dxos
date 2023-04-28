@@ -12,10 +12,13 @@ import { SearchPanel } from './SearchPanel';
 
 export default {
   component: SearchPanel,
-  decorators: [ClientSpaceDecorator()]
+  decorators: [ClientSpaceDecorator()],
+  parameters: {
+    layout: 'fullscreen'
+  }
 };
 
-export const Test = () => {
+const Test = () => {
   const spaces = useSpaces();
   const space = spaces[0];
   useEffect(() => {
@@ -30,7 +33,7 @@ export const Test = () => {
   }
 
   return (
-    <div className='flex flex-col w-[300px]'>
+    <div className='flex flex-col w-[300px] bg-white'>
       <SearchPanel space={space} onSelect={() => {}} onResults={() => {}} />
     </div>
   );
