@@ -25,7 +25,7 @@ export type SpacePanelProps = {
   onClose: () => void;
 };
 
-export const SpacePanel = ({ onAction, onNavigate, onClose }: SpacePanelProps) => {
+export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProps) => {
   const client = useClient();
   const { showDeletedObjects } = useAppState();
   const { setShowDeletedObjects } = useAppReducer();

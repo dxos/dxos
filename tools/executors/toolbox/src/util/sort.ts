@@ -8,6 +8,8 @@ const isPlainObject = (obj: any) => {
   return Object.prototype.toString.call(obj) === '[object Object]';
 };
 
+// TODO(burdon): Replace with npm package?
+
 // Custom key sorter, or array of fixed keys to prefix the naturally sorted list.
 type Sorter = string[] | ((value: any) => any);
 

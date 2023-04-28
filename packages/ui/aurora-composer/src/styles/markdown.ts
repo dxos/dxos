@@ -17,7 +17,7 @@ export const heading: Record<HeadingLevel, string> = {
 
 export const blockquote = 'mlb-2 border-is-4 border-neutral-500/50 pis-5';
 
-// todo (thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
+// TODO(thure): Tailwind was not seeing `[&>li:before]:content-["•"]` as a utility class, but it would work if instead of `"•"` it was `"X"`… why?
 export const unorderedList =
   'mlb-2 grid grid-cols-[min-content_1fr] [&>li:before]:content-[attr(marker)] [&>li:before]:mlb-1 [&>li:before]:mie-2';
 export const orderedList =
