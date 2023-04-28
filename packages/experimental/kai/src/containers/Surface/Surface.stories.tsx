@@ -64,7 +64,7 @@ const SurfaceManagerContextProvider: FC<{
 const SurfaceContext = React.createContext<{ id: string } | undefined>(undefined);
 
 /**
- * Surface container.
+ * Surface container implements chrome and contains content outlet.
  */
 const Surface: FC<{ id: string; children: ReactNode; className?: string }> = ({ id, children, className }) => {
   return (
