@@ -120,9 +120,11 @@ const SidebarSurface = () => {
             <MagnifyingGlass className={getSize(5)} />
           </Button>
         </div>
-        <Button onClick={toggleSidebar}>
-          <CaretLeft className={getSize(5)} />
-        </Button>
+        <div>
+          <Button onClick={toggleSidebar}>
+            <CaretLeft className={getSize(5)} />
+          </Button>
+        </div>
       </div>
 
       <SurfaceOutlet />
