@@ -3,9 +3,9 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 'react';
+import React, { FC, ReactNode, Suspense, useContext } from 'react';
+import { createMemoryRouter, RouterProvider, useNavigate, useParams } from 'react-router-dom';
 
-import { Event } from '@dxos/async';
 import { Button, ThemeProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
@@ -16,32 +16,29 @@ import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePan
 
 import '@dxosTheme';
 
-// TODO(burdon): Actions/App state/Routes (e.g., get/set SurfaceManager state from URL).
-
 /**
  * Manages current state of all surfaces.
  */
 class SurfaceManager {
-  private readonly surfaces: Record<string, FC> = {};
-  private readonly state: Record<string, string | undefined> = {};
-  readonly updated = new Event<string>();
+  private readonly components: Record<string, FC> = {};
+  readonly state: Record<string, string | undefined> = {};
 
-  constructor(surfaces?: Record<string, FC>) {
-    Object.entries(surfaces ?? {}).forEach(([id, component]) => this.registerSurface(id, component));
+  constructor(components?: Record<string, FC>) {
+    Object.entries(components ?? {}).forEach(([id, component]) => this.registerComponent(id, component));
   }
 
-  registerSurface(id: string, surface: FC) {
-    this.surfaces[id] = surface;
+  setState(id: string, component?: string) {
+    this.state[id] = component;
   }
 
-  setSurface(id: string, surface: string | undefined) {
-    this.state[id] = surface;
-    this.updated.emit(id);
+  registerComponent(id: string, components: FC) {
+    this.components[id] = components;
   }
 
-  getSurface(id: string) {
-    const component = this.state[id];
-    return component ? this.surfaces[component] : undefined;
+  getComponent(id: string | undefined) {
+    if (id) {
+      return this.components[id];
+    }
   }
 }
 
@@ -49,29 +46,31 @@ const SurfaceManagerContext = React.createContext<{ manager: SurfaceManager }>({
 
 const SurfaceManagerContextProvider: FC<{
   children: ReactNode;
-  surfaces?: Record<string, FC>;
-  state?: Record<string, string>;
-}> = ({ children, surfaces, state }) => {
-  const manager = new SurfaceManager(surfaces);
-  Object.entries(state ?? {}).forEach(([id, surface]) => manager.setSurface(id, surface));
-
+  components?: Record<string, FC>;
+}> = ({ children, components }) => {
+  const manager = new SurfaceManager(components);
   return <SurfaceManagerContext.Provider value={{ manager }}>{children}</SurfaceManagerContext.Provider>;
 };
 
 /**
  * Context for a surface.
  */
-const SurfaceContext = React.createContext<{ id: string } | undefined>(undefined);
+const SurfaceContext = React.createContext<{ id: string; component?: string } | undefined>(undefined);
+
+type SurfaceProps = {
+  id: string;
+  element?: ReactNode;
+  component: string | undefined;
+};
 
 /**
- * Surface container.
+ * Surface container implements chrome and contains content outlet.
  */
-const Surface: FC<{ id: string; children: ReactNode; className?: string }> = ({ id, children, className }) => {
-  return (
-    <SurfaceContext.Provider value={{ id }}>
-      <div className={mx('flex flex-1 bs-full', className)}>{children}</div>;
-    </SurfaceContext.Provider>
-  );
+const Surface = ({ id, element, component }: SurfaceProps) => {
+  const { manager } = useContext(SurfaceManagerContext);
+  manager.setState(id, component);
+
+  return <SurfaceContext.Provider value={{ id, component }}>{element ?? <SurfaceOutlet />}</SurfaceContext.Provider>;
 };
 
 /**
@@ -79,19 +78,8 @@ const Surface: FC<{ id: string; children: ReactNode; className?: string }> = ({ 
  */
 const SurfaceOutlet = () => {
   const { manager } = useContext(SurfaceManagerContext);
-  const { id } = useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext.'));
-  const [, forceUpdate] = useState({});
-  useEffect(() => {
-    const subscription = manager.updated.on((updated) => {
-      if (id === updated) {
-        forceUpdate({});
-      }
-    });
-
-    return () => subscription();
-  }, []);
-
-  const Content = manager.getSurface(id);
+  const { component } = useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext.'));
+  const Content = manager.getComponent(component);
   if (!Content) {
     return null;
   }
@@ -104,18 +92,6 @@ const SurfaceOutlet = () => {
 };
 
 //
-// Stories
-//
-
-export default {
-  component: Surface,
-  decorators: [FullscreenDecorator(), ClientSpaceDecorator()],
-  parameters: {
-    layout: 'fullscreen'
-  }
-};
-
-//
 // App surfaces
 //
 
@@ -123,26 +99,107 @@ const SidebarSurface = () => {
   const toggleSidebar = useTogglePanelSidebar();
 
   return (
-    <Surface id='sidebar' className='bg-zinc-200'>
-      <div className='flex flex-col grow'>
-        <div className='flex flex-row-reverse h-[32px] px-2 items-center'>
-          <Button onClick={toggleSidebar}>
-            <CaretLeft className={getSize(5)} />
-          </Button>
-        </div>
-
-        <SurfaceOutlet />
+    <div className='flex flex-col grow bs-full bg-zinc-200'>
+      <div className='flex flex-row-reverse h-[32px] px-2 items-center'>
+        <Button onClick={toggleSidebar}>
+          <CaretLeft className={getSize(5)} />
+        </Button>
       </div>
-    </Surface>
+
+      <SurfaceOutlet />
+      <Info />
+    </div>
   );
 };
 
 const MainSurface = () => {
-  const toggleSidebar = useTogglePanelSidebar();
-  const { displayState } = useContext(PanelSidebarContext);
+  return (
+    <div className='flex flex-col grow overflow-y-scroll'>
+      <SurfaceOutlet />
+      <Info />
+    </div>
+  );
+};
+
+//
+// App content
+//
+
+const Debug = () => {
+  const surface = useContext(SurfaceContext);
+  const {
+    manager: { state: global }
+  } = useContext(SurfaceManagerContext);
+  return (
+    <div className='p-2'>
+      <pre className='text-sm'>{JSON.stringify({ surface, global }, undefined, 2)}</pre>
+    </div>
+  );
+};
+
+const Info = () => {
+  const surface = useContext(SurfaceContext);
+  return (
+    <div className='p-2'>
+      <pre className='text-sm'>{JSON.stringify({ surface }, undefined, 2)}</pre>
+    </div>
+  );
+};
+
+const Navigator: FC = () => {
+  // TODO(burdon): Decouple router.
+  const navigate = useNavigate();
+  const { main } = useParams();
+
+  const items = [
+    { label: 'Reset' },
+    { label: 'Component 1', component: 'component-1' },
+    { label: 'Component 2', component: 'component-2' },
+    { label: 'Component 3', component: 'component-3' }
+  ];
 
   return (
-    <Surface id='main'>
+    <ul>
+      {items.map(({ label, component }, i) => (
+        <li
+          key={i}
+          className={mx('px-2 cursor-pointer', component === main && 'bg-green-200')}
+          onClick={() => navigate(`/${component ?? ''}`)}
+        >
+          {label}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const Component1 = () => (
+  <div className='p-2'>
+    <h1>Component 1</h1>
+  </div>
+);
+
+const Component2 = () => (
+  <div className='p-2'>
+    <h1>Component 2</h1>
+  </div>
+);
+
+const Component3 = () => (
+  <div className='p-2'>
+    <h1>Component 3</h1>
+  </div>
+);
+
+//
+// Stories
+//
+
+const PanelMain: FC<{ children: ReactNode }> = ({ children }) => {
+  const { displayState } = useContext(PanelSidebarContext);
+  const toggleSidebar = useTogglePanelSidebar();
+  return (
+    <div className='flex grow overflow-hidden'>
       {displayState !== 'show' && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
@@ -152,74 +209,73 @@ const MainSurface = () => {
           </div>
         </div>
       )}
-
-      <div className='px-2 py-1'>
-        <SurfaceOutlet />
-      </div>
-    </Surface>
-  );
-};
-
-//
-// App content
-//
-
-const Sidebar: FC = () => {
-  const { manager } = useContext(SurfaceManagerContext);
-
-  const items = [
-    { label: 'Reset' },
-    { label: 'Item 1', component: 'main-1' },
-    { label: 'Item 2', component: 'main-2' },
-    { label: 'Item 3', component: 'main-3' }
-  ];
-
-  return (
-    <div className='px-2'>
-      <ul>
-        {items.map(({ label, component }) => (
-          <li key={label} className='cursor-pointer' onClick={() => manager.setSurface('main', component)}>
-            {label}
-          </li>
-        ))}
-      </ul>
+      <div className='flex flex-col grow overflow-hidden divide-y divide-zinc-300'>{children}</div>
     </div>
   );
 };
 
-const Main1: FC = () => <div>Item 1</div>;
-const Main2: FC = () => <div>Item 2</div>;
-const Main3: FC = () => <div>Item 3</div>;
-
-//
-// App shell
-//
-
-const TestApp = () => {
-  // prettier-ignore
-  const surfaces = {
-    'sidebar': Sidebar,
-    'main-1': Main1,
-    'main-2': Main2,
-    'main-3': Main3
-  };
+const Layout = () => {
+  const { main } = useParams();
 
   return (
+    <PanelSidebarProvider
+      inlineStart
+      slots={{
+        main: { className: 'flex grow overflow-hidden' },
+        content: {
+          children: <Surface id='sidebar' element={<SidebarSurface />} component='navigator' />
+        }
+      }}
+    >
+      <PanelMain>
+        <Surface id='main' element={<MainSurface />} component={main} />
+        <Surface id='debug' component='debug' />
+      </PanelMain>
+    </PanelSidebarProvider>
+  );
+};
+
+const TestApp = () => {
+  // TODO(burdon): Surfaces defined by plugins.
+  // prettier-ignore
+  const components = {
+    'navigator': Navigator,
+    'component-1': Component1,
+    'component-2': Component2,
+    'component-3': Component3,
+    'debug': Debug
+  };
+
+  const Root = () => (
     <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[appkitTranslations, osTranslations]}>
-      <SurfaceManagerContextProvider surfaces={surfaces} state={{ sidebar: 'sidebar', main: 'main-1' }}>
-        <PanelSidebarProvider
-          inlineStart
-          slots={{
-            content: {
-              children: <SidebarSurface />
-            }
-          }}
-        >
-          <MainSurface />
-        </PanelSidebarProvider>
+      <SurfaceManagerContextProvider components={components}>
+        <Layout />
       </SurfaceManagerContextProvider>
     </ThemeProvider>
   );
+
+  const router = createMemoryRouter([
+    {
+      path: '/',
+      element: <Root />,
+      children: [
+        {
+          path: '/:main',
+          element: <Root />
+        }
+      ]
+    }
+  ]);
+
+  return <RouterProvider router={router} />;
+};
+
+export default {
+  component: Surface,
+  decorators: [FullscreenDecorator(), ClientSpaceDecorator()],
+  parameters: {
+    layout: 'fullscreen'
+  }
 };
 
 export const Default = {
