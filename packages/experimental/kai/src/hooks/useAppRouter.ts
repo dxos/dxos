@@ -64,7 +64,7 @@ export type AppRoute = {
 
 /**
  * App Route:
- *  /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
+ * /truncateKey(spaceKey)/section[/encodeFrame(frameId)[/objectId]]
  */
 export const useAppRouter = (): AppRoute => {
   const { spaceKey, section, frame, objectId } = useParams();

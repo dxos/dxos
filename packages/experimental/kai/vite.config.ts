@@ -55,7 +55,6 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
