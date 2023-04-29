@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { List, MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { Circle, List, MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -173,27 +173,46 @@ const Info = () => {
 const Navigator: FC = () => {
   // TODO(burdon): Decouple router with events.
   const navigate = useNavigate();
-  const { main } = useParams();
-  const handleSelect = (component: string | undefined) => {
-    navigate(`/${component ?? ''}`);
+  const { main, object } = useParams();
+  const handleSelect = (component: string | undefined, objectId?: string) => {
+    navigate(`/${component ?? ''}` + (objectId ? `/${objectId}` : ''));
   };
 
-  const navItems = [
+  const tree = [
     { label: 'Reset' },
     { label: 'Component 1', component: 'component-1' },
-    { label: 'Component 2', component: 'component-2' },
-    { label: 'Component 3', component: 'component-3' }
+    { label: 'Component 2', component: 'component-2', objects: ['1'] },
+    { label: 'Component 3', component: 'component-3', objects: ['2', '3', '4'] }
   ];
 
   return (
     <ul className='py-4'>
-      {navItems.map(({ label, component }, i) => (
-        <li
-          key={i}
-          className={mx('px-2 cursor-pointer', component === main && 'bg-green-200')}
-          onClick={() => handleSelect(component)}
-        >
-          {label}
+      {tree.map(({ label, component, objects }, i) => (
+        <li key={i}>
+          <div
+            className={mx('px-2 cursor-pointer', component === main && 'bg-green-200')}
+            onClick={() => handleSelect(component)}
+          >
+            {label}
+          </div>
+          {objects && (
+            <ul>
+              {objects.map((obj, j) => (
+                <li key={j}>
+                  <div
+                    className={mx('flex px-2 items-center cursor-pointer')}
+                    onClick={() => handleSelect(component, obj)}
+                  >
+                    <Circle
+                      weight={obj === object ? 'fill' : undefined}
+                      className={mx('mr-2 text-blue-500', getSize(3))}
+                    />
+                    Object {obj}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </li>
       ))}
     </ul>
@@ -314,7 +333,13 @@ const TestApp = () => {
       children: [
         {
           path: '/:main',
-          element: <Root />
+          element: <Root />,
+          children: [
+            {
+              path: '/:main/:object',
+              element: <Root />
+            }
+          ]
         }
       ]
     }
