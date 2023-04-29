@@ -32,7 +32,7 @@ const searchFields = ['title', 'name', 'description', 'content', 'subject', 'bod
 
 // TODO(burdon): Implement in echo schema.
 const getProperty = (object: Object, path: string[]): string | undefined => {
-  const value = (object as Record<string, any>)[path[0]];
+  const value = (object as { [key: string]: any })[path[0]];
   if (typeof value === 'string') {
     return value;
   } else if (typeof value === 'object') {

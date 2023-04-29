@@ -74,7 +74,7 @@ const PureViewStateInvitation = ({
   );
 };
 
-// TODO(thure): Restore this?
+// todo (thure): Restore this?
 const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: AuthenticatingInvitationObservable }) => {
   const { t } = useTranslation('os');
   const { status, haltedAt } = useInvitationStatus(activeInvitation);

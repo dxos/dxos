@@ -41,7 +41,7 @@ export type EchoType =
 export type EchoSchemaField = {
   name: string;
   type: EchoType;
-  options?: Record<string, any>;
+  options?: { [key: string]: any };
 };
 
 /**

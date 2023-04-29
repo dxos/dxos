@@ -39,13 +39,12 @@ import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
 import { ObjectAction, ObjectList } from './ObjectList';
-import { Separator, SpaceListPanel } from './SpaceListPanel';
+import { Separator, SpacePanel } from './SpacePanel';
 
 export type SidebarProps = {
   onNavigate: (path: string) => void;
 };
 
-// TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
 // TODO(burdon): Split into sub-components.
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
@@ -262,7 +261,13 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
   return (
     <DensityProvider density='fine'>
-      <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
+      <div
+        role='none'
+        className={mx(
+          'flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg',
+          theme.panel === 'flat' && 'border-r'
+        )}
+      >
         {/* Header */}
         <div className='flex flex-col shrink-0'>
           <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
@@ -291,7 +296,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         {/* Spaces */}
         {showSpaceList && (
-          <SpaceListPanel
+          <SpacePanel
             onAction={handleSpaceListAction}
             onNavigate={onNavigate}
             onClose={() => setShowSpaceList(false)}

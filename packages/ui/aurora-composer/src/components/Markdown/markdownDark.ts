@@ -30,7 +30,7 @@ export const cursor = '#ffffff';
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
 export const markdownDarktheme = {
-  // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated
+  // todo (thure): consider whether these commented-out rules from one-dark-theme should be integrated
   // '&': {
   //   color: ivory,
   //   backgroundColor: background
@@ -138,7 +138,7 @@ export const markdownDarktheme = {
   },
   ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
     const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
-    // TODO(thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
+    // todo (thure): This appears to be the best or only way to set selection caret heights, but it's far more verbose than it needs to be.
     acc[`& .text-${fontSize} + .cm-ySelectionCaret`] = { height };
     acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
     acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };

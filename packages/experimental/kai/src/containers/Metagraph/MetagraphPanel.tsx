@@ -10,7 +10,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useMetagraph } from '@dxos/react-metagraph';
-import { compareObject, compareString } from '@dxos/util';
+import { sortObject, sortString } from '@dxos/util';
 
 // TODO(burdon): Type selector.
 
@@ -56,7 +56,7 @@ const columns: TableColumn<Module>[] = [
 export const MetagraphPanel = () => {
   const client = useMetagraph();
   const [modules, setModules] = useState<Module[]>([]);
-  const sortedModules = modules.sort(compareObject('name', compareString()));
+  const sortedModules = modules.sort(sortObject('name', sortString()));
 
   useEffect(() => {
     void handleRefresh();

@@ -5,30 +5,28 @@
 // TODO(burdon): Unique.
 // TODO(burdon): Options for undefined to end.
 
-type Compare<T> = (a: T, b: T) => number;
+type Object = { [key: string]: any };
+type Sorter<T> = (a: T, b: T) => number;
 
-export const compareScalar =
-  (inc = true) =>
+export const sortScalar =
+  (natural = true) =>
   (a: any, b: any) =>
-    (inc ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
+    (natural ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
 
-export const compareString =
-  (inc = true, caseInsensitive = true) =>
-  (a: string, b: string) => {
-    if (caseInsensitive) {
-      a = a?.toLowerCase();
-      b = b?.toLowerCase();
-    }
-    return (inc ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
-  };
+export const sortString =
+  (natural = true, insensitive = true) =>
+  (a: string, b: string) =>
+    insensitive
+      ? (natural ? 1 : -1) * a.toLowerCase().localeCompare(b.toLowerCase())
+      : (natural ? 1 : -1) * a.localeCompare(b);
 
-export const compareObject =
-  <T extends Record<string, any>>(prop: string, sorter: Compare<any>, inc = true): Compare<any> =>
+export const sortObject =
+  <T extends Object>(prop: string, sorter: Sorter<any>, natural = true): Sorter<any> =>
   (a: T, b: T) =>
-    (inc ? 1 : -1) * sorter(a[prop], b[prop]);
+    (natural ? 1 : -1) * sorter(a[prop], b[prop]);
 
-export const compareMulti =
-  <T extends Record<string, any>>(sorters: Compare<T>[]) =>
+export const sortMany =
+  <T extends Object>(sorters: Sorter<T>[]) =>
   (a: T, b: T) => {
     const sort = (i = 0): number => {
       const s = sorters[i](a, b);
