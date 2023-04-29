@@ -5,14 +5,14 @@
 Application framework ontology:
 
 - **Vault**: HALO universal app (PWA).
-- **App**: Application Shell that manages Surfaces.
+- **Shell**: Main application container that manages Surfaces.
 - **Surface**: Configurable UI Container that provides screen (AR? voice?) real-estate to Plugins.
 - **Plugin**: App module that implements the App's functionality. 
 - **Frame**: UI component that operates on part of the App's ECHO Graph.
 
 ### Apps and Surfaces
 
-- Apps have multiple Surfaces that may be arranged by the App Shell (e.g., mobile, web, AR) and/or re-arranged by the user.
+- The App defines the layout of multiple Surfaces.
 - Surfaces are decoupled application containers that contain a single root component (Frame), which may be set dynamically by the application (e.g., via Actions).
 - The App's UX is made up ENTIRELY from Surfaces and their contained Frames.
   - E.g., a degenerative App my contain a single Surface; a simple App may contain just two Surfaces (e.g., "sidebar" and "main"); other Apps may have collections of possibly nested surfaces.
@@ -20,6 +20,7 @@ Application framework ontology:
   - The state includes the current Frame identifier as well as state specific to the Frame (e.g., currently selected item).
   - The App's state is defined by the set of all Surface states, which may be encoded (in full or in part) by a Web URL.
   - Surfaces may have chrome (e.g., the Sidebar Surface may have open/close buttons).
+- The Surface Controller defines a mapping from the Router to the state of individual Surfaces. The Router is update via events emitted by Surfaces.
 
 ### Plugins and Frames
 
@@ -48,7 +49,7 @@ Application framework ontology:
   - May contain a subset of the graph: e.g., only showing "suggested" (recent, contextually relevant) objects. 
     - This allows for the representation of potentially large datasets, which may be paged/streamed from remotely located Spaces (e.g., via KUBE agents).
 - **Universal Search**
-  - Implements controls to filter the Brane.
+  - Implements controls to query/filter the Brane.
   - Displays a flat list of search results, which may be represented as a compact table (icon, label, snippet).
     - NOTE: Results may be represented in other forms (e.g., thumbnails, cards).
   - A Search Action may cause the "sidebar" surface to swap-in the Search Plugin. 
@@ -68,7 +69,7 @@ Application framework ontology:
   - The detail view is rendered in a nested Surface, which may contain a Message Stack (i.e., set of sections that represent a conversation, 
     or sections representing information relating to the message: e.g., Contact, Content, Documents.)
 - **CRM**
-  - Defines a set of Frames to implement a CRM: e.g., Contact Manager, Task List, Kanban.
+  - Defines a set of Frames that implements a CRM workflow: e.g., Contact Manager, Calendar, Task List, Kanban.
 - **Assistant**
   - Implements:
     - A conversational text/voice interaction with an LLM;
