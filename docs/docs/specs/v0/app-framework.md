@@ -1,5 +1,12 @@
 # App Framework Notes
 
+## Goals
+
+0. Implement an App framework that enables third parties to extend the functionality selected by the User.
+1. Decouple modular UI components from the static App structure.
+2. Enable dynamic discovery and installation of modular UI components.
+3. Enable isolation of UI components.
+   
 ## Summary
 
 Application framework ontology:
@@ -14,7 +21,7 @@ Application framework ontology:
 
 - The App defines the layout of multiple Surfaces.
 - Surfaces are decoupled application containers that contain a single root component (Frame), which may be set dynamically by the application (e.g., via Actions).
-- The App's UX is made up ENTIRELY from Surfaces and their contained Frames.
+- The App's UI is made up ENTIRELY from Surfaces and their contained Frames.
   - E.g., a degenerative App my contain a single Surface; a simple App may contain just two Surfaces (e.g., "sidebar" and "main"); other Apps may have collections of possibly nested surfaces.
 - Each Surface has a current state managed by the App.
   - The state includes the current Frame identifier as well as state specific to the Frame (e.g., currently selected item).
@@ -74,3 +81,14 @@ Application framework ontology:
   - Implements:
     - A conversational text/voice interaction with an LLM;
     - Suggestions from the LLM relating to the current context (discovered by Plugin context update Actions).
+
+## Decoupling
+
+- Components should not have a hardcoded denpendency on the App's Router layout; hence they should not call the Router hooks (e.g.,  `useParams` or `useNavigage`) directly. E.g., the Kanban component may SELECT (event) the Project component with a particular object.
+  - React-router maps the URL onto the static UI hierarchy and state. The URL/Router structure is determined by different Apps.
+  - Part of the path determines the page layout (UI components); other parts encode the current app state (e.g., Space Key, Object ID).
+  - The Framework should decode this state to make it transparently accessible via hooks (e.g., useState).
+  - App components should emit semantic events that modify the App state (indirectly modifying the Router/URL).
+  - Not all of the App state is encoded by the URL.
+
+
