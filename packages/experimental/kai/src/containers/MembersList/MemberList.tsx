@@ -3,7 +3,6 @@
 //
 
 import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
-import { useAppReducer, useAppRouter, useAppState } from 'packages/experimental/kai/src/hooks';
 import React, { FC, useCallback, useEffect } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
@@ -12,6 +11,8 @@ import { SpaceMember } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useMembers } from '@dxos/react-client';
+
+import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 
 // TODO(burdon): Intent.
 export type MemberListProps = {

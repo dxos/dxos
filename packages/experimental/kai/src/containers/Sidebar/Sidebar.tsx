@@ -18,7 +18,6 @@ import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-shell';
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
-  useCreateInvitation,
   Section,
   SearchResults,
   bool,
@@ -26,14 +25,15 @@ import {
   getIcon,
   optionsKeys,
   useAppRouter,
-  useTheme,
-  useAppState
+  useAppState,
+  useCreateInvitation,
+  useTheme
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
-import { ObjectAction, ObjectList } from './ObjectList';
+import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
 import { Separator, SpacePanel } from './SpacePanel';
 
 export type SidebarProps = {
@@ -59,20 +59,19 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     if (space && frame && frame.runtime.filter && !objectId) {
       const { objects } = space.db.query(frame.runtime.filter());
       if (objects.length) {
-        handleObjectAction(objects[0].id, ObjectAction.SELECT);
+        handleObjectAction({ type: ObjectActionType.SELECT, object: objects[0] });
       }
     }
   }, [space, frame]);
 
   //
-  // UX state
+  // App state
   //
 
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
   const { state: connectionState } = useNetworkStatus();
-  const [showSpaceList, setShowSpaceList] = useState(false);
-  const [showFrames, setShowFrames] = useState(false);
+  const [showSpacePanel, setShowSpacePanel] = useState(false);
 
   const [showSearchResults, setShowSearchResults] = useState(false);
   const handleSearchResults = (results: SearchResults) => {
@@ -89,17 +88,23 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     }
   };
 
-  const handleObjectAction = (object: TypedObject, action: ObjectAction) => {
-    switch (action) {
-      case ObjectAction.SELECT: {
-        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object.id }));
+  // TODO(burdon): Change to Intent (as below).
+  const handleObjectAction = (action: ObjectAction) => {
+    const { type, object } = action;
+    switch (type) {
+      case ObjectActionType.SELECT: {
+        onNavigate(createPath({ spaceKey: space!.key, frame: frame?.module.id, objectId: object?.id }));
         break;
       }
-      case ObjectAction.DELETE: {
+
+      case ObjectActionType.DELETE: {
+        assert(object);
         space?.db.remove(object);
         break;
       }
-      case ObjectAction.RESTORE: {
+
+      case ObjectActionType.RESTORE: {
+        assert(object);
         space?.db.add(object);
         break;
       }
@@ -130,6 +135,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         await client.mesh.setConnectionState(ConnectionState.ONLINE);
         break;
       }
+
       case ConnectionState.ONLINE: {
         await client.mesh.setConnectionState(ConnectionState.OFFLINE);
         break;
@@ -142,17 +148,10 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   }
 
   const Icon = getIcon(space.properties.icon);
-  const { Plugin } = frame?.runtime ?? {};
 
   return (
     <DensityProvider density='fine'>
-      <div
-        role='none'
-        className={mx(
-          'flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg',
-          theme.panel === 'flat' && 'border-r'
-        )}
-      >
+      <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
         {/* Header */}
         <div className='flex flex-col shrink-0'>
           <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
@@ -168,7 +167,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 variant='ghost'
                 className='flex p-0 px-1'
                 data-testid='sidebar.showSpaceList'
-                onClick={() => setShowSpaceList((show) => !show)}
+                onClick={() => setShowSpacePanel((show) => !show)}
               >
                 <Info className={getSize(5)} />
               </Button>
@@ -179,13 +178,13 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
           </div>
         </div>
 
-        {/* Spaces */}
-        {showSpaceList && (
-          <SpacePanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpaceList(false)} />
+        {/* SpacePanel */}
+        {showSpacePanel && (
+          <SpacePanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpacePanel(false)} />
         )}
 
-        {/* Search */}
-        {!showSpaceList && (
+        {/* Search/Frames */}
+        {!showSpacePanel && (
           <div className='flex flex-col overflow-hidden space-y-2'>
             {(bool(options.get('experimental.search')) && (
               <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
@@ -193,88 +192,61 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
             {/* Items if not actively searching. */}
             {!showSearchResults && (
-              <div className='overflow-y-scroll space-y-4'>
-                {/* Frame list filter. */}
-                {bool(options.get('experimental.frames')) && <FrameList />}
-
-                {/* Generic object list. */}
-                {!Plugin && frame?.runtime.filter && (
-                  <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
-                )}
-
-                {/* Frame-specific plugin. */}
-                {/* TODO(burdon): Plugin spec (space, onSelect). */}
-                {Plugin && (
-                  <Suspense>
-                    {
-                      <Plugin
-                        space={space}
-                        onSelect={(objectId: string | undefined) => {
-                          onNavigate(createPath({ spaceKey: space.key, frame: frame?.module.id, objectId }));
-                        }}
-                      />
-                    }
-                  </Suspense>
-                )}
-
-                {/* Frame registry dialog. */}
-                <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
-                {bool(options.get('experimental.frames')) && (
-                  <div className='flex px-4 items-center'>
-                    <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
-                      <AppWindow className={getSize(6)} />
-                    </Button>
-                    {/* TODO(burdon): Put inside button? */}
-                    <span className='w-full pl-2'>Frames</span>
-                  </div>
-                )}
-              </div>
+              <FrameContent showDeletedObjects={showDeletedObjects} handleObjectAction={handleObjectAction} />
             )}
           </div>
         )}
 
         <div className='flex-1' />
-
         <div className='flex shrink-0 flex-col my-2'>
-          <div className='pl-2'>
-            <Button
-              data-testid='space-share'
-              variant='ghost'
-              title='Share space'
-              onClick={(event) =>
-                handleSpaceAction({
-                  action: IntentAction.SPACE_SHARE,
-                  data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
-                })
-              }
-            >
-              <UserPlus className={getSize(6)} />
-            </Button>
+          {/* Members */}
+          <div>
+            <div className='pl-2'>
+              <Button
+                data-testid='space-share'
+                variant='ghost'
+                title='Share space'
+                onClick={(event) =>
+                  handleSpaceAction({
+                    action: IntentAction.SPACE_SHARE,
+                    data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+                  })
+                }
+              >
+                <UserPlus className={getSize(6)} />
+              </Button>
+            </div>
+
+            <MemberList onNavigate={onNavigate} />
           </div>
 
-          <MemberList onNavigate={onNavigate} />
+          {/* Experimental */}
+          {(bool(options.get('experimental.bots')) || bool(options.get('experimental.metagraph'))) && (
+            <>
+              <Separator />
+              {bool(options.get('experimental.bots')) && (
+                <Link
+                  className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
+                  to={createPath({ spaceKey: space.key, section: Section.BOTS })}
+                >
+                  <Robot className={getSize(6)} />
+                  <div className='pl-2'>Bots</div>
+                </Link>
+              )}
 
-          <Separator />
-          {bool(options.get('experimental.bots')) && (
-            <Link
-              className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
-              to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-            >
-              <Robot className={getSize(6)} />
-              <div className='pl-2'>Bots</div>
-            </Link>
+              {bool(options.get('experimental.metagraph')) && (
+                <Link
+                  className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
+                  to={createPath({ spaceKey: space.key, section: Section.DMG })}
+                >
+                  <Graph className={getSize(6)} />
+                  <div className='pl-2'>Metagraph</div>
+                </Link>
+              )}
+            </>
           )}
 
-          {bool(options.get('experimental.metagraph')) && (
-            <Link
-              className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
-              to={createPath({ spaceKey: space.key, section: Section.DMG })}
-            >
-              <Graph className={getSize(6)} />
-              <div className='pl-2'>Metagraph</div>
-            </Link>
-          )}
-
+          {/* Network */}
           <Separator />
           <div className='flex mli-2 items-center'>
             <Button variant='ghost' className='p-0 px-2' onClick={handleToggleConnection}>
@@ -291,3 +263,59 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     </DensityProvider>
   );
 });
+
+// TODO(burdon): Factor out.
+const FrameContent = ({
+  showDeletedObjects,
+  handleObjectAction
+}: {
+  showDeletedObjects?: boolean;
+  handleObjectAction: (action: ObjectAction) => void;
+}) => {
+  const [options] = useKeyStore(optionsKeys);
+  const { space, frame } = useAppRouter(); // TODO(burdon): Factor out.
+  const [showFrames, setShowFrames] = useState(false);
+  const { Plugin } = frame?.runtime ?? {};
+
+  if (!space) {
+    return null;
+  }
+
+  return (
+    <div className='overflow-y-scroll space-y-4'>
+      {/* Frame list filter. */}
+      {bool(options.get('experimental.frames')) && <FrameList />}
+
+      {/* Generic object list. */}
+      {!Plugin && frame?.runtime.filter && (
+        <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
+      )}
+
+      {/* Frame-specific plugin. */}
+      {/* TODO(burdon): Plugin spec (space, onSelect). */}
+      {Plugin && (
+        <Suspense>
+          <Plugin
+            space={space}
+            onSelect={(objectId: string | undefined) => {
+              const object = objectId ? space.db.getObjectById(objectId) : undefined;
+              handleObjectAction({ type: ObjectActionType.SELECT, object });
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Frame registry dialog. */}
+      <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
+      {bool(options.get('experimental.frames')) && (
+        <div className='flex px-4 items-center'>
+          <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
+            <AppWindow className={getSize(6)} />
+          </Button>
+          {/* TODO(burdon): Put inside button? */}
+          <span className='w-full pl-2'>Frames</span>
+        </div>
+      )}
+    </div>
+  );
+};
