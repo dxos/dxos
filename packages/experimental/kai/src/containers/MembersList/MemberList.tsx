@@ -3,13 +3,81 @@
 //
 
 import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import { useAppReducer, useAppRouter, useAppState } from 'packages/experimental/kai/src/hooks';
+import React, { FC, useCallback, useEffect } from 'react';
 
+import { scheduleTaskInterval } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { SpaceMember } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { useClient, useMembers } from '@dxos/react-client';
 
-export const MemberList: FC<{
+// TODO(burdon): Intent.
+export type MemberListProps = {
+  onNavigate: (path: string) => void;
+};
+
+export const MemberList = ({ onNavigate }: MemberListProps) => {
+  const { space } = useAppRouter(); // TODO(burdon): Factor out.
+  const members = useMembers(space?.key);
+  const client = useClient();
+  const { setActiveFrame } = useAppReducer();
+
+  const membersLocations = new Map<string, string>();
+  useEffect(() => {
+    if (space) {
+      const ctx = new Context();
+      scheduleTaskInterval(
+        ctx,
+        async () => {
+          await space.postMessage('currentLocation', {
+            identityKey: client.halo.identity.get()?.identityKey.toHex(),
+            location: window.location.pathname
+          });
+        },
+        500
+      );
+
+      ctx.onDispose(
+        space!.listen('currentLocation', ({ payload: { identityKey, location } }) => {
+          if (!membersLocations.has(identityKey) || membersLocations.get(identityKey) !== location) {
+            membersLocations.set(identityKey, location);
+          }
+        })
+      );
+      return () => {
+        void ctx.dispose();
+      };
+    }
+  }, [space]);
+
+  const { frames: activeFrames } = useAppState();
+  const focusOnMember = useCallback((member: SpaceMember) => {
+    const path = membersLocations.get(member.identity.identityKey.toHex());
+
+    // TODO(burdon): Hack.
+    // Check if Frame which we are try to focus in is installed, and install it if necessary.
+    const id = path?.split('/')[3].split('_').join('.');
+    // TODO(mykola): Reconcile with FrameRegistry.
+    if (id) {
+      const activate = !activeFrames.find((frameId) => frameId === id);
+      if (activate) {
+        setActiveFrame(id, activate);
+      }
+    }
+
+    if (path) {
+      onNavigate(path);
+    }
+  }, []);
+
+  return (
+    <MembersPanel identityKey={client.halo.identity.get()!.identityKey} members={members} onSelect={focusOnMember} />
+  );
+};
+
+export const MembersPanel: FC<{
   identityKey: PublicKey;
   members: SpaceMember[];
   onSelect?: (member: SpaceMember) => void;

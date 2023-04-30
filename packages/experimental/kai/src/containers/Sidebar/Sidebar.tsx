@@ -4,17 +4,15 @@
 
 import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
+import React, { useContext, useEffect, useState, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 
-import { scheduleTaskInterval } from '@dxos/async';
 import { Button, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
-import { Context } from '@dxos/context';
 import { searchMeta } from '@dxos/kai-frames';
-import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { observer, useClient, useKeyStore, useNetworkStatus, useSpaces } from '@dxos/react-client';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceListAction } from '../../components';
@@ -29,7 +27,6 @@ import {
   optionsKeys,
   useAppRouter,
   useTheme,
-  useAppReducer,
   useAppState
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
@@ -50,12 +47,10 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
   const [options] = useKeyStore(optionsKeys);
-  const { setActiveFrame } = useAppReducer();
 
   const theme = useTheme();
   const client = useClient();
   const spaces = useSpaces();
-  const members = useMembers(space?.key);
   const startInvitation = useCreateInvitation();
 
   // TODO(burdon): Error if conditional filter.
@@ -79,10 +74,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const [showSpaceList, setShowSpaceList] = useState(false);
   const [showFrames, setShowFrames] = useState(false);
 
-  //
-  // Search
-  //
-
   const [showSearchResults, setShowSearchResults] = useState(false);
   const handleSearchResults = (results: SearchResults) => {
     setShowSearchResults(results.results.length > 0);
@@ -97,10 +88,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       }
     }
   };
-
-  //
-  // Space management
-  //
 
   const handleObjectAction = (object: TypedObject, action: ObjectAction) => {
     switch (action) {
@@ -136,62 +123,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       }
     }
   };
-
-  //
-  // Members focusing
-  //
-
-  const membersLocations = new Map<string, string>();
-  useEffect(() => {
-    if (space) {
-      const ctx = new Context();
-      scheduleTaskInterval(
-        ctx,
-        async () => {
-          await space.postMessage('currentLocation', {
-            identityKey: client.halo.identity.get()?.identityKey.toHex(),
-            location: window.location.pathname
-          });
-        },
-        500
-      );
-
-      ctx.onDispose(
-        space!.listen('currentLocation', ({ payload: { identityKey, location } }) => {
-          if (!membersLocations.has(identityKey) || membersLocations.get(identityKey) !== location) {
-            membersLocations.set(identityKey, location);
-          }
-        })
-      );
-      return () => {
-        void ctx.dispose();
-      };
-    }
-  }, [space]);
-
-  const { frames: activeFrames } = useAppState();
-  const focusOnMember = useCallback((member: SpaceMember) => {
-    const path = membersLocations.get(member.identity.identityKey.toHex());
-
-    // TODO(burdon): Hack.
-    // Check if Frame which we are try to focus in is installed, and install it if necessary.
-    const id = path?.split('/')[3].split('_').join('.');
-    // TODO(mykola): Reconcile with FrameRegistry.
-    if (id) {
-      const activate = !activeFrames.find((frameId) => frameId === id);
-      if (activate) {
-        setActiveFrame(id, activate);
-      }
-    }
-
-    if (path) {
-      onNavigate(path);
-    }
-  }, []);
-
-  //
-  // Connection
-  //
 
   const handleToggleConnection = async () => {
     switch (connectionState) {
@@ -291,6 +222,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 )}
 
                 {/* Frame registry dialog. */}
+                <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
                 {bool(options.get('experimental.frames')) && (
                   <div className='flex px-4 items-center'>
                     <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
@@ -307,7 +239,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         <div className='flex-1' />
 
-        {/* Members */}
         <div className='flex shrink-0 flex-col my-2'>
           <div className='pl-2'>
             <Button
@@ -325,11 +256,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             </Button>
           </div>
 
-          <MemberList
-            identityKey={client.halo.identity.get()!.identityKey}
-            members={members}
-            onSelect={focusOnMember}
-          />
+          <MemberList onNavigate={onNavigate} />
 
           <Separator />
           {bool(options.get('experimental.bots')) && (
@@ -364,8 +291,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             <span>Toggle connection</span>
           </div>
         </div>
-
-        <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
       </div>
     </DensityProvider>
   );
