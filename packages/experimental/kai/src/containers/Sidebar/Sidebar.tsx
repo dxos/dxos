@@ -107,7 +107,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   };
 
   // TODO(burdon): Factor out intention handlers?
-  const handleSpaceListAction = (intent: Intent<SpaceListAction>) => {
+  const handleSpaceAction = (intent: Intent<SpaceListAction>) => {
     const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
     assert(space);
 
@@ -181,11 +181,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         {/* Spaces */}
         {showSpaceList && (
-          <SpacePanel
-            onAction={handleSpaceListAction}
-            onNavigate={onNavigate}
-            onClose={() => setShowSpaceList(false)}
-          />
+          <SpacePanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpaceList(false)} />
         )}
 
         {/* Search */}
@@ -246,7 +242,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
               variant='ghost'
               title='Share space'
               onClick={(event) =>
-                handleSpaceListAction({
+                handleSpaceAction({
                   action: IntentAction.SPACE_SHARE,
                   data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
                 })
