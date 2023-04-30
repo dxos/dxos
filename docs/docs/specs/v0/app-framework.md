@@ -2,11 +2,12 @@
 
 ## Goals
 
-0. Implement an App framework that enables third parties to extend the functionality selected by the User.
-1. Decouple modular UI components from the static App structure.
-2. Enable dynamic discovery and installation of modular UI components.
-3. Enable isolation of UI components.
-   
+1. Minimal shared App shell shared between Composer and Kai to facilitate a common development path.
+2. Implement an App framework that enables third parties to extend the functionality selected by the User.
+3. Decouple modular UI components from the static App structure.
+4. Enable dynamic discovery and installation of modular UI components.
+5. Enable isolation of UI components (and restricted access to data).
+
 ## Summary
 
 Application framework ontology:
