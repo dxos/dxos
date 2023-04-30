@@ -10,7 +10,7 @@ import { getSize } from '@dxos/aurora-theme';
 import { ConfigProto } from '@dxos/config';
 import { TableColumn, Table } from '@dxos/mosaic';
 import { CompactQrCode } from '@dxos/react-appkit';
-import { compareObject, compareString } from '@dxos/util';
+import { sortObject, sortString } from '@dxos/util';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -69,7 +69,7 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
       width: 100,
       Cell: ({ value }: { value: string[] }) => (
         <div>
-          {value.sort(compareString()).map((tag, i) => (
+          {value.sort(sortString()).map((tag, i) => (
             <div key={i} className='pr-1'>
               <span className='rounded-md p-1 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>{tag}</span>
             </div>
@@ -96,7 +96,7 @@ export const RegistryPage = () => {
   const kube = useKube();
   const [config, setConfig] = useState<ConfigProto>({});
   const [modules, setModules] = useState<Module[]>([]);
-  const sortedModules = modules.sort(compareObject('name', compareString()));
+  const sortedModules = modules.sort(sortObject('name', sortString()));
   const { t } = useTranslation('appkit');
 
   useEffect(() => {

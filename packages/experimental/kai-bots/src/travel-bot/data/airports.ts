@@ -74,7 +74,7 @@ export const fetchAirports = async (): Promise<Airport[]> => {
   parser.on('end', () => trigger.wake(airports));
   parser.on('error', () => trigger.wake([]));
   parser.on('readable', () => {
-    let record: Record<string, any>;
+    let record: { [key: string]: any };
     while ((record = parser.read())) {
       // About Filter to about 500.
       if (record.type === 'large_airport') {

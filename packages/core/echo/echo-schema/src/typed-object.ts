@@ -403,7 +403,7 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 /**
  * Base class for generated document types and expando objects.
  */
-export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
+export type TypedObject<T extends Record<string, any> = { [key: string]: any }> = TypedObjectImpl<T> & T;
 
 type TypedObjectConstructor = {
   /**
@@ -411,7 +411,7 @@ type TypedObjectConstructor = {
    * @param initialProps Initial properties.
    * @param _schemaType Schema type for generated types.
    */
-  new <T extends Record<string, any> = Record<string, any>>(
+  new <T extends Record<string, any> = { [key: string]: any }>(
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType
   ): TypedObject<T>;
@@ -428,10 +428,11 @@ type ExpandoConstructor = {
   /**
    * Create a new document.
    * @param initialProps Initial properties.
+   * @param _schemaType Schema type for generated types.
    */
   new (initialProps?: Record<string, any>): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
 
-export type Expando = TypedObject;
+export type Expando = TypedObject<{ [key: string]: any }>;

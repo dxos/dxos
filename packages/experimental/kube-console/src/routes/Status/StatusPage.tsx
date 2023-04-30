@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { TableColumn, Table } from '@dxos/mosaic';
-import { compareObject, compareString } from '@dxos/util';
+import { sortObject, sortString } from '@dxos/util';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -52,7 +52,7 @@ const columns: TableColumn<Service>[] = [
 export const StatusPage = () => {
   const kube = useKube();
   const [services, setServices] = useState<Service[]>([]);
-  const soredServices = services.sort(compareObject('name', compareString()));
+  const soredServices = services.sort(sortObject('name', sortString()));
 
   useEffect(() => {
     void handleRefresh();

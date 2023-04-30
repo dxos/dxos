@@ -14,7 +14,7 @@ import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Select } from '@dxos/react-appkit';
 import { useKeyStore } from '@dxos/react-client';
 
-import { useAppRouter, useBotClient, getBotEnvs, botKeys, botModules } from '../../hooks';
+import { botDefs, useAppRouter, useBotClient, getBotEnvs, botKeys } from '../../hooks';
 
 const REFRESH_DELAY = 5_000;
 
@@ -84,7 +84,7 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotR
 export const BotManager = () => {
   const [status, setStatus] = useState<string>();
   const [records, setRecords] = useState<BotRecord[]>([]);
-  const [botId, setBotId] = useState<string>(botModules[0].id!);
+  const [botId, setBotId] = useState<string>(botDefs[0].module.id!);
   const { space } = useAppRouter();
   const botClient = useBotClient(space!);
   const [keyMap] = useKeyStore(Object.keys(botKeys));
@@ -155,9 +155,12 @@ export const BotManager = () => {
       <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
           <Select value={botId} onValueChange={setBotId}>
-            {botModules.map(({ id, displayName }) => (
+            {botDefs.map(({ module: { id, displayName }, runtime: { Icon } }) => (
               <Select.Item key={id} value={id!}>
-                <div className='flex items-center'>{displayName}</div>
+                <div className='flex items-center'>
+                  <Icon className={mx(getSize(5), 'mr-2')} />
+                  {displayName}
+                </div>
               </Select.Item>
             ))}
           </Select>

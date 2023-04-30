@@ -6,7 +6,7 @@ declare global {
   const mochaExecutor: {
     environment: import('@dxos/test').TestEnvironment;
     tags: string[];
-    executorResult: Record<string, any>;
+    executorResult: { [key: string]: any };
   };
 }
 

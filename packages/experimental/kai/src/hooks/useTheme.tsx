@@ -79,6 +79,7 @@ export type Theme = {
     header: string;
     border: string;
   };
+  panel?: 'normal' | 'flat';
 };
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names

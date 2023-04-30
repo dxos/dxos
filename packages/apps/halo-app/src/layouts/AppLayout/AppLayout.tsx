@@ -52,7 +52,7 @@ export const AppLayout = ({ spacesPath = '/spaces', manageProfilePath, menubarCo
           </ProfileMenu>
         )}
       </Menubar>
-      {/* TODO(thure): multiple Menubars messes up keyboard a11y */}
+      {/* todo(thure): multiple Menubars messes up keyboard a11y */}
       <Menubar>
         <Separator className='grow' />
         {menubarContent}

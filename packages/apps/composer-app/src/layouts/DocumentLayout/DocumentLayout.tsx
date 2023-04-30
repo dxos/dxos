@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -64,7 +63,6 @@ export const DocumentLayout = () => {
         navigate(getPath(nextSpaceKey));
       }}
     >
-      {/* TODO(burdon): Probably shouldn't introduce Octokit dep this high up. */}
       <OctokitProvider>
         <PanelSidebarProvider
           slots={{
