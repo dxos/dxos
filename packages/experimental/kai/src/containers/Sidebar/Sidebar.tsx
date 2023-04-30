@@ -4,28 +4,26 @@
 
 import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
-import clipboardCopy from 'clipboard-copy';
 import React, { useContext, useEffect, useState, Suspense, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Button, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, TypedObject, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { TypedObject } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { searchMeta } from '@dxos/kai-frames';
-import { log } from '@dxos/log';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useKeyStore, useMembers, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useShell, useTogglePanelSidebar } from '@dxos/react-shell';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
+  useCreateInvitation,
   Section,
   SearchResults,
   bool,
-  createInvitationPath,
   createPath,
   getIcon,
   optionsKeys,
@@ -53,12 +51,12 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const { showDeletedObjects } = useAppState();
   const [options] = useKeyStore(optionsKeys);
   const { setActiveFrame } = useAppReducer();
-  const shell = useShell();
 
   const theme = useTheme();
   const client = useClient();
   const spaces = useSpaces();
   const members = useMembers(space?.key);
+  const startInvitation = useCreateInvitation();
 
   // TODO(burdon): Error if conditional filter.
   // const objects = useQuery(space, frame?.runtime.filter?.());
@@ -80,26 +78,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const { state: connectionState } = useNetworkStatus();
   const [showSpaceList, setShowSpaceList] = useState(false);
   const [showFrames, setShowFrames] = useState(false);
-
-  //
-  // Invitations
-  //
-
-  const [observable, setObservable] = useState<CancellableInvitationObservable>();
-  useEffect(() => {
-    return () => {
-      void observable?.cancel();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (observable) {
-      const href = createInvitationPath(observable.get());
-      const url = new URL(href, window.origin);
-      console.log(url); // Log for test automation.
-      void clipboardCopy(url.toString());
-    }
-  }, [observable]);
 
   //
   // Search
@@ -153,30 +131,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
       }
 
       case IntentAction.SPACE_SHARE: {
-        if (intent.data.modifier) {
-          const swarmKey = PublicKey.random(); // TODO(burdon): Factor out.
-          const observable = space.createInvitation({
-            swarmKey,
-            type: Invitation.Type.MULTIUSE,
-            authMethod: Invitation.AuthMethod.NONE
-          });
-
-          const subscription = observable.subscribe(
-            (invitation: Invitation) => {
-              if (invitation.state === Invitation.State.CONNECTING) {
-                setObservable(observable);
-                subscription.unsubscribe();
-              }
-            },
-            (error) => {
-              log.error(error);
-              subscription.unsubscribe();
-            }
-          );
-        } else {
-          void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: intent.data.spaceKey });
-        }
-
+        startInvitation(space, intent.data.modifier);
         break;
       }
     }
@@ -215,7 +170,6 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   }, [space]);
 
   const { frames: activeFrames } = useAppState();
-  // const frameRegistry = useFrameRegistry();
   const focusOnMember = useCallback((member: SpaceMember) => {
     const path = membersLocations.get(member.identity.identityKey.toHex());
 
