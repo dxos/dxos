@@ -17,10 +17,10 @@ import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePan
 
 import '@dxosTheme';
 
-type Action = {
-  type: 'select';
-  source: string;
-};
+// type Action = {
+//   type: 'select';
+//   source: string;
+// };
 
 /**
  * Manages current state of all surfaces.
