@@ -348,6 +348,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kai-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kai-types/package.json",
           "jsonpath": "$.version"
         },

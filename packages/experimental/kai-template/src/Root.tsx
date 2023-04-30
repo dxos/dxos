@@ -6,6 +6,16 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import {
+  AppState,
+  AppStateProvider,
+  ShellProvider,
+  botModules,
+  configProvider,
+  defaultFrames,
+  kaiTranslations,
+  useClientProvider
+} from '@dxos/kai';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
@@ -14,14 +24,9 @@ import { ClientProvider } from '@dxos/react-client';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { osTranslations } from '@dxos/react-shell';
 
-import { AppState, AppStateProvider, configProvider, useClientProvider, botModules, defaultFrames } from '../../hooks';
-import kaiTranslations from '../../translations';
-import { ShellProvider } from '../ShellProvider';
-
 /**
  * Main app container.
  */
-// TODO(burdon): Rename.
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {

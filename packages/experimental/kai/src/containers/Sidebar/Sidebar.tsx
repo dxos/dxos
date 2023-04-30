@@ -41,7 +41,6 @@ export type SidebarProps = {
 };
 
 // TODO(burdon): Remove observer?
-// TODO(burdon): Split into sub-components.
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.

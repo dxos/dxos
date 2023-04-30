@@ -4,6 +4,6 @@
 
 import * as enUS from './en-US';
 
-export default {
-  'en-US': enUS
-};
+export const kaiTranslations = { 'en-US': enUS };
+
+export default kaiTranslations;
