@@ -95,6 +95,7 @@ export class Context {
    */
   raise(error: Error): void {
     if (this._isDisposed) {
+      // TODO(dmaretskyi): Don't log those.
       log.warn('Error in disposed context', error);
       return;
     }
