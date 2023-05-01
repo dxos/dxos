@@ -49,6 +49,7 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
     const isInvalid = !!validationMessage && validationValence === 'error';
 
     const { autoFocus, ...inputSlot } = slots.input ?? {};
+    console.log('>>>>>>>>>>>>>>>>>', slots.input, inputSlot);
 
     const bareInputBaseProps = {
       ...inputSlot,

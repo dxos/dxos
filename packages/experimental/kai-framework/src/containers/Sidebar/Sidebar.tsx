@@ -281,32 +281,36 @@ const FrameContent = ({
   }
 
   return (
-    <div className='overflow-y-scroll space-y-4'>
+    <div className='flex flex-col w-full overflow overflow-y-scroll space-y-4'>
       {/* Frame list filter. */}
       {bool(options.get('experimental.frames')) && <FrameList />}
 
       {/* Generic object list. */}
       {!Plugin && frame?.runtime.filter && (
-        <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
+        <div className='flex w-full overflow-hidden'>
+          <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
+        </div>
       )}
 
       {/* Frame-specific plugin. */}
       {/* TODO(burdon): Plugin spec (space, onSelect). */}
       {Plugin && (
-        <Suspense>
-          <Plugin
-            space={space}
-            onSelect={(objectId: string | undefined) => {
-              const object = objectId ? space.db.getObjectById(objectId) : undefined;
-              handleObjectAction({ type: ObjectActionType.SELECT, object });
-            }}
-          />
-        </Suspense>
+        <div className='flex w-full overflow-hidden'>
+          <Suspense>
+            <Plugin
+              space={space}
+              onSelect={(objectId: string | undefined) => {
+                const object = objectId ? space.db.getObjectById(objectId) : undefined;
+                handleObjectAction({ type: ObjectActionType.SELECT, object });
+              }}
+            />
+          </Suspense>
+        </div>
       )}
 
       {/* Frame registry dialog. */}
       <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
-      {bool(options.get('experimental.frames')) && (
+      {bool(options.get('experimental.frames')) && false && (
         <div className='flex px-4 items-center'>
           <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
             <AppWindow className={getSize(6)} />
