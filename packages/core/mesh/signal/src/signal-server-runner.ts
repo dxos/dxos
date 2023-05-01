@@ -43,7 +43,12 @@ export class SignalServerRunner {
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
-    log(`Starting ${this._binCommand} (cwd: ${this._cwd})`);
+    log(`starting`, {
+      binCommand: this._binCommand,
+      signalArguments: this._signalArguments,
+      cwd: this._cwd,
+      port: this._port
+    });
     if (this._cwd && !fs.existsSync(this._cwd)) {
       throw new Error(`CWD not exists: ${this._cwd}`);
     }
