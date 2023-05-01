@@ -9,8 +9,8 @@ export type ThemeFunction<P extends Record<string, any>> = (
   path: string,
   defaultClassName: string,
   styleProps?: P,
-  ...options: ClassNameArray
+  ...etc: ClassNameArray
 ) => string;
-export type ComponentFunction<P extends Record<string, any>> = (styleProps: P, ...options: ClassNameArray) => string;
+export type ComponentFunction<P extends Record<string, any>> = (styleProps: P, ...etc: ClassNameArray) => string;
 export type ComponentFragment<P extends Record<string, any>> = (styleProps: P) => ClassNameValue[];
 export type Theme<P extends Record<string, any>> = { [key: string]: Theme<P> | ComponentFunction<P> };
