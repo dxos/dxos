@@ -5,9 +5,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { List, ListItem, ListItemEndcap } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { useFrameRegistry } from '@dxos/kai-frames';
-import { List, ListItem, ListItemEndcap } from '@dxos/react-appkit';
 
 import { createPath, useAppRouter, useAppState } from '../../hooks';
 
@@ -22,7 +22,7 @@ export const FrameList = () => {
   // TODO(burdon): Remove unnecessary classes.
   return (
     <div className='is-full'>
-      <List labelId='objects'>
+      <List aria-labelledby='objects'>
         {activeFrames
           .map((frameId) => frameRegistry.getFrameDef(frameId)!)
           .filter(Boolean)
@@ -30,18 +30,11 @@ export const FrameList = () => {
             <ListItem
               id={id}
               key={id}
-              slots={{
-                root: { className: mx(id === currentFrame?.module.id && 'bg-zinc-200') },
-                // TODO(burdon): Rename slot "main"?
-                mainContent: { className: 'flex w-full px-3 items-center' }
-              }}
+              className={['flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200']}
             >
               <Link key={id} className='flex w-full items-center' to={createPath({ spaceKey: space.key, frame: id })}>
-                <ListItemEndcap asChild>
-                  {/* TODO(burdon): Why is div needed? */}
-                  <div className='flex items-center'>
-                    <Icon className={getSize(6)} />
-                  </div>
+                <ListItemEndcap className='items-center'>
+                  <Icon className={getSize(6)} />
                 </ListItemEndcap>
                 <div className='pl-1'>{displayName}</div>
               </Link>
