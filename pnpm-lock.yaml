@@ -2639,13 +2639,17 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/kai-frames': workspace:*
       '@dxos/kai-framework': workspace:*
+      '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-icons': workspace:*
+      '@dxos/react-metagraph': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
@@ -2697,13 +2701,17 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
+      '@dxos/kai-frames': link:../kai-frames
       '@dxos/kai-framework': link:../kai-framework
+      '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../metagraph
       '@dxos/node-std': link:../../common/node-std
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-icons': link:../../ui/react-icons
+      '@dxos/react-metagraph': link:../react-metagraph
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel

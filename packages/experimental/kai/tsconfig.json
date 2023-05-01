@@ -75,7 +75,19 @@
       "path": "../../ui/react-icons"
     },
     {
+      "path": "../kai-frames"
+    },
+    {
       "path": "../kai-framework"
+    },
+    {
+      "path": "../kai-types"
+    },
+    {
+      "path": "../metagraph"
+    },
+    {
+      "path": "../react-metagraph"
     }
   ],
   "ts-node": {
