@@ -8,8 +8,9 @@ import React, { ComponentProps, ComponentPropsWithRef, forwardRef, ReactNode } f
 import { Density, Elevation } from '@dxos/aurora-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 
-interface ButtonProps extends ComponentPropsWithRef<'button'> {
+interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<'button'>> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';
   density?: Density;
   elevation?: Elevation;

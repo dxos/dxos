@@ -6,7 +6,6 @@ import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { ComponentPropsWithoutRef } from 'react';
 
-import { tx } from '@dxos/aurora-theme';
 import { Density } from '@dxos/aurora-types';
 import {
   List as ListPrimitive,
@@ -32,9 +31,10 @@ import {
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 
-type ListProps = ListPrimitiveProps & { density?: Density };
+type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
 
 const useListDensity = ({ density, variant }: Pick<ListProps, 'density' | 'variant'>) => {
   const contextDensity = useDensityContext(density);
@@ -54,7 +54,7 @@ const List = ({ className, children, ...props }: ListProps) => {
   );
 };
 
-type ListItemEndcapProps = ComponentPropsWithoutRef<'div'> & { asChild?: boolean };
+type ListItemEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
 const ListItemEndcap = ({ children, className, asChild, ...props }: ListItemEndcapProps) => {
   const Root = asChild ? Slot : 'div';
@@ -71,21 +71,32 @@ const ListItemEndcap = ({ children, className, asChild, ...props }: ListItemEndc
   );
 };
 
-const MockListItemOpenTrigger = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
+const MockListItemOpenTrigger = ({
+  className,
+  ...props
+}: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const density = useDensityContext();
+  const { tx } = useThemeContext();
   return (
     <div
       role='none'
+      {...props}
       className={tx('list.item.openTrigger', 'list__listItem__openTrigger--mock', { density }, className)}
     />
   );
 };
 
-const MockListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
-  return <div role='none' className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, className)} />;
+const MockListItemDragHandle = ({
+  className,
+  ...props
+}: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
+  const { tx } = useThemeContext();
+  return (
+    <div role='none' {...props} className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, className)} />
+  );
 };
 
-type ListItemHeadingProps = ListPrimitiveItemHeadingProps;
+type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;
 
 const ListItemHeading = ({ children, className, ...props }: ListItemHeadingProps) => {
   const { tx } = useThemeContext();
@@ -100,7 +111,7 @@ const ListItemHeading = ({ children, className, ...props }: ListItemHeadingProps
   );
 };
 
-type ListItemDragHandleProps = ListPrimitiveItemDragHandleProps;
+type ListItemDragHandleProps = ThemedClassName<ListPrimitiveItemDragHandleProps>;
 
 const ListItemDragHandle = ({ className, children, ...props }: ListItemDragHandleProps) => {
   const { tx } = useThemeContext();
@@ -116,7 +127,7 @@ const ListItemDragHandle = ({ className, children, ...props }: ListItemDragHandl
   );
 };
 
-type ListItemOpenTriggerProps = ListPrimitiveItemOpenTriggerProps;
+type ListItemOpenTriggerProps = ThemedClassName<ListPrimitiveItemOpenTriggerProps>;
 
 const ListItemOpenTrigger = ({ __listItemScope, className, children, ...props }: ListItemOpenTriggerProps) => {
   const { tx } = useThemeContext();
@@ -142,7 +153,7 @@ const ListItemOpenTrigger = ({ __listItemScope, className, children, ...props }:
   );
 };
 
-type ListItemProps = ListPrimitiveItemProps;
+type ListItemProps = ThemedClassName<ListPrimitiveItemProps>;
 
 const ListItem = ({ className, children, ...props }: ListItemProps) => {
   const { tx } = useThemeContext();
