@@ -9,8 +9,7 @@
     "outDir": "dist/types",
     "types": [
       "node",
-      "sharedworker",
-      "vite-plugin-pwa/client"
+      "sharedworker"
     ]
   },
   "include": [
