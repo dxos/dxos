@@ -52,14 +52,14 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],

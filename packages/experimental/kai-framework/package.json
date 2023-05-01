@@ -12,6 +12,11 @@
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./testing": "./dist/lib/browser/testing/index.mjs",
+    "./theme-extensions": "./theme-extensions.js"
+  },
   "scripts": {
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
