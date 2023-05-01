@@ -25,13 +25,7 @@ export default defineConfig({
         : false
   },
   build: {
-    sourcemap: true,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        test: resolve(__dirname, 'test.html')
-      }
-    }
+    sourcemap: true
   },
   resolve: {
     alias: {
