@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -21,11 +21,12 @@ import { SignalManager } from './signal-manager';
  */
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
+  private readonly _pushStatus = new PushStream<SignalStatus[]>();
 
   private _ctx!: Context;
   private _opened = false;
 
-  readonly statusChanged = new Event<SignalStatus[]>();
+  readonly status = MulticastObservable.from(this._pushStatus.observable, []);
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
     topic: PublicKey;
@@ -46,8 +47,14 @@ export class WebsocketSignalManager implements SignalManager {
   ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
-      const server = new SignalClient(host.server, async (message) => this.onMessage.emit(message), async (data) => this.swarmEvent.emit(data));
-      server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
+      const server = new SignalClient(
+        host.server,
+        async (message) => this.onMessage.emit(message),
+        async (data) => this.swarmEvent.emit(data)
+      );
+      server.state.subscribe(() => {
+        this._pushStatus.push(this.getStatus());
+      });
 
       this._servers.set(host.server, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));

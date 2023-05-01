@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, MulticastObservable, PushStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
@@ -74,8 +74,11 @@ export class NetworkManager {
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
 
-  private _connectionState = ConnectionState.ONLINE;
-  public readonly connectionStateChanged = new Event<ConnectionState>();
+  private readonly _pushConnectionState = new PushStream<ConnectionState>();
+  public readonly connectionState = MulticastObservable.from(
+    this._pushConnectionState.observable,
+    ConnectionState.ONLINE
+  );
 
   private readonly _connectionLog?: ConnectionLog;
 
@@ -104,15 +107,6 @@ export class NetworkManager {
   // TODO(burdon): Remove access (Devtools only).
   get connectionLog() {
     return this._connectionLog;
-  }
-
-  // TODO(burdon): Remove access (Devtools only).
-  get signalManager() {
-    return this._signalManager;
-  }
-
-  get connectionState() {
-    return this._connectionState;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
@@ -210,13 +204,12 @@ export class NetworkManager {
   }
 
   async setConnectionState(state: ConnectionState) {
-    if (state === this._connectionState) {
+    if (state === this.connectionState.get()) {
       return;
     }
 
     switch (state) {
       case ConnectionState.OFFLINE: {
-        this._connectionState = state;
         // go offline
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
         await this._messenger.close();
@@ -224,7 +217,6 @@ export class NetworkManager {
         break;
       }
       case ConnectionState.ONLINE: {
-        this._connectionState = state;
         // go online
         this._messenger.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
@@ -233,6 +225,6 @@ export class NetworkManager {
       }
     }
 
-    this.connectionStateChanged.emit(this._connectionState);
+    this._pushConnectionState.next(state);
   }
 }

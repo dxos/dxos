@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, MulticastObservable } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
@@ -13,7 +13,7 @@ import { Message, SignalMethods } from '../signal-methods';
  *
  */
 export interface SignalManager extends SignalMethods {
-  statusChanged: Event<SignalStatus[]>;
+  status: MulticastObservable<SignalStatus[]>;
   commandTrace: Event<CommandTrace>;
   swarmEvent: Event<{ topic: PublicKey; swarmEvent: SwarmEvent }>;
   onMessage: Event<Message>;

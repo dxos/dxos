@@ -69,7 +69,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
-  const { state: connectionState } = useNetworkStatus();
+  const { swarm: connectionState } = useNetworkStatus();
   const [showSpacePanel, setShowSpacePanel] = useState(false);
 
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -131,12 +131,12 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
-        await client.mesh.setConnectionState(ConnectionState.ONLINE);
+        await client.mesh.updateConfig(ConnectionState.ONLINE);
         break;
       }
 
       case ConnectionState.ONLINE: {
-        await client.mesh.setConnectionState(ConnectionState.OFFLINE);
+        await client.mesh.updateConfig(ConnectionState.OFFLINE);
         break;
       }
     }

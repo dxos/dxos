@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
@@ -76,13 +76,10 @@ export class IFrameHostRuntime {
       this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,
-        networkManager: new NetworkManager({
-          log: true,
-          signalManager: signals
-            ? new WebsocketSignalManager(signals)
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory: this._transportFactory
-        })
+        signalManager: signals
+          ? new WebsocketSignalManager(signals)
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        transportFactory: this._transportFactory
       });
 
       const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {

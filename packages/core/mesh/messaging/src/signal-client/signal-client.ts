@@ -4,13 +4,23 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
+import {
+  DeferredTask,
+  Event,
+  MulticastObservable,
+  PushStream,
+  Trigger,
+  asyncTimeout,
+  scheduleTask,
+  scheduleTaskInterval,
+  sleep
+} from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Message as SignalMessage, SignalState, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { Message, SignalMethods } from '../signal-methods';
@@ -20,26 +30,6 @@ const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;
 const ERROR_RECONCILE_DELAY = 1000;
 const RECONCILE_INTERVAL = 5_000;
-
-export enum SignalState {
-  /** Connection is being established. */
-  CONNECTING = 'CONNECTING',
-
-  /** Connection is being re-established. */
-  RE_CONNECTING = 'RE_CONNECTING',
-
-  /** Connected. */
-  CONNECTED = 'CONNECTED',
-
-  /** Server terminated the connection. Socket will be reconnected. */
-  DISCONNECTED = 'DISCONNECTED',
-
-  /** Server terminated the connection with an ERROR. Socket will be reconnected. */
-  ERROR = 'ERROR',
-
-  /** Socket was closed. */
-  CLOSED = 'CLOSED'
-}
 
 export type SignalStatus = {
   host: string;
@@ -65,7 +55,7 @@ export type CommandTrace = {
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
 export class SignalClient implements SignalMethods {
-  private _state = SignalState.CLOSED;
+  private readonly _pushState = new PushStream<SignalState>();
 
   private _lastError?: Error;
 
@@ -94,7 +84,7 @@ export class SignalClient implements SignalMethods {
   private _reconcileTask?: DeferredTask;
   private _reconnectTask?: DeferredTask;
 
-  readonly statusChanged = new Event<SignalStatus>();
+  readonly state = MulticastObservable.from(this._pushState.observable, SignalState.CLOSED);
   readonly commandTrace = new Event<CommandTrace>();
 
   /**
@@ -155,16 +145,16 @@ export class SignalClient implements SignalMethods {
   open() {
     log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
 
-    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
+    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this.state.get())) {
       return;
     }
 
     this._ctx = new Context({
       onError: (err) => {
-        if (this._state === SignalState.CLOSED || this._ctx?.disposed) {
+        if (this.state.get() === SignalState.CLOSED || this._ctx?.disposed) {
           return;
         }
-        if (this._state === SignalState.CONNECTED) {
+        if (this.state.get() === SignalState.CONNECTED) {
           log.warn('SignalClient error:', err);
         }
         this._scheduleReconcileAfterError();
@@ -181,7 +171,7 @@ export class SignalClient implements SignalMethods {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        if (this._state === SignalState.CONNECTED) {
+        if (this.state.get() === SignalState.CONNECTED) {
           this._reconcileTask!.schedule();
         }
       },
@@ -195,11 +185,15 @@ export class SignalClient implements SignalMethods {
     this._setState(SignalState.CONNECTING);
     this._createClient();
     log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
+
+    this.state.subscribe(() => {
+      log('signal state changed', { status: this.getStatus() });
+    });
   }
 
   async close() {
     log('closing...');
-    if ([SignalState.CLOSED].includes(this._state)) {
+    if ([SignalState.CLOSED].includes(this.state.get())) {
       return;
     }
 
@@ -215,7 +209,7 @@ export class SignalClient implements SignalMethods {
   getStatus(): SignalStatus {
     return {
       host: this._host,
-      state: this._state,
+      state: this.state.get(),
       error: this._lastError?.message,
       reconnectIn: this._reconnectAfter,
       connectionStarted: this._connectionStarted,
@@ -242,7 +236,7 @@ export class SignalClient implements SignalMethods {
   async sendMessage(msg: Message): Promise<void> {
     this._performance.sentMessages++;
     await this._clientReady.wait();
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    assert(this.state.get() === SignalState.CONNECTED, 'Not connected to Signal Server');
     await this._client!.sendMessage(msg);
   }
 
@@ -270,14 +264,12 @@ export class SignalClient implements SignalMethods {
   }
 
   private _setState(newState: SignalState) {
-    this._state = newState;
     this._lastStateChange = new Date();
-    log('signal state changed', { status: this.getStatus() });
-    this.statusChanged.emit(this.getStatus());
+    this._pushState.next(newState);
   }
 
   private _createClient() {
-    log('creating client', { host: this._host, state: this._state });
+    log('creating client', { host: this._host, state: this.state.get() });
     assert(!this._client, 'Client already created');
 
     this._connectionStarted = new Date();
@@ -306,14 +298,14 @@ export class SignalClient implements SignalMethods {
           },
 
           onDisconnected: () => {
-            log('socket disconnected', { state: this._state });
-            if (this._state === SignalState.ERROR) {
+            log('socket disconnected', { state: this.state.get() });
+            if (this.state.get() === SignalState.ERROR) {
               // Ignore disconnects after error.
               // Handled by error handler before disconnect handler.
               this._setState(SignalState.DISCONNECTED);
               return;
             }
-            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+            if (this.state.get() !== SignalState.CONNECTED && this.state.get() !== SignalState.CONNECTING) {
               this._incrementReconnectTimeout();
             }
             this._setState(SignalState.DISCONNECTED);
@@ -321,9 +313,9 @@ export class SignalClient implements SignalMethods {
           },
 
           onError: (error) => {
-            log('socket error', { error, state: this._state });
+            log('socket error', { error, state: this.state.get() });
             this._lastError = error;
-            if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+            if (this.state.get() !== SignalState.CONNECTED && this.state.get() !== SignalState.CONNECTING) {
               this._incrementReconnectTimeout();
             }
             this._setState(SignalState.ERROR);
@@ -333,7 +325,7 @@ export class SignalClient implements SignalMethods {
         }
       });
     } catch (err: any) {
-      if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
+      if (this.state.get() !== SignalState.CONNECTED && this.state.get() !== SignalState.CONNECTING) {
         this._incrementReconnectTimeout();
       }
       this._lastError = err;
@@ -348,15 +340,15 @@ export class SignalClient implements SignalMethods {
   }
 
   private async _reconnect() {
-    log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
+    log(`reconnecting in ${this._reconnectAfter}ms`, { state: this.state.get() });
     this._performance.reconnectCounter++;
 
-    if (this._state === SignalState.RE_CONNECTING) {
+    if (this.state.get() === SignalState.RECONNECTING) {
       log.warn('Signal api already reconnecting.');
       return;
     }
 
-    if (this._state === SignalState.CLOSED) {
+    if (this.state.get() === SignalState.CLOSED) {
       return;
     }
 
@@ -368,7 +360,7 @@ export class SignalClient implements SignalMethods {
 
     await cancelWithContext(this._ctx!, sleep(this._reconnectAfter));
 
-    this._setState(SignalState.RE_CONNECTING);
+    this._setState(SignalState.RECONNECTING);
 
     this._createClient();
   }
@@ -377,7 +369,7 @@ export class SignalClient implements SignalMethods {
     await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    assert(this.state.get() === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from topics that are no longer needed.
     for (const { topic, peerId } of this._swarmStreams.keys()) {
@@ -417,7 +409,7 @@ export class SignalClient implements SignalMethods {
     await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    assert(this.state.get() === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from messages that are no longer needed.
     for (const peerId of this._messageStreams.keys()) {

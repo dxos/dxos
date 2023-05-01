@@ -130,11 +130,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus({ networkManager: this.params.context.networkManager });
+    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSignal(): Stream<SignalResponse> {
-    return subscribeToSignal({ networkManager: this.params.context.networkManager });
+    return subscribeToSignal({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {

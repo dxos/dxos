@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, MulticastObservable } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -36,7 +36,7 @@ export class MemorySignalManagerContext {
  * In memory signal manager for testing.
  */
 export class MemorySignalManager implements SignalManager {
-  readonly statusChanged = new Event<SignalStatus[]>();
+  readonly status = MulticastObservable.of([]);
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
     topic: PublicKey;

@@ -3,7 +3,12 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  SignalManager,
+  WebsocketSignalManager
+} from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -61,12 +66,18 @@ export class TestPeer {
   /**
    * @internal
    */
+  readonly _signalManager: SignalManager;
+
+  /**
+   * @internal
+   */
   readonly _networkManager: NetworkManager;
 
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
   constructor(private readonly testBuilder: TestBuilder) {
+    this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager();
   }
 
@@ -111,7 +122,7 @@ export class TestPeer {
     }
 
     return new NetworkManager({
-      signalManager: this.testBuilder.createSignalManager(),
+      signalManager: this._signalManager,
       transportFactory
     });
   }
