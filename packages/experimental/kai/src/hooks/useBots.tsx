@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Database, Envelope, Flower, Sword } from '@phosphor-icons/react';
-import { FC, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
@@ -11,69 +10,32 @@ import { useConfig, useKeyStore } from '@dxos/react-client';
 
 import { BotClient } from '../bots';
 
-export type BotDef = {
-  module: Module;
-  runtime: {
-    Icon: FC<any>;
-    constructor: () => void;
-  };
-};
-
-// TODO(burdon): Factor out module defs.
-export const botDefs: BotDef[] = [
+export const botModules: Module[] = [
   {
-    module: {
-      id: 'dxos.module.bot.store',
-      type: 'dxos:type/bot',
-      displayName: 'StoreBot',
-      description: 'Secure storage.'
-    },
-    runtime: {
-      Icon: Database,
-      constructor: () => undefined
-    }
+    id: 'dxos.module.bot.store',
+    type: 'dxos:type/bot',
+    displayName: 'StoreBot',
+    description: 'Secure storage.'
   },
   {
-    module: {
-      id: 'dxos.module.bot.mail',
-      type: 'dxos:type/bot',
-      displayName: 'MailBot',
-      description: 'Email sync.'
-    },
-    runtime: {
-      Icon: Envelope,
-      constructor: () => undefined
-    }
+    id: 'dxos.module.bot.mail',
+    type: 'dxos:type/bot',
+    displayName: 'MailBot',
+    description: 'Email sync.'
   },
   {
-    module: {
-      id: 'dxos.module.bot.chess',
-      type: 'dxos:type/bot',
-      displayName: 'ChessBot',
-      description: 'Basic chess engine.'
-    },
-    runtime: {
-      Icon: Sword,
-      constructor: () => undefined
-    }
+    id: 'dxos.module.bot.chess',
+    type: 'dxos:type/bot',
+    displayName: 'ChessBot',
+    description: 'Basic chess engine.'
   },
   {
-    module: {
-      id: 'dxos.module.bot.kai',
-      type: 'dxos:type/bot',
-      displayName: 'KaiBot',
-      description: 'Research and task assistant.'
-    },
-    runtime: {
-      Icon: Flower,
-      constructor: () => undefined
-    }
+    id: 'dxos.module.bot.kai',
+    type: 'dxos:type/bot',
+    displayName: 'KaiBot',
+    description: 'Research and task assistant.'
   }
 ];
-
-export const botModules: Module[] = botDefs.map(({ module }) => module);
-
-export type BotMap = Map<string, BotDef>;
 
 // TODO(burdon): Bot KMS in HALO?
 export const botKeys: { [key: string]: string } = {

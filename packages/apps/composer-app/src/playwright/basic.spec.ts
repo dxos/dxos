@@ -128,7 +128,7 @@ test.describe('Basic test', () => {
       await host.getMarkdownTextbox().press('End');
       await host.getMarkdownTextbox().type(parts[2]);
       await guest.getMarkdownTextbox().getByText(allParts).waitFor();
-      // todo(thure): Just pressing 'End' was not enough to move the cursor to the end of the test string on my local device; validate that these presses work in CI.
+      // TODO(thure): Just pressing 'End' was not enough to move the cursor to the end of the test string on my local device; validate that these presses work in CI.
       await Promise.all([host.getMarkdownTextbox().press('End'), guest.getMarkdownTextbox().press('End')]);
       await Promise.all([host.getMarkdownTextbox().press('ArrowDown'), guest.getMarkdownTextbox().press('ArrowDown')]);
       // await Promise.all([host.page.pause(), guest.page.pause()]);

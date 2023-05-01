@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { sortMany, sortScalar, sortObject, sortString } from './sort';
+import { compareMulti, compareScalar, compareObject, compareString } from './sort';
 
 const data = [
   { i: 0, idx: 1, label: 'apple' },
@@ -21,36 +21,38 @@ describe('Sort', () => {
   test('sortString', async () => {
     {
       const items = data.map((item) => item.label);
-      const results = items.sort(sortString());
-      expect(results).to.deep.eq(['apple', 'Banana', 'banana', 'lemon', 'Orange', 'peach']);
+      items.sort(compareString());
+      expect(items).to.deep.eq(['apple', 'Banana', 'banana', 'lemon', 'Orange', 'peach']);
     }
 
     {
       const items = data.map((item) => item.label);
-      const results = items.sort(sortString(false));
-      expect(results).to.deep.eq(['peach', 'Orange', 'lemon', 'Banana', 'banana', 'apple']);
+      items.sort(compareString(false));
+      expect(items).to.deep.eq(['peach', 'Orange', 'lemon', 'Banana', 'banana', 'apple']);
     }
   });
 
   test('sortScalar', async () => {
     const items = data.map((item) => item.idx);
-    const results = items.sort(sortScalar());
-    expect(results).to.deep.eq([1, 1, 2, 2, 2, undefined]);
+    items.sort(compareScalar());
+    expect(items).to.deep.eq([1, 1, 2, 2, 2, undefined]);
   });
 
   test('sortObject', async () => {
-    const results = [...data].sort(sortObject('label', sortString()));
-    expect(results).to.deep.eq([data[0], data[3], data[4], data[2], data[1], data[5]]);
+    const copy = [...data];
+    copy.sort(compareObject('label', compareString()));
+    expect(copy).to.deep.eq([data[0], data[3], data[4], data[2], data[1], data[5]]);
   });
 
   test('sortMany', async () => {
-    const results = [...data].sort(
-      sortMany([
-        sortObject('idx', sortScalar(true)),
-        sortObject('label', sortString()),
-        sortObject('enabled', sortScalar(false))
+    const copy = [...data];
+    copy.sort(
+      compareMulti([
+        compareObject('idx', compareScalar(true)),
+        compareObject('label', compareString()),
+        compareObject('enabled', compareScalar(false))
       ])
     );
-    expect(results).to.deep.eq([data[0], data[2], data[4], data[3], data[1], data[5]]);
+    expect(copy).to.deep.eq([data[0], data[2], data[4], data[3], data[1], data[5]]);
   });
 });

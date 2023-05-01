@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
@@ -10,22 +10,26 @@ import { FrameContextProvider, FrameState, FrameDef } from '@dxos/kai-frames';
 
 import { createPath, useAppReducer } from '../../hooks';
 
+export type SurfaceProps = {
+  space: Space;
+  frame?: FrameDef<any>;
+  objectId?: string;
+  fullscreen?: boolean;
+};
+
+// TODO(burdon): Loading?
+
 /**
- * Frame component container and context.
+ * Frame component container and context provider.
  */
-export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?: string; fullscreen?: boolean }> = ({
-  space,
-  frame,
-  objectId,
-  fullscreen
-}) => {
+export const Surface = ({ space, frame, objectId, fullscreen }: SurfaceProps) => {
   const { setFullscreen } = useAppReducer();
   const navigate = useNavigate();
 
   // TODO(burdon): Remove.
   // Auto-create first object.
   useEffect(() => {
-    if (frame.runtime.filter && frame.runtime.autoCreate) {
+    if (frame && frame.runtime.filter && frame.runtime.autoCreate) {
       const { objects } = space.db.query(frame.runtime.filter());
       // TODO(burdon): Race condition?
       if (objects.length === 0) {
@@ -37,11 +41,6 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
     }
   }, [space]);
 
-  const Component = frame.runtime.Component;
-  if (!Component) {
-    return null;
-  }
-
   const handleStateChange = (state: FrameState) => {
     if (state.space) {
       navigate(createPath({ spaceKey: state.space?.key, frame: state.frame?.module.id, objectId: state.objectId }));
@@ -51,6 +50,11 @@ export const FrameContainer: FC<{ space: Space; frame: FrameDef<any>; objectId?:
       setFullscreen(state.fullscreen);
     }
   };
+
+  const Component = frame?.runtime.Component;
+  if (!Component) {
+    return null;
+  }
 
   return (
     <div className='flex flex-col w-full overflow-hidden'>

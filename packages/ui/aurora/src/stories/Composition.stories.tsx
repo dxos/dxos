@@ -17,7 +17,7 @@ export default {
 const ScenarioContent = (_props: {}) => (
   <>
     <Button>Text</Button>
-    {/* todo(thure): Restore an Input here */}
+    {/* TODO(thure): Restore an Input here */}
     {/* <Input */}
     {/*  label='excluded' */}
     {/*  variant='subdued' */}

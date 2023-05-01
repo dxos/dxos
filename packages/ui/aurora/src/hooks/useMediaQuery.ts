@@ -11,7 +11,7 @@ export type UseMediaQueryOptions = {
   ssr?: boolean;
 };
 
-// todo (thure): This should be derived from the same source of truth as the Tailwind theme config
+// TODO(thure): This should be derived from the same source of truth as the Tailwind theme config
 const breakpointMediaQueries: Record<string, string> = {
   sm: '(min-width: 640px)',
   md: '(min-width: 768px)',
