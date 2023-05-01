@@ -68,7 +68,7 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
     setInternalDisplayState('show');
     setTimeout(() => {
       setTransitionShow(true);
-      // todo (thure): this may be a race condition in certain situations
+      // TODO(thure): This may be a race condition in certain situations.
     }, 0);
   };
 
@@ -78,7 +78,7 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={false}>
-        {/* todo(thure): Why does DialogPrimitive.Overlay not render any element here? */}
+        {/* TODO(thure): Why does DialogPrimitive.Overlay not render any element here? */}
         {!isLg && (
           <div
             role='none'

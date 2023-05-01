@@ -145,7 +145,7 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             target: `inputting${Kind}InvitationCode`,
             actions: 'log'
           }
-          // todo(thure): Restore this transition that redeems the invitation code on init.
+          // TODO(thure): Restore this transition that redeems the invitation code on init.
           // {
           //   target: `acceptingRedeemed${Kind}Invitation`,
           //   actions: [`redeem${Kind}InvitationCode`, 'log']

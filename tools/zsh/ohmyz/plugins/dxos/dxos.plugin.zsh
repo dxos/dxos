@@ -72,6 +72,7 @@ function pre () {
 
   # export CI=true
 
+  nx reset
   pnpm i --no-frozen-lockfile
   CI=true pa build
   CI=true pa test
