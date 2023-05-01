@@ -21,14 +21,18 @@ import {
   ListScopedProps,
   ListItemDragHandle,
   useListContext,
-  LIST_NAME
+  LIST_NAME,
+  MockListItemDragHandle
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
+import { Checkbox } from '../Checkbox';
 import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
+  root?: { className?: string };
+  selectableCheckbox?: { className?: string };
   input?: InputProps['slots'];
 }
 
@@ -47,6 +51,7 @@ export type EditableListItemProps = ListItemProps & {
 export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
+  list?: { className?: string };
   addItemInput?: InputProps['slots'];
   addItemButton?: ButtonProps;
 }
@@ -151,9 +156,8 @@ export const EditableList = ({
       </List>
       <div className='flex'>
         <DensityProvider density={density}>
-          {/* todo(thure): Find a way to mock this? */}
-          {/* <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} /> */}
-          <ListItemEndcap className='invisible' />
+          {variant === 'ordered-draggable' && <MockListItemDragHandle />}
+          {completable && <ListItemEndcap className='invisible' />}
           <Input
             variant='subdued'
             label={t('new list item input label')}
@@ -216,7 +220,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
     forwardedRef
   ) => {
     const { t } = useTranslation('appkit');
-    const { variant } = useListContext(LIST_NAME, __listScope);
+    const { variant, selectable } = useListContext(LIST_NAME, __listScope);
     return (
       <ListItem
         ref={forwardedRef}
@@ -228,6 +232,17 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         }}
       >
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
+        {selectable && (
+          <ListItemEndcap>
+            <Checkbox
+              id={`${id}__checkbox`}
+              className={slots?.selectableCheckbox?.className}
+              checked={completed}
+              defaultChecked={defaultCompleted}
+              onCheckedChange={onChangeCompleted}
+            />
+          </ListItemEndcap>
+        )}
         <ListItemHeading className='sr-only'>{title}</ListItemHeading>
         <Input
           {...{

@@ -5,17 +5,18 @@
 import { Buildings, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { List, ListItem, ListItemEndcap, ListItemHeading } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { Address, Organization } from '@dxos/kai-types';
-import { List, ListItem, Input, ListItemEndcap, ListItemHeading } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 import { useQuery, observer } from '@dxos/react-client';
 
 export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());
 
   return (
-    <List labelId='todo' density='coarse'>
+    <List aria-labelledby='todo' density='coarse'>
       {organizations.map((organization) => (
         <OrganizationListItem key={organization.id} organization={organization} />
       ))}
@@ -47,7 +48,7 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
 
           {/* Contacts */}
           {organization.people?.length > 0 && (
-            <List density='fine' labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
+            <List density='fine' aria-labelledby='todo' className='mlb-1'>
               {organization.people?.map((contact) => (
                 <ListItem key={contact.id}>
                   <ListItemEndcap className={mx('flex items-center')}>
