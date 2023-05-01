@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Density, Elevation, ComponentFunction, ComponentFragment } from '@dxos/aurora-types';
+import type { Density, Elevation, ComponentFunction, ComponentFragment, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -90,4 +90,14 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx('rounded-md overflow-hidden', contentElevation({ elevation: props.elevation }), ...etc);
+};
+
+export const buttonTheme: Theme<AppButtonStyleProps> = {
+  root: buttonAppRoot,
+  group: buttonGroup
+};
+
+export const buttonOsTheme: Theme<OsButtonStyleProps> = {
+  ...buttonTheme,
+  root: buttonOsRoot
 };
