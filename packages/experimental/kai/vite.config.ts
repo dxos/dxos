@@ -47,6 +47,7 @@ export default defineConfig({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
 
+    // TODO(burdon): Currently all transitive UI dependencies must be declared in package deps.
     // Directories to scan for Tailwind classes.
     ThemePlugin({
       content: [

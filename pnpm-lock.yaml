@@ -2635,6 +2635,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
@@ -2644,6 +2645,7 @@ importers:
       '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
+      '@dxos/mosaic': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -2698,6 +2700,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
@@ -2706,6 +2709,7 @@ importers:
       '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
       '@dxos/metagraph': link:../metagraph
+      '@dxos/mosaic': link:../mosaic
       '@dxos/node-std': link:../../common/node-std
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async

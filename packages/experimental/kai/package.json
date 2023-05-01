@@ -10,6 +10,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-composer": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -18,6 +19,7 @@
     "@dxos/kai-types": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/metagraph": "workspace:*",
+    "@dxos/mosaic": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",

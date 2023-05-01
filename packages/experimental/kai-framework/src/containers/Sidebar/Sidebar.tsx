@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AppWindow, CaretLeft, Info, Graph, Robot, UserPlus, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { useContext, useEffect, useState, Suspense } from 'react';
-import { Link } from 'react-router-dom';
 
 import { Button, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
@@ -199,12 +198,16 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
         <div className='flex-1' />
         <div className='flex shrink-0 flex-col my-2'>
           {/* Members */}
+          <Separator />
+
+          <MemberList onNavigate={onNavigate} />
           <div>
-            <div className='pl-2'>
+            <div className='pl-4'>
               <Button
-                data-testid='space-share'
                 variant='ghost'
+                data-testid='space-share'
                 title='Share space'
+                className='p-0 items-center'
                 onClick={(event) =>
                   handleSpaceAction({
                     action: IntentAction.SPACE_SHARE,
@@ -212,11 +215,10 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                   })
                 }
               >
-                <UserPlus className={getSize(6)} />
+                <Users className={getSize(6)} />
+                <div className='pl-2'>Manage Users</div>
               </Button>
             </div>
-
-            <MemberList onNavigate={onNavigate} />
           </div>
 
           {/* Experimental */}
@@ -224,38 +226,51 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
             <>
               <Separator />
               {bool(options.get('experimental.bots')) && (
-                <Link
-                  className={mx('flex px-4 py-1', section === Section.BOTS && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.BOTS })}
-                >
-                  <Robot className={getSize(6)} />
-                  <div className='pl-2'>Bots</div>
-                </Link>
+                <div>
+                  <Button
+                    variant='ghost'
+                    title='Show bot console.'
+                    className='mli-2 p-0 px-2 items-center'
+                    onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
+                  >
+                    <Robot className={getSize(6)} />
+                    <div className='pl-2 text-sm'>Manage Bots</div>
+                  </Button>
+                </div>
               )}
 
               {bool(options.get('experimental.metagraph')) && (
-                <Link
-                  className={mx('flex px-4 py-1', section === Section.DMG && 'bg-zinc-200')}
-                  to={createPath({ spaceKey: space.key, section: Section.DMG })}
-                >
-                  <Graph className={getSize(6)} />
-                  <div className='pl-2'>Metagraph</div>
-                </Link>
+                <div>
+                  <Button
+                    variant='ghost'
+                    title='Show metagraph.'
+                    className='mli-2 p-0 px-2 items-center'
+                    onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.DMG }))}
+                  >
+                    <Graph className={getSize(6)} />
+                    <div className='pl-2 text-sm'>Metagraph</div>
+                  </Button>
+                </div>
               )}
             </>
           )}
 
           {/* Network */}
           <Separator />
-          <div className='flex mli-2 items-center'>
-            <Button variant='ghost' className='p-0 px-2' onClick={handleToggleConnection}>
+          <div>
+            <Button
+              variant='ghost'
+              title='Toggle connection state.'
+              className='mli-2 p-0 px-2 items-center'
+              onClick={handleToggleConnection}
+            >
               {connectionState === ConnectionState.ONLINE ? (
                 <WifiHigh className={getSize(6)} />
               ) : (
                 <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
               )}
+              <span className='pl-2'>Toggle connection</span>
             </Button>
-            <span>Toggle connection</span>
           </div>
         </div>
       </div>
@@ -281,7 +296,7 @@ const FrameContent = ({
   }
 
   return (
-    <div className='flex flex-col w-full overflow overflow-y-scroll space-y-4'>
+    <div className='flex flex-col w-full overflow-y-scroll space-y-4'>
       {/* Frame list filter. */}
       {bool(options.get('experimental.frames')) && <FrameList />}
 
@@ -310,13 +325,17 @@ const FrameContent = ({
 
       {/* Frame registry dialog. */}
       <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
-      {bool(options.get('experimental.frames')) && false && (
-        <div className='flex px-4 items-center'>
-          <Button variant='ghost' className='p-0' onClick={() => setShowFrames(true)}>
+      {bool(options.get('experimental.frames')) && (
+        <div>
+          <Button
+            variant='ghost'
+            title='Select frame.'
+            className='mli-2 p-0 px-2 items-center'
+            onClick={() => setShowFrames(true)}
+          >
             <AppWindow className={getSize(6)} />
+            <div className='pl-2 text-sm'>Frames</div>
           </Button>
-          {/* TODO(burdon): Put inside button? */}
-          <span className='w-full pl-2'>Frames</span>
         </div>
       )}
     </div>

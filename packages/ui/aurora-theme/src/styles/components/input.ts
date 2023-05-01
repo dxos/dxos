@@ -80,9 +80,9 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => {
 
 export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...options) => {
   return props.variant === 'subdued'
-    ? mx(...sharedSubduedInputStyles(props))
+    ? mx(...sharedSubduedInputStyles(props), ...options)
     : props.variant === 'static'
-    ? mx(sharedStaticInputStyles(props))
+    ? mx(sharedStaticInputStyles(props), ...options)
     : mx(
         'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
         !props.disabled && defaultFocus,
@@ -95,9 +95,9 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...opti
 
 export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...options) => {
   return props.variant === 'subdued'
-    ? mx(...sharedSubduedInputStyles(props))
+    ? mx(...sharedSubduedInputStyles(props), ...options)
     : props.variant === 'static'
-    ? mx(sharedStaticInputStyles(props))
+    ? mx(sharedStaticInputStyles(props), ...options)
     : mx(
         'rounded-sm text-sm bg-white/50 dark:bg-neutral-750/50',
         !props.disabled && osFocus,

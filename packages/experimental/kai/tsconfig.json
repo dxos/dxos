@@ -66,6 +66,9 @@
       "path": "../../ui/aurora"
     },
     {
+      "path": "../../ui/aurora-composer"
+    },
+    {
       "path": "../../ui/aurora-theme"
     },
     {
@@ -85,6 +88,9 @@
     },
     {
       "path": "../metagraph"
+    },
+    {
+      "path": "../mosaic"
     },
     {
       "path": "../react-metagraph"

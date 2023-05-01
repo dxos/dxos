@@ -7,13 +7,13 @@ const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 module.exports = {
   osThemeExtension: {
-    // ...osThemeExtension,
+    ...osThemeExtension,
     spacing: {
       sidebar: '200px'
     }
-  }
+  },
 
-  // kaiThemeExtension: {
-  //   ...kaiThemeExtension
-  // }
+  kaiThemeExtension: {
+    ...kaiThemeExtension
+  }
 };
