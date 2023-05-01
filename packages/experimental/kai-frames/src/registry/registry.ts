@@ -9,24 +9,32 @@ import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
 // TODO(burdon): Hack for sidebar content.
-export type PluginComponent = FC<{ space: Space; onSelect?: (objectId: string | undefined) => void } | any>;
+export type PluginProps = { space: Space; onSelect?: (objectId: string | undefined) => void };
 
 /**
  * Dynamically loaded metadata for frame.
  */
-// TODO(burdon): Remove generic type.
+// TODO(burdon): Remove generic type?
 export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
   Component: FC<any>;
 
-  // Sidebar
-  autoCreate?: boolean;
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove: sidebar should interpret plugin metadata.
+  Plugin?: FC<PluginProps>;
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Rename titleProperty; get from schema.
   title?: string;
+
   // TODO(burdon): Generalize filter.
   filter?: () => TypeFilter<T>;
+  autoCreate?: boolean;
   onCreate?: (space: Space) => Promise<T>;
-  // TODO(burdon): Rename Selector.
-  Plugin?: PluginComponent;
 };
 
 // TODO(burdon): Rename.
@@ -36,18 +44,26 @@ export type FrameDef<T extends TypedObject> = {
   runtime: FrameRuntime<T>;
 };
 
+export type SearchMeta = {
+  rank: number;
+  Icon: FC<any>;
+  // TODO(burdon): Look-up based on type.
+  frame?: FrameDef<any>;
+};
+
 /**
  * In-memory registry of loaded frames.
+ * @deprecated Use metagraph.
  */
 export class FrameRegistry {
   private readonly _frameMap = new Map<string, FrameDef<any>>();
 
-  get frames() {
-    return Array.from(this._frameMap.values());
+  constructor(frameDefs: FrameDef<any>[] = []) {
+    frameDefs.forEach((frameDef) => this._frameMap.set(frameDef.module.id!, frameDef));
   }
 
-  addFrameDef(frameDef: FrameDef<any>) {
-    this._frameMap.set(frameDef.module.id!, frameDef);
+  get frames() {
+    return Array.from(this._frameMap.values());
   }
 
   getFrameDef(id: string) {
