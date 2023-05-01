@@ -11,27 +11,25 @@ import {
   inputAppInput,
   inputOsInput,
   dropdownMenuItem,
-  listItemAppDragHandle,
-  listItemOsDragHandle,
-  listItemAppOpenTrigger,
-  listItemOsOpenTrigger,
-  buttonGroup
+  buttonGroup,
+  listTheme,
+  listOsTheme
 } from './components';
 
-export const theme: Theme = {
+export const theme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
   button: { root: buttonAppRoot, group: buttonGroup },
   input: { input: inputAppInput },
   dropdownMenu: { item: dropdownMenuItem },
-  list: { dragHandle: listItemAppDragHandle, openTrigger: listItemAppOpenTrigger }
+  list: listTheme
 };
 
-export const osTheme: Theme = {
+export const osTheme: Theme<Record<string, any>> = {
   ...theme,
   themeName: () => 'dxos',
   button: { ...theme.button, root: buttonOsRoot },
   input: { ...theme.input, input: inputOsInput },
-  list: { ...theme.list, dragHandle: listItemOsDragHandle, openTrigger: listItemOsOpenTrigger }
+  list: listOsTheme
 };
 
 export const tx = <P extends Record<string, any>>(
@@ -40,7 +38,7 @@ export const tx = <P extends Record<string, any>>(
   styleProps: P,
   ...options: any[]
 ): string => {
-  const result: Theme | ComponentFunction<P> = get(theme, path);
+  const result: Theme<P> | ComponentFunction<P> = get(theme, path);
   return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };
 
@@ -50,6 +48,6 @@ export const osTx = <P extends Record<string, any>>(
   styleProps: P,
   ...options: any[]
 ): string => {
-  const result: Theme | ComponentFunction<P> = get(osTheme, path);
+  const result: Theme<P> | ComponentFunction<P> = get(osTheme, path);
   return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };

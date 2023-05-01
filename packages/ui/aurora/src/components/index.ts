@@ -3,6 +3,8 @@
 //
 
 export * from './Button';
+export * from './List';
+
 export * from './DensityProvider';
 export * from './ElevationProvider';
 export * from './ThemeProvider';

@@ -5,10 +5,11 @@
 import { Archive, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { List, ListItem, ListItemEndcap, ListItemHeading } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
-import { List, ListItem, ListItemEndcap, ListItemHeading, Input } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
 import { TaskList } from './TaskList';
@@ -67,7 +68,7 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
       {object.team?.length > 0 && (
         <div className='pt-2'>
           <h2 className='pl-2 text-xs'>Team</h2>
-          <List labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
+          <List aria-labelledby='todo' className='mlb-1'>
             {object.team?.map((contact) => (
               <ListItem key={contact.id}>
                 <ListItemEndcap className={getSize(6)}>
