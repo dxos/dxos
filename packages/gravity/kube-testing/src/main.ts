@@ -129,6 +129,7 @@ const test = async () => {
   //
   {
     log.info('Short stats', stats.shortStats);
+    fs.mkdirSync('./out/results', { recursive: true })
     fs.writeFileSync(
       `./out/results/stats${testConfig.randomSeed}.json`,
       JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2)
