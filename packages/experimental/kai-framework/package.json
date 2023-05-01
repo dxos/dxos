@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/kai",
+  "name": "@dxos/kai-framework",
   "version": "0.1.41",
   "private": true,
-  "description": "Kai Demo.",
+  "description": "Kai Framework.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

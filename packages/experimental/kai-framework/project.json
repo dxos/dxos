@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/kai/src",
+  "sourceRoot": "packages/experimental/kai-framework/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/kai/src/index.ts",
-        "outputPath": "packages/experimental/kai/dist/types",
-        "tsConfig": "packages/experimental/kai/tsconfig.json"
+        "main": "packages/experimental/kai-framework/src/index.ts",
+        "outputPath": "packages/experimental/kai-framework/dist/types",
+        "tsConfig": "packages/experimental/kai-framework/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -35,7 +35,7 @@
         "production"
       ],
       "options": {
-        "outputPath": "packages/experimental/kai/out/kai"
+        "outputPath": "packages/experimental/kai-framework/out/kai-framework"
       },
       "outputs": [
         "{options.outputPath}"
@@ -45,9 +45,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/kai/src/index.ts"
+          "packages/experimental/kai-framework/src/index.ts"
         ],
-        "outputPath": "packages/experimental/kai/dist/lib"
+        "outputPath": "packages/experimental/kai-framework/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -60,19 +60,19 @@
           "chromium",
           "webkit"
         ],
-        "coveragePath": "coverage/packages/experimental/kai",
-        "outputPath": "tmp/playwright/packages/experimental/kai",
-        "playwrightConfigPath": "packages/experimental/kai/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/experimental/kai",
-        "serve": "kai:serve-with-vault",
+        "coveragePath": "coverage/packages/experimental/kai-framework",
+        "outputPath": "tmp/playwright/packages/experimental/kai-framework",
+        "playwrightConfigPath": "packages/experimental/kai-framework/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/experimental/kai-framework",
+        "serve": "kai-framework:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
         },
         "testPatterns": [
-          "packages/experimental/kai/src/playwright/**/*.spec.{ts,js}"
+          "packages/experimental/kai-framework/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/kai/src/**/*"
+          "packages/experimental/kai-framework/src/**/*"
         ]
       },
       "outputs": [
@@ -86,7 +86,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/kai-framework/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -96,14 +96,14 @@
     "preview": {
       "executor": "@nrwl/web:file-server",
       "options": {
-        "buildTarget": "kai:bundle",
-        "staticFilePath": "packages/experimental/kai/out/kai"
+        "buildTarget": "kai-framework:bundle",
+        "staticFilePath": "packages/experimental/kai-framework/out/kai-framework"
       }
     },
     "serve": {
       "executor": "@nrwl/vite:dev-server",
       "options": {
-        "buildTarget": "kai:bundle"
+        "buildTarget": "kai-framework:bundle"
       }
     },
     "serve-with-vault": {
@@ -117,7 +117,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "configDir": "packages/experimental/kai/.storybook",
+        "configDir": "packages/experimental/kai-framework/.storybook",
         "uiFramework": "@storybook/react"
       }
     },
@@ -127,14 +127,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai",
-        "outputPath": "tmp/mocha/packages/experimental/kai",
-        "resultsPath": "test-results/packages/experimental/kai",
+        "coveragePath": "coverage/packages/experimental/kai-framework",
+        "outputPath": "tmp/mocha/packages/experimental/kai-framework",
+        "resultsPath": "test-results/packages/experimental/kai-framework",
         "testPatterns": [
-          "packages/experimental/kai/src/**/*.test.{ts,js}"
+          "packages/experimental/kai-framework/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/kai/src/**/*"
+          "packages/experimental/kai-framework/src/**/*"
         ]
       },
       "outputs": [
