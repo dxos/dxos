@@ -28,4 +28,4 @@ const data = {
   ]
 };
 
-export const Json = () => <JsonTree data={data} labelId='storybook__json-tree' />;
+export const Json = () => <JsonTree data={data} />;
