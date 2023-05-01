@@ -66,13 +66,13 @@ export const EditableObjectList = <T extends Object>({
             <ListItem
               id={object.id}
               key={object.id}
-              className={mx('flex w-full px-3 items-center', selected === object.id && slots?.selected?.className)}
+              className={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
             >
               <ListItemEndcap>
                 <Button
                   variant='ghost'
                   onClick={() => onSelect?.(object.id)}
-                  className={mx(isSelected ? 'text-selection-text' : '')}
+                  className={isSelected && 'text-selection-text'}
                 >
                   <Icon className={getSize(6)} />
                 </Button>

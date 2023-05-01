@@ -51,7 +51,7 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
             <List density='fine' aria-labelledby='todo' className='mlb-1'>
               {organization.people?.map((contact) => (
                 <ListItem key={contact.id}>
-                  <ListItemEndcap className={mx('flex items-center')}>
+                  <ListItemEndcap className='flex items-center'>
                     <User className={getSize(5)} />
                   </ListItemEndcap>
                   <ListItemHeading className='text-sm pbs-1.5'>{contact.name}</ListItemHeading>

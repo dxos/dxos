@@ -190,7 +190,7 @@ export const EditableList = ({
               <Button
                 variant='ghost'
                 {...slots.addItemButton}
-                className={mx('p-1', slots.addItemButton?.className)}
+                className={['p-1', slots.addItemButton?.className]}
                 onClick={onClickAdd}
               >
                 <Plus className={getSize(4)} />
@@ -233,7 +233,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
       >
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
         {selectable && (
-          <ListItemEndcap>
+          <ListItemEndcap className='items-center'>
             <Checkbox
               id={`${id}__checkbox`}
               className={slots?.selectableCheckbox?.className}

@@ -6,7 +6,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { List, ListItem, ListItemEndcap } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
 import { useFrameRegistry } from '@dxos/kai-frames';
 
 import { createPath, useAppRouter, useAppState } from '../../hooks';
@@ -30,7 +30,7 @@ export const FrameList = () => {
             <ListItem
               id={id}
               key={id}
-              className={mx('flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200')}
+              className={['flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200']}
             >
               <Link key={id} className='flex w-full items-center' to={createPath({ spaceKey: space.key, frame: id })}>
                 <ListItemEndcap className='items-center'>

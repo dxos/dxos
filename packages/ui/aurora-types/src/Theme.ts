@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-type ClassNameValue = ClassNameArray | string | null | undefined | 0 | false;
-type ClassNameArray = ClassNameValue[];
+export type ClassNameValue = ClassNameArray | string | null | undefined | 0 | false;
+export type ClassNameArray = ClassNameValue[];
 
 export type ThemeFunction<P extends Record<string, any>> = (
   path: string,
