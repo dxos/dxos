@@ -58,7 +58,7 @@ export class SignalServerRunner {
     });
 
     server.stdout.on('data', (data) => {
-      log(`TestServer stdout: ${data}`);
+      log.info(`TestServer stdout: ${data}`);
     });
 
     server.stderr.on('data', (data) => {
@@ -104,7 +104,7 @@ export class SignalServerRunner {
   }
 
   public stop(): void {
-    this._serverProcess.kill('SIGINT');
+    this._serverProcess.kill('SIGTERM');
   }
 
   public url(): string {
