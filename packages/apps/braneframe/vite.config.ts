@@ -101,11 +101,16 @@ export default defineConfig({
       }
     })
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    // TODO(wittjosiah): Create sentry project.
     // sentryVitePlugin({
-    //   org: "dxos",
-    //   project: "braneframe",
-    //   include: "./out/braneframe",
-    //   authToken: process.env.NODE_ENV === 'production' ? process.env.SENTRY_RELEASE_AUTH_TOKEN : undefined
+    //   org: 'dxos',
+    //   project: 'braneframe',
+    //   sourcemaps: {
+    //     assets: './packages/apps/braneframe/out/braneframe/**'
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   dryRun: !process.env.CI
     // })
   ]
 });
