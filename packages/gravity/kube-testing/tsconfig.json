@@ -7,7 +7,8 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
+    "module": "CommonJS",
+    "target": "esnext",
     "outDir": "dist"
   },
   "exclude": [
