@@ -2,4 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Input';
+export * from './Description';
+export * from './ErrorMessage';
+export * from './Label';
+export * from './Root';
