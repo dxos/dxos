@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { Config, iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client';
 import { RemoteServiceConnectionError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -26,6 +27,7 @@ export class IFrameProxyRuntime {
   private readonly _configProvider: IFrameProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
   private readonly _shellPort?: RpcPort;
+  private _release = new Trigger();
   private _config!: Config;
   private _transportService!: BridgeService;
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
@@ -56,20 +58,24 @@ export class IFrameProxyRuntime {
       requested: workerServiceBundle,
       exposed: iframeServiceBundle,
       handlers: {
-        BridgeService: this._transportService,
-        IframeService: {
-          async heartbeat() {
-            // Ok.
-          }
-        }
+        BridgeService: this._transportService
       },
       port: this._systemPort,
       timeout: 200
     });
 
+    const id = String(Math.floor(Math.random() * 1000000));
+    this._release = new Trigger();
+    const ready = new Trigger();
+    void navigator.locks.request(`${origin}-${id}`, async () => {
+      ready.wake();
+      await this._release.wait();
+    });
+
     try {
+      await ready.wait();
       await this._systemRpc.open();
-      await this._systemRpc.rpc.WorkerService.start({ origin });
+      await this._systemRpc.rpc.WorkerService.start({ origin, id });
     } catch (err) {
       log.catch(err);
       throw new RemoteServiceConnectionError('Failed to connect to worker');
@@ -78,6 +84,7 @@ export class IFrameProxyRuntime {
   }
 
   async close() {
+    this._release.wake();
     await this._shellRuntime?.close();
     await this._systemRpc.rpc.WorkerService.stop();
     await this._systemRpc.close();

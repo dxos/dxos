@@ -13,11 +13,8 @@ package dxos.iframe;
 
 message StartRequest {
   string origin = 1;
-}
-
-/// Worker-to-iframe RPCs.
-service IframeService {
-  rpc Heartbeat(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // Unique identifier for a browser tab.
+  string id = 2;
 }
 
 /// Iframe-to-worker RPCs.
