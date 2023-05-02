@@ -5,7 +5,7 @@
 import { DraggableAttributes } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckboxProps } from '@radix-ui/react-checkbox';
+import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
