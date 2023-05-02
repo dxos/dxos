@@ -96,16 +96,18 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'devtools-extension',
-            include: './out/devtools-extension',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : [])
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    // TODO(wittjosiah): Seems to have some conflict with the chrome extension plugin.
+    //   If only one is included it builds but fails with both.
+    // sentryVitePlugin({
+    //   org: 'dxos',
+    //   project: 'devtools-extension',
+    //   sourcemaps: {
+    //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   dryRun: !process.env.CI
+    // })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**
