@@ -68,15 +68,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'tasks-app',
-            include: './out/tasks',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : [])
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'tasks-app',
+      sourcemaps: {
+        assets: './packages/apps/tasks-app/out/tasks/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: !process.env.CI
+    })
   ]
 });

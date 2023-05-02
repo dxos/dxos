@@ -346,7 +346,7 @@ importers:
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -377,7 +377,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -409,7 +409,7 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/showdown': ^2.0.0
@@ -459,7 +459,7 @@ importers:
       '@dxos/vault': link:../../sdk/vault
       '@octokit/openapi-types': 16.0.0
       '@remix-run/router': 1.0.2
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@types/showdown': 2.0.0
@@ -499,7 +499,7 @@ importers:
       '@radix-ui/react-alert-dialog': ^1.0.3
       '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/debug': ^4.1.7
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
@@ -548,7 +548,7 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/debug': 4.1.7
       '@types/node': 18.11.9
       '@types/react': 18.0.21
@@ -640,7 +640,7 @@ importers:
       '@dxos/sentry': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
@@ -669,7 +669,7 @@ importers:
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.3.1
@@ -819,7 +819,7 @@ importers:
       '@dxos/util': workspace:*
       '@dxos/vault': workspace:*
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
@@ -850,7 +850,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/vault': link:../../sdk/vault
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.3.1
@@ -2318,7 +2318,7 @@ importers:
       '@mui/icons-material': ^5.8.0
       '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/chrome': ^0.0.125
       '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
@@ -2373,7 +2373,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/kai-framework': link:../../experimental/kai-framework
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/chrome': 0.0.125
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
@@ -2661,7 +2661,7 @@ importers:
       '@dxos/websocket-rpc': workspace:*
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@storybook/addons': ^7.0.6
       '@storybook/api': ^7.0.6
       '@storybook/components': ^7.0.6
@@ -2737,7 +2737,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/vault': link:../../sdk/vault
       '@remix-run/router': 1.0.2
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@storybook/addons': 7.0.7_biqbaboplfbrettd7655fr4n2y
       '@storybook/api': 7.0.7_biqbaboplfbrettd7655fr4n2y
       '@storybook/components': 7.0.7_biqbaboplfbrettd7655fr4n2y
@@ -3084,7 +3084,7 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@storybook/addons': ^7.0.6
       '@storybook/api': ^7.0.6
       '@storybook/components': ^7.0.6
@@ -3182,7 +3182,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/vault': link:../../sdk/vault
       '@remix-run/router': 1.0.2
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@storybook/addons': 7.0.7_biqbaboplfbrettd7655fr4n2y
       '@storybook/api': 7.0.7_biqbaboplfbrettd7655fr4n2y
       '@storybook/components': 7.0.7_biqbaboplfbrettd7655fr4n2y
@@ -3446,7 +3446,7 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@storybook/addons': ^7.0.6
       '@storybook/api': ^7.0.6
       '@storybook/components': ^7.0.6
@@ -3547,7 +3547,7 @@ importers:
       '@babel/core': 7.20.12
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@remix-run/router': 1.0.2
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/d3': 7.4.0
@@ -4255,7 +4255,7 @@ importers:
       '@fastify/cors': ^8.2.1
       '@fastify/static': ^6.9.0
       '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.4.0
+      '@sentry/vite-plugin': ^0.7.2
       '@types/debug': ^4.1.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/node': ^18.11.9
@@ -4297,7 +4297,7 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@sentry/vite-plugin': 0.4.0
+      '@sentry/vite-plugin': 0.7.2
       '@types/debug': 4.1.7
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9
@@ -4399,7 +4399,7 @@ importers:
       '@codemirror/commands': 6.2.2
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/language': 6.6.0
-      '@codemirror/language-data': 6.1.0
+      '@codemirror/language-data': 6.1.0_252h5dwvsiu2pnu2vr7ql3rya4
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
@@ -4423,7 +4423,7 @@ importers:
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
       '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
       '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      codemirror: 6.0.1
+      codemirror: 6.0.1_@lezer+common@1.0.2
       lib0: 0.2.65
       lodash.get: 4.4.2
       prosemirror-model: 1.19.0
@@ -7799,15 +7799,6 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete/6.4.2:
-    resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
-    dependencies:
-      '@codemirror/language': 6.6.0
-      '@codemirror/state': 6.2.0
-      '@codemirror/view': 6.9.2
-      '@lezer/common': 1.0.2
-    dev: false
-
   /@codemirror/autocomplete/6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e:
     resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
     peerDependencies:
@@ -7838,20 +7829,23 @@ packages:
       '@lezer/cpp': 1.1.0
     dev: false
 
-  /@codemirror/lang-css/6.1.1:
+  /@codemirror/lang-css/6.1.1_i3aqn63zftbgivbr4riltn5mqe:
     resolution: {integrity: sha512-P6jdNEHyRcqqDgbvHYyC9Wxkek0rnG3a9aVSRi4a7WrjPbQtBTaOmvYpXmm13zZMAatO4Oqpac+0QZs7sy+LnQ==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/css': 1.1.1
+    transitivePeerDependencies:
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-html/6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
-      '@codemirror/lang-css': 6.1.1
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -7871,7 +7865,7 @@ packages:
   /@codemirror/lang-javascript/6.1.4:
     resolution: {integrity: sha512-OxLf7OfOZBTMRMi6BO/F72MNGmgOd9B0vetOLvHsDACFXayBzW8fm8aWnDM0yuy68wTK03MBf4HbjSBNRG5q7A==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/state': 6.2.0
@@ -7908,12 +7902,16 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python/6.1.2:
+  /@codemirror/lang-python/6.1.2_252h5dwvsiu2pnu2vr7ql3rya4:
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@lezer/python': 1.1.2
+    transitivePeerDependencies:
+      - '@codemirror/state'
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust/6.0.1:
@@ -7923,14 +7921,17 @@ packages:
       '@lezer/rust': 1.0.0
     dev: false
 
-  /@codemirror/lang-sql/6.4.0:
+  /@codemirror/lang-sql/6.4.0_i3aqn63zftbgivbr4riltn5mqe:
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/highlight': 1.1.3
       '@lezer/lr': 1.3.3
+    transitivePeerDependencies:
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-wast/6.0.1:
@@ -7941,34 +7942,40 @@ packages:
       '@lezer/lr': 1.3.3
     dev: false
 
-  /@codemirror/lang-xml/6.0.2:
+  /@codemirror/lang-xml/6.0.2_@codemirror+view@6.9.2:
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/common': 1.0.2
       '@lezer/xml': 1.0.1
+    transitivePeerDependencies:
+      - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data/6.1.0:
+  /@codemirror/language-data/6.1.0_252h5dwvsiu2pnu2vr7ql3rya4:
     resolution: {integrity: sha512-g9V23fuLRI9AEbpM6bDy1oquqgpFlIDHTihUhL21NPmxp+x67ZJbsKk+V71W7/Bj8SCqEO1PtqQA/tDGgt1nfw==}
     dependencies:
       '@codemirror/lang-cpp': 6.0.2
-      '@codemirror/lang-css': 6.1.1
+      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/lang-json': 6.0.1
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2
+      '@codemirror/lang-python': 6.1.2_252h5dwvsiu2pnu2vr7ql3rya4
       '@codemirror/lang-rust': 6.0.1
-      '@codemirror/lang-sql': 6.4.0
+      '@codemirror/lang-sql': 6.4.0_i3aqn63zftbgivbr4riltn5mqe
       '@codemirror/lang-wast': 6.0.1
-      '@codemirror/lang-xml': 6.0.2
+      '@codemirror/lang-xml': 6.0.2_@codemirror+view@6.9.2
       '@codemirror/language': 6.6.0
       '@codemirror/legacy-modes': 6.3.1
+    transitivePeerDependencies:
+      - '@codemirror/state'
+      - '@codemirror/view'
+      - '@lezer/common'
     dev: false
 
   /@codemirror/language/6.6.0:
@@ -12592,22 +12599,25 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@sentry/bundler-plugin-core/0.4.0:
-    resolution: {integrity: sha512-Xi+dqaSOoxbdmxegX7f66FVOxm2dVJLmrMXUpoNyuV6ASoccRWzouGaFekP059SUTTD05ytk1mHqwgVuBCA0Dw==}
+  /@sentry/bundler-plugin-core/0.7.2:
+    resolution: {integrity: sha512-9d1MxEgRkPCTewQ26Bs+J/GxvnNVIRuQPZrHs70qRLotMiedH4KlHauh2MhbgH5rdgm0DUeOcafhxoBSK7ji3w==}
     engines: {node: '>= 10'}
     dependencies:
-      '@sentry/cli': 2.14.4
+      '@sentry/cli': 2.17.5
       '@sentry/node': 7.46.0
       '@sentry/tracing': 7.46.0
+      find-up: 5.0.0
+      glob: 9.3.2
       magic-string: 0.27.0
       unplugin: 1.0.1
+      webpack-sources: 3.2.3
     transitivePeerDependencies:
       - encoding
       - supports-color
     dev: true
 
-  /@sentry/cli/2.14.4:
-    resolution: {integrity: sha512-PPtb5qA2sKnYvj2QBBGOrla4kyG6AqOTVaELoc80mZgZ+yDjuaPH/Xmbg/K+rzZyypVlv4XleTtju44830Q/SA==}
+  /@sentry/cli/2.17.5:
+    resolution: {integrity: sha512-0tXjLDpaKB46851EMJ6NbP0o9/gdEaDSLAyjEtXxlVO6+RyhUj6x6jDwn0vis8n/7q0AvbIjAcJrot+TbZP+WQ==}
     engines: {node: '>= 10'}
     hasBin: true
     requiresBuild: true
@@ -12739,11 +12749,11 @@ packages:
       '@sentry/types': 7.46.0
       tslib: 1.14.1
 
-  /@sentry/vite-plugin/0.4.0:
-    resolution: {integrity: sha512-dBxM00MCLzO/idzAqj33ZfbIBKZxP+FzpxtS2WaV0yzad9yLBAFZ/VGDIGHQJC0Qo3fsFi/CZpmN39wJkJoWFA==}
+  /@sentry/vite-plugin/0.7.2:
+    resolution: {integrity: sha512-gprT6wyc1JEtjZcWjv1jQSjT2QV62ZCLmXsjK4oKosb0uaaUMR4UgKxorZyNPGSY08YangjumeJZ7UX0/zakkw==}
     engines: {node: '>= 10'}
     dependencies:
-      '@sentry/bundler-plugin-core': 0.4.0
+      '@sentry/bundler-plugin-core': 0.7.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -19290,16 +19300,18 @@ packages:
     resolution: {integrity: sha512-LuO8/7LW6XuR5ERn1yavXAfodGRhuY2yP60JTZIw5yNYMCE5lUVbk3NFUCJxjnphQH+Xemp5hOGb1LgUXm00Xw==}
     dev: true
 
-  /codemirror/6.0.1:
+  /codemirror/6.0.1_@lezer+common@1.0.2:
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/commands': 6.2.2
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
+    transitivePeerDependencies:
+      - '@lezer/common'
     dev: false
 
   /codesandbox-import-util-types/2.2.3:
@@ -23564,6 +23576,16 @@ packages:
       minimatch: 5.1.0
       once: 1.4.0
 
+  /glob/9.3.2:
+    resolution: {integrity: sha512-BTv/JhKXFEHsErMte/AnfiSv8yYOLLiyH2lTg8vn02O21zWFgHPTfxtgn1QRe7NRgggUhC8hacR2Re94svHqeA==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dependencies:
+      fs.realpath: 1.0.0
+      minimatch: 7.4.6
+      minipass: 4.2.8
+      path-scurry: 1.7.0
+    dev: true
+
   /global-modules/0.2.3:
     resolution: {integrity: sha512-JeXuCbvYzYXcwE6acL9V2bAOeSIGl4dD+iwLY9iUx2VBJJ80R18HCn+JCwHM9Oegdfya3lEkGCdaRkSyc10hDA==}
     engines: {node: '>=0.10.0'}
@@ -27335,6 +27357,11 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
+  /lru-cache/9.1.1:
+    resolution: {integrity: sha512-65/Jky17UwSb0BuB9V+MyDpsOtXKmYwzhyl+cOa9XUiI4uV2Ouy/2voFP3+al0BjZbJgMBD8FojMpAf+Z+qn4A==}
+    engines: {node: 14 || >=16.14}
+    dev: true
+
   /lru_map/0.3.3:
     resolution: {integrity: sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==}
 
@@ -28435,6 +28462,13 @@ packages:
     dependencies:
       brace-expansion: 2.0.1
 
+  /minimatch/7.4.6:
+    resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: 2.0.1
+    dev: true
+
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
 
@@ -28503,6 +28537,16 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       yallist: 4.0.0
+
+  /minipass/4.2.8:
+    resolution: {integrity: sha512-fNzuVyifolSLFL4NzpF+wEF4qrgqaaKX0haXPQEdQ7NKAN+WecoKMHV09YcuL/DHxrUsYQOK3MiuDf7Ip2OXfQ==}
+    engines: {node: '>=8'}
+    dev: true
+
+  /minipass/5.0.0:
+    resolution: {integrity: sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==}
+    engines: {node: '>=8'}
+    dev: true
 
   /minisearch/3.3.0:
     resolution: {integrity: sha512-DlOEfLtiRKcEuShEaaufoDpWKv94lWDSRK7Bkcd0htqHEFZ1vqTi3IIW8cYcPIlomQjaCdiZXk4pyzBNc79I2Q==}
@@ -30156,6 +30200,14 @@ packages:
 
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
+
+  /path-scurry/1.7.0:
+    resolution: {integrity: sha512-UkZUeDjczjYRE495+9thsgcVgsaCPkaw80slmfVFgllxY+IO8ubTsOpFVjDPROBqJdHfVPUFRHPBV/WciOVfWg==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dependencies:
+      lru-cache: 9.1.1
+      minipass: 5.0.0
+    dev: true
 
   /path-to-regexp/0.1.7:
     resolution: {integrity: sha512-5DFkuoqlv1uYQKxy8omFBeJPQcdoE07Kv2sferDCrAq1ohOU+MSDswDIbnx3YAM60qIOnYa53wBhXW0EbMonrQ==}

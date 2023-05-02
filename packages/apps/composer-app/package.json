@@ -43,7 +43,7 @@
     "@dxos/vault": "workspace:*",
     "@octokit/openapi-types": "^16.0.0",
     "@remix-run/router": "^1.0.2",
-    "@sentry/vite-plugin": "^0.4.0",
+    "@sentry/vite-plugin": "^0.7.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/showdown": "^2.0.0",

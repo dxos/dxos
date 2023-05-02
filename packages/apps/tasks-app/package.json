@@ -31,7 +31,7 @@
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@sentry/vite-plugin": "^0.4.0",
+    "@sentry/vite-plugin": "^0.7.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
