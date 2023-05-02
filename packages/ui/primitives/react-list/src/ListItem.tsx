@@ -64,11 +64,13 @@ type ListItemContextValue = {
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> & { asChild?: boolean };
+type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<typeof Primitive.p>, 'id'>> & {
+  asChild?: boolean;
+};
 
 const ListItemHeading = ({ children, asChild, __listItemScope, ...props }: ListItemHeadingProps) => {
   const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-  const Root = asChild ? Slot : 'div';
+  const Root = asChild ? Slot : Primitive.p;
   return (
     <Root {...props} id={headingId}>
       {children}
@@ -76,7 +78,7 @@ const ListItemHeading = ({ children, asChild, __listItemScope, ...props }: ListI
   );
 };
 
-type ListItemDragHandleProps = ComponentPropsWithRef<'div'>;
+type ListItemDragHandleProps = ComponentPropsWithRef<typeof Primitive.div>;
 
 const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemScopedProps<ListItemDragHandleProps>>(
   ({ __listItemScope, children, ...props }, forwardedRef) => {

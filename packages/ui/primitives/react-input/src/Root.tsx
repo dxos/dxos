@@ -15,19 +15,21 @@ type InputRootProps = PropsWithChildren<{ id?: string }>;
 
 const [createInputContext, createInputScope] = createContextScope(INPUT_NAME, []);
 
-type InputContextValue = { id: string };
+type InputContextValue = { id: string; descriptionId: string; errorMessageId: string };
 
 const [InputProvider, useInputContext] = createInputContext<InputContextValue>(INPUT_NAME);
 
-const Root = ({ id: propsId, __inputScope, children }: InputScopedProps<InputRootProps>) => {
+const InputRoot = ({ id: propsId, __inputScope, children }: InputScopedProps<InputRootProps>) => {
   const id = useId('input', propsId);
+  const descriptionId = useId('input__description');
+  const errorMessageId = useId('input__error-message');
   return (
-    <InputProvider id={id} scope={__inputScope}>
+    <InputProvider {...{ id, descriptionId, errorMessageId }} scope={__inputScope}>
       {children}
     </InputProvider>
   );
 };
 
-export { Root, Root as InputRoot, createInputScope, useInputContext, INPUT_NAME };
+export { InputRoot, InputRoot as Root, createInputScope, useInputContext, INPUT_NAME };
 
 export type { InputRootProps, InputScopedProps };
