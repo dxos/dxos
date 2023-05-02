@@ -9,7 +9,6 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import '@dxosTheme';
 import { Config, Defaults } from '@dxos/config';
-import { AppState } from '@dxos/kai-framework';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
@@ -17,6 +16,7 @@ import { captureException } from '@dxos/sentry';
 
 import '../style.css';
 
+import { AppState } from './hooks';
 import { createRouter } from './router';
 
 void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });

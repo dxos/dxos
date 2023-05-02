@@ -12,10 +12,6 @@ body {
   @apply font-body font-normal text-base;
 }
 
-/*
- * TODO(burdon): Factor out (kai-framework).
- */
-
 /**
  * Highlight
  */

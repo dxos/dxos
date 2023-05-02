@@ -15,17 +15,25 @@ import { ShowDeletedOption, useQuery } from '@dxos/react-client';
 
 import { useAppRouter } from '../../hooks';
 
-// TODO(burdon): Generalize?
-export enum ObjectAction {
+export enum ObjectActionType {
   SELECT = 1,
   DELETE = 2,
   RESTORE = 3
 }
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Change to Intent.
+export type ObjectAction = {
+  type: ObjectActionType;
+  object: TypedObject | undefined; // TODO(burdon): ID not object.
+};
+
 export type ObjectListProps<T extends TypedObject> = {
   frameDef: FrameRuntime<T>;
   showDeleted?: boolean;
-  onAction?: (object: T, action: ObjectAction) => void;
+  onAction?: (action: ObjectAction) => void;
 };
 
 export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAction }: ObjectListProps<T>) => {
@@ -42,7 +50,7 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
   const handleCreate = async () => {
     assert(frameDef.onCreate);
     const object = await frameDef.onCreate(space);
-    onAction?.(object, ObjectAction.SELECT);
+    onAction?.({ type: ObjectActionType.SELECT, object });
     return object.id;
   };
 
@@ -56,7 +64,7 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
   const handleSelect = (objectId: string) => {
     const object = objects.find((object) => object.id === objectId);
     if (object) {
-      onAction?.(object, ObjectAction.SELECT);
+      onAction?.({ type: ObjectActionType.SELECT, object });
     }
   };
 
@@ -69,7 +77,9 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
       <Button
         variant='ghost'
         title={object.__deleted ? 'Delete' : 'Restore'}
-        onClick={() => onAction?.(object, object.__deleted ? ObjectAction.RESTORE : ObjectAction.DELETE)}
+        onClick={() =>
+          onAction?.({ type: object.__deleted ? ObjectActionType.RESTORE : ObjectActionType.DELETE, object })
+        }
       >
         <Icon className={getSize(4)} />
       </Button>
