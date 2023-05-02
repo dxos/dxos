@@ -4,8 +4,8 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 
+import { ListItem, ListItemProps } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { ListItem, ListItemProps } from '@dxos/react-appkit';
 
 // TODO(burdon): Move to react-appkit?
 // Removes need for class overrides in console.
@@ -18,12 +18,11 @@ export type ListItemButtonProps = ListItemProps & {
 export const ListItemButton = ({ slots, onClick, selected, ...rest }: ListItemButtonProps) => {
   return (
     <ListItem
-      slots={{
-        // TODO(burdon): How to deal with colors?
-        root: { className: mx('px-2 py-1', selected && 'bg-highlight-bg dark:bg-dark-highlight-bg') },
-        mainContent: { className: 'flex items-center overflow-hidden cursor-pointer', onClick },
-        ...slots
-      }}
+      className={[
+        'flex items-center overflow-hidden cursor-pointer px-2 py-1',
+        selected && 'bg-highlight-bg dark:bg-dark-highlight-bg'
+      ]}
+      onClick={onClick}
       {...rest}
     />
   );

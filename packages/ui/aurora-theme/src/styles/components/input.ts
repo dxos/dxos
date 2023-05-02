@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, MessageValence } from '@dxos/aurora-types';
+import { ComponentFragment, ComponentFunction, Density, MessageValence, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -78,26 +78,26 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => {
   ];
 };
 
-export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...options) => {
+export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
   return props.variant === 'subdued'
-    ? mx(...sharedSubduedInputStyles(props), ...options)
+    ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(sharedStaticInputStyles(props), ...options)
+    ? mx(...sharedStaticInputStyles(props), ...etc)
     : mx(
         'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
         !props.disabled && defaultFocus,
         !props.disabled && defaultHover,
         inputValence(props.validationValence) || neutralInputValence,
         ...sharedDefaultInputStyles(props),
-        ...options
+        ...etc
       );
 };
 
-export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...options) => {
+export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
   return props.variant === 'subdued'
-    ? mx(...sharedSubduedInputStyles(props), ...options)
+    ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(sharedStaticInputStyles(props), ...options)
+    ? mx(...sharedStaticInputStyles(props), ...etc)
     : mx(
         'rounded-sm text-sm bg-white/50 dark:bg-neutral-750/50',
         !props.disabled && osFocus,
@@ -105,6 +105,14 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...optio
         inputValence(props.validationValence) ||
           'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent',
         sharedDefaultInputStyles(props),
-        ...options
+        ...etc
       );
+};
+
+export const inputTheme: Theme<InputStyleProps> = {
+  input: inputAppInput
+};
+
+export const inputOsTheme: Theme<InputStyleProps> = {
+  input: inputOsInput
 };

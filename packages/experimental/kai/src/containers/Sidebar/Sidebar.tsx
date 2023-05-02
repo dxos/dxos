@@ -33,12 +33,13 @@ import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 import { FrameList } from './FrameList';
 import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
-import { Separator, SpacePanel } from './SpacePanel';
+import { Separator, SpaceListPanel } from './SpaceListPanel';
 
 export type SidebarProps = {
   onNavigate: (path: string) => void;
 };
 
+// TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
@@ -178,7 +179,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         {/* SpacePanel */}
         {showSpacePanel && (
-          <SpacePanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpacePanel(false)} />
+          <SpaceListPanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpacePanel(false)} />
         )}
 
         {/* Search/Frames */}
