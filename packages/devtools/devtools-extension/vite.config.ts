@@ -11,7 +11,7 @@ import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
-import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
+import { kaiThemeExtension } from '@dxos/kai-framework/theme-extensions';
 import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 import packageJson from './package.json';
