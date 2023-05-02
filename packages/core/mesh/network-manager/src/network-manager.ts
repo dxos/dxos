@@ -106,11 +106,6 @@ export class NetworkManager {
     return this._connectionLog;
   }
 
-  // TODO(burdon): Remove access (Devtools only).
-  get signalManager() {
-    return this._signalManager;
-  }
-
   get connectionState() {
     return this._connectionState;
   }

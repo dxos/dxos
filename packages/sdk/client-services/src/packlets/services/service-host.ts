@@ -9,8 +9,9 @@ import { clientServiceBundle, ClientServices, createDefaultModelFactory, PublicK
 import { Config } from '@dxos/config';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
@@ -34,14 +35,18 @@ export type ClientServicesHostParams = {
    */
   config?: Config;
   modelFactory?: ModelFactory;
-  networkManager?: NetworkManager;
+  transportFactory?: TransportFactory;
+  signalManager?: SignalManager;
+  connectionLog?: boolean;
   storage?: Storage;
   lockKey?: string;
 };
 
 export type InitializeOptions = {
   config?: Config;
-  networkManager?: NetworkManager;
+  transportFactory?: TransportFactory;
+  signalManager?: SignalManager;
+  connectionLog?: boolean;
 };
 
 /**
@@ -56,6 +61,7 @@ export class ClientServicesHost {
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
+  private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
 
@@ -70,7 +76,9 @@ export class ClientServicesHost {
     config,
     modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
-    networkManager,
+    transportFactory,
+    signalManager,
+    connectionLog,
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey
@@ -79,7 +87,7 @@ export class ClientServicesHost {
     this._modelFactory = modelFactory;
 
     if (config) {
-      this.initialize({ config, networkManager });
+      this.initialize({ config, transportFactory, signalManager });
     }
 
     this._resourceLock = lockKey
@@ -141,7 +149,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  initialize({ config, networkManager }: InitializeOptions) {
+  initialize({ config, ...options }: InitializeOptions) {
     assert(!this._open, 'service host is open');
 
     if (config) {
@@ -153,10 +161,21 @@ export class ClientServicesHost {
       }
     }
 
-    if (networkManager) {
-      assert(!this._networkManager, 'network manager already set');
-      this._networkManager = networkManager;
-    }
+    const {
+      connectionLog = true,
+      transportFactory = createWebRTCTransportFactory({
+        iceServers: this._config?.get('runtime.services.ice')
+      }),
+      signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? [])
+    } = options;
+    this._signalManager = signalManager;
+
+    assert(!this._networkManager, 'network manager already set');
+    this._networkManager = new NetworkManager({
+      log: connectionLog,
+      transportFactory,
+      signalManager
+    });
   }
 
   async open() {
@@ -168,6 +187,7 @@ export class ClientServicesHost {
 
     assert(this._config, 'config not set');
     assert(this._storage, 'storage not set');
+    assert(this._signalManager, 'signal manager not set');
     assert(this._networkManager, 'network manager not set');
 
     this._opening = true;
@@ -178,7 +198,12 @@ export class ClientServicesHost {
 
     // TODO(wittjosiah): Make re-entrant.
     // TODO(burdon): Break into components.
-    this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
+    this._serviceContext = new ServiceContext(
+      this._storage,
+      this._networkManager,
+      this._signalManager,
+      this._modelFactory
+    );
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
@@ -204,7 +229,7 @@ export class ClientServicesHost {
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
-      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
+      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
       LoggingService: this._loggingService,
 
