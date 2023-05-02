@@ -343,6 +343,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kai-framework/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kai-sandbox/package.json",
           "jsonpath": "$.version"
         },

@@ -75,20 +75,18 @@ export default defineConfig({
       }
     }),
 
-    // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    /*
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'console',
-            include: './out/console',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : []),
-    */
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    // TODO(wittjosiah): Create sentry project.
+    // sentryVitePlugin({
+    //   org: 'dxos',
+    //   project: 'kube-console',
+    //   sourcemaps: {
+    //     assets: './packages/experimental/kube-console/out/console/**'
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   dryRun: !process.env.CI
+    // }),
 
     // https://www.bundle-buddy.com/rollup
     {

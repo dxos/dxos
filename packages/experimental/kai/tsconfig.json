@@ -24,13 +24,7 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -48,12 +42,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -61,15 +49,6 @@
     },
     {
       "path": "../../core/mesh/websocket-rpc"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -99,13 +78,10 @@
       "path": "../../ui/react-icons"
     },
     {
-      "path": "../chess-app"
-    },
-    {
       "path": "../kai-frames"
     },
     {
-      "path": "../kai-sandbox"
+      "path": "../kai-framework"
     },
     {
       "path": "../kai-types"
@@ -115,9 +91,6 @@
     },
     {
       "path": "../mosaic"
-    },
-    {
-      "path": "../plexus"
     },
     {
       "path": "../react-metagraph"

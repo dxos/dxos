@@ -32,8 +32,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          faker: ['faker'],
-          highlighter: ['react-syntax-highlighter'],
           vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
@@ -47,19 +45,20 @@ export default defineConfig({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
     }),
 
+    // TODO(burdon): Currently all transitive UI dependencies must be declared in package deps.
     // Directories to scan for Tailwind classes.
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai-frames/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai-framework/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
@@ -113,16 +112,16 @@ export default defineConfig({
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'kai',
-            include: './out/kai',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : []),
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'kai',
+      sourcemaps: {
+        assets: './packages/experimental/kai/out/kai/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: !process.env.CI
+    }),
 
     // https://www.bundle-buddy.com/rollup
     {

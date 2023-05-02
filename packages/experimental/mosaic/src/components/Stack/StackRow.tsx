@@ -50,11 +50,16 @@ export const StackRow = forwardRef(
           dragging && 'border-t border-b relative z-10'
         )}
       >
-        <div className={mx('hidden md:flex shrink-0 w-24 h-[32px] items-center', !showControls && 'invisible')}>
+        <div
+          className={mx(
+            'hidden md:flex shrink-0 w-24 h-[32px] items-center',
+            !showControls && 'invisible group-hover:visible'
+          )}
+        >
           {!dragging && (
             // TODO(burdon): Don't hide menu when selected.
             // TODO(burdon): Menu popup triggers scrollbar.
-            <div className={mx('flex group-hover:visible ml-4 text-gray-400')}>
+            <div className={mx('flex ml-4 text-gray-400')}>
               <div className='flex justify-center w-8'>{ContextMenu && <ContextMenu section={section} />}</div>
               <div className='flex justify-center w-8'>{DragHandle}</div>
             </div>

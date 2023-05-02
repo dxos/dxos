@@ -6,9 +6,9 @@ import type { Router } from '@remix-run/router';
 import React, { ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { Root } from './containers';
-import { AppState } from './hooks';
-import { SettingsPage, SpacePage } from './pages';
+import { AppState, SettingsPage, SpacePage } from '@dxos/kai-framework';
+
+import { Root } from './Root';
 
 /**
  * Main app routes.
