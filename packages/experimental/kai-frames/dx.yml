@@ -13,16 +13,6 @@ package:
       # TODO(wittjosiah): Currently breaking publish to dev kube.
       # tunnel: true
 
-    - name: kai-web
-      type: dxos:type/app
-      displayName: kai-web
-      description: Kai Demo.
-      build:
-        command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
-        env:
-          VITE_DEV: true
-          DX_VAULT: false
-
 runtime:
   client:
     storage:

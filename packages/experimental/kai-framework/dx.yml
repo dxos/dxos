@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: kai
+    - name: kai-demo
       type: dxos:type/app
       displayName: kai
       description: Kai Demo.
