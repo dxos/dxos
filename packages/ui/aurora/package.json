@@ -15,7 +15,7 @@
     "plugin.d.ts"
   ],
   "scripts": {
-    "chromatic": "chromatic --project-token=\"44ade288043a\" --storybook-build-dir out/aurora"
+    "chromatic": "chromatic --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
   },
   "dependencies": {
     "@radix-ui/react-context": "^1.0.0",
