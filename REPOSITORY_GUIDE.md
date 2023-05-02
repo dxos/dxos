@@ -275,5 +275,24 @@ NOTE: Bots are rapidly evolving experimental features with limited documentation
 
 To get started follow the [instructions in the bot-lab README](./packages/experimental/bot-lab/README.md).
 
+## Service Workers
 
+Observations of service worker behavior related to using apps w/ DXOS vault
 
+| Page load method                                                                     | In IFrame | Service worker behavior                                                                                 |
+| :----------------------------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------ |
+| New tab                                                                              | N/A       | New version waiting for activation is activated                                                         |
+| Reload                                                                               | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
+| Reload                                                                               | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |
+| [Hard reload](https://web.dev/service-worker-lifecycle/#shift-reload)                | N/A       | New version waiting for activation is activated                                                         |
+| [Update & reload](https://vite-plugin-pwa.netlify.app/frameworks/#prompt-for-update) | N/A       | New version waiting for activation is activated                                                         |
+
+Recommended reading for better understanding the service worker lifecycle: https://web.dev/service-worker-lifecycle.
+
+### Vite
+
+The easiest way to setup a PWA with Vite is to use this plugin https://vite-plugin-pwa.netlify.app/.
+
+At present the recommendation would be to avoid the [`autoUpdate` strategy](https://vite-plugin-pwa.netlify.app/guide/auto-update.html) as it does not provide any predictability to users for when the app will update.
+
+NOTE: the [prompt for update strategy](https://vite-plugin-pwa.netlify.app/guide/prompt-for-update.html) can be used without actually providing prompts and the app will update along the lines of the table above. This is currently how the HALO vault's service worker is setup (though it will likely evolve later to [handle migrations](https://web.dev/service-worker-lifecycle/#activate-2)).

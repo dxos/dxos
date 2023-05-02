@@ -58,7 +58,8 @@ export default defineConfig({
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
