@@ -4313,6 +4313,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
       '@dxos/react-hooks': workspace:*
+      '@dxos/react-input': workspace:*
       '@dxos/react-list': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-context': ^1.0.0
@@ -4334,6 +4335,7 @@ importers:
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/aurora-types': link:../aurora-types
       '@dxos/react-hooks': link:../primitives/react-hooks
+      '@dxos/react-input': link:../primitives/react-input
       '@dxos/react-list': link:../primitives/react-list
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
