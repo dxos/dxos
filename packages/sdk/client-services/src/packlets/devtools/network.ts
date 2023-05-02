@@ -27,7 +27,7 @@ export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: Sig
       }
     };
 
-    signalManager.status.subscribe(() => update());
+    signalManager.statusChanged.on(() => update());
     update();
   });
 

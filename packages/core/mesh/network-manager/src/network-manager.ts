@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, MulticastObservable, PushStream } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
@@ -74,11 +74,8 @@ export class NetworkManager {
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
 
-  private readonly _pushConnectionState = new PushStream<ConnectionState>();
-  public readonly connectionState = MulticastObservable.from(
-    this._pushConnectionState.observable,
-    ConnectionState.ONLINE
-  );
+  private _connectionState = ConnectionState.ONLINE;
+  public readonly connectionStateChanged = new Event<ConnectionState>();
 
   private readonly _connectionLog?: ConnectionLog;
 
@@ -107,6 +104,10 @@ export class NetworkManager {
   // TODO(burdon): Remove access (Devtools only).
   get connectionLog() {
     return this._connectionLog;
+  }
+
+  get connectionState() {
+    return this._connectionState;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
@@ -204,12 +205,13 @@ export class NetworkManager {
   }
 
   async setConnectionState(state: ConnectionState) {
-    if (state === this.connectionState.get()) {
+    if (state === this._connectionState) {
       return;
     }
 
     switch (state) {
       case ConnectionState.OFFLINE: {
+        this._connectionState = state;
         // go offline
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
         await this._messenger.close();
@@ -217,6 +219,7 @@ export class NetworkManager {
         break;
       }
       case ConnectionState.ONLINE: {
+        this._connectionState = state;
         // go online
         this._messenger.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
@@ -225,6 +228,6 @@ export class NetworkManager {
       }
     }
 
-    this._pushConnectionState.next(state);
+    this.connectionStateChanged.emit(this._connectionState);
   }
 }
