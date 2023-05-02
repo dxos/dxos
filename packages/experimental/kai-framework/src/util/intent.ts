@@ -13,6 +13,6 @@ export enum IntentAction {
  */
 export type Intent<T = {}, A = IntentAction> = {
   action: A;
-  data: T;
   source?: string;
+  data: T;
 };

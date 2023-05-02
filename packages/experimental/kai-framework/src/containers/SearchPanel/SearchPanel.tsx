@@ -39,13 +39,16 @@ export const SearchPanel = ({ space, onResults, onSelect }: SearchPanelProps) =>
   useEffect(() => onResults?.(results), [results]);
 
   return (
-    <div className='flex flex-col overflow-hidden w-full'>
-      <div className='flex items-center p-2'>
-        <div className='pl-2 pr-1'>
+    <div className='flex flex-col shrink-0 overflow-hidden w-full'>
+      <div className='flex overflow-hidden items-center p-2'>
+        <div className='flex shrink-0 pl-2 pr-1'>
           <MagnifyingGlass className={getSize(6)} />
         </div>
         <Searchbar
-          slots={{ root: { className: 'pl-1', variant: 'subdued' }, input: { autoFocus: true, className: 'border-b' } }}
+          slots={{
+            root: { className: 'flex overflow-hidden pl-1', variant: 'subdued' },
+            input: { autoFocus: true }
+          }}
           onSearch={handleSearch}
         />
       </div>

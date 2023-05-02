@@ -21,11 +21,14 @@ import { ShellProvider } from '../ShellProvider';
 /**
  * Main app container.
  */
+// TODO(burdon): Rename.
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
     client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
   };
+
+  // TODO(burdon): Factor out config.
 
   return (
     <ThemeProvider

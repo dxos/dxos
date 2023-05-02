@@ -58,7 +58,7 @@ export const EditableObjectList = <T extends Object>({
   };
 
   return (
-    <div role='none' className={mx('is-full', slots.root?.className)}>
+    <div role='none' className={mx('flex flex-col overflow-hidden is-full', slots.root?.className)}>
       <List aria-labelledby='objects'>
         {objects.map((object) => {
           const isSelected = object.id === selected;
@@ -83,9 +83,10 @@ export const EditableObjectList = <T extends Object>({
                 label='Title'
                 labelVisuallyHidden
                 placeholder='Title'
+                // TODO(burdon): Input classname not propagated.
                 slots={{
-                  root: { className: 'grow pl-1' },
-                  input: { autoFocus: !getTitle(object)?.length }
+                  root: { className: 'flex w-full overflow-hidden pl-1' },
+                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length }
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
