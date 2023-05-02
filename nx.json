@@ -19,6 +19,7 @@
           "lint",
           "prebuild",
           "prerelease",
+          "storybook-build",
           "test"
         ],
         "parallel": 6,
