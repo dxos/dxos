@@ -43,7 +43,7 @@ export type SidebarProps = {
 // TODO(burdon): Remove observer?
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
-  const { space, section, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
+  const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
   const [options] = useKeyStore(optionsKeys);
 
@@ -179,7 +179,11 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
 
         {/* SpacePanel */}
         {showSpacePanel && (
-          <SpaceListPanel onAction={handleSpaceAction} onNavigate={onNavigate} onClose={() => setShowSpacePanel(false)} />
+          <SpaceListPanel
+            onAction={handleSpaceAction}
+            onNavigate={onNavigate}
+            onClose={() => setShowSpacePanel(false)}
+          />
         )}
 
         {/* Search/Frames */}
