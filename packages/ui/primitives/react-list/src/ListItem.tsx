@@ -151,8 +151,6 @@ const PureListItem = forwardRef<
       </Primitive.li>
     );
 
-    console.log('[list item collapsible]', collapsible);
-
     return (
       <ListItemProvider
         scope={__listItemScope}

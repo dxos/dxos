@@ -18,7 +18,7 @@ export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 // prettier-ignore
 const defaultSlides = [
   [
-    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmRZKZTjHSdYz4u2Zu64r1hCExJ1kNTMDuRJWyQjvgEXsN)'
+    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmbsKuxFkcn7YHtUd882dcZ4SapLeqEKnzXHs2t6iPBaon)'
   ].join('\n'),
   [
     '# DXOS',

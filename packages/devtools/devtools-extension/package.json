@@ -40,7 +40,7 @@
     "@crxjs/vite-plugin": "^1.0.14",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/kai": "workspace:*",
+    "@dxos/kai-framework": "workspace:*",
     "@sentry/vite-plugin": "^0.4.0",
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
