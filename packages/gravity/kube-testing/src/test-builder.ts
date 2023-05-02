@@ -13,7 +13,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { runSignal } from './run-test-signal';
 
 export type Failure = {
-  error: Error;
+  error: string;
   action: ExchangedMessage | DiscoverdPeer;
 };
 
@@ -66,7 +66,7 @@ export class Stats {
 
   addFailure(error: Error, action: ExchangedMessage | DiscoverdPeer) {
     if (!this._testFinished) {
-      this.performance.failures.push({ error, action });
+      this.performance.failures.push({ error: error.toString(), action });
     }
   }
 
