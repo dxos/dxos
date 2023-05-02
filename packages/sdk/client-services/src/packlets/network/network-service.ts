@@ -21,6 +21,7 @@ export class NetworkServiceImpl implements NetworkService {
 
       const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
       const unsubscribeSignal = this.signalManager.statusChanged.on(() => update());
+      update();
 
       return () => {
         unsubscribeSwarm();
