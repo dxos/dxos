@@ -7,9 +7,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "type": "module",
   "scripts": {
-    "run-tests": "node ./dist/lib/node/main.cjs"
+    "run-tests": "node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
