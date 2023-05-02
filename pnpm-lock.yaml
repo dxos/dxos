@@ -4520,6 +4520,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       lodash.omit: ^4.5.0
+      rci: ^0.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
@@ -4530,6 +4531,7 @@ importers:
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       lodash.omit: 4.5.0
+      rci: 0.1.0_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -4628,7 +4630,6 @@ importers:
       lodash.merge: ^4.6.2
       lodash.throttle: ^4.1.1
       qrcode.react: ^3.1.0
-      rci: ^0.0.3
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.4.0
@@ -4678,7 +4679,6 @@ importers:
       lodash.merge: 4.6.2
       lodash.throttle: 4.1.1
       qrcode.react: 3.1.0_react@18.2.0
-      rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       url-join: 5.0.0
     devDependencies:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
@@ -31365,8 +31365,8 @@ packages:
       strip-json-comments: 2.0.1
     dev: true
 
-  /rci/0.0.3_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-Rs71aR0YL/8pVNKkGLpTQgPOgn0vPelxzTmP2rChF3Ac30nzROVasilAWbONn5rzwm+1yp23SHyS/IsIU1Wnjw==}
+  /rci/0.1.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-o/elFrXXRLdYDAq/qQUFE175TqzJ5nU3MYwIwa6WOZfljNJ4akQSy1n7zA79swB696MNIFDWJs+Do0q2FBTy+Q==}
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'

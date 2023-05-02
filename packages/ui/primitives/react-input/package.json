@@ -22,7 +22,8 @@
     "@radix-ui/react-primitive": "^1.0.2",
     "@radix-ui/react-slot": "^1.0.1",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
-    "lodash.omit": "^4.5.0"
+    "lodash.omit": "^4.5.0",
+    "rci": "^0.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.21",
