@@ -14,30 +14,12 @@
       ]
     },
     "compile": {
-      "dependsOn": [
-        "compile-lib"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "true"
-        ]
-      }
-    },
-    "compile-lib": {
-      "dependsOn": [
-        "^compile"
-      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/ui/primitives/react-list/src/index.ts"
         ],
-        "outputPath": "packages/ui/primitives/react-list/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/ui/primitives/react-list/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
