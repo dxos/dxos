@@ -259,8 +259,7 @@ message SubscribeToSignalStatusResponse {
   message SignalServer {
     string host = 1;
 
-    // SignalApi.State enum.
-    string state = 2;
+    dxos.mesh.signal.SignalState state = 2;
 
     optional string error = 3;
 

@@ -27,14 +27,10 @@ import { ClientServicesHost, ServiceContext } from '../services';
 //
 
 export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
-  const networkManager = new NetworkManager({
-    signalManager: new MemorySignalManager(signalManagerContext),
-    transportFactory: MemoryTransportFactory
-  });
-
   return new ClientServicesHost({
     config,
-    networkManager
+    signalManager: new MemorySignalManager(signalManagerContext),
+    transportFactory: MemoryTransportFactory
   });
 };
 
@@ -45,13 +41,14 @@ export const createServiceContext = ({
   signalContext?: MemorySignalManagerContext;
   storage?: Storage;
 } = {}) => {
+  const signalManager = new MemorySignalManager(signalContext);
   const networkManager = new NetworkManager({
-    signalManager: new MemorySignalManager(signalContext),
+    signalManager,
     transportFactory: MemoryTransportFactory
   });
 
   const modelFactory = createDefaultModelFactory();
-  return new ServiceContext(storage, networkManager, modelFactory);
+  return new ServiceContext(storage, networkManager, signalManager, modelFactory);
 };
 
 export const createPeers = async (numPeers: number) => {

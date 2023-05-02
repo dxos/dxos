@@ -360,24 +360,30 @@ service InvitationsService {
 // MESH
 //
 
+// TODO(wittjosiah): Rename to SwarnState?
 enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
 }
 
 message NetworkStatus {
-  ConnectionState state = 1;
+  message Signal {
+    string server = 1;
+    dxos.mesh.signal.SignalState state = 2;
+  }
+
+  ConnectionState swarm = 1;
+  repeated Signal signaling = 2;
 }
 
-message SetNetworkOptionsRequest {
-  ConnectionState state = 1;
+message UpdateConfigRequest {
+  ConnectionState swarm = 1;
 }
 
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
-  // TODO(wittjosiah): Align verbs with other services.
-  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
+  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
 }
 
 //

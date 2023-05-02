@@ -20,6 +20,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -67,6 +68,7 @@ export class ServiceContext {
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
+    public readonly signalManager: SignalManager,
     public readonly modelFactory: ModelFactory
   ) {
     // TODO(burdon): Move strings to constants.
@@ -115,6 +117,7 @@ export class ServiceContext {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     log('opening...');
+    await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
     await this.identityManager.open();
@@ -133,6 +136,7 @@ export class ServiceContext {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.networkManager.close();
+    await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
   }
