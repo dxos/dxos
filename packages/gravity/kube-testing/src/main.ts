@@ -27,7 +27,7 @@ type TestConfig = {
 
 const testConfig: TestConfig = {
   servers: 1,
-  agents: 20,
+  agents: 200,
   serversPerAgent: 1,
   topics: [PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random()],
   topicsPerAgent: 2,
@@ -108,7 +108,7 @@ const test = async () => {
           Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.leaveTopic(topic))))
         )
       );
-      log.info('iteration finished');
+      log.info('iteration finished', stats.shortStats);
     },
     testConfig.repeatInterval
   );
@@ -134,6 +134,7 @@ const test = async () => {
       `./out/results/stats${testConfig.randomSeed}.json`,
       JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2)
     );
+    log.info('Stats written to file', { fileName: `./out/results/stats${testConfig.randomSeed}.json` })
   }
 };
 
