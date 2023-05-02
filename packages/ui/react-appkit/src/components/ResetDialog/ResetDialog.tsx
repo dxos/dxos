@@ -44,8 +44,7 @@ export const ResetDialog = ({
   error,
   errors: propsErrors,
   config: configProvider,
-  // TODO(wittjosiah): Don't use process.env.
-  isDev = process.env.NODE_ENV === 'development',
+  isDev = false,
   defaultOpen,
   open,
   onOpenChange

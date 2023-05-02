@@ -20,7 +20,6 @@ export * from './Input';
 export * from './InvitationList';
 export * from './InvitationStatus';
 export * from './Join';
-export * from './List';
 export * from './Loading';
 export * from './ManageSpacePage';
 export * from './Menubar';

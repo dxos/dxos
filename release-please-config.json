@@ -343,6 +343,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kai-framework/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kai-sandbox/package.json",
           "jsonpath": "$.version"
         },
@@ -449,6 +454,16 @@
         {
           "type": "json",
           "path": "packages/ui/aurora-types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/primitives/react-hooks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/primitives/react-list/package.json",
           "jsonpath": "$.version"
         },
         {

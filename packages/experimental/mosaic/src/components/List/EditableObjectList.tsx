@@ -5,9 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, List, ListItem, ListItemEndcap } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { List, ListItem, Input, ListItemEndcap } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.
 export type Object = { id: string };
@@ -58,32 +58,24 @@ export const EditableObjectList = <T extends Object>({
   };
 
   return (
-    <div role='none' className={mx('is-full', slots.root?.className)}>
-      <List labelId='objects'>
+    <div role='none' className={mx('flex flex-col overflow-hidden is-full', slots.root?.className)}>
+      <List aria-labelledby='objects'>
         {objects.map((object) => {
           const isSelected = object.id === selected;
           return (
             <ListItem
               id={object.id}
               key={object.id}
-              slots={{
-                root: {
-                  className: selected === object.id ? slots?.selected?.className : undefined
-                },
-                mainContent: { className: 'flex w-full px-3 items-center' }
-              }}
+              className={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
             >
-              <ListItemEndcap asChild>
-                {/* TODO(burdon): Why is div required? */}
-                <div>
-                  <Button
-                    variant='ghost'
-                    onClick={() => onSelect?.(object.id)}
-                    className={mx(isSelected ? 'text-selection-text' : '')}
-                  >
-                    <Icon className={getSize(6)} />
-                  </Button>
-                </div>
+              <ListItemEndcap>
+                <Button
+                  variant='ghost'
+                  onClick={() => onSelect?.(object.id)}
+                  className={isSelected && 'text-selection-text'}
+                >
+                  <Icon className={getSize(6)} />
+                </Button>
               </ListItemEndcap>
 
               <Input
@@ -91,9 +83,10 @@ export const EditableObjectList = <T extends Object>({
                 label='Title'
                 labelVisuallyHidden
                 placeholder='Title'
+                // TODO(burdon): Input classname not propagated.
                 slots={{
-                  root: { className: 'grow pl-1' },
-                  input: { autoFocus: !getTitle(object)?.length }
+                  root: { className: 'flex w-full overflow-hidden pl-1' },
+                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length }
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}

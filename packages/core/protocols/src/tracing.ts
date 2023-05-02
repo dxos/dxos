@@ -6,7 +6,7 @@ export type Command = 'begin' | 'end' | 'update';
 
 export type TraceStatus = 'ok' | 'error';
 
-export type DataType = { [key: string]: any };
+export type DataType = Record<string, any>;
 
 export type TracingContext = {
   span?: {

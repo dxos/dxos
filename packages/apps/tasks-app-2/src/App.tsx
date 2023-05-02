@@ -12,7 +12,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { Routes } from './Routes';
 import { Main } from './components/Main';
 
-// Dynamics allows configuration to be supplied by the hosting KUBE
+// Dynamics allows configuration to be supplied by the hosting KUBE.
 const config = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
