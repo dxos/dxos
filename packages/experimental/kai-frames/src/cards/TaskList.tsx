@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, KeyboardEvent, useState } from 'react';
+import React, { ChangeEvent, ComponentPropsWithoutRef, KeyboardEvent, useState } from 'react';
 
 import { Task } from '@dxos/kai-types';
 import {
@@ -88,8 +88,8 @@ export const TaskItem = observer(({ slots, task, onDelete }: TaskItemProps) => {
             'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
         }
       }}
-      onChangeCompleted={(completed) => (task.completed = completed)}
-      onChangeTitle={({ target: { value } }) => {
+      onChangeCompleted={(completed: boolean) => (task.completed = completed)}
+      onChangeTitle={({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
         task.title = value ?? '';
       }}
       {...(onDelete && { onClickDelete: () => onDelete(task) })}

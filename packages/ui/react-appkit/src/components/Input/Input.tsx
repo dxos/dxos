@@ -39,12 +39,10 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
     }: InputProps,
     forwardedRef
   ) => {
-    const internalInputId = useId('input');
+    const inputId = useId('input', slots.input?.id);
     const descriptionId = useId('input-description');
     const validationId = useId('input-validation');
     const { hasIosKeyboard } = useThemeContext();
-
-    const inputId = slots.input?.id ?? internalInputId;
 
     const isInvalid = !!validationMessage && validationValence === 'error';
 

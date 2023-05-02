@@ -64,7 +64,7 @@ type ListItemContextValue = {
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-type ListItemHeadingProps = ListItemScopedProps<ComponentPropsWithoutRef<'p'>> & { asChild?: boolean };
+type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> & { asChild?: boolean };
 
 const ListItemHeading = ({ children, asChild, __listItemScope, ...props }: ListItemHeadingProps) => {
   const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
@@ -151,8 +151,6 @@ const PureListItem = forwardRef<
       </Primitive.li>
     );
 
-    console.log('[list item collapsible]', collapsible);
-
     return (
       <ListItemProvider
         scope={__listItemScope}
@@ -201,12 +199,12 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
 
 const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
   const { variant } = useListContext(LIST_NAME, props.__listScope);
-  const listItemId = useId('listItem');
+  const listItemId = useId('listItem', props.id);
 
   if (variant === 'ordered-draggable') {
-    return <DraggableListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
+    return <DraggableListItem {...props} ref={forwardedRef} id={listItemId} />;
   } else {
-    return <PureListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
+    return <PureListItem {...props} ref={forwardedRef} id={listItemId} />;
   }
 });
 
