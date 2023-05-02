@@ -32,8 +32,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          faker: ['faker'],
-          highlighter: ['react-syntax-highlighter'],
           vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
