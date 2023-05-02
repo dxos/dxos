@@ -28,7 +28,7 @@ export const runSignal = async () => {
   const runner = new SignalServerRunner({
     port: randomInt(10000, 20000),
     binCommand: `go run ${BIN_PATH}`,
-    signalArguments: ['p2pserver'],
+    signalArguments: ['p2pserver',],
     cwd: PATH_TO_KUBE_REPO
   });
   await runner.waitUntilStarted();
