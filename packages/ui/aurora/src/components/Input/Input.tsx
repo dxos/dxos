@@ -70,9 +70,9 @@ const ErrorMessage = ({ srOnly, className, children, ...props }: ErrorMessagePro
 
 type ValidationMessageProps = ErrorMessagePrimitiveProps & { srOnly?: boolean; validationValence?: MessageValence };
 
-const ValidationMessage = (props: ValidationMessageProps) => {
+const ValidationMessage = ({ validationValence, ...props }: ValidationMessageProps) => {
   const { tx } = useThemeContext();
-  const { srOnly, validationValence, className, asChild, children, ...otherProps } = props;
+  const { srOnly, className, asChild, children, ...otherProps } = props;
   if (validationValence === 'error') {
     return <ErrorMessage {...props} />;
   } else {

@@ -5,20 +5,56 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { InputRoot } from './Input';
+import { MessageValence } from '@dxos/aurora-types';
 
-type StoryInputProps = Partial<{ label: string; placeholder: string; disabled: boolean; description: string }>;
+import { Description, InputRoot, Label, PinInput as NaturalPinInput, ValidationMessage } from './Input';
 
-const StoryInput = (props: StoryInputProps) => {
+type StoryInputProps = Partial<{
+  label: string;
+  placeholder: string;
+  disabled: boolean;
+  description: string;
+  labelVisuallyHidden: boolean;
+  descriptionVisuallyHidden: boolean;
+  size: 'pin';
+  validationMessage: string;
+  validationValence: MessageValence;
+}>;
+
+const StoryInput = ({
+  size,
+  label,
+  description,
+  labelVisuallyHidden,
+  descriptionVisuallyHidden,
+  validationValence,
+  validationMessage,
+  ...props
+}: StoryInputProps) => {
   // TODO(thure): Implement
-  return <InputRoot></InputRoot>;
+  return (
+    <InputRoot {...{ validationValence }}>
+      <Label srOnly={labelVisuallyHidden}>{label}</Label>
+      {size === 'pin' && <NaturalPinInput {...props} />}
+      <Description srOnly={descriptionVisuallyHidden}>
+        {validationMessage && (
+          <>
+            <ValidationMessage validationValence={validationValence}>{validationMessage}</ValidationMessage>{' '}
+          </>
+        )}
+        {description}
+      </Description>
+    </InputRoot>
+  );
 };
 
 export default {
   component: StoryInput,
   // TODO(thure): Refactor
   argTypes: {
+    label: { control: 'text' },
     description: { control: 'text' },
+    validationMessage: { control: 'text' },
     validationValence: {
       control: 'select',
       options: ['success', 'info', 'warning', 'error']
