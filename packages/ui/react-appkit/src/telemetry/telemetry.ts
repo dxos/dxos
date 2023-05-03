@@ -114,20 +114,50 @@ export const initializeAppTelemetry = async ({
       ...telemetryOptions
     });
 
-    const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
-    if (IPDATA_API_KEY) {
-      await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
-        .then((res) => res.json())
-        .then((data) => {
-          BASE_TELEMETRY_PROPERTIES.city = data.city;
-          BASE_TELEMETRY_PROPERTIES.region = data.region;
-          BASE_TELEMETRY_PROPERTIES.country = data.country;
-          BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
-          BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
-        })
-        .catch((err) => Sentry.captureException(err));
+    const ipData = await getIPData(config);
+    if (ipData && ipData.city) {
+      BASE_TELEMETRY_PROPERTIES.city = ipData.city;
+      BASE_TELEMETRY_PROPERTIES.region = ipData.region;
+      BASE_TELEMETRY_PROPERTIES.country = ipData.country;
+      BASE_TELEMETRY_PROPERTIES.latitude = ipData.latitude;
+      BASE_TELEMETRY_PROPERTIES.longitude = ipData.longitude;
     }
   } catch (err) {
     log.error('Failed to initialize app telemetry', err);
+  }
+};
+
+type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
+
+const getIPData = async (config: Config): Promise<IPData | void> => {
+  const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
+  type CachedIPData = {
+    data: IPData;
+    timestamp: number;
+  };
+
+  // Check cache first.
+  const cachedData: null | CachedIPData = await localForage.getItem('dxos:telemetry:ipdata');
+  if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
+    return cachedData.data;
+  }
+
+  // Fetch data if not cached.
+  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
+  if (IPDATA_API_KEY) {
+    return fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Cache data.
+        localForage
+          .setItem('dxos:telemetry:ipdata', {
+            data,
+            timestamp: Date.now()
+          })
+          .catch((err) => Sentry.captureException(err));
+
+        return data;
+      })
+      .catch((err) => Sentry.captureException(err));
   }
 };
