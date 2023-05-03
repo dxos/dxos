@@ -51,6 +51,9 @@ const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: St
       })),
       testConfig.serversPerAgent
     );
+
+    // NOTE: Opening too many connections too fast causes some of them to be dropped.
+    await sleep(5)
     await builder.createPeer({ signals, stats });
   }
 };
