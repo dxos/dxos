@@ -4,7 +4,7 @@
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
@@ -18,7 +18,14 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
   build: {
     sourcemap: true
