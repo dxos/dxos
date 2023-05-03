@@ -99,6 +99,7 @@ export class WorkerRuntime {
    * Selects one of the existing session fro WebRTC networking.
    */
   private _reconnectWebrtc() {
+    log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
       if (!this.sessions.has(this._sessionForNetworking)) {
