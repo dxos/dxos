@@ -3,11 +3,20 @@
 //
 
 import '@dxosTheme';
+import React from 'react';
 
-import { Input } from './Input';
+import { InputRoot } from './Input';
+
+type StoryInputProps = Partial<{ label: string; placeholder: string; disabled: boolean; description: string }>;
+
+const StoryInput = (props: StoryInputProps) => {
+  // TODO(thure): Implement
+  return <InputRoot></InputRoot>;
+};
 
 export default {
-  component: Input,
+  component: StoryInput,
+  // TODO(thure): Refactor
   argTypes: {
     description: { control: 'text' },
     validationValence: {

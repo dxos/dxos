@@ -9,10 +9,13 @@ import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
 import { INPUT_NAME, InputScopedProps, useInputContext, Valence } from './Root';
 
-type PinInputProps = Omit<ComponentPropsWithRef<typeof CodeInput>, 'id' | 'className'> & {
+type PinInputProps = Omit<
+  ComponentPropsWithRef<typeof CodeInput>,
+  'id' | 'className' | 'inputRef' | 'renderSegment' | 'spellCheck'
+> & {
   asChild?: boolean;
   inputClassName?: string;
-  segmentClassName?: (styleProps: { focused: boolean; disabled: boolean; validationValence: Valence }) => string;
+  segmentClassName?: (styleProps: { focused: boolean; validationValence: Valence }) => string;
   segmentPadding?: string;
   segmentHeight?: string;
 };
@@ -30,7 +33,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     }: InputScopedProps<PinInputProps>,
     forwardedRef
   ) => {
-    const { id, validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
     const width = getSegmentCssWidth(segmentPadding);
     const inputRef = useForwardedRef(forwardedRef);
     const inputFocused = useIsFocused(inputRef);
@@ -41,14 +44,13 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           key={index}
           className={segmentClassName?.({
             focused: !!(inputFocused && state),
-            disabled: !!props.disabled,
             validationValence
           })}
           data-state={state}
           style={{ width, height: segmentHeight }}
         />
       ),
-      [segmentClassName, inputFocused, validationValence, props.disabled]
+      [segmentClassName, inputFocused, validationValence]
     );
 
     return (
@@ -58,8 +60,14 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           spacing: '8px',
           fontFamily: '',
           spellCheck: false,
+          length: 6,
           ...props,
           id,
+          'aria-describedby': descriptionId,
+          ...(validationValence === 'error' && {
+            'aria-invalid': 'true' as const,
+            'aria-errormessage': errorMessageId
+          }),
           inputRef,
           renderSegment,
           className: inputClassName

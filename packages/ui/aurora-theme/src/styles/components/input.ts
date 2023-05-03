@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, MessageValence, Theme } from '@dxos/aurora-types';
+import { ComponentFragment, ComponentFunction, Density, MessageValence } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -17,7 +17,9 @@ import {
   subduedFocus,
   fineBlockSize,
   coarseBlockSize,
-  staticFocus
+  staticFocus,
+  defaultDescription,
+  valenceColorText
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -26,6 +28,10 @@ export type InputStyleProps = Partial<{
   focused: boolean;
   density: Density;
   validationValence: MessageValence;
+}>;
+
+export type InputMetaStyleProps = Partial<{
+  srOnly: boolean;
 }>;
 
 export const neutralInputValence = '';
@@ -109,10 +115,38 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) 
       );
 };
 
-export const inputTheme: Theme<InputStyleProps> = {
-  input: inputAppInput
+export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
+  return mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 };
 
-export const inputOsTheme: Theme<InputStyleProps> = {
+export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(
+    'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
+    props.srOnly && 'sr-only',
+    ...etc
+  );
+};
+
+export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
+};
+
+export const inputValidationMessage: ComponentFunction<InputMetaStyleProps & { validationValence: MessageValence }> = (
+  props,
+  ...etc
+) => {
+  return mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+};
+
+export const inputTheme = {
+  input: inputAppInput,
+  inputWithSegments: inputWithSegmentsInput,
+  label: inputLabel,
+  description: inputDescription,
+  validationMessage: inputValidationMessage
+};
+
+export const inputOsTheme = {
+  ...inputTheme,
   input: inputOsInput
 };
