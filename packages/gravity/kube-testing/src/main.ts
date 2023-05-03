@@ -23,18 +23,20 @@ type TestConfig = {
   repeatInterval: number;
   duration: number;
   randomSeed: string;
+  type: 'discovery' | 'signaling';
 };
 
 const testConfig: TestConfig = {
   servers: 1,
-  agents: 200,
+  agents: 1000,
   serversPerAgent: 1,
   topics: [PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random()],
   topicsPerAgent: 2,
   discoverTimeout: 5_000,
   repeatInterval: 0,
   duration: 60_000,
-  randomSeed: PublicKey.random().toHex()
+  randomSeed: PublicKey.random().toHex(),
+  type: 'signaling'
 };
 
 seedrandom(testConfig.randomSeed, { global: true });
@@ -94,23 +96,37 @@ const test = async () => {
     ctx,
     async () => {
       log.info(`${testCounter++} test iteration running...`);
-      for (const peer of builder.peers) {
-        for (const topic of randomArraySlice(testConfig.topics, testConfig.topicsPerAgent)) {
-          await cancelWithContext(ctx, peer.joinTopic(topic));
+
+      switch (testConfig.type) {
+        case 'discovery': {
+          for (const peer of builder.peers) {
+            for (const topic of randomArraySlice(testConfig.topics, testConfig.topicsPerAgent)) {
+              await cancelWithContext(ctx, peer.joinTopic(topic));
+            }
+          }
+
+          await Promise.all(
+            Array.from(stats.topics.entries()).map(([topic, agents]) =>
+              Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic))))
+            )
+          );
+
+          await Promise.all(
+            Array.from(stats.topics.entries()).map(([topic, agents]) =>
+              Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.leaveTopic(topic))))
+            )
+          );
+          break;
         }
+        case 'signaling': {
+          await Promise.all(builder.peers.map((peer) =>
+            peer.sendMessage(randomArraySlice(builder.peers, 1)[0])
+          ));
+          break;
+        }
+        default: throw new Error(`Unknown test type: ${testConfig.type}`);
       }
 
-      await Promise.all(
-        Array.from(stats.topics.entries()).map(([topic, agents]) =>
-          Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic))))
-        )
-      );
-
-      await Promise.all(
-        Array.from(stats.topics.entries()).map(([topic, agents]) =>
-          Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.leaveTopic(topic))))
-        )
-      );
       log.info('iteration finished', stats.shortStats);
     },
     testConfig.repeatInterval
