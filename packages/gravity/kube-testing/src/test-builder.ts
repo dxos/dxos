@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { WebsocketSignalManager } from '@dxos/messaging';
+import { Message, WebsocketSignalManager } from '@dxos/messaging';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
+import { randomBytes } from 'node:crypto';
 
 import { runSignal } from './run-test-signal';
 
@@ -164,6 +165,7 @@ export class TestAgent {
     }
 
     await this.signalManager.open();
+    await this.signalManager.subscribeMessages(this.peerId)
   }
 
   async destroy() {
@@ -214,6 +216,42 @@ export class TestAgent {
         this._stats.addDiscoveredPeer(action);
       }
     }
+  }
+
+  async sendMessage(to: TestAgent) {
+    const message: Message = {
+      author: this.peerId,
+      recipient: to.peerId,
+      payload: {
+        type_url: 'example.Message',
+        value: randomBytes(32)
+      }
+    }
+
+    const received = to.signalManager.onMessage.waitFor(data =>
+      Buffer.from(data.payload.value).equals(Buffer.from(message.payload.value))
+    )
+
+    await this.signalManager.sendMessage(message);
+
+    try {
+      await cancelWithContext(this._ctx, asyncTimeout(received, 5_000));
+
+      this._stats.addExchangedMessage({
+        type: 'MESSAGE',
+        signalServers: this.signalServers,
+        author: this.peerId,
+        recipient: to.peerId,
+      });
+    } catch(err: any) {
+      this._stats.addFailure(err, {
+        type: 'MESSAGE',
+        signalServers: this.signalServers,
+        author: this.peerId,
+        recipient: to.peerId,
+      });
+    }
+
   }
 }
 
