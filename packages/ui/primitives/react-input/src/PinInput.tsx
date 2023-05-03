@@ -11,9 +11,8 @@ import { INPUT_NAME, InputScopedProps, useInputContext, Valence } from './Root';
 
 type PinInputProps = Omit<
   ComponentPropsWithRef<typeof CodeInput>,
-  'id' | 'className' | 'inputRef' | 'renderSegment' | 'spellCheck'
+  'id' | 'className' | 'inputRef' | 'renderSegment'
 > & {
-  asChild?: boolean;
   inputClassName?: string;
   segmentClassName?: (styleProps: { focused: boolean; validationValence: Valence }) => string;
   segmentPadding?: string;
@@ -24,7 +23,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   (
     {
       __inputScope,
-      asChild,
       segmentClassName,
       inputClassName,
       segmentPadding = '13px',

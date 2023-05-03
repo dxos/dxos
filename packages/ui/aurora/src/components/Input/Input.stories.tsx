@@ -13,6 +13,7 @@ import {
   InputRoot,
   Label,
   PinInput as NaturalPinInput,
+  TextInput as NaturalTextInput,
   Validation
 } from './Input';
 
@@ -43,6 +44,7 @@ const StoryInput = ({
     <InputRoot {...{ validationValence }}>
       <Label srOnly={labelVisuallyHidden}>{label}</Label>
       {size === 'pin' && <NaturalPinInput {...props} />}
+      {size !== 'pin' && <NaturalTextInput {...props} />}
       <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>

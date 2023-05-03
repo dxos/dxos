@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, MessageValence } from '@dxos/aurora-types';
+import { ComponentFragment, ComponentFunction, Density, Elevation, MessageValence } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -19,7 +19,8 @@ import {
   coarseBlockSize,
   staticFocus,
   defaultDescription,
-  valenceColorText
+  valenceColorText,
+  contentElevation
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -27,6 +28,7 @@ export type InputStyleProps = Partial<{
   disabled: boolean;
   focused: boolean;
   density: Density;
+  elevation: Elevation;
   validationValence: MessageValence;
 }>;
 
@@ -88,12 +90,13 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
   return props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), ...etc)
+    ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
     : mx(
         'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
         !props.disabled && defaultFocus,
         !props.disabled && defaultHover,
         inputValence(props.validationValence) || neutralInputValence,
+        !props.disabled && contentElevation(props),
         ...sharedDefaultInputStyles(props),
         ...etc
       );
@@ -110,7 +113,7 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) 
         !props.disabled && osHover,
         inputValence(props.validationValence) ||
           'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent',
-        sharedDefaultInputStyles(props),
+        ...sharedDefaultInputStyles(props),
         ...etc
       );
 };

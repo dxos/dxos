@@ -3,7 +3,7 @@
 //
 import React, { useCallback } from 'react';
 
-import { contentElevation, Density, Elevation } from '@dxos/aurora-theme';
+import { Density, Elevation } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
@@ -17,6 +17,8 @@ import {
   DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   PinInput as PinInputPrimitive,
   PinInputProps as PinInputPrimitiveProps,
+  TextInput as TextInputPrimitive,
+  TextInputProps as TextInputPrimitiveProps,
   useInputContext,
   INPUT_NAME,
   InputScopedProps
@@ -116,9 +118,9 @@ const PinInput = ({
           focused,
           disabled: props.disabled,
           density,
+          elevation: propsElevation ?? elevation,
           validationValence
         },
-        !props.disabled && variant !== 'subdued' && contentElevation({ elevation: propsElevation ?? elevation }),
         propsSegmentClassName
       ),
     [tx, props.disabled, elevation, propsElevation, density]
@@ -135,7 +137,43 @@ const PinInput = ({
   );
 };
 
-export { Root, Root as InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput };
+type TextInputProps = InputSharedProps & TextInputPrimitiveProps;
+
+const TextInput = ({
+  __inputScope,
+  className,
+  density: propsDensity,
+  elevation: propsElevation,
+  variant,
+  ...props
+}: InputScopedProps<TextInputProps>) => {
+  const { hasIosKeyboard } = useThemeContext();
+  const { tx } = useThemeContext();
+  const density = useDensityContext(propsDensity);
+  const { elevation } = useElevationContext();
+  const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+  return (
+    <TextInputPrimitive
+      {...props}
+      className={tx(
+        'input.input',
+        'input--pin-segment',
+        {
+          variant,
+          disabled: props.disabled,
+          density,
+          elevation: propsElevation ?? elevation,
+          validationValence
+        },
+        className
+      )}
+      {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+    />
+  );
+};
+
+export { Root, Root as InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput, TextInput };
 
 export type {
   RootProps,
@@ -144,5 +182,6 @@ export type {
   DescriptionProps,
   ValidationProps,
   DescriptionAndValidationProps,
-  PinInputProps
+  PinInputProps,
+  TextInputProps
 };

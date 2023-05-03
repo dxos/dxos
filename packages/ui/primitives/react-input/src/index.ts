@@ -3,5 +3,7 @@
 //
 
 export * from './InputMeta';
-export * from './PinInput';
 export * from './Root';
+
+export * from './PinInput';
+export * from './TextInput';
