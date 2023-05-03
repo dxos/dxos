@@ -6,28 +6,37 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
-import { Button, useTranslation, ButtonProps, Density, DensityProvider } from '@dxos/aurora';
-import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
-
-import { Input, InputProps } from '../Input';
 import {
+  Button,
+  useTranslation,
+  ButtonProps,
+  Density,
+  DensityProvider,
   List,
   ListItem,
   ListItemHeading,
   ListItemEndcap,
-  ListItemDragHandle,
-  ListProps,
+  useListDensity,
   ListItemProps,
-  useListDensity
-} from '../List';
+  ListScopedProps,
+  ListItemDragHandle,
+  useListContext,
+  LIST_NAME,
+  MockListItemDragHandle
+} from '@dxos/aurora';
+import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
+
+import { Checkbox } from '../Checkbox';
+import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
-  listItem?: ListItemProps['slots'];
+  root?: { className?: string };
+  selectableCheckbox?: { className?: string };
   input?: InputProps['slots'];
 }
 
-export interface EditableListItemProps {
+export type EditableListItemProps = ListItemProps & {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;
@@ -37,12 +46,12 @@ export interface EditableListItemProps {
   onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   onClickDelete?: () => void;
   slots?: EditableListItemSlots;
-}
+};
 
 export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
-  list?: ListProps['slots'];
+  list?: { className?: string };
   addItemInput?: InputProps['slots'];
   addItemButton?: ButtonProps;
 }
@@ -111,7 +120,6 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
 
 export const EditableList = ({
   children,
-  labelId,
   completable,
   variant = 'ordered-draggable',
   onClickAdd,
@@ -138,20 +146,18 @@ export const EditableList = ({
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
-        labelId={labelId}
         variant={variant}
         selectable={completable}
         onDragEnd={handleDragEnd}
         listItemIds={itemIdOrder ?? []}
-        slots={slots.list}
         density={density}
       >
         {children}
       </List>
       <div className='flex'>
         <DensityProvider density={density}>
-          <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
-          <ListItemEndcap className='invisible' />
+          {variant === 'ordered-draggable' && <MockListItemDragHandle />}
+          {completable && <ListItemEndcap className='invisible' />}
           <Input
             variant='subdued'
             label={t('new list item input label')}
@@ -184,7 +190,7 @@ export const EditableList = ({
               <Button
                 variant='ghost'
                 {...slots.addItemButton}
-                className={mx('p-1', slots.addItemButton?.className)}
+                className={['p-1', slots.addItemButton?.className]}
                 onClick={onClickAdd}
               >
                 <Plus className={getSize(4)} />
@@ -197,9 +203,10 @@ export const EditableList = ({
   );
 };
 
-export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>(
+export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<EditableListItemProps>>(
   (
     {
+      __listScope,
       id,
       defaultCompleted,
       completed,
@@ -209,10 +216,11 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
       onChangeTitle,
       onClickDelete,
       slots = {}
-    }: EditableListItemProps,
+    },
     forwardedRef
   ) => {
     const { t } = useTranslation('appkit');
+    const { variant, selectable } = useListContext(LIST_NAME, __listScope);
     return (
       <ListItem
         ref={forwardedRef}
@@ -220,10 +228,21 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
-          onSelectedChange: onChangeCompleted,
-          slots: slots.listItem
+          onSelectedChange: onChangeCompleted
         }}
       >
+        {variant === 'ordered-draggable' && <ListItemDragHandle />}
+        {selectable && (
+          <ListItemEndcap className='items-center'>
+            <Checkbox
+              id={`${id}__checkbox`}
+              className={slots?.selectableCheckbox?.className}
+              checked={completed}
+              defaultChecked={defaultCompleted}
+              onCheckedChange={onChangeCompleted}
+            />
+          </ListItemEndcap>
+        )}
         <ListItemHeading className='sr-only'>{title}</ListItemHeading>
         <Input
           {...{

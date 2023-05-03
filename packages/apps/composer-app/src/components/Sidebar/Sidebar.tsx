@@ -37,7 +37,7 @@ const DocumentTree = observer(() => {
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot labelId={treeLabel} data-testid='composer.sidebarTree'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {

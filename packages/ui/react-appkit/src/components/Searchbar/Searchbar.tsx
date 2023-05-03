@@ -50,7 +50,7 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         variant={slots.root?.variant ?? 'default'}
         slots={{
           root: {
-            className: 'w-full'
+            className: 'flex w-full overflow-hidden'
           },
           input: {
             onKeyDown: ({ key }) => key === 'Escape' && handleReset(),

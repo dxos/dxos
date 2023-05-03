@@ -19,7 +19,8 @@ import { ClientServicesProvider } from '../client';
 export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
   private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
-    state: ConnectionState.OFFLINE
+    swarm: ConnectionState.OFFLINE,
+    signaling: []
   });
 
   private _ctx?: Context;
@@ -45,9 +46,9 @@ export class MeshProxy {
     return this._networkStatus;
   }
 
-  async setConnectionState(state: ConnectionState) {
+  async updateConfig(swarm: ConnectionState) {
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
+    return this._serviceProvider.services.NetworkService.updateConfig({ swarm });
   }
 
   /**
@@ -58,7 +59,7 @@ export class MeshProxy {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
+    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatusUpdated.emit(networkStatus);
     });

@@ -10,7 +10,7 @@ import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Message as SignalMessage, SignalState, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { Message, SignalMethods } from '../signal-methods';
@@ -20,26 +20,6 @@ const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;
 const ERROR_RECONCILE_DELAY = 1000;
 const RECONCILE_INTERVAL = 5_000;
-
-export enum SignalState {
-  /** Connection is being established. */
-  CONNECTING = 'CONNECTING',
-
-  /** Connection is being re-established. */
-  RE_CONNECTING = 'RE_CONNECTING',
-
-  /** Connected. */
-  CONNECTED = 'CONNECTED',
-
-  /** Server terminated the connection. Socket will be reconnected. */
-  DISCONNECTED = 'DISCONNECTED',
-
-  /** Server terminated the connection with an ERROR. Socket will be reconnected. */
-  ERROR = 'ERROR',
-
-  /** Socket was closed. */
-  CLOSED = 'CLOSED'
-}
 
 export type SignalStatus = {
   host: string;
@@ -351,7 +331,7 @@ export class SignalClient implements SignalMethods {
     log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
     this._performance.reconnectCounter++;
 
-    if (this._state === SignalState.RE_CONNECTING) {
+    if (this._state === SignalState.RECONNECTING) {
       log.warn('Signal api already reconnecting.');
       return;
     }
@@ -368,7 +348,7 @@ export class SignalClient implements SignalMethods {
 
     await cancelWithContext(this._ctx!, sleep(this._reconnectAfter));
 
-    this._setState(SignalState.RE_CONNECTING);
+    this._setState(SignalState.RECONNECTING);
 
     this._createClient();
   }

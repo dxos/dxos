@@ -10,10 +10,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "plugin.d.ts",
-    "vite.config.ts"
-  ],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",

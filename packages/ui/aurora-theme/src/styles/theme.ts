@@ -6,32 +6,29 @@ import get from 'lodash.get';
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import {
-  buttonAppRoot,
-  buttonOsRoot,
-  inputAppInput,
-  inputOsInput,
-  dropdownMenuItem,
-  listItemAppDragHandle,
-  listItemOsDragHandle,
-  listItemAppOpenTrigger,
-  listItemOsOpenTrigger,
-  buttonGroup
+  listTheme,
+  listOsTheme,
+  buttonTheme,
+  buttonOsTheme,
+  dropdownMenuTheme,
+  inputTheme,
+  inputOsTheme
 } from './components';
 
-export const theme: Theme = {
+export const theme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
-  button: { root: buttonAppRoot, group: buttonGroup },
-  input: { input: inputAppInput },
-  dropdownMenu: { item: dropdownMenuItem },
-  list: { dragHandle: listItemAppDragHandle, openTrigger: listItemAppOpenTrigger }
+  button: buttonTheme,
+  input: inputTheme,
+  dropdownMenu: dropdownMenuTheme,
+  list: listTheme
 };
 
-export const osTheme: Theme = {
+export const osTheme: Theme<Record<string, any>> = {
   ...theme,
   themeName: () => 'dxos',
-  button: { ...theme.button, root: buttonOsRoot },
-  input: { ...theme.input, input: inputOsInput },
-  list: { ...theme.list, dragHandle: listItemOsDragHandle, openTrigger: listItemOsOpenTrigger }
+  button: buttonOsTheme,
+  input: inputOsTheme,
+  list: listOsTheme
 };
 
 export const tx = <P extends Record<string, any>>(
@@ -40,7 +37,7 @@ export const tx = <P extends Record<string, any>>(
   styleProps: P,
   ...options: any[]
 ): string => {
-  const result: Theme | ComponentFunction<P> = get(theme, path);
+  const result: Theme<P> | ComponentFunction<P> = get(theme, path);
   return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };
 
@@ -50,6 +47,6 @@ export const osTx = <P extends Record<string, any>>(
   styleProps: P,
   ...options: any[]
 ): string => {
-  const result: Theme | ComponentFunction<P> = get(osTheme, path);
+  const result: Theme<P> | ComponentFunction<P> = get(osTheme, path);
   return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
 };
