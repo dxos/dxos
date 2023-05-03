@@ -24,6 +24,7 @@ export type IFrameProxyRuntimeParams = {
  * Manages the client connection to the shared worker.
  */
 export class IFrameProxyRuntime {
+  private readonly _id = String(Math.floor(Math.random() * 1000000));
   private readonly _configProvider: IFrameProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
   private readonly _shellPort?: RpcPort;
@@ -64,18 +65,21 @@ export class IFrameProxyRuntime {
       timeout: 200
     });
 
-    const id = String(Math.floor(Math.random() * 1000000));
-    this._release = new Trigger();
-    const ready = new Trigger();
-    void navigator.locks.request(`${origin}-${id}`, async () => {
-      ready.wake();
-      await this._release.wait();
-    });
+    let lockKey: string | undefined;
+    if (typeof navigator !== 'undefined') {
+      lockKey = this._lockKey(origin);
+      this._release = new Trigger();
+      const ready = new Trigger();
+      void navigator.locks.request(lockKey, async () => {
+        ready.wake();
+        await this._release.wait();
+      });
+      await ready.wait();
+    }
 
     try {
-      await ready.wait();
       await this._systemRpc.open();
-      await this._systemRpc.rpc.WorkerService.start({ origin, id });
+      await this._systemRpc.rpc.WorkerService.start({ origin, lockKey });
     } catch (err) {
       log.catch(err);
       throw new RemoteServiceConnectionError('Failed to connect to worker');
@@ -88,5 +92,9 @@ export class IFrameProxyRuntime {
     await this._shellRuntime?.close();
     await this._systemRpc.rpc.WorkerService.stop();
     await this._systemRpc.close();
+  }
+
+  private _lockKey(origin: string) {
+    return `${origin}-${this._id}`;
   }
 }

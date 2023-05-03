@@ -13,8 +13,8 @@ package dxos.iframe;
 
 message StartRequest {
   string origin = 1;
-  // Unique identifier for a browser tab.
-  string id = 2;
+  /// Key for the iframe resource lock used to determine when the service is closing.
+  optional string lock_key = 2;
 }
 
 /// Iframe-to-worker RPCs.

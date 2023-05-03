@@ -9,7 +9,7 @@ import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { Callback } from '@dxos/util';
+import { Callback, MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
@@ -38,7 +38,7 @@ export class WorkerSession {
   public origin?: string;
 
   @logInfo
-  public id?: string;
+  public lockKey?: string;
 
   public bridgeService?: BridgeService;
 
@@ -83,7 +83,7 @@ export class WorkerSession {
         WorkerService: {
           start: async (request) => {
             this.origin = request.origin;
-            this.id = request.id;
+            this.lockKey = request.lockKey;
             this._startTrigger.wake();
           },
 
@@ -110,11 +110,7 @@ export class WorkerSession {
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
-    void navigator.locks
-      .request(`${this.origin}-${this.id}`, () => {
-        // No-op.
-      })
-      .then(() => this.close());
+    this.lockKey && this._afterLockReleases(this.lockKey, () => this.close());
   }
 
   async close() {
@@ -134,5 +130,13 @@ export class WorkerSession {
     } catch {
       log.info('No shell connected.');
     }
+  }
+
+  private _afterLockReleases(lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
+    return navigator.locks
+      .request(lockKey, () => {
+        // No-op.
+      })
+      .then(callback);
   }
 }
