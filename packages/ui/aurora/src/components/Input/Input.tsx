@@ -1,11 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { Slot } from '@radix-ui/react-slot';
 import React, { useCallback } from 'react';
 
 import { contentElevation, Density, Elevation } from '@dxos/aurora-theme';
-import { MessageValence } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
@@ -13,10 +11,15 @@ import {
   LabelProps as LabelPrimitiveProps,
   Description as DescriptionPrimitive,
   DescriptionProps as DescriptionPrimitiveProps,
-  ErrorMessage as ErrorMessagePrimitive,
-  ErrorMessageProps as ErrorMessagePrimitiveProps,
+  Validation as ValidationPrimitive,
+  ValidationProps as ValidationPrimitiveProps,
+  DescriptionAndValidation as DescriptionAndValidationPrimitive,
+  DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   PinInput as PinInputPrimitive,
-  PinInputProps as PinInputPrimitiveProps
+  PinInputProps as PinInputPrimitiveProps,
+  useInputContext,
+  INPUT_NAME,
+  InputScopedProps
 } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
@@ -32,7 +35,7 @@ type LabelProps = LabelPrimitiveProps & { srOnly?: boolean };
 const Label = ({ srOnly, className, children, ...props }: LabelProps) => {
   const { tx } = useThemeContext();
   return (
-    <LabelPrimitive {...props} className={tx('input.label', 'label', { srOnly }, className)}>
+    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, className)}>
       {children}
     </LabelPrimitive>
   );
@@ -43,54 +46,44 @@ type DescriptionProps = DescriptionPrimitiveProps & { srOnly?: boolean };
 const Description = ({ srOnly, className, children, ...props }: DescriptionProps) => {
   const { tx } = useThemeContext();
   return (
-    <DescriptionPrimitive {...props} className={tx('input.description', 'description', { srOnly }, className)}>
+    <DescriptionPrimitive {...props} className={tx('input.description', 'input__description', { srOnly }, className)}>
       {children}
     </DescriptionPrimitive>
   );
 };
 
-type ErrorMessageProps = ErrorMessagePrimitiveProps & { srOnly?: boolean };
+type ValidationProps = ValidationPrimitiveProps & { srOnly?: boolean };
 
-const ErrorMessage = ({ srOnly, className, children, ...props }: ErrorMessageProps) => {
+const Validation = ({ __inputScope, srOnly, className, children, ...props }: InputScopedProps<ValidationProps>) => {
   const { tx } = useThemeContext();
+  const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
   return (
-    <ErrorMessagePrimitive
+    <ValidationPrimitive
       {...props}
       className={tx(
-        'input.validationMessage',
-        'validation-message validation-message--error',
-        { srOnly, validationValence: 'error' },
+        'input.validation',
+        `input__validation-message input__validation-message--${validationValence}`,
+        { srOnly, validationValence },
         className
       )}
     >
       {children}
-    </ErrorMessagePrimitive>
+    </ValidationPrimitive>
   );
 };
 
-type ValidationMessageProps = ErrorMessagePrimitiveProps & { srOnly?: boolean; validationValence?: MessageValence };
+type DescriptionAndValidationProps = DescriptionAndValidationPrimitiveProps & { srOnly?: boolean };
 
-const ValidationMessage = ({ validationValence, ...props }: ValidationMessageProps) => {
+const DescriptionAndValidation = ({ srOnly, className, children, ...props }: DescriptionAndValidationProps) => {
   const { tx } = useThemeContext();
-  const { srOnly, className, asChild, children, ...otherProps } = props;
-  if (validationValence === 'error') {
-    return <ErrorMessage {...props} />;
-  } else {
-    const Root = asChild ? Slot : 'span';
-    return (
-      <Root
-        {...otherProps}
-        className={tx(
-          'input.validationMessage',
-          `validation-message validation-message--${validationValence}`,
-          { srOnly, validationValence },
-          className
-        )}
-      >
-        {children}
-      </Root>
-    );
-  }
+  return (
+    <DescriptionAndValidationPrimitive
+      {...props}
+      className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, className)}
+    >
+      {children}
+    </DescriptionAndValidationPrimitive>
+  );
 };
 
 type InputVariant = 'default' | 'subdued';
@@ -142,14 +135,14 @@ const PinInput = ({
   );
 };
 
-export { Root, Root as InputRoot, Label, Description, ErrorMessage, ValidationMessage, PinInput };
+export { Root, Root as InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput };
 
 export type {
   RootProps,
   RootProps as InputRootProps,
   LabelProps,
   DescriptionProps,
-  ErrorMessageProps,
-  ValidationMessageProps,
+  ValidationProps,
+  DescriptionAndValidationProps,
   PinInputProps
 };

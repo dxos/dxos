@@ -7,7 +7,14 @@ import React from 'react';
 
 import { MessageValence } from '@dxos/aurora-types';
 
-import { Description, InputRoot, Label, PinInput as NaturalPinInput, ValidationMessage } from './Input';
+import {
+  Description,
+  DescriptionAndValidation,
+  InputRoot,
+  Label,
+  PinInput as NaturalPinInput,
+  Validation
+} from './Input';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -36,14 +43,14 @@ const StoryInput = ({
     <InputRoot {...{ validationValence }}>
       <Label srOnly={labelVisuallyHidden}>{label}</Label>
       {size === 'pin' && <NaturalPinInput {...props} />}
-      <Description srOnly={descriptionVisuallyHidden}>
+      <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
-            <ValidationMessage validationValence={validationValence}>{validationMessage}</ValidationMessage>{' '}
+            <Validation>{validationMessage}</Validation>{' '}
           </>
         )}
-        {description}
-      </Description>
+        <Description>{description}</Description>
+      </DescriptionAndValidation>
     </InputRoot>
   );
 };

@@ -131,7 +131,11 @@ export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, 
   return mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
 };
 
-export const inputValidationMessage: ComponentFunction<InputMetaStyleProps & { validationValence: MessageValence }> = (
+export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(props.srOnly && 'sr-only', ...etc);
+};
+
+export const inputValidation: ComponentFunction<InputMetaStyleProps & { validationValence: MessageValence }> = (
   props,
   ...etc
 ) => {
@@ -143,7 +147,8 @@ export const inputTheme = {
   inputWithSegments: inputWithSegmentsInput,
   label: inputLabel,
   description: inputDescription,
-  validationMessage: inputValidationMessage
+  validation: inputValidation,
+  descriptionAndValidation: inputDescriptionAndValidation
 };
 
 export const inputOsTheme = {
