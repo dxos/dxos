@@ -88,6 +88,9 @@ const test = async () => {
     );
   }
 
+  // NOTE: Sometimes first message is not dropped if it is sent too soon.
+  await sleep(1_000)
+
   //
   // test
   //
