@@ -17,7 +17,7 @@ type TestConfig = {
   servers: number;
   agents: number;
   serversPerAgent: number;
-  topics: PublicKey[];
+  topicCount: number,
   topicsPerAgent: number;
   discoverTimeout: number;
   repeatInterval: number;
@@ -28,15 +28,15 @@ type TestConfig = {
 
 const testConfig: TestConfig = {
   servers: 1,
-  agents: 1000,
+  agents: 200,
   serversPerAgent: 1,
-  topics: [PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random(), PublicKey.random()],
-  topicsPerAgent: 2,
+  topicCount: 100,
+  topicsPerAgent: 1,
   discoverTimeout: 5_000,
   repeatInterval: 0,
   duration: 60_000,
   randomSeed: PublicKey.random().toHex(),
-  type: 'signaling'
+  type: 'discovery'
 };
 
 seedrandom(testConfig.randomSeed, { global: true });
@@ -76,6 +76,8 @@ const test = async () => {
   const stats = new Stats();
   const ctx = new Context();
 
+  const topics = Array.from(range(testConfig.topicCount)).map(() => PublicKey.random());
+
   {
     log.info('Test setup...', testConfig);
 
@@ -103,7 +105,7 @@ const test = async () => {
       switch (testConfig.type) {
         case 'discovery': {
           for (const peer of builder.peers) {
-            for (const topic of randomArraySlice(testConfig.topics, testConfig.topicsPerAgent)) {
+            for (const topic of randomArraySlice(topics, testConfig.topicsPerAgent)) {
               await cancelWithContext(ctx, peer.joinTopic(topic));
             }
           }
@@ -152,11 +154,10 @@ const test = async () => {
   {
     log.info('Short stats', stats.shortStats);
     fs.mkdirSync('./out/results', { recursive: true })
-    fs.writeFileSync(
-      `./out/results/stats${testConfig.randomSeed}.json`,
-      JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2)
-    );
-    log.info('Stats written to file', { fileName: `./out/results/stats${testConfig.randomSeed}.json` })
+    const fileName = `./out/results/stats-${new Date().toISOString()}.json`
+    fs.writeFileSync(fileName, JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2));
+    log.info('Stats written to file', { fileName })
+    console.log(`stats file: ${fileName}`)
   }
 };
 
