@@ -9,7 +9,7 @@ import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { Callback } from '@dxos/util';
+import { Callback, MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
@@ -20,9 +20,6 @@ export type WorkerSessionParams = {
   appPort: RpcPort;
   shellPort: RpcPort;
   readySignal: Trigger<Error | undefined>;
-  options?: {
-    heartbeatInterval: number;
-  };
 };
 
 /**
@@ -34,29 +31,19 @@ export class WorkerSession {
   private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
-  private readonly _options: NonNullable<WorkerSessionParams['options']>;
-  private _heartbeatTimer?: NodeJS.Timeout;
 
   public readonly onClose = new Callback<() => Promise<void>>();
 
   @logInfo
   public origin?: string;
 
+  @logInfo
+  public lockKey?: string;
+
   public bridgeService?: BridgeService;
 
-  constructor({
-    serviceHost,
-    systemPort,
-    appPort,
-    shellPort,
-    readySignal,
-    options = {
-      heartbeatInterval: 1_000
-    }
-  }: WorkerSessionParams) {
-    assert(options);
+  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionParams) {
     assert(serviceHost);
-    this._options = options;
     this._serviceHost = serviceHost;
 
     const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
@@ -96,6 +83,7 @@ export class WorkerSession {
         WorkerService: {
           start: async (request) => {
             this.origin = request.origin;
+            this.lockKey = request.lockKey;
             this._startTrigger.wake();
           },
 
@@ -122,22 +110,7 @@ export class WorkerSession {
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
-
-    // Detect if bridge is present.
-    // TODO(burdon): Add heartbeat to client's System service.
-    //  How do we detect if the client's tab closed?
-    this._heartbeatTimer = setInterval(async () => {
-      try {
-        await this._iframeRpc.rpc.IframeService.heartbeat();
-      } catch (err) {
-        log.warn('Heartbeat failed', { err });
-        try {
-          await this.close();
-        } catch (err: any) {
-          log.catch(err);
-        }
-      }
-    }, this._options.heartbeatInterval);
+    this.lockKey && this._afterLockReleases(this.lockKey, () => this.close());
   }
 
   async close() {
@@ -146,10 +119,6 @@ export class WorkerSession {
       await this.onClose.callIfSet();
     } catch (err: any) {
       log.catch(err);
-    }
-
-    if (this._heartbeatTimer !== undefined) {
-      clearInterval(this._heartbeatTimer);
     }
 
     await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
@@ -161,5 +130,13 @@ export class WorkerSession {
     } catch {
       log.info('No shell connected.');
     }
+  }
+
+  private _afterLockReleases(lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
+    return navigator.locks
+      .request(lockKey, () => {
+        // No-op.
+      })
+      .then(callback);
   }
 }
