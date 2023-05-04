@@ -1,0 +1,126 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { createContext } from '@radix-ui/react-context';
+import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { ComponentPropsWithRef, Dispatch, forwardRef, PropsWithChildren, SetStateAction } from 'react';
+
+import { useMediaQuery } from '@dxos/react-hooks';
+
+import { useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
+
+const MAIN_ROOT_NAME = 'MainRoot';
+const SIDEBAR_NAME = 'Sidebar';
+const MAIN_NAME = 'Main';
+
+type MainContextValue = {
+  sidebarOpen: boolean;
+  setSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
+};
+
+const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
+  sidebarOpen: false,
+  setSidebarOpen: (nextOpen) => {
+    console.warn('Attempt to set sidebar state without initializing `MainRoot`');
+  }
+});
+
+type MainRootProps = PropsWithChildren<{
+  sidebarOpen?: boolean;
+  defaultSidebarOpen?: boolean;
+  onSidebarOpenChange?: (nextOpen: boolean) => void;
+}>;
+
+const MainRoot = ({
+  sidebarOpen: propsSidebarOpen,
+  defaultSidebarOpen,
+  onSidebarOpenChange,
+  children,
+  ...props
+}: MainRootProps) => {
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [sidebarOpen = isLg, setSidebarOpen] = useControllableState<boolean>({
+    prop: propsSidebarOpen,
+    defaultProp: defaultSidebarOpen,
+    onChange: onSidebarOpenChange
+  });
+  return (
+    <MainProvider {...{ ...props, sidebarOpen, setSidebarOpen }}>
+      <DialogRoot open={sidebarOpen} modal={false}>
+        {children}
+      </DialogRoot>
+    </MainProvider>
+  );
+};
+
+MainRoot.displayName = MAIN_ROOT_NAME;
+
+type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>>;
+
+const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, forwardedRef) => {
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const { sidebarOpen } = useMainContext(SIDEBAR_NAME);
+  const { tx } = useThemeContext();
+  return (
+    <DialogContent
+      forceMount
+      onOpenAutoFocus={(event) => isLg && event.preventDefault()}
+      onCloseAutoFocus={(event) => isLg && event.preventDefault()}
+      {...props}
+      className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, className)}
+      ref={forwardedRef}
+    >
+      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+    </DialogContent>
+  );
+});
+
+Sidebar.displayName = SIDEBAR_NAME;
+
+type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
+
+const Main = forwardRef<HTMLDivElement, MainProps>(
+  ({ asChild, className, children, ...props }: MainProps, forwardedRef) => {
+    const [isLg] = useMediaQuery('lg', { ssr: false });
+    const { sidebarOpen } = useMainContext(MAIN_NAME);
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : 'main';
+
+    return (
+      <Root {...props} className={tx('main.content', 'main', { isLg, sidebarOpen }, className)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  }
+);
+
+Main.displayName = MAIN_NAME;
+
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
+
+const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, ...props }, forwardedRef) => {
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const { sidebarOpen, setSidebarOpen } = useMainContext(MAIN_NAME);
+  const { tx } = useThemeContext();
+  return (
+    <div
+      onClick={() => setSidebarOpen(false)}
+      {...props}
+      className={tx('main.overlay', 'main__overlay', { isLg, sidebarOpen }, className)}
+      data-open={sidebarOpen}
+      aria-hidden='true'
+      data-aria-hidden='true'
+      ref={forwardedRef}
+    />
+  );
+});
+
+export { MainRoot, Main, Sidebar, MainOverlay, useMainContext };
+
+export type { MainRootProps, MainProps, SidebarProps, MainOverlayProps };

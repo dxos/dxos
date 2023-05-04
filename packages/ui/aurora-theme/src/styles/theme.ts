@@ -12,15 +12,17 @@ import {
   buttonOsTheme,
   dropdownMenuTheme,
   inputTheme,
-  inputOsTheme
+  inputOsTheme,
+  mainTheme
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
   button: buttonTheme,
-  input: inputTheme,
   dropdownMenu: dropdownMenuTheme,
-  list: listTheme
+  input: inputTheme,
+  list: listTheme,
+  main: mainTheme
 };
 
 export const osTheme: Theme<Record<string, any>> = {
