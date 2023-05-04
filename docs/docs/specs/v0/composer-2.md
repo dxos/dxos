@@ -203,16 +203,21 @@ export const SpacesPlugin: Plugin = {
   },
   provides: {
     graph: {
-      getNodes(parent, context) { // return a GraphNode with label and lazy children
+      getNodes(parent, context) {
+        // return a GraphNode with label and lazy children
         const { client } = context;
         return client.getSpaces().transform((space) => ({
           label: humanize(space.key),
-          children() { return space.query().transform((object) => ({ /* ... */ })) }
+          children() {
+            return space.query().transform((object) => ({
+              /* ... */
+            }));
+          }
         })); // transformed observable
       }
     }
   }
-}
+};
 ```
 
 ## Separation from ECHO
@@ -239,3 +244,91 @@ Others are not binding directly to ECHO objects, but observe other things, e.g.:
 - `HaloButton` binds to nothing (no explicit data context) and invokes the shell when clicked.
 
 n.b.: One could say `HaloButton` binds to a HALO Identity, but that would be the case for an `Avatar` orb component or similar, the `HaloButton` component is parameterless and always calls `useIdentity` internally without requiring data context from the parent, making it trivial to use in any application.
+
+## Appendix - other types
+
+```ts
+type MaybePromise<T> = T | Promise<T>;
+
+type Plugin = {
+  meta: {
+    // serializable, could be stored in a space.
+    id: string;
+    name: string;
+    description: string;
+    icon: string | React.FC; // can be a URL or base64 encoded data: URL?
+  };
+  provides: {
+    graph: {
+      getNodes(parent: GraphNode, context: AppContext): Observable<GraphNode[]>;
+      getActions(parent: GraphNode, context: AppContext): Observable<Action[]>;
+    };
+    components: {
+      [name: string]:
+        | React.FC
+        | ((
+            selection: GraphNode[],
+            context: AppContext
+          ) => MaybePromise<React.FC>);
+    };
+  };
+};
+
+type Effect = (state: AppState) => MaybePromise<AppState>;
+
+// a structure describing how to render an action button in the UI
+// and what internal action object should be dispatched when clicked
+// i.e. the Action needs an icon to display it, when clicked it should
+// tell the store to { type: 'refresh-everything' } which is handled
+// by action handlers in every plugin
+type Action<TStoreAction extends { type: string }> = {
+  id: string;
+  label: string;
+  icon?: React.FC;
+  invoke(state: AppState, context: AppContext): MaybePromise<TStoreAction>;
+};
+
+type GraphNode<TDatum = any> = {
+  id: string;
+  data?: TDatum;
+  label: string;
+  description?: string;
+  icon?: React.FC;
+  loading?: boolean;
+  disabled?: boolean;
+  actions?: Action[];
+  children?: GraphNode[];
+  parent?: GraphNode;
+  labelEditable?: boolean;
+  onLabelChanged?(value: string, context: AppContext): any;
+};
+
+type AppState = {
+  route: string; // the route URL
+  spaceKey: PublicKey; // from router
+  entityId: string; // from router
+  plugins: {
+    TreePlugin: {
+      plugin: Plugin;
+      state: {
+        tree: {
+          selection: GraphNode[];
+          nodes: GraphNode[];
+        };
+      }
+    };
+    SidebarPlugin: {
+      plugin: Plugin;
+      state: {
+        sidebar: {
+          isOpen: boolean; // is the sidebar currently open
+          isPinned: boolean; // whether the sidebar will autohide
+        };
+      }
+    }
+  };
+  plugins: Plugin[]; // all plugins for convenience?
+  client: Client;
+  // etc
+};
+```
