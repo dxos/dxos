@@ -4,6 +4,8 @@
 
 export * from './client';
 export * from './config';
+export * from './iframe-controller';
+export * from './iframe-service-host';
 export * from './iframe-service-proxy';
 export * from './serializer';
 export * from './service-definitions';
