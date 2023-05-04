@@ -71,12 +71,12 @@ type Plugin = {
     icon: string | React.FC; // can be a URL or base64 encoded data: URL?
   };
   provides: {
-    tree: {
-      getTreeNodes(parent: TreeNode): Observable<TreeNode[]>;
-      getTreeNodeActions(parent: TreeNode): Observable<Action[]>;
+    graph: {
+      getNodes(parent: GraphNode): Observable<GraphNode[]>;
+      getActions(parent: GraphNode): Observable<Action[]>;
     };
     content: {
-      getComponent(selection: TreeNode[]): MaybePromise<React.FC>;
+      getComponent(selection: GraphNode[]): MaybePromise<React.FC>;
     };
   };
 };
@@ -90,15 +90,17 @@ type Action = {
   invoke(state: AppState): MaybePromise<Effect | Effect[]>;
 };
 
-type TreeNode<T = any> = {
+type GraphNode<T = any> = {
   id: string;
   data?: T;
   label: string;
+  description?: string;
   icon?: React.FC;
   actions?: Action[];
   loading?: boolean;
   disabled?: boolean;
-  children?: TreeNode[];
+  children?: GraphNode[];
+  // parent?: GraphNode;
   labelEditable?: boolean;
   onLabelChanged?(value: string): any;
 };
@@ -108,8 +110,8 @@ type AppState = {
   searchTerm: string; // any search terms in universal search
   surfaces: {
     tree: {
-      selection: TreeNode[];
-      nodes: TreeNode[];
+      selection: GraphNode[];
+      nodes: GraphNode[];
     };
     sidebar: {
       isOpen: boolean; // is the sidebar currently open
@@ -138,7 +140,7 @@ If a stack of custom components is required, that is just an extension of the st
 
 - how to do paging of large result sets
 - how to detect circular / infinite trees and deal with them
-- how to expand `getTreeNodes` lazily / in a timely manner without losing too much fidelity in the Tree
+- how to expand `getNodes` lazily / in a timely manner without losing too much fidelity in the Tree
 
 #### How Kai relates to this model
 
