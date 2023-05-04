@@ -34,6 +34,7 @@ export type InputStyleProps = Partial<{
 
 export type InputMetaStyleProps = Partial<{
   srOnly: boolean;
+  validationValence: MessageValence;
 }>;
 
 export const neutralInputValence = '';
@@ -138,10 +139,7 @@ export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProp
   return mx(props.srOnly && 'sr-only', ...etc);
 };
 
-export const inputValidation: ComponentFunction<InputMetaStyleProps & { validationValence: MessageValence }> = (
-  props,
-  ...etc
-) => {
+export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
   return mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 };
 
