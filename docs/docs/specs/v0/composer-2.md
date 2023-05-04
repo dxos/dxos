@@ -117,39 +117,57 @@ Below is a diagram illustrating how:
 Below is an example of how the App in the diagram above would be instantiated illustrating how every surface and component comes from a plugin (none are statically defined by the App).
 
 ```tsx
-<App
-  plugins={[
-    new SplitViewPlugin(), // provides SplitView with sidebar, main, tools surfaces
-    new TreePlugin(), // provides Tree and Selection which visualize the graph
-    new SpacesPlugin(), // provides graph nodes that represent ECHO spaces and their contents
-    new StackPlugin(), // provides Stack
-    new ComposerPlugin(), // provides Composer
-    new ImagePlugin(), // provides Image
-    new HaloPlugin(), // provides the HALO button and shell in the tools surface
-    new SearchPlugin() // provides the Search element in the tools surface
-  ]}
-  state={{
-    // initial state with which the application state context will be created
-    // (or amended during a re-render)
-    // e.g.: parsed route and params information from a parent route element goes here
-    spaceKey: PublicKey.parse(routeArgs.spaceKey),
-    entityId: routeArgs.id,
-    // a special area of state declaring the way surfaces are to be given props
-    surfaces: {
-      // the props to be passed to the main surface
-      main: {
-        component: 'SplitViewPlugin.SplitView',
+import { RouteComponentProps, useNavigate } from 'react-router';
+
+<Route path="/:spaceKey/:objectId" element={AppContainer} />;
+
+const AppContainer = (props: RouteComponentProps) => {
+  const { spaceKey, objectId } = props.params;
+  const navigate = useNavigate();
+  return (
+    <App
+      plugins={[
+        new SplitViewPlugin(), // provides SplitView with sidebar, main, tools surfaces
+        new TreePlugin(), // provides Tree and Selection which visualize the graph
+        new SpacesPlugin(), // provides graph nodes that represent ECHO spaces and their contents
+        new StackPlugin(), // provides Stack
+        new ComposerPlugin(), // provides Composer
+        new ImagePlugin(), // provides Image
+        new HaloPlugin(), // provides the HALO button and shell in the tools surface
+        new SearchPlugin() // provides the Search element in the tools surface
+      ]}
+      initialState={{
+        // a special area of state declaring the way surfaces are to be given props
         surfaces: {
-          sidebar: { component: 'TreePlugin.Tree' },
-          tools: {
-            component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search']
-          },
-          main: { component: 'TreePlugin.Selection' }
+          // the props to be passed to the main surface
+          main: {
+            component: 'SplitViewPlugin.SplitView',
+            surfaces: {
+              sidebar: { component: 'TreePlugin.Tree' },
+              tools: {
+                component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search']
+              },
+              main: { component: 'TreePlugin.Selection' }
+            }
+          }
         }
-      }
-    }
-  }}
-/>
+      }}
+      state={{
+        // initial state with which the application state context will be created
+        // (or amended during a re-render)
+        // e.g.: parsed route and params information from a parent route element goes here
+        spaceKey: PublicKey.parse(spaceKey),
+        entityId: objectId
+      }}
+      handlers={{
+        ['selection-changed'](state, action) {
+          const { selection } = action;
+          navigate(constructPath(action.entity));
+        }
+      }}
+    />
+  );
+};
 ```
 
 It should be clear that the entire application structure is constructed based on what is passed in to `state.surfaces` and can therefore be serialized, stored in ECHO, modified by users, or otherwise altered dynamically at runtime.
@@ -200,6 +218,28 @@ export const TreePlugin: Plugin = {
 };
 ```
 
+```tsx
+import { TreeView } from '@dxos/aurora';
+import { useAppContext } from '@dxos/app-framework';
+
+const Tree = () => {
+  const { plugins, dispatch, state } = useAppContext();
+  // obtain graph nodes from all plugins ad-nauseum
+  const nodes: GraphNode[] = [];
+  // grab selection from state
+  const selection = state.TreePlugin.tree.selection;
+  return (
+    <TreeView
+      nodes={nodes}
+      selection={selection}
+      onSelectionChanged={(selection: GraphNode[]) => {
+        dispatch({ type: 'selection-changed', selection });
+      }}
+    />
+  );
+};
+```
+
 ### Spaces Plugin
 
 ```tsx
@@ -227,6 +267,7 @@ export const SpacesPlugin: Plugin = {
   }
 };
 ```
+
 ## Separation from ECHO
 
 ### Non-ECHO graph nodes
@@ -270,6 +311,7 @@ type Plugin = {
     name: string;
     description: string;
     icon: string | React.FC; // can be a URL or base64 encoded data: URL?
+    // dependencies: string[];
   };
   provides: {
     graph: {
@@ -328,7 +370,7 @@ type AppState = {
           selection: GraphNode[];
           nodes: GraphNode[];
         };
-      }
+      };
     };
     SidebarPlugin: {
       plugin: Plugin;
@@ -337,8 +379,8 @@ type AppState = {
           isOpen: boolean; // is the sidebar currently open
           isPinned: boolean; // whether the sidebar will autohide
         };
-      }
-    }
+      };
+    };
   };
   plugins: Plugin[]; // all plugins for convenience?
   client: Client;
