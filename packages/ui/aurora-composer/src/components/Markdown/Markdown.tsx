@@ -19,13 +19,14 @@ import { EditorState } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
-  highlightSpecialChars,
-  drawSelection,
-  highlightActiveLine,
-  dropCursor,
-  rectangularSelection,
   crosshairCursor,
+  drawSelection,
+  dropCursor,
+  highlightActiveLine,
   highlightActiveLineGutter,
+  highlightSpecialChars,
+  placeholder,
+  rectangularSelection,
   EditorView
 } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
@@ -37,8 +38,8 @@ import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';
-import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
+import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
 
 export type MarkdownComposerProps = {
   model?: ComposerModel;
@@ -133,6 +134,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           crosshairCursor(),
           highlightActiveLine(),
           highlightSelectionMatches(),
+          placeholder(slots.editor?.placeholder ?? ''), // TODO(burdon): Needs consistent styling.
           keymap.of([
             ...closeBracketsKeymap,
             ...defaultKeymap,
@@ -145,7 +147,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           EditorView.lineWrapping,
           // Theme
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-          EditorView.theme({ ...markdownDarktheme, ...slots.editor?.markdownTheme }),
+          EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
             : [syntaxHighlighting(defaultHighlightStyle)]),
