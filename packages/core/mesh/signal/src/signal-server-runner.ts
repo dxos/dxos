@@ -18,6 +18,7 @@ interface TestBrokerOptions {
   cwd?: string;
   port?: number;
   timeout?: number;
+  env?: Record<string, string>;
 }
 
 // TODO(burdon): Convert to TestBuilder pattern.
@@ -25,6 +26,7 @@ export class SignalServerRunner {
   private readonly _binCommand: string;
   private readonly _signalArguments: string[];
   private readonly _cwd?: string;
+  private readonly _env: Record<string, string>;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
@@ -32,12 +34,13 @@ export class SignalServerRunner {
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000 }: TestBrokerOptions) {
+  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000, env = {}}: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
     this._cwd = cwd;
     this._port = port;
     this._timeout = timeout;
+    this._env = env;
 
     this._serverProcess = this.startProcess();
   }
@@ -54,7 +57,11 @@ export class SignalServerRunner {
     }
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
-      shell: true
+      shell: true,
+      env: {
+        ...process.env,
+        ...this._env
+      }
     });
 
     server.stdout.on('data', (data) => {

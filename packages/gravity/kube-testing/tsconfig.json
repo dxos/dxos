@@ -8,8 +8,8 @@
       "ESNext"
     ],
     "module": "CommonJS",
-    "target": "esnext",
-    "outDir": "dist"
+    "outDir": "dist",
+    "target": "esnext"
   },
   "exclude": [
     "/node_modules/"
