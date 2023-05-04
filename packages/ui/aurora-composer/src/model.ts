@@ -16,7 +16,7 @@ export type ComposerSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
-    placeholder?: string; // TODO(burdon): Not implemented.
+    placeholder?: string;
     spellCheck?: boolean;
     tabIndex?: number;
     markdownTheme?: Parameters<typeof EditorView.theme>[0];

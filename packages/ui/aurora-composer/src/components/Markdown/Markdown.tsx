@@ -38,8 +38,8 @@ import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';
-import { markdownDarkHighlighting, markdownTheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
+import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
 
 export type MarkdownComposerProps = {
   model?: ComposerModel;
