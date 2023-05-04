@@ -3,26 +3,27 @@
 //
 
 import { CaretRight } from '@phosphor-icons/react';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button } from '@dxos/aurora';
+import { Button, useMainContext } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState } from '@dxos/react-client';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { AppMenu, BotManager, Surface, MetagraphPanel } from '../containers';
 import { Section, useAppRouter, useAppState, useTheme } from '../hooks';
 import { SpaceLoading } from './SpaceLoading';
+
+const SPACE_PANEL_NAME = 'KaiFrameworkSpacePanel';
 
 export const SpacePanel = () => {
   const theme = useTheme();
   const { chat, dev, fullscreen } = useAppState();
   const { space, frame, objectId } = useAppRouter();
   const { section } = useParams();
-  const toggleSidebar = useTogglePanelSidebar();
-  const { displayState } = useContext(PanelSidebarContext);
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SPACE_PANEL_NAME);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const frameRegistry = useFrameRegistry();
   let sidebarFrameDef: FrameDef<any> | undefined;
@@ -38,7 +39,7 @@ export const SpacePanel = () => {
     <div className='flex flex-col bs-full overflow-hidden'>
       {space?.state.get() === SpaceState.READY && (
         <div className={mx('flex shrink-0 h-[40px] p-2 items-center', theme.classes.header)}>
-          {displayState !== 'show' && (
+          {!sidebarOpen && (
             <Button variant='ghost' onClick={toggleSidebar}>
               {<CaretRight className={getSize(6)} />}
             </Button>
@@ -75,3 +76,5 @@ export const SpacePanel = () => {
     </div>
   );
 };
+
+SpacePanel.displayName = SPACE_PANEL_NAME;

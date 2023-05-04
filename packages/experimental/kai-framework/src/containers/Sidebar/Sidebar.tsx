@@ -4,15 +4,14 @@
 
 import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
-import React, { useContext, useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 
-import { Button, DensityProvider } from '@dxos/aurora';
+import { Button, DensityProvider, useMainContext } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { observer, useClient, useKeyStore, useNetworkStatus, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
@@ -41,6 +40,7 @@ export type SidebarProps = {
 
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
+const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
@@ -67,8 +67,8 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // App state
   //
 
-  const toggleSidebar = useTogglePanelSidebar();
-  const { displayState } = useContext(PanelSidebarContext);
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const { swarm: connectionState } = useNetworkStatus();
   const [showSpacePanel, setShowSpacePanel] = useState(false);
 
@@ -171,7 +171,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                 <Info className={getSize(5)} />
               </Button>
               <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
-                {displayState === 'show' && <CaretLeft className={getSize(6)} />}
+                {sidebarOpen && <CaretLeft className={getSize(6)} />}
               </Button>
             </div>
           </div>
@@ -282,6 +282,8 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
     </DensityProvider>
   );
 });
+
+Sidebar.displayName = SIDEBAR_NAME;
 
 // TODO(burdon): Factor out.
 const FrameContent = ({
