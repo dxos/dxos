@@ -41,9 +41,9 @@ const testConfig: TestConfig = {
 
 seedrandom(testConfig.randomSeed, { global: true });
 
-const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: Stats) => {
-  for (const _ of range(testConfig.servers)) {
-    await builder.createServer();
+const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: Stats, outFolder: string) => {
+  for (const num of range(testConfig.servers)) {
+    await builder.createServer(num, outFolder);
   }
 
   for (const _ of range(testConfig.agents)) {
@@ -78,10 +78,13 @@ const test = async () => {
 
   const topics = Array.from(range(testConfig.topicCount)).map(() => PublicKey.random());
 
+  const outFolder = `${process.cwd()}/out/results/${new Date().toISOString()}`
+
   {
     log.info('Test setup...', testConfig);
+    fs.mkdirSync(outFolder, { recursive: true })
 
-    await setupTest(builder, testConfig, stats);
+    await setupTest(builder, testConfig, stats, outFolder);
 
     log.info('Test setup complete');
     log.info(
@@ -153,8 +156,7 @@ const test = async () => {
   //
   {
     log.info('Short stats', stats.shortStats);
-    fs.mkdirSync('./out/results', { recursive: true })
-    const fileName = `./out/results/stats-${new Date().toISOString()}.json`
+    const fileName = `${outFolder}/stats.json`
     fs.writeFileSync(fileName, JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2));
     log.info('Stats written to file', { fileName })
     console.log(`stats file: ${fileName}`)
