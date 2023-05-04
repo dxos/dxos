@@ -35,6 +35,8 @@ export const bold = 'font-bold';
 
 export const code = 'font-mono bg-neutral-500/10 rounded pli-0.5 plb-0.5 -mlb-0.5';
 
+export const placeholder = 'font-mono';
+
 export const codeWithoutMarks = mx(code, 'pli-1.5 mli-0.5');
 
 export const italic = 'italic';
