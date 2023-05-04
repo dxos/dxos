@@ -58,8 +58,6 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
       value,
       defaultValue,
       onChange,
-      validationMessage,
-      validationValence,
       variant,
       elevation,
       density

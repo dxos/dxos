@@ -13,14 +13,7 @@ import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  ComponentProps,
-  ComponentPropsWithoutRef,
-  ComponentPropsWithRef,
-  Dispatch,
-  forwardRef,
-  SetStateAction
-} from 'react';
+import React, { ComponentProps, ComponentPropsWithRef, Dispatch, forwardRef, SetStateAction } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
@@ -64,19 +57,21 @@ type ListItemContextValue = {
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<typeof Primitive.p>, 'id'>> & {
+type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithRef<typeof Primitive.p>, 'id'>> & {
   asChild?: boolean;
 };
 
-const ListItemHeading = ({ children, asChild, __listItemScope, ...props }: ListItemHeadingProps) => {
-  const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-  const Root = asChild ? Slot : Primitive.p;
-  return (
-    <Root {...props} id={headingId}>
-      {children}
-    </Root>
-  );
-};
+const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
+  ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
+    const Root = asChild ? Slot : Primitive.p;
+    return (
+      <Root {...props} id={headingId} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  }
+);
 
 type ListItemDragHandleProps = ComponentPropsWithRef<typeof Primitive.div>;
 
