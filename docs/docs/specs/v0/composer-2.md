@@ -158,6 +158,8 @@ It's possible for the app to enter a mode where the surface-to-component binding
 
 `Tree` is responsible for rendering all `GraphNodes` provided by plugins, and provides a state to the global `AppState` reflecting the currently selected node(s).
 
+In order to populate the `Tree`, plugins are first asked to present their lists of children with no `parent` node. This generates the first level items in the Tree. Then, for each node ad-nauseum, plugins are asked to return more children until the tree reaches a steady state. This allows plugins to add nodes to each other's nodes.
+
 `SpacesPlugin` provides the entire graph in this example, starting with nodes for each ECHO space, followed by subnodes representing queries or specific types, followed by objects of each type.
 
 `Selection` is responsible for sensing what nodes are selected by reading the relevant area in `AppState`, obtaining a reference to the selected `GraphNodes` and the nested ECHO objects they represent, and passing them to a `<Surface />` which knows how to choose the right component to render that ECHO object with.
@@ -167,6 +169,12 @@ It's possible for the app to enter a mode where the surface-to-component binding
 `Stack` components also use `Surfaces` to obtain components from `ComposerPlugin` and `ImagePlugin` which know how to render ECHO objects of type `text` and `image` respectively.
 
 `SearchPlugin` knows how to alter the `surfaces` section of the state such that a different control is presented instead of the `Tree` with flat search results whenever a search term is present in the input box. Alternatively, the `Tree` can equally respond to changes in the search term (global state) and filter itself down accordingly.
+
+Other plugins possible:
+
+1. the **markdown** plugin - which provides a plain text editor `Composer` for the content area and fills the Tree with plain text documents from ECHO
+2. the **filesystem** plugin - which provides import / export to folders on disk
+3. the **github** plugin - which provides nodes representing github issues and assets
 
 ## Example Plugins
 
@@ -219,7 +227,6 @@ export const SpacesPlugin: Plugin = {
   }
 };
 ```
-
 ## Separation from ECHO
 
 ### Non-ECHO graph nodes
@@ -244,6 +251,12 @@ Others are not binding directly to ECHO objects, but observe other things, e.g.:
 - `HaloButton` binds to nothing (no explicit data context) and invokes the shell when clicked.
 
 n.b.: One could say `HaloButton` binds to a HALO Identity, but that would be the case for an `Avatar` orb component or similar, the `HaloButton` component is parameterless and always calls `useIdentity` internally without requiring data context from the parent, making it trivial to use in any application.
+
+## Things to think about:
+
+- how to do paging of large result sets
+- how to detect circular / infinite trees and deal with them
+- how to expand `getNodes` lazily / in a timely manner without losing too much fidelity in the Tree
 
 ## Appendix - other types
 
