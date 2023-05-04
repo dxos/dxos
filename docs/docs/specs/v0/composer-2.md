@@ -3,6 +3,7 @@
 A developer-first, peer-to-peer knowledge management system (KMS).
 
 ## Iteration history
+
 - `zhenya-0` proposed a static (v1) vs dynamic (v2) chrome paradigm.
 - `rich-0` proposed Surfaces, ECHO-bound Frames and embraced the dynamic chrome paradigm, getting ahead of `zhenya-0` in terms of flexibility.
 - `zhenya-1` (this version) embraces Surfaces, is ahead of `rich-0` in terms of flexibility, but behind `rich-0` in terms of dynamic discovery, loading, installation, and isolation of modular code. This version also decouples from ECHO and replaces `Frames` with regular `React.Component`.
@@ -81,7 +82,6 @@ Below is a diagram illustrating how:
 
 ![Composer Structural Diagram](./composer.drawio.svg)
 
-
 ## Stacks
 
 - Stacks are just components which rely on the same `<Surface />` concept to delegate the concrete rendering of stack elements to components provided by plugins.
@@ -120,16 +120,16 @@ Below is an example of how the App in the diagram above would be instantiated il
 <App
   plugins={[
     new SplitViewPlugin(), // provides SplitView with sidebar, main, tools surfaces
-    new TreePlugin(),      // provides Tree and Selection which visualize the graph
-    new SpacesPlugin(),    // provides graph nodes that represent ECHO spaces and their contents
-    new StackPlugin(),     // provides Stack
-    new ComposerPlugin(),  // provides Composer
-    new ImagePlugin(),     // provides Image
-    new HaloPlugin(),      // provides the HALO button and shell in the tools surface
-    new SearchPlugin()     // provides the Search element in the tools surface
+    new TreePlugin(), // provides Tree and Selection which visualize the graph
+    new SpacesPlugin(), // provides graph nodes that represent ECHO spaces and their contents
+    new StackPlugin(), // provides Stack
+    new ComposerPlugin(), // provides Composer
+    new ImagePlugin(), // provides Image
+    new HaloPlugin(), // provides the HALO button and shell in the tools surface
+    new SearchPlugin() // provides the Search element in the tools surface
   ]}
   state={{
-    // initial state with which the application state context will be created 
+    // initial state with which the application state context will be created
     // (or amended during a re-render)
     // e.g.: parsed route and params information from a parent route element goes here
     spaceKey: PublicKey.parse(routeArgs.spaceKey),
@@ -168,11 +168,59 @@ It's possible for the app to enter a mode where the surface-to-component binding
 
 `SearchPlugin` knows how to alter the `surfaces` section of the state such that a different control is presented instead of the `Tree` with flat search results whenever a search term is present in the input box. Alternatively, the `Tree` can equally respond to changes in the search term (global state) and filter itself down accordingly.
 
+## Example Plugins
+
+### Tree Plugin
+
+```tsx
+import { HaloButton } from '@dxos/react-shell';
+import { Tree } from './Tree';
+import { Selection } from './Selection';
+import { Plugin } from '@dxos/app-model';
+
+export const TreePlugin: Plugin = {
+  meta: {
+    id: 'TreePlugin'
+  },
+  provides: {
+    components: {
+      HaloButton,
+      Tree, // uses AppContext.plugins to grab graph nodes from all plugins
+      Selection // uses AppContext.tree.selection to grab ECHO objects in GraphNode.data and <Surface /> them
+    }
+  }
+};
+```
+
+### Spaces Plugin
+
+```tsx
+import { Plugin } from '@dxos/app-model';
+
+export const SpacesPlugin: Plugin = {
+  meta: {
+    id: 'SpacesPlugin'
+  },
+  provides: {
+    graph: {
+      getNodes(parent, context) { // return a GraphNode with label and lazy children
+        const { client } = context;
+        return client.getSpaces().transform((space) => ({
+          label: humanize(space.key),
+          children() { return space.query().transform((object) => ({ /* ... */ })) }
+        })); // transformed observable
+      }
+    }
+  }
+}
+```
+
 ## Separation from ECHO
 
 ### Non-ECHO graph nodes
 
 Graph nodes are not restricted to being ECHO objects. Examples:
+
 - nodes that represent the default surface-to-component bindings and allow users to configure or swap e.g.: the root `SplitView` for something else with the same (or different) surfaces.
 - nodes that represent the filesystem
 - nodes that represent entities in GitHub (which are not also represented in ECHO)
@@ -180,13 +228,14 @@ Graph nodes are not restricted to being ECHO objects. Examples:
 ### Non-Frame components
 
 Some of the components in the example above can be considered `Frames` because they bind directly to ECHO objects. Examples:
-  - Composer
-  - Image
-  - Stack
+
+- Composer
+- Image
+- Stack
 
 Others are not binding directly to ECHO objects, but observe other things, e.g.: only ephemeral elements of `AppState`:
-  - `Search` binds to `AppState.search.term` or similar
-  - `HaloButton` binds to nothing (no explicit data context) and invokes the shell when clicked. 
-  
-n.b.: One could say `HaloButton` binds to a HALO Identity, but that would be the case for an `Avatar` orb component or similar, the `HaloButton` component is parameterless and always calls `useIdentity` internally without requiring data context from the parent, making it trivial to use in any application.
 
+- `Search` binds to `AppState.search.term` or similar
+- `HaloButton` binds to nothing (no explicit data context) and invokes the shell when clicked.
+
+n.b.: One could say `HaloButton` binds to a HALO Identity, but that would be the case for an `Avatar` orb component or similar, the `HaloButton` component is parameterless and always calls `useIdentity` internally without requiring data context from the parent, making it trivial to use in any application.
