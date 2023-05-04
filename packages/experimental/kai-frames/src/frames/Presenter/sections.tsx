@@ -26,9 +26,11 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
     [
       {
         id: Document.type.name,
-        label: 'New slide',
+        label: 'New slide!!!',
         Icon: Article,
-        onAction: (stack, section) => insert(stack, section, new DocumentStack.Section({ object: new Document() }))
+        onAction: (stack, section) => {
+          insert(stack, section, new Document());
+        }
       },
       {
         id: File.type.name,
@@ -66,10 +68,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
   const config = useConfig();
   const identity = useIdentity();
   const { space } = useFrameContext();
-  const object = section.object;
-
-  // TODO(burdon): Handle image.
-  // console.log(object.__typename);
+  const { object } = section;
 
   switch (object.__typename) {
     case Document.type.name: {
@@ -80,6 +79,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
           text={object.content}
           slots={{
             editor: {
+              placeholder: 'Enter text...',
               spellCheck: false // TODO(burdon): Config.
             }
           }}

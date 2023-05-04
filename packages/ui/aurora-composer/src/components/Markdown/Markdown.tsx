@@ -19,13 +19,14 @@ import { EditorState } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
-  highlightSpecialChars,
-  drawSelection,
-  highlightActiveLine,
-  dropCursor,
-  rectangularSelection,
   crosshairCursor,
+  drawSelection,
+  dropCursor,
+  highlightActiveLine,
   highlightActiveLineGutter,
+  highlightSpecialChars,
+  placeholder,
+  rectangularSelection,
   EditorView
 } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
@@ -133,6 +134,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           crosshairCursor(),
           highlightActiveLine(),
           highlightSelectionMatches(),
+          placeholder(slots.editor?.placeholder ?? ''),
           keymap.of([
             ...closeBracketsKeymap,
             ...defaultKeymap,
