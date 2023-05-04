@@ -43,7 +43,7 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 2. Runtime extensibility - for now it's ok to assume all plugins are compiled-in, and later we'll tackle loading and installing them at runtime via ESM.
 3. Dynamic discovery and installation of modular UI components - although the design should not preclude this later once runtime extensibility is complete.
 4. Central registration in DMG - no dynamic discovery and installation means DMG is not required in this design.
-5. Coupling of any part of the composer model to ECHO - ECHO will be just one of the sources of state for the application, and therefore the application model should not marry developers to ECHO.
+5. Coupling of any part of the application model to ECHO - ECHO will be just one of the sources of state for the application, and therefore the application model should not marry developers to ECHO.
 
 ## Definitions
 
@@ -51,10 +51,10 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 - **Component**: A regular react component which can rely on a specific application context while inside the application. Components are free to nest as many Surfaces within them as necessary.
 - **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface accepts a data context, a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. stacking them horizontally or vertically).
 - **Plugin**: A unit of containment, modularization, and distribution of external/modular functionality that can be dynamically installed into an application (at build time, and later at runtime). Plugins provide things like components and other data to the application.
-- **Shell**: The HALO button and generic UI for join and space management flows that appear in popups overtop the main application and hosted in the vault iframe. A subset of the vault UI surface that is restricted to the calling application that saving developers the cost of implementing boilerplate UI flows for space and identity management.
-- **Chrome**: All the UI of an application that is not (but surrounds) the user generated content itself. (e.g.: buttons, toolbars, dividers, drag handles, ... etc.)
+- **Shell**: The HALO button and generic UI for join and space management flows that appear in popups overtop the main application and hosted in the vault iframe. A subset of the vault UI surface that is restricted to the calling application that saves developers the cost of implementing boilerplate UI flows for space and identity management.
+- **Chrome**: All the UI of an application that is not (but surrounds) the user generated content itself. (e.g.: buttons, toolbars, sidebar affordances, dividers, drag handles, ... etc.)
 - **Vault**: HALO universal PWA which stores identity and data
-- **Stack**: A user experience paradigm (component) which enables editing columns of mixed content with arbitrary (extensible) content types. A key feature is the draggability of paragraphs or content items to re-order them.
+- **Stack**: A user experience paradigm (component) which enables editing columns of mixed content with arbitrary (extensible) content types. A key feature is the draggability of stack elements to re-order them.
 
 ## Non-definitions
 
