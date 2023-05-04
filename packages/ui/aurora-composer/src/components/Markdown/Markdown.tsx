@@ -38,7 +38,7 @@ import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';
-import { markdownDarkHighlighting, markdownDarktheme } from './markdownDark';
+import { markdownDarkHighlighting, markdownTheme } from './markdownDark';
 import { markdownTagsExtension } from './markdownTags';
 
 export type MarkdownComposerProps = {
@@ -134,7 +134,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           crosshairCursor(),
           highlightActiveLine(),
           highlightSelectionMatches(),
-          placeholder(slots.editor?.placeholder ?? ''),
+          placeholder(slots.editor?.placeholder ?? ''), // TODO(burdon): Needs consistent styling.
           keymap.of([
             ...closeBracketsKeymap,
             ...defaultKeymap,
@@ -147,7 +147,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           EditorView.lineWrapping,
           // Theme
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [markdownTagsExtension] }),
-          EditorView.theme({ ...markdownDarktheme, ...slots.editor?.markdownTheme }),
+          EditorView.theme({ ...markdownTheme, ...slots.editor?.markdownTheme }),
           ...(themeMode === 'dark'
             ? [syntaxHighlighting(oneDarkHighlightStyle)]
             : [syntaxHighlighting(defaultHighlightStyle)]),

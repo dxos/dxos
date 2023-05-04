@@ -95,11 +95,6 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
             class: italic
           }
         },
-        placeholder: {
-          HTMLAttributes: {
-            class: placeholder
-          }
-        },
         strike: {
           HTMLAttributes: {
             class: strikethrough

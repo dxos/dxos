@@ -26,7 +26,7 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
     [
       {
         id: Document.type.name,
-        label: 'New slide!!!',
+        label: 'New slide',
         Icon: Article,
         onAction: (stack, section) => {
           insert(stack, section, new Document());
@@ -79,7 +79,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
           text={object.content}
           slots={{
             editor: {
-              placeholder: 'Enter text...',
+              placeholder: 'Text...',
               spellCheck: false // TODO(burdon): Config.
             }
           }}
