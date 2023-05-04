@@ -12,6 +12,7 @@ import React, { ComponentPropsWithRef, Dispatch, forwardRef, PropsWithChildren, 
 import { useMediaQuery } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 const MAIN_ROOT_NAME = 'MainRoot';
@@ -60,7 +61,7 @@ const MainRoot = ({
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
-type SidebarProps = ComponentPropsWithRef<typeof DialogContent>;
+type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>>;
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -82,7 +83,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children,
 
 Sidebar.displayName = SIDEBAR_NAME;
 
-type MainProps = ComponentPropsWithRef<typeof Primitive.div> & { asChild?: boolean };
+type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
 
 const Main = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, className, children, ...props }: MainProps, forwardedRef) => {
@@ -101,7 +102,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
 
 Main.displayName = MAIN_NAME;
 
-type MainOverlayProps = Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>;
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });

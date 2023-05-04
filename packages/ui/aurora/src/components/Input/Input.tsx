@@ -3,7 +3,7 @@
 //
 import React, { useCallback } from 'react';
 
-import { Density, Elevation } from '@dxos/aurora-types';
+import { Density, Elevation, ClassNameValue } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
@@ -27,6 +27,7 @@ import {
 } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 
 type RootProps = InputRootProps;
 
@@ -34,7 +35,7 @@ const Root = (props: RootProps) => {
   return <InputRoot {...props} />;
 };
 
-type LabelProps = LabelPrimitiveProps & { srOnly?: boolean };
+type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
 const Label = ({ srOnly, className, children, ...props }: LabelProps) => {
   const { tx } = useThemeContext();
@@ -45,7 +46,7 @@ const Label = ({ srOnly, className, children, ...props }: LabelProps) => {
   );
 };
 
-type DescriptionProps = DescriptionPrimitiveProps & { srOnly?: boolean };
+type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
 const Description = ({ srOnly, className, children, ...props }: DescriptionProps) => {
   const { tx } = useThemeContext();
@@ -56,7 +57,7 @@ const Description = ({ srOnly, className, children, ...props }: DescriptionProps
   );
 };
 
-type ValidationProps = ValidationPrimitiveProps & { srOnly?: boolean };
+type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
 const Validation = ({ __inputScope, srOnly, className, children, ...props }: InputScopedProps<ValidationProps>) => {
   const { tx } = useThemeContext();
@@ -76,7 +77,7 @@ const Validation = ({ __inputScope, srOnly, className, children, ...props }: Inp
   );
 };
 
-type DescriptionAndValidationProps = DescriptionAndValidationPrimitiveProps & { srOnly?: boolean };
+type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = ({ srOnly, className, children, ...props }: DescriptionAndValidationProps) => {
   const { tx } = useThemeContext();
@@ -95,7 +96,10 @@ type InputVariant = 'default' | 'subdued';
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
 type PinInputProps = InputSharedProps &
-  Omit<PinInputPrimitiveProps, 'segmentClassName'> & { segmentClassName?: string };
+  Omit<PinInputPrimitiveProps, 'segmentClassName' | 'inputClassName'> & {
+    segmentClassName?: ClassNameValue;
+    inputClassName?: ClassNameValue;
+  };
 
 const PinInput = ({
   density: propsDensity,
@@ -139,7 +143,7 @@ const PinInput = ({
   );
 };
 
-type TextInputProps = InputSharedProps & TextInputPrimitiveProps;
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
 
 const TextInput = ({
   __inputScope,
@@ -175,7 +179,7 @@ const TextInput = ({
   );
 };
 
-type TextAreaProps = InputSharedProps & TextAreaPrimitiveProps;
+type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = ({
   __inputScope,

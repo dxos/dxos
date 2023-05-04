@@ -25,8 +25,8 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOp
   mx(
     'fixed inset-0 z-30 bg-transparent',
     'transition-opacity duration-200 ease-in-out',
-    sidebarOpen ? 'opacity-100' : 'opacity-0',
-    sidebarOpen ? 'block' : 'hidden',
+    !isLg && sidebarOpen ? 'opacity-100' : 'opacity-0',
+    !isLg && sidebarOpen ? 'block' : 'hidden',
     ...etc
   );
 
