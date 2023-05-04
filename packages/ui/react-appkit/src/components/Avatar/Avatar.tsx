@@ -69,8 +69,8 @@ export const Avatar = forwardRef(
     }: PropsWithChildren<AvatarProps>,
     ref: ForwardedRef<HTMLSpanElement>
   ) => {
-    const labelId = propsLabelId ?? useId('avatarLabel');
-    const descriptionId = propsDescriptionId ?? useId('avatarDescription');
+    const labelId = useId('avatarLabel', propsLabelId);
+    const descriptionId = useId('avatarDescription', propsDescriptionId);
     const maskId = useId('mask');
     const svgId = useId('mask');
     const fallbackSrc = useMemo(
