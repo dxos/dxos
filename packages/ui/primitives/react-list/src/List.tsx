@@ -8,7 +8,7 @@ import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import omit from 'lodash.omit';
-import React, { ComponentPropsWithoutRef, forwardRef, ReactHTMLElement } from 'react';
+import React, { ComponentPropsWithRef, forwardRef, ReactHTMLElement } from 'react';
 
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
@@ -33,8 +33,8 @@ type DraggableListProps = Omit<SharedListProps, 'slots'> & {
 };
 
 type ListProps =
-  | (Omit<ComponentPropsWithoutRef<typeof Primitive.ol>, 'onDragEnd'> & SharedListProps)
-  | (Omit<ComponentPropsWithoutRef<typeof Primitive.ol>, 'onDragEnd'> & DraggableListProps);
+  | (Omit<ComponentPropsWithRef<typeof Primitive.ol>, 'onDragEnd'> & SharedListProps)
+  | (Omit<ComponentPropsWithRef<typeof Primitive.ol>, 'onDragEnd'> & DraggableListProps);
 
 // LIST
 
