@@ -24,24 +24,26 @@ type TreeProps = ListProps;
 
 type TreeItemProps = ListItemProps;
 
-const TreeRoot = (props: TreeProps) => {
-  return <List {...props} />;
-};
-
-type TreeBranchProps = ListScopedProps<TreeProps>;
-
-// todo(thure): Ideally this should not have to be explicitly typed, blocked by https://github.com/microsoft/TypeScript/issues/47663
-const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOListElement, TreeBranchProps>(
-  ({ __listScope, ...props }: TreeBranchProps) => {
-    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
-
-    return <List {...props} aria-labelledby={headingId} />;
+const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListElement, TreeProps>(
+  (props, forwardedRef) => {
+    return <List {...props} ref={forwardedRef} />;
   }
 );
 
-const TreeItem = (props: ListItemProps) => {
-  return <ListItem role='treeitem' {...props} />;
-};
+type TreeBranchProps = ListScopedProps<TreeProps>;
+
+const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOListElement, TreeBranchProps>(
+  ({ __listScope, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
+    return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
+  }
+);
+
+const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
+  (props, forwardedRef) => {
+    return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
+  }
+);
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 
