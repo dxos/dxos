@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, ForwardRefExoticComponent } from 'react';
 
 import {
   List,
@@ -24,20 +24,26 @@ type TreeProps = ListProps;
 
 type TreeItemProps = ListItemProps;
 
-const TreeRoot = forwardRef<HTMLOListElement, TreeProps>((props, forwardedRef) => {
-  return <List {...props} ref={forwardedRef} />;
-});
+const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListElement, TreeProps>(
+  (props, forwardedRef) => {
+    return <List {...props} ref={forwardedRef} />;
+  }
+);
 
 type TreeBranchProps = ListScopedProps<TreeProps>;
 
-const TreeBranch = forwardRef<HTMLOListElement, TreeBranchProps>(({ __listScope, ...props }, forwardedRef) => {
-  const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
-  return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
-});
+const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOListElement, TreeBranchProps>(
+  ({ __listScope, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
+    return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
+  }
+);
 
-const TreeItem = forwardRef<HTMLLIElement, ListItemProps>((props, forwardedRef) => {
-  return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
-});
+const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
+  (props, forwardedRef) => {
+    return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
+  }
+);
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 
