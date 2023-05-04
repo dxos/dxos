@@ -27,6 +27,7 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
