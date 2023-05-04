@@ -17,6 +17,14 @@ import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePan
 
 import '@dxosTheme';
 
+// TODO(burdon): Generic.
+type Action = {
+  type: 'select';
+  source: string;
+  target?: string;
+  data?: any;
+};
+
 /**
  * Manages current state of all surfaces.
  */
@@ -24,6 +32,7 @@ class SurfaceController {
   private readonly components: Record<string, FC> = {};
   readonly state: Record<string, string | undefined> = {};
   readonly update = new Event<string>();
+  readonly action = new Event<Action>();
 
   constructor(components?: Record<string, FC>) {
     Object.entries(components ?? {}).forEach(([id, component]) => this.registerComponent(id, component));
@@ -81,6 +90,12 @@ const Surface = ({ id, element }: SurfaceProps) => {
       {element ?? <SurfaceOutlet />}
     </SurfaceContext.Provider>
   );
+};
+
+const useAction = () => {
+  const { controller } = useContext(SurfaceControllerContext);
+  const { id } = useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext.'));
+  return (action: Partial<Action>) => controller.action.emit({ ...action, source: id } as Action);
 };
 
 /**
@@ -172,10 +187,12 @@ const Info = () => {
 
 const Navigator: FC = () => {
   // TODO(burdon): Decouple router with events.
+  const handler = useAction();
   const navigate = useNavigate();
   const { main, object } = useParams();
   const handleSelect = (component: string | undefined, objectId?: string) => {
     navigate(`/${component ?? ''}` + (objectId ? `/${objectId}` : ''));
+    handler({ type: 'select', data: { component, objectId } });
   };
 
   const tree = [
@@ -278,6 +295,14 @@ const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
+// TODO(burdon): Combination of reducer and router.
+
+type AppState = {
+  navigator?: string;
+  main?: string;
+  objectId?: string;
+};
+
 const Layout = () => {
   // Decouple router.
   const { controller } = useContext(SurfaceControllerContext);
@@ -287,6 +312,17 @@ const Layout = () => {
     controller.setState('sidebar', 'navigator');
     controller.setState('main', main);
   }, [main]);
+  useEffect(
+    () =>
+      controller.action.on((action) => {
+        switch (action.type!) {
+          case 'select': {
+            break;
+          }
+        }
+      }),
+    []
+  );
 
   return (
     <PanelSidebarProvider
