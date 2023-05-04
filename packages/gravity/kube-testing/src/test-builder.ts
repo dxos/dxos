@@ -128,8 +128,8 @@ export class TestBuilder {
     return peer;
   }
 
-  async createServer() {
-    const server = await runSignal();
+  async createServer(num: number, outFolder: string) {
+    const server = await runSignal(num, outFolder);
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);
     return server;

@@ -24,12 +24,17 @@ const BIN_PATH = './cmds/signal-test/main.go';
   }
 }
 
-export const runSignal = async () => {
+export const runSignal = async (num: number, outFolder: string) => {
   const runner = new SignalServerRunner({
     port: randomInt(10000, 20000),
     binCommand: `go run ${BIN_PATH}`,
     signalArguments: ['p2pserver',],
-    cwd: PATH_TO_KUBE_REPO
+    cwd: PATH_TO_KUBE_REPO,
+    env: {
+      'GOLOG_FILE': `${outFolder}/signal-${num}.log`,
+      'GOLOG_OUTPUT':'file',
+      'GOLOG_LOG_FMT':'json',
+    }
   });
   await runner.waitUntilStarted();
   return runner;
