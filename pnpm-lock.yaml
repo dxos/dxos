@@ -4317,7 +4317,10 @@ importers:
       '@dxos/react-list': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-context': ^1.0.0
+      '@radix-ui/react-dialog': ^1.0.3
+      '@radix-ui/react-primitive': ^1.0.2
       '@radix-ui/react-slot': ^1.0.1
+      '@radix-ui/react-use-controllable-state': ^1.0.0
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
@@ -4328,7 +4331,10 @@ importers:
       vite: ^4.3.0
     dependencies:
       '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:

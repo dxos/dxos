@@ -7,13 +7,21 @@ import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import { Button, ThemeProvider } from '@dxos/aurora';
+import {
+  Button,
+  MainRoot,
+  Sidebar as SidebarRoot,
+  Main,
+  ThemeProvider,
+  useMainContext,
+  MainOverlay
+} from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
-import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';
+import { osTranslations } from '@dxos/react-shell';
 
 import '@dxosTheme';
 
@@ -110,8 +118,10 @@ const SurfaceOutlet = () => {
 // App surfaces
 //
 
+const SIDEBAR_SURFACE_NAME = 'KaiFrameworkSidebarSurface';
+
 const SidebarSurface = () => {
-  const toggleSidebar = useTogglePanelSidebar();
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_SURFACE_NAME);
   const { controller } = useContext(SurfaceControllerContext);
 
   return (
@@ -126,7 +136,7 @@ const SidebarSurface = () => {
           </Button>
         </div>
         <div>
-          <Button onClick={toggleSidebar}>
+          <Button onClick={() => setSidebarOpen(!sidebarOpen)}>
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -137,6 +147,8 @@ const SidebarSurface = () => {
     </div>
   );
 };
+
+SidebarSurface.displayName = SIDEBAR_SURFACE_NAME;
 
 const MainSurface = () => {
   return (
@@ -264,15 +276,16 @@ const Component3 = () => (
 // Layout
 //
 
+const PANEL_SIDEBAR_CONTENT_NAME = 'PanelSidebarContent';
+
 const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { displayState } = useContext(PanelSidebarContext);
-  const toggleSidebar = useTogglePanelSidebar();
+  const { sidebarOpen, setSidebarOpen } = useMainContext(PANEL_SIDEBAR_CONTENT_NAME);
   return (
     <div className='flex grow overflow-hidden'>
-      {displayState !== 'show' && (
+      {sidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button onClick={toggleSidebar}>
+            <Button onClick={() => setSidebarOpen(!sidebarOpen)}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -282,6 +295,8 @@ const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
     </div>
   );
 };
+
+PanelSidebarContent.displayName = PANEL_SIDEBAR_CONTENT_NAME;
 
 const Layout = () => {
   // Decouple router.
@@ -294,20 +309,18 @@ const Layout = () => {
   }, [main]);
 
   return (
-    <PanelSidebarProvider
-      inlineStart
-      slots={{
-        main: { className: 'flex grow overflow-hidden' },
-        content: {
-          children: <Surface id='sidebar' element={<SidebarSurface />} />
-        }
-      }}
-    >
-      <PanelSidebarContent>
-        <Surface id='main' element={<MainSurface />} />
-        <Surface id='debug' />
-      </PanelSidebarContent>
-    </PanelSidebarProvider>
+    <MainRoot>
+      <MainOverlay />
+      <SidebarRoot>
+        <Surface id='sidebar' element={<SidebarSurface />} />
+      </SidebarRoot>
+      <Main asChild>
+        <PanelSidebarContent>
+          <Surface id='main' element={<MainSurface />} />
+          <Surface id='debug' />
+        </PanelSidebarContent>
+      </Main>
+    </MainRoot>
   );
 };
 

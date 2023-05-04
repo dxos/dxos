@@ -3,7 +3,7 @@
 //
 
 import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-icons/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -13,12 +13,13 @@ import {
   ThemeContext,
   useId,
   useThemeContext,
-  useTranslation
+  useTranslation,
+  useMainContext
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useShell } from '@dxos/react-shell';
+import { useShell } from '@dxos/react-shell';
 
 import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
@@ -48,12 +49,14 @@ const DocumentTree = observer(() => {
   );
 });
 
+const SIDEBAR_CONTENT_NAME = 'SidebarContent';
+
 const SidebarContent = () => {
   const client = useClient();
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
@@ -142,7 +145,7 @@ const SidebarContent = () => {
                 <Button
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
-                  onClick={() => setDisplayState(displayState === 'show' ? 'hide' : 'show')}
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
                   className='pli-1'
                 >
                   <ArrowLineLeft className={getSize(4)} />
@@ -182,13 +185,16 @@ const SidebarContent = () => {
   );
 };
 
+SidebarContent.displayName = SIDEBAR_CONTENT_NAME;
+
+const SIDEBAR_TOGGLE_NAME = 'SidebarToggle';
+
 const SidebarToggle = () => {
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_TOGGLE_NAME);
   const { t } = useTranslation('os');
-  const open = displayState === 'show';
   const themeContext = useThemeContext();
   const button = (
-    <Button data-testid='composer.toggleSidebar' onClick={() => setDisplayState('show')} className='p-0 is-[40px]'>
+    <Button data-testid='composer.toggleSidebar' onClick={() => setSidebarOpen(true)} className='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
@@ -198,10 +204,10 @@ const SidebarToggle = () => {
         role='none'
         className={mx(
           'fixed block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200',
-          open ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
+          sidebarOpen ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
         )}
       >
-        {open ? (
+        {sidebarOpen ? (
           button
         ) : (
           <Tooltip content={t('open sidebar label')} tooltipLabelsTrigger side='right'>
@@ -212,5 +218,7 @@ const SidebarToggle = () => {
     </ThemeContext.Provider>
   );
 };
+
+SidebarToggle.displayName = SIDEBAR_TOGGLE_NAME;
 
 export { SidebarContent, SidebarToggle };

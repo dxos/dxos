@@ -5,12 +5,12 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { contentElevation, defaultOsButtonColors, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation, MainRoot, Main, Sidebar, MainOverlay } from '@dxos/aurora';
+import { defaultOsButtonColors } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
-import { PanelSidebarProvider, ShellProvider, useShell } from '@dxos/react-shell';
+import { ShellProvider, useShell } from '@dxos/react-shell';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
 import { namespace, abbreviateKey, getPath } from '../../router';
@@ -66,24 +66,22 @@ export const DocumentLayout = () => {
     >
       {/* TODO(burdon): Probably shouldn't introduce Octokit dep this high up. */}
       <OctokitProvider>
-        <PanelSidebarProvider
-          slots={{
-            content: {
-              children: <SidebarContent />,
-              className: mx(
-                defaultOsButtonColors,
-                contentElevation({ elevation: 'chrome' }),
-                'backdrop-blur overflow-visible'
-              ),
+        <MainRoot>
+          <MainOverlay />
+          <Sidebar
+            {...{
+              className: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
               onOpenAutoFocus: (event) => event.preventDefault(),
               onCloseAutoFocus: (event) => event.preventDefault()
-            },
-            main: { role: 'main', className: 'min-bs-full' }
-          }}
-        >
-          <Outlet context={{ space }} />
-          <SidebarToggle />
-        </PanelSidebarProvider>
+            }}
+          >
+            <SidebarContent />
+          </Sidebar>
+          <Main className='min-bs-full'>
+            <Outlet context={{ space }} />
+            <SidebarToggle />
+          </Main>
+        </MainRoot>
       </OctokitProvider>
       {space &&
         invitations.map((invitation) => {
