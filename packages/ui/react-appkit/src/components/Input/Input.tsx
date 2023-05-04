@@ -77,14 +77,18 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
     return (
       <div role='none' className={slots.root?.className}>
         <InputRoot {...{ validationValence, id }}>
-          <Label {...slots?.label}>{label}</Label>
+          <Label {...slots?.label} srOnly={labelVisuallyHidden}>
+            {label}
+          </Label>
           {bareInput}
           {(description || validationMessage) && (
             <DescriptionAndValidation className={slots.description?.className}>
               {validationMessage && (
                 <Validation className={slots.validation?.className}>{validationMessage} </Validation>
               )}
-              <Description className={slots.description?.className}>{description}</Description>
+              <Description srOnly={descriptionVisuallyHidden} className={slots.description?.className}>
+                {description}
+              </Description>
             </DescriptionAndValidation>
           )}
         </InputRoot>

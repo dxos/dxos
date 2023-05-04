@@ -60,7 +60,7 @@ export const inputValence = (valence?: MessageValence) => {
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => {
   return [
-    'bg-transparent text-current',
+    'is-full bg-transparent text-current',
     props.density === 'fine' ? fineBlockSize : coarseBlockSize,
     defaultPlaceholder,
     subduedFocus,
@@ -70,7 +70,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => {
   return [
-    'text-neutral-900 dark:text-white',
+    'is-full text-neutral-900 dark:text-white',
     defaultPlaceholder,
     props.density === 'fine' ? defaultFine : defaultCoarse,
     props.disabled && defaultDisabled
