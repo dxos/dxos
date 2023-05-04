@@ -2,6 +2,11 @@
 
 A developer-first, peer-to-peer knowledge management system (KMS).
 
+## Iteration history
+- `zhenya-0` proposed a static (v1) vs dynamic (v2) chrome paradigm.
+- `rich-0` proposed Surfaces, ECHO-bound Frames and embraced the dynamic chrome paradigm, getting ahead of `zhenya-0` in terms of flexibility.
+- `zhenya-1` (this version) embraces Surfaces, is ahead of `rich-0` in terms of flexibility, but behind `rich-0` in terms of dynamic discovery, loading, installation, and isolation of modular code. This version also decouples from ECHO and replaces `Frames` with regular `React.Component`.
+
 ## Scenarios
 
 #### Composer scenarios (production)
@@ -30,7 +35,7 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 
 1. To provide developers with full control over the interface of their KMS
 2. To make it possible for Kai and Composer to share a common application framework
-3. To make Composer a easier-to-ship subset of all of Kai's scenarios
+3. To make Composer an easier-to-ship subset of all of Kai's scenarios
 
 ## Non goals
 
@@ -38,13 +43,13 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 2. Runtime extensibility - for now it's ok to assume all plugins are compiled-in, and later we'll tackle loading and installing them at runtime via ESM.
 3. Dynamic discovery and installation of modular UI components - although the design should not preclude this later once runtime extensibility is complete.
 4. Central registration in DMG - no dynamic discovery and installation means DMG is not required in this design.
-5. Coupling of any part of the composer model to ECHO - ECHO will be just one of the sources of state for the application, and therefore the application model does not need to and should not marry developers to ECHO as much as possible.
+5. Coupling of any part of the composer model to ECHO - ECHO will be just one of the sources of state for the application, and therefore the application model should not marry developers to ECHO.
 
 ## Definitions
 
-- **Application**: An application built with this composer framework which can use Surfaces to render components "dynamically" and provides a specific context to all nested components.
+- **Application**: An application built with this framework which can use Surfaces to render components "dynamically" and provides a specific context to all nested components allowing them to access `application state` and list of `loaded plugins`.
 - **Component**: A regular react component which can rely on a specific application context while inside the application. Components are free to nest as many Surfaces within them as necessary.
-- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface accepts a data context, a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface.
+- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface accepts a data context, a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. stacking them horizontally or vertically).
 - **Plugin**: A unit of containment, modularization, and distribution of external/modular functionality that can be dynamically installed into an application (at build time, and later at runtime). Plugins provide things like components and other data to the application.
 - **Shell**: The HALO button and generic UI for join and space management flows that appear in popups overtop the main application and hosted in the vault iframe. A subset of the vault UI surface that is restricted to the calling application that saving developers the cost of implementing boilerplate UI flows for space and identity management.
 - **Chrome**: All the UI of an application that is not (but surrounds) the user generated content itself. (e.g.: buttons, toolbars, dividers, drag handles, ... etc.)
@@ -55,13 +60,27 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 
 - **Frames**: are not defined because explicit coupling to ECHO is a non-goal, and without that Frames are just regular React Components which can assume certain contexts or props within this application framework. React Components or Components are used in place of Frames from prior art.
 
+## Out of scope
+
+- Distribution (or registration) of Components separately from Plugins. Plugins are the only unit of registration and distribution and contain / provide a list of Components to the host application. To identify a component globally, a string containing the identity of the plugin _and_ the component must be used.
+
 ## Applications are made of Surfaces and Components
 
 - The application is a component `<App />`.
 - A component can have any number of `<Surface />` as children inside it.
 - A Surface figures out what Component(s) to render given a set of `loaded plugins`, a `data context`, and `other control props`. It can be understood as the the developer intention to render/visualize the given `data context` (datum) using whatever appropriate component as provided by Plugins and configured by the the end user and/or the developer.
 - The main `<App />` component defines a single, full-screen `<Surface />` for rendering "anything". i.e.: does not opine about what it is, delegates that to plugins and initial configuration entirely.
-- The main `<App />` component also wraps the surface with a Context provider representing the total and entire state of the application which becomes available through a hook to any nested component.
+- The main `<App />` component also wraps the main `Surface` with an `AppContext` provider representing the total and entire state of the application which becomes available through a hook to any nested component.
+
+## Example Structure
+
+Below is a diagram illustrating how:
+
+- a full application is built up to handle a `Stack` of `Composer` and `Image`
+- `Surfaces` are the only element of abstraction necessary to both compose the entire application chrome and implement the abstract portion of `Stack`.
+
+![Composer Structural Diagram](./composer.drawio.svg)
+
 
 ## Stacks
 
@@ -93,16 +112,9 @@ A developer-first, peer-to-peer knowledge management system (KMS).
 - Plugins can provide action handlers such as `plugin.handlers.[<action-type>](state, action): { state, effects }` and can react to actions coming from other plugins this way.
 - Plugins may provide any number of other data types and APIs which are specific to certain components which may be present in the Application tree at runtime. If a certain component does not exist, then it will not ask for the relevant `provides` from plugins, and they will therefore be inert. (i.e. Plugins provide a `graph` which can be consumed by any number of UI components including the `Tree` which itself is provided by the `TreePlugin` and may represent the entire and total graph built up by all the plugins loaded).
 
-## Structural Diagram
+## Example
 
-Below is a diagram illustrating:
-
-- a full application is built up to handle a `Stack` of `Composer` and `Image`
-- `Surfaces` are the only element of abstraction necessary to both compose the entire application chrome and implement the abstract portion of `Stack`.
-
-![Composer Structural Diagram](./composer.drawio.svg)
-
-Below is an example of how this App would be instantiated illustrating how every surface and component comes from a plugin (none are statically defined by the App).
+Below is an example of how the App in the diagram above would be instantiated illustrating how every surface and component comes from a plugin (none are statically defined by the App).
 
 ```tsx
 <App
