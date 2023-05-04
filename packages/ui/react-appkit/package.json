@@ -69,7 +69,6 @@
     "lodash.merge": "^4.6.2",
     "lodash.throttle": "^4.1.1",
     "qrcode.react": "^3.1.0",
-    "rci": "^0.0.3",
     "url-join": "^5.0.0"
   },
   "devDependencies": {

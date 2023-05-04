@@ -3,20 +3,76 @@
 //
 
 import '@dxosTheme';
+import React from 'react';
 
-import { Input } from './Input';
+import { MessageValence } from '@dxos/aurora-types';
+
+import {
+  Description,
+  DescriptionAndValidation,
+  InputRoot,
+  Label,
+  PinInput as NaturalPinInput,
+  TextInput as NaturalTextInput,
+  TextArea as NaturalTextArea,
+  Validation
+} from './Input';
+
+type StoryInputProps = Partial<{
+  label: string;
+  placeholder: string;
+  disabled: boolean;
+  description: string;
+  labelVisuallyHidden: boolean;
+  descriptionVisuallyHidden: boolean;
+  size: 'default' | 'pin' | 'textarea';
+  validationMessage: string;
+  validationValence: MessageValence;
+}>;
+
+const StoryInput = ({
+  size = 'default',
+  label,
+  description,
+  labelVisuallyHidden,
+  descriptionVisuallyHidden,
+  validationValence,
+  validationMessage,
+  ...props
+}: StoryInputProps) => {
+  // TODO(thure): Implement
+  return (
+    <InputRoot {...{ validationValence }}>
+      <Label srOnly={labelVisuallyHidden}>{label}</Label>
+      {size === 'pin' && <NaturalPinInput {...props} />}
+      {size === 'textarea' && <NaturalTextArea {...props} />}
+      {size === 'default' && <NaturalTextInput {...props} />}
+      <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
+        {validationMessage && (
+          <>
+            <Validation>{validationMessage}</Validation>{' '}
+          </>
+        )}
+        <Description>{description}</Description>
+      </DescriptionAndValidation>
+    </InputRoot>
+  );
+};
 
 export default {
-  component: Input,
+  component: StoryInput,
+  // TODO(thure): Refactor
   argTypes: {
+    label: { control: 'text' },
     description: { control: 'text' },
+    validationMessage: { control: 'text' },
     validationValence: {
       control: 'select',
       options: ['success', 'info', 'warning', 'error']
     },
     size: {
       control: 'select',
-      options: ['md', 'lg', 'pin']
+      options: ['default', 'textarea', 'pin']
     }
   }
 };
@@ -106,6 +162,15 @@ export const InputWithValidationAndDescription = {
     description: 'This description is extra.',
     validationValence: 'success',
     validationMessage: 'This validation message is really part of the description.'
+  }
+};
+
+export const TextArea = {
+  args: {
+    label: 'This input is a text area input',
+    size: 'textarea',
+    description: 'Type a long paragraph',
+    placeholder: 'Lorem ipsum dolor sit amet'
   }
 };
 
