@@ -14,6 +14,7 @@ import {
   Label,
   PinInput as NaturalPinInput,
   TextInput as NaturalTextInput,
+  TextArea as NaturalTextArea,
   Validation
 } from './Input';
 
@@ -24,13 +25,13 @@ type StoryInputProps = Partial<{
   description: string;
   labelVisuallyHidden: boolean;
   descriptionVisuallyHidden: boolean;
-  size: 'pin';
+  size: 'default' | 'pin' | 'textarea';
   validationMessage: string;
   validationValence: MessageValence;
 }>;
 
 const StoryInput = ({
-  size,
+  size = 'default',
   label,
   description,
   labelVisuallyHidden,
@@ -44,7 +45,8 @@ const StoryInput = ({
     <InputRoot {...{ validationValence }}>
       <Label srOnly={labelVisuallyHidden}>{label}</Label>
       {size === 'pin' && <NaturalPinInput {...props} />}
-      {size !== 'pin' && <NaturalTextInput {...props} />}
+      {size === 'textarea' && <NaturalTextArea {...props} />}
+      {size === 'default' && <NaturalTextInput {...props} />}
       <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
@@ -70,7 +72,7 @@ export default {
     },
     size: {
       control: 'select',
-      options: ['md', 'lg', 'pin']
+      options: ['default', 'textarea', 'pin']
     }
   }
 };
@@ -160,6 +162,15 @@ export const InputWithValidationAndDescription = {
     description: 'This description is extra.',
     validationValence: 'success',
     validationMessage: 'This validation message is really part of the description.'
+  }
+};
+
+export const TextArea = {
+  args: {
+    label: 'This input is a text area input',
+    size: 'textarea',
+    description: 'Type a long paragraph',
+    placeholder: 'Lorem ipsum dolor sit amet'
   }
 };
 

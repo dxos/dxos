@@ -19,6 +19,8 @@ import {
   PinInputProps as PinInputPrimitiveProps,
   TextInput as TextInputPrimitive,
   TextInputProps as TextInputPrimitiveProps,
+  TextArea as TextAreaPrimitive,
+  TextAreaProps as TextAreaPrimitiveProps,
   useInputContext,
   INPUT_NAME,
   InputScopedProps
@@ -158,7 +160,7 @@ const TextInput = ({
       {...props}
       className={tx(
         'input.input',
-        'input--pin-segment',
+        'input',
         {
           variant,
           disabled: props.disabled,
@@ -173,7 +175,53 @@ const TextInput = ({
   );
 };
 
-export { Root, Root as InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput, TextInput };
+type TextAreaProps = InputSharedProps & TextAreaPrimitiveProps;
+
+const TextArea = ({
+  __inputScope,
+  className,
+  density: propsDensity,
+  elevation: propsElevation,
+  variant,
+  ...props
+}: InputScopedProps<TextAreaProps>) => {
+  const { hasIosKeyboard } = useThemeContext();
+  const { tx } = useThemeContext();
+  const density = useDensityContext(propsDensity);
+  const { elevation } = useElevationContext();
+  const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+  return (
+    <TextAreaPrimitive
+      {...props}
+      className={tx(
+        'input.input',
+        'input--text-area',
+        {
+          variant,
+          disabled: props.disabled,
+          density,
+          elevation: propsElevation ?? elevation,
+          validationValence
+        },
+        className
+      )}
+      {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+    />
+  );
+};
+
+export {
+  Root,
+  Root as InputRoot,
+  Label,
+  Description,
+  Validation,
+  DescriptionAndValidation,
+  PinInput,
+  TextInput,
+  TextArea
+};
 
 export type {
   RootProps,
@@ -183,5 +231,6 @@ export type {
   ValidationProps,
   DescriptionAndValidationProps,
   PinInputProps,
-  TextInputProps
+  TextInputProps,
+  TextAreaProps
 };

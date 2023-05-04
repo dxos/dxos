@@ -92,7 +92,7 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
     : props.variant === 'static'
     ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
     : mx(
-        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
+        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 border-transparent',
         !props.disabled && defaultFocus,
         !props.disabled && defaultHover,
         inputValence(props.validationValence) || neutralInputValence,

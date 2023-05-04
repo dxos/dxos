@@ -7,3 +7,4 @@ export * from './Root';
 
 export * from './PinInput';
 export * from './TextInput';
+export * from './TextArea';
