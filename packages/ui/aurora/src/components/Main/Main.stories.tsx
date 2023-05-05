@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Button';
@@ -16,7 +17,7 @@ const SidebarToggle = () => {
 
 const StoryMain = (_args: StoryMainArgs) => {
   return (
-    <MainRoot>
+    <MainRoot defaultSidebarOpen>
       <MainOverlay />
       <Sidebar>
         <p>Sidebar content, hi!</p>
