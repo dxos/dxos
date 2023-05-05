@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Config } from '@dxos/config';
 import { ApiError } from '@dxos/errors';
-import { iosCheck } from '@dxos/util';
+import { safariCheck } from '@dxos/util';
 
 import { IFrameClientServicesHost } from './iframe-service-host';
 import { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
@@ -28,10 +28,10 @@ export const fromIFrame = (
 
   const source = config.get('runtime.client.remoteSource');
 
-  if (!iosCheck()) {
+  if (!safariCheck()) {
     return new IFrameClientServicesProxy({ source, ...options });
   }
 
-  assert(host, 'Host is required for iOS');
+  assert(host, 'Host is required for Safari');
   return new IFrameClientServicesHost({ host: host(config), source, vault: options.vault, timeout: options.timeout });
 };

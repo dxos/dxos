@@ -19,7 +19,7 @@ import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
 import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
-import { iosCheck } from '@dxos/util';
+import { safariCheck } from '@dxos/util';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');
@@ -70,7 +70,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     }
   });
 
-  if (iosCheck()) {
+  if (safariCheck()) {
     log.info('Running DXOS shell from app client.');
     const origin = (window as any).__DXOS_APP_ORIGIN__;
     window.parent.postMessage({ channel: DEFAULT_INTERNAL_CHANNEL, payload: 'client' }, origin);
