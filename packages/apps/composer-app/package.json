@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/composer-app",
+  "name": "@braneframe/composer-app",
   "version": "0.1.41",
   "private": true,
   "description": "DXOS composer application.",
@@ -8,16 +8,13 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
@@ -39,7 +36,6 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@octokit/openapi-types": "^16.0.0",
     "@remix-run/router": "^1.0.2",

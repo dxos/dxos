@@ -131,16 +131,6 @@ message Kanban {
   string column_type = 2;
 }
 
-message Document {
-  option (object) = true;
-
-  string title = 1;
-  // TODO(wittjosiah): Annotate as rich text.
-  dxos.schema.Text content = 2;
-  // repeated string tags = 2;
-  string tag = 3;
-}
-
 // TODO(burdon): How to model grounding? Scope/vector, etc?
 message Dialogue {
   option (object) = true;

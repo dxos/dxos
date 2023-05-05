@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
-import { Document } from '@dxos/kai-types';
 import { Input } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
