@@ -24,10 +24,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../sdk/config"
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/react-shell"
@@ -39,7 +36,13 @@
       "path": "../../ui/aurora-theme"
     },
     {
+      "path": "../../ui/aurora-theme"
+    },
+    {
       "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../kai-frames"
     }
   ],
   "ts-node": {

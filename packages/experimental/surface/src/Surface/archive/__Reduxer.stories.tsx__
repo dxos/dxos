@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+/*
 import React, { createContext, PropsWithChildren, Reducer, useContext, useEffect, useMemo, useReducer } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -68,3 +69,4 @@ const App = () => {
     </ControllerProvider>
   );
 };
+*/

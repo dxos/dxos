@@ -393,6 +393,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/surface/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-agent/package.json",
           "jsonpath": "$.version"
         },
