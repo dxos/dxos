@@ -25,7 +25,6 @@ export type IFrameClientServicesHostOptions = {
 
 export class IFrameClientServicesHost implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
-  private _spaceProvider?: Provider<PublicKey | undefined>;
   private _iframeController!: IFrameController;
   private _shellController!: ShellController;
   private readonly _host: ClientServicesProvider;
@@ -62,7 +61,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   }
 
   setSpaceProvider(provider: Provider<PublicKey | undefined>) {
-    this._spaceProvider = provider;
+    this._shellController.setSpaceProvider(provider);
   }
 
   async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
@@ -120,7 +119,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
         }
       }
     });
-    this._shellController = new ShellController(this._iframeController, this.joinedSpace, this._spaceProvider);
+    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
     await this._shellController.open();
   }
 

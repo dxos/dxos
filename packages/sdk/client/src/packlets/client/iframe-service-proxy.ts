@@ -46,7 +46,6 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   private _loggingStream?: Stream<LogEntry>;
   private _iframeController!: IFrameController;
   private _shellController?: ShellController;
-  private _spaceProvider?: Provider<PublicKey | undefined>;
   private readonly _source: string;
   private readonly _shell: string | boolean;
   private readonly _vault: string;
@@ -93,7 +92,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   setSpaceProvider(provider: Provider<PublicKey | undefined>) {
-    this._spaceProvider = provider;
+    this._shellController?.setSpaceProvider(provider);
   }
 
   async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
@@ -179,7 +178,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    this._shellController = new ShellController(this._iframeController, this.joinedSpace, this._spaceProvider);
+    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
     await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.
