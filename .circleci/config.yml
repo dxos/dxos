@@ -102,6 +102,7 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1

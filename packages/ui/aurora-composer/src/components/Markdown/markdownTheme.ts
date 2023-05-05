@@ -29,7 +29,7 @@ export const cursor = '#ffffff';
 
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
-export const markdownDarktheme = {
+export const markdownTheme = {
   // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated
   // '&': {
   //   color: ivory,
@@ -67,6 +67,7 @@ export const markdownDarktheme = {
   //   border: 'none',
   //   color: '#ddd'
   // },
+
   '.cm-tooltip': {
     border: 'none',
     backgroundColor: tooltipBackground
@@ -114,6 +115,9 @@ export const markdownDarktheme = {
   },
   '.dark & .cm-cursor': {
     borderLeftColor: cursor
+  },
+  '.cm-placeholder': {
+    fontFamily: get(tokens, 'fontFamily.body', []).join(',')
   },
   '& .cm-scroller': {
     fontFamily: get(tokens, 'fontFamily.mono', []).join(',')

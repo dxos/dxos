@@ -14,7 +14,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import type { IframeService, AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
+import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 
@@ -68,12 +68,10 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 });
 
 export type IframeServiceBundle = {
-  IframeService: IframeService;
   BridgeService: BridgeService;
 };
 
 export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
-  IframeService: schema.getService('dxos.iframe.IframeService'),
   BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
 };
 

@@ -150,7 +150,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       .getSwarm(topic)
       ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
+    const peerLeft = peer2._signalManager.swarmEvent.waitFor(
       (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
     );
 

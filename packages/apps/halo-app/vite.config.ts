@@ -6,7 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
@@ -24,7 +24,14 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
   build: {
     sourcemap: true,
@@ -58,7 +65,8 @@ export default defineConfig({
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
@@ -81,16 +89,16 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'halo-app',
-            include: './out/halo',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : []),
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'halo-app',
+      sourcemaps: {
+        assets: './packages/apps/halo-app/out/halo/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: !process.env.CI
+    }),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, MessageValence, Theme } from '@dxos/aurora-types';
+import { ComponentFragment, ComponentFunction, Density, Elevation, MessageValence } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -17,7 +17,10 @@ import {
   subduedFocus,
   fineBlockSize,
   coarseBlockSize,
-  staticFocus
+  staticFocus,
+  defaultDescription,
+  valenceColorText,
+  contentElevation
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -25,6 +28,12 @@ export type InputStyleProps = Partial<{
   disabled: boolean;
   focused: boolean;
   density: Density;
+  elevation: Elevation;
+  validationValence: MessageValence;
+}>;
+
+export type InputMetaStyleProps = Partial<{
+  srOnly: boolean;
   validationValence: MessageValence;
 }>;
 
@@ -51,7 +60,7 @@ export const inputValence = (valence?: MessageValence) => {
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => {
   return [
-    'bg-transparent text-current',
+    'is-full bg-transparent text-current',
     props.density === 'fine' ? fineBlockSize : coarseBlockSize,
     defaultPlaceholder,
     subduedFocus,
@@ -61,7 +70,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => {
   return [
-    'text-neutral-900 dark:text-white',
+    'is-full text-neutral-900 dark:text-white',
     defaultPlaceholder,
     props.density === 'fine' ? defaultFine : defaultCoarse,
     props.disabled && defaultDisabled
@@ -82,12 +91,13 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
   return props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), ...etc)
+    ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
     : mx(
-        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
+        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 border-transparent',
         !props.disabled && defaultFocus,
         !props.disabled && defaultHover,
         inputValence(props.validationValence) || neutralInputValence,
+        !props.disabled && contentElevation(props),
         ...sharedDefaultInputStyles(props),
         ...etc
       );
@@ -104,15 +114,45 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) 
         !props.disabled && osHover,
         inputValence(props.validationValence) ||
           'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent',
-        sharedDefaultInputStyles(props),
+        ...sharedDefaultInputStyles(props),
         ...etc
       );
 };
 
-export const inputTheme: Theme<InputStyleProps> = {
-  input: inputAppInput
+export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
+  return mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 };
 
-export const inputOsTheme: Theme<InputStyleProps> = {
+export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(
+    'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
+    props.srOnly && 'sr-only',
+    ...etc
+  );
+};
+
+export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
+};
+
+export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(props.srOnly && 'sr-only', ...etc);
+};
+
+export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
+  return mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+};
+
+export const inputTheme = {
+  input: inputAppInput,
+  inputWithSegments: inputWithSegmentsInput,
+  label: inputLabel,
+  description: inputDescription,
+  validation: inputValidation,
+  descriptionAndValidation: inputDescriptionAndValidation
+};
+
+export const inputOsTheme = {
+  ...inputTheme,
   input: inputOsInput
 };

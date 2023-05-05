@@ -4,7 +4,7 @@
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { RemoteServiceConnectionError, RemoteServiceConnectionTimeout } from '@dxos/errors';
+import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log, parseFilter } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -196,10 +196,13 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     );
 
     if (!this._iframe) {
-      const res = await fetch(source);
-      if (res.status >= 400) {
-        throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
-      }
+      // TODO(wittjosiah): This doesn't work with generated service worker when offline. Remove?
+      //   Is there an easy way to respond to this without a lot of custom work inside the service worker?
+      //   Is getting an http response here helpful information or just overhead?
+      // const res = await fetch(source);
+      // if (res.status >= 400) {
+      //   throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
+      // }
 
       let interval: NodeJS.Timer | undefined;
       const loaded = new Trigger();

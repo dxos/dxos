@@ -2,4 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export type Plugin = {};
+// TODO(burdon): Define state.
+
+export type Plugin = {
+  id: string;
+};

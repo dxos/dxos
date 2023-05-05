@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AppContainer } from 'packages/experimental/surface/src/Surface/components';
 import React from 'react';
 import { createMemoryRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
 
@@ -12,7 +11,9 @@ import { appkitTranslations } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations } from '@dxos/react-shell';
 
+import { AppContainer } from './components';
 import { AppContextProvider, Surface } from './framework';
+import { DebugPlugin, StackPlugin } from './plugins';
 
 import '@dxosTheme';
 
@@ -34,10 +35,18 @@ const state = {
   '.router': {
     spaceKey: undefined
   },
-  'com.example.test': {
+  [StackPlugin.id]: {
     counter: 0
   }
 };
+
+// Notes
+// - root app context that manages global app state
+// - natural use of routes, which configure surfaces based on route params
+// -
+
+// TODO(burdon): Map path to app state.
+// TODO(burdon): Configure surfaces: binding to plugins. Define.
 
 const StoryApp = () => {
   const router = createMemoryRouter([
@@ -50,20 +59,14 @@ const StoryApp = () => {
           element: <Surface id='home' element={<div>HOME</div>} />
         },
         {
-          // TODO(burdon): Map path to app state.
           path: '/space/:spaceKey',
-          element: (
-            <Surface
-              id='space'
-              element={<AppContainer />}
-              plugins={[
-                {
-                  id: 'com.example.test',
-                  reducer: (state: any = {}, action: any) => state
-                }
-              ]}
-            />
-          )
+          element: <Surface id='space' element={<AppContainer />} />,
+          children: [
+            {
+              path: '/path/:spaceKey/:plugin',
+              element: <Surface id='type' element={<AppContainer />} plugins={[DebugPlugin, StackPlugin]} />
+            }
+          ]
         }
       ]
     }

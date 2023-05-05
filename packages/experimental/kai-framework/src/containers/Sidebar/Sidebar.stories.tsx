@@ -6,12 +6,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
+import { MainOverlay, MainRoot } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-import { PanelSidebarContext } from '@dxos/react-shell';
 
 import '@dxosTheme';
 
@@ -40,9 +40,10 @@ const Test = () => {
             }}
           >
             <div className='flex h-[100vh] w-[300px] bg-white'>
-              <PanelSidebarContext.Provider value={{ displayState: 'show', setDisplayState: () => {} }}>
+              <MainRoot defaultSidebarOpen>
+                <MainOverlay />
                 <Sidebar onNavigate={() => {}} />
-              </PanelSidebarContext.Provider>
+              </MainRoot>
             </div>
           </AppStateProvider>
         </FrameRegistryContextProvider>

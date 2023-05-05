@@ -74,6 +74,21 @@ message PeerEvent {
   }
 }
 
+enum SignalState {
+  /// Connection is being established.
+  CONNECTING = 0;
+  /// Connection is being re-established.
+  RECONNECTING = 1;
+  /// Connected.
+  CONNECTED = 2;
+  /// Server terminated the connection. Socket will be reconnected.
+  DISCONNECTED = 3;
+  /// Server terminated the connection with an ERROR. Socket will be reconnected.
+  ERROR = 4;
+  /// Socket was closed.
+  CLOSED = 5;
+}
+
 // TOOD(burdon): Rename.
 // TODO(burdon): Reconcile with `@dxos/kube`.
 service Signal {

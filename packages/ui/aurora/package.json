@@ -14,9 +14,15 @@
     "plugin.js",
     "plugin.d.ts"
   ],
+  "scripts": {
+    "chromatic": "chromatic --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
+  },
   "dependencies": {
     "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.0.3",
+    "@radix-ui/react-primitive": "^1.0.2",
     "@radix-ui/react-slot": "^1.0.1",
+    "@radix-ui/react-use-controllable-state": "^1.0.0",
     "i18next": "^21.10.0",
     "react-i18next": "^11.18.6"
   },
@@ -24,10 +30,12 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "chromatic": "^6.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vite": "^4.3.0"

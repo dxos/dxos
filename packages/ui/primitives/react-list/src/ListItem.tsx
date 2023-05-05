@@ -5,7 +5,7 @@
 import { DraggableAttributes } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckboxProps } from '@radix-ui/react-checkbox';
+import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -13,14 +13,7 @@ import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  ComponentProps,
-  ComponentPropsWithoutRef,
-  ComponentPropsWithRef,
-  Dispatch,
-  forwardRef,
-  SetStateAction
-} from 'react';
+import React, { ComponentProps, ComponentPropsWithRef, Dispatch, forwardRef, SetStateAction } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
@@ -64,19 +57,23 @@ type ListItemContextValue = {
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-type ListItemHeadingProps = ListItemScopedProps<ComponentPropsWithoutRef<'p'>> & { asChild?: boolean };
-
-const ListItemHeading = ({ children, asChild, __listItemScope, ...props }: ListItemHeadingProps) => {
-  const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-  const Root = asChild ? Slot : 'div';
-  return (
-    <Root {...props} id={headingId}>
-      {children}
-    </Root>
-  );
+type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithRef<typeof Primitive.p>, 'id'>> & {
+  asChild?: boolean;
 };
 
-type ListItemDragHandleProps = ComponentPropsWithRef<'div'>;
+const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
+  ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
+    const Root = asChild ? Slot : Primitive.p;
+    return (
+      <Root {...props} id={headingId} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  }
+);
+
+type ListItemDragHandleProps = ComponentPropsWithRef<typeof Primitive.div>;
 
 const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemScopedProps<ListItemDragHandleProps>>(
   ({ __listItemScope, children, ...props }, forwardedRef) => {
@@ -199,12 +196,12 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
 
 const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
   const { variant } = useListContext(LIST_NAME, props.__listScope);
-  const listItemId = useId('listItem');
+  const listItemId = useId('listItem', props.id);
 
   if (variant === 'ordered-draggable') {
-    return <DraggableListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
+    return <DraggableListItem {...props} ref={forwardedRef} id={listItemId} />;
   } else {
-    return <PureListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
+    return <PureListItem {...props} ref={forwardedRef} id={listItemId} />;
   }
 });
 
