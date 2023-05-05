@@ -27,6 +27,7 @@ type MainContextValue = {
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   sidebarOpen: false,
   setSidebarOpen: (nextOpen) => {
+    // TODO(burdon): Standardize with other context missing errors using raise.
     console.warn('Attempt to set sidebar state without initializing `MainRoot`');
   }
 });
@@ -121,6 +122,6 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, .
   );
 });
 
-export { MainRoot, Main, Sidebar, MainOverlay, useMainContext };
+export { Main, MainOverlay, MainRoot, Sidebar, useMainContext };
 
-export type { MainRootProps, MainProps, SidebarProps, MainOverlayProps };
+export type { MainRootProps, MainProps, MainOverlayProps, SidebarProps };

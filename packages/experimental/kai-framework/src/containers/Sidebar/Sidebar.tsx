@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { CaretLeft, Info, Graph, PuzzlePiece, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
@@ -34,13 +34,14 @@ import { FrameList } from './FrameList';
 import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
 import { Separator, SpaceListPanel } from './SpaceListPanel';
 
+const SIDEBAR_NAME = 'KaiFrameworkSidebar';
+
 export type SidebarProps = {
   onNavigate: (path: string) => void;
 };
 
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
-const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
@@ -239,7 +240,7 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
                     onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
                   >
                     <Robot className={getSize(6)} />
-                    <div className='pl-2 text-sm'>Manage Bots</div>
+                    <div className='pl-2 text-sm'>Functions</div>
                   </Button>
                 </div>
               )}
@@ -340,8 +341,8 @@ const FrameContent = ({
             className='mli-2 p-0 px-2 items-center'
             onClick={() => setShowFrames(true)}
           >
-            <AppWindow className={getSize(6)} />
-            <div className='pl-2 text-sm'>Frames</div>
+            <PuzzlePiece className={getSize(6)} />
+            <div className='pl-2 text-sm'>Plugins</div>
           </Button>
         </div>
       )}

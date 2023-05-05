@@ -5,7 +5,7 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { MainRoot, Main, Sidebar as SidebarRoot, MainOverlay } from '@dxos/aurora';
+import { Main, MainOverlay, MainRoot, Sidebar as SidebarRoot } from '@dxos/aurora';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 
 import { Surface, Sidebar } from '../containers';
@@ -37,6 +37,9 @@ const SpacePage = () => {
       </div>
     );
   }
+
+  // TODO(burdon): Discuss (otherwise can you put anything inside Main?) Avoid use of Main as grab bag for app state.
+  // <Main sidebar={<Sidebar />}><SpacePanel /></Main>
 
   return (
     <MainRoot>
