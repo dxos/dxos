@@ -63,7 +63,7 @@
         "outputDir": "packages/ui/aurora/out/aurora"
       },
       "outputs": [
-        "{options.outputPath}"
+        "{options.outputDir}"
       ]
     }
   },
