@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
-import { MainOverlay, MainRoot } from '@dxos/aurora';
+import { Button, Main, MainOverlay, MainRoot, useMainContext } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
@@ -17,6 +17,11 @@ import '@dxosTheme';
 
 import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 import { Sidebar } from './Sidebar';
+
+const SidebarInvoker = () => {
+  const { setSidebarOpen } = useMainContext('KaiFrameworkStorybookSidebarInvoker');
+  return <Button onClick={() => setSidebarOpen(true)}>Open</Button>;
+};
 
 const Test = () => {
   const navigate = useNavigate();
@@ -39,12 +44,13 @@ const Test = () => {
               frames: defaultFrames
             }}
           >
-            <div className='flex h-[100vh] w-[300px] bg-white'>
-              <MainRoot defaultSidebarOpen>
-                <MainOverlay />
-                <Sidebar onNavigate={() => {}} />
-              </MainRoot>
-            </div>
+            <MainRoot>
+              <MainOverlay />
+              <Sidebar onNavigate={() => {}} />
+              <Main>
+                <SidebarInvoker />
+              </Main>
+            </MainRoot>
           </AppStateProvider>
         </FrameRegistryContextProvider>
       </MetagraphProvider>
