@@ -7,6 +7,7 @@ import { createMemoryRouter, Link, Outlet, RouterProvider } from 'react-router-d
 
 import { ThemeProvider } from '@dxos/aurora';
 import { FullscreenDecorator } from '@dxos/kai-frames';
+import { PublicKey } from '@dxos/keys';
 import { appkitTranslations } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations } from '@dxos/react-shell';
@@ -17,9 +18,22 @@ import { DebugPlugin, StackPlugin } from './plugins';
 
 import '@dxosTheme';
 
+// prettier-ignore
+const state = {
+  // TODO(burdon): Plugin?
+  '.router': {
+    state: {
+      spaceKey: PublicKey
+    }
+  },
+  [StackPlugin.id]: {
+    counter: 0
+  }
+};
+
 const StoryRoot = () => (
   <ThemeProvider rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]}>
-    <AppContextProvider initialState={{}}>
+    <AppContextProvider initialState={state}>
       <div className='flex w-full p-2 bg-zinc-200'>
         <Link to={'/home'}>Home</Link>
       </div>
@@ -29,16 +43,6 @@ const StoryRoot = () => (
     </AppContextProvider>
   </ThemeProvider>
 );
-
-// prettier-ignore
-const state = {
-  '.router': {
-    spaceKey: undefined
-  },
-  [StackPlugin.id]: {
-    counter: 0
-  }
-};
 
 // Notes
 // - root app context that manages global app state
