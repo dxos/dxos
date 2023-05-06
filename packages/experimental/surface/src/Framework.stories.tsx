@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { createMemoryRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, Link, Outlet, RouterProvider, useParams } from 'react-router-dom';
 
 import { ThemeProvider } from '@dxos/aurora';
 import { FullscreenDecorator } from '@dxos/kai-frames';
@@ -50,6 +50,17 @@ const StoryRoot = () => (
 // -
 
 // TODO(burdon): Map path to app state.
+type State = {
+  spaceKey?: PublicKey;
+  objectId?: string;
+};
+
+const mapRouteParams = (): State => {
+  const { spaceKey: _spaceKey, objectId } = useParams();
+  const spaceKey = PublicKey.from(_spaceKey as string);
+  return { spaceKey, objectId };
+};
+
 // TODO(burdon): Configure surfaces: binding to plugins. Define.
 
 const StoryApp = () => {
@@ -67,7 +78,7 @@ const StoryApp = () => {
           element: <Surface id='space' element={<AppContainer />} />,
           children: [
             {
-              path: '/path/:spaceKey/:plugin',
+              path: '/path/:spaceKey/:objectId',
               element: <Surface id='type' element={<AppContainer />} plugins={[DebugPlugin, StackPlugin]} />
             }
           ]

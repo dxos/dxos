@@ -24,3 +24,5 @@ export type SurfaceProps = {
 export const Surface = ({ id, element }: SurfaceProps) => {
   return <SurfaceContext.Provider value={{}}>{element}</SurfaceContext.Provider>;
 };
+
+export const useSurface = () => {};
