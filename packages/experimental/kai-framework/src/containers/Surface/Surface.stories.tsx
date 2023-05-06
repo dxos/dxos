@@ -16,7 +16,7 @@ import {
   useMainContext,
   MainOverlay
 } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx, tx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
@@ -128,15 +128,15 @@ const SidebarSurface = () => {
     <div className='flex flex-col grow bs-full bg-zinc-200'>
       <div className='flex justify-between h-[32px] px-2 items-center'>
         <div className='flex'>
-          <Button onClick={() => controller.setState('sidebar', 'navigator')}>
+          <Button variant='ghost' onClick={() => controller.setState('sidebar', 'navigator')}>
             <List className={getSize(5)} />
           </Button>
-          <Button onClick={() => controller.setState('sidebar', 'search')}>
+          <Button variant='ghost' onClick={() => controller.setState('sidebar', 'search')}>
             <MagnifyingGlass className={getSize(5)} />
           </Button>
         </div>
         <div>
-          <Button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Button variant='ghost' onClick={() => setSidebarOpen(!sidebarOpen)}>
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -282,10 +282,10 @@ const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
   const { sidebarOpen, setSidebarOpen } = useMainContext(PANEL_SIDEBAR_CONTENT_NAME);
   return (
     <div className='flex grow overflow-hidden'>
-      {sidebarOpen && (
+      {!sidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Button variant='ghost' onClick={() => setSidebarOpen(true)}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -314,7 +314,7 @@ const Layout = () => {
       <SidebarRoot>
         <Surface id='sidebar' element={<SidebarSurface />} />
       </SidebarRoot>
-      <Main asChild>
+      <Main>
         <PanelSidebarContent>
           <Surface id='main' element={<MainSurface />} />
           <Surface id='debug' />
@@ -337,7 +337,7 @@ const TestApp = () => {
   };
 
   const Root = () => (
-    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]}>
+    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]} tx={tx}>
       <SurfaceControllerContextProvider components={components}>
         <Layout />
       </SurfaceControllerContextProvider>
