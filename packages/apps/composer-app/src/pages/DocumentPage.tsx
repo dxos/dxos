@@ -31,10 +31,10 @@ import TurndownService from 'turndown';
 
 import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
-import { getSize, mx, osTx } from '@dxos/aurora-theme';
+import { getSize, osTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useFileDownload, DropdownMenu, Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
+import { useFileDownload, Input, Dialog, DropdownMenuItem, DropdownMenu } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
 import { useOctokitContext } from '../components';
@@ -85,34 +85,39 @@ const DocumentPageContent = observer(
     const themeContext = useThemeContext();
     return (
       <>
-        <div role='none' className='mli-auto max-is-[50rem] min-bs-[80vh] border border-neutral-500/20 flex flex-col'>
-          <Input
-            key={document.id}
-            variant='subdued'
-            label={t('document title label')}
-            labelVisuallyHidden
-            placeholder={t('untitled document title')}
-            value={document.title ?? ''}
-            onChange={({ target: { value } }) => (document.title = value)}
-            slots={{
-              root: { className: 'shrink-0 pli-6 plb-1 bg-neutral-500/20' },
-              input: { 'data-testid': 'composer.documentTitle' } as HTMLAttributes<HTMLInputElement>
-            }}
-          />
+        <div
+          role='none'
+          className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
+        >
+          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-12 md:pis-0'>
+            <Input
+              key={document.id}
+              variant='subdued'
+              label={t('document title label')}
+              labelVisuallyHidden
+              placeholder={t('untitled document title')}
+              value={document.title ?? ''}
+              onChange={({ target: { value } }) => (document.title = value)}
+              slots={{
+                root: { className: 'shrink-0 grow pis-6 plb-2' },
+                input: { 'data-testid': 'composer.documentTitle' } as HTMLAttributes<HTMLInputElement>
+              }}
+            />
+            <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
+              <DropdownMenu
+                trigger={
+                  <Button className='p-0 is-10' variant='ghost' density='coarse'>
+                    <DotsThreeVertical className={getSize(6)} />
+                  </Button>
+                }
+              >
+                {dropdownMenuContent}
+              </DropdownMenu>
+            </ThemeContext.Provider>
+          </div>
           {children}
         </div>
         <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-          <div role='none' className={mx('fixed block-start-0 inline-end-0 p-2')}>
-            <DropdownMenu
-              trigger={
-                <Button className='p-0 is-10' density='coarse'>
-                  <DotsThreeVertical className={getSize(6)} />
-                </Button>
-              }
-            >
-              {dropdownMenuContent}
-            </DropdownMenu>
-          </div>
           {handleImport && (
             <Dialog
               open={importDialogOpen}
@@ -619,7 +624,7 @@ export const DocumentPage = observer(() => {
   const document = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
 
   return (
-    <div role='none' className='pli-14 plb-11'>
+    <div role='none'>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />

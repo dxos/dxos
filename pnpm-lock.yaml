@@ -4477,6 +4477,7 @@ importers:
       tailwindcss: ~3.2.7
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.8.0
+      tailwindcss-touch: ^1.0.1
       vite: ^4.3.0
     dependencies:
       '@fontsource/fira-code': 4.5.12
@@ -4491,6 +4492,7 @@ importers:
       tailwindcss: 3.2.7
       tailwindcss-logical: 3.0.0_gbtt6ss3tbiz4yjtvdr6fbrj44
       tailwindcss-radix: 2.8.0
+      tailwindcss-touch: 1.0.1
     devDependencies:
       '@dxos/aurora-types': link:../aurora-types
       '@types/lodash.get': 4.4.7
@@ -34310,6 +34312,10 @@ packages:
 
   /tailwindcss-radix/2.8.0:
     resolution: {integrity: sha512-1k1UfoIYgVyBl13FKwwoKavjnJ5VEaUClCTAsgz3VLquN4ay/lyaMPzkbqD71sACDs2fRGImytAUlMb4TzOt1A==}
+
+  /tailwindcss-touch/1.0.1:
+    resolution: {integrity: sha512-h8A/S9+Mk2rnnaOB/NGCE7CxDhtGKbsAWf8Y2tCO6Zf381Y8dKcygPl1OXkFDnWXkL+FfHxmrGpwculDWAumbA==}
+    dev: false
 
   /tailwindcss/3.0.7_ee22xw2qfzolowrlqapvox2wrq:
     resolution: {integrity: sha512-rZdKNHtC64jcQncLoWOuCzj4lQDTAgLtgK3WmQS88tTdpHh9OwLqULTQxI3tw9AMJsqSpCKlmcjW/8CSnni6zQ==}
