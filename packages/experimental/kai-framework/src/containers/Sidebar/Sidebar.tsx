@@ -38,9 +38,10 @@ export type SidebarProps = {
   onNavigate: (path: string) => void;
 };
 
+const SIDEBAR_NAME = 'KaiFrameworkSidebar';
+
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
-const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.

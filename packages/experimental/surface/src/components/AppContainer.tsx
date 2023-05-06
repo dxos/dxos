@@ -3,37 +3,41 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useContext } from 'react';
+import React, { PropsWithChildren } from 'react';
+import { Outlet } from 'react-router-dom';
 
-import { Button } from '@dxos/aurora';
+import { Button, Main, MainOverlay, MainRoot, Sidebar as SidebarRoot, useMainContext } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';
 
 import { Surface } from '../framework';
 
+const NAME = 'what-does-this-do?';
+
 const SidebarPanel = ({ children }: PropsWithChildren) => {
-  const toggleSidebar = useTogglePanelSidebar();
+  const { sidebarOpen, setSidebarOpen } = useMainContext(NAME);
   return (
     <div className='flex flex-col grow'>
       <div className='flex'>
-        <Button onClick={toggleSidebar}>
+        <Button onClick={() => setSidebarOpen(false)}>
           <CaretLeft className={getSize(5)} />
         </Button>
       </div>
+      <div>[[{sidebarOpen}]]</div>
       <div className='flex grow'>{children}</div>
     </div>
   );
 };
 
+SidebarPanel.NAME = NAME;
+
 const MainPanel = ({ children }: PropsWithChildren) => {
-  const { displayState } = useContext(PanelSidebarContext);
-  const toggleSidebar = useTogglePanelSidebar();
+  const { sidebarOpen, setSidebarOpen } = useMainContext(NAME);
   return (
     <div className='flex grow overflow-hidden'>
-      {displayState !== 'show' && (
+      {!sidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button onClick={toggleSidebar}>
+            <Button onClick={() => setSidebarOpen(true)}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -46,22 +50,20 @@ const MainPanel = ({ children }: PropsWithChildren) => {
 
 export const AppContainer = () => {
   return (
-    <PanelSidebarProvider
-      inlineStart
-      slots={{
-        main: { className: 'flex grow overflow-hidden' },
-        content: {
-          children: (
-            <SidebarPanel>
-              <Surface id='sidebar' />
-            </SidebarPanel>
-          )
-        }
-      }}
-    >
-      <MainPanel>
-        <Surface id='main' />
-      </MainPanel>
-    </PanelSidebarProvider>
+    <MainRoot defaultSidebarOpen>
+      <MainOverlay />
+      <SidebarRoot className='!block-start-appbar'>
+        <SidebarPanel>
+          <Surface id='sidebar' />
+          <div>SIDEBAR</div>
+        </SidebarPanel>
+      </SidebarRoot>
+      <Main className='pbs-header bs-full overflow-hidden'>
+        <MainPanel>
+          <div>MAIN</div>
+          <Outlet />
+        </MainPanel>
+      </Main>
+    </MainRoot>
   );
 };

@@ -71,14 +71,14 @@ const StoryApp = () => {
       children: [
         {
           path: '/home',
-          element: <Surface id='home' element={<div>HOME</div>} />
+          element: <Surface id='home' element={<Link to={`/space/${PublicKey.random().toHex()}`}>GO</Link>} />
         },
         {
           path: '/space/:spaceKey',
           element: <Surface id='space' element={<AppContainer />} />,
           children: [
             {
-              path: '/path/:spaceKey/:objectId',
+              path: '/space/:spaceKey/:objectId',
               element: <Surface id='type' element={<AppContainer />} plugins={[DebugPlugin, StackPlugin]} />
             }
           ]
