@@ -6,7 +6,7 @@ import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } 
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
-import { Button, DensityProvider, useMainContext } from '@dxos/aurora';
+import { Button, DensityProvider, useMainContext, Sidebar as NaturalSidebar, ClassNameValue } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
@@ -36,12 +36,13 @@ import { Separator, SpaceListPanel } from './SpaceListPanel';
 
 export type SidebarProps = {
   onNavigate: (path: string) => void;
+  className?: ClassNameValue;
 };
 
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
 const SIDEBAR_NAME = 'KaiFrameworkSidebar';
-export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
+export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
@@ -149,137 +150,139 @@ export const Sidebar = observer(({ onNavigate }: SidebarProps) => {
   const Icon = getIcon(space.properties.icon);
 
   return (
-    <DensityProvider density='fine'>
-      <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
-        {/* Header */}
-        <div className='flex flex-col shrink-0'>
-          <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
-            <div className='flex overflow-hidden grow items-center'>
-              <div className='flex shrink-0 px-3'>
-                <Icon className={getSize(8)} weight='duotone' data-testid='sidebar.spaceIcon' />
+    <NaturalSidebar className={className}>
+      <DensityProvider density='fine'>
+        <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
+          {/* Header */}
+          <div className='flex flex-col shrink-0'>
+            <div className={mx('flex overflow-hidden items-center h-[40px]', theme.classes.header)}>
+              <div className='flex overflow-hidden grow items-center'>
+                <div className='flex shrink-0 px-3'>
+                  <Icon className={getSize(8)} weight='duotone' data-testid='sidebar.spaceIcon' />
+                </div>
+                <div className='truncate text-lg'>{space.properties.name ?? 'Space'}</div>
               </div>
-              <div className='truncate text-lg'>{space.properties.name ?? 'Space'}</div>
-            </div>
 
-            <div className='flex shrink-0 items-center'>
-              <Button
-                variant='ghost'
-                className='flex p-0 px-1'
-                data-testid='sidebar.showSpaceList'
-                onClick={() => setShowSpacePanel((show) => !show)}
-              >
-                <Info className={getSize(5)} />
-              </Button>
-              <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
-                {sidebarOpen && <CaretLeft className={getSize(6)} />}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* SpacePanel */}
-        {showSpacePanel && (
-          <SpaceListPanel
-            onAction={handleSpaceAction}
-            onNavigate={onNavigate}
-            onClose={() => setShowSpacePanel(false)}
-          />
-        )}
-
-        {/* Search/Frames */}
-        {!showSpacePanel && (
-          <div className='flex flex-col overflow-hidden space-y-2'>
-            {(bool(options.get('experimental.search')) && (
-              <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
-            )) || <div className='mt-2' />}
-
-            {/* Items if not actively searching. */}
-            {!showSearchResults && (
-              <FrameContent showDeletedObjects={showDeletedObjects} handleObjectAction={handleObjectAction} />
-            )}
-          </div>
-        )}
-
-        <div className='flex-1' />
-        <div className='flex shrink-0 flex-col my-2'>
-          {/* Members */}
-          <Separator />
-
-          <MemberList onNavigate={onNavigate} />
-          <div>
-            <div className='pl-4'>
-              <Button
-                variant='ghost'
-                data-testid='space-share'
-                title='Share space'
-                className='p-0 items-center'
-                onClick={(event) =>
-                  handleSpaceAction({
-                    action: IntentAction.SPACE_SHARE,
-                    data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
-                  })
-                }
-              >
-                <Users className={getSize(6)} />
-                <div className='pl-2'>Manage Users</div>
-              </Button>
+              <div className='flex shrink-0 items-center'>
+                <Button
+                  variant='ghost'
+                  className='flex p-0 px-1'
+                  data-testid='sidebar.showSpaceList'
+                  onClick={() => setShowSpacePanel((show) => !show)}
+                >
+                  <Info className={getSize(5)} />
+                </Button>
+                <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
+                  {sidebarOpen && <CaretLeft className={getSize(6)} />}
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Experimental */}
-          {(bool(options.get('experimental.bots')) || bool(options.get('experimental.metagraph'))) && (
-            <>
-              <Separator />
-              {bool(options.get('experimental.bots')) && (
-                <div>
-                  <Button
-                    variant='ghost'
-                    title='Show bot console.'
-                    className='mli-2 p-0 px-2 items-center'
-                    onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
-                  >
-                    <Robot className={getSize(6)} />
-                    <div className='pl-2 text-sm'>Manage Bots</div>
-                  </Button>
-                </div>
-              )}
-
-              {bool(options.get('experimental.metagraph')) && (
-                <div>
-                  <Button
-                    variant='ghost'
-                    title='Show metagraph.'
-                    className='mli-2 p-0 px-2 items-center'
-                    onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.DMG }))}
-                  >
-                    <Graph className={getSize(6)} />
-                    <div className='pl-2 text-sm'>Metagraph</div>
-                  </Button>
-                </div>
-              )}
-            </>
+          {/* SpacePanel */}
+          {showSpacePanel && (
+            <SpaceListPanel
+              onAction={handleSpaceAction}
+              onNavigate={onNavigate}
+              onClose={() => setShowSpacePanel(false)}
+            />
           )}
 
-          {/* Network */}
-          <Separator />
-          <div>
-            <Button
-              variant='ghost'
-              title='Toggle connection state.'
-              className='mli-2 p-0 px-2 items-center'
-              onClick={handleToggleConnection}
-            >
-              {connectionState === ConnectionState.ONLINE ? (
-                <WifiHigh className={getSize(6)} />
-              ) : (
-                <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
+          {/* Search/Frames */}
+          {!showSpacePanel && (
+            <div className='flex flex-col overflow-hidden space-y-2'>
+              {(bool(options.get('experimental.search')) && (
+                <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
+              )) || <div className='mt-2' />}
+
+              {/* Items if not actively searching. */}
+              {!showSearchResults && (
+                <FrameContent showDeletedObjects={showDeletedObjects} handleObjectAction={handleObjectAction} />
               )}
-              <span className='pl-2'>Toggle connection</span>
-            </Button>
+            </div>
+          )}
+
+          <div className='flex-1' />
+          <div className='flex shrink-0 flex-col my-2'>
+            {/* Members */}
+            <Separator />
+
+            <MemberList onNavigate={onNavigate} />
+            <div>
+              <div className='pl-4'>
+                <Button
+                  variant='ghost'
+                  data-testid='space-share'
+                  title='Share space'
+                  className='p-0 items-center'
+                  onClick={(event) =>
+                    handleSpaceAction({
+                      action: IntentAction.SPACE_SHARE,
+                      data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+                    })
+                  }
+                >
+                  <Users className={getSize(6)} />
+                  <div className='pl-2'>Manage Users</div>
+                </Button>
+              </div>
+            </div>
+
+            {/* Experimental */}
+            {(bool(options.get('experimental.bots')) || bool(options.get('experimental.metagraph'))) && (
+              <>
+                <Separator />
+                {bool(options.get('experimental.bots')) && (
+                  <div>
+                    <Button
+                      variant='ghost'
+                      title='Show bot console.'
+                      className='mli-2 p-0 px-2 items-center'
+                      onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
+                    >
+                      <Robot className={getSize(6)} />
+                      <div className='pl-2 text-sm'>Manage Bots</div>
+                    </Button>
+                  </div>
+                )}
+
+                {bool(options.get('experimental.metagraph')) && (
+                  <div>
+                    <Button
+                      variant='ghost'
+                      title='Show metagraph.'
+                      className='mli-2 p-0 px-2 items-center'
+                      onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.DMG }))}
+                    >
+                      <Graph className={getSize(6)} />
+                      <div className='pl-2 text-sm'>Metagraph</div>
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Network */}
+            <Separator />
+            <div>
+              <Button
+                variant='ghost'
+                title='Toggle connection state.'
+                className='mli-2 p-0 px-2 items-center'
+                onClick={handleToggleConnection}
+              >
+                {connectionState === ConnectionState.ONLINE ? (
+                  <WifiHigh className={getSize(6)} />
+                ) : (
+                  <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
+                )}
+                <span className='pl-2'>Toggle connection</span>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </DensityProvider>
+      </DensityProvider>
+    </NaturalSidebar>
   );
 });
 
