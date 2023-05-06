@@ -203,8 +203,8 @@ const SidebarToggle = () => {
       <div
         role='none'
         className={mx(
-          'fixed block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200',
-          sidebarOpen ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
+          'fixed block-start-0 pointer-coarse:block-end-0 pointer-coarse:block-start-auto p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          sidebarOpen && 'opacity-0 pointer-events-none'
         )}
       >
         {sidebarOpen ? (
