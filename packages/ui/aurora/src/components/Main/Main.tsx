@@ -9,11 +9,12 @@ import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { ComponentPropsWithRef, Dispatch, forwardRef, PropsWithChildren, SetStateAction } from 'react';
 
-import { useMediaQuery } from '@dxos/react-hooks';
+import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
+import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const SIDEBAR_NAME = 'Sidebar';
@@ -65,8 +66,10 @@ type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>>
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { sidebarOpen } = useMainContext(SIDEBAR_NAME);
+  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
   const { tx } = useThemeContext();
+  const ref = useForwardedRef(forwardedRef);
+  useSwipeToDismiss(ref, () => setSidebarOpen(false), 48, 'left', 0);
   return (
     <DialogContent
       forceMount
@@ -74,7 +77,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children,
       onCloseAutoFocus={(event) => isLg && event.preventDefault()}
       {...props}
       className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, className)}
-      ref={forwardedRef}
+      ref={ref}
     >
       <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
     </DialogContent>
