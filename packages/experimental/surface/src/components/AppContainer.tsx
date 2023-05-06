@@ -28,8 +28,6 @@ const SidebarPanel = ({ children }: PropsWithChildren) => {
   );
 };
 
-SidebarPanel.NAME = NAME;
-
 const MainPanel = ({ children }: PropsWithChildren) => {
   const { sidebarOpen, setSidebarOpen } = useMainContext(NAME);
   return (
