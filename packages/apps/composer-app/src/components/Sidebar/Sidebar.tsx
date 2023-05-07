@@ -14,7 +14,7 @@ import {
   useId,
   useThemeContext,
   useTranslation,
-  useMainContext
+  useSidebar
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
@@ -56,7 +56,7 @@ const SidebarContent = () => {
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_CONTENT_NAME);
+  const { closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
@@ -145,7 +145,7 @@ const SidebarContent = () => {
                 <Button
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  onClick={closeSidebar}
                   className='pli-1'
                 >
                   <ArrowLineLeft className={getSize(4)} />
@@ -190,11 +190,11 @@ SidebarContent.displayName = SIDEBAR_CONTENT_NAME;
 const SIDEBAR_TOGGLE_NAME = 'SidebarToggle';
 
 const SidebarToggle = () => {
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_TOGGLE_NAME);
+  const { openSidebar, sidebarOpen } = useSidebar(SIDEBAR_TOGGLE_NAME);
   const { t } = useTranslation('os');
   const themeContext = useThemeContext();
   const button = (
-    <Button data-testid='composer.toggleSidebar' onClick={() => setSidebarOpen(true)} className='p-0 is-[40px]'>
+    <Button data-testid='composer.toggleSidebar' onClick={openSidebar} className='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
