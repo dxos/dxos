@@ -6,13 +6,13 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Button';
-import { Main, MainRoot, MainOverlay, Sidebar, useMainContext } from './Main';
+import { Main, MainRoot, MainOverlay, Sidebar, useSidebar } from './Main';
 
 type StoryMainArgs = {};
 
 const SidebarToggle = () => {
-  const { sidebarOpen, setSidebarOpen } = useMainContext('StoryMain__SidebarToggle');
-  return <Button onClick={() => setSidebarOpen(!sidebarOpen)}>Toggle sidebar</Button>;
+  const { toggleSidebar } = useSidebar('StoryMain__SidebarToggle');
+  return <Button onClick={toggleSidebar}>Toggle sidebar</Button>;
 };
 
 const StoryMain = (_args: StoryMainArgs) => {

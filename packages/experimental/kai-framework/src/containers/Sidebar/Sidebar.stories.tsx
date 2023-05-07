@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
-import { Button, Main, MainOverlay, MainRoot, useMainContext } from '@dxos/aurora';
+import { Button, Main, MainOverlay, MainRoot, useSidebar } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
@@ -19,8 +19,8 @@ import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 import { Sidebar } from './Sidebar';
 
 const SidebarInvoker = () => {
-  const { setSidebarOpen } = useMainContext('KaiFrameworkStorybookSidebarInvoker');
-  return <Button onClick={() => setSidebarOpen(true)}>Open</Button>;
+  const { openSidebar } = useSidebar();
+  return <Button onClick={openSidebar}>Open</Button>;
 };
 
 const Test = () => {

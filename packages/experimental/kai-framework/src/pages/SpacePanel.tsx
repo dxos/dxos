@@ -6,7 +6,7 @@ import { CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button, useMainContext } from '@dxos/aurora';
+import { Button, useSidebar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState } from '@dxos/react-client';
@@ -22,8 +22,7 @@ export const SpacePanel = () => {
   const { chat, dev, fullscreen } = useAppState();
   const { space, frame, objectId } = useAppRouter();
   const { section } = useParams();
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SPACE_PANEL_NAME);
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const { sidebarOpen, toggleSidebar } = useSidebar(SPACE_PANEL_NAME);
 
   const frameRegistry = useFrameRegistry();
   let sidebarFrameDef: FrameDef<any> | undefined;

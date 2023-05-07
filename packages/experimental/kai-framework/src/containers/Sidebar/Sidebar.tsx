@@ -6,7 +6,7 @@ import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } 
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
-import { Button, DensityProvider, useMainContext, Sidebar as NaturalSidebar, ClassNameValue } from '@dxos/aurora';
+import { Button, DensityProvider, Sidebar as NaturalSidebar, ClassNameValue, useSidebar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
@@ -68,8 +68,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   // App state
   //
 
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const { toggleSidebar, sidebarOpen } = useSidebar(SIDEBAR_NAME);
   const { swarm: connectionState } = useNetworkStatus();
   const [showSpacePanel, setShowSpacePanel] = useState(false);
 
