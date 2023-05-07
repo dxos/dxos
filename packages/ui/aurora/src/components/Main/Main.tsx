@@ -7,7 +7,14 @@ import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentPropsWithRef, Dispatch, forwardRef, PropsWithChildren, SetStateAction } from 'react';
+import React, {
+  ComponentPropsWithRef,
+  Dispatch,
+  forwardRef,
+  PropsWithChildren,
+  SetStateAction,
+  useCallback
+} from 'react';
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 
@@ -19,6 +26,7 @@ import { useSwipeToDismiss } from './useSwipeToDismiss';
 const MAIN_ROOT_NAME = 'MainRoot';
 const SIDEBAR_NAME = 'Sidebar';
 const MAIN_NAME = 'Main';
+const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
 type MainContextValue = {
   sidebarOpen: boolean;
@@ -31,6 +39,17 @@ const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME
     console.warn('Attempt to set sidebar state without initializing `MainRoot`');
   }
 });
+
+const useSidebar = (consumerName = GENERIC_CONSUMER_NAME) => {
+  const { setSidebarOpen, sidebarOpen } = useMainContext(consumerName);
+  return {
+    sidebarOpen,
+    setSidebarOpen,
+    toggleSidebar: useCallback(() => setSidebarOpen(!sidebarOpen), [sidebarOpen, setSidebarOpen]),
+    openSidebar: useCallback(() => setSidebarOpen(true), [setSidebarOpen]),
+    closeSidebar: useCallback(() => setSidebarOpen(false), [setSidebarOpen])
+  };
+};
 
 type MainRootProps = PropsWithChildren<{
   sidebarOpen?: boolean;
@@ -124,6 +143,6 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, .
   );
 });
 
-export { MainRoot, Main, Sidebar, MainOverlay, useMainContext };
+export { MainRoot, Main, Sidebar, MainOverlay, useMainContext, useSidebar };
 
 export type { MainRootProps, MainProps, SidebarProps, MainOverlayProps };

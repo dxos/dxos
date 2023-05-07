@@ -33,7 +33,7 @@ const state = {
 
 const StoryRoot = () => (
   <ThemeProvider rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]}>
-    <AppContextProvider initialState={state}>
+    <AppContextProvider initialState={state} reducer={(s) => s}>
       <div className='flex w-full p-2 bg-zinc-200'>
         <Link to={'/home'}>Home</Link>
       </div>

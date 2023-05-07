@@ -5,7 +5,7 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { MainRoot, Main, Sidebar as SidebarRoot, MainOverlay } from '@dxos/aurora';
+import { MainRoot, Main, MainOverlay } from '@dxos/aurora';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 
 import { Surface, Sidebar } from '../containers';
@@ -41,9 +41,7 @@ const SpacePage = () => {
   return (
     <MainRoot>
       <MainOverlay />
-      <SidebarRoot className='!block-start-appbar'>
-        <Sidebar onNavigate={(path) => navigate(path)} />
-      </SidebarRoot>
+      <Sidebar className='!block-start-appbar' onNavigate={(path) => navigate(path)} />
       <Main className='pbs-header bs-full overflow-hidden'>
         <SpacePanel />
       </Main>
