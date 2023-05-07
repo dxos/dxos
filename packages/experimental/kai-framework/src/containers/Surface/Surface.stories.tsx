@@ -7,15 +7,7 @@ import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import {
-  Button,
-  MainRoot,
-  Sidebar as SidebarRoot,
-  Main,
-  ThemeProvider,
-  useMainContext,
-  MainOverlay
-} from '@dxos/aurora';
+import { Button, MainRoot, Sidebar as SidebarRoot, Main, ThemeProvider, MainOverlay, useSidebar } from '@dxos/aurora';
 import { getSize, mx, tx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
@@ -121,7 +113,7 @@ const SurfaceOutlet = () => {
 const SIDEBAR_SURFACE_NAME = 'KaiFrameworkSidebarSurface';
 
 const SidebarSurface = () => {
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_SURFACE_NAME);
+  const { toggleSidebar } = useSidebar(SIDEBAR_SURFACE_NAME);
   const { controller } = useContext(SurfaceControllerContext);
 
   return (
@@ -136,7 +128,7 @@ const SidebarSurface = () => {
           </Button>
         </div>
         <div>
-          <Button variant='ghost' onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Button variant='ghost' onClick={toggleSidebar}>
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -279,13 +271,13 @@ const Component3 = () => (
 const PANEL_SIDEBAR_CONTENT_NAME = 'PanelSidebarContent';
 
 const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { sidebarOpen, setSidebarOpen } = useMainContext(PANEL_SIDEBAR_CONTENT_NAME);
+  const { sidebarOpen, openSidebar } = useSidebar(PANEL_SIDEBAR_CONTENT_NAME);
   return (
     <div className='flex grow overflow-hidden'>
       {!sidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button variant='ghost' onClick={() => setSidebarOpen(true)}>
+            <Button variant='ghost' onClick={openSidebar}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
