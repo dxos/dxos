@@ -23,7 +23,7 @@ export interface AlertProps {
 
 export const Alert = ({ title, children, assertive, valence, elevation: propsElevation, slots = {} }: AlertProps) => {
   const labelId = useId('alertLabel');
-  const { elevation } = useElevationContext();
+  const elevation = useElevationContext(propsElevation) ?? 'group';
   return (
     <div
       {...slots.root}
@@ -31,7 +31,7 @@ export const Alert = ({ title, children, assertive, valence, elevation: propsEle
       aria-labelledby={labelId}
       className={mx(
         'p-3 rounded-md max-is-full overflow-auto',
-        surfaceElevation({ elevation: propsElevation ?? elevation ?? 'group' }),
+        surfaceElevation({ elevation }),
         alertValence(valence),
         slots.root?.className
       )}
