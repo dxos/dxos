@@ -112,7 +112,7 @@ const PinInput = ({
   const { hasIosKeyboard } = useThemeContext();
   const { tx } = useThemeContext();
   const density = useDensityContext(propsDensity);
-  const { elevation } = useElevationContext();
+  const elevation = useElevationContext(propsElevation);
 
   const segmentClassName = useCallback(
     ({ focused, validationValence }: Parameters<Exclude<PinInputPrimitiveProps['segmentClassName'], undefined>>[0]) =>
@@ -124,7 +124,7 @@ const PinInput = ({
           focused,
           disabled: props.disabled,
           density,
-          elevation: propsElevation ?? elevation,
+          elevation,
           validationValence
         },
         propsSegmentClassName
@@ -156,7 +156,7 @@ const TextInput = ({
   const { hasIosKeyboard } = useThemeContext();
   const { tx } = useThemeContext();
   const density = useDensityContext(propsDensity);
-  const { elevation } = useElevationContext();
+  const elevation = useElevationContext(propsElevation);
   const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
 
   return (
@@ -169,7 +169,7 @@ const TextInput = ({
           variant,
           disabled: props.disabled,
           density,
-          elevation: propsElevation ?? elevation,
+          elevation,
           validationValence
         },
         className
@@ -192,7 +192,7 @@ const TextArea = ({
   const { hasIosKeyboard } = useThemeContext();
   const { tx } = useThemeContext();
   const density = useDensityContext(propsDensity);
-  const { elevation } = useElevationContext();
+  const elevation = useElevationContext(propsElevation);
   const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
 
   return (
@@ -205,7 +205,7 @@ const TextArea = ({
           variant,
           disabled: props.disabled,
           density,
-          elevation: propsElevation ?? elevation,
+          elevation,
           validationValence
         },
         className
