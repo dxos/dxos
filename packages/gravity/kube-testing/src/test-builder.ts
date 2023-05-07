@@ -5,6 +5,7 @@
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Message, WebsocketSignalManager } from '@dxos/messaging';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
@@ -153,6 +154,8 @@ export class TestAgent {
   private readonly _stats: Stats;
   private readonly _ctx = new Context();
 
+  private readonly _topics = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
+
   constructor({ signals, stats }: TestAgentParams) {
     this.signalServers = signals;
     this._stats = stats;
@@ -164,6 +167,19 @@ export class TestAgent {
       throw new Error('Agent already destroyed');
     }
 
+    this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic: discoveredTopic }) => {
+      // process.stdout.write('#')
+      const peers = this._topics.get(discoveredTopic);
+      if (!peers) {
+        log.warn('Topic not found', { discoveredTopic })
+        return;
+      }
+      if (swarmEvent.peerAvailable) {
+        peers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+      } else if (swarmEvent.peerLeft) {
+        peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
+      }
+    });
     await this.signalManager.open();
     await this.signalManager.subscribeMessages(this.peerId)
   }
@@ -178,27 +194,27 @@ export class TestAgent {
   }
 
   async joinTopic(topic: PublicKey) {
+    this._topics.set(topic, new ComplexSet(PublicKey.hash));
     await this.signalManager.join({ topic, peerId: this.peerId });
     this._stats.joinTopic(topic, this);
   }
 
   async leaveTopic(topic: PublicKey) {
     await this.signalManager.leave({ topic, peerId: this.peerId });
+    this._topics.delete(topic);
     this._stats.leaveTopic(topic, this);
   }
 
   async discoverPeers(topic: PublicKey, timeout = 5_000) {
-    const discoverdPeers: PublicKey[] = [];
-    this.signalManager.swarmEvent.on(({ swarmEvent, topic: discoveredTopic }) => {
-      if (discoveredTopic.equals(topic) && swarmEvent.peerAvailable) {
-        discoverdPeers.push(PublicKey.from(swarmEvent.peerAvailable.peer));
-      }
-    });
-
+    
     await cancelWithContext(this._ctx, sleep(timeout));
-
+    
     const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
-
+    const discoverdPeers = this._topics.get(topic) ?? new ComplexSet(PublicKey.hash);
+    // log.info('discover', {
+    //   expectedPeers: expectedPeers.length,
+    //   discoverdPeers: discoverdPeers.size,
+    // })
     for (const peer of expectedPeers) {
       if (peer.equals(this.peerId)) {
         continue;
@@ -210,7 +226,7 @@ export class TestAgent {
         peerThatDiscovering: this.peerId,
         peerToDiscover: peer
       };
-      if (!discoverdPeers.some((p) => p.equals(peer))) {
+      if (!discoverdPeers.has(peer)) {
         this._stats.addFailure(new Error('Peer not discovered'), action);
       } else {
         this._stats.addDiscoveredPeer(action);

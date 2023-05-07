@@ -27,10 +27,10 @@ type TestConfig = {
 };
 
 const testConfig: TestConfig = {
-  servers: 1,
-  agents: 200,
+  servers: 2,
+  agents: 40,
   serversPerAgent: 1,
-  topicCount: 100,
+  topicCount: 1,
   topicsPerAgent: 1,
   discoverTimeout: 5_000,
   repeatInterval: 0,
@@ -53,6 +53,8 @@ const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: St
       })),
       testConfig.serversPerAgent
     );
+
+    // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
 
     // NOTE: Opening too many connections too fast causes some of them to be dropped.
     await sleep(5)
@@ -115,7 +117,7 @@ const test = async () => {
 
           await Promise.all(
             Array.from(stats.topics.entries()).map(([topic, agents]) =>
-              Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic))))
+              Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic, testConfig.discoverTimeout))))
             )
           );
 
