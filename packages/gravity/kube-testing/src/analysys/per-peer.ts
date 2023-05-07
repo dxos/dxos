@@ -6,8 +6,11 @@ const { testConfig, shortStats, stats } = data;
 
 const statsPerPeer = new Map();
 
-for (const failure of stats.failures) {
-  const peer = failure.action.peerThatDiscovering;
+// const key = 'peerThatDiscovering'
+const key = 'peerToDiscover'
+
+for (const evt of stats.failures) {
+  const peer = evt.action[key];
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
@@ -19,8 +22,8 @@ for (const failure of stats.failures) {
   statsPerPeer.set(peer, counters);
 }
 
-for (const failure of stats.exchangedMessages) {
-  const peer = failure.action.peerThatDiscovering;
+for (const evt of stats.exchangedMessages) {
+  const peer = evt.action[key];
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
@@ -32,8 +35,8 @@ for (const failure of stats.exchangedMessages) {
   statsPerPeer.set(peer, counters);
 }
 
-for (const failure of stats.discoveredPeers) {
-  const peer = failure.peerThatDiscovering;
+for (const evt of stats.discoveredPeers) {
+  const peer = evt[key];
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
