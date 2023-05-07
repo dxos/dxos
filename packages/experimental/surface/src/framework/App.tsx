@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, PropsWithChildren, useContext } from 'react';
+import React, { Dispatch, PropsWithChildren, createContext, useContext, useReducer, Reducer } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -10,17 +10,33 @@ import { raise } from '@dxos/debug';
 // App
 //
 
-type AppContextType = {
-  state: any;
+export type AppAction = {
+  type: string;
+  data: any;
 };
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+type AppContextType<T = {}> = {
+  state: T;
+  dispatch: Dispatch<any>;
+};
 
-export const AppContextProvider = ({ children, initialState }: PropsWithChildren<{ initialState: any }>) => {
-  return <AppContext.Provider value={{ state: initialState }}>{children}</AppContext.Provider>;
+const AppContext = createContext<AppContextType<any> | undefined>(undefined);
+
+export const AppContextProvider = <T = {},>({
+  children,
+  reducer,
+  initialState
+}: PropsWithChildren<{ initialState: T; reducer: (state: T, action: AppAction) => T }>) => {
+  const [state, dispatch] = useReducer<Reducer<T, AppAction>>(reducer, initialState);
+  return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
 };
 
 export const useAppState = () => {
   const { state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return state;
+};
+
+export const useAppReducer = () => {
+  const { dispatch } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  return dispatch;
 };
