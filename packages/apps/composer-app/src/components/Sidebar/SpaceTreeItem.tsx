@@ -18,7 +18,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
+import { defaultDisabled, getSize } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
 import {
   Tooltip,
@@ -43,6 +43,7 @@ import { useShell } from '@dxos/react-shell';
 import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
 import { backupSpace, restoreSpace } from '../../util';
+import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
 import { Separator } from '../Separator';
 import { DocumentTreeItem } from './DocumentTreeItem';
 
@@ -88,12 +89,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
     spaceKey === abbreviateKey(space.key) && setOpen(true);
   }, [spaceKey]);
 
-  const spaceDisplayName =
-    (space.properties.name?.length ?? 0) > 0
-      ? space.properties.name
-      : disabled
-      ? t('loading space title')
-      : t('untitled space title');
+  const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
@@ -102,7 +98,8 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
       collapsible
       open={open}
       onOpenChange={setOpen}
-      {...{ className: mx('mbe-2 block', disabled && defaultDisabled), ...(disabled && { 'aria-disabled': true }) }}
+      className={['mbe-2 block', disabled && defaultDisabled]}
+      {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
         <TreeItemOpenTrigger>

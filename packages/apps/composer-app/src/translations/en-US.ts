@@ -49,5 +49,7 @@ export const composer = {
   'download all docs in space label': 'Download backup',
   'upload all docs in space label': 'Upload backup',
   'invitation ready for auth code message': 'An invitation is ready for its authentication code',
-  'view invitations label': 'View'
+  'view invitations label': 'View',
+  'hidden spaces tree label': 'Hidden spaces',
+  'unhide space label': 'Un-hide space'
 };
