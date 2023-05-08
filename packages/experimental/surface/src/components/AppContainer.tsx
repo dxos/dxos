@@ -8,9 +8,9 @@ import React, { PropsWithChildren } from 'react';
 import { Button, useMainContext } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 
-const NAME = 'what-does-this-do?';
+const NAME = 'what-is-this-for?'; // TODO(burdon): ???
 
-const SidebarPanel = ({ children }: PropsWithChildren) => {
+export const SidebarPanel = ({ children }: PropsWithChildren) => {
   const { sidebarOpen, setSidebarOpen } = useMainContext(NAME);
   return (
     <div className='flex flex-col grow'>
@@ -25,7 +25,7 @@ const SidebarPanel = ({ children }: PropsWithChildren) => {
   );
 };
 
-const MainPanel = ({ children }: PropsWithChildren) => {
+export const MainPanel = ({ children }: PropsWithChildren) => {
   const { sidebarOpen, setSidebarOpen } = useMainContext(NAME);
   return (
     <div className='flex grow overflow-hidden'>
