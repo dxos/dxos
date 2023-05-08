@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export const randomArraySlice = <T>(array: T[], size: number) => {
   const result = [];
   const arrayCopy = [...array];

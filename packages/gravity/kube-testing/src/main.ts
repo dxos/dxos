@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { Stats, TestBuilder } from './test-builder';
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
+import { Stats, TestBuilder } from './test-builder';
 import { randomArraySlice } from './util';
 
 type TestConfig = {
@@ -167,7 +167,7 @@ const test = async () => {
 //   .then(() => log.info('Done'))
 //   .catch((e) => log.catch(e));
 
-runPlan({
+void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
@@ -184,4 +184,4 @@ runPlan({
   options: {
     staggerAgents: 5
   }
-})
+});

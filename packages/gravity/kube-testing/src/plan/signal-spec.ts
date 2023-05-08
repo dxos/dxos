@@ -1,11 +1,16 @@
-import { scheduleTaskInterval, sleep } from "@dxos/async";
-import { cancelWithContext, Context } from "@dxos/context";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
-import { range } from "@dxos/util";
-import { Stats, TestBuilder } from "../test-builder";
-import { randomArraySlice } from "../util";
-import { AgentParams, TestParams, TestPlan } from "./spec-base";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { scheduleTaskInterval, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { range } from '@dxos/util';
+
+import { Stats, TestBuilder } from '../test-builder';
+import { randomArraySlice } from '../util';
+import { AgentParams, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
   servers: number;
@@ -13,19 +18,19 @@ export type SignalTestSpec = {
 
   agents: number;
   serversPerAgent: number;
-  topicCount: number,
+  topicCount: number;
   topicsPerAgent: number;
   discoverTimeout: number;
   repeatInterval: number;
   duration: number;
   randomSeed: string;
   type: 'discovery' | 'signaling';
-}
+};
 
 export type SignalAgentConfig = {
   servers: string[];
   topics: string[];
-}
+};
 
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
@@ -42,37 +47,43 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         this.builder.servers.map((server) => server.url()),
         spec.serversPerAgent
       );
-  
+
       // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
 
       return {
         servers,
-        topics: randomArraySlice(topics, spec.topicsPerAgent).map(topic => topic.toHex())
-      }
-    })
+        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex())
+      };
+    });
   }
 
-  async agentMain({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async agentMain({
+    agentId,
+    agents,
+    spec,
+    config,
+    outDir
+  }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     const ctx = new Context();
     const stats = new Stats();
 
-    log.info('start', { agentId, config, spec, outDir })
+    log.info('start', { agentId, config, spec, outDir });
 
-    const topics = config.topics.map(topic => PublicKey.from(topic))
-    const agentsPerTopic: Record<string, string[]> = {}
-    for(const [agentId, agentCfg] of Object.entries(agents)) {
-      for(const topic of agentCfg.topics) {
-        agentsPerTopic[agentId] ??= []
-        agentsPerTopic[agentId].push(topic)
+    const topics = config.topics.map((topic) => PublicKey.from(topic));
+    const agentsPerTopic: Record<string, string[]> = {};
+    for (const [agentId, agentCfg] of Object.entries(agents)) {
+      for (const topic of agentCfg.topics) {
+        agentsPerTopic[agentId] ??= [];
+        agentsPerTopic[agentId].push(topic);
       }
     }
 
     const agent = await this.builder.createPeer({
-      signals: config.servers.map(server => ({ server })),
+      signals: config.servers.map((server) => ({ server })),
       stats
-    })
+    });
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
-    await sleep(1_000)
+    await sleep(1_000);
 
     //
     // test
@@ -89,23 +100,22 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
               await cancelWithContext(ctx, agent.joinTopic(PublicKey.from(topic)));
             }
 
-            await sleep(spec.discoverTimeout)
+            await sleep(spec.discoverTimeout);
 
             // await Promise.all(topics.map((topic) =>
             //   cancelWithContext(ctx, agent.discoverPeers(PublicKey.from(topic), spec.discoverTimeout))
             // ));
 
-            await Promise.all(topics.map((topic) =>
-                cancelWithContext(ctx, agent.leaveTopic(PublicKey.from(topic)))
-            ));
+            await Promise.all(topics.map((topic) => cancelWithContext(ctx, agent.leaveTopic(PublicKey.from(topic)))));
             break;
           }
           case 'signaling': {
-            throw new Error('not implemented')
-              // agent.sendMessage(randomArraySlice(builder.peers, 1)[0])
+            throw new Error('not implemented');
+            // agent.sendMessage(randomArraySlice(builder.peers, 1)[0])
             break;
           }
-          default: throw new Error(`Unknown test type: ${spec.type}`);
+          default:
+            throw new Error(`Unknown test type: ${spec.type}`);
         }
 
         log.info('iteration finished', stats.shortStats);
@@ -113,10 +123,10 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
       spec.repeatInterval
     );
 
-    await sleep(spec.duration)
+    await sleep(spec.duration);
   }
 
   async cleanupPlan(): Promise<void> {
-    await this.builder.destroy()
+    await this.builder.destroy();
   }
 }
