@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { randomBytes } from 'node:crypto';
+
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -10,7 +12,6 @@ import { Message, WebsocketSignalManager } from '@dxos/messaging';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
-import { randomBytes } from 'node:crypto';
 
 import { runSignal } from './run-test-signal';
 
@@ -171,7 +172,7 @@ export class TestAgent {
       // process.stdout.write('#')
       const peers = this._topics.get(discoveredTopic);
       if (!peers) {
-        log.warn('Topic not found', { discoveredTopic })
+        log.warn('Topic not found', { discoveredTopic });
         return;
       }
       if (swarmEvent.peerAvailable) {
@@ -181,7 +182,7 @@ export class TestAgent {
       }
     });
     await this.signalManager.open();
-    await this.signalManager.subscribeMessages(this.peerId)
+    await this.signalManager.subscribeMessages(this.peerId);
   }
 
   async destroy() {
@@ -206,9 +207,8 @@ export class TestAgent {
   }
 
   async discoverPeers(topic: PublicKey, timeout = 5_000) {
-    
     await cancelWithContext(this._ctx, sleep(timeout));
-    
+
     const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
     const discoverdPeers = this._topics.get(topic) ?? new ComplexSet(PublicKey.hash);
     // log.info('discover', {
@@ -242,11 +242,11 @@ export class TestAgent {
         type_url: 'example.Message',
         value: randomBytes(32)
       }
-    }
+    };
 
-    const received = to.signalManager.onMessage.waitFor(data =>
+    const received = to.signalManager.onMessage.waitFor((data) =>
       Buffer.from(data.payload.value).equals(Buffer.from(message.payload.value))
-    )
+    );
 
     await this.signalManager.sendMessage(message);
 
@@ -257,17 +257,16 @@ export class TestAgent {
         type: 'MESSAGE',
         signalServers: this.signalServers,
         author: this.peerId,
-        recipient: to.peerId,
+        recipient: to.peerId
       });
-    } catch(err: any) {
+    } catch (err: any) {
       this._stats.addFailure(err, {
         type: 'MESSAGE',
         signalServers: this.signalServers,
         author: this.peerId,
-        recipient: to.peerId,
+        recipient: to.peerId
       });
     }
-
   }
 }
 
