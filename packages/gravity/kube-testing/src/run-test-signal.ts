@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { raise } from '@dxos/debug';
 import { SignalServerRunner } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-// const PATH_TO_KUBE_REPO = '/Users/mykola/Documents/dev/kube/';
-const PATH_TO_KUBE_REPO = '/Users/dmaretskyi/Projects/kube/';
+const PATH_TO_KUBE_REPO =
+  {
+    mykola: '/Users/mykola/Documents/dev/kube/',
+    dmaretskyi: '/Users/dmaretskyi/Projects/kube/'
+  }[execSync('whoami').toString().trim()] ?? raise(new Error('Who are you?'));
 const BIN_PATH = './cmds/signal-test/main.go';
 
 {
