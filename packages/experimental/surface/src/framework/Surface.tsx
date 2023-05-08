@@ -4,15 +4,12 @@
 
 import React, { createContext, ReactNode } from 'react';
 
-import { Plugin } from './Plugin';
-
 type SurfaceContextType = {};
 
 const SurfaceContext = createContext<SurfaceContextType | undefined>(undefined);
 
 export type SurfaceProps = {
   id: string; // TODO(burdon): Hierarchical ID.
-  plugins?: Plugin[];
   element?: ReactNode;
 };
 

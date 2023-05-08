@@ -4,3 +4,4 @@
 
 export * from './DebugPlugin';
 export * from './StackPlugin';
+export * from './SettingsPlugin';

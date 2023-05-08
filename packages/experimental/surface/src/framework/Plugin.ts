@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Define state.
+import { FC } from 'react';
 
+// TODO(burdon): State.
 export type Plugin = {
   id: string;
+  components?: Record<string, FC>;
 };
