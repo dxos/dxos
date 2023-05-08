@@ -14,35 +14,35 @@ export type AppAction = {
   data: any;
 };
 
-export type RouteAdapter<T> = {
-  paramsToState: (params: any) => T;
-  stateToPath: (state?: T) => string;
+export type RouteAdapter<TState> = {
+  paramsToState: (params: any) => TState;
+  stateToPath: (state?: TState) => string;
 };
 
-type AppContextType<T = {}> = {
-  state: T;
+type AppContextType<TState = {}> = {
+  state: TState;
   dispatch: Dispatch<any>;
   plugins: Record<string, Plugin>;
-  routeAdapter?: RouteAdapter<T>;
+  routeAdapter?: RouteAdapter<TState>;
 };
 
 const AppContext = createContext<AppContextType<any> | undefined>(undefined);
 
-type AppContextProviderProps<T> = {
-  initialState: T;
+type AppContextProviderProps<TState> = {
+  initialState: TState;
   plugins?: Record<string, Plugin>;
-  routeAdapter?: RouteAdapter<T>;
-  reducer: (state: T, action: AppAction) => T;
+  routeAdapter?: RouteAdapter<TState>;
+  reducer: (state: TState, action: AppAction) => TState;
 };
 
-export const AppContextProvider = <T = {},>({
+export const AppContextProvider = <TState = {},>({
   children,
   initialState,
   plugins = {},
   routeAdapter,
   reducer
-}: PropsWithChildren<AppContextProviderProps<T>>) => {
-  const [state, dispatch] = useReducer<Reducer<T, AppAction>>(reducer, initialState);
+}: PropsWithChildren<AppContextProviderProps<TState>>) => {
+  const [state, dispatch] = useReducer<Reducer<TState, AppAction>>(reducer, initialState);
   return <AppContext.Provider value={{ state, dispatch, plugins, routeAdapter }}>{children}</AppContext.Provider>;
 };
 
