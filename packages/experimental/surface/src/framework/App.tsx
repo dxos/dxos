@@ -9,10 +9,6 @@ import { raise } from '@dxos/debug';
 
 import { Plugin } from './Plugin';
 
-//
-// App
-//
-
 export type AppAction = {
   type: string;
   data: any;

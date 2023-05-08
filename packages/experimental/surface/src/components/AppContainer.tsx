@@ -4,12 +4,9 @@
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
-import { Outlet } from 'react-router-dom';
 
-import { Button, Main, MainOverlay, MainRoot, Sidebar as SidebarRoot, useMainContext } from '@dxos/aurora';
+import { Button, useMainContext } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-
-import { Surface } from '../framework';
 
 const NAME = 'what-does-this-do?';
 
@@ -46,6 +43,7 @@ const MainPanel = ({ children }: PropsWithChildren) => {
   );
 };
 
+/*
 export const AppContainer = () => {
   return (
     <MainRoot defaultSidebarOpen>
@@ -65,3 +63,4 @@ export const AppContainer = () => {
     </MainRoot>
   );
 };
+*/
