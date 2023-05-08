@@ -7,6 +7,7 @@ import { FC } from 'react';
 export interface Plugin<State extends {} = {}> {
   id: string;
   components: Record<string, FC>;
+  deps: Plugin[];
   state: State;
 }
 
@@ -16,6 +17,7 @@ export abstract class PluginBase<State extends {} = {}> implements Plugin<State>
   protected constructor(
     public readonly id: string,
     public readonly components: Record<string, FC>,
+    public readonly deps: Plugin[] = [],
     initialState: State = {} as State
   ) {
     this._state = { ...initialState };

@@ -21,9 +21,16 @@ import {
 } from './framework';
 import { DebugPlugin, SettingsPlugin, StackPlugin } from './plugins';
 
+// Issues:
+// - TODO(burdon): App and Plugin lifecycle.
+// - TODO(burdon): State management (access indexed app state).
+// - TODO(burdon): Map route to Surfaces and Surface to plugin.
+// - TODO(burdon): Events dispatch (bubbling).
+// - TODO(burdon): Stack plugin: contract to section components from plugins.
+
 /**
  * Goals
- * - Don't use react router navigate directly.
+ * - Don't use React router navigate directly.
  * - Update app state from router.
  * - Update surfaces bases on app state.
  */
@@ -93,7 +100,6 @@ export const TestApp = () => {
   return (
     <AppContextProvider<AppState>
       initialState={{ counter: 0 }}
-      // TODO(burdon): Configure plugins (e.g., state mapping).
       // prettier-ignore
       plugins={{
         debug: new DebugPlugin(),
@@ -112,6 +118,7 @@ export const TestApp = () => {
 // Components
 //
 
+// TODO(burdon): See AppContainer (Sidebar, etc.)
 export const AppRoot = () => {
   const spaces = useSpaces();
   useEffect(() => {
