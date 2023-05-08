@@ -4,6 +4,7 @@ import { ChildProcess, fork } from "child_process";
 import { AgentParams, TestPlan } from "./spec-base";
 import * as fs from 'fs'
 import { log } from "@dxos/log";
+import { join } from "path";
 
 type PlanOptions = {
   staggerAgents?: number;
@@ -54,12 +55,15 @@ const runPlanner = async <S, C>({plan, spec, options}: RunPlanParams<S, C>) => {
       agentId,
       spec,
       agents,
+      outDir: join(outDir, agentId),
       config: agentConfig
     }
 
     if(options.staggerAgents !== undefined && options.staggerAgents > 0) {
       await sleep(options.staggerAgents)
     }
+
+    fs.mkdirSync(agentParams.outDir, { recursive: true })
 
     const childProcess = fork(process.argv[1], {
       env: {

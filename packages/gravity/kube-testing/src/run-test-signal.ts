@@ -8,8 +8,8 @@ import path from 'node:path';
 import { SignalServerRunner } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-const PATH_TO_KUBE_REPO = '/Users/mykola/Documents/dev/kube/';
-// const PATH_TO_KUBE_REPO = '/Users/dmaretskyi/Projects/kube/';
+// const PATH_TO_KUBE_REPO = '/Users/mykola/Documents/dev/kube/';
+const PATH_TO_KUBE_REPO = '/Users/dmaretskyi/Projects/kube/';
 const BIN_PATH = './cmds/signal-test/main.go';
 
 {

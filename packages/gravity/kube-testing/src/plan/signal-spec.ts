@@ -52,11 +52,11 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     })
   }
 
-  async agentMain({ agentId, agents, spec, config }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async agentMain({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     const ctx = new Context();
     const stats = new Stats();
 
-    log.info('start', { agentId })
+    log.info('start', { agentId, config, spec, outDir })
 
     const topics = config.topics.map(topic => PublicKey.from(topic))
     const agentsPerTopic: Record<string, string[]> = {}
