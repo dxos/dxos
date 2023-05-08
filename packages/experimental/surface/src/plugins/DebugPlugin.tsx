@@ -5,9 +5,9 @@
 import React from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { Plugin, useAppState } from '../framework';
+import { PluginBase, useAppState } from '../framework';
 
-const DebugInfo = () => {
+const DebugPanel = () => {
   const location = useLocation();
   const params = useParams();
   const state = useAppState();
@@ -15,7 +15,10 @@ const DebugInfo = () => {
   return <pre>{JSON.stringify({ router: { location, params }, state }, undefined, 2)}</pre>;
 };
 
-export const DebugPlugin: Plugin = {
-  id: 'org.dxos.debug',
-  components: { main: DebugInfo }
-};
+export class DebugPlugin extends PluginBase {
+  constructor() {
+    super('org.dxos.debug', {
+      main: DebugPanel
+    });
+  }
+}

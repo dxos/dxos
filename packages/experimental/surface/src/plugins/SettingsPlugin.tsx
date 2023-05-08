@@ -4,14 +4,17 @@
 
 import React from 'react';
 
-import { Plugin } from '../framework';
+import { PluginBase } from '../framework';
 
 // TODO(burdon): Display config.
-const Settings = () => {
+const SettingsPanel = () => {
   return <h1>Settings</h1>;
 };
 
-export const SettingsPlugin: Plugin = {
-  id: 'org.dxos.settings',
-  components: { main: Settings }
-};
+export class SettingsPlugin extends PluginBase {
+  constructor() {
+    super('org.dxos.settings', {
+      main: SettingsPanel
+    });
+  }
+}

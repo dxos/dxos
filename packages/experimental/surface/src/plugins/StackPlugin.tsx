@@ -6,7 +6,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 
-import { Plugin } from '../framework';
+import { PluginBase } from '../framework';
 
 // TODO(burdon): Implement toy stack by listing object in space.
 
@@ -16,15 +16,14 @@ const Stack = () => {
   return <div>Stack</div>;
 };
 
-const StackPluginState = {
-  spaceKey: PublicKey
+export type StackPluginState = {
+  spaceKey: PublicKey;
 };
 
-export const StackPlugin: Plugin = {
-  id: 'org.dxos.stack',
-  // TODO(burdon): Configure Plugin with mapping from AppState.
-  state: StackPluginState,
-  components: {
-    main: Stack
+export class StackPlugin extends PluginBase<StackPluginState> {
+  constructor() {
+    super('org.dxos.stack', {
+      main: Stack
+    });
   }
-};
+}

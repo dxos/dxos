@@ -94,7 +94,12 @@ export const TestApp = () => {
     <AppContextProvider<AppState>
       initialState={{ counter: 0 }}
       // TODO(burdon): Configure plugins (e.g., state mapping).
-      plugins={{ debug: DebugPlugin, settings: SettingsPlugin, stack: StackPlugin }}
+      // prettier-ignore
+      plugins={{
+        debug: new DebugPlugin(),
+        settings: new SettingsPlugin(),
+        stack: new StackPlugin()
+      }}
       routeAdapter={routeAdapter}
       reducer={appReducer}
     >
