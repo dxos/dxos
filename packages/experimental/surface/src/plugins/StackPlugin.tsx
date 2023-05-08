@@ -12,15 +12,18 @@ import { Plugin } from '../framework';
 
 const Stack = () => {
   // TODO(burdon): Get state from Surface.
+  // const { state: { spaceKey } } = useSurface();
   return <div>Stack</div>;
+};
+
+const StackPluginState = {
+  spaceKey: PublicKey
 };
 
 export const StackPlugin: Plugin = {
   id: 'org.dxos.stack',
   // TODO(burdon): Configure Plugin with mapping from AppState.
-  state: {
-    spaceKey: PublicKey
-  },
+  state: StackPluginState,
   components: {
     main: Stack
   }

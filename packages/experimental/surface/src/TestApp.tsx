@@ -93,6 +93,7 @@ export const TestApp = () => {
   return (
     <AppContextProvider<AppState>
       initialState={{ counter: 0 }}
+      // TODO(burdon): Configure plugins (e.g., state mapping).
       plugins={{ debug: DebugPlugin, settings: SettingsPlugin, stack: StackPlugin }}
       routeAdapter={routeAdapter}
       reducer={appReducer}
@@ -143,6 +144,7 @@ export const Header = () => {
       <div className='flex space-x-2'>
         <Button onClick={() => appNavigate()}>Home</Button>
         <Button onClick={() => appNavigate({ spaceKey: space.key })}>Space</Button>
+        {/* TODO(burdon): Select object. */}
         <Button onClick={() => appNavigate({ spaceKey: space.key, objectId: '123' })}>Object</Button>
       </div>
 
