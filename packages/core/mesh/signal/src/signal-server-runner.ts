@@ -34,7 +34,7 @@ export class SignalServerRunner {
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000, env = {}}: TestBrokerOptions) {
+  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000, env = {} }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
     this._cwd = cwd;
@@ -46,7 +46,7 @@ export class SignalServerRunner {
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
-    log(`starting`, {
+    log('starting', {
       binCommand: this._binCommand,
       signalArguments: this._signalArguments,
       cwd: this._cwd,
