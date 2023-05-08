@@ -167,6 +167,10 @@ export class TestAgent {
     if (this._ctx.disposed) {
       throw new Error('Agent already destroyed');
     }
+    log.trace('dxos.test.signal.start', {
+      eventType: 'AGENT_START',
+      peerId: this.peerId
+    });
 
     this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic: discoveredTopic }) => {
       // process.stdout.write('#')
