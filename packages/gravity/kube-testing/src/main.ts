@@ -12,6 +12,9 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { Stats, TestBuilder } from './test-builder';
+import { runPlan } from './plan/run-plan';
+import { SignalTestPlan } from './plan/signal-spec';
+import { randomArraySlice } from './util';
 
 type TestConfig = {
   servers: number;
@@ -60,17 +63,6 @@ const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: St
     await sleep(5);
     await builder.createPeer({ signals, stats });
   }
-};
-
-const randomArraySlice = <T>(array: T[], size: number) => {
-  const result = [];
-  const arrayCopy = [...array];
-  for (let i = 0; i < size; i++) {
-    const randomIndex = Math.floor(Math.random() * arrayCopy.length);
-    result.push(arrayCopy[randomIndex]);
-    arrayCopy.splice(randomIndex, 1);
-  }
-  return result;
 };
 
 const test = async () => {
@@ -171,6 +163,25 @@ const test = async () => {
   }
 };
 
-test()
-  .then(() => log.info('Done'))
-  .catch((e) => log.catch(e));
+// test()
+//   .then(() => log.info('Done'))
+//   .catch((e) => log.catch(e));
+
+runPlan({
+  plan: new SignalTestPlan(),
+  spec: {
+    servers: 1,
+    agents: 10,
+    serversPerAgent: 1,
+    topicCount: 1,
+    topicsPerAgent: 1,
+    discoverTimeout: 5_000,
+    repeatInterval: 500,
+    duration: 60_000,
+    randomSeed: PublicKey.random().toHex(),
+    type: 'discovery'
+  },
+  options: {
+    staggerAgents: 5
+  }
+})
