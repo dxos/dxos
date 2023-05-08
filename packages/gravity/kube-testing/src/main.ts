@@ -17,7 +17,7 @@ type TestConfig = {
   servers: number;
   agents: number;
   serversPerAgent: number;
-  topicCount: number,
+  topicCount: number;
   topicsPerAgent: number;
   discoverTimeout: number;
   repeatInterval: number;
@@ -28,13 +28,13 @@ type TestConfig = {
 
 const testConfig: TestConfig = {
   servers: 2,
-  agents: 40,
+  agents: 10,
   serversPerAgent: 1,
   topicCount: 1,
   topicsPerAgent: 1,
   discoverTimeout: 5_000,
   repeatInterval: 0,
-  duration: 60_000,
+  duration: 10_000,
   randomSeed: PublicKey.random().toHex(),
   type: 'discovery'
 };
@@ -57,7 +57,7 @@ const setupTest = async (builder: TestBuilder, testConfig: TestConfig, stats: St
     // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
 
     // NOTE: Opening too many connections too fast causes some of them to be dropped.
-    await sleep(5)
+    await sleep(5);
     await builder.createPeer({ signals, stats });
   }
 };
@@ -80,11 +80,11 @@ const test = async () => {
 
   const topics = Array.from(range(testConfig.topicCount)).map(() => PublicKey.random());
 
-  const outFolder = `${process.cwd()}/out/results/${new Date().toISOString()}`
+  const outFolder = `${process.cwd()}/out/results/${new Date().toISOString()}`;
 
   {
     log.info('Test setup...', testConfig);
-    fs.mkdirSync(outFolder, { recursive: true })
+    fs.mkdirSync(outFolder, { recursive: true });
 
     await setupTest(builder, testConfig, stats, outFolder);
 
@@ -96,7 +96,7 @@ const test = async () => {
   }
 
   // NOTE: Sometimes first message is not dropped if it is sent too soon.
-  await sleep(1_000)
+  await sleep(1_000);
 
   //
   // test
@@ -117,7 +117,11 @@ const test = async () => {
 
           await Promise.all(
             Array.from(stats.topics.entries()).map(([topic, agents]) =>
-              Promise.all(Array.from(agents.values()).map((agent) => cancelWithContext(ctx, agent.discoverPeers(topic, testConfig.discoverTimeout))))
+              Promise.all(
+                Array.from(agents.values()).map((agent) =>
+                  cancelWithContext(ctx, agent.discoverPeers(topic, testConfig.discoverTimeout))
+                )
+              )
             )
           );
 
@@ -129,12 +133,11 @@ const test = async () => {
           break;
         }
         case 'signaling': {
-          await Promise.all(builder.peers.map((peer) =>
-            peer.sendMessage(randomArraySlice(builder.peers, 1)[0])
-          ));
+          await Promise.all(builder.peers.map((peer) => peer.sendMessage(randomArraySlice(builder.peers, 1)[0])));
           break;
         }
-        default: throw new Error(`Unknown test type: ${testConfig.type}`);
+        default:
+          throw new Error(`Unknown test type: ${testConfig.type}`);
       }
 
       log.info('iteration finished', stats.shortStats);
@@ -158,10 +161,13 @@ const test = async () => {
   //
   {
     log.info('Short stats', stats.shortStats);
-    const fileName = `${outFolder}/stats.json`
-    fs.writeFileSync(fileName, JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2));
-    log.info('Stats written to file', { fileName })
-    console.log(`stats file: ${fileName}`)
+    const fileName = `${outFolder}/stats.json`;
+    fs.writeFileSync(
+      fileName,
+      JSON.stringify({ testConfig, shortStats: stats.shortStats, stats: stats.performance }, null, 2)
+    );
+    log.info('Stats written to file', { fileName });
+    console.log(`stats file: ${fileName}`);
   }
 };
 
