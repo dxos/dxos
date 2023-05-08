@@ -26,7 +26,7 @@ export type RouteAdapter<T> = {
 type AppContextType<T = {}> = {
   state: T;
   dispatch: Dispatch<any>;
-  plugins: Plugin[];
+  plugins: Record<string, Plugin>;
   routeAdapter?: RouteAdapter<T>;
 };
 
@@ -34,7 +34,7 @@ const AppContext = createContext<AppContextType<any> | undefined>(undefined);
 
 type AppContextProviderProps<T> = {
   initialState: T;
-  plugins?: Plugin[];
+  plugins?: Record<string, Plugin>;
   routeAdapter?: RouteAdapter<T>;
   reducer: (state: T, action: AppAction) => T;
 };
@@ -42,7 +42,7 @@ type AppContextProviderProps<T> = {
 export const AppContextProvider = <T = {},>({
   children,
   initialState,
-  plugins = [],
+  plugins = {},
   routeAdapter,
   reducer
 }: PropsWithChildren<AppContextProviderProps<T>>) => {
@@ -65,4 +65,9 @@ export const useAppNavigate = <T,>() => {
 export const useAppReducer = () => {
   const { dispatch } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return dispatch;
+};
+
+export const usePlugin = (id: string): Plugin => {
+  const { plugins } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  return plugins[id];
 };

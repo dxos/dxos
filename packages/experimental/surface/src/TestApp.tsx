@@ -3,11 +3,12 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createMemoryRouter, Outlet, RouterProvider, useNavigate } from 'react-router-dom';
 
 import { Button } from '@dxos/aurora';
-import { PublicKey } from '@dxos/react-client';
+import { Generator } from '@dxos/kai-types/testing';
+import { PublicKey, useSpaces } from '@dxos/react-client';
 
 import {
   AppAction,
@@ -18,7 +19,7 @@ import {
   useAppReducer,
   useAppState
 } from './framework';
-import { DebugPlugin, StackPlugin } from './plugins';
+import { DebugPlugin, SettingsPlugin, StackPlugin } from './plugins';
 
 /**
  * Goals
@@ -46,7 +47,7 @@ export const TestApp = () => {
       children: [
         {
           path: '/settings',
-          element: <Surface id='settings' />
+          element: <Surface plugin='settings' />
         },
         {
           path: '/:spaceKey',
@@ -58,7 +59,6 @@ export const TestApp = () => {
           // }
           children: [
             {
-              // TODO(burdon): Configure Surface based on object type.
               path: '/:spaceKey/:objectId'
             }
           ]
@@ -93,7 +93,7 @@ export const TestApp = () => {
   return (
     <AppContextProvider<AppState>
       initialState={{ counter: 0 }}
-      plugins={{ debug: DebugPlugin, stack: StackPlugin }}
+      plugins={{ debug: DebugPlugin, settings: SettingsPlugin, stack: StackPlugin }}
       routeAdapter={routeAdapter}
       reducer={appReducer}
     >
@@ -107,6 +107,12 @@ export const TestApp = () => {
 //
 
 export const AppRoot = () => {
+  const spaces = useSpaces();
+  useEffect(() => {
+    const generator = new Generator(spaces[0].db);
+    void generator.generate();
+  }, [spaces]);
+
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex shrink-0 p-4 bg-zinc-200'>
@@ -118,7 +124,7 @@ export const AppRoot = () => {
       </main>
 
       <div className='flex shrink-0 p-4 bg-zinc-200'>
-        <Surface id='debug' />
+        <Surface plugin='debug' component='main' />
       </div>
     </div>
   );
@@ -128,14 +134,16 @@ export const Header = () => {
   const navigate = useNavigate();
   const appNavigate = useAppNavigate<AppState>();
   const dispatch = useAppReducer();
+  const spaces = useSpaces();
+  const space = spaces[0];
 
   return (
     <nav className='flex grow justify-between'>
       {/* Action. */}
       <div className='flex space-x-2'>
         <Button onClick={() => appNavigate()}>Home</Button>
-        <Button onClick={() => appNavigate({ spaceKey: PublicKey.random() })}>Space</Button>
-        <Button onClick={() => appNavigate({ spaceKey: PublicKey.random(), objectId: '123' })}>Object</Button>
+        <Button onClick={() => appNavigate({ spaceKey: space.key })}>Space</Button>
+        <Button onClick={() => appNavigate({ spaceKey: space.key, objectId: '123' })}>Object</Button>
       </div>
 
       {/* Direct navigation. */}
@@ -170,6 +178,9 @@ export const SpaceContainer = () => {
           <pre>{objectId}</pre>
         </div>
       )}
+
+      {/* TODO(burdon): Configure based on object type. */}
+      <Surface plugin='stack' />
     </div>
   );
 };

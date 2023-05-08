@@ -17,5 +17,5 @@ const DebugInfo = () => {
 
 export const DebugPlugin: Plugin = {
   id: 'org.dxos.debug',
-  components: { debug: DebugInfo }
+  components: { main: DebugInfo }
 };

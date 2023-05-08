@@ -7,5 +7,5 @@ import { FC } from 'react';
 // TODO(burdon): State.
 export type Plugin = {
   id: string;
-  components?: Record<string, FC>;
+  components: Record<string, FC>;
 };

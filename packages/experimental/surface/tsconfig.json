@@ -43,6 +43,9 @@
     },
     {
       "path": "../kai-frames"
+    },
+    {
+      "path": "../kai-types"
     }
   ],
   "ts-node": {
