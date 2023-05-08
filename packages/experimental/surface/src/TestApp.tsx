@@ -8,7 +8,7 @@ import { createMemoryRouter, Outlet, RouterProvider, useNavigate } from 'react-r
 
 import { Button } from '@dxos/aurora';
 import { Generator } from '@dxos/kai-types/testing';
-import { PublicKey, useSpaces } from '@dxos/react-client';
+import { PublicKey, useSpace, useSpaces } from '@dxos/react-client';
 
 import {
   AppAction,
@@ -23,9 +23,9 @@ import { DebugPlugin, SettingsPlugin, StackPlugin } from './plugins';
 
 // Issues:
 // - TODO(burdon): App and Plugin lifecycle.
-// - TODO(burdon): State management (access indexed app state).
+// - TODO(burdon): State management (access indexed app state). How does a plugin get state?
 // - TODO(burdon): Map route to Surfaces and Surface to plugin.
-// - TODO(burdon): Events dispatch (bubbling).
+// - TODO(burdon): Actions dispatch (bubbling). Contracts/type-safety.
 // - TODO(burdon): Stack plugin: contract to section components from plugins.
 
 /**
@@ -54,7 +54,7 @@ export const TestApp = () => {
       children: [
         {
           path: '/settings',
-          element: <Surface plugin='settings' />
+          element: <Surface plugin='org.dxos.settings' />
         },
         {
           path: '/:spaceKey',
@@ -101,11 +101,11 @@ export const TestApp = () => {
     <AppContextProvider<AppState>
       initialState={{ counter: 0 }}
       // prettier-ignore
-      plugins={{
-        debug: new DebugPlugin(),
-        settings: new SettingsPlugin(),
-        stack: new StackPlugin()
-      }}
+      plugins={[
+        new DebugPlugin(),
+        new SettingsPlugin(),
+        new StackPlugin()
+      ]}
       routeAdapter={routeAdapter}
       reducer={appReducer}
     >
@@ -137,7 +137,7 @@ export const AppRoot = () => {
       </main>
 
       <div className='flex shrink-0 p-4 bg-zinc-200'>
-        <Surface plugin='debug' component='main' />
+        <Surface plugin='org.dxos.debug' />
       </div>
     </div>
   );
@@ -177,24 +177,28 @@ export const Header = () => {
 
 export const SpaceContainer = () => {
   const { spaceKey, objectId } = useAppState();
+  const space = useSpace(spaceKey);
+  const object = space?.db.getObjectById(objectId);
+
   return (
     <div>
-      <h2>SpaceContainer</h2>
-      {spaceKey && (
-        <div>
-          <span>space key</span>
-          <pre>{spaceKey.truncate()}</pre>
-        </div>
-      )}
-      {objectId && (
-        <div>
-          <span>object id</span>
-          <pre>{objectId}</pre>
-        </div>
-      )}
+      <div>
+        <h2>SpaceContainer</h2>
+        {spaceKey && (
+          <div>
+            <span>space key</span>
+            <pre>{spaceKey.truncate()}</pre>
+          </div>
+        )}
+        {objectId && (
+          <div>
+            <span>object id</span>
+            <pre>{objectId}</pre>
+          </div>
+        )}
+      </div>
 
-      {/* TODO(burdon): Configure based on object type. */}
-      <Surface plugin='stack' />
+      {object && <Surface plugin='org.dxos.stack' data={{ object }} />}
     </div>
   );
 };

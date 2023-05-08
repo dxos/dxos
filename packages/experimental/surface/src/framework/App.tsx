@@ -22,7 +22,7 @@ export type RouteAdapter<T> = {
 type AppContextType<T = {}> = {
   state: T;
   dispatch: Dispatch<any>;
-  plugins: Record<string, Plugin>;
+  plugins?: Plugin[];
   routeAdapter?: RouteAdapter<T>;
 };
 
@@ -30,7 +30,7 @@ const AppContext = createContext<AppContextType<any> | undefined>(undefined);
 
 type AppContextProviderProps<T> = {
   initialState: T;
-  plugins?: Record<string, Plugin>;
+  plugins?: Plugin[];
   routeAdapter?: RouteAdapter<T>;
   reducer: (state: T, action: AppAction) => T;
 };
@@ -38,7 +38,7 @@ type AppContextProviderProps<T> = {
 export const AppContextProvider = <T = {},>({
   children,
   initialState,
-  plugins = {},
+  plugins = [],
   routeAdapter,
   reducer
 }: PropsWithChildren<AppContextProviderProps<T>>) => {
@@ -46,24 +46,36 @@ export const AppContextProvider = <T = {},>({
   return <AppContext.Provider value={{ state, dispatch, plugins, routeAdapter }}>{children}</AppContext.Provider>;
 };
 
+export const usePlugins = (): Plugin[] => {
+  const { plugins = [] } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  return plugins;
+};
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const useAppState = () => {
   const { state, routeAdapter } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   const params = useParams();
   return { ...state, ...routeAdapter?.paramsToState?.(params) };
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const useAppNavigate = <T,>() => {
   const { routeAdapter } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   const navigate = useNavigate();
   return (state?: T) => navigate(routeAdapter!.stateToPath(state));
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const useAppReducer = () => {
   const { dispatch } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return dispatch;
-};
-
-export const usePlugin = (id: string): Plugin => {
-  const { plugins } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
-  return plugins[id];
 };

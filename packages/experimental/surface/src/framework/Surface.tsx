@@ -2,18 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext } from 'react';
+import React, { createContext, FC, useContext } from 'react';
 
-import { usePlugin } from './App';
+import { raise } from '@dxos/debug';
 
-type SurfaceContextType = {};
+import { usePlugins } from './App';
+
+type SurfaceContextType = { data: any };
 
 const SurfaceContext = createContext<SurfaceContextType | undefined>(undefined);
 
 export type SurfaceProps = {
   id?: string; // TODO(burdon): Hierarchical ID.
-  plugin: string;
-  component?: string;
+  plugin?: string;
+  data?: any;
 };
 
 /**
@@ -21,18 +23,34 @@ export type SurfaceProps = {
  * Surfaces are dynamically configurable by the App based on the application state.
  * Surfaces are nested and can be used to create a hierarchy of UI components.
  */
-export const Surface = ({ id, plugin: pluginId, component }: SurfaceProps) => {
-  const plugin = usePlugin(pluginId);
-  const Component = plugin.components[component || 'main'];
+export const Surface = ({ id, plugin: pluginId, data }: SurfaceProps) => {
+  const plugins = usePlugins();
+
+  let Component: FC | undefined;
+  const plugin = pluginId ? plugins.find(({ id }) => id === pluginId) : undefined;
+  if (plugin) {
+    Component = plugin.getComponent(data);
+  } else {
+    // Get first matching component.
+    for (const plugin of plugins) {
+      Component = plugin.getComponent(data);
+      if (Component) {
+        break;
+      }
+    }
+  }
+
   if (!Component) {
     return null;
   }
 
   return (
-    <SurfaceContext.Provider value={{}}>
+    <SurfaceContext.Provider value={{ data }}>
       <Component />
     </SurfaceContext.Provider>
   );
 };
 
-export const useSurface = () => {};
+export const useSurface = (): SurfaceContextType => {
+  return useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext'));
+};
