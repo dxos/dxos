@@ -7,7 +7,7 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 200,
+    agents: 150,
     serversPerAgent: 1,
     topicCount: 1,
     topicsPerAgent: 1,

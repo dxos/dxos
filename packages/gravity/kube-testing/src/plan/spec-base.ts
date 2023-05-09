@@ -10,10 +10,13 @@ export type TestParams<S> = {
 
 export type AgentParams<S, C> = {
   agentId: string;
-  spec: S;
-  agents: Record<string, C>;
   outDir: string;
   config: C;
+
+  // environment: {
+    spec: S;
+    agents: Record<string, C>;
+  // }
 };
 
 export type PlanResults = {
@@ -26,10 +29,14 @@ export type AgentResult = {
   logFile: string
 }
 
+// plan vs environment
 export interface TestPlan<S, C> {
+  // init
   configurePlan(params: TestParams<S>): Promise<C[]>; // 1
 
+  // run
   agentMain(params: AgentParams<S, C>): Promise<void>; // N
 
+  // finish
   finishPlan(results: PlanResults): Promise<void>;
 }
