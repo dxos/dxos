@@ -7,21 +7,23 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { useConfig } from '@dxos/react-client';
 
-import { PluginBase, useAppState } from '../framework';
+import { Plugin } from '../framework';
 
 const DebugPanel = () => {
   const config = useConfig();
   const location = useLocation();
   const params = useParams();
-  const state = useAppState();
 
-  return <pre>{JSON.stringify({ config: config.values, router: { location, params }, state }, undefined, 2)}</pre>;
+  return <pre>{JSON.stringify({ config: config.values, router: { location, params } }, undefined, 2)}</pre>;
 };
 
-export class DebugPlugin extends PluginBase {
+export class DebugPlugin extends Plugin {
   constructor() {
-    super('org.dxos.debug', {
-      main: DebugPanel
+    super({
+      id: 'org.dxos.debug',
+      components: {
+        main: DebugPanel
+      }
     });
   }
 }

@@ -7,7 +7,7 @@ import React from 'react';
 import { DocumentStack } from '@dxos/kai-types';
 import { PublicKey } from '@dxos/keys';
 
-import { PluginBase, useSurface } from '../framework';
+import { Plugin, useSurface } from '../framework';
 
 const Stack = () => {
   // TODO(burdon): Make type-safe.
@@ -22,17 +22,20 @@ export type StackPluginState = {
   spaceKey: PublicKey;
 };
 
-export class StackPlugin extends PluginBase<StackPluginState> {
+export class StackPlugin extends Plugin<StackPluginState> {
   constructor() {
-    super('org.dxos.stack', {
-      main: Stack
+    super({
+      id: 'org.dxos.stack',
+      components: {
+        main: Stack
+      }
     });
   }
 
   override getComponent(context: any) {
     const { object } = context;
     if (object?.type === DocumentStack.type) {
-      return this.components.main;
+      return this.config.components.main;
     }
   }
 }

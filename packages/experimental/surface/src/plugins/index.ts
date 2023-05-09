@@ -3,5 +3,5 @@
 //
 
 export * from './DebugPlugin';
+export * from './SpacesPlugin';
 export * from './StackPlugin';
-export * from './SettingsPlugin';

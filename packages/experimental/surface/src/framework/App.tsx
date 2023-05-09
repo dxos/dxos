@@ -2,80 +2,67 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Dispatch, PropsWithChildren, createContext, useContext, useReducer, Reducer } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { PropsWithChildren, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
+import { Action } from './Action';
 import { Plugin } from './Plugin';
+import { useSurface } from './Surface';
 
-export type AppAction = {
-  type: string;
-  data: any;
-};
-
+/**
+ * @deprecated
+ */
 export type RouteAdapter<T> = {
   paramsToState: (params: any) => T;
   stateToPath: (state?: T) => string;
 };
 
-type AppContextType<T = {}> = {
-  state: T;
-  dispatch: Dispatch<any>;
-  plugins?: Plugin[];
-  routeAdapter?: RouteAdapter<T>;
+type AppContextType = {
+  plugins: Plugin<any, any>[];
+  state: Record<string, any>;
 };
 
-const AppContext = createContext<AppContextType<any> | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-type AppContextProviderProps<T> = {
-  initialState: T;
-  plugins?: Plugin[];
-  routeAdapter?: RouteAdapter<T>;
-  reducer: (state: T, action: AppAction) => T;
+type AppContextProviderProps = {
+  plugins?: Plugin<any, any>[];
 };
 
-export const AppContextProvider = <T = {},>({
-  children,
-  initialState,
-  plugins = [],
-  routeAdapter,
-  reducer
-}: PropsWithChildren<AppContextProviderProps<T>>) => {
-  const [state, dispatch] = useReducer<Reducer<T, AppAction>>(reducer, initialState);
-  return <AppContext.Provider value={{ state, dispatch, plugins, routeAdapter }}>{children}</AppContext.Provider>;
+// TODO(burdon): Set-up plugin contexts.
+export const AppContextProvider = ({ children, plugins = [] }: PropsWithChildren<AppContextProviderProps>) => {
+  const state = plugins.reduce<Record<string, any>>((state, plugin) => {
+    return { ...state, [plugin.config.id]: plugin.config.initialState };
+  }, {});
+
+  return <AppContext.Provider value={{ plugins, state }}>{children}</AppContext.Provider>;
 };
 
-export const usePlugins = (): Plugin[] => {
-  const { plugins = [] } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+export const usePlugins = (): Plugin<any, any>[] => {
+  const { plugins } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return plugins;
 };
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const useAppState = () => {
-  const { state, routeAdapter } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
-  const params = useParams();
-  return { ...state, ...routeAdapter?.paramsToState?.(params) };
+export const usePluginState = <TState extends {}>(type: typeof Plugin<TState, any>): TState => {
+  const { state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  const { plugin } = useSurface();
+  // TODO(burdon): Type check.
+  return state[plugin.config.id];
 };
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const useAppNavigate = <T,>() => {
-  const { routeAdapter } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
-  const navigate = useNavigate();
-  return (state?: T) => navigate(routeAdapter!.stateToPath(state));
-};
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const useAppReducer = () => {
-  const { dispatch } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
-  return dispatch;
+// TODO(burdon): Dispatch to all or bubble?
+export const useActionDispatch = () => {
+  const { plugins, state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  return <TAction extends Action>(action: TAction) => {
+    plugins.forEach((plugin) => {
+      const reducer = plugin.config.reducer;
+      if (reducer) {
+        // TODO(burdon): Use ctx util.
+        setTimeout(() => {
+          const pluginState = state[plugin.config.id];
+          state[plugin.config.id] = reducer(pluginState, action);
+        });
+      }
+    });
+  };
 };

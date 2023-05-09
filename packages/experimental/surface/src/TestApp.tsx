@@ -10,16 +10,8 @@ import { Button } from '@dxos/aurora';
 import { Generator } from '@dxos/kai-types/testing';
 import { PublicKey, useSpace, useSpaces } from '@dxos/react-client';
 
-import {
-  AppAction,
-  AppContextProvider,
-  RouteAdapter,
-  Surface,
-  useAppNavigate,
-  useAppReducer,
-  useAppState
-} from './framework';
-import { DebugPlugin, SettingsPlugin, StackPlugin } from './plugins';
+import { AppContextProvider, RouteAdapter, Surface, useActionDispatch } from './framework';
+import { DebugPlugin, SpacesPlugin, StackPlugin } from './plugins';
 
 // Issues:
 // - TODO(burdon): App and Plugin lifecycle.
@@ -53,8 +45,8 @@ export const TestApp = () => {
       element: <AppRoot />,
       children: [
         {
-          path: '/settings',
-          element: <Surface plugin='org.dxos.settings' />
+          path: '/',
+          element: <Surface plugin='org.dxos.spaces' component='main' />
         },
         {
           path: '/:spaceKey',
@@ -74,6 +66,8 @@ export const TestApp = () => {
     }
   ]);
 
+  // TODO(burdon): Create NavPlugin for app.
+
   const routeAdapter: RouteAdapter<AppState> = {
     paramsToState: ({ spaceKey, objectId }: { spaceKey?: string; objectId?: string }): AppState => {
       return {
@@ -87,27 +81,14 @@ export const TestApp = () => {
     }
   };
 
-  const appReducer = (state: AppState, { type }: AppAction): AppState => {
-    switch (type) {
-      case 'inc': {
-        return { ...state, counter: (state.counter || 0) + 1 };
-      }
-    }
-
-    return state;
-  };
-
   return (
-    <AppContextProvider<AppState>
-      initialState={{ counter: 0 }}
+    <AppContextProvider
       // prettier-ignore
       plugins={[
         new DebugPlugin(),
-        new SettingsPlugin(),
+        new SpacesPlugin(),
         new StackPlugin()
       ]}
-      routeAdapter={routeAdapter}
-      reducer={appReducer}
     >
       <RouterProvider router={router} fallbackElement={<div>FALLBACK</div>} />
     </AppContextProvider>
@@ -137,7 +118,7 @@ export const AppRoot = () => {
       </main>
 
       <div className='flex shrink-0 p-4 bg-zinc-200'>
-        <Surface plugin='org.dxos.debug' />
+        <Surface plugin='org.dxos.debug' component='main' />
       </div>
     </div>
   );
@@ -146,7 +127,8 @@ export const AppRoot = () => {
 export const Header = () => {
   const navigate = useNavigate();
   const appNavigate = useAppNavigate<AppState>();
-  const dispatch = useAppReducer();
+  // TODO(burdon): Create plugin to handle space selection.
+  const dispatch = useActionDispatch();
   const spaces = useSpaces();
   const space = spaces[0];
 

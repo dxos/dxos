@@ -4,32 +4,18 @@
 
 import { FC } from 'react';
 
-export interface Plugin<State extends {} = {}> {
+import { Action, NullAction } from './Action';
+
+export interface PluginConfig<TState extends {} = {}, TAction extends Action = typeof NullAction> {
   id: string;
-  // TODO(burdon): Remove state.
-  state: State;
-  // TODO(burdon): String keys?
+  // TODO(burdon): Named components?
   components: Record<string, FC>;
-  getComponent: (context: any) => FC | undefined;
+  initialState?: TState;
+  reducer?: (state: TState, action: TAction) => TState;
 }
 
-export abstract class PluginBase<State extends {} = {}> implements Plugin<State> {
-  private readonly _state: State;
-
-  protected constructor(
-    public readonly id: string,
-    public readonly components: Record<string, FC>,
-    initialState: State = {} as State
-  ) {
-    this._state = { ...initialState };
-  }
-
-  // TODO(burdon): Plugin context.
-  // TODO(burdon): State is part of AppState (useAppState).
-  //  By default indexed by the plugin id, although this should be configured since there may be multiple instances.
-  get state() {
-    return this._state;
-  }
+export abstract class Plugin<TState extends {} = {}, TAction extends Action = typeof NullAction> {
+  protected constructor(public readonly config: PluginConfig<TState, TAction>) {}
 
   getComponent(context: any): FC | undefined {
     return undefined;
