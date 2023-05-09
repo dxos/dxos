@@ -24,12 +24,14 @@ export const createFileProcessor = ({ path, level }: { path: string; level: LogL
 
     const record = {
       ...entry,
+      timestamp: Date.now(),
       meta: {
-        ...entry.meta
+        ...entry.meta,
       },
       context: jsonify(getContextFromEntry(entry))
     };
     delete record.meta?.bugcheck;
+    delete record.meta?.scope;
     appendFileSync(fd, JSON.stringify(record) + '\n');
   };
 };
@@ -52,7 +54,9 @@ export const jsonify = (value: any): any => {
   if (typeof value === 'function') {
     return null;
   } else if (typeof value === 'object' && value !== null) {
-    if (Array.isArray(value)) {
+    if(value instanceof Uint8Array) {
+      return Buffer.from(value).toString('hex');
+    } if (Array.isArray(value)) {
       return value.map(jsonify);
     } else {
       if (typeof value.toJSON === 'function') {

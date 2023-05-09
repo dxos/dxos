@@ -10,7 +10,9 @@ import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
-import { AgentParams, TestPlan } from './spec-base';
+import { AgentParams, PlanResults, TestPlan } from './spec-base';
+
+const AGENT_LOG_FILE = 'agent.log';
 
 type PlanOptions = {
   staggerAgents?: number;
@@ -54,6 +56,10 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   });
 
   const children: ChildProcess[] = [];
+  const planResults: PlanResults = {
+    agents: {}
+  }
+  const promises: Promise<void>[] = []
 
   for (const [agentId, agentConfig] of Object.entries(agents)) {
     const agentParams: AgentParams<S, C> = {
@@ -77,20 +83,27 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       }
     });
     children.push(childProcess);
+    promises.push(Event.wrap<number>(childProcess, 'exit').waitForCount(1).then(exitCode => {
+      planResults.agents[agentId] = {
+        exitCode,
+        outDir: agentParams.outDir,
+        logFile: join(agentParams.outDir, AGENT_LOG_FILE),
+      }
+    }))
   }
 
-  await Promise.all(children.map((child) => Event.wrap(child, 'exit').waitForCount(1)));
+  await Promise.all(promises);
 
   log.info('test complete');
 
-  await plan.cleanupPlan();
+  await plan.finishPlan(planResults);
 
   log.info('cleanup complete');
 };
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
   try {
-    log.addProcessor(createFileProcessor({ path: join(params.outDir, 'agent.log'), level: LogLevel.TRACE }));
+    log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
     await plan.agentMain(params);
   } catch (err) {
     console.error(err);

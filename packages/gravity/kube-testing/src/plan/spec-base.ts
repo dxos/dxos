@@ -16,10 +16,20 @@ export type AgentParams<S, C> = {
   config: C;
 };
 
+export type PlanResults = {
+  agents: { [agentId: string]: AgentResult }
+}
+
+export type AgentResult = {
+  exitCode: number
+  outDir: string
+  logFile: string
+}
+
 export interface TestPlan<S, C> {
   configurePlan(params: TestParams<S>): Promise<C[]>; // 1
 
   agentMain(params: AgentParams<S, C>): Promise<void>; // N
 
-  cleanupPlan(): Promise<void>;
+  finishPlan(results: PlanResults): Promise<void>;
 }

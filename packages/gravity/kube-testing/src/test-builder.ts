@@ -4,8 +4,8 @@
 
 import { randomBytes } from 'node:crypto';
 
-import { asyncTimeout, sleep } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, WebsocketSignalManager } from '@dxos/messaging';
@@ -13,6 +13,8 @@ import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { checkType } from '@dxos/debug';
+import { TraceEvent } from './analysys/reducer';
 import { runSignal } from './run-test-signal';
 
 export type Failure = {
@@ -146,21 +148,23 @@ export class TestBuilder {
 export type TestAgentParams = {
   signals: Runtime.Services.Signal[];
   stats: Stats;
+  peerId?: PublicKey;
 };
 
 export class TestAgent {
   public readonly signalManager;
-  public readonly peerId = PublicKey.random();
+  public readonly peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
   private readonly _stats: Stats;
   private readonly _ctx = new Context();
 
   private readonly _topics = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
-  constructor({ signals, stats }: TestAgentParams) {
+  constructor({ signals, stats, peerId = PublicKey.random() }: TestAgentParams) {
     this.signalServers = signals;
     this._stats = stats;
     this.signalManager = new WebsocketSignalManager(signals);
+    this.peerId = peerId;
   }
 
   async start() {
@@ -185,6 +189,16 @@ export class TestAgent {
         peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
       }
     });
+
+    this.signalManager.onMessage.on(this._ctx, (message) => {
+      log.trace('dxos.test.signal', checkType<TraceEvent>({
+        type: 'RECEIVE_MESSAGE',
+        sender: message.author.toHex(),
+        receiver: message.recipient.toHex(),
+        message: Buffer.from(message.payload.value).toString('hex'),
+      }))
+    })
+
     await this.signalManager.open();
     await this.signalManager.subscribeMessages(this.peerId);
   }
@@ -238,39 +252,23 @@ export class TestAgent {
     }
   }
 
-  async sendMessage(to: TestAgent) {
+  async sendMessage(to: PublicKey) {
     const message: Message = {
       author: this.peerId,
-      recipient: to.peerId,
+      recipient: to,
       payload: {
         type_url: 'example.Message',
         value: randomBytes(32)
       }
     };
 
-    const received = to.signalManager.onMessage.waitFor((data) =>
-      Buffer.from(data.payload.value).equals(Buffer.from(message.payload.value))
-    );
-
+    log.trace('dxos.test.signal', checkType<TraceEvent>({
+      type: 'SENT_MESSAGE',
+      sender: message.author.toHex(),
+      receiver: message.recipient.toHex(),
+      message: Buffer.from(message.payload.value).toString('hex'),
+    }))
     await this.signalManager.sendMessage(message);
-
-    try {
-      await cancelWithContext(this._ctx, asyncTimeout(received, 5_000));
-
-      this._stats.addExchangedMessage({
-        type: 'MESSAGE',
-        signalServers: this.signalServers,
-        author: this.peerId,
-        recipient: to.peerId
-      });
-    } catch (err: any) {
-      this._stats.addFailure(err, {
-        type: 'MESSAGE',
-        signalServers: this.signalServers,
-        author: this.peerId,
-        recipient: to.peerId
-      });
-    }
   }
 }
 
