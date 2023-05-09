@@ -14,7 +14,12 @@ type ExplodeAction = {
   type: 'explode';
 };
 
-type AnyAction = NavigateAction | ExplodeAction;
+type FooAction = {
+  type: 'foo';
+  bar: 'foo';
+};
+
+type AnyAction = NavigateAction | ExplodeAction | FooAction;
 
 type ActionHandlers<TAction extends Action, TState, TContext = any> = {
   [type in TAction['type']]: (action: Extract<TAction, { type: type }>, state: TState, context: TContext) => TState;
@@ -38,5 +43,9 @@ export const actions =
 // ------
 
 export const reducer = actions<AnyAction, State>({
-  explode: (action, state) => state
+  explode: (action, state) => state,
+  foo: (action, state) => {
+    const { bar } = action;
+    return state;
+  }
 });
