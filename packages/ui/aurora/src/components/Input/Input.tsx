@@ -29,12 +29,6 @@ import {
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
-type RootProps = InputRootProps;
-
-const Root = (props: RootProps) => {
-  return <InputRoot {...props} />;
-};
-
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, className, children, ...props }, forwardedRef) => {
@@ -225,21 +219,10 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   }
 );
 
-export {
-  Root,
-  Root as InputRoot,
-  Label,
-  Description,
-  Validation,
-  DescriptionAndValidation,
-  PinInput,
-  TextInput,
-  TextArea
-};
+export { InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput, TextInput, TextArea };
 
 export type {
-  RootProps,
-  RootProps as InputRootProps,
+  InputRootProps,
   LabelProps,
   DescriptionProps,
   ValidationProps,
