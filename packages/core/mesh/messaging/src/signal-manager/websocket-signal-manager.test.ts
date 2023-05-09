@@ -18,9 +18,9 @@ describe('WebSocketSignalManager', () => {
     broker2 = await runTestSignalServer({ port: 5002 });
   });
 
-  afterAll(async () => {
-    await broker1.stop();
-    await broker2.stop();
+  afterAll(() => {
+    broker1.stop();
+    broker2.stop();
   });
 
   const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>
