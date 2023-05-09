@@ -77,7 +77,7 @@ export class SignalServerRunner {
     });
 
     server.on('close', (code) => {
-      log(`TestServer exited with code ${code}`);
+      log.info(`TestServer exited with code ${code}`);
     });
 
     this._serverProcess = server;
@@ -111,7 +111,10 @@ export class SignalServerRunner {
   }
 
   public stop(): void {
-    this._serverProcess.kill('SIGTERM');
+    const delivered = this._serverProcess.kill('SIGINT');
+    if (!delivered) {
+      log.warn('kill signal was not delivered to child process');
+    }
   }
 
   public url(): string {
