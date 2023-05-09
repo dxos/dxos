@@ -4,8 +4,8 @@
 
 import { randomBytes } from 'node:crypto';
 
-import { sleep } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context } from '@dxos/context';
+import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, WebsocketSignalManager } from '@dxos/messaging';
@@ -13,105 +13,8 @@ import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { checkType } from '@dxos/debug';
 import { TraceEvent } from './analysys/reducer';
 import { runSignal } from './run-test-signal';
-
-export type Failure = {
-  error: string;
-  action: ExchangedMessage | DiscoverdPeer;
-};
-
-export type ExchangedMessage = {
-  type: 'MESSAGE';
-  signalServers: Runtime.Services.Signal[];
-  author: PublicKey;
-  recipient: PublicKey;
-};
-
-export type DiscoverdPeer = {
-  type: 'SWARM_EVENT';
-  signalServers: Runtime.Services.Signal[];
-  topic: PublicKey;
-  peerThatDiscovering: PublicKey;
-  peerToDiscover: PublicKey;
-};
-
-export class Stats {
-  private readonly _performance = {
-    failures: [] as Failure[],
-    exchangedMessages: [] as ExchangedMessage[],
-    discoveredPeers: [] as DiscoverdPeer[]
-  };
-
-  /**
-   * Flag to prevent adding new stats after test is finished.
-   */
-  private _testFinished = false;
-
-  public topics = new ComplexMap<PublicKey, ComplexSet<TestAgent>>(PublicKey.hash);
-
-  public messageListeners = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
-
-  get performance() {
-    return this._performance;
-  }
-
-  get shortStats() {
-    return {
-      failures: this.performance.failures.length,
-      exchangedMessages: this.performance.exchangedMessages.length,
-      discoveredPeers: this.performance.discoveredPeers.length
-    };
-  }
-
-  finishTest() {
-    this._testFinished = true;
-  }
-
-  addFailure(error: Error, action: ExchangedMessage | DiscoverdPeer) {
-    if (!this._testFinished) {
-      this.performance.failures.push({ error: error.toString(), action });
-    }
-  }
-
-  addExchangedMessage(message: ExchangedMessage) {
-    if (!this._testFinished) {
-      this.performance.exchangedMessages.push(message);
-    }
-  }
-
-  addDiscoveredPeer(peer: DiscoverdPeer) {
-    if (!this._testFinished) {
-      this.performance.discoveredPeers.push(peer);
-    }
-  }
-
-  joinTopic(topic: PublicKey, agent: TestAgent) {
-    const existingTopic = this.topics.get(topic);
-    if (existingTopic) {
-      existingTopic.add(agent);
-    } else {
-      this.topics.set(topic, new ComplexSet(TestAgent.hash, [agent]));
-    }
-  }
-
-  leaveTopic(topic: PublicKey, agent: TestAgent) {
-    const existingTopic = this.topics.get(topic);
-    if (!existingTopic) {
-      throw new Error('Topic not found');
-    }
-    existingTopic.delete(agent);
-  }
-
-  addMessageListener(agent: TestAgent) {
-    this.messageListeners.set(agent.peerId, agent);
-  }
-
-  removeMessageListener(agent: TestAgent) {
-    this.messageListeners.delete(agent.peerId);
-  }
-}
 
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
@@ -147,7 +50,6 @@ export class TestBuilder {
 
 export type TestAgentParams = {
   signals: Runtime.Services.Signal[];
-  stats: Stats;
   peerId?: PublicKey;
 };
 
@@ -155,14 +57,12 @@ export class TestAgent {
   public readonly signalManager;
   public readonly peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
-  private readonly _stats: Stats;
   private readonly _ctx = new Context();
 
   private readonly _topics = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
-  constructor({ signals, stats, peerId = PublicKey.random() }: TestAgentParams) {
+  constructor({ signals, peerId = PublicKey.random() }: TestAgentParams) {
     this.signalServers = signals;
-    this._stats = stats;
     this.signalManager = new WebsocketSignalManager(signals);
     this.peerId = peerId;
   }
@@ -191,13 +91,16 @@ export class TestAgent {
     });
 
     this.signalManager.onMessage.on(this._ctx, (message) => {
-      log.trace('dxos.test.signal', checkType<TraceEvent>({
-        type: 'RECEIVE_MESSAGE',
-        sender: message.author.toHex(),
-        receiver: message.recipient.toHex(),
-        message: Buffer.from(message.payload.value).toString('hex'),
-      }))
-    })
+      log.trace(
+        'dxos.test.signal',
+        checkType<TraceEvent>({
+          type: 'RECEIVE_MESSAGE',
+          sender: message.author.toHex(),
+          receiver: message.recipient.toHex(),
+          message: Buffer.from(message.payload.value).toString('hex')
+        })
+      );
+    });
 
     await this.signalManager.open();
     await this.signalManager.subscribeMessages(this.peerId);
@@ -215,41 +118,11 @@ export class TestAgent {
   async joinTopic(topic: PublicKey) {
     this._topics.set(topic, new ComplexSet(PublicKey.hash));
     await this.signalManager.join({ topic, peerId: this.peerId });
-    this._stats.joinTopic(topic, this);
   }
 
   async leaveTopic(topic: PublicKey) {
     await this.signalManager.leave({ topic, peerId: this.peerId });
     this._topics.delete(topic);
-    this._stats.leaveTopic(topic, this);
-  }
-
-  async discoverPeers(topic: PublicKey, timeout = 5_000) {
-    await cancelWithContext(this._ctx, sleep(timeout));
-
-    const expectedPeers: PublicKey[] = Array.from(this._stats.topics.get(topic)?.values() ?? []).map((a) => a.peerId);
-    const discoverdPeers = this._topics.get(topic) ?? new ComplexSet(PublicKey.hash);
-    // log.info('discover', {
-    //   expectedPeers: expectedPeers.length,
-    //   discoverdPeers: discoverdPeers.size,
-    // })
-    for (const peer of expectedPeers) {
-      if (peer.equals(this.peerId)) {
-        continue;
-      }
-      const action: DiscoverdPeer = {
-        type: 'SWARM_EVENT',
-        signalServers: this.signalServers,
-        topic,
-        peerThatDiscovering: this.peerId,
-        peerToDiscover: peer
-      };
-      if (!discoverdPeers.has(peer)) {
-        this._stats.addFailure(new Error('Peer not discovered'), action);
-      } else {
-        this._stats.addDiscoveredPeer(action);
-      }
-    }
   }
 
   async sendMessage(to: PublicKey) {
@@ -262,12 +135,15 @@ export class TestAgent {
       }
     };
 
-    log.trace('dxos.test.signal', checkType<TraceEvent>({
-      type: 'SENT_MESSAGE',
-      sender: message.author.toHex(),
-      receiver: message.recipient.toHex(),
-      message: Buffer.from(message.payload.value).toString('hex'),
-    }))
+    log.trace(
+      'dxos.test.signal',
+      checkType<TraceEvent>({
+        type: 'SENT_MESSAGE',
+        sender: message.author.toHex(),
+        receiver: message.recipient.toHex(),
+        message: Buffer.from(message.payload.value).toString('hex')
+      })
+    );
     await this.signalManager.sendMessage(message);
   }
 }
