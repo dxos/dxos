@@ -14,7 +14,7 @@
       ]
     },
     "bundle": {
-      "executor": "nx-script:run-script",
+      "executor": "nx:run-script",
       "options": {
         "script": "bundle"
       },

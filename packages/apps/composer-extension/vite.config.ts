@@ -23,8 +23,13 @@ function generateManifest() {
 export default defineConfig({
   plugins: [
     ReactPlugin(),
+    // https://vite-plugin-web-extension.aklinker1.io/config/plugin-options.html
     WebExtensionPlugin({
-      manifest: generateManifest
+      browser: process.env.TARGET,
+      manifest: generateManifest,
+      webExtConfig: {
+        startUrl: [process.env.OPEN_URL ?? 'https://github.com/dxos/dxos/issues/99']
+      }
     })
   ],
   resolve: {

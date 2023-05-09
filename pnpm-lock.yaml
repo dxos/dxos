@@ -413,6 +413,8 @@ importers:
 
   packages/apps/composer-extension:
     specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/webextension-polyfill': ^0.10.0
@@ -424,6 +426,8 @@ importers:
       vite-plugin-web-extension: ^3.0.1
       webextension-polyfill: ^0.10.0
     dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
