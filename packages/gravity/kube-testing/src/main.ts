@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { PublicKey } from '@dxos/keys';
 
 import { runPlan } from './plan/run-plan';
@@ -15,7 +19,7 @@ void runPlan({
     repeatInterval: 5_000,
     duration: 60_000,
     randomSeed: PublicKey.random().toHex(),
-    type: 'signaling',
+    type: 'signaling'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {

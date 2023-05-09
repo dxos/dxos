@@ -40,7 +40,8 @@ export const runSignal = async (num: number, outFolder: string) => {
       GOLOG_FILE: `${outFolder}/signal-${num}.log`,
       GOLOG_OUTPUT: 'file',
       GOLOG_LOG_FMT: 'json'
-    }
+    },
+    shell: true
   });
   await runner.waitUntilStarted();
   return runner;
