@@ -10,14 +10,6 @@ import { Action } from './Action';
 import { Plugin } from './Plugin';
 import { useSurface } from './Surface';
 
-/**
- * @deprecated
- */
-export type RouteAdapter<T> = {
-  paramsToState: (params: any) => T;
-  stateToPath: (state?: T) => string;
-};
-
 type AppContextType = {
   plugins: Plugin<any, any>[];
   state: Record<string, any>;
@@ -29,7 +21,6 @@ type AppContextProviderProps = {
   plugins?: Plugin<any, any>[];
 };
 
-// TODO(burdon): Set-up plugin contexts.
 export const AppContextProvider = ({ children, plugins = [] }: PropsWithChildren<AppContextProviderProps>) => {
   const state = plugins.reduce<Record<string, any>>((state, plugin) => {
     return { ...state, [plugin.config.id]: plugin.config.initialState };
@@ -43,6 +34,7 @@ export const usePlugins = (): Plugin<any, any>[] => {
   return plugins;
 };
 
+// TODO(burdon): Not updated.
 export const usePluginState = <TState extends {}>(type: typeof Plugin<TState, any>): TState => {
   const { state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   const { plugin } = useSurface();
@@ -50,10 +42,10 @@ export const usePluginState = <TState extends {}>(type: typeof Plugin<TState, an
   return state[plugin.config.id];
 };
 
-// TODO(burdon): Dispatch to all or bubble?
 export const useActionDispatch = () => {
   const { plugins, state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return <TAction extends Action>(action: TAction) => {
+    // TODO(burdon): Dispatch to all or bubble?
     plugins.forEach((plugin) => {
       const reducer = plugin.config.reducer;
       if (reducer) {

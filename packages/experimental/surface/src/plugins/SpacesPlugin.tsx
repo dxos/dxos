@@ -9,7 +9,7 @@ import { PublicKey, useSpaces } from '@dxos/react-client';
 
 import { Action, Plugin, useActionDispatch } from '../framework';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Reconcile with 'navigate' action.
 // TODO(burdon): Combine with object selector.
 export type SelectSpaceAction = Action & {
   type: 'space-select';
@@ -26,11 +26,13 @@ const SpacesPanel = () => {
       <h2 className='text-sm'>Spaces</h2>
       <div>
         {spaces.map((space) => (
-          <div key={space.key.toHex()} className='flex items-center'>
+          <div
+            key={space.key.toHex()}
+            className='flex items-center cursor-pointer'
+            onClick={() => dispatch({ type: 'space-select', spaceKey: space.key })}
+          >
             <Planet />
-            <div className='ml-1 pointer' onClick={() => dispatch({ type: 'space-select', spaceKey: space.key })}>
-              {space.properties.name}
-            </div>
+            <div className='ml-1'>{space.properties.name}</div>
           </div>
         ))}
       </div>

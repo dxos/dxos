@@ -10,7 +10,15 @@ import { Button } from '@dxos/aurora';
 import { Generator } from '@dxos/kai-types/testing';
 import { PublicKey, useSpace, useSpaces } from '@dxos/react-client';
 
-import { AppContextProvider, RouteAdapter, Surface, useActionDispatch } from './framework';
+import {
+  Action,
+  AppContextProvider,
+  createActionReducer,
+  Plugin,
+  Surface,
+  useActionDispatch,
+  usePluginState
+} from './framework';
 import { DebugPlugin, SpacesPlugin, StackPlugin } from './plugins';
 
 // Issues:
@@ -27,7 +35,27 @@ import { DebugPlugin, SpacesPlugin, StackPlugin } from './plugins';
  * - Update surfaces bases on app state.
  */
 
-export type AppState = {
+/*
+export type RouteAdapter<T> = {
+  paramsToState: (params: any) => T;
+  stateToPath: (state?: T) => string;
+};
+
+const routeAdapter: RouteAdapter<AppState> = {
+  paramsToState: ({ spaceKey, objectId }: { spaceKey?: string; objectId?: string }): AppState => {
+    return {
+      spaceKey: spaceKey ? PublicKey.from(spaceKey) : undefined,
+      objectId
+    };
+  },
+
+  stateToPath: ({ spaceKey, objectId }: AppState = {}): string => {
+    return '/' + [spaceKey?.toHex(), objectId].filter(Boolean).join('/');
+  }
+};
+*/
+
+type AppState = {
   // TODO(burdon): Map to actual objects (create test space/objects)?
   // space: Space;
   // object?: TypedObject;
@@ -37,12 +65,73 @@ export type AppState = {
   counter?: number;
 };
 
+type NavAction = Action & {
+  type: 'navigate';
+  spaceKey?: PublicKey;
+  objectId?: string;
+};
+
+type AppAction = NavAction;
+
+// TODO(burdon): See AppContainer (Sidebar, etc.)
+export const AppRoot = () => {
+  const spaces = useSpaces();
+  useEffect(() => {
+    const generator = new Generator(spaces[0].db);
+    void generator.generate();
+  }, [spaces]);
+
+  // TODO(burdon): Not updated.
+  const navigate = useNavigate();
+  const { spaceKey } = usePluginState(AppPlugin) ?? {};
+  useEffect(() => {
+    console.log('===', spaceKey);
+  }, [spaceKey]);
+
+  return (
+    <div className='flex flex-col grow overflow-hidden'>
+      <div className='flex shrink-0 p-4 bg-zinc-200'>
+        <Header />
+      </div>
+
+      <main className='flex flex-col grow p-4'>
+        <Outlet />
+      </main>
+
+      <div className='flex shrink-0 p-4 bg-zinc-200'>
+        <Surface plugin='org.dxos.debug' component='main' />
+      </div>
+    </div>
+  );
+};
+
+class AppPlugin extends Plugin<AppState, AppAction> {
+  constructor() {
+    super({
+      id: 'com.example.test',
+      components: {
+        main: AppRoot
+      },
+      reducer: createActionReducer<AppState, AppAction>({
+        navigate: (state, { spaceKey, objectId }) => {
+          console.log('>>>', spaceKey?.toHex());
+          return { ...state, spaceKey, objectId };
+        }
+      })
+    });
+  }
+}
+
+//
+//
+//
+
 export const TestApp = () => {
   // Use natural routes to configure surfaces
   const router = createMemoryRouter([
     {
       path: '/',
-      element: <AppRoot />,
+      element: <Surface plugin='com.example.test' component='main' />,
       children: [
         {
           path: '/',
@@ -66,25 +155,11 @@ export const TestApp = () => {
     }
   ]);
 
-  // TODO(burdon): Create NavPlugin for app.
-
-  const routeAdapter: RouteAdapter<AppState> = {
-    paramsToState: ({ spaceKey, objectId }: { spaceKey?: string; objectId?: string }): AppState => {
-      return {
-        spaceKey: spaceKey ? PublicKey.from(spaceKey) : undefined,
-        objectId
-      };
-    },
-
-    stateToPath: ({ spaceKey, objectId }: AppState = {}): string => {
-      return '/' + [spaceKey?.toHex(), objectId].filter(Boolean).join('/');
-    }
-  };
-
   return (
     <AppContextProvider
       // prettier-ignore
       plugins={[
+        new AppPlugin(),
         new DebugPlugin(),
         new SpacesPlugin(),
         new StackPlugin()
@@ -99,35 +174,8 @@ export const TestApp = () => {
 // Components
 //
 
-// TODO(burdon): See AppContainer (Sidebar, etc.)
-export const AppRoot = () => {
-  const spaces = useSpaces();
-  useEffect(() => {
-    const generator = new Generator(spaces[0].db);
-    void generator.generate();
-  }, [spaces]);
-
-  return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex shrink-0 p-4 bg-zinc-200'>
-        <Header />
-      </div>
-
-      <main className='flex flex-col grow p-4'>
-        <Outlet />
-      </main>
-
-      <div className='flex shrink-0 p-4 bg-zinc-200'>
-        <Surface plugin='org.dxos.debug' component='main' />
-      </div>
-    </div>
-  );
-};
-
 export const Header = () => {
   const navigate = useNavigate();
-  const appNavigate = useAppNavigate<AppState>();
-  // TODO(burdon): Create plugin to handle space selection.
   const dispatch = useActionDispatch();
   const spaces = useSpaces();
   const space = spaces[0];
@@ -136,10 +184,8 @@ export const Header = () => {
     <nav className='flex grow justify-between'>
       {/* Action. */}
       <div className='flex space-x-2'>
-        <Button onClick={() => appNavigate()}>Home</Button>
-        <Button onClick={() => appNavigate({ spaceKey: space.key })}>Space</Button>
-        {/* TODO(burdon): Select object. */}
-        <Button onClick={() => appNavigate({ spaceKey: space.key, objectId: '123' })}>Object</Button>
+        <Button onClick={() => dispatch({ type: 'navigate' })}>Home</Button>
+        <Button onClick={() => dispatch({ type: 'navigate', spaceKey: space.key })}>Space</Button>
       </div>
 
       {/* Direct navigation. */}
@@ -158,9 +204,9 @@ export const Header = () => {
 };
 
 export const SpaceContainer = () => {
-  const { spaceKey, objectId } = useAppState();
+  const { spaceKey, objectId } = usePluginState(AppPlugin);
   const space = useSpace(spaceKey);
-  const object = space?.db.getObjectById(objectId);
+  const object = objectId ? space?.db.getObjectById(objectId) : undefined;
 
   return (
     <div>
