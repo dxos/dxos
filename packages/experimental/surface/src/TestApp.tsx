@@ -73,8 +73,10 @@ type NavAction = Action & {
 
 type AppAction = NavAction;
 
+// TODO(burdon): Root nav-only component.
 // TODO(burdon): See AppContainer (Sidebar, etc.)
 export const AppRoot = () => {
+  // TODO(burdon): Create action.
   const spaces = useSpaces();
   useEffect(() => {
     const generator = new Generator(spaces[0].db);
