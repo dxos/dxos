@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep, asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner, runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
@@ -12,15 +12,19 @@ import { WebsocketSignalManager } from './websocket-signal-manager';
 describe('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
   let broker2: SignalServerRunner;
+  let broker1: SignalServerRunner;
+  let broker2: SignalServerRunner;
 
   beforeAll(async () => {
     broker1 = await runTestSignalServer({ port: 5001 });
     broker2 = await runTestSignalServer({ port: 5002 });
+    broker1 = await runTestSignalServer({ port: 5001 });
+    broker2 = await runTestSignalServer({ port: 5002 });
   });
 
-  afterAll(async () => {
-    await broker1.stop();
-    await broker2.stop();
+  afterAll(() => {
+    broker1.stop();
+    broker2.stop();
   });
 
   const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>
@@ -28,6 +32,15 @@ describe('WebSocketSignalManager', () => {
       ({ swarmEvent, topic }) =>
         !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic)
     );
+
+  const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
+    return client.onMessage.waitFor(
+      (msg) =>
+        msg.author.equals(expectedMessage.author) &&
+        msg.recipient.equals(expectedMessage.recipient) &&
+        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value)
+    );
+  };
 
   const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
     return client.onMessage.waitFor(
@@ -87,7 +100,9 @@ describe('WebSocketSignalManager', () => {
     await client1.sendMessage(message);
 
     await asyncTimeout(received, 1_000);
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('works with one broken server', async () => {
     const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);

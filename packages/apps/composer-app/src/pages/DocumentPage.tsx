@@ -89,7 +89,7 @@ const DocumentPageContent = observer(
           role='none'
           className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
         >
-          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-12 md:pis-0'>
+          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-6 pointer-coarse:pis-0 lg:pis-0'>
             <Input
               key={document.id}
               variant='subdued'
@@ -100,13 +100,16 @@ const DocumentPageContent = observer(
               onChange={({ target: { value } }) => (document.title = value)}
               slots={{
                 root: { className: 'shrink-0 grow pis-6 plb-2' },
-                input: { 'data-testid': 'composer.documentTitle' } as HTMLAttributes<HTMLInputElement>
+                input: {
+                  'data-testid': 'composer.documentTitle',
+                  className: 'text-center'
+                } as HTMLAttributes<HTMLInputElement>
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
               <DropdownMenu
                 trigger={
-                  <Button className='p-0 is-10' variant='ghost' density='coarse'>
+                  <Button className='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
                 }

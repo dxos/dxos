@@ -24,27 +24,27 @@ export const valenceColorText = (valence?: MessageValence) => {
   }
 };
 
-export const neutralAlertColors = '';
-export const successAlertColors =
+export const neutralMessageColors = 'bg-neutral-25 dark:bg-neutral-850';
+export const successMessageColors =
   'shadow-success-500/50 dark:shadow-success-500/50 text-success-600 dark:text-success-100 bg-success-50 dark:bg-success-900';
-export const infoAlertColors =
+export const infoMessageColors =
   'shadow-info-500/50 dark:shadow-info-500/50 text-info-600 dark:text-info-100 bg-info-50 dark:bg-info-900';
-export const warningAlertColors =
+export const warningMessageColors =
   'shadow-warning-500/50 dark:shadow-warning-500/50 text-warning-600 dark:text-warning-100 bg-warning-50 dark:bg-warning-900';
-export const errorAlertColors =
+export const errorMessageColors =
   'shadow-error-500/50 dark:shadow-error-500/50 text-error-600 dark:text-error-100 bg-error-50 dark:bg-error-900';
 
-export const alertValence = (valence?: MessageValence) => {
+export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successAlertColors;
+      return successMessageColors;
     case 'info':
-      return infoAlertColors;
+      return infoMessageColors;
     case 'warning':
-      return warningAlertColors;
+      return warningMessageColors;
     case 'error':
-      return errorAlertColors;
+      return errorMessageColors;
     default:
-      return neutralAlertColors;
+      return neutralMessageColors;
   }
 };

@@ -25,6 +25,7 @@ import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
 import { useOctokitContext } from '../OctokitProvider';
 import { Separator } from '../Separator';
+import { HiddenSpacesTree } from './HiddenSpacesTree';
 import { SpaceTreeItem } from './SpaceTreeItem';
 
 const DocumentTree = observer(() => {
@@ -34,17 +35,23 @@ const DocumentTree = observer(() => {
   const { t } = useTranslation('composer');
   const identity = useIdentity();
   return (
-    <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow flex flex-col plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
             return <SpaceTreeItem key={space.key.toHex()} space={space} />;
           })}
       </TreeRoot>
+      <div role='none' className='grow' />
+      <HiddenSpacesTree
+        hiddenSpaces={spaces.filter(
+          (space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden === true
+        )}
+      />
     </div>
   );
 });
