@@ -32,8 +32,8 @@ export const runSignal = async (num: number, outFolder: string) => {
     port: randomInt(10000, 20000),
     binCommand: `go run -gcflags="all=-N -l" ${BIN_PATH}`,
     signalArguments: [
-      // 'p2pserver'
-      'globalsubserver'
+      'p2pserver'
+      // 'globalsubserver'
     ],
     cwd: PATH_TO_KUBE_REPO,
     env: {
