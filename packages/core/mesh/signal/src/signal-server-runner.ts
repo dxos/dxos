@@ -19,6 +19,10 @@ interface TestBrokerOptions {
   port?: number;
   timeout?: number;
   env?: Record<string, string>;
+
+  /**
+   * Allows arbitrary commands. WARNING: It stalls on Linux machine if `true`.
+   */
   shell?: boolean;
 }
 
