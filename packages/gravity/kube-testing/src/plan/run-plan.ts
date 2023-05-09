@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
+import { writeFileSync } from 'node:fs';
 
 const AGENT_LOG_FILE = 'agent.log';
 
@@ -94,8 +95,15 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   await Promise.all(promises);
 
-  log.info('test complete');
+  log.info('test complete', {
+    summary: join(outDir, 'test.json')
+  });
 
+  writeFileSync(join(outDir, 'test.json'), JSON.stringify({
+    spec,
+    results: planResults,
+    agents,
+  }, null, 4))
   await plan.finishPlan(planResults);
 
   log.info('cleanup complete');

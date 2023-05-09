@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 import { LogReader, SerializedLogEntry, TraceEvent } from '../analysys/reducer';
+import * as dfd from 'danfojs-node'
 
 import { Stats, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
@@ -69,7 +70,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     const ctx = new Context();
     const stats = new Stats();
 
-    log.info('start', { agentId, config, spec, outDir, agents: Object.keys(agents) });
+    log.info('start', { agentId });
 
     const topics = config.topics.map((topic) => PublicKey.from(topic));
     const agentsPerTopic: Record<string, string[]> = {};
@@ -86,7 +87,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
       peerId: PublicKey.from(agentId),
     });
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
-    await sleep(3_000);
+    await sleep(1_000);
 
     //
     // test
@@ -129,39 +130,41 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   }
 
   async finishPlan(results: PlanResults): Promise<void> {
-    log.info('finishPlan', { results })
-    void this.builder.destroy();
+    // log.info('finishPlan', { results })
+    await this.builder.destroy();
 
-    const reader = new LogReader();
-    for(const { logFile } of Object.values(results.agents)) {
-      console.log('add', { logFile })
-      reader.addFile(logFile)
-    }
+    // const reader = new LogReader();
+    // for(const { logFile } of Object.values(results.agents)) {
+    //   console.log('add', { logFile })
+    //   reader.addFile(logFile)
+    // }
 
-    const messages = new Map<string, { sent: number, received: number }>();
+    // const messages = new Map<string, { sent: number, received: number }>();
 
-    for await(const entry of reader) {
-      if(entry.message !== 'dxos.test.signal') {
-        continue;
-      }
-      const data: TraceEvent = entry.context;
+    // for await(const entry of reader) {
+    //   if(entry.message !== 'dxos.test.signal') {
+    //     continue;
+    //   }
+    //   const data: TraceEvent = entry.context;
 
-      switch(data.type) {
-        case 'SENT_MESSAGE':
-          if(!messages.has(data.message)) {
-            messages.set(data.message, { sent: 0, received: 0})
-          }
-          messages.get(data.message)!.sent = entry.timestamp;
-          break;
-        case 'RECEIVE_MESSAGE':
-          if(!messages.has(data.message)) {
-            messages.set(data.message, { sent: 0, received: 0})
-          }
-          messages.get(data.message)!.received = entry.timestamp;
-          break;
-      }
-    }
+    //   switch(data.type) {
+    //     case 'SENT_MESSAGE':
+    //       if(!messages.has(data.message)) {
+    //         messages.set(data.message, { sent: 0, received: 0})
+    //       }
+    //       messages.get(data.message)!.sent = entry.timestamp;
+    //       break;
+    //     case 'RECEIVE_MESSAGE':
+    //       if(!messages.has(data.message)) {
+    //         messages.set(data.message, { sent: 0, received: 0})
+    //       }
+    //       messages.get(data.message)!.received = entry.timestamp;
+    //       break;
+    //   }
+    // }
 
-    console.log(messages)
+    // const lagTimes = new dfd.Series(Array.from(messages.values()).map(x => x.received - x.sent))
+
+    // console.log(messages)
   }
 }

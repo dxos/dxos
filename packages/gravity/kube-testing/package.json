@@ -7,6 +7,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
     "run-tests": "node -r ts-node/register ./src/main.ts"
   },
@@ -21,6 +27,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/util": "workspace:*",
+    "danfojs-node": "^1.1.2",
     "faker": "^5.5.3",
     "seedrandom": "^3.0.5"
   },
