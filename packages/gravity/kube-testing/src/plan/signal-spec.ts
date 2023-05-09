@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import seedrandom from 'seedrandom';
+
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
-import { LogReader, SerializedLogEntry, TraceEvent } from '../analysys/reducer';
-import * as dfd from 'danfojs-node'
 
 import { Stats, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
@@ -38,6 +38,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   builder = new TestBuilder();
 
   async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
+    seedrandom(spec.randomSeed, { global: true });
     for (const num of range(spec.servers)) {
       await this.builder.createServer(num, outDir);
     }
@@ -45,11 +46,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
 
     return range(spec.agents).map((): SignalAgentConfig => {
-      const servers = spec.serverOverride 
-      ? [spec.serverOverride] : randomArraySlice(
-        this.builder.servers.map((server) => server.url()),
-        spec.serversPerAgent
-      );
+      const servers = spec.serverOverride
+        ? [spec.serverOverride]
+        : randomArraySlice(
+            this.builder.servers.map((server) => server.url()),
+            spec.serversPerAgent
+          );
 
       // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
 
@@ -67,6 +69,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     config,
     outDir
   }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+    seedrandom(spec.randomSeed, { global: true });
     const ctx = new Context();
     const stats = new Stats();
 
@@ -84,7 +87,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     const agent = await this.builder.createPeer({
       signals: config.servers.map((server) => ({ server })),
       stats,
-      peerId: PublicKey.from(agentId),
+      peerId: PublicKey.from(agentId)
     });
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
     await sleep(1_000);
@@ -114,7 +117,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
             break;
           }
           case 'signaling': {
-            agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
+            agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]));
             break;
           }
           default:

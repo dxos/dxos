@@ -4,6 +4,7 @@
 
 import { ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Event, sleep } from '@dxos/async';
@@ -11,7 +12,6 @@ import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
-import { writeFileSync } from 'node:fs';
 
 const AGENT_LOG_FILE = 'agent.log';
 
@@ -59,8 +59,8 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   const children: ChildProcess[] = [];
   const planResults: PlanResults = {
     agents: {}
-  }
-  const promises: Promise<void>[] = []
+  };
+  const promises: Promise<void>[] = [];
 
   for (const [agentId, agentConfig] of Object.entries(agents)) {
     const agentParams: AgentParams<S, C> = {
@@ -84,13 +84,17 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       }
     });
     children.push(childProcess);
-    promises.push(Event.wrap<number>(childProcess, 'exit').waitForCount(1).then(exitCode => {
-      planResults.agents[agentId] = {
-        exitCode,
-        outDir: agentParams.outDir,
-        logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-      }
-    }))
+    promises.push(
+      Event.wrap<number>(childProcess, 'exit')
+        .waitForCount(1)
+        .then((exitCode) => {
+          planResults.agents[agentId] = {
+            exitCode,
+            outDir: agentParams.outDir,
+            logFile: join(agentParams.outDir, AGENT_LOG_FILE)
+          };
+        })
+    );
   }
 
   await Promise.all(promises);
@@ -99,11 +103,18 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     summary: join(outDir, 'test.json')
   });
 
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify({
-    spec,
-    results: planResults,
-    agents,
-  }, null, 4))
+  writeFileSync(
+    join(outDir, 'test.json'),
+    JSON.stringify(
+      {
+        spec,
+        results: planResults,
+        agents
+      },
+      null,
+      4
+    )
+  );
   await plan.finishPlan(planResults);
 
   log.info('cleanup complete');
