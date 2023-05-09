@@ -9,16 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', () => {
-  let broker: TestBroker;
+  let broker: SignalServerRunner;
 
   beforeAll(async () => {
-    broker = await createTestBroker();
+    broker = await runTestSignalServer();
   });
 
   afterAll(() => {
