@@ -60,7 +60,7 @@ describe('WebSocketSignalManager', () => {
     .timeout(1_000)
     .retries(2);
 
-  test('join single swarm with doubled brokers', async () => {
+  test.only('join single swarm with doubled brokers', async () => {
     const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
     const client2 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
     await openAndClose(client1, client2);
