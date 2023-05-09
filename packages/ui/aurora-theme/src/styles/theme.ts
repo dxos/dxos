@@ -35,7 +35,7 @@ export const osTheme: Theme<Record<string, any>> = {
   list: listOsTheme
 };
 
-export const tx = <P extends Record<string, any>>(
+export const appTx = <P extends Record<string, any>>(
   path: string,
   defaultClassName: string,
   styleProps: P,

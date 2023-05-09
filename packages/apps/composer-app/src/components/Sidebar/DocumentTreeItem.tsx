@@ -8,7 +8,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { useTranslation, ListItemEndcap } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
-import { getSize, mx, tx } from '@dxos/aurora-theme';
+import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
@@ -24,8 +24,10 @@ export const DocumentTreeItem = observer(({ document, linkTo }: { document: Comp
       <TreeItemHeading asChild>
         <Link
           to={linkTo}
-          className={mx(
-            tx('button.root', 'tree-item__heading--link', { variant: 'ghost' }),
+          className={appTx(
+            'button.root',
+            'tree-item__heading--link',
+            { variant: 'ghost' },
             'is-full text-base p-0 font-normal items-start gap-1'
           )}
           data-testid='composer.documentTreeItemHeading'
