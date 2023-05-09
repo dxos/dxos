@@ -125,7 +125,6 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       JSON.stringify(
         {
           spec,
-
           stats,
           results: planResults,
           agents
