@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { LogEntry, LogLevel } from '@dxos/log';
-import { Message } from '@dxos/messaging';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { readFileSync } from 'node:fs';
+
+import { PublicKey } from '@dxos/keys';
+import { LogLevel } from '@dxos/log';
+import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export enum TestingEvent {
   // Test agent control events.
@@ -54,23 +53,28 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
 
   addFile(path: string) {
     // TODO(dmaretskyi): Read files chunk by chunk.
-    this._logs.push(...readFileSync(path, 'utf-8').split('\n').filter(line => line.trim().length > 0).map(line => JSON.parse(line)))
+    this._logs.push(
+      ...readFileSync(path, 'utf-8')
+        .split('\n')
+        .filter((line) => line.trim().length > 0)
+        .map((line) => JSON.parse(line))
+    );
   }
 
   async *[Symbol.asyncIterator](): AsyncGenerator<SerializedLogEntry> {
     let idx = 0;
-    while(idx < this._logs.length) {
+    while (idx < this._logs.length) {
       yield this._logs[idx++];
     }
   }
 }
 
 export type SerializedLogEntry<T = any> = {
-  level: LogLevel
-  message: string
-  timestamp: number
-  context: T,
+  level: LogLevel;
+  message: string;
+  timestamp: number;
+  context: T;
   meta: {
     // TODO(dmaretskyi): .
-  }
-}
+  };
+};

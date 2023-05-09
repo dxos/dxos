@@ -32,15 +32,16 @@ export const runSignal = async (num: number, outFolder: string) => {
     port: randomInt(10000, 20000),
     binCommand: `go run -gcflags="all=-N -l" ${BIN_PATH}`,
     signalArguments: [
-      // 'p2pserver'
-      'globalsubserver'
+      'p2pserver'
+      // 'globalsubserver'
     ],
     cwd: PATH_TO_KUBE_REPO,
     env: {
       GOLOG_FILE: `${outFolder}/signal-${num}.log`,
       GOLOG_OUTPUT: 'file',
       GOLOG_LOG_FMT: 'json'
-    }
+    },
+    shell: true
   });
   await runner.waitUntilStarted();
   return runner;
