@@ -17,7 +17,7 @@ void runPlan({
     topicsPerAgent: 1,
     discoverTimeout: 5_000,
     repeatInterval: 5_000,
-    duration: 5_000,
+    duration: 60_000,
     randomSeed: PublicKey.random().toHex(),
     type: 'signaling'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'

@@ -7,10 +7,11 @@ import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Event, sleep } from '@dxos/async';
+import { Event, asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
+import { analyzeMessages } from '../analysys/stat-analysys';
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
 
 const AGENT_LOG_FILE = 'agent.log';
@@ -62,59 +63,81 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   };
   const promises: Promise<void>[] = [];
 
-  for (const [agentId, agentConfig] of Object.entries(agents)) {
-    const agentParams: AgentParams<S, C> = {
-      agentId,
-      spec,
-      agents,
-      outDir: join(outDir, agentId),
-      config: agentConfig
-    };
+  {
+    //
+    // Start agents
+    //
+    for (const [agentId, agentConfig] of Object.entries(agents)) {
+      const agentParams: AgentParams<S, C> = {
+        agentId,
+        spec,
+        agents,
+        outDir: join(outDir, agentId),
+        config: agentConfig
+      };
 
-    if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
-      await sleep(options.staggerAgents);
+      if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
+        await sleep(options.staggerAgents);
+      }
+
+      fs.mkdirSync(agentParams.outDir, { recursive: true });
+
+      const childProcess = fork(process.argv[1], {
+        env: {
+          ...process.env,
+          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams)
+        }
+      });
+      children.push(childProcess);
+      promises.push(
+        Event.wrap<number>(childProcess, 'exit')
+          .waitForCount(1)
+          .then((exitCode) => {
+            planResults.agents[agentId] = {
+              exitCode,
+              outDir: agentParams.outDir,
+              logFile: join(agentParams.outDir, AGENT_LOG_FILE)
+            };
+          })
+      );
     }
 
-    fs.mkdirSync(agentParams.outDir, { recursive: true });
+    await Promise.all(promises);
 
-    const childProcess = fork(process.argv[1], {
-      env: {
-        ...process.env,
-        GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams)
-      }
+    log.info('test complete', {
+      summary: join(outDir, 'test.json')
     });
-    children.push(childProcess);
-    promises.push(
-      Event.wrap<number>(childProcess, 'exit')
-        .waitForCount(1)
-        .then((exitCode) => {
-          planResults.agents[agentId] = {
-            exitCode,
-            outDir: agentParams.outDir,
-            logFile: join(agentParams.outDir, AGENT_LOG_FILE)
-          };
-        })
-    );
   }
 
-  await Promise.all(promises);
+  {
+    //
+    // Save results
+    //
+    let stats: any;
+    try {
+      stats = await asyncTimeout(analyzeMessages(planResults), 5_000);
+    } catch (err) {
+      log.warn(`Error while analyzing results ${outDir}`, err);
+    }
 
-  log.info('test complete', {
-    summary: join(outDir, 'test.json')
-  });
+    writeFileSync(
+      join(outDir, 'test.json'),
+      JSON.stringify(
+        {
+          spec,
 
-  writeFileSync(
-    join(outDir, 'test.json'),
-    JSON.stringify(
-      {
-        spec,
-        results: planResults,
-        agents
-      },
-      null,
-      4
-    )
-  );
+          stats,
+          results: planResults,
+          agents
+        },
+        null,
+        4
+      )
+    );
+
+    console.log();
+  }
+
   await plan.finishPlan(planResults);
 
   log.info('cleanup complete');
