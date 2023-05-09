@@ -1,0 +1,41 @@
+{
+  "sourceRoot": "packages/apps/composer-extension/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/composer-extension/src/index.ts",
+        "outputPath": "packages/apps/composer-extension/dist/types",
+        "tsConfig": "packages/apps/composer-extension/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "nx-script:run-script",
+      "options": {
+        "script": "bundle"
+      },
+      "outputs": [
+        "packages/apps/composer-extension/out/composer-extension"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/composer-extension/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    }
+  }
+}
