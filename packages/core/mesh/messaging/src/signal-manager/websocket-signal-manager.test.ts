@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
-describe('WebSocketSignalManager', () => {
+describe.only('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
   let broker2: SignalServerRunner;
 
@@ -60,35 +60,34 @@ describe('WebSocketSignalManager', () => {
     .timeout(1_000)
     .retries(2);
 
-  test
-    .only('join single swarm with doubled brokers', async () => {
-      const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
-      const client2 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
-      await openAndClose(client1, client2);
+  test('join single swarm with doubled brokers', async () => {
+    const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
+    const client2 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
+    await openAndClose(client1, client2);
 
-      const [topic, peer1, peer2] = PublicKey.randomSequence();
+    const [topic, peer1, peer2] = PublicKey.randomSequence();
 
-      const joined12 = expectPeerAvailable(client1, topic, peer2);
-      const joined21 = expectPeerAvailable(client2, topic, peer1);
+    const joined12 = expectPeerAvailable(client1, topic, peer2);
+    const joined21 = expectPeerAvailable(client2, topic, peer1);
 
-      await client1.join({ topic, peerId: peer1 });
-      await client2.join({ topic, peerId: peer2 });
+    await client1.join({ topic, peerId: peer1 });
+    await client2.join({ topic, peerId: peer2 });
 
-      await asyncTimeout(Promise.all([joined12, joined21]), 1_000);
+    await asyncTimeout(Promise.all([joined12, joined21]), 1_000);
 
-      const message = {
-        author: peer1,
-        recipient: peer2,
-        payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) }
-      };
+    const message = {
+      author: peer1,
+      recipient: peer2,
+      payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) }
+    };
 
-      const received = expectReceivedMessage(client2, message);
-      await client2.subscribeMessages(peer2);
-      await sleep(50);
-      await client1.sendMessage(message);
+    const received = expectReceivedMessage(client2, message);
+    await client2.subscribeMessages(peer2);
+    await sleep(50);
+    await client1.sendMessage(message);
 
-      await asyncTimeout(received, 1_000);
-    })
+    await asyncTimeout(received, 1_000);
+  })
     .timeout(1_000)
     .retries(2);
 
