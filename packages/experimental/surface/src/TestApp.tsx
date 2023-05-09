@@ -19,7 +19,7 @@ import {
   useActionDispatch,
   usePluginState
 } from './framework';
-import { DebugPlugin, SpacesPlugin, StackPlugin } from './plugins';
+import { CounterPlugin, DebugPlugin, SpacesPlugin, StackPlugin } from './plugins';
 
 // Issues:
 // - TODO(burdon): App and Plugin lifecycle.
@@ -85,9 +85,9 @@ export const AppRoot = () => {
 
   // TODO(burdon): Not updated.
   const navigate = useNavigate();
-  const { spaceKey } = usePluginState(AppPlugin) ?? {};
+  const { spaceKey, objectId } = usePluginState(AppPlugin) ?? {};
   useEffect(() => {
-    console.log('===', spaceKey);
+    navigate('/' + [spaceKey?.toHex(), objectId].filter(Boolean).join('/'));
   }, [spaceKey]);
 
   return (
@@ -100,7 +100,8 @@ export const AppRoot = () => {
         <Outlet />
       </main>
 
-      <div className='flex shrink-0 p-4 bg-zinc-200'>
+      <div className='flex flex-col shrink-0 p-4 bg-zinc-200'>
+        <Surface plugin='org.dxos.counter' component='main' />
         <Surface plugin='org.dxos.debug' component='main' />
       </div>
     </div>
@@ -116,7 +117,6 @@ class AppPlugin extends Plugin<AppState, AppAction> {
       },
       reducer: createActionReducer<AppState, AppAction>({
         navigate: (state, { spaceKey, objectId }) => {
-          console.log('>>>', spaceKey?.toHex());
           return { ...state, spaceKey, objectId };
         }
       })
@@ -142,11 +142,6 @@ export const TestApp = () => {
         {
           path: '/:spaceKey',
           element: <SpaceContainer />,
-          // TODO(burdon): Use to async load Space? Doesn't seem to work in storybook?
-          // https://reactrouter.com/en/main/route/loader
-          // loader: ({ params: { spaceKey } }) => {
-          //   return { spaceKey: spaceKey ? PublicKey.from(spaceKey) : undefined };
-          // }
           children: [
             {
               path: '/:spaceKey/:objectId'
@@ -162,6 +157,7 @@ export const TestApp = () => {
       // prettier-ignore
       plugins={[
         new AppPlugin(),
+        new CounterPlugin(),
         new DebugPlugin(),
         new SpacesPlugin(),
         new StackPlugin()

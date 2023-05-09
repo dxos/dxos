@@ -20,14 +20,14 @@ export { Observable, PushStream, Subscriber };
 // https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
 export class MulticastObservable<T> extends Observable<T> {
   private readonly _observers = new Set<Observer<T>>();
-  private readonly _observerable: Observable<T>;
+  private readonly _observable: Observable<T>;
   private _subscription: Subscription;
 
   constructor(subscriber: Observable<T> | Subscriber<T>, private _value?: T) {
     super((observer) => this._subscribe(observer));
 
-    this._observerable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
-    this._subscription = this._observerable.subscribe(this._handlers);
+    this._observable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
+    this._subscription = this._observable.subscribe(this._handlers);
   }
 
   static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
@@ -71,7 +71,7 @@ export class MulticastObservable<T> extends Observable<T> {
 
   private _subscribe(observer: Observer<T>) {
     if (this._subscription.closed) {
-      this._subscription = this._observerable.subscribe(this._handlers);
+      this._subscription = this._observable.subscribe(this._handlers);
     }
 
     if (!this._observers.has(observer) && this._value !== undefined) {

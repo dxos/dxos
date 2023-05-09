@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren, createContext, useContext } from 'react';
+import React, { PropsWithChildren, createContext, useContext, useState, SetStateAction, Dispatch } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -12,7 +12,8 @@ import { useSurface } from './Surface';
 
 type AppContextType = {
   plugins: Plugin<any, any>[];
-  state: Record<string, any>;
+  pluginsState: Record<string, any>;
+  setPluginsState: Dispatch<SetStateAction<Record<string, any>>>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -22,11 +23,14 @@ type AppContextProviderProps = {
 };
 
 export const AppContextProvider = ({ children, plugins = [] }: PropsWithChildren<AppContextProviderProps>) => {
-  const state = plugins.reduce<Record<string, any>>((state, plugin) => {
-    return { ...state, [plugin.config.id]: plugin.config.initialState };
-  }, {});
+  // TODO(burdon): Hack -- use preact signals or https://signia.tldraw.dev/docs/react-bindings?
+  const [pluginsState, setPluginsState] = useState(
+    plugins.reduce<Record<string, any>>((state, plugin) => {
+      return { ...state, [plugin.config.id]: plugin.config.initialState };
+    }, {})
+  );
 
-  return <AppContext.Provider value={{ plugins, state }}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={{ plugins, pluginsState, setPluginsState }}>{children}</AppContext.Provider>;
 };
 
 export const usePlugins = (): Plugin<any, any>[] => {
@@ -34,27 +38,26 @@ export const usePlugins = (): Plugin<any, any>[] => {
   return plugins;
 };
 
-// TODO(burdon): Not updated.
 export const usePluginState = <TState extends {}>(type: typeof Plugin<TState, any>): TState => {
-  const { state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  const { pluginsState } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   const { plugin } = useSurface();
   // TODO(burdon): Type check.
-  return state[plugin.config.id];
+  return pluginsState[plugin.config.id];
 };
 
 export const useActionDispatch = () => {
-  const { plugins, state } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
+  const { plugins, pluginsState, setPluginsState } = useContext(AppContext) ?? raise(new Error('Missing AppContext'));
   return <TAction extends Action>(action: TAction) => {
     // TODO(burdon): Dispatch to all or bubble?
     plugins.forEach((plugin) => {
       const reducer = plugin.config.reducer;
       if (reducer) {
         // TODO(burdon): Use ctx util.
-        setTimeout(() => {
-          const pluginState = state[plugin.config.id];
-          state[plugin.config.id] = reducer(pluginState, action);
-        });
+        pluginsState[plugin.config.id] = reducer(pluginsState[plugin.config.id], action);
       }
+
+      // TODO(burdon): Hack.
+      setPluginsState({ ...pluginsState });
     });
   };
 };
