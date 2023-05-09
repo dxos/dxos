@@ -14,20 +14,20 @@ export type AgentParams<S, C> = {
   config: C;
 
   // environment: {
-    spec: S;
-    agents: Record<string, C>;
+  spec: S;
+  agents: Record<string, C>;
   // }
 };
 
 export type PlanResults = {
-  agents: { [agentId: string]: AgentResult }
-}
+  agents: { [agentId: string]: AgentResult };
+};
 
 export type AgentResult = {
-  exitCode: number
-  outDir: string
-  logFile: string
-}
+  exitCode: number;
+  outDir: string;
+  logFile: string;
+};
 
 // plan vs environment
 export interface TestPlan<S, C> {
