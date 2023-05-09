@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
-describe.only('WebSocketSignalManager', () => {
+describe('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
   let broker2: SignalServerRunner;
 
