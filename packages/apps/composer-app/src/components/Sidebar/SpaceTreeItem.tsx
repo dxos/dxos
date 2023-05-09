@@ -13,7 +13,7 @@ import {
   Plus,
   Upload
 } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -93,6 +93,10 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
+  const [optionsMenuOpen, setOpetionsMenuOpen] = useState(false);
+
   return (
     <TreeItem
       collapsible
@@ -113,7 +117,17 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         >
           {spaceDisplayName}
         </TreeItemHeading>
-        <TooltipRoot>
+        <TooltipRoot
+          open={optionsTooltipOpen}
+          onOpenChange={(nextOpen) => {
+            if (suppressNextTooltip.current) {
+              setOptionsTooltipOpen(false);
+              suppressNextTooltip.current = false;
+            } else {
+              setOptionsTooltipOpen(nextOpen);
+            }
+          }}
+        >
           <TooltipContent className='z-[31]' side='bottom'>
             {t('space options label')}
           </TooltipContent>
@@ -125,7 +139,18 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
                 </Button>
               </TooltipTrigger>
             }
-            slots={{ content: { className: 'z-[31]' } }}
+            slots={{
+              root: {
+                open: optionsMenuOpen,
+                onOpenChange: (nextOpen: boolean) => {
+                  if (!nextOpen) {
+                    suppressNextTooltip.current = true;
+                  }
+                  return setOpetionsMenuOpen(nextOpen);
+                }
+              },
+              content: { className: 'z-[31]' }
+            }}
           >
             <DropdownMenuItem asChild>
               <Input
