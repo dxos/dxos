@@ -13,7 +13,8 @@ import {
   dropdownMenuTheme,
   inputTheme,
   inputOsTheme,
-  mainTheme
+  mainTheme,
+  messageTheme
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -22,7 +23,8 @@ export const theme: Theme<Record<string, any>> = {
   dropdownMenu: dropdownMenuTheme,
   input: inputTheme,
   list: listTheme,
-  main: mainTheme
+  main: mainTheme,
+  message: messageTheme
 };
 
 export const osTheme: Theme<Record<string, any>> = {

@@ -7,3 +7,4 @@ export * from './input';
 export * from './dropdown-menu';
 export * from './list';
 export * from './main';
+export * from './message';
