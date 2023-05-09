@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { Stats, TestBuilder } from '../test-builder';
+import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
 
@@ -71,7 +71,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     seedrandom(spec.randomSeed, { global: true });
     const ctx = new Context();
-    const stats = new Stats();
 
     log.info('start', { agentId });
 
@@ -86,7 +85,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
     const agent = await this.builder.createPeer({
       signals: config.servers.map((server) => ({ server })),
-      stats,
       peerId: PublicKey.from(agentId)
     });
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
@@ -117,14 +115,14 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
             break;
           }
           case 'signaling': {
-            agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]));
+            await agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]));
             break;
           }
           default:
             throw new Error(`Unknown test type: ${spec.type}`);
         }
 
-        log.info('iteration finished', stats.shortStats);
+        log.info('iteration finished');
       },
       spec.repeatInterval
     );
