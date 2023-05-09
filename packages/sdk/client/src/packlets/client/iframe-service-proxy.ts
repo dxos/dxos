@@ -12,6 +12,7 @@ import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
+import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
@@ -70,7 +71,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     logFilter = 'error,warn',
-    timeout = 3000
+    timeout = DEFAULT_TIMEOUT
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
     this._options = { source, channel, shell, vault, logFilter, timeout };
