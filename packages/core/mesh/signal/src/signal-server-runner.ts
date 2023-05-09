@@ -19,6 +19,11 @@ interface TestBrokerOptions {
   port?: number;
   timeout?: number;
   env?: Record<string, string>;
+
+  /**
+   * Allows arbitrary commands. WARNING: It stalls on Linux machine if `true`.
+   */
+  shell?: boolean;
 }
 
 // TODO(burdon): Convert to TestBuilder pattern.
@@ -27,6 +32,7 @@ export class SignalServerRunner {
   private readonly _signalArguments: string[];
   private readonly _cwd?: string;
   private readonly _env: Record<string, string>;
+  private readonly _shell: boolean;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
@@ -34,13 +40,22 @@ export class SignalServerRunner {
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor({ binCommand, signalArguments, cwd, port = 8080, timeout = 5_000, env = {} }: TestBrokerOptions) {
+  constructor({
+    binCommand,
+    signalArguments,
+    cwd,
+    port = 8080,
+    timeout = 5_000,
+    env = {},
+    shell = false
+  }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
     this._cwd = cwd;
     this._port = port;
     this._timeout = timeout;
     this._env = env;
+    this._shell = shell;
 
     this._serverProcess = this.startProcess();
   }
@@ -57,7 +72,7 @@ export class SignalServerRunner {
     }
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
-      shell: true,
+      shell: this._shell,
       env: {
         ...process.env,
         ...this._env
@@ -77,7 +92,7 @@ export class SignalServerRunner {
     });
 
     server.on('close', (code) => {
-      log(`TestServer exited with code ${code}`);
+      log.info(`TestServer exited with code ${code}`);
     });
 
     this._serverProcess = server;
@@ -111,7 +126,10 @@ export class SignalServerRunner {
   }
 
   public stop(): void {
-    this._serverProcess.kill('SIGTERM');
+    const delivered = this._serverProcess.kill('SIGINT');
+    if (!delivered) {
+      log.warn('kill signal was not delivered to child process');
+    }
   }
 
   public url(): string {
