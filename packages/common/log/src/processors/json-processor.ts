@@ -26,7 +26,7 @@ export const createFileProcessor = ({ path, level }: { path: string; level: LogL
       ...entry,
       timestamp: Date.now(),
       meta: {
-        ...entry.meta,
+        ...entry.meta
       },
       context: jsonify(getContextFromEntry(entry))
     };
@@ -54,9 +54,10 @@ export const jsonify = (value: any): any => {
   if (typeof value === 'function') {
     return null;
   } else if (typeof value === 'object' && value !== null) {
-    if(value instanceof Uint8Array) {
+    if (value instanceof Uint8Array) {
       return Buffer.from(value).toString('hex');
-    } if (Array.isArray(value)) {
+    }
+    if (Array.isArray(value)) {
       return value.map(jsonify);
     } else {
       if (typeof value.toJSON === 'function') {
