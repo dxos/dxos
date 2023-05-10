@@ -81,14 +81,10 @@ export const mapToJson = (m: Map<string, any>) => {
 
 export const analyzeSwarmEvents = async (results: PlanResults) => {
   /**
-   * topic -> (peer -> join/leave)
+   * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
    */
-  const expectedTopics = new Map<string, Map<string, { join?: number; leave?: number }>>();
+  const topics = new Map<string, Map<string, { join?: number; leave?: number; seen: Map<string, number> }>>();
 
-  /**
-   * peer -> (topic -> (peer  -> timestamp))
-   */
-  const seenPeers = new Map<string, Map<string, Map<string, number>>>();
   const reader = new LogReader();
 
   for (const { logFile } of Object.values(results.agents)) {
@@ -102,44 +98,36 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     const data: TraceEvent = entry.context;
 
     //
-    // Propagate `topics` map
+    // Propagate map
     //
-    if (data.type === 'JOIN_SWARM' || data.type === 'LEAVE_SWARM') {
-      if (!expectedTopics.has(data.topic)) {
-        expectedTopics.set(data.topic, new Map());
+    if (
+      data.type === 'JOIN_SWARM' ||
+      data.type === 'LEAVE_SWARM' ||
+      data.type === 'PEER_AVAILABLE' ||
+      data.type === 'PEER_LEFT'
+    ) {
+      if (!topics.has(data.topic)) {
+        topics.set(data.topic, new Map());
       }
-      if (!expectedTopics.get(data.topic)!.has(data.peerId)) {
-        expectedTopics.get(data.topic)!.set(data.peerId, { join: undefined, leave: undefined });
+      if (!topics.get(data.topic)!.has(data.peerId)) {
+        topics.get(data.topic)!.set(data.peerId, { join: undefined, leave: undefined, seen: new Map() });
       }
     }
     switch (data.type) {
       case 'JOIN_SWARM': {
-        expectedTopics.get(data.topic)!.get(data.peerId)!.join = entry.timestamp;
+        topics.get(data.topic)!.get(data.peerId)!.join = entry.timestamp;
         break;
       }
       case 'LEAVE_SWARM': {
-        expectedTopics.get(data.topic)!.get(data.peerId)!.leave = entry.timestamp;
+        topics.get(data.topic)!.get(data.peerId)!.leave = entry.timestamp;
         break;
       }
-    }
-    //
-    // Propagate `seenPeers` map
-    //
-    if (data.type === 'PEER_AVAILABLE' || data.type === 'PEER_LEFT') {
-      if (!seenPeers.has(data.peerId)) {
-        seenPeers.set(data.peerId, new Map());
-      }
-      if (!seenPeers.get(data.peerId)!.has(data.topic)) {
-        seenPeers.get(data.peerId)!.set(data.topic, new Map());
-      }
-    }
-    switch (data.type) {
       case 'PEER_AVAILABLE': {
-        const oldTimestamp = seenPeers.get(data.peerId)!.get(data.topic)!.get(data.discoveredPeer);
+        const oldTimestamp = topics.get(data.topic)!.get(data.peerId)!.seen.get(data.discoveredPeer);
         if (oldTimestamp && oldTimestamp < entry.timestamp) {
           continue;
         }
-        seenPeers.get(data.peerId)!.get(data.topic)!.set(data.discoveredPeer, entry.timestamp);
+        topics.get(data.topic)!.get(data.peerId)!.seen.set(data.discoveredPeer, entry.timestamp);
         break;
       }
     }
@@ -148,20 +136,19 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
   let failures = 0;
   const discoverLag = [];
 
-  for (const [peer, joinedTopics] of seenPeers.entries()) {
-    for (const [topic, peersPerTopic] of joinedTopics.entries()) {
-      const expectedPeers = expectedTopics.get(topic);
-
-      for (const [expectedPeer, timings] of expectedPeers!.entries()) {
-        if (expectedPeer === peer) {
+  for (const [_, peersPerTopic] of topics.entries()) {
+    for (const [peerId, seen] of peersPerTopic.entries()) {
+      for (const [expectedPeer, timings] of peersPerTopic.entries()) {
+        if (expectedPeer === peerId) {
           continue;
         }
-        if (!peersPerTopic.has(expectedPeer)) {
+        if (!seen.seen.has(expectedPeer)) {
           failures++;
           continue;
         }
-        const discoverTime = peersPerTopic.get(expectedPeer)!;
+        const discoverTime = seen.seen.get(expectedPeer)!;
         if (discoverTime < timings.join! || timings.leave! < discoverTime) {
+          failures++;
           continue;
         }
         discoverLag.push(discoverTime - timings.join!);
