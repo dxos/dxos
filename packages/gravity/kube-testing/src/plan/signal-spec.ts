@@ -103,6 +103,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
         switch (spec.type) {
           case 'discovery': {
+            agent.regeneratePeerId();
             const topics = config.topics.map((topic) => PublicKey.from(topic));
             for (const topic of topics) {
               await cancelWithContext(ctx, agent.joinTopic(PublicKey.from(topic)));

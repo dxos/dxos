@@ -55,13 +55,17 @@ export type TestAgentParams = {
 
 export class TestAgent {
   public readonly signalManager;
-  public readonly peerId: PublicKey;
+  public peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
   private readonly _ctx = new Context();
   constructor({ signals, peerId = PublicKey.random() }: TestAgentParams) {
     this.signalServers = signals;
     this.signalManager = new WebsocketSignalManager(signals);
     this.peerId = peerId;
+  }
+
+  regeneratePeerId() {
+    this.peerId = PublicKey.random();
   }
 
   async start() {
