@@ -53,8 +53,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
             spec.serversPerAgent
           );
 
-      // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
-
       return {
         servers,
         topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex())
@@ -74,19 +72,19 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
     log.info('start', { agentId });
 
-    const topics = config.topics.map((topic) => PublicKey.from(topic));
-    const agentsPerTopic: Record<string, string[]> = {};
-    for (const [agentId, agentCfg] of Object.entries(agents)) {
-      for (const topic of agentCfg.topics) {
-        agentsPerTopic[agentId] ??= [];
-        agentsPerTopic[agentId].push(topic);
-      }
-    }
+    // const agentsPerTopic: Record<string, string[]> = {};
+    // for (const [agentId, agentCfg] of Object.entries(agents)) {
+    //   for (const topic of agentCfg.topics) {
+    //     agentsPerTopic[agentId] ??= [];
+    //     agentsPerTopic[agentId].push(topic);
+    //   }
+    // }
 
     const agent = await this.builder.createPeer({
       signals: config.servers.map((server) => ({ server })),
       peerId: PublicKey.from(agentId)
     });
+
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
     await sleep(1_000);
 
@@ -101,15 +99,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
         switch (spec.type) {
           case 'discovery': {
+            const topics = config.topics.map((topic) => PublicKey.from(topic));
             for (const topic of topics) {
               await cancelWithContext(ctx, agent.joinTopic(PublicKey.from(topic)));
             }
 
             await sleep(spec.discoverTimeout);
-
-            // await Promise.all(topics.map((topic) =>
-            //   cancelWithContext(ctx, agent.discoverPeers(PublicKey.from(topic), spec.discoverTimeout))
-            // ));
 
             await Promise.all(topics.map((topic) => cancelWithContext(ctx, agent.leaveTopic(PublicKey.from(topic)))));
             break;
@@ -131,41 +126,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   }
 
   async finishPlan(results: PlanResults): Promise<void> {
-    // log.info('finishPlan', { results })
     await this.builder.destroy();
-
-    // const reader = new LogReader();
-    // for(const { logFile } of Object.values(results.agents)) {
-    //   console.log('add', { logFile })
-    //   reader.addFile(logFile)
-    // }
-
-    // const messages = new Map<string, { sent: number, received: number }>();
-
-    // for await(const entry of reader) {
-    //   if(entry.message !== 'dxos.test.signal') {
-    //     continue;
-    //   }
-    //   const data: TraceEvent = entry.context;
-
-    //   switch(data.type) {
-    //     case 'SENT_MESSAGE':
-    //       if(!messages.has(data.message)) {
-    //         messages.set(data.message, { sent: 0, received: 0})
-    //       }
-    //       messages.get(data.message)!.sent = entry.timestamp;
-    //       break;
-    //     case 'RECEIVE_MESSAGE':
-    //       if(!messages.has(data.message)) {
-    //         messages.set(data.message, { sent: 0, received: 0})
-    //       }
-    //       messages.get(data.message)!.received = entry.timestamp;
-    //       break;
-    //   }
-    // }
-
-    // const lagTimes = new dfd.Series(Array.from(messages.values()).map(x => x.received - x.sent))
-
-    // console.log(messages)
   }
 }

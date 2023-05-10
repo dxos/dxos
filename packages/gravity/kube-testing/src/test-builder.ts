@@ -5,13 +5,13 @@
 import { randomBytes } from 'node:crypto';
 
 import { Context } from '@dxos/context';
-import { checkType } from '@dxos/debug';
+import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, WebsocketSignalManager } from '@dxos/messaging';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { TraceEvent } from './analysys/reducer';
 import { runSignal } from './run-test-signal';
@@ -58,9 +58,6 @@ export class TestAgent {
   public readonly peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
   private readonly _ctx = new Context();
-
-  private readonly _topics = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
-
   constructor({ signals, peerId = PublicKey.random() }: TestAgentParams) {
     this.signalServers = signals;
     this.signalManager = new WebsocketSignalManager(signals);
@@ -76,18 +73,22 @@ export class TestAgent {
       peerId: this.peerId
     });
 
-    this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic: discoveredTopic }) => {
-      // process.stdout.write('#')
-      const peers = this._topics.get(discoveredTopic);
-      if (!peers) {
-        log.warn('Topic not found', { discoveredTopic });
-        return;
-      }
-      if (swarmEvent.peerAvailable) {
-        peers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
-      } else if (swarmEvent.peerLeft) {
-        peers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
-      }
+    this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic }) => {
+      const serializedEvent = swarmEvent.peerAvailable
+        ? { peerAvailable: { peer: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() } }
+        : swarmEvent.peerLeft
+        ? { peerLeft: { peer: PublicKey.from(swarmEvent.peerLeft.peer).toHex() } }
+        : raise(new Error('Unknown event'));
+
+      log.trace(
+        'dxos.test.swarmEvent',
+        checkType<TraceEvent>({
+          peerId: this.peerId.toHex(),
+          type: 'SWARM_EVENT',
+          topic: topic.toHex(),
+          swarmEvent: serializedEvent
+        })
+      );
     });
 
     this.signalManager.onMessage.on(this._ctx, (message) => {
@@ -116,13 +117,11 @@ export class TestAgent {
   }
 
   async joinTopic(topic: PublicKey) {
-    this._topics.set(topic, new ComplexSet(PublicKey.hash));
     await this.signalManager.join({ topic, peerId: this.peerId });
   }
 
   async leaveTopic(topic: PublicKey) {
     await this.signalManager.leave({ topic, peerId: this.peerId });
-    this._topics.delete(topic);
   }
 
   async sendMessage(to: PublicKey) {
