@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './Avatar';
 export * from './Button';
 export * from './Input';
 export * from './List';

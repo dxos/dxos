@@ -23,15 +23,15 @@ import { useThemeContext } from '../../hooks';
 
 type AvatarVariant = 'square' | 'circle';
 
-type AvatarRootProps = AvatarRootPrimitiveProps & { size?: Size; variant?: AvatarVariant };
+type AvatarRootProps = AvatarRootPrimitiveProps & { labelId?: string; size?: Size; variant?: AvatarVariant };
 
 type AvatarContextValue = { labelId: string; maskId: string; size: Size; variant: AvatarVariant };
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
 
 const AvatarRoot = forwardRef<HTMLSpanElement, AvatarRootProps>(
-  ({ size = 10, variant = 'circle', className, id: propsId, ...props }, forwardedRef) => {
-    const labelId = useId('avatar__label', propsId);
+  ({ size = 10, variant = 'circle', className, labelId: propsLabelId, ...props }, forwardedRef) => {
+    const labelId = useId('avatar__label', propsLabelId);
     const maskId = useId('mask');
     const { tx } = useThemeContext();
     return (
