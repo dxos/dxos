@@ -10,9 +10,9 @@ import { SignalTestPlan } from './plan/signal-spec';
 void runPlan({
   plan: new SignalTestPlan(),
   spec: {
-    servers: 1,
-    agents: 2,
-    serversPerAgent: 1,
+    servers: 3,
+    agents: 10,
+    serversPerAgent: 2,
     signalArguments: [
       'p2pserver'
       // 'globalsubserver'
