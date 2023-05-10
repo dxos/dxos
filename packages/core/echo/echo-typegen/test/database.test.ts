@@ -9,7 +9,6 @@ import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
-import { waitForDebugger } from 'node:inspector';
 
 describe('database', () => {
   test('creating objects', async () => {
