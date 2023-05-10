@@ -4,11 +4,10 @@
 
 import JSZip from 'jszip';
 
+import { Document } from '@braneframe/types';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { YText } from '@dxos/text-model';
-
-import { ComposerDocument } from '../proto';
 
 export type ComposerDocumentBackup = {
   origin?: Partial<{
@@ -27,7 +26,7 @@ export type SpaceBackup = {
 };
 
 export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string): Promise<SpaceBackup> => {
-  const itemsQuery = space.db.query(ComposerDocument.filter());
+  const itemsQuery = space.db.query(Document.filter());
   const namesCount = new Map<string, number>();
   const getFileName = (title: string) => {
     const displayTitle = title || defaultDocumentTitle;
@@ -58,7 +57,7 @@ export const backupSpace = async (space: Space, defaultDocumentTitle: string): P
   backupPackage.file('composer-space-backup.json', JSON.stringify(backup));
   const items = backupPackage.folder('items');
   backup.items.forEach((docBackup) => {
-    const document = space.db.getObjectById(docBackup.origin!.id!) as ComposerDocument;
+    const document = space.db.getObjectById(docBackup.origin!.id!) as Document;
     items!.file(docBackup.fileName, document?.content.content?.toString() ?? '');
   });
   return backupPackage.generateAsync({ type: 'blob' });
@@ -72,8 +71,8 @@ export const restoreSpace = async (space: Space, backupBlob: Blob) => {
     await Promise.all(
       backup.items.map(async ({ fileName, origin = {} }) => {
         const { id, title } = origin;
-        const extantDoc = id ? space.db.getObjectById<ComposerDocument>(id) : undefined;
-        const targetDoc = extantDoc ?? space.db.add(new ComposerDocument());
+        const extantDoc = id ? space.db.getObjectById<Document>(id) : undefined;
+        const targetDoc = extantDoc ?? space.db.add(new Document());
         const docContent = await backupPackage.file(`items/${fileName}`)?.async('string');
         if (targetDoc && targetDoc.content.content) {
           targetDoc.content.content.delete(0, targetDoc.content.content.length);
