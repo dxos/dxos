@@ -14,7 +14,8 @@ import {
   inputTheme,
   inputOsTheme,
   mainTheme,
-  messageTheme
+  messageTheme,
+  avatarTheme
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -24,7 +25,8 @@ export const theme: Theme<Record<string, any>> = {
   input: inputTheme,
   list: listTheme,
   main: mainTheme,
-  message: messageTheme
+  message: messageTheme,
+  avatar: avatarTheme
 };
 
 export const osTheme: Theme<Record<string, any>> = {

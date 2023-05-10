@@ -5,7 +5,6 @@
 import { Circle, Moon } from '@phosphor-icons/react';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import * as PortalPrimitive from '@radix-ui/react-portal';
-import { toSvg } from 'jdenticon';
 import React, {
   cloneElement,
   ComponentProps,
@@ -13,8 +12,7 @@ import React, {
   forwardRef,
   PropsWithChildren,
   ReactHTMLElement,
-  ReactNode,
-  useMemo
+  ReactNode
 } from 'react';
 
 import { useId, Size } from '@dxos/aurora';
@@ -73,13 +71,6 @@ export const Avatar = forwardRef(
     const descriptionId = useId('avatarDescription', propsDescriptionId);
     const maskId = useId('mask');
     const svgId = useId('mask');
-    const fallbackSrc = useMemo(
-      () =>
-        `data:image/svg+xml;utf8,${encodeURIComponent(
-          toSvg(fallbackValue, size === 'px' ? 1 : size * 4, { padding: 0 })
-        )}`,
-      [fallbackValue]
-    );
 
     const imageSizeNumber = size === 'px' ? 1 : size * 4;
     const statusIconSize = size > 9 ? 4 : size < 6 ? 2 : 3;
@@ -125,7 +116,7 @@ export const Avatar = forwardRef(
               </AvatarPrimitive.Image>
             )}
             <AvatarPrimitive.Fallback delayMs={0} {...slots.fallback} asChild>
-              <image href={fallbackSrc} width='100%' height='100%' mask={`url(#${maskId})`} />
+              <image width='100%' height='100%' mask={`url(#${maskId})`} />
             </AvatarPrimitive.Fallback>
           </svg>
           {status === 'active' && (
