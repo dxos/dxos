@@ -8,12 +8,13 @@ import faker from 'faker';
 import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
+import { Document } from '@braneframe/types';
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { stripKeys } from '@dxos/util';
 
-import { Contact, Document, Event, Message, Organization, Note, Project, Task } from '../proto';
+import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).

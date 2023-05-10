@@ -6,15 +6,14 @@ import { Article, ArticleMedium, Circle } from '@phosphor-icons/react';
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { Document } from '@braneframe/types';
 import { useTranslation, ListItemEndcap } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
-import { ComposerDocument } from '../../proto';
-
-export const DocumentTreeItem = observer(({ document, linkTo }: { document: ComposerDocument; linkTo: string }) => {
+export const DocumentTreeItem = observer(({ document, linkTo }: { document: Document; linkTo: string }) => {
   const { t } = useTranslation('composer');
   const { docKey } = useParams();
   const active = docKey === document.id;
