@@ -57,8 +57,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
             spec.serversPerAgent
           );
 
-      // const signals = [{ server: 'ws://localhost:1337/.well-known/dx/signal'}];
-
       return {
         servers,
         topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex())
@@ -78,19 +76,19 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
     log.info('start', { agentId });
 
-    const topics = config.topics.map((topic) => PublicKey.from(topic));
-    const agentsPerTopic: Record<string, string[]> = {};
-    for (const [agentId, agentCfg] of Object.entries(agents)) {
-      for (const topic of agentCfg.topics) {
-        agentsPerTopic[agentId] ??= [];
-        agentsPerTopic[agentId].push(topic);
-      }
-    }
+    // const agentsPerTopic: Record<string, string[]> = {};
+    // for (const [agentId, agentCfg] of Object.entries(agents)) {
+    //   for (const topic of agentCfg.topics) {
+    //     agentsPerTopic[agentId] ??= [];
+    //     agentsPerTopic[agentId].push(topic);
+    //   }
+    // }
 
     const agent = await this.builder.createPeer({
       signals: config.servers.map((server) => ({ server })),
       peerId: PublicKey.from(agentId)
     });
+
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
     await sleep(1_000);
 
@@ -105,15 +103,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
         switch (spec.type) {
           case 'discovery': {
+            const topics = config.topics.map((topic) => PublicKey.from(topic));
             for (const topic of topics) {
               await cancelWithContext(ctx, agent.joinTopic(PublicKey.from(topic)));
             }
 
             await sleep(spec.discoverTimeout);
-
-            // await Promise.all(topics.map((topic) =>
-            //   cancelWithContext(ctx, agent.discoverPeers(PublicKey.from(topic), spec.discoverTimeout))
-            // ));
 
             await Promise.all(topics.map((topic) => cancelWithContext(ctx, agent.leaveTopic(PublicKey.from(topic)))));
             break;

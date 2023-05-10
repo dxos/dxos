@@ -6,7 +6,6 @@ import { readFileSync } from 'node:fs';
 
 import { PublicKey } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export enum TestingEvent {
   // Test agent control events.
@@ -19,10 +18,7 @@ export enum TestingEvent {
   LEAVE_SWARM = ''
 }
 
-export type TraceEvent = {
-  // peerId: PublicKey;
-  // timestamp: number;
-} & (
+export type TraceEvent =
   | {
       type: 'SENT_MESSAGE' | 'RECEIVE_MESSAGE';
       sender: string;
@@ -32,12 +28,19 @@ export type TraceEvent = {
   | {
       peerId: string;
       type: 'SWARM_EVENT';
-      topic: PublicKey;
-      swarmEvent: SwarmEvent;
+      topic: string;
+      swarmEvent:
+        | {
+            peerAvailable: {
+              peer: string;
+            };
+          }
+        | { peerLeft: { peer: string } };
     }
   | {
       type: 'LEAVE_SWARM' | 'JOIN_SWARM';
       topic: PublicKey;
+      peerId: string;
     }
   | {
       type: 'ERROR';
@@ -45,8 +48,7 @@ export type TraceEvent = {
     }
   | {
       type: 'START' | 'STOP';
-    }
-);
+    };
 
 export class LogReader implements AsyncIterable<SerializedLogEntry> {
   private _logs: any[] = [];
