@@ -19,7 +19,7 @@ export const fromIFrame = (
   config: Config = new Config(),
   options: Omit<Partial<IFrameClientServicesProxyOptions>, 'source'> = {},
   // TODO(wittjosiah): This is here to workaround client/client-services cyclic dependency. Remove.
-  host?: (config?: Config) => ClientServicesProvider,
+  hostProvider?: (config?: Config) => ClientServicesProvider,
 ): ClientServicesProvider => {
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.
@@ -32,6 +32,11 @@ export const fromIFrame = (
     return new IFrameClientServicesProxy({ source, ...options });
   }
 
-  assert(host, 'Host is required for Safari');
-  return new IFrameClientServicesHost({ host: host(config), source, vault: options.vault, timeout: options.timeout });
+  assert(hostProvider, 'Host is required for Safari');
+  return new IFrameClientServicesHost({
+    host: hostProvider(config),
+    source,
+    vault: options.vault,
+    timeout: options.timeout,
+  });
 };

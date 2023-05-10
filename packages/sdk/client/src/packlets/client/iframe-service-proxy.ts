@@ -35,8 +35,6 @@ export type IFrameClientServicesProxyOptions = {
  * Proxy to host client service via iframe.
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  // TODO(wittjosiah): Remove.
-  public messageChannel?: MessageChannel;
   public readonly joinedSpace = new Event<PublicKey>();
 
   private _iframe?: HTMLIFrameElement;
