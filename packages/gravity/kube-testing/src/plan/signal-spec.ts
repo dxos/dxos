@@ -10,20 +10,19 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
+import { analyzeMessages } from '../analysys/stat-analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
-import { LogReader } from '../analysys/reducer';
-import { analyzeMessages } from '../analysys/stat-analysys';
 
 export type SignalTestSpec = {
   servers: number;
   serverOverride?: string;
   signalArguments: string[];
-  
+
   agents: number;
   serversPerAgent: number;
-  
+
   type: 'discovery' | 'signaling';
   topicCount: number;
   topicsPerAgent: number;
@@ -32,7 +31,7 @@ export type SignalTestSpec = {
   repeatInterval: number;
   agentWaitTime: number;
   duration: number;
-  
+
   randomSeed: string;
 };
 
@@ -46,9 +45,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     seedrandom(spec.randomSeed, { global: true });
-    await Promise.all(range(spec.servers).map(num => 
-      this.builder.createServer(num, outDir, spec.signalArguments)
-    ))
+    await Promise.all(range(spec.servers).map((num) => this.builder.createServer(num, outDir, spec.signalArguments)));
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
 
@@ -135,7 +132,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     );
 
     await sleep(spec.duration);
-    await ctx.dispose()
+    await ctx.dispose();
     await sleep(spec.agentWaitTime);
   }
 

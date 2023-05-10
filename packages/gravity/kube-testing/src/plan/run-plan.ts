@@ -7,11 +7,10 @@ import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Event, asyncTimeout, sleep } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
-import { analyzeMessages } from '../analysys/stat-analysys';
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
 
 const AGENT_LOG_FILE = 'agent.log';
@@ -113,7 +112,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   try {
     stats = await await plan.finishPlan(planResults);
   } catch (err) {
-    log.warn(`error finishing plan`, err);
+    log.warn('error finishing plan', err);
   }
 
   writeFileSync(
@@ -131,7 +130,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   );
 
   log.info('plan complete');
-  process.exit(0)
+  process.exit(0);
 };
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
