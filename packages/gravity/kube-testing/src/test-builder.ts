@@ -78,19 +78,20 @@ export class TestAgent {
     });
 
     this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic }) => {
-      const serializedEvent = swarmEvent.peerAvailable
-        ? { peerAvailable: { peer: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() } }
+      const type = swarmEvent.peerAvailable ? 'PEER_AVAILABLE' : 'PEER_LEFT';
+      const discoveredPeer = swarmEvent.peerAvailable
+        ? PublicKey.from(swarmEvent.peerAvailable.peer).toHex()
         : swarmEvent.peerLeft
-        ? { peerLeft: { peer: PublicKey.from(swarmEvent.peerLeft.peer).toHex() } }
-        : raise(new Error('Unknown event'));
+        ? PublicKey.from(swarmEvent.peerLeft.peer).toHex()
+        : raise(new Error('Unknown peer event'));
 
       log.trace(
         'dxos.test.signal',
         checkType<TraceEvent>({
           peerId: this.peerId.toHex(),
-          type: 'SWARM_EVENT',
+          type,
           topic: topic.toHex(),
-          swarmEvent: serializedEvent
+          discoveredPeer
         })
       );
     });
