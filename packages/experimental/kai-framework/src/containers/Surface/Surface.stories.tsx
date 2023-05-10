@@ -8,7 +8,7 @@ import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams
 
 import { Event } from '@dxos/async';
 import { Button, MainRoot, Sidebar as SidebarRoot, Main, ThemeProvider, MainOverlay, useSidebar } from '@dxos/aurora';
-import { getSize, mx, tx } from '@dxos/aurora-theme';
+import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
@@ -329,7 +329,7 @@ const TestApp = () => {
   };
 
   const Root = () => (
-    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]} tx={tx}>
+    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]} tx={appTx}>
       <SurfaceControllerContextProvider components={components}>
         <Layout />
       </SurfaceControllerContextProvider>

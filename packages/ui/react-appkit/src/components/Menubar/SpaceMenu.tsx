@@ -6,7 +6,7 @@ import { Gear, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultInlineSeparator, getSize, mx, tx } from '@dxos/aurora-theme';
+import { defaultInlineSeparator, getSize, mx, appTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
 
@@ -34,7 +34,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
       slots={{
         content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },
         trigger: {
-          className: tx(
+          className: appTx(
             'button.root',
             'button button--popover-trigger',
             {},

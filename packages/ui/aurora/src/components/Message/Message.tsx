@@ -16,6 +16,8 @@ type MessageProps = ComponentPropsWithRef<typeof Primitive.div> & {
   valence?: MessageValence;
   elevation?: Elevation;
   asChild?: boolean;
+  titleId?: string;
+  descriptionId?: string;
 };
 
 type MessageContextValue = { titleId?: string; descriptionId: string };
@@ -23,10 +25,19 @@ const MESSAGE_NAME = 'Message';
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
 
 const Message = forwardRef<HTMLDivElement, MessageProps>(
-  ({ asChild, valence, elevation: propsElevation, className, children, ...props }) => {
+  ({
+    asChild,
+    valence,
+    elevation: propsElevation,
+    className,
+    titleId: propsTitleId,
+    descriptionId: propsDescriptionId,
+    children,
+    ...props
+  }) => {
     const { tx } = useThemeContext();
-    const titleId = useId('message__title');
-    const descriptionId = useId('message__description');
+    const titleId = useId('message__title', propsTitleId);
+    const descriptionId = useId('message__description', propsDescriptionId);
     const elevation = useElevationContext(propsElevation);
     const Root = asChild ? Slot : Primitive.div;
     return (
