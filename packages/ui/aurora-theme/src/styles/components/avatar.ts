@@ -16,8 +16,7 @@ export type AvatarStyleProps = Partial<{
 export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10 }, ...etc) =>
   mx('relative inline-flex', getSize(size), ...etc);
 
-export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly = true }, ...etc) =>
-  mx(srOnly && 'sr-only', ...etc);
+export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
 export const avatarStatus: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('is-full bs-full', ...etc);
 

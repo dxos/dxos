@@ -14,7 +14,7 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { toSvg } from 'jdenticon';
-import React, { ComponentPropsWithRef, forwardRef, useMemo } from 'react';
+import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren, useMemo } from 'react';
 
 import { Size } from '@dxos/aurora-types';
 import { useId } from '@dxos/react-hooks';
@@ -23,28 +23,31 @@ import { useThemeContext } from '../../hooks';
 
 type AvatarVariant = 'square' | 'circle';
 
-type AvatarRootProps = AvatarRootPrimitiveProps & { labelId?: string; size?: Size; variant?: AvatarVariant };
+type AvatarRootProps = PropsWithChildren<{ labelId?: string; size?: Size; variant?: AvatarVariant }>;
 
 type AvatarContextValue = { labelId: string; maskId: string; size: Size; variant: AvatarVariant };
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
 
-const AvatarRoot = forwardRef<HTMLSpanElement, AvatarRootProps>(
-  ({ size = 10, variant = 'circle', className, labelId: propsLabelId, ...props }, forwardedRef) => {
-    const labelId = useId('avatar__label', propsLabelId);
-    const maskId = useId('mask');
-    const { tx } = useThemeContext();
-    return (
-      <AvatarProvider {...{ labelId, maskId, size, variant }}>
-        <AvatarRootPrimitive
-          {...props}
-          className={tx('avatar.root', 'avatar', { size, variant }, className)}
-          ref={forwardedRef}
-        />
-      </AvatarProvider>
-    );
-  }
-);
+const AvatarRoot = ({ size = 10, variant = 'circle', children, labelId: propsLabelId }: AvatarRootProps) => {
+  const labelId = useId('avatar__label', propsLabelId);
+  const maskId = useId('mask');
+  return <AvatarProvider {...{ labelId, maskId, size, variant }}>{children}</AvatarProvider>;
+};
+
+type AvatarProps = AvatarRootPrimitiveProps;
+
+const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ className, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { size, variant } = useAvatarContext('Avatar');
+  return (
+    <AvatarRootPrimitive
+      {...props}
+      className={tx('avatar.root', 'avatar', { size, variant }, className)}
+      ref={forwardedRef}
+    />
+  );
+});
 
 type AvatarLabelProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & {
   asChild?: boolean;
@@ -154,6 +157,7 @@ const useJdenticonHref = (value: string, size: Size) => {
 
 export {
   AvatarRoot,
+  Avatar,
   AvatarImage,
   AvatarFallback,
   AvatarLabel,
@@ -165,6 +169,7 @@ export {
 
 export type {
   AvatarRootProps,
+  AvatarProps,
   AvatarImageProps,
   AvatarFallbackProps,
   AvatarLabelProps,
