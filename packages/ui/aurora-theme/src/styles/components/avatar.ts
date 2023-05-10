@@ -5,7 +5,7 @@
 import { ComponentFunction, Size, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { getSize } from '../fragments';
+import { defaultDescription, getSize } from '../fragments';
 
 export type AvatarStyleProps = Partial<{
   size: Size;
@@ -17,8 +17,10 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10 }, .
   mx('relative inline-flex', getSize(size), ...etc);
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
+export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
+  mx(defaultDescription, srOnly && 'sr-only', ...etc);
 
-export const avatarStatus: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('is-full bs-full', ...etc);
+export const avatarFrame: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('is-full bs-full', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -35,6 +37,7 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
 export const avatarTheme: Theme<AvatarStyleProps> = {
   root: avatarRoot,
   label: avatarLabel,
+  description: avatarDescription,
   statusIcon: avatarStatusIcon,
-  status: avatarStatus
+  frame: avatarFrame
 };

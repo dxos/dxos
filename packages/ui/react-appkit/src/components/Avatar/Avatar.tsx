@@ -3,27 +3,17 @@
 //
 
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
-import React, {
-  cloneElement,
-  ComponentProps,
-  ForwardedRef,
-  forwardRef,
-  PropsWithChildren,
-  ReactHTMLElement,
-  ReactNode
-} from 'react';
+import React, { ComponentProps, ForwardedRef, forwardRef, PropsWithChildren, ReactHTMLElement, ReactNode } from 'react';
 
 import {
   Size,
   AvatarRoot,
   Avatar as NaturalAvatar,
   AvatarFallback,
-  AvatarMaskedImage,
-  AvatarStatus,
   AvatarImage,
   useJdenticonHref,
-  useId,
-  AvatarLabel
+  AvatarLabel,
+  AvatarDescription
 } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
@@ -80,41 +70,18 @@ export const Avatar = forwardRef(
     ref: ForwardedRef<HTMLSpanElement>
   ) => {
     const jdenticon = useJdenticonHref(fallbackValue, size);
-    const descriptionId = useId('avatarDescription', propsDescriptionId);
-
     return (
       <>
-        <AvatarRoot labelId={propsLabelId} {...{ size, variant }}>
+        <AvatarRoot labelId={propsLabelId} descriptionId={propsDescriptionId} {...{ size, variant, status }}>
           <NaturalAvatar {...slots.root} ref={ref}>
-            {status ? (
-              <AvatarStatus {...{ status }}>
-                {mediaSrc && (
-                  <AvatarImage asChild>
-                    <AvatarMaskedImage href={mediaSrc} />
-                  </AvatarImage>
-                )}
-                <AvatarFallback delayMs={0} asChild>
-                  <AvatarMaskedImage href={jdenticon} />
-                </AvatarFallback>
-              </AvatarStatus>
-            ) : (
-              <>
-                <AvatarImage src={mediaSrc} />
-                <AvatarFallback asChild delayMs={0}>
-                  <img src={jdenticon} />
-                </AvatarFallback>
-              </>
-            )}
+            {mediaSrc && <AvatarImage href={mediaSrc} />}
+            <AvatarFallback delayMs={0} href={jdenticon} />
           </NaturalAvatar>
           <div role='none' {...slots.labels} className={mx('contents', slots?.labels?.className)}>
             <AvatarLabel asChild={typeof label !== 'string'}>{label}</AvatarLabel>
-            {!propsDescriptionId &&
-              description &&
-              (typeof description === 'string' ? (
-                <span id={descriptionId}>{description}</span>
-              ) : (
-                cloneElement(description, { id: descriptionId })
-              ))}
+            {description && (
+              <AvatarDescription asChild={typeof description !== 'string'}>{description}</AvatarDescription>
+            )}
           </div>
         </AvatarRoot>
       </>
