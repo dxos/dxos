@@ -234,8 +234,8 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
           editorRef.current.view.dispatch({
             changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md }
           });
-        } catch (error) {
-          log.catch(error);
+        } catch (err) {
+          log.catch(err);
         }
         setImportDialogOpen(false);
       }
@@ -245,13 +245,14 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
 
   const docGhId = useMemo<GhIdentifier | null>(() => {
     try {
-      const key = document.meta?.keys?.find((key) => key.source === 'github');
-      if (key?.source) {
-        return JSON.parse(key.source);
+      const key = document.meta?.keys?.find((key) => key.source === 'com.github');
+      if (key?.id) {
+        return JSON.parse(key.id);
       } else {
         return null;
       }
-    } catch (e) {
+    } catch (err) {
+      log.catch(err);
       return null;
     }
   }, [document.meta?.keys]);
@@ -447,7 +448,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
               <DropdownMenuItem
                 className='flex items-center gap-2'
                 onClick={() => {
-                  const index = document.meta?.keys?.findIndex((key) => key.source === 'github');
+                  const index = document.meta?.keys?.findIndex((key) => key.source === 'com.github');
                   index && index >= 0 && document.meta?.keys?.splice(index, 1);
                   setGhUrlValue('');
                 }}
@@ -513,11 +514,11 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
         title={t('bind to file in github label')}
         open={ghBindOpen}
         onOpenChange={(nextOpen) => {
-          const key = { source: 'github', id: JSON.stringify(ghId) };
-          if (!document.meta) {
-            document.meta = {};
-          }
-          document.meta.keys ? document.meta.keys.push(key) : [key];
+          // TODO(wittjosiah): `id` should not be stringified json but taking a more canonical form.
+          //   e.g., dxos/dxos/issues/{issue_number}
+          const key = { source: 'com.github', id: JSON.stringify(ghId) };
+          // TODO(wittjosiah): Stop overwriting document.meta.
+          document.meta = { keys: [key] };
           setGhBindOpen(nextOpen);
         }}
         closeTriggers={[
