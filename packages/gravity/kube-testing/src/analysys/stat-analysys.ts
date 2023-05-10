@@ -16,6 +16,34 @@ const seriesToJson = (s: Series) => {
   );
 };
 
+const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
+  const stats = new Series(series).describe() as Series;
+
+  const values: number[] = [];
+  const indexes: string[] = [];
+  Object.entries(additionalMetrics).forEach(([key, value]) => {
+    values.push(value);
+    indexes.push(key);
+  });
+
+  stats.append(values, indexes, { inplace: true });
+  stats.print();
+
+  return seriesToJson(stats);
+};
+
+export const mapToJson = (m: Map<string, any>) => {
+  return Object.fromEntries(
+    Array.from(m.entries()).map(([key, val]) => {
+      let decoded = val;
+      if (val instanceof Map) {
+        decoded = mapToJson(val);
+      }
+      return [key, decoded];
+    })
+  );
+};
+
 export const analyzeMessages = async (results: PlanResults) => {
   const messages = new Map<string, { sent?: number; received?: number }>();
   const reader = new LogReader();
@@ -48,35 +76,12 @@ export const analyzeMessages = async (results: PlanResults) => {
   }
 
   const failures = Array.from(messages.values()).filter((x) => !x.received || !x.sent).length;
-  console.log(
-    'Succesfull messages',
-    Array.from(messages.values())
-      .filter((x) => !!x.sent && !!x.received)
-      .map((x) => x.received! - x.sent!).length
-  );
-  const lagTimes = new Series(
-    Array.from(messages.values())
-      .filter((x) => !!x.sent && !!x.received)
-      .map((x) => x.received! - x.sent!)
-  );
+  const lagTimes = Array.from(messages.values())
+    .filter((x) => !!x.sent && !!x.received)
+    .map((x) => x.received! - x.sent!);
+  console.log('Succesfull messages', lagTimes.length);
 
-  const stats = lagTimes.describe() as Series;
-  stats.append([failures], ['failures'], { inplace: true });
-
-  stats.print();
-  return seriesToJson(stats);
-};
-
-export const mapToJson = (m: Map<string, any>) => {
-  return Object.fromEntries(
-    Array.from(m.entries()).map(([key, val]) => {
-      let decoded = val;
-      if (val instanceof Map) {
-        decoded = mapToJson(val);
-      }
-      return [key, decoded];
-    })
-  );
+  return getStats(lagTimes, { failures });
 };
 
 export const analyzeSwarmEvents = async (results: PlanResults) => {
@@ -148,7 +153,6 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
         }
         const discoverTime = seen.seen.get(expectedPeer)!;
         if (discoverTime < timings.join! || timings.leave! < discoverTime) {
-          failures++;
           continue;
         }
         discoverLag.push(discoverTime - timings.join!);
@@ -156,11 +160,5 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     }
   }
 
-  const lagTimes = new Series(discoverLag);
-  const stats = lagTimes.describe() as Series;
-  stats.append([failures], ['failures'], { inplace: true });
-
-  stats.print();
-
-  return seriesToJson(stats);
+  return getStats(discoverLag, { failures });
 };
