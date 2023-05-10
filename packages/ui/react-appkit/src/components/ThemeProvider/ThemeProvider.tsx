@@ -12,7 +12,7 @@ import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/rea
 import React, { PropsWithChildren } from 'react';
 
 import { ThemeProvider as AuroraThemeProvider, ThemeProviderProps as AuroraThemeProviderProps } from '@dxos/aurora';
-import { mx, osTx, tx } from '@dxos/aurora-theme';
+import { mx, osTx, appTx } from '@dxos/aurora-theme';
 
 export type ThemeProviderProps = AuroraThemeProviderProps &
   PropsWithChildren<{
@@ -31,7 +31,7 @@ export const ThemeProvider = ({
   ...auroraThemeProviderProps
 }: ThemeProviderProps) => {
   return (
-    <AuroraThemeProvider tx={themeVariant === 'os' ? osTx : tx} {...auroraThemeProviderProps}>
+    <AuroraThemeProvider tx={themeVariant === 'os' ? osTx : appTx} {...auroraThemeProviderProps}>
       <ToastProvider {...toastProviderProps}>
         <TooltipProvider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}
