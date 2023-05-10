@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
@@ -36,7 +37,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     host,
     source = DEFAULT_CLIENT_ORIGIN,
     vault = DEFAULT_INTERNAL_CHANNEL,
-    timeout = 3000
+    timeout = DEFAULT_TIMEOUT
   }: IFrameClientServicesHostOptions) {
     this._host = host;
     this._source = source;
