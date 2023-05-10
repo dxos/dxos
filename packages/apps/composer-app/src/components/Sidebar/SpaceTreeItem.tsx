@@ -13,10 +13,11 @@ import {
   Plus,
   Upload
 } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { Document } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, getSize } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
@@ -40,7 +41,6 @@ import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
-import { ComposerDocument } from '../../proto';
 import { abbreviateKey, getPath } from '../../router';
 import { backupSpace, restoreSpace } from '../../util';
 import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
@@ -48,7 +48,7 @@ import { Separator } from '../Separator';
 import { DocumentTreeItem } from './DocumentTreeItem';
 
 export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
-  const documents = useQuery(space, ComposerDocument.filter());
+  const documents = useQuery(space, Document.filter());
   const { t } = useTranslation('composer');
   const navigate = useNavigate();
   const shell = useShell();
@@ -61,7 +61,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
   const disabled = spaceSate !== SpaceState.READY;
 
   const handleCreate = useCallback(async () => {
-    const document = await space.db.add(new ComposerDocument());
+    const document = await space.db.add(new Document());
     return navigate(getPath(space.key, document.id));
   }, [space, navigate]);
 
@@ -93,6 +93,10 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
+  const [optionsMenuOpen, setOpetionsMenuOpen] = useState(false);
+
   return (
     <TreeItem
       collapsible
@@ -113,7 +117,17 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         >
           {spaceDisplayName}
         </TreeItemHeading>
-        <TooltipRoot>
+        <TooltipRoot
+          open={optionsTooltipOpen}
+          onOpenChange={(nextOpen) => {
+            if (suppressNextTooltip.current) {
+              setOptionsTooltipOpen(false);
+              suppressNextTooltip.current = false;
+            } else {
+              setOptionsTooltipOpen(nextOpen);
+            }
+          }}
+        >
           <TooltipContent className='z-[31]' side='bottom'>
             {t('space options label')}
           </TooltipContent>
@@ -125,7 +139,18 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
                 </Button>
               </TooltipTrigger>
             }
-            slots={{ content: { className: 'z-[31]' } }}
+            slots={{
+              root: {
+                open: optionsMenuOpen,
+                onOpenChange: (nextOpen: boolean) => {
+                  if (!nextOpen) {
+                    suppressNextTooltip.current = true;
+                  }
+                  return setOpetionsMenuOpen(nextOpen);
+                }
+              },
+              content: { className: 'z-[31]' }
+            }}
           >
             <DropdownMenuItem asChild>
               <Input

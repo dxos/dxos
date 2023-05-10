@@ -6,9 +6,10 @@ import assert from 'assert';
 import startCase from 'lodash.startcase';
 import { ChatCompletionRequestMessage } from 'openai';
 
+import { Document } from '@braneframe/types';
 import { Space } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
-import { Contact, Document, DocumentStack } from '@dxos/kai-types';
+import { Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 

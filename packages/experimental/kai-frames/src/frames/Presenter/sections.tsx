@@ -6,8 +6,9 @@ import { Article, Image, Trash } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
-import { Document, DocumentStack, File } from '@dxos/kai-types';
+import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
 
