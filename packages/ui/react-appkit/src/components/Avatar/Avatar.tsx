@@ -2,10 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Circle, Moon } from '@phosphor-icons/react';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
-import * as PortalPrimitive from '@radix-ui/react-portal';
-import { toSvg } from 'jdenticon';
 import React, {
   cloneElement,
   ComponentProps,
@@ -13,18 +10,26 @@ import React, {
   forwardRef,
   PropsWithChildren,
   ReactHTMLElement,
-  ReactNode,
-  useMemo
+  ReactNode
 } from 'react';
 
-import { useId, Size } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import {
+  Size,
+  AvatarRoot,
+  AvatarFallback,
+  AvatarMaskedImage,
+  AvatarStatus,
+  AvatarImage,
+  useJdenticonHref,
+  useId
+} from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export interface AvatarSlots {
   root?: Omit<ComponentProps<typeof AvatarPrimitive.Root>, 'children'>;
   image?: ComponentProps<'image'>;
   fallback?: Omit<ComponentProps<typeof AvatarPrimitive.Fallback>, 'children'>;
-  labels?: Omit<ComponentProps<'div'>, 'children'>;
+  labels?: Omit<ComponentProps<'div'>, 'children' | 'ref'>;
 }
 
 interface SharedAvatarProps {
@@ -52,6 +57,9 @@ interface IdLabeledAvatarProps extends Omit<SharedAvatarProps, 'labelId'> {
 
 export type AvatarProps = DirectlyLabeledAvatarProps | IdLabeledAvatarProps;
 
+/**
+ * @deprecated please use `Avatar` from ui/aurora.
+ */
 export const Avatar = forwardRef(
   (
     {
@@ -69,97 +77,37 @@ export const Avatar = forwardRef(
     }: PropsWithChildren<AvatarProps>,
     ref: ForwardedRef<HTMLSpanElement>
   ) => {
-    const labelId = useId('avatarLabel', propsLabelId);
+    const jdenticon = useJdenticonHref(fallbackValue, size);
     const descriptionId = useId('avatarDescription', propsDescriptionId);
-    const maskId = useId('mask');
-    const svgId = useId('mask');
-    const fallbackSrc = useMemo(
-      () =>
-        `data:image/svg+xml;utf8,${encodeURIComponent(
-          toSvg(fallbackValue, size === 'px' ? 1 : size * 4, { padding: 0 })
-        )}`,
-      [fallbackValue]
-    );
-
-    const imageSizeNumber = size === 'px' ? 1 : size * 4;
-    const statusIconSize = size > 9 ? 4 : size < 6 ? 2 : 3;
-    const maskSize = statusIconSize * 4 + 2;
-    const maskCenter = imageSizeNumber - (statusIconSize * 4) / 2;
+    const labelId = useId('avatarLabel', propsLabelId);
 
     return (
       <>
-        <AvatarPrimitive.Root
-          {...slots.root}
-          className={mx('relative inline-flex', getSize(size), slots.root?.className)}
-          aria-labelledby={labelId}
-          {...((description || propsDescriptionId) && { 'aria-describedby': descriptionId })}
-          ref={ref}
-        >
-          <svg
-            viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
-            width={imageSizeNumber}
-            height={imageSizeNumber}
-            id={svgId}
-            className='is-full bs-full'
-          >
-            <defs>
-              <mask id={maskId}>
-                {variant === 'circle' ? (
-                  <circle fill='white' cx='50%' cy='50%' r='50%' />
-                ) : (
-                  <rect fill='white' width='100%' height='100%' />
-                )}
-                {status && (
-                  <circle
-                    fill='black'
-                    cx={`${(100 * maskCenter) / imageSizeNumber}%`}
-                    cy={`${(100 * maskCenter) / imageSizeNumber}%`}
-                    r={`${(50 * maskSize) / imageSizeNumber}%`}
-                  />
-                )}
-              </mask>
-            </defs>
-            {mediaSrc && (
-              <AvatarPrimitive.Image asChild>
-                <image href={mediaSrc} width='100%' height='100%' {...slots.image} mask={`url(#${maskId})`} />
-              </AvatarPrimitive.Image>
-            )}
-            <AvatarPrimitive.Fallback delayMs={0} {...slots.fallback} asChild>
-              <image href={fallbackSrc} width='100%' height='100%' mask={`url(#${maskId})`} />
-            </AvatarPrimitive.Fallback>
-          </svg>
-          {status === 'active' && (
-            <Circle
-              className={mx(
-                getSize(statusIconSize),
-                'absolute block-end-0 inline-end-0 text-success-500 dark:text-success-400'
+        <AvatarRoot labelId={labelId} {...{ size, variant }} {...slots.root} ref={ref}>
+          {status ? (
+            <AvatarStatus {...{ status }}>
+              {mediaSrc && (
+                <AvatarImage asChild>
+                  <AvatarMaskedImage href={mediaSrc} />
+                </AvatarImage>
               )}
-              weight='fill'
-            />
+              <AvatarFallback delayMs={0} asChild>
+                <AvatarMaskedImage href={jdenticon} />
+              </AvatarFallback>
+            </AvatarStatus>
+          ) : (
+            <>
+              <AvatarImage src={mediaSrc} />
+              <AvatarFallback asChild delayMs={0}>
+                <img src={jdenticon} />
+              </AvatarFallback>
+            </>
           )}
-          {status === 'inactive' && (
-            <Moon
-              mirrored
-              className={mx(
-                getSize(statusIconSize),
-                'absolute block-end-0 inline-end-0 text-warning-500 dark:text-warning-400'
-              )}
-              weight='fill'
-            />
-          )}
-        </AvatarPrimitive.Root>
+        </AvatarRoot>
         <div role='none' {...slots.labels} className={mx('contents', slots?.labels?.className)}>
           {!propsLabelId &&
             label &&
-            (typeof label === 'string' ? (
-              <PortalPrimitive.Root asChild>
-                <span id={labelId} className='sr-only'>
-                  {label}
-                </span>
-              </PortalPrimitive.Root>
-            ) : (
-              cloneElement(label, { id: labelId })
-            ))}
+            (typeof label === 'string' ? <span id={labelId}>{label}</span> : cloneElement(label, { id: labelId }))}
           {!propsDescriptionId &&
             description &&
             (typeof description === 'string' ? (
