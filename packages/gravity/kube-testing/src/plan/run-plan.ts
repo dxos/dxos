@@ -109,37 +109,29 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     });
   }
 
-  {
-    //
-    // Save results
-    //
-    let stats: any;
-    try {
-      stats = await asyncTimeout(analyzeMessages(planResults), 5_000);
-    } catch (err) {
-      log.warn(`Error while analyzing results ${outDir}`, err);
-    }
-
-    writeFileSync(
-      join(outDir, 'test.json'),
-      JSON.stringify(
-        {
-          spec,
-          stats,
-          results: planResults,
-          agents
-        },
-        null,
-        4
-      )
-    );
-
-    console.log();
+  let stats: any;
+  try {
+    stats = await await plan.finishPlan(planResults);
+  } catch (err) {
+    log.warn(`error finishing plan`, err);
   }
 
-  await plan.finishPlan(planResults);
+  writeFileSync(
+    join(outDir, 'test.json'),
+    JSON.stringify(
+      {
+        spec,
+        stats,
+        results: planResults,
+        agents
+      },
+      null,
+      4
+    )
+  );
 
-  log.info('cleanup complete');
+  log.info('plan complete');
+  process.exit(0)
 };
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {

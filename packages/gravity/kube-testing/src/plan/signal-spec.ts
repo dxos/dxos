@@ -13,6 +13,8 @@ import { range } from '@dxos/util';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
+import { LogReader } from '../analysys/reducer';
+import { analyzeMessages } from '../analysys/stat-analysys';
 
 export type SignalTestSpec = {
   servers: number;
@@ -130,42 +132,8 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await sleep(spec.duration);
   }
 
-  async finishPlan(results: PlanResults): Promise<void> {
-    // log.info('finishPlan', { results })
+  async finishPlan(results: PlanResults): Promise<any> {
     await this.builder.destroy();
-
-    // const reader = new LogReader();
-    // for(const { logFile } of Object.values(results.agents)) {
-    //   console.log('add', { logFile })
-    //   reader.addFile(logFile)
-    // }
-
-    // const messages = new Map<string, { sent: number, received: number }>();
-
-    // for await(const entry of reader) {
-    //   if(entry.message !== 'dxos.test.signal') {
-    //     continue;
-    //   }
-    //   const data: TraceEvent = entry.context;
-
-    //   switch(data.type) {
-    //     case 'SENT_MESSAGE':
-    //       if(!messages.has(data.message)) {
-    //         messages.set(data.message, { sent: 0, received: 0})
-    //       }
-    //       messages.get(data.message)!.sent = entry.timestamp;
-    //       break;
-    //     case 'RECEIVE_MESSAGE':
-    //       if(!messages.has(data.message)) {
-    //         messages.set(data.message, { sent: 0, received: 0})
-    //       }
-    //       messages.get(data.message)!.received = entry.timestamp;
-    //       break;
-    //   }
-    // }
-
-    // const lagTimes = new dfd.Series(Array.from(messages.values()).map(x => x.received - x.sent))
-
-    // console.log(messages)
+    return analyzeMessages(results);
   }
 }

@@ -11,13 +11,13 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 50,
+    agents: 10,
     serversPerAgent: 1,
     topicCount: 1,
     topicsPerAgent: 1,
     discoverTimeout: 5_000,
     repeatInterval: 5_000,
-    duration: 60_000,
+    duration: 20_000,
     randomSeed: PublicKey.random().toHex(),
     type: 'signaling'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'

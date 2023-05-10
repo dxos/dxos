@@ -38,5 +38,5 @@ export interface TestPlan<S, C> {
   agentMain(params: AgentParams<S, C>): Promise<void>; // N
 
   // finish
-  finishPlan(results: PlanResults): Promise<void>;
+  finishPlan(results: PlanResults): Promise<any>;
 }
