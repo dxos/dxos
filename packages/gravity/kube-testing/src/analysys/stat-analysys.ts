@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Series, toJSON as serializeToJSON } from 'danfojs-node';
+import { Series } from 'danfojs-node';
 
 import { PlanResults } from '../plan/spec-base';
 import { LogReader, TraceEvent } from './reducer';
@@ -37,8 +37,7 @@ export const analyzeMessages = async (results: PlanResults) => {
     }
   }
 
-  const sentNotReceived = Array.from(messages.values()).filter((x) => x.received === undefined).length;
-  const receivedNotSent = Array.from(messages.values()).filter((x) => x.sent === undefined).length;
+  const failures = Array.from(messages.values()).filter((x) => !x.received || !x.sent).length;
   console.log(
     'Succesfull messages',
     Array.from(messages.values())
@@ -50,12 +49,19 @@ export const analyzeMessages = async (results: PlanResults) => {
       .filter((x) => !!x.sent && !!x.received)
       .map((x) => x.received! - x.sent!)
   );
-  const stats = lagTimes.describe();
-  stats.append(
-    [sentNotReceived + receivedNotSent, sentNotReceived, receivedNotSent],
-    ['failures', 'sentNotReceived', 'receivedNotSent'],
-    { inplace: true }
+
+  const stats = lagTimes.describe() as Series;
+  stats.append([failures], ['failures'], { inplace: true });
+
+  stats.print();
+  return seriesToJson(stats);
+};
+
+const seriesToJson = (s: Series) => {
+  const indexes = s.index;
+  return Object.fromEntries(
+    (s.values as Array<number>).map((val, i) => {
+      return [indexes[i], val];
+    })
   );
-  console.log(stats.toString());
-  return serializeToJSON(stats, { format: 'column' });
 };
