@@ -330,73 +330,15 @@ importers:
       vuepress-plugin-check-md: 0.0.3
       vuepress-theme-hope: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
 
-  packages/apps/braneframe:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/sentry': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.7.2
-      '@types/node': ^18.11.9
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      typescript: ^4.8.4
-      vite: ^4.3.0
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@dxos/sentry': link:../../common/sentry
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@sentry/react': 7.42.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@sentry/vite-plugin': 0.7.2
-      '@types/node': 18.11.9
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.3.1
-      typescript: 4.8.4
-      vite: 4.3.1_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_fsot53mdcl7oczeoetyqvo3nfq
-      workbox-window: 6.5.4
-
   packages/apps/composer-app:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -429,12 +371,12 @@ importers:
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
+      '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
@@ -455,7 +397,6 @@ importers:
       turndown: 7.1.1
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/vault': link:../../sdk/vault
       '@octokit/openapi-types': 16.0.0
       '@remix-run/router': 1.0.2
@@ -855,6 +796,17 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.3.1
       vite: 4.3.1
+
+  packages/apps/types:
+    specifiers:
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/node-std': workspace:*
+    dependencies:
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/node-std': link:../../common/node-std
+    devDependencies:
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
 
   packages/common/async:
     specifiers:
@@ -1322,6 +1274,9 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@types/debug': 4.1.7
+
+  packages/common/timeouts:
+    specifiers: {}
 
   packages/common/typings:
     specifiers: {}
@@ -2765,6 +2720,7 @@ importers:
 
   packages/experimental/kai-bots:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/async': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
@@ -2805,6 +2761,7 @@ importers:
       openai: ^3.2.1
       split2: ^4.1.0
     dependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
@@ -2849,6 +2806,7 @@ importers:
   packages/experimental/kai-frames:
     specifiers:
       '@babel/core': ^7.18.13
+      '@braneframe/types': workspace:*
       '@dnd-kit/core': ^6.0.5
       '@dnd-kit/modifiers': ^6.0.0
       '@dnd-kit/sortable': ^7.0.1
@@ -2944,6 +2902,7 @@ importers:
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
+      '@braneframe/types': link:../../apps/types
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -3289,6 +3248,7 @@ importers:
 
   packages/experimental/kai-types:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -3311,6 +3271,7 @@ importers:
       y-protocols: ^1.0.5
       yjs: ^13.5.44
     dependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -3976,6 +3937,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/timeouts': workspace:*
       '@dxos/util': workspace:*
       '@types/lodash.isequal': ^4.5.0
       '@types/lodash.isequalwith': ^4.4.0
@@ -4007,6 +3969,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
+      '@dxos/timeouts': link:../../common/timeouts
       '@dxos/util': link:../../common/util
       base-x: 3.0.9
       debug: 4.3.4
@@ -4359,6 +4322,7 @@ importers:
       '@dxos/react-input': workspace:*
       '@dxos/react-list': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-avatar': ^1.0.2
       '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-dialog': ^1.0.3
       '@radix-ui/react-primitive': ^1.0.2
@@ -4368,17 +4332,20 @@ importers:
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
       i18next: ^21.10.0
+      jdenticon: ^3.2.0
       react: ^18.2.0
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
       vite: ^4.3.0
     dependencies:
+      '@radix-ui/react-avatar': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-context': 1.0.0_react@18.2.0
       '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       i18next: 21.10.0
+      jdenticon: 3.2.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
       '@dxos/aurora-theme': link:../aurora-theme
@@ -4678,7 +4645,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
-      jdenticon: ^3.2.0
       localforage: ^1.10.0
       lodash.merge: ^4.6.2
       lodash.throttle: ^4.1.1
@@ -4727,7 +4693,6 @@ importers:
       '@radix-ui/react-toolbar': 1.0.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      jdenticon: 3.2.0
       localforage: 1.10.0
       lodash.merge: 4.6.2
       lodash.throttle: 4.1.1
@@ -16296,7 +16261,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.1_@types+node@18.11.9
+      vite: 4.3.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -36695,7 +36660,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.20.4
-      vite: 4.3.1_@types+node@18.11.9
+      vite: 4.3.1
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
