@@ -81,7 +81,7 @@ export class TestAgent {
         : raise(new Error('Unknown event'));
 
       log.trace(
-        'dxos.test.swarmEvent',
+        'dxos.test.signal',
         checkType<TraceEvent>({
           peerId: this.peerId.toHex(),
           type: 'SWARM_EVENT',
@@ -108,6 +108,13 @@ export class TestAgent {
   }
 
   async destroy() {
+    log.trace(
+      'dxos.test.signal.start',
+      checkType<TraceEvent>({
+        type: 'AGENT_STOP',
+        peerId: this.peerId.toHex()
+      })
+    );
     await this._ctx.dispose();
     await this.signalManager.close();
   }
@@ -117,10 +124,26 @@ export class TestAgent {
   }
 
   async joinTopic(topic: PublicKey) {
+    log.trace(
+      'dxos.test.signal',
+      checkType<TraceEvent>({
+        type: 'JOIN_SWARM',
+        topic: topic.toHex(),
+        peerId: this.peerId.toHex()
+      })
+    );
     await this.signalManager.join({ topic, peerId: this.peerId });
   }
 
   async leaveTopic(topic: PublicKey) {
+    log.trace(
+      'dxos.test.signal',
+      checkType<TraceEvent>({
+        type: 'LEAVE_SWARM',
+        topic: topic.toHex(),
+        peerId: this.peerId.toHex()
+      })
+    );
     await this.signalManager.leave({ topic, peerId: this.peerId });
   }
 
