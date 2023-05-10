@@ -4,7 +4,6 @@
 
 import { readFileSync } from 'node:fs';
 
-import { PublicKey } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 
 export enum TestingEvent {
@@ -27,27 +26,23 @@ export type TraceEvent =
     }
   | {
       peerId: string;
-      type: 'SWARM_EVENT';
+      type: 'PEER_AVAILABLE' | 'PEER_LEFT';
       topic: string;
-      swarmEvent:
-        | {
-            peerAvailable: {
-              peer: string;
-            };
-          }
-        | { peerLeft: { peer: string } };
+      discoveredPeer: string;
     }
   | {
       type: 'LEAVE_SWARM' | 'JOIN_SWARM';
-      topic: PublicKey;
+      topic: string;
       peerId: string;
     }
   | {
       type: 'ERROR';
       err: Error;
+      peerId: string;
     }
   | {
-      type: 'START' | 'STOP';
+      type: 'AGENT_START' | 'AGENT_STOP';
+      peerId: string;
     };
 
 export class LogReader implements AsyncIterable<SerializedLogEntry> {
