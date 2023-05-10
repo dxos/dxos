@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout, sleep, asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { runTestSignalServer, SignalServerRunner, runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, openAndClose } from '@dxos/test';
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
@@ -12,12 +12,8 @@ import { WebsocketSignalManager } from './websocket-signal-manager';
 describe('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;
   let broker2: SignalServerRunner;
-  let broker1: SignalServerRunner;
-  let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    broker1 = await runTestSignalServer({ port: 5001 });
-    broker2 = await runTestSignalServer({ port: 5002 });
     broker1 = await runTestSignalServer({ port: 5001 });
     broker2 = await runTestSignalServer({ port: 5002 });
   });
@@ -32,15 +28,6 @@ describe('WebSocketSignalManager', () => {
       ({ swarmEvent, topic }) =>
         !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic)
     );
-
-  const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
-    return client.onMessage.waitFor(
-      (msg) =>
-        msg.author.equals(expectedMessage.author) &&
-        msg.recipient.equals(expectedMessage.recipient) &&
-        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value)
-    );
-  };
 
   const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
     return client.onMessage.waitFor(
