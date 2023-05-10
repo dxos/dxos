@@ -9,6 +9,7 @@ import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { waitForDebugger } from 'node:inspector';
 
 describe('database', () => {
   test('creating objects', async () => {
@@ -103,4 +104,23 @@ describe('database', () => {
       expect(container.objects[1].__typename).to.equal(Contact.type.name);
     }
   });
+
+  test('object fields', async () => {
+    const task = new Task();
+
+    task.title = 'test';
+    expect(task.title).to.eq('test');
+
+    task.meta = {};
+    expect(task.meta).to.exist;
+    expect(task.meta).to.be.empty;
+
+    task.meta.keys = [];
+    expect(task.meta.keys).to.exist;
+    expect(task.meta.keys).to.have.length(0);
+
+    task.meta.keys.push({ source: 'example', id: 'test' });
+    expect(task.meta.keys).to.have.length(1);
+  });
+
 });
