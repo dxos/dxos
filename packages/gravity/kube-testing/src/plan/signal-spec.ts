@@ -19,16 +19,21 @@ import { analyzeMessages } from '../analysys/stat-analysys';
 export type SignalTestSpec = {
   servers: number;
   serverOverride?: string;
-
+  signalArguments: string[];
+  
   agents: number;
   serversPerAgent: number;
+  
+  type: 'discovery' | 'signaling';
   topicCount: number;
   topicsPerAgent: number;
+
   discoverTimeout: number;
   repeatInterval: number;
+  agentWaitTime: number;
   duration: number;
+  
   randomSeed: string;
-  type: 'discovery' | 'signaling';
 };
 
 export type SignalAgentConfig = {
@@ -41,9 +46,9 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     seedrandom(spec.randomSeed, { global: true });
-    for (const num of range(spec.servers)) {
-      await this.builder.createServer(num, outDir);
-    }
+    await Promise.all(range(spec.servers).map(num => 
+      this.builder.createServer(num, outDir, spec.signalArguments)
+    ))
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
 
@@ -130,6 +135,8 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     );
 
     await sleep(spec.duration);
+    await ctx.dispose()
+    await sleep(spec.agentWaitTime);
   }
 
   async finishPlan(results: PlanResults): Promise<any> {

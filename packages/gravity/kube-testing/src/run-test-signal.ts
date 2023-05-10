@@ -27,14 +27,11 @@ const BIN_PATH = './cmds/signal-test/main.go';
   }
 }
 
-export const runSignal = async (num: number, outFolder: string) => {
+export const runSignal = async (num: number, outFolder: string, signalArguments: string[]) => {
   const runner = new SignalServerRunner({
     port: randomInt(10000, 20000),
     binCommand: `go run -gcflags="all=-N -l" ${BIN_PATH}`,
-    signalArguments: [
-      'p2pserver'
-      // 'globalsubserver'
-    ],
+    signalArguments,
     cwd: PATH_TO_KUBE_REPO,
     env: {
       GOLOG_FILE: `${outFolder}/signal-${num}.log`,
