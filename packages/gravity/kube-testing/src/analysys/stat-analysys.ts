@@ -147,14 +147,15 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
         if (expectedPeer === peerId) {
           continue;
         }
+        if (seen.leave! < timings.join! || timings.leave! < seen.join!) {
+          // Different iterations, do not intersect in time
+          continue;
+        }
         if (!seen.seen.has(expectedPeer)) {
           failures++;
           continue;
         }
         const discoverTime = seen.seen.get(expectedPeer)!;
-        if (discoverTime < timings.join! || timings.leave! < discoverTime) {
-          continue;
-        }
         discoverLag.push(discoverTime - timings.join!);
       }
     }
