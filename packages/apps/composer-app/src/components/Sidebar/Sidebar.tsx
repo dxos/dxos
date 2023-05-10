@@ -6,6 +6,7 @@ import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-ic
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Document } from '@braneframe/types';
 import {
   Button,
   DensityProvider,
@@ -21,7 +22,6 @@ import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
-import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
 import { useOctokitContext } from '../OctokitProvider';
 import { Separator } from '../Separator';
@@ -76,7 +76,7 @@ const SidebarContent = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.createSpace();
-    const document = await space.db.add(new ComposerDocument());
+    const document = await space.db.add(new Document());
     return navigate(getPath(space.key, document.id));
   };
 

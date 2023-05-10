@@ -29,6 +29,7 @@ import { useOutletContext, useParams } from 'react-router-dom';
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
 
+import { Document } from '@braneframe/types';
 import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
 import { getSize, osTx } from '@dxos/aurora-theme';
@@ -38,7 +39,6 @@ import { useFileDownload, Input, Dialog, DropdownMenuItem, DropdownMenu } from '
 import { observer, useIdentity } from '@dxos/react-client';
 
 import { useOctokitContext } from '../components';
-import { ComposerDocument } from '../proto';
 
 type GhSharedProps = {
   owner: string;
@@ -75,7 +75,7 @@ const DocumentPageContent = observer(
     importDialogOpen,
     setImportDialogOpen
   }: PropsWithChildren<{
-    document: ComposerDocument;
+    document: Document;
     dropdownMenuContent?: ReactNode;
     handleImport?: (file: File) => Promise<void>;
     importDialogOpen?: boolean;
@@ -149,7 +149,7 @@ const DocumentPageContent = observer(
   }
 );
 
-const RichTextDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
+const RichTextDocumentPage = observer(({ document, space }: { document: Document; space: Space }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
   const identity = useIdentity();
@@ -200,7 +200,7 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Composer
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-const MarkdownDocumentPage = observer(({ document, space }: { document: ComposerDocument; space: Space }) => {
+const MarkdownDocumentPage = observer(({ document, space }: { document: Document; space: Space }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
@@ -234,8 +234,8 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
           editorRef.current.view.dispatch({
             changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md }
           });
-        } catch (error) {
-          log.catch(error);
+        } catch (err) {
+          log.catch(err);
         }
         setImportDialogOpen(false);
       }
@@ -245,16 +245,17 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
 
   const docGhId = useMemo<GhIdentifier | null>(() => {
     try {
-      const extantFileId = JSON.parse(document.github);
-      if (extantFileId) {
-        return extantFileId;
+      const key = document.meta?.keys?.find((key) => key.source === 'com.github');
+      if (key?.id) {
+        return JSON.parse(key.id);
       } else {
         return null;
       }
-    } catch (e) {
+    } catch (err) {
+      log.catch(err);
       return null;
     }
-  }, [document.github]);
+  }, [document.meta?.keys]);
 
   const ghId = useMemo<GhIdentifier | null>(() => {
     try {
@@ -447,7 +448,8 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
               <DropdownMenuItem
                 className='flex items-center gap-2'
                 onClick={() => {
-                  document.github = '';
+                  const index = document.meta?.keys?.findIndex((key) => key.source === 'com.github');
+                  index && index >= 0 && document.meta?.keys?.splice(index, 1);
                   setGhUrlValue('');
                 }}
               >
@@ -512,7 +514,11 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Composer
         title={t('bind to file in github label')}
         open={ghBindOpen}
         onOpenChange={(nextOpen) => {
-          document.github = JSON.stringify(ghId);
+          // TODO(wittjosiah): `id` should not be stringified json but taking a more canonical form.
+          //   e.g., dxos/dxos/issues/{issue_number}
+          const key = { source: 'com.github', id: JSON.stringify(ghId) };
+          // TODO(wittjosiah): Stop overwriting document.meta.
+          document.meta = { keys: [key] };
           setGhBindOpen(nextOpen);
         }}
         closeTriggers={[
@@ -624,7 +630,7 @@ export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
-  const document = space && docKey ? (space.db.getObjectById(docKey) as ComposerDocument) : undefined;
+  const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
 
   return (
     <div role='none'>

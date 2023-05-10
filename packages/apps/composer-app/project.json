@@ -65,15 +65,6 @@
         "{options.outputFile}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "packages/apps/composer-app/src/proto/gen"
-      ]
-    },
     "preview": {
       "executor": "@nrwl/web:file-server",
       "options": {
