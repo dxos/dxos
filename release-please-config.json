@@ -158,6 +158,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/timeouts/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/typings/package.json",
           "jsonpath": "$.version"
         },
