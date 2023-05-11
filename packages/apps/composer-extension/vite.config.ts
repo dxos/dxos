@@ -30,6 +30,7 @@ export default defineConfig({
     WebExtensionPlugin({
       browser: process.env.TARGET,
       manifest: generateManifest,
+      // https://extensionworkshop.com/documentation/develop/web-ext-command-reference/
       webExtConfig: {
         browserConsole: true,
         startUrl: [process.env.OPEN_URL ?? 'https://github.com/dxos/dxos/issues/99'],
