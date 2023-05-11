@@ -137,7 +137,10 @@ export class Analyzer {
     return reader;
   }
 
-  private _getStats(series: number[], additionalMetrics: Record<string, number> = {}) {
+  private _getStats(
+    series: number[],
+    additionalMetrics: Record<string, number> = {}
+  ): Record<string, number> & { count: number; mean: number; std: number } {
     const stats = new Series(series).describe() as Series;
 
     const values: number[] = [];
@@ -150,7 +153,14 @@ export class Analyzer {
     stats.append(values, indexes, { inplace: true });
     stats.print();
 
-    return seriesToJson(stats);
+    const jsonStats = seriesToJson(stats);
+
+    return {
+      count: jsonStats.count,
+      mean: jsonStats.mean,
+      std: jsonStats.std,
+      ...jsonStats
+    };
   }
 
   private _mapToJson = (m: Map<string, any>) => {
