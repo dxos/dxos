@@ -2,42 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  DotsThreeVertical,
-  DownloadSimple,
-  FileArrowDown,
-  FileArrowUp,
-  FilePlus,
-  Link,
-  LinkBreak,
-  UploadSimple
-} from '@phosphor-icons/react';
-import React, {
-  Dispatch,
-  HTMLAttributes,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
-import { FileUploader } from 'react-drag-drop-files';
+import { DownloadSimple, FileArrowDown, FileArrowUp, Link, LinkBreak, UploadSimple } from '@phosphor-icons/react';
+import React, { HTMLAttributes, useCallback, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 
 import { Document } from '@braneframe/types';
-import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
+import { Button, useTranslation, Trans } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
-import { getSize, osTx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Input, Dialog, DropdownMenuItem, DropdownMenu } from '@dxos/react-appkit';
+import { Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
 import { useOctokitContext } from '../../components';
 import type { OutletContext } from '../../layouts';
+import { EmbeddedDocumentPage } from './EmbeddedDocumentPage';
+import { StandaloneDocumentPage } from './StandaloneDocumentPage';
 import { useRichTextFile } from './useRichTextFile';
 import { useTextFile } from './useTextFile';
 
@@ -57,89 +39,6 @@ type GhIssueIdentifier = GhSharedProps & {
 
 type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
-const DocumentPageContent = observer(
-  ({
-    children,
-    document,
-    dropdownMenuContent,
-    handleFileImport,
-    fileImportDialogOpen,
-    setFileImportDialogOpen
-  }: PropsWithChildren<{
-    document: Document;
-    dropdownMenuContent?: ReactNode;
-    handleFileImport?: (file: File) => Promise<void>;
-    fileImportDialogOpen?: boolean;
-    setFileImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
-  }>) => {
-    const { t } = useTranslation('composer');
-    const themeContext = useThemeContext();
-    return (
-      <>
-        <div
-          role='none'
-          className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
-        >
-          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-6 pointer-coarse:pis-0 lg:pis-0'>
-            <Input
-              key={document.id}
-              variant='subdued'
-              label={t('document title label')}
-              labelVisuallyHidden
-              placeholder={t('untitled document title')}
-              value={document.title ?? ''}
-              onChange={({ target: { value } }) => (document.title = value)}
-              slots={{
-                root: { className: 'shrink-0 grow pis-6 plb-2' },
-                input: {
-                  'data-testid': 'composer.documentTitle',
-                  className: 'text-center'
-                } as HTMLAttributes<HTMLInputElement>
-              }}
-            />
-            <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu
-                trigger={
-                  <Button className='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
-                    <DotsThreeVertical className={getSize(6)} />
-                  </Button>
-                }
-              >
-                {dropdownMenuContent}
-              </DropdownMenu>
-            </ThemeContext.Provider>
-          </div>
-          {children}
-        </div>
-        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-          {handleFileImport && (
-            <Dialog
-              open={fileImportDialogOpen}
-              onOpenChange={setFileImportDialogOpen}
-              title={t('confirm import title')}
-              slots={{ overlay: { className: 'backdrop-blur-sm' } }}
-            >
-              <p className='mlb-4'>{t('confirm import body')}</p>
-              <FileUploader
-                types={['md']}
-                classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
-                dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-                handleChange={handleFileImport}
-              >
-                <FilePlus weight='duotone' className={getSize(8)} />
-                <span>{t('upload file message')}</span>
-              </FileUploader>
-              <Button className='block is-full' onClick={() => setFileImportDialogOpen?.(false)}>
-                {t('cancel label', { ns: 'appkit' })}
-              </Button>
-            </Dialog>
-          )}
-        </ThemeContext.Provider>
-      </>
-    );
-  }
-);
-
 type DocumentPageProps = {
   document: Document;
   space: Space;
@@ -148,11 +47,14 @@ type DocumentPageProps = {
 const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) => {
   const editorRef = useRef<TipTapEditor>(null);
   const identity = useIdentity();
+  const { layout } = useOutletContext<OutletContext>();
 
   const fileProps = useRichTextFile(editorRef);
 
+  const Root = layout === 'embedded' ? EmbeddedDocumentPage : StandaloneDocumentPage;
+
   return (
-    <DocumentPageContent
+    <Root
       {...{
         document,
         ...fileProps
@@ -171,7 +73,7 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
           editor: { className: 'pbe-20' }
         }}
       />
-    </DocumentPageContent>
+    </Root>
   );
 });
 
@@ -182,6 +84,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
+  const { layout } = useOutletContext<OutletContext>();
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
@@ -435,9 +338,11 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
     </>
   );
 
+  const Root = layout === 'embedded' ? EmbeddedDocumentPage : StandaloneDocumentPage;
+
   return (
     <>
-      <DocumentPageContent
+      <Root
         {...{
           document,
           ...fileProps,
@@ -464,7 +369,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
             }
           }}
         />
-      </DocumentPageContent>
+      </Root>
       <Dialog
         title={t('bind to file in github label')}
         open={ghBindOpen}
