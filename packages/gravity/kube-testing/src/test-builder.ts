@@ -13,7 +13,7 @@ import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SignalServerRunner } from '@dxos/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { TraceEvent } from './analysys/logging';
+import { TraceEvent } from './analysys';
 import { runSignal } from './run-test-signal';
 
 export class TestBuilder {
