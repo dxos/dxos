@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 import { PublishTestSpec, CacheStatus, EvaluationResult } from './spec';
 import { log, run, sleep } from './utils';
@@ -16,11 +17,11 @@ export class TestRunner {
   constructor(
     private readonly _spec: PublishTestSpec,
   ) {
-    this._appPath = `out/${this._spec.appName}`;
+    this._appPath = `${os.tmpdir()}/kube-publishing/${this._spec.appName}`;
   }
 
   private async _checkoutApp() {
-    await run(`echo "${this._spec.appName}" | npm init @dxos@latest`, [], { cwd: this._appPath, shell: true });
+    await run(`echo "${this._spec.appName}" | npm init "@dxos@latest"`, [], { cwd: this._appPath, shell: true });
     await run('npm', ['install'], { cwd: this._appPath });
     await sleep(1_000);
   }
@@ -49,7 +50,7 @@ export class TestRunner {
     // TODO(egorgripasov): Consider using the DX lib directly.
     await run(
       'npx',
-      ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), '../config.yml')],
+      ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')],
       { cwd: this._appPath },
     );
   }
@@ -92,7 +93,7 @@ export class TestRunner {
 
   async run() {
     // Prepare test env.
-    log(`Starting test ${this._testId}...`);
+    log(`Starting test ${this._testId} in ${this._appPath}...`);
 
     if (!fs.existsSync(this._appPath)) {
       log('Checking out app...');
