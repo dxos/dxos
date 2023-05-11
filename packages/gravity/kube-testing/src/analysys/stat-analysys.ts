@@ -16,6 +16,7 @@ const seriesToJson = (s: Series) => {
   );
 };
 
+// TODO(mykola): typedef for stats.
 const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
   const stats = new Series(series).describe() as Series;
 
