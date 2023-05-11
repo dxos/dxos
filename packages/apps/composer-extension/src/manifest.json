@@ -14,14 +14,6 @@
   "{{firefox}}.browser_action": {
     "default_popup": "src/popup.html"
   },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
-  },
-  "sandbox": {
-    "pages": [
-      "src/sandbox.html"
-    ]
-  },
   "content_scripts": [
     {
       "matches": [
@@ -29,16 +21,6 @@
       ],
       "js": [
         "src/content.ts"
-      ]
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "matches": [
-        "https://github.com/*"
-      ],
-      "resources": [
-        "src/sandbox.html"
       ]
     }
   ]

@@ -3,11 +3,11 @@
 //
 
 import { defineConfig } from 'vite';
-import ReactPlugin from '@vitejs/plugin-react-swc';
 import WebExtensionPlugin, { readJsonFile } from 'vite-plugin-web-extension';
 import { resolve } from 'node:path';
+import { mkdirSync } from 'node:fs';
 
-function generateManifest() {
+const generateManifest = () => {
   const manifest = readJsonFile(resolve(__dirname, 'src/manifest.json'));
   const packageJson = readJsonFile(resolve(__dirname, 'package.json'));
 
@@ -17,25 +17,27 @@ function generateManifest() {
     version: packageJson.version,
     ...manifest
   };
-}
+};
+
+// This is needed because web-ext fails to recursively create the directory.
+mkdirSync(resolve(__dirname, '.profiles/chromium'), { recursive: true });
+mkdirSync(resolve(__dirname, '.profiles/firefox'), { recursive: true });
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    ReactPlugin(),
     // https://vite-plugin-web-extension.aklinker1.io/config/plugin-options.html
     WebExtensionPlugin({
       browser: process.env.TARGET,
       manifest: generateManifest,
       webExtConfig: {
-        startUrl: [process.env.OPEN_URL ?? 'https://github.com/dxos/dxos/issues/99']
+        browserConsole: true,
+        startUrl: [process.env.OPEN_URL ?? 'https://github.com/dxos/dxos/issues/99'],
+        profileCreateIfMissing: true,
+        keepProfileChanges: true,
+        chromiumProfile: '.profiles/chromium',
+        firefoxProfile: '.profiles/firefox'
       }
     })
-  ],
-  resolve: {
-    alias: {
-      // In dev mode, make sure fast refresh works
-      '/@react-refresh': resolve(__dirname, 'node_modules/@vitejs/plugin-react-swc/refresh-runtime.js')
-    }
-  }
+  ]
 });
