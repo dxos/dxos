@@ -75,10 +75,10 @@ export const analyzeMessages = async (results: PlanResults) => {
     }
   }
 
-  const failures = Array.from(messages.values()).filter((x) => !x.received || !x.sent).length;
+  const failures = Array.from(messages.values()).filter((message) => !message.received || !message.sent).length;
   const lagTimes = Array.from(messages.values())
-    .filter((x) => !!x.sent && !!x.received)
-    .map((x) => x.received! - x.sent!);
+    .filter((message) => !!message.sent && !!message.received)
+    .map((message) => message.received! - message.sent!);
   console.log('Succesfull messages', lagTimes.length);
 
   return getStats(lagTimes, { failures });
