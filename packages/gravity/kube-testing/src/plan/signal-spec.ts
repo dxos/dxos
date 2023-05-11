@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import seedrandom from 'seedrandom';
-
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { analyzeMessages, analyzeSwarmEvents } from '../analysys/stat-analysys';
+import { Analyzer } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
@@ -27,12 +25,14 @@ export type SignalTestSpec = {
   topicCount: number;
   topicsPerAgent: number;
 
+  /**
+   * Time to allow everything to init. NOTE: Sometimes first message is not dropped if it is sent too soon.
+   */
+  startWaitTime: number;
   discoverTimeout: number;
   repeatInterval: number;
   agentWaitTime: number;
   duration: number;
-
-  randomSeed: string;
 };
 
 export type SignalAgentConfig = {
@@ -43,8 +43,7 @@ export type SignalAgentConfig = {
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
 
-  async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
-    seedrandom(spec.randomSeed, { global: true });
+  async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     await Promise.all(range(spec.servers).map((num) => this.builder.createServer(num, outDir, spec.signalArguments)));
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
@@ -64,14 +63,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
   }
 
-  async agentMain({
-    agentId,
-    agents,
-    spec,
-    config,
-    outDir
-  }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
-    seedrandom(spec.randomSeed, { global: true });
+  async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     const ctx = new Context();
 
     log.info('start', { agentId });
@@ -90,7 +82,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
 
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
-    await sleep(1_000);
+    await sleep(spec.startWaitTime);
 
     //
     // test
@@ -132,14 +124,15 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await sleep(spec.agentWaitTime);
   }
 
-  async finishPlan(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
     await this.builder.destroy();
+    const analyser = new Analyzer(results);
     switch (params.spec.type) {
       case 'discovery': {
-        return analyzeSwarmEvents(results);
+        return analyser.analyzeSwarmEvents();
       }
       case 'signaling': {
-        return analyzeMessages(results);
+        return analyser.analyzeMessages();
       }
       default: {
         throw new Error(`Unknown test type: ${params.spec.type}`);
