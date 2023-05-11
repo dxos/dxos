@@ -19,6 +19,7 @@ void runPlan({
     ],
     topicCount: 1,
     topicsPerAgent: 1,
+    startWaitTime: 1_000,
     discoverTimeout: 5_000,
     repeatInterval: 200,
     agentWaitTime: 5_000,
