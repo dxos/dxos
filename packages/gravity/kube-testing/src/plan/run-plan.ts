@@ -48,7 +48,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     outDir
   });
 
-  const agentsArray = await plan.configurePlan({
+  const agentsArray = await plan.init({
     spec,
     outDir,
     testId
@@ -113,7 +113,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   let stats: any;
   try {
-    stats = await await plan.finishPlan(
+    stats = await await plan.finish(
       {
         spec,
         outDir,
@@ -147,7 +147,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
   try {
     log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
-    await plan.agentMain(params);
+    await plan.run(params);
   } catch (err) {
     console.error(err);
     process.exit(1);

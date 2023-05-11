@@ -43,7 +43,7 @@ export type SignalAgentConfig = {
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
 
-  async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     await Promise.all(range(spec.servers).map((num) => this.builder.createServer(num, outDir, spec.signalArguments)));
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
@@ -63,7 +63,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
   }
 
-  async agentMain({
+  async run({
     agentId,
     agents,
     spec,
@@ -130,7 +130,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await sleep(spec.agentWaitTime);
   }
 
-  async finishPlan(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
     await this.builder.destroy();
     const analyser = new Analyzer(results);
     switch (params.spec.type) {
