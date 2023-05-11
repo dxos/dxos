@@ -11,7 +11,8 @@ import {
   InputRoot,
   PinInput as NaturalPinInput,
   TextInput as NaturalTextInput,
-  TextArea as NaturalTextArea
+  TextArea as NaturalTextArea,
+  Checkbox as NaturalCheckbox
 } from './Input';
 import { Description, DescriptionAndValidation, Label, Validation } from './InputMeta';
 
@@ -22,13 +23,13 @@ type StoryInputProps = Partial<{
   description: string;
   labelVisuallyHidden: boolean;
   descriptionVisuallyHidden: boolean;
-  size: 'default' | 'pin' | 'textarea';
+  type: 'default' | 'pin' | 'textarea' | 'checkbox';
   validationMessage: string;
   validationValence: MessageValence;
 }>;
 
 const StoryInput = ({
-  size = 'default',
+  type = 'default',
   label,
   description,
   labelVisuallyHidden,
@@ -41,9 +42,10 @@ const StoryInput = ({
   return (
     <InputRoot {...{ validationValence }}>
       <Label srOnly={labelVisuallyHidden}>{label}</Label>
-      {size === 'pin' && <NaturalPinInput {...props} />}
-      {size === 'textarea' && <NaturalTextArea {...props} />}
-      {size === 'default' && <NaturalTextInput {...props} />}
+      {type === 'pin' && <NaturalPinInput {...props} />}
+      {type === 'textarea' && <NaturalTextArea {...props} />}
+      {type === 'checkbox' && <NaturalCheckbox {...props} />}
+      {type === 'default' && <NaturalTextInput {...props} />}
       <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
@@ -67,7 +69,7 @@ export default {
       control: 'select',
       options: ['success', 'info', 'warning', 'error']
     },
-    size: {
+    type: {
       control: 'select',
       options: ['default', 'textarea', 'pin']
     }
@@ -165,7 +167,7 @@ export const InputWithValidationAndDescription = {
 export const TextArea = {
   args: {
     label: 'This input is a text area input',
-    size: 'textarea',
+    type: 'textarea',
     description: 'Type a long paragraph',
     placeholder: 'Lorem ipsum dolor sit amet'
   }
@@ -174,9 +176,19 @@ export const TextArea = {
 export const PinInput = {
   args: {
     label: 'This input is a PIN-style input',
-    size: 'pin',
+    type: 'pin',
     length: 6,
     description: 'Type in secret you received',
     placeholder: '••••••'
+  }
+};
+
+export const Checkbox = {
+  args: {
+    label: 'This is a checkbox',
+    type: 'checkbox',
+    description: 'It’s checked, indeterminate, or unchecked',
+    size: 5,
+    weight: 'bold'
   }
 };

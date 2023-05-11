@@ -1,9 +1,16 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { forwardRef, useCallback } from 'react';
+import { Check, IconWeight, Minus } from '@phosphor-icons/react';
+import {
+  Root as CheckboxPrimitive,
+  CheckboxProps as CheckboxPrimitiveProps,
+  Indicator as CheckboxIndicatorPrimitive
+} from '@radix-ui/react-checkbox';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { forwardRef, ForwardRefExoticComponent, Fragment, useCallback } from 'react';
 
-import { Density, Elevation, ClassNameValue } from '@dxos/aurora-types';
+import { Density, Elevation, ClassNameValue, Size } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
@@ -143,6 +150,57 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   }
 );
 
-export { InputRoot, PinInput, TextInput, TextArea };
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
 
-export type { InputVariant, InputRootProps, PinInputProps, TextInputProps, TextAreaProps };
+const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
+  HTMLButtonElement,
+  InputScopedProps<CheckboxProps>
+>(
+  (
+    {
+      __inputScope,
+      checked: propsChecked,
+      defaultChecked: propsDefaultChecked,
+      onCheckedChange: propsOnCheckedChange,
+      size,
+      weight = 'bold',
+      className,
+      ...props
+    },
+    forwardedRef
+  ) => {
+    const [checked, onCheckedChange] = useControllableState({
+      prop: propsChecked,
+      defaultProp: propsDefaultChecked,
+      onChange: propsOnCheckedChange
+    });
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    const { tx } = useThemeContext();
+    const Icon = checked === 'indeterminate' ? Minus : checked ? Check : Fragment;
+    return (
+      <CheckboxPrimitive
+        {...{
+          ...props,
+          checked,
+          onCheckedChange,
+          id,
+          'aria-describedby': descriptionId,
+          ...(validationValence === 'error' && {
+            'aria-invalid': 'true' as const,
+            'aria-errormessage': errorMessageId
+          }),
+          className: tx('input.checkbox', 'input--checkbox', { size }, className)
+        }}
+        ref={forwardedRef}
+      >
+        <CheckboxIndicatorPrimitive asChild>
+          <Icon weight={weight} className={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size })} />
+        </CheckboxIndicatorPrimitive>
+      </CheckboxPrimitive>
+    );
+  }
+);
+
+export { InputRoot, PinInput, TextInput, TextArea, Checkbox };
+
+export type { InputVariant, InputRootProps, PinInputProps, TextInputProps, TextAreaProps, CheckboxProps };
