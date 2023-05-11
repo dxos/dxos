@@ -54,7 +54,7 @@ export class Analyzer {
     return this._getStats(lagTimes, { failures });
   }
 
-  async analyzeSwarmEvents(results: PlanResults) {
+  async analyzeSwarmEvents() {
     /**
      * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
      */
