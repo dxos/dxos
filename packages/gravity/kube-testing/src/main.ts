@@ -11,11 +11,11 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 10,
+    agents: 30,
     serversPerAgent: 1,
     signalArguments: [
-      'p2pserver'
-      // 'globalsubserver'
+      // 'p2pserver'
+      'globalsubserver'
     ],
     topicCount: 1,
     topicsPerAgent: 1,
@@ -28,7 +28,7 @@ void runPlan({
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
-    staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex()
+    staggerAgents: 5
+    // repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-11T10:49:46-0cba/test.json'
   }
 });

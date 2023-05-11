@@ -27,6 +27,7 @@ const getStats = (series: number[], additionalMetrics: Record<string, number> = 
   });
 
   stats.append(values, indexes, { inplace: true });
+  stats.config.setMaxRow(20);
   stats.print();
 
   return seriesToJson(stats);
@@ -81,7 +82,7 @@ export const analyzeMessages = async (results: PlanResults) => {
     .map((x) => x.received! - x.sent!);
   console.log('Succesfull messages', lagTimes.length);
 
-  return getStats(lagTimes, { failures });
+  return getStats(lagTimes, { failures, failureRate: failures / lagTimes.length });
 };
 
 export const analyzeSwarmEvents = async (results: PlanResults) => {
@@ -139,7 +140,9 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
   }
 
   let failures = 0;
+  let ignored = 0;
   const discoverLag = [];
+  const failureTtt = []; // Time Together on Topic
 
   for (const [_, peersPerTopic] of topics.entries()) {
     for (const [peerId, seen] of peersPerTopic.entries()) {
@@ -147,11 +150,14 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
         if (expectedPeer === peerId) {
           continue;
         }
-        if (seen.leave! < timings.join! || timings.leave! < seen.join!) {
+        const timeTogetherOnTopic = Math.min(seen.leave! - timings.join!, timings.leave! - seen.join!);
+        if (timeTogetherOnTopic < 500) {
           // Different iterations, do not intersect in time
+          ignored++;
           continue;
         }
         if (!seen.seen.has(expectedPeer)) {
+          failureTtt.push(timeTogetherOnTopic);
           failures++;
           continue;
         }
@@ -161,5 +167,10 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     }
   }
 
-  return getStats(discoverLag, { failures });
+  return getStats(discoverLag, {
+    ignored,
+    failures,
+    failureRate: failures / discoverLag.length,
+    fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN
+  });
 };
