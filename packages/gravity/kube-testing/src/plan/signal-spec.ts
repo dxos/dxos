@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { analyzeMessages, analyzeSwarmEvents } from '../analysys/stat-analysys';
+import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
