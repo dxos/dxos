@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
-
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 
