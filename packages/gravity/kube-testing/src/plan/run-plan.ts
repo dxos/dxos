@@ -6,6 +6,7 @@ import { ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import seedrandom from 'seedrandom';
 
 import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -17,6 +18,7 @@ const AGENT_LOG_FILE = 'agent.log';
 
 type PlanOptions = {
   staggerAgents?: number;
+  randomSeed?: string;
 };
 
 export type RunPlanParams<S, C> = {
@@ -26,6 +28,7 @@ export type RunPlanParams<S, C> = {
 };
 
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+  options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (!process.env.GRAVITY_AGENT_PARAMS) {
     // Planner mode
     await runPlanner({ plan, spec, options });
@@ -126,6 +129,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     join(outDir, 'test.json'),
     JSON.stringify(
       {
+        options,
         spec,
         stats,
         results: planResults,

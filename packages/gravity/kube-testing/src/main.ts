@@ -23,11 +23,11 @@ void runPlan({
     repeatInterval: 200,
     agentWaitTime: 5_000,
     duration: 30_000,
-    randomSeed: PublicKey.random().toHex(),
     type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
-    staggerAgents: 5
+    staggerAgents: 5,
+    randomSeed: PublicKey.random().toHex(),
   }
 });

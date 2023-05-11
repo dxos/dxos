@@ -31,8 +31,6 @@ export type SignalTestSpec = {
   repeatInterval: number;
   agentWaitTime: number;
   duration: number;
-
-  randomSeed: string;
 };
 
 export type SignalAgentConfig = {
@@ -44,7 +42,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   builder = new TestBuilder();
 
   async configurePlan({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
-    seedrandom(spec.randomSeed, { global: true });
     await Promise.all(range(spec.servers).map((num) => this.builder.createServer(num, outDir, spec.signalArguments)));
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
@@ -71,7 +68,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     config,
     outDir
   }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
-    seedrandom(spec.randomSeed, { global: true });
     const ctx = new Context();
 
     log.info('start', { agentId });
