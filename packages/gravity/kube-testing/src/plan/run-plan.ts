@@ -19,6 +19,7 @@ const AGENT_LOG_FILE = 'agent.log';
 type PlanOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
+  randomSeed?: string;
 };
 
 type TestSummary = {
@@ -45,7 +46,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
   if (options.repeatAnalysis) {
     // Analysis mode
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
-    await plan.finishPlan(
+    await plan.finish(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
       summary.results
     );
