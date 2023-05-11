@@ -28,6 +28,6 @@ void runPlan({
   },
   options: {
     staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex(),
+    randomSeed: PublicKey.random().toHex()
   }
 });

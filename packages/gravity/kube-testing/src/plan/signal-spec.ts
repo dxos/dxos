@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import seedrandom from 'seedrandom';
-
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
