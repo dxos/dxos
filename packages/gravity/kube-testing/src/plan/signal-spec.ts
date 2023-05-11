@@ -25,6 +25,10 @@ export type SignalTestSpec = {
   topicCount: number;
   topicsPerAgent: number;
 
+  /**
+   * Time to allow everything to init. NOTE: Sometimes first message is not dropped if it is sent too soon.
+   */
+  startWaitTime: number;
   discoverTimeout: number;
   repeatInterval: number;
   agentWaitTime: number;
@@ -84,7 +88,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
 
     // NOTE: Sometimes first message is not dropped if it is sent too soon.
-    await sleep(1_000);
+    await sleep(spec.startWaitTime);
 
     //
     // test
