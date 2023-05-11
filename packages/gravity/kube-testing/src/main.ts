@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
-
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 
@@ -19,11 +17,11 @@ void runPlan({
     ],
     topicCount: 1,
     topicsPerAgent: 1,
+    startWaitTime: 1_000,
     discoverTimeout: 5_000,
     repeatInterval: 200,
     agentWaitTime: 5_000,
-    duration: 30_000,
-    randomSeed: PublicKey.random().toHex(),
+    duration: 10_000,
     type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
