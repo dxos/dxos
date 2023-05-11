@@ -31,9 +31,12 @@ export type AgentResult = {
 
 // plan vs environment
 export interface TestPlan<S, C> {
-  init(params: TestParams<S>): Promise<C[]>; // 1
+  // init
+  configurePlan(params: TestParams<S>): Promise<C[]>; // 1
 
-  run(params: AgentParams<S, C>): Promise<void>; // N
+  // run
+  agentMain(params: AgentParams<S, C>): Promise<void>; // N
 
-  finish(params: TestParams<S>, results: PlanResults): Promise<any>;
+  // finish
+  finishPlan(params: TestParams<S>, results: PlanResults): Promise<any>;
 }

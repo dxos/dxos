@@ -3,37 +3,31 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 
-import { Executor } from './plan/run-plan';
+import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 
-const executor = new Executor({
+void runPlan({
   plan: new SignalTestPlan(),
   spec: {
-    servers: 1,
+    servers: 3,
     agents: 10,
-    serversPerAgent: 1,
+    serversPerAgent: 2,
     signalArguments: [
       'p2pserver'
       // 'globalsubserver'
     ],
     topicCount: 1,
     topicsPerAgent: 1,
-    startWaitTime: 1_000,
     discoverTimeout: 5_000,
     repeatInterval: 200,
     agentWaitTime: 5_000,
-    duration: 10_000,
+    duration: 30_000,
+    randomSeed: PublicKey.random().toHex(),
     type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
-    staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex()
+    staggerAgents: 5
   }
-});
-
-void executor.run().catch((err) => {
-  log.catch(err);
 });
