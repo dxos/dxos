@@ -1,0 +1,21 @@
+{
+  "name": "@dxos/composer-extension",
+  "version": "0.1.41",
+  "private": true,
+  "description": "Composer Web Extension",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "type": "module",
+  "scripts": {
+    "bundle": "vite build",
+    "serve": "vite"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4",
+    "vite": "^4.3.0",
+    "vite-plugin-web-extension": "^3.0.7"
+  }
+}
