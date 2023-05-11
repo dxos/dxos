@@ -8,6 +8,7 @@ import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent
 
 import {
   Button,
+  Checkbox,
   useTranslation,
   ButtonProps,
   Density,
@@ -22,11 +23,11 @@ import {
   ListItemDragHandle,
   useListContext,
   LIST_NAME,
-  MockListItemDragHandle
+  MockListItemDragHandle,
+  InputRoot
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
-import { Checkbox } from '../Checkbox';
 import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
@@ -234,13 +235,14 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
         {selectable && (
           <ListItemEndcap className='items-center'>
-            <Checkbox
-              id={`${id}__checkbox`}
-              className={slots?.selectableCheckbox?.className}
-              checked={completed}
-              defaultChecked={defaultCompleted}
-              onCheckedChange={onChangeCompleted}
-            />
+            <InputRoot id={`${id}__checkbox`}>
+              <Checkbox
+                className={slots?.selectableCheckbox?.className}
+                checked={completed}
+                defaultChecked={defaultCompleted}
+                onCheckedChange={onChangeCompleted}
+              />
+            </InputRoot>
           </ListItemEndcap>
         )}
         <ListItemHeading className='sr-only'>{title}</ListItemHeading>
