@@ -32,6 +32,13 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // Conflict between web-ext and addons-scanner-utils.
+    // web-ext > addons-linter > addons-scanner-utils.
+    case 'addons-scanner-utils': {
+      delete packageJson.peerDependencies['node-fetch']
+      break;
+    }
+
     case 'esbuild-plugin-raw': {
       packageJson.peerDependencies['esbuild'] = '^0.16.0'
       break;
