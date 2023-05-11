@@ -3,6 +3,7 @@
 //
 
 import {
+  ArrowSquareOut,
   DotsThreeVertical,
   DownloadSimple,
   FileArrowDown,
@@ -10,7 +11,8 @@ import {
   FilePlus,
   Link,
   LinkBreak,
-  UploadSimple
+  UploadSimple,
+  X
 } from '@phosphor-icons/react';
 import React, {
   Dispatch,
@@ -24,7 +26,7 @@ import React, {
   useState
 } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
-import { useOutletContext, useParams } from 'react-router-dom';
+import { useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
@@ -149,7 +151,13 @@ const DocumentPageContent = observer(
   }
 );
 
-const RichTextDocumentPage = observer(({ document, space }: { document: Document; space: Space }) => {
+type DocumentPageProps = {
+  document: Document;
+  space: Space;
+  embed?: boolean;
+};
+
+const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
   const identity = useIdentity();
@@ -200,11 +208,12 @@ const RichTextDocumentPage = observer(({ document, space }: { document: Document
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-const MarkdownDocumentPage = observer(({ document, space }: { document: Document; space: Space }) => {
+const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageProps) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
+  const location = useLocation();
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -246,8 +255,21 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
   const docGhId = useMemo<GhIdentifier | null>(() => {
     try {
       const key = document.meta?.keys?.find((key) => key.source === 'com.github');
-      if (key?.id) {
-        return JSON.parse(key.id);
+      const [owner, repo, type, ...rest] = key?.id?.split('/') ?? [];
+      if (type === 'issues') {
+        return {
+          owner,
+          repo,
+          issueNumber: parseInt(rest[0], 10)
+        };
+      } else if (type === 'blob') {
+        const [ref, ...pathParts] = rest;
+        return {
+          owner,
+          repo,
+          ref,
+          path: pathParts.join('/')
+        };
       } else {
         return null;
       }
@@ -257,7 +279,7 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
     }
   }, [document.meta?.keys]);
 
-  const ghId = useMemo<GhIdentifier | null>(() => {
+  const ghId = useMemo<string | null>(() => {
     try {
       const url = new URL(ghUrlValue);
       const [_, owner, repo, type, ...rest] = url.pathname.split('/');
@@ -265,21 +287,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
         const [ref, ...pathParts] = rest;
         const path = pathParts.join('/');
         const ext = pathParts[pathParts.length - 1].split('.')[1];
-        return ext === 'md'
-          ? {
-              owner,
-              repo,
-              ref,
-              path
-            }
-          : null;
+        return ext === 'md' ? `${owner}/${repo}/blob/${ref}/${path}` : null;
       } else if (type === 'issues') {
         const [issueNumberString] = rest;
-        return {
-          owner,
-          repo,
-          issueNumber: parseInt(issueNumberString)
-        };
+        return `${owner}/${repo}/issues/${issueNumberString}`;
       } else {
         return null;
       }
@@ -430,6 +441,10 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
     );
   }, [importGhIssueContent, importGhFileContent, docGhId]);
 
+  const handleCloseEmbed = useCallback(() => {
+    window.parent.postMessage({ type: 'close-embed' }, '*');
+  }, []);
+
   const dropdownMenuContent = (
     <>
       <DropdownMenuItem className='flex items-center gap-2' onClick={handleExport}>
@@ -475,6 +490,18 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
           )}
         </>
       )}
+      {embed && (
+        <>
+          <DropdownMenuItem className='flex items-center gap-2' onClick={() => open(location.pathname, '_blank')}>
+            <ArrowSquareOut className={getSize(4)} />
+            <span>{t('open in composer label')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className='flex items-center gap-2' onClick={() => handleCloseEmbed()}>
+            <X className={getSize(4)} />
+            <span>{t('close embed label')}</span>
+          </DropdownMenuItem>
+        </>
+      )}
     </>
   );
 
@@ -514,12 +541,12 @@ const MarkdownDocumentPage = observer(({ document, space }: { document: Document
         title={t('bind to file in github label')}
         open={ghBindOpen}
         onOpenChange={(nextOpen) => {
-          // TODO(wittjosiah): `id` should not be stringified json but taking a more canonical form.
-          //   e.g., dxos/dxos/issues/{issue_number}
-          const key = { source: 'com.github', id: JSON.stringify(ghId) };
-          // TODO(wittjosiah): Stop overwriting document.meta.
-          document.meta = { keys: [key] };
-          setGhBindOpen(nextOpen);
+          if (ghId) {
+            const key = { source: 'com.github', id: ghId };
+            // TODO(wittjosiah): Stop overwriting document.meta.
+            document.meta = { keys: [key] };
+            setGhBindOpen(nextOpen);
+          }
         }}
         closeTriggers={[
           <Button key='done' variant='primary'>
@@ -631,12 +658,14 @@ export const DocumentPage = observer(() => {
   const { space } = useOutletContext<{ space?: Space }>();
   const { docKey } = useParams();
   const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
+  const [searchParams] = useSearchParams();
+  const embed = searchParams.get('embed');
 
   return (
     <div role='none'>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
-          <MarkdownDocumentPage document={document} space={space} />
+          <MarkdownDocumentPage document={document} space={space} embed={embed === 'true'} />
         ) : (
           <RichTextDocumentPage document={document} space={space} />
         )

@@ -17,6 +17,7 @@ const composerStyles = Object.entries({
   'border-radius': '6px',
   width: '100%',
   height: '100%',
+  'min-height': '30rem',
   'margin-bottom': '-5px'
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
@@ -31,13 +32,18 @@ const cancelButton = Array.from(document.getElementsByClassName('js-comment-canc
 
 if (commentForm) {
   const composer = document.createElement('iframe');
-  composer.setAttribute('src', import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
+  const baseUrl = import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org';
+  composer.setAttribute('src', `${baseUrl}?embed=true&location=${window.location.href}`);
   composer.setAttribute('style', composerStyles);
   Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
   commentForm.appendChild(composer);
 
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && cancelButton) {
+  window.addEventListener('message', (event) => {
+    if (event.source !== composer.contentWindow) {
+      return;
+    }
+
+    if (event.data.type === 'close-embed') {
       (cancelButton as HTMLButtonElement).click();
     }
   });
