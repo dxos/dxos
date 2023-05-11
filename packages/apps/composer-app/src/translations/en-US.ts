@@ -51,5 +51,6 @@ export const composer = {
   'invitation ready for auth code message': 'An invitation is ready for its authentication code',
   'view invitations label': 'View',
   'hidden spaces tree label': 'Hidden spaces',
-  'unhide space label': 'Un-hide space'
+  'unhide space label': 'Un-hide space',
+  'empty space message': 'No documents – click plus ☝ to get started'
 };

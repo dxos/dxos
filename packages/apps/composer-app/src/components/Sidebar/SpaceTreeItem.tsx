@@ -19,7 +19,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, getSize } from '@dxos/aurora-theme';
+import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
 import {
   Tooltip,
@@ -199,12 +199,22 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         </Tooltip>
       </div>
       <TreeItemBody>
-        {documents.length > 0 && (
+        {documents.length > 0 ? (
           <TreeBranch>
             {documents.map((document) => (
               <DocumentTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
             ))}
           </TreeBranch>
+        ) : (
+          <div
+            role='none'
+            className={mx(
+              'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
+              defaultDescription
+            )}
+          >
+            {t('empty space message')}
+          </div>
         )}
       </TreeItemBody>
       <Dialog

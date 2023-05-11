@@ -4,7 +4,7 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React, { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useMediaQuery } from '@dxos/aurora';
@@ -26,7 +26,6 @@ import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 
 import composerTranslations from '../../translations';
-import { DocumentLayout } from '../DocumentLayout';
 
 // TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')
@@ -52,9 +51,6 @@ export const Root = () => {
     }
   });
 
-  const [searchParams] = useSearchParams();
-  const embed = searchParams.get('embed');
-
   const [prefersDark] = useMediaQuery('(prefers-color-scheme: dark)', { ssr: false, fallback: true });
 
   useEffect(() => {
@@ -72,8 +68,8 @@ export const Root = () => {
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
       <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-          <ErrorProvider isDev={embed !== 'true'}>
-            <DocumentLayout />
+          <ErrorProvider isDev>
+            <Outlet />
           </ErrorProvider>
         </ClientProvider>
       </ErrorBoundary>

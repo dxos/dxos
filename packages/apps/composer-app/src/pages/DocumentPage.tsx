@@ -3,7 +3,6 @@
 //
 
 import {
-  ArrowSquareOut,
   DotsThreeVertical,
   DownloadSimple,
   FileArrowDown,
@@ -11,8 +10,7 @@ import {
   FilePlus,
   Link,
   LinkBreak,
-  UploadSimple,
-  X
+  UploadSimple
 } from '@phosphor-icons/react';
 import React, {
   Dispatch,
@@ -26,7 +24,7 @@ import React, {
   useState
 } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
-import { useLocation, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 import { Converter } from 'showdown';
 import TurndownService from 'turndown';
@@ -154,7 +152,6 @@ const DocumentPageContent = observer(
 type DocumentPageProps = {
   document: Document;
   space: Space;
-  embed?: boolean;
 };
 
 const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) => {
@@ -208,12 +205,11 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageProps) => {
+const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
-  const location = useLocation();
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -441,10 +437,6 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
     );
   }, [importGhIssueContent, importGhFileContent, docGhId]);
 
-  const handleCloseEmbed = useCallback(() => {
-    window.parent.postMessage({ type: 'close-embed' }, '*');
-  }, []);
-
   const dropdownMenuContent = (
     <>
       <DropdownMenuItem className='flex items-center gap-2' onClick={handleExport}>
@@ -488,18 +480,6 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
               </DropdownMenuItem>
             </>
           )}
-        </>
-      )}
-      {embed && (
-        <>
-          <DropdownMenuItem className='flex items-center gap-2' onClick={() => open(location.pathname, '_blank')}>
-            <ArrowSquareOut className={getSize(4)} />
-            <span>{t('open in composer label')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className='flex items-center gap-2' onClick={() => handleCloseEmbed()}>
-            <X className={getSize(4)} />
-            <span>{t('close embed label')}</span>
-          </DropdownMenuItem>
         </>
       )}
     </>
@@ -655,17 +635,13 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
 
 export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
-  const { space } = useOutletContext<{ space?: Space }>();
-  const { docKey } = useParams();
-  const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
-  const [searchParams] = useSearchParams();
-  const embed = searchParams.get('embed');
+  const { space, document } = useOutletContext<{ space?: Space; document?: Document }>();
 
   return (
     <div role='none'>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
-          <MarkdownDocumentPage document={document} space={space} embed={embed === 'true'} />
+          <MarkdownDocumentPage document={document} space={space} />
         ) : (
           <RichTextDocumentPage document={document} space={space} />
         )

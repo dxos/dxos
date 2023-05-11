@@ -3,5 +3,3 @@
 //
 
 export * from './StandaloneLayout';
-export * from './EmbeddedLayout';
-export * from './Root';
