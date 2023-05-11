@@ -8,15 +8,12 @@ import React from 'react';
 import { MessageValence } from '@dxos/aurora-types';
 
 import {
-  Description,
-  DescriptionAndValidation,
   InputRoot,
-  Label,
   PinInput as NaturalPinInput,
   TextInput as NaturalTextInput,
-  TextArea as NaturalTextArea,
-  Validation
+  TextArea as NaturalTextArea
 } from './Input';
+import { Description, DescriptionAndValidation, Label, Validation } from './InputMeta';
 
 type StoryInputProps = Partial<{
   label: string;

@@ -7,14 +7,6 @@ import { Density, Elevation, ClassNameValue } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
-  Label as LabelPrimitive,
-  LabelProps as LabelPrimitiveProps,
-  Description as DescriptionPrimitive,
-  DescriptionProps as DescriptionPrimitiveProps,
-  Validation as ValidationPrimitive,
-  ValidationProps as ValidationPrimitiveProps,
-  DescriptionAndValidation as DescriptionAndValidationPrimitive,
-  DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   PinInput as PinInputPrimitive,
   PinInputProps as PinInputPrimitiveProps,
   TextInput as TextInputPrimitive,
@@ -28,74 +20,6 @@ import {
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
-
-type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
-
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, className, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, className)} ref={forwardedRef}>
-      {children}
-    </LabelPrimitive>
-  );
-});
-
-type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
-
-const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DescriptionPrimitive
-        {...props}
-        className={tx('input.description', 'input__description', { srOnly }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </DescriptionPrimitive>
-    );
-  }
-);
-
-type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
-
-const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    return (
-      <ValidationPrimitive
-        {...props}
-        className={tx(
-          'input.validation',
-          `input__validation-message input__validation-message--${validationValence}`,
-          { srOnly, validationValence },
-          className
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </ValidationPrimitive>
-    );
-  }
-);
-
-type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
-
-const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DescriptionAndValidationPrimitive
-        {...props}
-        className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </DescriptionAndValidationPrimitive>
-    );
-  }
-);
 
 type InputVariant = 'default' | 'subdued';
 
@@ -219,15 +143,6 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   }
 );
 
-export { InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput, TextInput, TextArea };
+export { InputRoot, PinInput, TextInput, TextArea };
 
-export type {
-  InputRootProps,
-  LabelProps,
-  DescriptionProps,
-  ValidationProps,
-  DescriptionAndValidationProps,
-  PinInputProps,
-  TextInputProps,
-  TextAreaProps
-};
+export type { InputVariant, InputRootProps, PinInputProps, TextInputProps, TextAreaProps };
