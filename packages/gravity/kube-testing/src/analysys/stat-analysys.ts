@@ -141,7 +141,7 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
 
   let failures = 0;
   let ignored = 0;
-  const discoverLag = [];
+  const discoverLag = [0];
   const failureTtt = []; // Time Together on Topic
 
   for (const [_, peersPerTopic] of topics.entries()) {
