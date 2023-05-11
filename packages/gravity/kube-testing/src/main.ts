@@ -11,7 +11,7 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 20,
+    agents: 30,
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
@@ -25,10 +25,10 @@ void runPlan({
     duration: 30_000,
     randomSeed: PublicKey.random().toHex(),
     type: 'discovery',
-    serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
+    // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
     staggerAgents: 5,
-    // repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-11T10:28:33-278c/test.json'
+    // repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-11T10:49:46-0cba/test.json'
   }
 });
