@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.0.2",
+    "@radix-ui/react-checkbox": "^1.0.3",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-primitive": "^1.0.2",
