@@ -10,9 +10,9 @@ import { SignalTestPlan } from './plan/signal-spec';
 void runPlan({
   plan: new SignalTestPlan(),
   spec: {
-    servers: 3,
+    servers: 1,
     agents: 10,
-    serversPerAgent: 2,
+    serversPerAgent: 1,
     signalArguments: [
       'p2pserver'
       // 'globalsubserver'
@@ -23,7 +23,7 @@ void runPlan({
     discoverTimeout: 5_000,
     repeatInterval: 200,
     agentWaitTime: 5_000,
-    duration: 30_000,
+    duration: 10_000,
     type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },

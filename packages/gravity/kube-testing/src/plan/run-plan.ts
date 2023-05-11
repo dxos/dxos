@@ -27,6 +27,7 @@ export type RunPlanParams<S, C> = {
   options: PlanOptions;
 };
 
+// TODO(mykola): Introduce Executor class.
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (!process.env.GRAVITY_AGENT_PARAMS) {
