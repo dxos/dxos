@@ -6,6 +6,7 @@ import { ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import seedrandom from 'seedrandom';
 
 import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -21,6 +22,7 @@ type PlanOptions = {
 };
 
 type TestSummary = {
+  options: PlanOptions;
   spec: any;
   stats: any;
   results: PlanResults;
@@ -37,7 +39,9 @@ export type RunPlanParams<S, C> = {
   options: PlanOptions;
 };
 
+// TODO(mykola): Introduce Executor class.
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+  options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
@@ -67,7 +71,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     outDir
   });
 
-  const agentsArray = await plan.configurePlan({
+  const agentsArray = await plan.init({
     spec,
     outDir,
     testId
@@ -132,7 +136,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   let stats: any;
   try {
-    stats = await await plan.finishPlan(
+    stats = await await plan.finish(
       {
         spec,
         outDir,
@@ -145,6 +149,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   }
 
   const summary: TestSummary = {
+    options,
     spec,
     stats,
     params: {
@@ -163,7 +168,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
   try {
     log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
-    await plan.agentMain(params);
+    await plan.run(params);
   } catch (err) {
     console.error(err);
     process.exit(1);

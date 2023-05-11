@@ -5,7 +5,7 @@
 import { Series } from 'danfojs-node';
 
 import { PlanResults } from '../plan/spec-base';
-import { LogReader, TraceEvent } from './reducer';
+import { LogReader, TraceEvent } from './logging';
 
 const seriesToJson = (s: Series) => {
   const indexes = s.index;
