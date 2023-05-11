@@ -10,12 +10,12 @@ import { SignalTestPlan } from './plan/signal-spec';
 void runPlan({
   plan: new SignalTestPlan(),
   spec: {
-    servers: 3,
-    agents: 10,
-    serversPerAgent: 2,
+    servers: 1,
+    agents: 20,
+    serversPerAgent: 1,
     signalArguments: [
-      'p2pserver'
-      // 'globalsubserver'
+      // 'p2pserver'
+      'globalsubserver'
     ],
     topicCount: 1,
     topicsPerAgent: 1,
@@ -24,10 +24,11 @@ void runPlan({
     agentWaitTime: 5_000,
     duration: 30_000,
     randomSeed: PublicKey.random().toHex(),
-    type: 'discovery'
-    // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
+    type: 'discovery',
+    serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
-    staggerAgents: 5
+    staggerAgents: 5,
+    // repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-11T10:28:33-278c/test.json'
   }
 });
