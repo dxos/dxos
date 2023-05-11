@@ -63,13 +63,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
   }
 
-  async run({
-    agentId,
-    agents,
-    spec,
-    config,
-    outDir
-  }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     const ctx = new Context();
 
     log.info('start', { agentId });
