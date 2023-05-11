@@ -3,12 +3,11 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 
-import { Executor } from './plan/run-plan';
+import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 
-const executor = new Executor({
+void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
@@ -32,8 +31,4 @@ const executor = new Executor({
     staggerAgents: 5,
     randomSeed: PublicKey.random().toHex()
   }
-});
-
-void executor.run().catch((err) => {
-  log.catch(err);
 });
