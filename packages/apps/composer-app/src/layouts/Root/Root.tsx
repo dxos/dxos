@@ -4,6 +4,7 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useMediaQuery } from '@dxos/aurora';
@@ -51,6 +52,9 @@ export const Root = () => {
     }
   });
 
+  const [searchParams] = useSearchParams();
+  const embed = searchParams.get('embed');
+
   const [prefersDark] = useMediaQuery('(prefers-color-scheme: dark)', { ssr: false, fallback: true });
 
   useEffect(() => {
@@ -68,7 +72,7 @@ export const Root = () => {
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
       <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-          <ErrorProvider>
+          <ErrorProvider isDev={embed !== 'true'}>
             <DocumentLayout />
           </ErrorProvider>
         </ClientProvider>
