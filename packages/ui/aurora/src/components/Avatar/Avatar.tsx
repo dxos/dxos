@@ -163,21 +163,23 @@ type AvatarImageProps = ComponentPropsWithRef<'image'> & {
   onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
 };
 
-const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>((props, forwardedRef) => {
-  return (
-    <AvatarImagePrimitive asChild>
-      <AvatarMaskedImage {...props} ref={forwardedRef} />
-    </AvatarImagePrimitive>
-  );
-});
+const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
+  ({ onLoadingStatusChange, ...props }, forwardedRef) => {
+    return (
+      <AvatarImagePrimitive onLoadingStatusChange={onLoadingStatusChange} asChild>
+        <AvatarMaskedImage {...props} ref={forwardedRef} />
+      </AvatarImagePrimitive>
+    );
+  }
+);
 
 type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
   delayMs?: number;
 };
 
-const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>((props, forwardedRef) => {
+const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delayMs, ...props }, forwardedRef) => {
   return (
-    <AvatarFallbackPrimitive asChild>
+    <AvatarFallbackPrimitive delayMs={delayMs} asChild>
       <AvatarMaskedImage {...props} ref={forwardedRef} />
     </AvatarFallbackPrimitive>
   );
