@@ -18,19 +18,19 @@ export const useTextFile = ({
 }): {
   fileImportDialogOpen: boolean;
   setFileImportDialogOpen: Dispatch<SetStateAction<boolean>>;
-  handleExport: () => void;
-  handleImport: (file: File) => Promise<void>;
+  handleFileExport: () => void;
+  handleFileImport: (file: File) => Promise<void>;
 } => {
   const download = useFileDownload();
   const [fileImportDialogOpen, setFileImportDialogOpen] = useState(false);
 
-  const handleExport = useCallback(() => {
+  const handleFileExport = useCallback(() => {
     if (content) {
       download(new Blob([content.toString()], { type: 'text/plain' }), `${document.title}.md`);
     }
   }, [document, content]);
 
-  const handleImport = useCallback(
+  const handleFileImport = useCallback(
     async (file: File) => {
       if (content && editorRef.current?.view) {
         try {
@@ -48,5 +48,5 @@ export const useTextFile = ({
     [content]
   );
 
-  return { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport };
+  return { fileImportDialogOpen, setFileImportDialogOpen, handleFileExport, handleFileImport };
 };

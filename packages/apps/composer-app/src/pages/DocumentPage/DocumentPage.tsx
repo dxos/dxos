@@ -62,15 +62,15 @@ const DocumentPageContent = observer(
     children,
     document,
     dropdownMenuContent,
-    handleImport,
-    importDialogOpen,
-    setImportDialogOpen
+    handleFileImport,
+    fileImportDialogOpen,
+    setFileImportDialogOpen
   }: PropsWithChildren<{
     document: Document;
     dropdownMenuContent?: ReactNode;
-    handleImport?: (file: File) => Promise<void>;
-    importDialogOpen?: boolean;
-    setImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
+    handleFileImport?: (file: File) => Promise<void>;
+    fileImportDialogOpen?: boolean;
+    setFileImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
   }>) => {
     const { t } = useTranslation('composer');
     const themeContext = useThemeContext();
@@ -112,10 +112,10 @@ const DocumentPageContent = observer(
           {children}
         </div>
         <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-          {handleImport && (
+          {handleFileImport && (
             <Dialog
-              open={importDialogOpen}
-              onOpenChange={setImportDialogOpen}
+              open={fileImportDialogOpen}
+              onOpenChange={setFileImportDialogOpen}
               title={t('confirm import title')}
               slots={{ overlay: { className: 'backdrop-blur-sm' } }}
             >
@@ -124,12 +124,12 @@ const DocumentPageContent = observer(
                 types={['md']}
                 classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
                 dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-                handleChange={handleImport}
+                handleChange={handleFileImport}
               >
                 <FilePlus weight='duotone' className={getSize(8)} />
                 <span>{t('upload file message')}</span>
               </FileUploader>
-              <Button className='block is-full' onClick={() => setImportDialogOpen?.(false)}>
+              <Button className='block is-full' onClick={() => setFileImportDialogOpen?.(false)}>
                 {t('cancel label', { ns: 'appkit' })}
               </Button>
             </Dialog>
@@ -149,16 +149,13 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
   const editorRef = useRef<TipTapEditor>(null);
   const identity = useIdentity();
 
-  const { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport } = useRichTextFile(editorRef);
+  const fileProps = useRichTextFile(editorRef);
 
   return (
     <DocumentPageContent
       {...{
         document,
-        handleExport,
-        handleImport,
-        dialogOpen: fileImportDialogOpen,
-        setDialogOpen: setFileImportDialogOpen
+        ...fileProps
       }}
     >
       <Composer
@@ -196,7 +193,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const content = document?.content.content;
 
-  const { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport } = useTextFile({
+  const fileProps = useTextFile({
     editorRef,
     content
   });
@@ -392,11 +389,11 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const dropdownMenuContent = (
     <>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={handleExport}>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setFileImportDialogOpen(true)}>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
         <UploadSimple className={getSize(4)} />
         <span>{t('import from file label')}</span>
       </DropdownMenuItem>
@@ -443,9 +440,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
       <DocumentPageContent
         {...{
           document,
-          handleImport,
-          importDialogOpen: fileImportDialogOpen,
-          setImportDialogOpen: setFileImportDialogOpen,
+          ...fileProps,
           dropdownMenuContent
         }}
       >

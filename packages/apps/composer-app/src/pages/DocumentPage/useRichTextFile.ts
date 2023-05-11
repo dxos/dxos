@@ -24,13 +24,13 @@ export const useRichTextFile = (
 ): {
   fileImportDialogOpen: boolean;
   setFileImportDialogOpen: Dispatch<SetStateAction<boolean>>;
-  handleExport: () => void;
-  handleImport: (file: File) => Promise<void>;
+  handleFileExport: () => void;
+  handleFileImport: (file: File) => Promise<void>;
 } => {
   const download = useFileDownload();
   const [fileImportDialogOpen, setFileImportDialogOpen] = useState(false);
 
-  const handleExport = useCallback(() => {
+  const handleFileExport = useCallback(() => {
     const editor = editorRef.current;
     const html = editor?.getHTML();
     if (html) {
@@ -41,7 +41,7 @@ export const useRichTextFile = (
     }
   }, [document, editorRef.current]);
 
-  const handleImport = useCallback(
+  const handleFileImport = useCallback(
     async (file: File) => {
       const editor = editorRef.current;
       if (editor) {
@@ -54,5 +54,5 @@ export const useRichTextFile = (
     [document, editorRef.current]
   );
 
-  return { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport };
+  return { fileImportDialogOpen, setFileImportDialogOpen, handleFileExport, handleFileImport };
 };
