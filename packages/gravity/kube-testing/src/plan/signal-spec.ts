@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { Analyzer } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
@@ -128,12 +128,13 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async finishPlan(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
     await this.builder.destroy();
+    const analyser = new Analyzer(results);
     switch (params.spec.type) {
       case 'discovery': {
-        return analyzeSwarmEvents(results);
+        return analyser.analyzeSwarmEvents();
       }
       case 'signaling': {
-        return analyzeMessages(results);
+        return analyser.analyzeMessages();
       }
       default: {
         throw new Error(`Unknown test type: ${params.spec.type}`);
