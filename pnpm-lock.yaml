@@ -4323,6 +4323,7 @@ importers:
       '@dxos/react-list': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-avatar': ^1.0.2
+      '@radix-ui/react-checkbox': ^1.0.3
       '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-dialog': ^1.0.3
       '@radix-ui/react-primitive': ^1.0.2
@@ -4339,6 +4340,7 @@ importers:
       vite: ^4.3.0
     dependencies:
       '@radix-ui/react-avatar': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-checkbox': 1.0.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-context': 1.0.0_react@18.2.0
       '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y

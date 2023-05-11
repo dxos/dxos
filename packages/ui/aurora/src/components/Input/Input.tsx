@@ -1,20 +1,19 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { forwardRef, useCallback } from 'react';
+import { Check, IconWeight, Minus } from '@phosphor-icons/react';
+import {
+  Root as CheckboxPrimitive,
+  CheckboxProps as CheckboxPrimitiveProps,
+  Indicator as CheckboxIndicatorPrimitive
+} from '@radix-ui/react-checkbox';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { forwardRef, ForwardRefExoticComponent, Fragment, useCallback } from 'react';
 
-import { Density, Elevation, ClassNameValue } from '@dxos/aurora-types';
+import { Density, Elevation, ClassNameValue, Size } from '@dxos/aurora-types';
 import {
   InputRoot,
   InputRootProps,
-  Label as LabelPrimitive,
-  LabelProps as LabelPrimitiveProps,
-  Description as DescriptionPrimitive,
-  DescriptionProps as DescriptionPrimitiveProps,
-  Validation as ValidationPrimitive,
-  ValidationProps as ValidationPrimitiveProps,
-  DescriptionAndValidation as DescriptionAndValidationPrimitive,
-  DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   PinInput as PinInputPrimitive,
   PinInputProps as PinInputPrimitiveProps,
   TextInput as TextInputPrimitive,
@@ -28,74 +27,6 @@ import {
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
-
-type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
-
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, className, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, className)} ref={forwardedRef}>
-      {children}
-    </LabelPrimitive>
-  );
-});
-
-type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
-
-const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DescriptionPrimitive
-        {...props}
-        className={tx('input.description', 'input__description', { srOnly }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </DescriptionPrimitive>
-    );
-  }
-);
-
-type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
-
-const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    return (
-      <ValidationPrimitive
-        {...props}
-        className={tx(
-          'input.validation',
-          `input__validation-message input__validation-message--${validationValence}`,
-          { srOnly, validationValence },
-          className
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </ValidationPrimitive>
-    );
-  }
-);
-
-type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
-
-const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ srOnly, className, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DescriptionAndValidationPrimitive
-        {...props}
-        className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </DescriptionAndValidationPrimitive>
-    );
-  }
-);
 
 type InputVariant = 'default' | 'subdued';
 
@@ -219,15 +150,57 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   }
 );
 
-export { InputRoot, Label, Description, Validation, DescriptionAndValidation, PinInput, TextInput, TextArea };
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
 
-export type {
-  InputRootProps,
-  LabelProps,
-  DescriptionProps,
-  ValidationProps,
-  DescriptionAndValidationProps,
-  PinInputProps,
-  TextInputProps,
-  TextAreaProps
-};
+const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
+  HTMLButtonElement,
+  InputScopedProps<CheckboxProps>
+>(
+  (
+    {
+      __inputScope,
+      checked: propsChecked,
+      defaultChecked: propsDefaultChecked,
+      onCheckedChange: propsOnCheckedChange,
+      size,
+      weight = 'bold',
+      className,
+      ...props
+    },
+    forwardedRef
+  ) => {
+    const [checked, onCheckedChange] = useControllableState({
+      prop: propsChecked,
+      defaultProp: propsDefaultChecked,
+      onChange: propsOnCheckedChange
+    });
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    const { tx } = useThemeContext();
+    const Icon = checked === 'indeterminate' ? Minus : checked ? Check : Fragment;
+    return (
+      <CheckboxPrimitive
+        {...{
+          ...props,
+          checked,
+          onCheckedChange,
+          id,
+          'aria-describedby': descriptionId,
+          ...(validationValence === 'error' && {
+            'aria-invalid': 'true' as const,
+            'aria-errormessage': errorMessageId
+          }),
+          className: tx('input.checkbox', 'input--checkbox', { size }, className)
+        }}
+        ref={forwardedRef}
+      >
+        <CheckboxIndicatorPrimitive asChild>
+          <Icon weight={weight} className={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size })} />
+        </CheckboxIndicatorPrimitive>
+      </CheckboxPrimitive>
+    );
+  }
+);
+
+export { InputRoot, PinInput, TextInput, TextArea, Checkbox };
+
+export type { InputVariant, InputRootProps, PinInputProps, TextInputProps, TextAreaProps, CheckboxProps };

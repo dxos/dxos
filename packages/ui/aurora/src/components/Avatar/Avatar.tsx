@@ -19,6 +19,7 @@ import { Size } from '@dxos/aurora-types';
 import { useId } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 
 type AvatarVariant = 'square' | 'circle';
 type AvatarStatus = 'active' | 'inactive';
@@ -50,7 +51,7 @@ const AvatarRoot = ({
   return <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status }}>{children}</AvatarProvider>;
 };
 
-type AvatarProps = AvatarRootPrimitiveProps;
+type AvatarProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
 const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, ...props }, forwardedRef) => {
   const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
@@ -72,7 +73,7 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
         viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
         width={imageSizeNumber}
         height={imageSizeNumber}
-        className={tx('avatar.frame', 'avatar__status', {}, className)}
+        className={tx('avatar.frame', 'avatar__frame', {})}
       >
         <defs>
           <mask id={maskId}>
@@ -97,19 +98,19 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
         <Moon
           mirrored
           weight='fill'
-          className={tx('avatar.statusIcon', 'avatar__status__icon', { size: statusIconSize, status })}
+          className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
       ) : (
         <Circle
           weight='fill'
-          className={tx('avatar.statusIcon', 'avatar__status__icon', { size: statusIconSize, status })}
+          className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
       )}
     </AvatarRootPrimitive>
   );
 });
 
-type AvatarLabelProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & {
+type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
@@ -130,7 +131,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
   }
 );
 
-type AvatarDescriptionProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & {
+type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
