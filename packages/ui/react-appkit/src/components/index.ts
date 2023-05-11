@@ -4,7 +4,6 @@
 
 export * from './AuthChoices';
 export * from './Avatar';
-export * from './Checkbox';
 export * from './CompoundButton';
 export * from './DeviceList';
 export * from './Dialog';
