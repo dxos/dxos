@@ -17,6 +17,18 @@ const AGENT_LOG_FILE = 'agent.log';
 
 type PlanOptions = {
   staggerAgents?: number;
+  repeatAnalysis?: string;
+};
+
+type TestSummary = {
+  spec: any;
+  stats: any;
+  results: PlanResults;
+  params: {
+    testId: string;
+    outDir: string;
+  };
+  agents: Record<string, any>;
 };
 
 export type RunPlanParams<S, C> = {
@@ -26,6 +38,16 @@ export type RunPlanParams<S, C> = {
 };
 
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+  if (options.repeatAnalysis) {
+    // Analysis mode
+    const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
+    await plan.finishPlan(
+      { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
+      summary.results
+    );
+    return;
+  }
+
   if (!process.env.GRAVITY_AGENT_PARAMS) {
     // Planner mode
     await runPlanner({ plan, spec, options });
@@ -122,19 +144,17 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     log.warn('error finishing plan', err);
   }
 
-  writeFileSync(
-    join(outDir, 'test.json'),
-    JSON.stringify(
-      {
-        spec,
-        stats,
-        results: planResults,
-        agents
-      },
-      null,
-      4
-    )
-  );
+  const summary: TestSummary = {
+    spec,
+    stats,
+    params: {
+      testId,
+      outDir
+    },
+    results: planResults,
+    agents
+  };
+  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
 
   log.info('plan complete');
   process.exit(0);
