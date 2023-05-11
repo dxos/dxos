@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { SignalServerRunner } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
@@ -27,7 +28,18 @@ const BIN_PATH = './cmds/signal-test/main.go';
   }
 }
 
+const ports = new Set<number>();
+
 export const runSignal = async (num: number, outFolder: string, signalArguments: string[]) => {
+  let port = randomInt(10000, 20000);
+
+  while (ports.has(port)) {
+    log.warn(`port in use ${port}`);
+    port = randomInt(10000, 20000);
+  }
+
+  ports.add(port);
+
   const runner = new SignalServerRunner({
     port: randomInt(10000, 20000),
     binCommand: `go run -gcflags="all=-N -l" ${BIN_PATH}`,

@@ -50,12 +50,13 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
 
   addFile(path: string) {
     // TODO(dmaretskyi): Read files chunk by chunk.
-    this._logs.push(
+    this._logs = [
+      this._logs,
       ...readFileSync(path, 'utf-8')
         .split('\n')
         .filter((line) => line.trim().length > 0)
         .map((line) => JSON.parse(line))
-    );
+    ];
   }
 
   async *[Symbol.asyncIterator](): AsyncGenerator<SerializedLogEntry> {
