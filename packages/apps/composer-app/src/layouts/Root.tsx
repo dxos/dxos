@@ -25,7 +25,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 
-import composerTranslations from '../../translations';
+import composerTranslations from '../translations';
 
 // TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
 const configOverride: ConfigProto = window.location.hostname.includes('localhost')

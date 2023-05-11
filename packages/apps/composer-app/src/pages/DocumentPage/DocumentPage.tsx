@@ -26,8 +26,6 @@ import React, {
 import { FileUploader } from 'react-drag-drop-files';
 import { useOutletContext } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
-import { Converter } from 'showdown';
-import TurndownService from 'turndown';
 
 import { Document } from '@braneframe/types';
 import { Button, useTranslation, ThemeContext, Trans, useThemeContext } from '@dxos/aurora';
@@ -35,10 +33,13 @@ import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aur
 import { getSize, osTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { useFileDownload, Input, Dialog, DropdownMenuItem, DropdownMenu } from '@dxos/react-appkit';
+import { Input, Dialog, DropdownMenuItem, DropdownMenu } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
-import { useOctokitContext } from '../components';
+import { useOctokitContext } from '../../components';
+import type { OutletContext } from '../../layouts';
+import { useRichTextFile } from './useRichTextFile';
+import { useTextFile } from './useTextFile';
 
 type GhSharedProps = {
   owner: string;
@@ -55,16 +56,6 @@ type GhIssueIdentifier = GhSharedProps & {
 };
 
 type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
-
-const turndownService = new TurndownService({
-  headingStyle: 'atx',
-  hr: '---',
-  codeBlockStyle: 'fenced'
-});
-
-const converter = new Converter();
-
-const nestedParagraphOutput = / +\n/g;
 
 const DocumentPageContent = observer(
   ({
@@ -155,37 +146,21 @@ type DocumentPageProps = {
 };
 
 const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const editorRef = useRef<TipTapEditor>(null);
   const identity = useIdentity();
-  const download = useFileDownload();
 
-  const handleExport = useCallback(() => {
-    const editor = editorRef.current;
-    const html = editor?.getHTML();
-    if (html) {
-      download(
-        new Blob([turndownService.turndown(html).replaceAll(nestedParagraphOutput, '')], { type: 'text/plain' }),
-        `${document.title}.md`
-      );
-    }
-  }, [document]);
-
-  const handleImport = useCallback(
-    async (file: File) => {
-      const editor = editorRef.current;
-      if (editor) {
-        const data = new Uint8Array(await file.arrayBuffer());
-        const md = new TextDecoder('utf-8').decode(data);
-        editor.commands.setContent(converter.makeHtml(md));
-        setDialogOpen(false);
-      }
-    },
-    [document]
-  );
+  const { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport } = useRichTextFile(editorRef);
 
   return (
-    <DocumentPageContent {...{ document, handleExport, handleImport, dialogOpen, setDialogOpen }}>
+    <DocumentPageContent
+      {...{
+        document,
+        handleExport,
+        handleImport,
+        dialogOpen: fileImportDialogOpen,
+        setDialogOpen: setFileImportDialogOpen
+      }}
+    >
       <Composer
         ref={editorRef}
         identity={identity}
@@ -212,7 +187,6 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
   const { t } = useTranslation('composer');
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
   const [ghBindOpen, setGhBindOpen] = useState(false);
   const [ghUrlValue, setGhUrlValue] = useState('');
@@ -222,31 +196,10 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const content = document?.content.content;
 
-  const download = useFileDownload();
-
-  const handleExport = useCallback(() => {
-    if (content) {
-      download(new Blob([content.toString()], { type: 'text/plain' }), `${document.title}.md`);
-    }
-  }, [document, content]);
-
-  const handleImport = useCallback(
-    async (file: File) => {
-      if (content && editorRef.current?.view) {
-        try {
-          const data = new Uint8Array(await file.arrayBuffer());
-          const md = new TextDecoder('utf-8').decode(data);
-          editorRef.current.view.dispatch({
-            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md }
-          });
-        } catch (err) {
-          log.catch(err);
-        }
-        setImportDialogOpen(false);
-      }
-    },
-    [content]
-  );
+  const { fileImportDialogOpen, setFileImportDialogOpen, handleExport, handleImport } = useTextFile({
+    editorRef,
+    content
+  });
 
   const docGhId = useMemo<GhIdentifier | null>(() => {
     try {
@@ -443,7 +396,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportDialogOpen(true)}>
+      <DropdownMenuItem className='flex items-center gap-2' onClick={() => setFileImportDialogOpen(true)}>
         <UploadSimple className={getSize(4)} />
         <span>{t('import from file label')}</span>
       </DropdownMenuItem>
@@ -491,8 +444,8 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         {...{
           document,
           handleImport,
-          importDialogOpen,
-          setImportDialogOpen,
+          importDialogOpen: fileImportDialogOpen,
+          setImportDialogOpen: setFileImportDialogOpen,
           dropdownMenuContent
         }}
       >
@@ -635,7 +588,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
 export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
-  const { space, document } = useOutletContext<{ space?: Space; document?: Document }>();
+  const { space, document } = useOutletContext<OutletContext>();
 
   return (
     <div role='none'>

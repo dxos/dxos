@@ -9,6 +9,8 @@ import { Button } from '@dxos/aurora';
 import { useSpaces } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
+import type { OutletContext } from './OutletContext';
+
 export const EmbeddedLayout = () => {
   const [searchParams] = useSearchParams();
   const { location } = useParams();
@@ -52,7 +54,7 @@ export const EmbeddedLayout = () => {
         console.warn('TODO: onJoinedSpace', nextSpaceKey);
       }}
     >
-      <Outlet context={{ space, document }} />
+      <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
       <Button className='fixed inline-end-0 block-end-0' onClick={handleCloseEmbed}>
         Close
       </Button>

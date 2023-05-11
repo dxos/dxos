@@ -13,8 +13,9 @@ import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
 import { ShellProvider, useShell } from '@dxos/react-shell';
 
-import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
-import { namespace, abbreviateKey, getPath } from '../../router';
+import { SidebarContent, SidebarToggle, OctokitProvider } from '../components';
+import { namespace, abbreviateKey, getPath } from '../router';
+import type { OutletContext } from './OutletContext';
 
 const InvitationToast = ({
   invitation,
@@ -82,7 +83,7 @@ export const StandaloneLayout = () => {
             <SidebarContent />
           </Sidebar>
           <Main className='min-bs-full'>
-            <Outlet context={{ space, document }} />
+            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
             <SidebarToggle />
           </Main>
         </MainRoot>
