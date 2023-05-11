@@ -24,11 +24,11 @@ void runPlan({
     agentWaitTime: 5_000,
     duration: 30_000,
     randomSeed: PublicKey.random().toHex(),
-    type: 'discovery',
+    type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
-    staggerAgents: 5,
+    staggerAgents: 5
     // repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-11T10:49:46-0cba/test.json'
   }
 });

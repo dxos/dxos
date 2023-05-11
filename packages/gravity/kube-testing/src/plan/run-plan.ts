@@ -17,19 +17,19 @@ const AGENT_LOG_FILE = 'agent.log';
 
 type PlanOptions = {
   staggerAgents?: number;
-  repeatAnalysis?: string
+  repeatAnalysis?: string;
 };
 
 type TestSummary = {
-  spec: any,
-  stats: any,
-  results: PlanResults,
+  spec: any;
+  stats: any;
+  results: PlanResults;
   params: {
     testId: string;
     outDir: string;
-  }
-  agents: Record<string, any>
-}
+  };
+  agents: Record<string, any>;
+};
 
 export type RunPlanParams<S, C> = {
   plan: TestPlan<S, C>;
@@ -38,9 +38,13 @@ export type RunPlanParams<S, C> = {
 };
 
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
-  if (options.repeatAnalysis) { // Analysis mode
+  if (options.repeatAnalysis) {
+    // Analysis mode
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
-    await plan.finishPlan({ spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId }, summary.results)
+    await plan.finishPlan(
+      { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
+      summary.results
+    );
     return;
   }
 
@@ -145,7 +149,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     stats,
     params: {
       testId,
-      outDir,
+      outDir
     },
     results: planResults,
     agents

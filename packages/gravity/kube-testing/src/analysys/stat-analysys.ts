@@ -139,8 +139,10 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     }
   }
 
-  let failures = 0, ignored = 0;
-  const discoverLag = [], failureTtt = []; // Time Together on Topic
+  let failures = 0;
+  let ignored = 0;
+  const discoverLag = [];
+  const failureTtt = []; // Time Together on Topic
 
   for (const [_, peersPerTopic] of topics.entries()) {
     for (const [peerId, seen] of peersPerTopic.entries()) {
@@ -165,5 +167,10 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     }
   }
 
-  return getStats(discoverLag, { ignored, failures, failureRate: failures / discoverLag.length, fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN });
+  return getStats(discoverLag, {
+    ignored,
+    failures,
+    failureRate: failures / discoverLag.length,
+    fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN
+  });
 };
