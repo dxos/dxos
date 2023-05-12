@@ -92,20 +92,24 @@ const DocumentsQueryableDocumentResolverProvider = ({
       }
 
       if (event.data.type === 'initial-data') {
-        const document = new Document({
+        const nextDocument = new Document({
           meta: {
             keys: [{ source, id }]
           },
           content: new Text(event.data.content)
         });
-        space.db.add(document);
+        space.db.add(nextDocument);
+        setDocument(nextDocument);
       }
     };
 
+    // todo(thure): Won't this always be the case initially?
     if (documents.length === 0) {
       window.addEventListener('message', handler);
       window.parent.postMessage({ type: 'request-initial-data' }, '*');
       return () => window.removeEventListener('message', handler);
+    } else {
+      setDocument(documents[0] as Document);
     }
   }, [space, documents]);
 
