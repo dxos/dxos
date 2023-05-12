@@ -155,9 +155,20 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
           continue;
         }
 
+        if (
+          timings.join === undefined ||
+          timings.leave === undefined ||
+          expectedPeerTimings.join === undefined ||
+          expectedPeerTimings.leave === undefined
+        ) {
+          // Not enough information
+          ignored++;
+          continue;
+        }
+
         const timeTogetherOnTopic = Math.min(
-          expectedPeerTimings.leave! - timings.join!,
-          timings.leave! - expectedPeerTimings.join!
+          expectedPeerTimings.leave - timings.join,
+          timings.leave - expectedPeerTimings.join
         );
 
         if (timeTogetherOnTopic < 0) {
@@ -177,7 +188,7 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
           continue;
         }
         const discoverTime = timings.seen.get(expectedPeer)!;
-        discoverLag.push(discoverTime - expectedPeerTimings.join!);
+        discoverLag.push(discoverTime - expectedPeerTimings.join);
       }
     }
   }
