@@ -17,7 +17,7 @@ import { TraceEvent } from './analysys';
 import { runSignal } from './run-test-signal';
 
 export class TestBuilder {
-  private readonly _peers = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
   private readonly _servers = new Map<string, SignalServerRunner>();
 
   get peers() {
@@ -29,7 +29,7 @@ export class TestBuilder {
   }
 
   async createPeer(params: TestAgentParams) {
-    const peer = new TestAgent(params);
+    const peer = new TestPeer(params);
     await peer.start();
     this._peers.set(peer.peerId, peer);
     return peer;
@@ -53,7 +53,7 @@ export type TestAgentParams = {
   peerId?: PublicKey;
 };
 
-export class TestAgent {
+export class TestPeer {
   public readonly signalManager;
   public peerId: PublicKey;
   public readonly signalServers: Runtime.Services.Signal[];
@@ -124,7 +124,7 @@ export class TestAgent {
     await this.signalManager.close();
   }
 
-  static hash(agent: TestAgent) {
+  static hash(agent: TestPeer) {
     return agent.peerId.toHex();
   }
 
