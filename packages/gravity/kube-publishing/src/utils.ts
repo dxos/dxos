@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { spawn } from 'child_process';
 import type { SpawnOptions } from 'child_process';
 
@@ -10,12 +14,6 @@ export const run = async (command: string, args: string[], options?: SpawnOption
     }
     resolve();
   });
-});
-
-export const sleep = async (ms: number) => new Promise<void>((resolve) => {
-  setTimeout(() => {
-    resolve();
-  }, ms);
 });
 
 export const log = (message: string) => {

@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export type PublishTestSpec = {
   appName: string;
   kubeEndpoint: string;

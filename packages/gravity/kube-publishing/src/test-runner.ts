@@ -1,10 +1,17 @@
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+//
+// Copyright 2023 DXOS.org
+//
+
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+
+import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { PublishTestSpec, CacheStatus, EvaluationResult } from './spec';
-import { log, run, sleep } from './utils';
+import { run } from './utils';
 
 const cfCacheHeader = 'cf-cache-status';
 
@@ -93,40 +100,50 @@ export class TestRunner {
 
   async run() {
     // Prepare test env.
-    log(`Starting test ${this._testId} in ${this._appPath}...`);
+    log.info('starting test', {
+      outDir: this._appPath,
+      testId: this._testId
+    });
 
     if (!fs.existsSync(this._appPath)) {
-      log('Checking out app...');
+      log.info('checking out app');
       fs.mkdirSync(this._appPath, { recursive: true });
       await this._checkoutApp();
     }
 
-    log('Modifying app for the first time...');
+    log.info('modifying app');
     await this._modifyApp(this._appPath, `${this._testId}step1`);
 
-    log('Publishing app for the first time...');
+    log.info('publishing app');
     await this._pubishApp();
 
-    log('Building files map...');
+    log.info('building files map');
     const currentPath = path.join(this._appPath, this._spec.outDir);
     await this._buildFilesMap(currentPath, currentPath);
 
-    log(`Waiting for ${this._spec.pubishDelayMs / 1000} sec...`);
+    log.info(`waiting before start checking`, { delay: this._spec.pubishDelayMs });
     await sleep(this._spec.pubishDelayMs);
 
     for (let i = 0; i < this._spec.checksCount; i++) {
+      log.info(`starting checking cycle ${i}`);
       const result = await this._evaluateAppFiles();
       const isPassed = Object.values(result).every(val => val.match);
 
-      let out = `Check ${i+1} is ${isPassed ? 'passed' : 'failed'}: \n`;
-      out += `In cache: \n ${Object.entries(result).filter(([_, v]) => v.cacheStatus == CacheStatus.HIT).map(e => e[0]).length} files. \n`
-      out += `Not in cache: \n ${JSON.stringify(Object.entries(result).filter(([_, v]) => v.cacheStatus == CacheStatus.MISS).map(e => e[0]), null, 4)} \n`
-      out += `In cache but expired: \n ${JSON.stringify(Object.entries(result).filter(([_, v]) => v.cacheStatus == CacheStatus.EXPIRED).map(e => e[0]), null, 4)} \n`
-      out += `Not supposed to be cached: \n ${JSON.stringify(Object.entries(result).filter(([_, v]) => v.cacheStatus == CacheStatus.BYPASS).map(e => e[0]), null, 4)} \n`
-      out += `Not cached by CF: \n ${JSON.stringify(Object.entries(result).filter(([_, v]) => v.cacheStatus == CacheStatus.DYNAMIC).map(e => e[0]), null, 4)} \n`
-      out += `\n\n\n`;
+      const testResult = {
+        testId: this._testId,
+        testStep: i,
+        isPassed,
+        filesTotal: Object.keys(result).length,
+        filesMatched: Object.values(result).filter(val => val.match).length,
+        filesNotMatched: Object.values(result).filter(val => !val.match).length,
+        filesInCache: Object.values(result).filter(val => val.cacheStatus == CacheStatus.HIT).length,
+        filesNotInCache: Object.values(result).filter(val => val.cacheStatus == CacheStatus.MISS).length,
+        filesInCacheButExpired: Object.values(result).filter(val => val.cacheStatus == CacheStatus.EXPIRED).length,
+        filesNotSupposedToBeCached: Object.values(result).filter(val => val.cacheStatus == CacheStatus.BYPASS).length,
+        filesNotCachedByCf: Object.values(result).filter(val => val.cacheStatus == CacheStatus.DYNAMIC).length,
+      }
 
-      log(out);
+      log.info('cycle result', testResult);
       await sleep(this._spec.checksIntervalMs);
     }
   }
