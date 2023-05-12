@@ -36,12 +36,22 @@ export type TraceEvent =
       peerId: string;
     }
   | {
-      type: 'ERROR';
-      err: Error;
+      type: 'ITERATION_ERROR';
+      err: {
+        name: string;
+        message: string;
+        stack?: string;
+      };
       peerId: string;
+      iterationId: number;
     }
   | {
       type: 'AGENT_START' | 'AGENT_STOP';
+      peerId: string;
+    }
+  | {
+      type: 'ITERATION_START';
+      iterationId: number;
       peerId: string;
     };
 

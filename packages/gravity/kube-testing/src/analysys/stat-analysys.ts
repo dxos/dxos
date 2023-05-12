@@ -4,6 +4,8 @@
 
 import { Series } from 'danfojs-node';
 
+import { log } from '@dxos/log';
+
 import { PlanResults } from '../plan/spec-base';
 import { LogReader, TraceEvent } from './logging';
 
@@ -47,11 +49,8 @@ export const mapToJson = (m: Map<string, any>) => {
 
 export const analyzeMessages = async (results: PlanResults) => {
   const messages = new Map<string, { sent?: number; received?: number }>();
-  const reader = new LogReader();
 
-  for (const { logFile } of Object.values(results.agents)) {
-    reader.addFile(logFile);
-  }
+  const reader = getReader(results);
 
   for await (const entry of reader) {
     if (entry.message !== 'dxos.test.signal') {
@@ -82,7 +81,11 @@ export const analyzeMessages = async (results: PlanResults) => {
     .map((x) => x.received! - x.sent!);
   console.log('Succesfull messages', lagTimes.length);
 
-  return getStats(lagTimes, { failures, failureRate: failures / lagTimes.length });
+  return getStats(lagTimes, {
+    failures,
+    failureRate: failures / (lagTimes.length + failures),
+    ...(await analyzeRunFailures(results))
+  });
 };
 
 export const analyzeSwarmEvents = async (results: PlanResults) => {
@@ -91,11 +94,7 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
    */
   const topics = new Map<string, Map<string, { join?: number; leave?: number; seen: Map<string, number> }>>();
 
-  const reader = new LogReader();
-
-  for (const { logFile } of Object.values(results.agents)) {
-    reader.addFile(logFile);
-  }
+  const reader = getReader(results);
 
   for await (const entry of reader) {
     if (entry.message !== 'dxos.test.signal') {
@@ -170,7 +169,75 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
   return getStats(discoverLag, {
     ignored,
     failures,
-    failureRate: failures / discoverLag.length,
-    fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN
+    failureRate: failures / (discoverLag.length + failures),
+    fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN,
+    ...(await analyzeRunFailures(results))
   });
+};
+
+const getReader = (results: PlanResults) => {
+  const reader = new LogReader();
+
+  for (const { logFile } of Object.values(results.agents)) {
+    reader.addFile(logFile);
+  }
+
+  return reader;
+};
+
+const analyzeRunFailures = async (results: PlanResults) => {
+  /**
+   * peerId -> {iterations: number, errors: number}
+   */
+  const peers = new Map<string, { errors: number; iterations: number }>();
+
+  let errors = 0;
+  let runs = 0;
+
+  const reader = getReader(results);
+
+  for await (const entry of reader) {
+    if (!entry.message || !entry.message.startsWith('dxos.test.signal')) {
+      continue;
+    }
+
+    const data: TraceEvent = entry.context;
+    //
+    // Propagate map
+    //
+    if (data.type === 'ITERATION_START' || data.type === 'ITERATION_ERROR') {
+      console.log('Iteration', data.type);
+      if (!peers.has(data.peerId)) {
+        peers.set(data.peerId, { errors: 0, iterations: 0 });
+      }
+      switch (data.type) {
+        case 'ITERATION_START': {
+          console.log('Iteration start', data.type);
+          runs++;
+          peers.get(data.peerId)!.iterations++;
+          break;
+        }
+        case 'ITERATION_ERROR': {
+          errors++;
+          peers.get(data.peerId)!.errors++;
+          break;
+        }
+      }
+    }
+  }
+
+  for (const [_, { errors, iterations }] of peers.entries()) {
+    if (iterations !== 1) {
+      log.warn('Not one iteration per Peer');
+    }
+    if (errors > 1) {
+      log.warn('More than one error per Peer');
+    }
+  }
+
+  return {
+    runs,
+    runErrors: errors,
+    runErrorsRate: errors / runs
+  };
 };

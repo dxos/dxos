@@ -4,11 +4,12 @@
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
@@ -64,8 +65,6 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   }
 
   async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
-    const ctx = new Context();
-
     log.info('start', { agentId });
 
     // const agentsPerTopic: Record<string, string[]> = {};
@@ -88,10 +87,36 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     // test
     //
     let testCounter = 0;
+
+    const ctx = new Context({
+      onError: (err) => {
+        log.trace(
+          'dxos.test.signal.context.onError',
+          checkType<TraceEvent>({
+            type: 'ITERATION_ERROR',
+            err: {
+              name: err.name,
+              message: err.message,
+              stack: err.stack
+            },
+            peerId: agent.peerId.toHex(),
+            iterationId: testCounter
+          })
+        );
+      }
+    });
     scheduleTaskInterval(
       ctx,
       async () => {
         log.info(`${testCounter++} test iteration running...`);
+        log.trace(
+          'dxos.test.signal.iteration.start',
+          checkType<TraceEvent>({
+            type: 'ITERATION_START',
+            peerId: agent.peerId.toHex(),
+            iterationId: testCounter
+          })
+        );
 
         switch (spec.type) {
           case 'discovery': {
@@ -107,7 +132,10 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
             break;
           }
           case 'signaling': {
-            await agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]));
+            await cancelWithContext(
+              ctx,
+              agent.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
+            );
             break;
           }
           default:
