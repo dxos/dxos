@@ -21,9 +21,10 @@ export const ResolverTree = observer(() => {
   return spaces.length ? (
     <>
       {' '}
-      <span className='sr-only' id={treeLabel}>
-        {t('sidebar tree label')}
-      </span>
+      <h1 className='text-lg font-system-normal' id={treeLabel}>
+        {t('resolver tree label')}
+      </h1>
+      <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
       <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
         {spaces.map((space) => {
           return (
@@ -37,7 +38,10 @@ export const ResolverTree = observer(() => {
     </>
   ) : (
     <>
-      <p className='text-center'>No spaces yet</p>
+      <h1 className='text-lg font-system-normal' id={treeLabel}>
+        {t('resolver no spaces message')}
+      </h1>
+      <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
       <Button
         className='block is-full'
         onClick={async () => {
@@ -46,7 +50,7 @@ export const ResolverTree = observer(() => {
           setSpace(space);
         }}
       >
-        Create one for this repository
+        {t('resolver create space label')}
       </Button>
     </>
   );

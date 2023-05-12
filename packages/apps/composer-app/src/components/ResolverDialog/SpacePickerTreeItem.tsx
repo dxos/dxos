@@ -43,7 +43,7 @@ export const SpacePickerTreeItem = ({
       className={['mbe-2 block', disabled && defaultDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
-      <div role='none' className='flex mis-1 items-center'>
+      <div role='none' className='flex items-center gap-1'>
         {hasDocuments ? (
           <TreeItemOpenTrigger>
             <OpenTriggerIcon />
@@ -52,7 +52,7 @@ export const SpacePickerTreeItem = ({
           <MockListItemOpenTrigger />
         )}
         <TreeItemHeading
-          className='grow break-words pbs-1.5 text-sm font-medium'
+          className='grow break-words pbs-2 text-base font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
           {spaceDisplayName}
