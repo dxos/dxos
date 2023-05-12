@@ -12,6 +12,7 @@ void runPlan({
   spec: {
     servers: 1,
     agents: 10,
+    peersPerAgent: 1,
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
@@ -29,7 +30,6 @@ void runPlan({
   },
   options: {
     staggerAgents: 5,
-    agentsPerProcess: 3,
     randomSeed: PublicKey.random().toHex()
     // repeatAnalysis:
     // '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-05-11T12:29:06-c896/test.json'
