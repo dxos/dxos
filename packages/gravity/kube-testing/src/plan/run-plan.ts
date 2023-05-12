@@ -18,6 +18,7 @@ const AGENT_LOG_FILE = 'agent.log';
 
 type PlanOptions = {
   staggerAgents?: number;
+  agentsPerProcess?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
 };
@@ -53,13 +54,13 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
     return;
   }
 
-  if (!process.env.GRAVITY_AGENT_PARAMS) {
+  if (!process.env.GRAVITY_AGENTS_PARAMS) {
     // Planner mode
     await runPlanner({ plan, spec, options });
   } else {
     // Agent mode
-    const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
-    await runAgent(plan, params);
+    const agentsParams: AgentParams<S, C>[] = JSON.parse(process.env.GRAVITY_AGENTS_PARAMS);
+    await Promise.all(agentsParams.map((params) => runAgent({ plan, params, options })));
   }
 };
 
@@ -88,30 +89,34 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     agents: {}
   };
   const promises: Promise<void>[] = [];
+  let agentCounter = 0;
 
   {
     //
     // Start agents
     //
-    for (const [agentId, agentConfig] of Object.entries(agents)) {
-      const agentParams: AgentParams<S, C> = {
-        agentId,
-        spec,
-        agents,
-        outDir: join(outDir, agentId),
-        config: agentConfig
-      };
+    const agentParams: AgentParams<S, C>[] = Object.entries(agents).map(([agentId, agentConfig]) => ({
+      agentCounter: agentCounter++,
+      agentId,
+      spec,
+      agents,
+      outDir: join(outDir, agentId),
+      config: agentConfig
+    }));
 
-      if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
-        await sleep(options.staggerAgents);
-      }
+    if (options.agentsPerProcess === undefined) {
+      options.agentsPerProcess = 1;
+    }
 
-      fs.mkdirSync(agentParams.outDir, { recursive: true });
+    while (agentParams.length > 0) {
+      const perProcessParams = agentParams.splice(0, options.agentsPerProcess);
+
+      perProcessParams.forEach(({ outDir }) => fs.mkdirSync(outDir, { recursive: true }));
 
       const childProcess = fork(process.argv[1], {
         env: {
           ...process.env,
-          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams)
+          GRAVITY_AGENTS_PARAMS: JSON.stringify(perProcessParams)
         }
       });
       children.push(childProcess);
@@ -119,14 +124,18 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         Event.wrap<number>(childProcess, 'exit')
           .waitForCount(1)
           .then((exitCode) => {
-            planResults.agents[agentId] = {
-              exitCode,
-              outDir: agentParams.outDir,
-              logFile: join(agentParams.outDir, AGENT_LOG_FILE)
-            };
+            perProcessParams.forEach(({ outDir, agentId }) => {
+              planResults.agents[agentId] = {
+                exitCode,
+                outDir,
+                logFile: join(outDir, AGENT_LOG_FILE)
+              };
+            });
           })
       );
     }
+
+    log.info(`Started ${children.length} processes, with ${options.agentsPerProcess} agents per process`);
 
     await Promise.all(promises);
 
@@ -166,9 +175,20 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   process.exit(0);
 };
 
-const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
+const runAgent = async <S, C>({
+  plan,
+  params,
+  options
+}: {
+  plan: TestPlan<S, C>;
+  params: AgentParams<S, C>;
+  options: PlanOptions;
+}) => {
   try {
     log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
+    if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
+      await sleep(options.staggerAgents * params.agentCounter);
+    }
     await plan.run(params);
   } catch (err) {
     console.error(err);

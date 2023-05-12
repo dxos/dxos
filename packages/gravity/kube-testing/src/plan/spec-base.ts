@@ -9,6 +9,7 @@ export type TestParams<S> = {
 };
 
 export type AgentParams<S, C> = {
+  agentCounter: number;
   agentId: string;
   outDir: string;
   config: C;
