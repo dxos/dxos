@@ -75,6 +75,12 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
       yield this._logs[idx++];
     }
   }
+
+  copy(): LogReader {
+    const reader = new LogReader();
+    reader._logs = [...this._logs];
+    return reader;
+  }
 }
 
 export type SerializedLogEntry<T = any> = {

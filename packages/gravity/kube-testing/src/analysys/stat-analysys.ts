@@ -89,11 +89,12 @@ export const analyzeMessages = async (results: PlanResults) => {
   return getStats(lagTimes, {
     failures,
     failureRate: failures / (lagTimes.length + failures),
-    ...(await analyzeRunFailures(results))
+    ...(await analyzeRunFailures(reader))
   });
 };
 
 export const analyzeSwarmEvents = async (results: PlanResults) => {
+  const start = Date.now();
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
    */
@@ -192,26 +193,31 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
     }
   }
 
+  log.info(`analyzeSwarmEvents: ${Date.now() - start}ms`);
+
   return getStats(discoverLag, {
     ignored,
     failures,
     failureRate: failures / (discoverLag.length + failures),
     fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN,
-    ...(await analyzeRunFailures(results))
+    ...(await analyzeRunFailures(reader))
   });
 };
 
 const getReader = (results: PlanResults) => {
+  const start = Date.now();
   const reader = new LogReader();
 
   for (const { logFile } of Object.values(results.agents)) {
     reader.addFile(logFile);
   }
 
+  log.info(`LogReader: ${Date.now() - start}ms`);
   return reader;
 };
 
-const analyzeRunFailures = async (results: PlanResults) => {
+const analyzeRunFailures = async (reader: LogReader) => {
+  const start = Date.now();
   /**
    * peerId -> {iterations: number, errors: number}
    */
@@ -219,9 +225,6 @@ const analyzeRunFailures = async (results: PlanResults) => {
 
   let errors = 0;
   let runs = 0;
-
-  const reader = getReader(results);
-
   for await (const entry of reader) {
     if (!entry.message || !entry.message.startsWith('dxos.test.signal')) {
       continue;
@@ -259,6 +262,7 @@ const analyzeRunFailures = async (results: PlanResults) => {
     }
   }
 
+  log.info(`analyzeRunFailures: ${Date.now() - start}ms`);
   return {
     runs,
     runErrors: errors,
