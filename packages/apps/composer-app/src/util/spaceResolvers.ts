@@ -7,14 +7,17 @@ import update from 'lodash.update';
 
 import { Space } from '@dxos/client';
 
-const ghMatch = (space: Space, identityHex: string, id: string) => {
+const ghMatch = (space: Space, identityHex: string, id: string): boolean => {
   const [ghOwner, ghRepo, ..._ghEtc] = id.split('/');
   return get<string[]>(space.properties.members, [identityHex, 'com.github', 'repos'], []).includes(
     `${ghOwner}/${ghRepo}`
   );
 };
 
-export const matchSpace = (space: Space, identityHex: string, source: string, id: string) => {
+export const matchSpace = (space: Space, identityHex: string, source?: string, id?: string) => {
+  if (!id) {
+    return false;
+  }
   switch (source) {
     case 'com.github':
       return ghMatch(space, identityHex, id);

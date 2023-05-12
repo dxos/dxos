@@ -2,23 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { Button, useId, useTranslation } from '@dxos/aurora';
 import { TreeRoot } from '@dxos/react-appkit';
-import { observer, useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { observer, useClient, useSpaces } from '@dxos/react-client';
 
 import { bindSpace } from '../../util';
-import { ResolverProps } from './ResolverProps';
+import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';
 
-export const ResolverTree = observer((props: ResolverProps) => {
+export const ResolverTree = observer(() => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
-  const identity = useIdentity();
-  const identityHex = identity?.identityKey.toHex();
+  const { setSpace, source, id, identityHex } = useContext(SpaceResolverContext);
   return spaces.length ? (
     <>
       {' '}
@@ -27,7 +26,12 @@ export const ResolverTree = observer((props: ResolverProps) => {
       </span>
       <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
         {spaces.map((space) => {
-          return <SpacePickerTreeItem key={space.key.toHex()} space={space} {...props} />;
+          return (
+            <SpacePickerTreeItem
+              key={space.key.toHex()}
+              {...{ space, setSpace, identityHex: identityHex!, source: source!, id: id! }}
+            />
+          );
         })}
       </TreeRoot>
     </>
@@ -38,8 +42,8 @@ export const ResolverTree = observer((props: ResolverProps) => {
         className='block is-full'
         onClick={async () => {
           const space = await client.createSpace();
-          bindSpace(space, identityHex ?? '', props.source, props.id);
-          props.setNextSpace(space);
+          bindSpace(space, identityHex!, source!, id!);
+          setSpace(space);
         }}
       >
         Create one for this repository

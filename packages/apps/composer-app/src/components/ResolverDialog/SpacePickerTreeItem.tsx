@@ -11,15 +11,19 @@ import { defaultDisabled } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
 import { TreeBranch, TreeItem, TreeItemBody, TreeItemHeading, TreeItemOpenTrigger } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
-import { useIdentity, useQuery } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client';
 
 import { bindSpace, getSpaceDisplayName } from '../../util';
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { ResolverProps } from './ResolverProps';
 
-export const SpacePickerTreeItem = ({ space, source, id, setNextSpace }: { space: Space } & ResolverProps) => {
-  const identity = useIdentity();
-  const identityHex = identity?.identityKey.toHex();
+export const SpacePickerTreeItem = ({
+  identityHex,
+  space,
+  source,
+  id,
+  setSpace
+}: Pick<ResolverProps, 'setSpace'> & { identityHex: string; space: Space; source: string; id: string }) => {
   const { t } = useTranslation('composer');
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
@@ -59,7 +63,7 @@ export const SpacePickerTreeItem = ({ space, source, id, setNextSpace }: { space
           onClick={() => {
             if (identityHex) {
               bindSpace(space, identityHex, source, id);
-              setNextSpace(space);
+              setSpace(space);
             }
           }}
         >
