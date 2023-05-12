@@ -37,7 +37,7 @@ const EmbeddedLayoutImpl = () => {
       ) : (
         <EmbeddedFirstRunPage />
       )}
-      <ButtonGroup className='fixed inline-end-2 block-end-2'>
+      <ButtonGroup className='fixed inline-end-2 block-end-2 z-[70]'>
         <Button onClick={handleCloseEmbed}>Close</Button>
         <Button onClick={handleSaveAndCloseEmbed}>Save & close</Button>
       </ButtonGroup>
