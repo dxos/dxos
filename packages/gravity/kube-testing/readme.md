@@ -16,6 +16,7 @@ pnpm i @dxos/kube-testing
 ## TODO
 
 IMPORTANT. TODO(mykola): Recreate agent on each iteration because stalled swarm events.
+
 1. Configure JSON logger
 2. Write traces
 3. Analyze traces
