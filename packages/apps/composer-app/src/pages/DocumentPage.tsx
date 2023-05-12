@@ -444,11 +444,11 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
   }, [importGhIssueContent, importGhFileContent, docGhId]);
 
   const handleCloseEmbed = useCallback(() => {
-    window.parent.postMessage({ type: 'close-embed' }, '*');
+    window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
   }, []);
 
   const handleSaveAndCloseEmbed = useCallback(() => {
-    window.parent.postMessage({ type: 'save-data', content: document.content.text }, '*');
+    window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
   }, []);
 
   const dropdownMenuContent = (

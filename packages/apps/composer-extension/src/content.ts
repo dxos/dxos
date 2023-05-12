@@ -50,9 +50,9 @@ const setupComposer = () => {
 
   if (commentForm) {
     const composer = document.createElement('iframe');
-    const baseUrl = import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org';
+    const baseUrl = new URL(import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
     composer.setAttribute('id', composerId);
-    composer.setAttribute('src', `${baseUrl}?embed=true&location=${window.location.href}`);
+    composer.setAttribute('src', `${baseUrl.href}?embed=true&location=${window.location.href}`);
     composer.setAttribute('style', composerStyles);
     Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
 
@@ -66,7 +66,7 @@ const setupComposer = () => {
             mutation.target.classList.contains('is-comment-stale')
           ) {
             stale = true;
-            composer.contentWindow?.postMessage({ type: 'comment-stale' }, '*');
+            composer.contentWindow?.postMessage({ type: 'comment-stale' }, baseUrl.origin);
           }
         }
       });
@@ -80,7 +80,7 @@ const setupComposer = () => {
 
       switch (event.data.type) {
         case 'request-initial-data': {
-          composer.contentWindow?.postMessage({ type: 'initial-data', content: body?.value }, '*');
+          composer.contentWindow?.postMessage({ type: 'initial-data', content: body?.value }, baseUrl.origin);
           break;
         }
 
