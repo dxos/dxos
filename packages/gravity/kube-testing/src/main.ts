@@ -11,8 +11,8 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 30,
-    peersPerAgent: 7,
+    agents: 5,
+    peersPerAgent: 5,
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
@@ -21,10 +21,10 @@ void runPlan({
     topicCount: 1,
     topicsPerAgent: 1,
     startWaitTime: 1_000,
-    discoverTimeout: 10_000,
+    discoverTimeout: 5_000,
     repeatInterval: 200,
     agentWaitTime: 5_000,
-    duration: 50_000,
+    duration: 20_000,
     type: 'discovery'
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },

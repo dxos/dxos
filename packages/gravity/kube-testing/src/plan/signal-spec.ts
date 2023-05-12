@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { TestBuilder } from '../test-builder';
+import { TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
 
@@ -68,21 +68,22 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
     log.info('start', { agentId });
 
-    const perPeerTest = async () => {
-      const peer = await this.builder.createPeer({
-        signals: config.servers.map((server) => ({ server })),
-        peerId: PublicKey.random()
-      });
+    const ctx = new Context();
+    let testCounter = 0;
 
-      // NOTE: Sometimes first message is not dropped if it is sent too soon.
-      await sleep(spec.startWaitTime);
+    const peers = await Promise.all(
+      range(spec.peersPerAgent).map(() =>
+        this.builder.createPeer({
+          signals: config.servers.map((server) => ({ server })),
+          peerId: PublicKey.random()
+        })
+      )
+    );
 
-      //
-      // test
-      //
-      let testCounter = 0;
+    const testRun = async (peer: TestPeer) => {
+      log.info(`${testCounter} test iteration running...`);
 
-      const ctx = new Context({
+      const context = ctx.derive({
         onError: (err) => {
           log.trace(
             'dxos.test.signal.context.onError',
@@ -99,54 +100,55 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
           );
         }
       });
-      scheduleTaskInterval(
-        ctx,
-        async () => {
-          log.info(`${testCounter++} test iteration running...`);
-          log.trace(
-            'dxos.test.signal.iteration.start',
-            checkType<TraceEvent>({
-              type: 'ITERATION_START',
-              peerId: peer.peerId.toHex(),
-              iterationId: testCounter
-            })
-          );
 
-          switch (spec.type) {
-            case 'discovery': {
-              peer.regeneratePeerId();
-              const topics = config.topics.map((topic) => PublicKey.from(topic));
-              for (const topic of topics) {
-                await cancelWithContext(ctx, peer.joinTopic(PublicKey.from(topic)));
-              }
-
-              await sleep(spec.discoverTimeout);
-
-              await Promise.all(topics.map((topic) => cancelWithContext(ctx, peer.leaveTopic(PublicKey.from(topic)))));
-              break;
-            }
-            case 'signaling': {
-              await cancelWithContext(
-                ctx,
-                peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
-              );
-              break;
-            }
-            default:
-              throw new Error(`Unknown test type: ${spec.type}`);
-          }
-
-          log.info('iteration finished');
-        },
-        spec.repeatInterval
+      log.trace(
+        'dxos.test.signal.iteration.start',
+        checkType<TraceEvent>({
+          type: 'ITERATION_START',
+          peerId: peer.peerId.toHex(),
+          iterationId: testCounter
+        })
       );
 
-      await sleep(spec.duration);
-      await ctx.dispose();
-      await sleep(spec.agentWaitTime);
+      switch (spec.type) {
+        case 'discovery': {
+          peer.regeneratePeerId();
+          const topics = config.topics.map((topic) => PublicKey.from(topic));
+          for (const topic of topics) {
+            await cancelWithContext(context, peer.joinTopic(PublicKey.from(topic)));
+          }
+
+          await sleep(spec.discoverTimeout);
+
+          await Promise.all(topics.map((topic) => cancelWithContext(context, peer.leaveTopic(PublicKey.from(topic)))));
+          break;
+        }
+        case 'signaling': {
+          await cancelWithContext(
+            context,
+            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
+          );
+          break;
+        }
+        default:
+          throw new Error(`Unknown test type: ${spec.type}`);
+      }
+
+      log.info('iteration finished');
     };
 
-    await Promise.all(range(spec.peersPerAgent).map(perPeerTest));
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
+        testCounter++;
+      },
+      spec.repeatInterval
+    );
+
+    await sleep(spec.duration);
+    await ctx.dispose();
+    await sleep(spec.agentWaitTime);
   }
 
   async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
