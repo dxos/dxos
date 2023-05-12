@@ -4,14 +4,22 @@
 
 import React from 'react';
 
-import { PanelAlertDialog } from '@dxos/react-shell';
+import { useThemeContext, ThemeContext } from '@dxos/aurora';
+import { mx, osTx } from '@dxos/aurora-theme';
+import { defaultDialogContent, defaultOverlay } from '@dxos/react-shell';
 
+import { ResolverProps } from './ResolverProps';
 import { ResolverTree } from './ResolverTree';
 
-export const ResolverDialog = ({ source, id }: { source: string; id: string }) => {
+export const ResolverDialog = (props: ResolverProps) => {
+  const themeContext = useThemeContext();
   return (
-    <PanelAlertDialog titleId=''>
-      <ResolverTree {...{ source, id }} />
-    </PanelAlertDialog>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
+      <div role='none' className={mx(defaultOverlay, 'static')}>
+        <div role='none' className={mx(defaultDialogContent)}>
+          <ResolverTree {...props} />
+        </div>
+      </div>
+    </ThemeContext.Provider>
   );
 };

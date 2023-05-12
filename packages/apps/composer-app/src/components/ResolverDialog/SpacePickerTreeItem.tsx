@@ -15,8 +15,9 @@ import { useIdentity, useQuery } from '@dxos/react-client';
 
 import { bindSpace, getSpaceDisplayName } from '../../util';
 import { DocumentTreeItem } from './DocumentTreeItem';
+import { ResolverProps } from './ResolverProps';
 
-export const SpacePickerTreeItem = ({ space, source, id }: { space: Space; source: string; id: string }) => {
+export const SpacePickerTreeItem = ({ space, source, id, setNextSpace }: { space: Space } & ResolverProps) => {
   const identity = useIdentity();
   const identityHex = identity?.identityKey.toHex();
   const { t } = useTranslation('composer');
@@ -55,7 +56,12 @@ export const SpacePickerTreeItem = ({ space, source, id }: { space: Space; sourc
         <Button
           density='fine'
           className='shrink-0'
-          onClick={() => identityHex && bindSpace(space, identityHex, source, id)}
+          onClick={() => {
+            if (identityHex) {
+              bindSpace(space, identityHex, source, id);
+              setNextSpace(space);
+            }
+          }}
         >
           Select
         </Button>

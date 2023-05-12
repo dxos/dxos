@@ -29,11 +29,11 @@ export const createRouter = (): Router =>
       element: <Root />,
       children: [
         {
-          path: '/embedded',
+          path: 'embedded',
           element: <EmbeddedLayout />,
           children: [
             {
-              path: ':location',
+              path: '*',
               element: <DocumentPage />
             },
             {

@@ -24,6 +24,7 @@ export const matchSpace = (space: Space, identityHex: string, source: string, id
 };
 
 const ghBind = (space: Space, identityHex: string, id: string) => {
+  console.log('[gh bind]', space, identityHex, id);
   const [ghOwner, ghRepo, ..._ghEtc] = id.split('/');
   return update(space.properties.members, [identityHex, 'com.github', 'repos'], (ghBindings) => {
     return [...(ghBindings ?? []), `${ghOwner}/${ghRepo}`];

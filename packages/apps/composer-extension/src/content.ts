@@ -33,7 +33,7 @@ const cancelButton = Array.from(document.getElementsByClassName('js-comment-canc
 if (commentForm) {
   const composer = document.createElement('iframe');
   const baseUrl = import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org';
-  composer.setAttribute('src', `${baseUrl}?embed=true&location=${window.location.href}`);
+  composer.setAttribute('src', `${baseUrl}/embedded/${window.location.href}`);
   composer.setAttribute('style', composerStyles);
   Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
   commentForm.appendChild(composer);
