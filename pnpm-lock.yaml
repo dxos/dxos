@@ -413,13 +413,17 @@ importers:
 
   packages/apps/composer-extension:
     specifiers:
+      '@types/webextension-polyfill': ^0.10.0
       typescript: ^4.8.4
       vite: ^4.3.0
       vite-plugin-web-extension: ^3.0.7
+      webextension-polyfill: ^0.10.0
     devDependencies:
+      '@types/webextension-polyfill': 0.10.0
       typescript: 4.8.4
       vite: 4.3.1
       vite-plugin-web-extension: 3.0.7_vite@4.3.1
+      webextension-polyfill: 0.10.0
 
   packages/apps/halo-app:
     specifiers:

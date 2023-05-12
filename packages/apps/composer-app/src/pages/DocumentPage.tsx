@@ -4,6 +4,7 @@
 
 import {
   ArrowSquareOut,
+  CloudCheck,
   DotsThreeVertical,
   DownloadSimple,
   FileArrowDown,
@@ -21,6 +22,7 @@ import React, {
   ReactNode,
   SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState
@@ -445,6 +447,10 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
     window.parent.postMessage({ type: 'close-embed' }, '*');
   }, []);
 
+  const handleSaveAndCloseEmbed = useCallback(() => {
+    window.parent.postMessage({ type: 'save-data', content: document.content.text }, '*');
+  }, []);
+
   const dropdownMenuContent = (
     <>
       <DropdownMenuItem className='flex items-center gap-2' onClick={handleExport}>
@@ -495,6 +501,10 @@ const MarkdownDocumentPage = observer(({ document, space, embed }: DocumentPageP
           <DropdownMenuItem className='flex items-center gap-2' onClick={() => open(location.pathname, '_blank')}>
             <ArrowSquareOut className={getSize(4)} />
             <span>{t('open in composer label')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className='flex items-center gap-2' onClick={() => handleSaveAndCloseEmbed()}>
+            <CloudCheck className={getSize(4)} />
+            <span>{t('save and close embed label')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem className='flex items-center gap-2' onClick={() => handleCloseEmbed()}>
             <X className={getSize(4)} />
@@ -659,13 +669,31 @@ export const DocumentPage = observer(() => {
   const { docKey } = useParams();
   const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
   const [searchParams] = useSearchParams();
-  const embed = searchParams.get('embed');
+  const embedded = searchParams.get('embed') === 'true';
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      if (event.data.type === 'comment-stale') {
+        // TODO(wittjosiah): Display in UI.
+        alert('comment stale');
+      }
+    };
+
+    if (embedded) {
+      window.addEventListener('message', handler);
+      return () => window.removeEventListener('message', handler);
+    }
+  }, [embedded]);
 
   return (
     <div role='none'>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
-          <MarkdownDocumentPage document={document} space={space} embed={embed === 'true'} />
+          <MarkdownDocumentPage document={document} space={space} embed={embedded} />
         ) : (
           <RichTextDocumentPage document={document} space={space} />
         )

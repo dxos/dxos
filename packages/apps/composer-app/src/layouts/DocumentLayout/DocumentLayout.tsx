@@ -2,15 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { Button, useTranslation, MainRoot, Main, Sidebar, MainOverlay } from '@dxos/aurora';
 import { defaultOsButtonColors } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
+import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout, Text } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
-import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
+import {
+  SpaceState,
+  useIdentity,
+  useInvitationStatus,
+  useQuery,
+  useSpaceInvitations,
+  useSpaces
+} from '@dxos/react-client';
 import { ShellProvider, useShell } from '@dxos/react-shell';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
@@ -58,29 +65,43 @@ export const DocumentLayout = () => {
   const navigate = useNavigate();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
-  const embed = searchParams.get('embed');
+  const embedded = searchParams.get('embed') === 'true';
   const location = searchParams.get('location');
+  const url = location ? new URL(location) : undefined;
+  const source = url?.hostname.split('.').reverse().join('.');
+  const id = url?.pathname.slice(1);
+  // TODO(wittjosiah): Space picker.
+  const documents = useQuery(spaces[0], (obj) => {
+    const keys = obj.meta?.keys;
+    return keys?.find((key: any) => key.source === source && key.id === id);
+  });
 
-  if (embed === 'true' && location && !spaceKey && spaces.length > 0) {
-    const url = new URL(location);
-    const source = url.hostname.split('.').reverse().join('.');
-    const id = url.pathname.slice(1);
-    // TODO(wittjosiah): Space picker.
-    const space = spaces[0];
-    const documents = space.db.query((obj) => {
-      const keys = obj.meta?.keys;
-      return keys?.find((key: any) => key.source === source && key.id === id);
-    }).objects;
-    let document = documents[0];
-    if (!document) {
-      document = new Document({
-        meta: {
-          keys: [{ source, id }]
-        }
-      });
-      space.db.add(document);
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      if (event.data.type === 'initial-data') {
+        const document = new Document({
+          meta: {
+            keys: [{ source, id }]
+          },
+          content: new Text(event.data.content)
+        });
+        spaces[0].db.add(document);
+      }
+    };
+
+    if (embedded && spaces.length > 0 && documents.length === 0) {
+      window.addEventListener('message', handler);
+      window.parent.postMessage({ type: 'request-initial-data' }, '*');
+      return () => window.removeEventListener('message', handler);
     }
-    return <Navigate to={`/${abbreviateKey(space.key)}/${documents[0].id}?embed=true`} />;
+  }, [embedded, spaces, documents]);
+
+  if (embedded && !spaceKey && documents.length > 0) {
+    return <Navigate to={`/${abbreviateKey(spaces[0].key)}/${documents[0].id}?embed=true`} />;
   }
 
   return (
@@ -96,7 +117,7 @@ export const DocumentLayout = () => {
       <OctokitProvider>
         <MainRoot>
           <MainOverlay />
-          {embed !== 'true' && (
+          {!embedded && (
             <Sidebar
               {...{
                 className: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
@@ -109,7 +130,7 @@ export const DocumentLayout = () => {
           )}
           <Main className='min-bs-full'>
             <Outlet context={{ space }} />
-            {embed !== 'true' && <SidebarToggle />}
+            {!embedded && <SidebarToggle />}
           </Main>
         </MainRoot>
       </OctokitProvider>
