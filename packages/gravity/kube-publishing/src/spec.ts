@@ -13,6 +13,8 @@ export type PublishTestSpec = {
   checksCount: number;
   // How long to wait between checks.
   checksIntervalMs: number;
+  // How many random files to generate.
+  randomFilesCount: number;
 };
 
 export enum CacheStatus {

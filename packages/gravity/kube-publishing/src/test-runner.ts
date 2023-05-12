@@ -51,6 +51,14 @@ export class TestRunner {
     await sleep(1_000);
   }
 
+  // Modifyes app build script to generate more test files.
+  private async _modifyBuildStep() {
+    const packageJson = fs.readFileSync(path.join(this._appPath, 'package.json'), 'utf8');
+    // TODO(egorgripasov): Read/preserve original build script to make test more extensible.
+    const newPackageJson = packageJson.replace(/"build": .*/g,  `"build": "NODE_OPTIONS=\\"--max-old-space-size=4096\\" tsc --noEmit && vite build && for i in {1..${this._spec.randomFilesCount}}; do base64 /dev/urandom | head -c 5000000 > ./out/test-app/file_$RANDOM$RANDOM_$i.js; done",`);
+    fs.writeFileSync(path.join(this._appPath, 'package.json'), newPackageJson, 'utf8');
+  }
+
   private async _pubishApp() {
     // TODO(egorgripasov): Consider using the DX lib directly.
     await run('npx', ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')], {
@@ -111,6 +119,9 @@ export class TestRunner {
 
     log.info('modifying app');
     await this._modifyApp(this._appPath, `${this._testId}step1`);
+
+    log.info('implementing randomness');
+    await this._modifyBuildStep();
 
     log.info('publishing app');
     await this._pubishApp();

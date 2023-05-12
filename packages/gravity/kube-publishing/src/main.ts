@@ -12,7 +12,8 @@ const main = async () => {
     outDir: 'out/test-app',
     pubishDelayMs: 30_000,
     checksCount: 10,
-    checksIntervalMs: 20_000
+    checksIntervalMs: 20_000,
+    randomFilesCount: 5
   };
 
   const testRunner = new TestRunner(testSpec);
