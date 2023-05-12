@@ -38,10 +38,16 @@ const getStats = (series: number[], additionalMetrics: Record<string, number> = 
 export const mapToJson = (m: Map<string, any>) => {
   return Object.fromEntries(
     Array.from(m.entries()).map(([key, val]) => {
-      let decoded = val;
-      if (val instanceof Map) {
-        decoded = mapToJson(val);
-      }
+      const decodeVal = (val: any): any => {
+        if (val instanceof Map) {
+          return mapToJson(val);
+        }
+        if (val instanceof Object) {
+          return Object.fromEntries(Object.entries(val).map(([key, val]) => [key, decodeVal(val)]));
+        }
+        return val;
+      };
+      const decoded: any = decodeVal(val);
       return [key, decoded];
     })
   );
@@ -130,38 +136,48 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
       case 'PEER_AVAILABLE': {
         const oldTimestamp = topics.get(data.topic)!.get(data.peerId)!.seen.get(data.discoveredPeer);
         if (oldTimestamp && oldTimestamp < entry.timestamp) {
-          continue;
+          break;
         }
         topics.get(data.topic)!.get(data.peerId)!.seen.set(data.discoveredPeer, entry.timestamp);
         break;
       }
     }
   }
-
   let failures = 0;
   let ignored = 0;
   const discoverLag = [0];
   const failureTtt = []; // Time Together on Topic
 
   for (const [_, peersPerTopic] of topics.entries()) {
-    for (const [peerId, seen] of peersPerTopic.entries()) {
-      for (const [expectedPeer, timings] of peersPerTopic.entries()) {
+    for (const [peerId, timings] of peersPerTopic.entries()) {
+      for (const [expectedPeer, expectedPeerTimings] of peersPerTopic.entries()) {
         if (expectedPeer === peerId) {
           continue;
         }
-        const timeTogetherOnTopic = Math.min(seen.leave! - timings.join!, timings.leave! - seen.join!);
-        if (timeTogetherOnTopic < 500) {
+
+        const timeTogetherOnTopic = Math.min(
+          expectedPeerTimings.leave! - timings.join!,
+          timings.leave! - expectedPeerTimings.join!
+        );
+
+        if (timeTogetherOnTopic < 0) {
           // Different iterations, do not intersect in time
+          continue;
+        }
+
+        if (timeTogetherOnTopic < 500) {
+          // Same iteration, but very small time window to interact.
           ignored++;
           continue;
         }
-        if (!seen.seen.has(expectedPeer)) {
+
+        if (!timings.seen.has(expectedPeer)) {
           failureTtt.push(timeTogetherOnTopic);
           failures++;
           continue;
         }
-        const discoverTime = seen.seen.get(expectedPeer)!;
-        discoverLag.push(discoverTime - timings.join!);
+        const discoverTime = timings.seen.get(expectedPeer)!;
+        discoverLag.push(discoverTime - expectedPeerTimings.join!);
       }
     }
   }

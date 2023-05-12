@@ -12,14 +12,14 @@ void runPlan({
   spec: {
     servers: 1,
     agents: 10,
-    peersPerAgent: 1,
+    peersPerAgent: 5,
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
       'globalsubserver'
     ],
-    topicCount: 5,
-    topicsPerAgent: 3,
+    topicCount: 1,
+    topicsPerAgent: 1,
     startWaitTime: 1_000,
     discoverTimeout: 10_000,
     repeatInterval: 200,
@@ -30,8 +30,8 @@ void runPlan({
   },
   options: {
     staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex()
+    randomSeed: PublicKey.random().toHex(),
     // repeatAnalysis:
-    // '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-05-11T12:29:06-c896/test.json'
+    //   '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-05-12T13:07:05-fa5b/test.json'
   }
 });
