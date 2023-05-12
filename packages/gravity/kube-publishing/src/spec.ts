@@ -3,6 +3,7 @@
 //
 
 export type PublishTestSpec = {
+  // If changed, make sure to create corresponding CNAME with Cloudflare.
   appName: string;
   kubeEndpoint: string;
   // TODO(egorgripasov): Read from dx.yaml.

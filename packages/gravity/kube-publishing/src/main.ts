@@ -7,6 +7,7 @@ import { TestRunner } from './test-runner';
 
 const main = async () => {
   const testSpec: PublishTestSpec = {
+    // If changed, make sure to create corresponding CNAME with Cloudflare.
     appName: 'test-app',
     kubeEndpoint: 'testing.dxos.org',
     outDir: 'out/test-app',
