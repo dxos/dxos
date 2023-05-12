@@ -55,7 +55,10 @@ export class TestRunner {
   private async _modifyBuildStep() {
     const packageJson = fs.readFileSync(path.join(this._appPath, 'package.json'), 'utf8');
     // TODO(egorgripasov): Read/preserve original build script to make test more extensible.
-    const newPackageJson = packageJson.replace(/"build": .*/g,  `"build": "NODE_OPTIONS=\\"--max-old-space-size=4096\\" tsc --noEmit && vite build && for i in {1..${this._spec.randomFilesCount}}; do base64 /dev/urandom | head -c 5000000 > ./out/test-app/file_$RANDOM$RANDOM_$i.js; done",`);
+    const newPackageJson = packageJson.replace(
+      /"build": .*/g,
+      `"build": "NODE_OPTIONS=\\"--max-old-space-size=4096\\" tsc --noEmit && vite build && for i in {1..${this._spec.randomFilesCount}}; do base64 /dev/urandom | head -c 5000000 > ./out/test-app/file_$RANDOM$RANDOM_$i.js; done",`
+    );
     fs.writeFileSync(path.join(this._appPath, 'package.json'), newPackageJson, 'utf8');
   }
 
