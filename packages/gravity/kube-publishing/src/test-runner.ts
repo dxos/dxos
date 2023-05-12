@@ -4,8 +4,8 @@
 
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -21,9 +21,7 @@ export class TestRunner {
   private _filesMap: Record<string, string> = {};
   private _testId = Date.now();
 
-  constructor(
-    private readonly _spec: PublishTestSpec,
-  ) {
+  constructor(private readonly _spec: PublishTestSpec) {
     this._appPath = `${os.tmpdir()}/kube-publishing/${this._spec.appName}`;
   }
 
@@ -55,11 +53,9 @@ export class TestRunner {
 
   private async _pubishApp() {
     // TODO(egorgripasov): Consider using the DX lib directly.
-    await run(
-      'npx',
-      ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')],
-      { cwd: this._appPath },
-    );
+    await run('npx', ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')], {
+      cwd: this._appPath
+    });
   }
 
   private async _buildFilesMap(outPath: string, currentPath: string) {
@@ -68,7 +64,7 @@ export class TestRunner {
       const filePath = path.join(currentPath, file);
       const stat = fs.statSync(filePath);
       if (stat.isDirectory()) {
-        await this._buildFilesMap(outPath, filePath)
+        await this._buildFilesMap(outPath, filePath);
       } else if (stat.isFile()) {
         const pathDiff = filePath.replace(outPath, '');
         const appFileContent = fs.readFileSync(filePath, 'utf8');
@@ -80,19 +76,21 @@ export class TestRunner {
   }
 
   private async _evaluateAppFiles(): Promise<EvaluationResult> {
-    let result: EvaluationResult = {};
+    const result: EvaluationResult = {};
     for await (const [pathDiff, expectedHash] of Object.entries(this._filesMap)) {
       const kubeFilePath = `https://${this._spec.appName}.${this._spec.kubeEndpoint}${pathDiff}`;
-      const response = await fetch(kubeFilePath, { cache: 'no-store' })
+      const response = await fetch(kubeFilePath, { cache: 'no-store' });
       const kubeFileContent = await response.text();
       const kubeFileHash = crypto.createHash('md5').update(kubeFileContent).digest('hex');
-      
-      const cacheStatus = response.headers.get(cfCacheHeader) ? response.headers.get(cfCacheHeader) as CacheStatus : undefined;
+
+      const cacheStatus = response.headers.get(cfCacheHeader)
+        ? (response.headers.get(cfCacheHeader) as CacheStatus)
+        : undefined;
 
       result[kubeFilePath] = {
         match: expectedHash === kubeFileHash,
-        cacheStatus,
-      }
+        cacheStatus
+      };
     }
 
     return result;
@@ -121,27 +119,28 @@ export class TestRunner {
     const currentPath = path.join(this._appPath, this._spec.outDir);
     await this._buildFilesMap(currentPath, currentPath);
 
-    log.info(`waiting before start checking`, { delay: this._spec.pubishDelayMs });
+    log.info('waiting before start checking', { delay: this._spec.pubishDelayMs });
     await sleep(this._spec.pubishDelayMs);
 
     for (let i = 0; i < this._spec.checksCount; i++) {
       log.info(`starting checking cycle ${i}`);
       const result = await this._evaluateAppFiles();
-      const isPassed = Object.values(result).every(val => val.match);
+      const isPassed = Object.values(result).every((val) => val.match);
 
       const testResult = {
         testId: this._testId,
         testStep: i,
         isPassed,
         filesTotal: Object.keys(result).length,
-        filesMatched: Object.values(result).filter(val => val.match).length,
-        filesNotMatched: Object.values(result).filter(val => !val.match).length,
-        filesInCache: Object.values(result).filter(val => val.cacheStatus == CacheStatus.HIT).length,
-        filesNotInCache: Object.values(result).filter(val => val.cacheStatus == CacheStatus.MISS).length,
-        filesInCacheButExpired: Object.values(result).filter(val => val.cacheStatus == CacheStatus.EXPIRED).length,
-        filesNotSupposedToBeCached: Object.values(result).filter(val => val.cacheStatus == CacheStatus.BYPASS).length,
-        filesNotCachedByCf: Object.values(result).filter(val => val.cacheStatus == CacheStatus.DYNAMIC).length,
-      }
+        filesMatched: Object.values(result).filter((val) => val.match).length,
+        filesNotMatched: Object.values(result).filter((val) => !val.match).length,
+        filesInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.HIT).length,
+        filesNotInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.MISS).length,
+        filesInCacheButExpired: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.EXPIRED).length,
+        filesNotSupposedToBeCached: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.BYPASS)
+          .length,
+        filesNotCachedByCf: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.DYNAMIC).length
+      };
 
       log.info('cycle result', testResult);
       await sleep(this._spec.checksIntervalMs);

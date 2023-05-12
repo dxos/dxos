@@ -27,7 +27,7 @@ export enum CacheStatus {
   DYNAMIC = 'DYNAMIC',
   // Not found in CF, CF retrieved from origin server.
   // The next time this resource is accessed its status should be HIT.
-  EXPIRED = 'EXPIRED',
+  EXPIRED = 'EXPIRED'
 }
 
 // TODO(egorgripasov): Make more meaningful?
@@ -36,4 +36,4 @@ export type FileEvaluationResult = {
   cacheStatus?: CacheStatus;
 };
 
-export type EvaluationResult = Record< string, FileEvaluationResult >;
+export type EvaluationResult = Record<string, FileEvaluationResult>;
