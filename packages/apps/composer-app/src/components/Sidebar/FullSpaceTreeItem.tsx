@@ -45,9 +45,9 @@ import { abbreviateKey, getPath } from '../../router';
 import { backupSpace, restoreSpace } from '../../util';
 import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
 import { Separator } from '../Separator';
-import { DocumentTreeItem } from './DocumentTreeItem';
+import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 
-export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
+export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   const documents = useQuery(space, Document.filter());
   const { t } = useTranslation('composer');
   const navigate = useNavigate();
@@ -202,7 +202,7 @@ export const SpaceTreeItem = observer(({ space }: { space: Space }) => {
         {documents.length > 0 ? (
           <TreeBranch>
             {documents.map((document) => (
-              <DocumentTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
+              <DocumentLinkTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
             ))}
           </TreeBranch>
         ) : (

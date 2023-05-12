@@ -1,0 +1,74 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { CaretDown, CaretRight } from '@phosphor-icons/react';
+import React, { useState } from 'react';
+
+import { Document } from '@braneframe/types';
+import { Button, MockListItemOpenTrigger, useTranslation } from '@dxos/aurora';
+import { defaultDisabled } from '@dxos/aurora-theme';
+import { Space, SpaceState } from '@dxos/client';
+import { TreeBranch, TreeItem, TreeItemBody, TreeItemHeading, TreeItemOpenTrigger } from '@dxos/react-appkit';
+import { useMulticastObservable } from '@dxos/react-async';
+import { useIdentity, useQuery } from '@dxos/react-client';
+
+import { bindSpace, getSpaceDisplayName } from '../../util';
+import { DocumentTreeItem } from './DocumentTreeItem';
+
+export const SpacePickerTreeItem = ({ space, source, id }: { space: Space; source: string; id: string }) => {
+  const identity = useIdentity();
+  const identityHex = identity?.identityKey.toHex();
+  const { t } = useTranslation('composer');
+  const spaceSate = useMulticastObservable(space.state);
+  const disabled = spaceSate !== SpaceState.READY;
+  const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
+  const documents = useQuery(space, Document.filter());
+  const hasDocuments = documents.length > 0;
+
+  const [open, setOpen] = useState(false);
+
+  const OpenTriggerIcon = open ? CaretDown : CaretRight;
+
+  return (
+    <TreeItem
+      collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className={['mbe-2 block', disabled && defaultDisabled]}
+      {...(disabled && { 'aria-disabled': true })}
+    >
+      <div role='none' className='flex mis-1 items-center'>
+        {hasDocuments ? (
+          <TreeItemOpenTrigger>
+            <OpenTriggerIcon />
+          </TreeItemOpenTrigger>
+        ) : (
+          <MockListItemOpenTrigger />
+        )}
+        <TreeItemHeading
+          className='grow break-words pbs-1.5 text-sm font-medium'
+          data-testid='composer.spaceTreeItemHeading'
+        >
+          {spaceDisplayName}
+        </TreeItemHeading>
+        <Button
+          density='fine'
+          className='shrink-0'
+          onClick={() => identityHex && bindSpace(space, identityHex, source, id)}
+        >
+          Select
+        </Button>
+      </div>
+      <TreeItemBody>
+        {hasDocuments && (
+          <TreeBranch>
+            {documents.map((document) => (
+              <DocumentTreeItem key={document.id} document={document} />
+            ))}
+          </TreeBranch>
+        )}
+      </TreeItemBody>
+    </TreeItem>
+  );
+};

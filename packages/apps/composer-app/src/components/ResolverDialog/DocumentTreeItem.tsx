@@ -1,0 +1,26 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Article, ArticleMedium } from '@phosphor-icons/react';
+import React from 'react';
+
+import { Document } from '@braneframe/types';
+import { useTranslation } from '@dxos/aurora';
+import { TextKind } from '@dxos/aurora-composer';
+import { getSize, mx } from '@dxos/aurora-theme';
+import { TreeItem, TreeItemHeading } from '@dxos/react-appkit';
+import { observer } from '@dxos/react-client';
+
+export const DocumentTreeItem = observer(({ document }: { document: Document }) => {
+  const { t } = useTranslation('composer');
+  const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
+  return (
+    <TreeItem className='pis-4'>
+      <TreeItemHeading>
+        <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
+        <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
+      </TreeItemHeading>
+    </TreeItem>
+  );
+});

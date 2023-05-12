@@ -6,30 +6,32 @@ import { Outlet, useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { Button } from '@dxos/aurora';
-import { useSpaces } from '@dxos/react-client';
+import { useIdentity, useSpaces } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
+import { ResolverDialog } from '../components';
+import { matchSpace } from '../util';
 import type { OutletContext } from './OutletContext';
 
-export const EmbeddedLayout = () => {
-  const [searchParams] = useSearchParams();
+const useResolveLocation = () => {
   const { location } = useParams();
   const spaces = useSpaces({ all: true });
-  const space = spaces[0];
-  const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const haloInvitationCode = searchParams.get('haloInvitationCode');
+  const identity = useIdentity();
 
-  const handleCloseEmbed = useCallback(() => {
-    window.parent.postMessage({ type: 'close-embed' }, '*');
-  }, []);
+  if (!location || !identity) {
+    return { space: undefined, document: undefined, source: undefined, id: undefined };
+  }
+
+  const identityHex = identity?.identityKey.toHex();
+  const url = new URL(location);
+  const source = url.hostname.split('.').reverse().join('.');
+  const id = url.pathname.slice(1);
+
+  const space = spaces.find((space) => matchSpace(space, identityHex, source, id));
 
   let document;
 
   if (location && space) {
-    const url = new URL(location);
-    const source = url.hostname.split('.').reverse().join('.');
-    const id = url.pathname.slice(1);
-    // TODO(wittjosiah): Space picker.
     const documents = space.db.query((obj) => {
       const keys = obj.meta?.keys;
       return keys?.find((key: any) => key.source === source && key.id === id);
@@ -45,6 +47,20 @@ export const EmbeddedLayout = () => {
     }
   }
 
+  return { document, space, source, id };
+};
+
+export const EmbeddedLayout = () => {
+  const [searchParams] = useSearchParams();
+  const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+  const haloInvitationCode = searchParams.get('haloInvitationCode');
+
+  const { space, document, source, id } = useResolveLocation();
+
+  const handleCloseEmbed = useCallback(() => {
+    window.parent.postMessage({ type: 'close-embed' }, '*');
+  }, []);
+
   return (
     <ShellProvider
       space={space}
@@ -54,7 +70,11 @@ export const EmbeddedLayout = () => {
         console.warn('TODO: onJoinedSpace', nextSpaceKey);
       }}
     >
-      <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
+      {space && document ? (
+        <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
+      ) : source && id ? (
+        <ResolverDialog {...{ source, id }} />
+      ) : null}
       <Button className='fixed inline-end-0 block-end-0' onClick={handleCloseEmbed}>
         Close
       </Button>
