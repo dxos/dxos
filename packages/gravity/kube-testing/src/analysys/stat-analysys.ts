@@ -85,7 +85,6 @@ export const analyzeMessages = async (results: PlanResults) => {
   const lagTimes = Array.from(messages.values())
     .filter((x) => !!x.sent && !!x.received)
     .map((x) => x.received! - x.sent!);
-  console.log('Succesfull messages', lagTimes.length);
 
   return getStats(lagTimes, {
     failures,
@@ -233,13 +232,11 @@ const analyzeRunFailures = async (results: PlanResults) => {
     // Propagate map
     //
     if (data.type === 'ITERATION_START' || data.type === 'ITERATION_ERROR') {
-      console.log('Iteration', data.type);
       if (!peers.has(data.peerId)) {
         peers.set(data.peerId, { errors: 0, iterations: 0 });
       }
       switch (data.type) {
         case 'ITERATION_START': {
-          console.log('Iteration start', data.type);
           runs++;
           peers.get(data.peerId)!.iterations++;
           break;
