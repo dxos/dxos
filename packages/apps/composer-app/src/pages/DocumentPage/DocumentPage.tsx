@@ -3,7 +3,7 @@
 //
 
 import { DownloadSimple, FileArrowDown, FileArrowUp, Link, LinkBreak, UploadSimple } from '@phosphor-icons/react';
-import React, { HTMLAttributes, useCallback, useMemo, useRef, useState } from 'react';
+import React, { HTMLAttributes, useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 
@@ -488,7 +488,26 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
 export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
-  const { space, document } = useOutletContext<OutletContext>();
+  const { space, document, layout } = useOutletContext<OutletContext>();
+  const embedded = layout === 'embedded';
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      if (event.data.type === 'comment-stale') {
+        // TODO(wittjosiah): Display in UI.
+        alert('comment stale');
+      }
+    };
+
+    if (embedded) {
+      window.addEventListener('message', handler);
+      return () => window.removeEventListener('message', handler);
+    }
+  }, [embedded]);
 
   return (
     <div role='none'>

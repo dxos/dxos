@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import browser from 'webextension-polyfill';
+
+const composerId = '__DXOS_COMPOSER__';
+
 const srOnly = Object.entries({
   clip: 'rect(0 0 0 0)',
   'clip-path': 'inset(50%)',
@@ -21,32 +25,87 @@ const composerStyles = Object.entries({
   'margin-bottom': '-5px'
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
-const issueId = (document.getElementsByName('issue[id]')[0] as HTMLInputElement)?.value;
-const issueForm = document.getElementById(`issue-${issueId}-edit-form`);
-const commentForm = Array.from(document.getElementsByClassName('js-previewable-comment-form')).find((element) => {
-  return issueForm?.contains(element);
-});
-const cancelButton = Array.from(document.getElementsByClassName('js-comment-cancel-button')).find((element) => {
-  return issueForm?.contains(element);
-});
+const setupComposer = () => {
+  if (document.getElementById(composerId)) {
+    return;
+  }
 
-if (commentForm) {
-  const composer = document.createElement('iframe');
-  const baseUrl = import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org';
-  composer.setAttribute('src', `${baseUrl}/embedded/${window.location.href}`);
-  composer.setAttribute('style', composerStyles);
-  Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
-  commentForm.appendChild(composer);
+  console.log('Setting up composer...');
 
-  window.addEventListener('message', (event) => {
-    if (event.source !== composer.contentWindow) {
-      return;
-    }
-
-    if (event.data.type === 'close-embed') {
-      (cancelButton as HTMLButtonElement).click();
-    }
+  const issueId = (document.getElementsByName('issue[id]')[0] as HTMLInputElement | undefined)?.value;
+  const issueForm = document.getElementById(`issue-${issueId}-edit-form`);
+  const commentForm = Array.from(document.getElementsByClassName('js-previewable-comment-form')).find((element) => {
+    return issueForm?.contains(element);
   });
+  const cancelButton = Array.from(document.getElementsByClassName('js-comment-cancel-button')).find((element) => {
+    return issueForm?.contains(element);
+  }) as HTMLButtonElement | undefined;
+  const updateButton = Array.from(document.getElementsByClassName('Button--primary')).find((element) => {
+    return issueForm?.contains(element);
+  }) as HTMLButtonElement | undefined;
+  const body = document.getElementById(`issue-${issueId}-body`) as HTMLTextAreaElement | undefined;
+  const commentParent = Array.from(document.getElementsByClassName('timeline-comment')).find((element) => {
+    return element.contains(issueForm);
+  }) as HTMLDivElement | undefined;
 
-  console.log('Content script initialized.');
-}
+  if (commentForm) {
+    const composer = document.createElement('iframe');
+    const baseUrl = new URL(import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
+    composer.setAttribute('id', composerId);
+    composer.setAttribute('src', `${baseUrl.href}/embedded/${window.location.href}`);
+    composer.setAttribute('style', composerStyles);
+    Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
+
+    let stale = false;
+    const staleObserver = new MutationObserver((mutationsList) => {
+      mutationsList.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (
+            !stale &&
+            mutation.target instanceof HTMLElement &&
+            mutation.target.classList.contains('is-comment-stale')
+          ) {
+            stale = true;
+            composer.contentWindow?.postMessage({ type: 'comment-stale' }, baseUrl.origin);
+          }
+        }
+      });
+    });
+    commentParent && staleObserver.observe(commentParent, { attributes: true });
+
+    window.addEventListener('message', (event) => {
+      if (event.source !== composer.contentWindow) {
+        return;
+      }
+
+      switch (event.data.type) {
+        case 'request-initial-data': {
+          composer.contentWindow?.postMessage({ type: 'initial-data', content: body?.value }, baseUrl.origin);
+          break;
+        }
+
+        case 'close-embed': {
+          cancelButton?.click();
+          break;
+        }
+
+        case 'save-data': {
+          if (body) {
+            body.value = event.data.content;
+          }
+          updateButton?.click();
+          break;
+        }
+      }
+    });
+
+    commentForm.appendChild(composer);
+
+    console.log('Composer setup completed.');
+  }
+};
+
+const port = browser.runtime.connect({ name: 'content' });
+port.onMessage.addListener(() => setupComposer());
+
+console.log('Content script initialized.');
