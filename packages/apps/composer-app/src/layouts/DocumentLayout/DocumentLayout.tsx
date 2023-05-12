@@ -95,7 +95,7 @@ export const DocumentLayout = () => {
 
     if (embedded && spaces.length > 0 && documents.length === 0) {
       window.addEventListener('message', handler);
-      window.parent.postMessage({ type: 'request-initial-data' }, '*');
+      window.parent.postMessage({ type: 'request-initial-data' }, 'https://github.com');
       return () => window.removeEventListener('message', handler);
     }
   }, [embedded, spaces, documents]);
