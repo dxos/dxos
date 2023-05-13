@@ -26,7 +26,8 @@
     "tailwind-merge": "^1.10.0",
     "tailwindcss": "~3.2.7",
     "tailwindcss-logical": "^3.0.0",
-    "tailwindcss-radix": "^2.8.0"
+    "tailwindcss-radix": "^2.8.0",
+    "tailwindcss-touch": "^1.0.1"
   },
   "devDependencies": {
     "@dxos/aurora-types": "workspace:*",

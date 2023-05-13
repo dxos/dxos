@@ -13,7 +13,9 @@ import {
   dropdownMenuTheme,
   inputTheme,
   inputOsTheme,
-  mainTheme
+  mainTheme,
+  messageTheme,
+  avatarTheme
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -22,7 +24,9 @@ export const theme: Theme<Record<string, any>> = {
   dropdownMenu: dropdownMenuTheme,
   input: inputTheme,
   list: listTheme,
-  main: mainTheme
+  main: mainTheme,
+  message: messageTheme,
+  avatar: avatarTheme
 };
 
 export const osTheme: Theme<Record<string, any>> = {
@@ -33,7 +37,7 @@ export const osTheme: Theme<Record<string, any>> = {
   list: listOsTheme
 };
 
-export const tx = <P extends Record<string, any>>(
+export const appTx = <P extends Record<string, any>>(
   path: string,
   defaultClassName: string,
   styleProps: P,

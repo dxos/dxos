@@ -11,7 +11,7 @@ import { Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { createTestBroker } from '@dxos/signal';
+import { runTestSignalServer } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
@@ -20,10 +20,10 @@ import { OfferMessage, SignalMessage } from './signal-messenger';
 describe('MessageRouter', () => {
   let topic: PublicKey;
 
-  let broker1: Awaited<ReturnType<typeof createTestBroker>>;
+  let broker1: Awaited<ReturnType<typeof runTestSignalServer>>;
 
   beforeAll(async () => {
-    broker1 = await createTestBroker();
+    broker1 = await runTestSignalServer();
   });
 
   beforeEach(() => {

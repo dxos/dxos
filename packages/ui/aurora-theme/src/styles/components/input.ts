@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, Elevation, MessageValence } from '@dxos/aurora-types';
+import { ComponentFragment, ComponentFunction, Density, Elevation, MessageValence, Size } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -20,7 +20,10 @@ import {
   staticFocus,
   defaultDescription,
   valenceColorText,
-  contentElevation
+  contentElevation,
+  getSize,
+  computeSize,
+  sizeValue
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -30,6 +33,7 @@ export type InputStyleProps = Partial<{
   density: Density;
   elevation: Elevation;
   validationValence: MessageValence;
+  size: Size;
 }>;
 
 export type InputMetaStyleProps = Partial<{
@@ -58,37 +62,31 @@ export const inputValence = (valence?: MessageValence) => {
   }
 };
 
-const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => {
-  return [
-    'is-full bg-transparent text-current',
-    props.density === 'fine' ? fineBlockSize : coarseBlockSize,
-    defaultPlaceholder,
-    subduedFocus,
-    props.disabled && defaultDisabled
-  ];
-};
+const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
+  'is-full bg-transparent text-current',
+  props.density === 'fine' ? fineBlockSize : coarseBlockSize,
+  defaultPlaceholder,
+  subduedFocus,
+  props.disabled && defaultDisabled
+];
 
-const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => {
-  return [
-    'is-full text-neutral-900 dark:text-white',
-    defaultPlaceholder,
-    props.density === 'fine' ? defaultFine : defaultCoarse,
-    props.disabled && defaultDisabled
-  ];
-};
+const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
+  'is-full text-neutral-900 dark:text-white',
+  defaultPlaceholder,
+  props.density === 'fine' ? defaultFine : defaultCoarse,
+  props.disabled && defaultDisabled
+];
 
-const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => {
-  return [
-    defaultPlaceholder,
-    'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
-    inputValence(props.validationValence),
-    props.disabled && defaultDisabled,
-    props.focused && staticFocus
-  ];
-};
+const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
+  defaultPlaceholder,
+  'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
+  inputValence(props.validationValence),
+  props.disabled && defaultDisabled,
+  props.focused && staticFocus
+];
 
-export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
-  return props.variant === 'subdued'
+export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
     ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
@@ -101,10 +99,9 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
         ...sharedDefaultInputStyles(props),
         ...etc
       );
-};
 
-export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
-  return props.variant === 'subdued'
+export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
     ? mx(...sharedStaticInputStyles(props), ...etc)
@@ -117,35 +114,48 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) 
         ...sharedDefaultInputStyles(props),
         ...etc
       );
-};
 
-export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) => {
-  return mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
-};
-
-export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
-  return mx(
-    'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
-    props.srOnly && 'sr-only',
+export const inputAppCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx(
+    getSize(size),
+    'flex items-center justify-center rounded text-white',
+    'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
+    defaultFocus,
     ...etc
   );
-};
 
-export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
-  return mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
-};
+export const inputOsCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx(
+    getSize(size),
+    'flex items-center justify-center rounded text-white',
+    'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
+    osFocus,
+    ...etc
+  );
 
-export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
-  return mx(props.srOnly && 'sr-only', ...etc);
-};
+export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx(getSize(computeSize(sizeValue(size) * 0.7, 4)), ...etc);
 
-export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) => {
-  return mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
-};
+export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
+
+export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+  mx('block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
+
+export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+  mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
+
+export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+  mx(props.srOnly && 'sr-only', ...etc);
+
+export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+  mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputAppInput,
   inputWithSegments: inputWithSegmentsInput,
+  checkbox: inputAppCheckbox,
+  checkboxIndicator: inputCheckboxIndicator,
   label: inputLabel,
   description: inputDescription,
   validation: inputValidation,
@@ -154,5 +164,6 @@ export const inputTheme = {
 
 export const inputOsTheme = {
   ...inputTheme,
-  input: inputOsInput
+  input: inputOsInput,
+  checkbox: inputOsCheckbox
 };

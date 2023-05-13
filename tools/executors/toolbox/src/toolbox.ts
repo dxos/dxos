@@ -104,6 +104,7 @@ class Toolbox {
     this.projects = projects.filter(
       (project: Project) =>
         project.name?.startsWith('@dxos') &&
+        project.name?.startsWith('@braneframe') &&
         (!this.config.project?.ignored || this.config.project?.ignored.indexOf(project.name) === -1)
     );
 

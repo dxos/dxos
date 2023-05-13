@@ -8,7 +8,7 @@ import { sleep, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { SignalClient } from './signal-client';
@@ -20,12 +20,12 @@ const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
 };
 
 describe('SignalClient', () => {
-  let broker1: TestBroker;
+  let broker1: SignalServerRunner;
 
-  let broker2: TestBroker;
+  let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    broker1 = await createTestBroker();
+    broker1 = await runTestSignalServer();
     // broker2 = await await createTestBroker(signalApiPort2);
   });
 
