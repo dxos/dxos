@@ -55,17 +55,27 @@ export type TraceEvent =
       peerId: string;
     };
 
+export type AddFileOptions = {
+  preprocessor?: (entry: any) => SerializedLogEntry;
+}
+
 export class LogReader implements AsyncIterable<SerializedLogEntry> {
   private _logs: any[] = [];
 
-  addFile(path: string) {
+  addFile(path: string, { preprocessor }: AddFileOptions = {}) {
     // TODO(dmaretskyi): Read files chunk by chunk.
     this._logs = [
       ...this._logs,
       ...readFileSync(path, 'utf-8')
         .split('\n')
         .filter((line) => line.trim().length > 0)
-        .map((line) => JSON.parse(line))
+        .map((line) => {
+          if(preprocessor) {
+            return preprocessor(JSON.parse(line));
+          }
+
+          return JSON.parse(line);
+        })
     ];
   }
 
@@ -92,3 +102,15 @@ export type SerializedLogEntry<T = any> = {
     // TODO(dmaretskyi): .
   };
 };
+
+export const zapPreprocessor = (entry: any): SerializedLogEntry => {
+  const { ts, msg, level, ...rest } = entry;
+
+  return ({
+    level: LogLevel.TRACE,
+    timestamp: new Date(entry.ts).getTime(),
+    message: entry.msg,
+    context: rest,
+    meta: {}
+  })
+}

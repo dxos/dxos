@@ -42,7 +42,7 @@ export const runSignal = async (num: number, outFolder: string, signalArguments:
 
   const runner = new SignalServerRunner({
     port: randomInt(10000, 20000),
-    binCommand: `go run -gcflags="all=-N -l" ${BIN_PATH}`,
+    binCommand: `go run ${BIN_PATH}`,
     signalArguments,
     cwd: PATH_TO_KUBE_REPO,
     env: {

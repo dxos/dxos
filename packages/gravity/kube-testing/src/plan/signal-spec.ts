@@ -158,7 +158,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await this.builder.destroy();
     switch (params.spec.type) {
       case 'discovery': {
-        return analyzeSwarmEvents(results);
+        return analyzeSwarmEvents(params, results);
       }
       case 'signaling': {
         return analyzeMessages(results);
