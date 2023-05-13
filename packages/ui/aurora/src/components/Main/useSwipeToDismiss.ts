@@ -87,31 +87,27 @@ export const useSwipeToDismiss = (
   }, []);
 
   useEffect(() => {
-    if (node) {
-      node.addEventListener('mousedown', onMouseDown);
-      node.addEventListener('touchstart', onMouseDown);
-    }
+    node?.addEventListener('mousedown', onMouseDown);
+    node?.addEventListener('touchstart', onMouseDown);
     return () => {
-      if (node) {
-        node.removeEventListener('mousedown', onMouseDown);
-        node.removeEventListener('touchstart', onMouseDown);
-      }
+      node?.removeEventListener('mousedown', onMouseDown);
+      node?.removeEventListener('touchstart', onMouseDown);
     };
   }, [node, onMouseDown]);
 
   useEffect(() => {
-    document.body.addEventListener('mouseup', onMouseUp);
-    document.body.addEventListener('mousemove', onMouseMove);
+    node?.addEventListener('mouseup', onMouseUp);
+    node?.addEventListener('mousemove', onMouseMove);
 
-    document.body.addEventListener('touchmove', onMouseMove, { passive: false });
-    document.body.addEventListener('touchend', onMouseUp);
+    node?.addEventListener('touchmove', onMouseMove, { passive: false });
+    node?.addEventListener('touchend', onMouseUp);
 
     return () => {
-      document.body.removeEventListener('mouseup', onMouseUp);
-      document.body.removeEventListener('mousemove', onMouseMove);
+      node?.removeEventListener('mouseup', onMouseUp);
+      node?.removeEventListener('mousemove', onMouseMove);
 
-      document.body.removeEventListener('touchmove', onMouseMove);
-      document.body.removeEventListener('touchend', onMouseMove);
+      node?.removeEventListener('touchmove', onMouseMove);
+      node?.removeEventListener('touchend', onMouseMove);
     };
   }, [onMouseUp, onMouseDown, onMouseMove]);
 
