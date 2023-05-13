@@ -142,7 +142,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     scheduleTaskInterval(
       ctx,
       async () => {
-        await env.syncBarrier(`iteration-${testCounter}`)
+        await env.syncBarrier(`iteration-${testCounter}`);
         await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
         testCounter++;
       },
