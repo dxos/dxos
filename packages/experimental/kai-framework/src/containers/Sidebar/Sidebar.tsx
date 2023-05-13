@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, Info, Graph, PuzzlePiece, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
@@ -240,7 +240,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                       className='mli-2 p-0 px-2 items-center'
                       onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
                     >
-                      <Robot className={getSize(6)} />
+                      <Function className={getSize(6)} />
                       <div className='pl-2 text-sm'>Functions</div>
                     </Button>
                   </div>
