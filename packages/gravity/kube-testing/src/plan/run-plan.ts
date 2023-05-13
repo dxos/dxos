@@ -7,12 +7,14 @@ import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
+import { createClient } from 'redis';
 
 import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
+import { AgentEnv } from './agent-env';
 
 const AGENT_LOG_FILE = 'agent.log';
 
@@ -98,6 +100,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         agentId,
         spec,
         agents,
+        testId,
         outDir: join(outDir, agentId),
         config: agentConfig
       };
@@ -169,7 +172,11 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
   try {
     log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
-    await plan.run(params);
+    
+    const env = new AgentEnv<S, C>(params);
+    await env.open();
+
+    await plan.run(env);
   } catch (err) {
     console.error(err);
     process.exit(1);

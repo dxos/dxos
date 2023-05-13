@@ -151,9 +151,14 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
           continue;
         }
         const timeTogetherOnTopic = Math.min(seen.leave! - timings.join!, timings.leave! - seen.join!);
+        if(timeTogetherOnTopic < 0) {
+          continue;
+        }
         if (timeTogetherOnTopic < 500) {
           // Different iterations, do not intersect in time
-          ignored++;
+          if(timeTogetherOnTopic > 0) {
+            ignored++;
+          }
           continue;
         }
         if (!seen.seen.has(expectedPeer)) {

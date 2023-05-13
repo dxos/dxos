@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTaskInterval, sleep } from '@dxos/async';
+import { scheduleTaskInterval, sleep, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -11,6 +11,7 @@ import { range } from '@dxos/util';
 import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
+import { AgentEnv } from './agent-env';
 import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
@@ -63,18 +64,11 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
   }
 
-  async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async run(env: AgentEnv<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+    const { agentId, agents, spec, config, testId, outDir } = env.params;
     const ctx = new Context();
 
     log.info('start', { agentId });
-
-    // const agentsPerTopic: Record<string, string[]> = {};
-    // for (const [agentId, agentCfg] of Object.entries(agents)) {
-    //   for (const topic of agentCfg.topics) {
-    //     agentsPerTopic[agentId] ??= [];
-    //     agentsPerTopic[agentId].push(topic);
-    //   }
-    // }
 
     const agent = await this.builder.createPeer({
       signals: config.servers.map((server) => ({ server })),
@@ -87,11 +81,13 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     //
     // test
     //
-    let testCounter = 0;
+    let iterationCounter = 0;
     scheduleTaskInterval(
       ctx,
       async () => {
-        log.info(`${testCounter++} test iteration running...`);
+        iterationCounter++;
+        await env.syncBarrier(`iteration-${iterationCounter}`);
+        log.info(`${iterationCounter} test iteration running...`);
 
         switch (spec.type) {
           case 'discovery': {
