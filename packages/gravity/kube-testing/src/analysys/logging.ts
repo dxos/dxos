@@ -57,7 +57,7 @@ export type TraceEvent =
 
 export type AddFileOptions = {
   preprocessor?: (entry: any) => SerializedLogEntry;
-}
+};
 
 export class LogReader implements AsyncIterable<SerializedLogEntry> {
   private _logs: any[] = [];
@@ -70,7 +70,7 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
         .split('\n')
         .filter((line) => line.trim().length > 0)
         .map((line) => {
-          if(preprocessor) {
+          if (preprocessor) {
             return preprocessor(JSON.parse(line));
           }
 
@@ -104,13 +104,13 @@ export type SerializedLogEntry<T = any> = {
 };
 
 export const zapPreprocessor = (entry: any): SerializedLogEntry => {
-  const { ts, msg, level, ...rest } = entry;
+  const { ts, msg, level: _, ...rest } = entry;
 
-  return ({
-    level: LogLevel.TRACE,
-    timestamp: new Date(entry.ts).getTime(),
-    message: entry.msg,
+  return {
+    level: LogLevel.TRACE, // TODO(dmaretskyi): Map levels?
+    timestamp: new Date(ts).getTime(),
+    message: msg,
     context: rest,
     meta: {}
-  })
-}
+  };
+};
