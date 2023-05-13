@@ -21,7 +21,6 @@ import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
-import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const SIDEBAR_NAME = 'Sidebar';
@@ -85,10 +84,9 @@ type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>>
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
+  const { sidebarOpen } = useMainContext(SIDEBAR_NAME);
   const { tx } = useThemeContext();
   const ref = useForwardedRef(forwardedRef);
-  useSwipeToDismiss(ref, () => setSidebarOpen(false), 48, 'left', 0);
   return (
     <DialogContent
       forceMount
