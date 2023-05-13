@@ -30,7 +30,8 @@ void runPlan({
   options: {
     staggerAgents: 5,
     randomSeed: PublicKey.random().toHex(),
-    repeatAnalysis: '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T11:36:15-d70b/test.json'
+    repeatAnalysis:
+      '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T11:36:15-d70b/test.json'
     // '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-05-11T12:29:06-c896/test.json'
   }
 });

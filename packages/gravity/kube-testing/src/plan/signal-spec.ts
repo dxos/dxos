@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTaskInterval, sleep, Trigger } from '@dxos/async';
+import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,7 +12,7 @@ import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 import { AgentEnv } from './agent-env';
-import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
+import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
   servers: number;
@@ -65,7 +65,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   }
 
   async run(env: AgentEnv<SignalTestSpec, SignalAgentConfig>): Promise<void> {
-    const { agentId, agents, spec, config, testId, outDir } = env.params;
+    const { agentId, agents, spec, config } = env.params;
     const ctx = new Context();
 
     log.info('start', { agentId });
