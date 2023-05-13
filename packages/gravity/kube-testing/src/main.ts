@@ -10,7 +10,7 @@ import { SignalTestPlan } from './plan/signal-spec';
 void runPlan({
   plan: new SignalTestPlan(),
   spec: {
-    servers: 2,
+    servers: 1,
     agents: 10,
     peersPerAgent: 10,
     serversPerAgent: 1,
@@ -30,8 +30,8 @@ void runPlan({
   },
   options: {
     staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex(),
-    repeatAnalysis:
-      '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+    randomSeed: PublicKey.random().toHex()
+    // repeatAnalysis:
+    //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
   }
 });
