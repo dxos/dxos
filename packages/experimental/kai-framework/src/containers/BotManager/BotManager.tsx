@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Robot, Ghost, X } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowLineDown, Broom, HandPalm, Ghost, Play, Robot, X } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -154,6 +154,9 @@ export const BotManager = () => {
     <div className='flex flex-1 flex-col px-2 overflow-hidden'>
       <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
+          <Button onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
+            <Play className={getSize(5)} />
+          </Button>
           <Select value={botId} onValueChange={setBotId}>
             {botModules.map(({ id, displayName }) => (
               <Select.Item key={id} value={id!}>
@@ -161,15 +164,20 @@ export const BotManager = () => {
               </Select.Item>
             ))}
           </Select>
-          <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
-            Start
-          </Button>
         </div>
         <div className='flex items-center space-x-2'>
-          <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
-          <Button onClick={handleStopAll}>Stop</Button>
-          <Button onClick={handleFlush}>Flush</Button>
-          <Button onClick={() => refresh}>Refresh</Button>
+          <Button onClick={() => botId && botClient.fetchImage()} title='Pull docker image'>
+            <ArrowLineDown className={getSize(5)} />
+          </Button>
+          <Button onClick={handleStopAll} title='Stop all containers'>
+            <HandPalm className={getSize(5)} />
+          </Button>
+          <Button onClick={handleFlush} title='Flush stopped containers'>
+            <Broom className={getSize(5)} />
+          </Button>
+          <Button onClick={() => refresh} title='Refresh list'>
+            <ArrowClockwise className={getSize(5)} />
+          </Button>
         </div>
       </Toolbar>
 

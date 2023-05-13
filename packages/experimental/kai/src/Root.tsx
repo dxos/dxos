@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { MainOverlay, MainRoot } from '@dxos/aurora';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import {
   AppState,
@@ -48,7 +49,10 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
               <FrameRegistryContextProvider frameDefs={frameDefs}>
                 <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                   <ShellProvider>
-                    <Outlet />
+                    <MainRoot>
+                      <MainOverlay />
+                      <Outlet />
+                    </MainRoot>
                     {children}
                   </ShellProvider>
                 </AppStateProvider>

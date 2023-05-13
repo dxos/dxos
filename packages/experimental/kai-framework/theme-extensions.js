@@ -4,26 +4,20 @@
 
 const colors = require('tailwindcss/colors');
 
-const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
-
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
 const primary = colors.sky;
 const secondary = colors.blue;
 const neutral = colors.zinc;
 
 module.exports = {
-  osThemeExtension: {
-    ...osThemeExtension,
-    spacing: {
-      sidebar: '300px'
-    }
-  },
-
   // https://tailwindcss.com/docs/theme#extending-the-default-theme
   kaiThemeExtension: {
     spacing: {
+      // TODO(burdon): Remove.
       appbar: '0px',
       header: '0px',
+
+      sidebar: '300px',
 
       // TODO(burdon): Hack.
       // Standardize column width for tiles (based on iPhone Pro 12).
