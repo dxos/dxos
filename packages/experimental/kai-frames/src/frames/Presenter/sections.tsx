@@ -6,8 +6,9 @@ import { Article, Image, Trash } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
-import { Document, DocumentStack, File } from '@dxos/kai-types';
+import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
 
@@ -28,7 +29,9 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         id: Document.type.name,
         label: 'New slide',
         Icon: Article,
-        onAction: (stack, section) => insert(stack, section, new DocumentStack.Section({ object: new Document() }))
+        onAction: (stack, section) => {
+          insert(stack, section, new Document());
+        }
       },
       {
         id: File.type.name,
@@ -66,10 +69,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
   const config = useConfig();
   const identity = useIdentity();
   const { space } = useFrameContext();
-  const object = section.object;
-
-  // TODO(burdon): Handle image.
-  // console.log(object.__typename);
+  const { object } = section;
 
   switch (object.__typename) {
     case Document.type.name: {
@@ -80,6 +80,7 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
           text={object.content}
           slots={{
             editor: {
+              placeholder: 'Text...',
               spellCheck: false // TODO(burdon): Config.
             }
           }}

@@ -5,7 +5,11 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
+<<<<<<< HEAD
 import { defineConfig } from 'vite';
+=======
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
+>>>>>>> main
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
@@ -24,7 +28,18 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   server: {
     host: true,
+<<<<<<< HEAD
     https: process.env.HTTPS === 'true'
+=======
+    https: process.env.HTTPS === 'true',
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
+>>>>>>> main
   },
 
   build: {
@@ -113,6 +128,7 @@ export default defineConfig({
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+<<<<<<< HEAD
     ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
       ? [
           sentryVitePlugin({
@@ -123,6 +139,19 @@ export default defineConfig({
           })
         ]
       : []),
+=======
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    // TODO(wittjosiah): Create sentry project.
+    // sentryVitePlugin({
+    //   org: 'dxos',
+    //   project: 'kai-demo',
+    //   sourcemaps: {
+    //     assets: './packages/experimental/kai-framework/out/kai-demo/**'
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   dryRun: !process.env.CI
+    // }),
+>>>>>>> main
 
     // https://www.bundle-buddy.com/rollup
     {

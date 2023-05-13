@@ -85,6 +85,9 @@ export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, in
 
   const run = async () => {
     await runInContextAsync(ctx, task);
+    if (ctx.disposed) {
+      return;
+    }
     timeoutId = setTimeout(run, interval);
   };
 

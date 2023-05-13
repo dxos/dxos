@@ -7,13 +7,22 @@ import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
+<<<<<<< HEAD
 import { Button, ThemeProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+=======
+import { Button, MainRoot, Sidebar as SidebarRoot, Main, ThemeProvider, MainOverlay, useSidebar } from '@dxos/aurora';
+import { getSize, mx, appTx } from '@dxos/aurora-theme';
+>>>>>>> main
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+<<<<<<< HEAD
 import { osTranslations, PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-shell';
+=======
+import { osTranslations } from '@dxos/react-shell';
+>>>>>>> main
 
 import '@dxosTheme';
 
@@ -110,23 +119,41 @@ const SurfaceOutlet = () => {
 // App surfaces
 //
 
+<<<<<<< HEAD
 const SidebarSurface = () => {
   const toggleSidebar = useTogglePanelSidebar();
+=======
+const SIDEBAR_SURFACE_NAME = 'KaiFrameworkSidebarSurface';
+
+const SidebarSurface = () => {
+  const { toggleSidebar } = useSidebar(SIDEBAR_SURFACE_NAME);
+>>>>>>> main
   const { controller } = useContext(SurfaceControllerContext);
 
   return (
     <div className='flex flex-col grow bs-full bg-zinc-200'>
       <div className='flex justify-between h-[32px] px-2 items-center'>
         <div className='flex'>
+<<<<<<< HEAD
           <Button onClick={() => controller.setState('sidebar', 'navigator')}>
             <List className={getSize(5)} />
           </Button>
           <Button onClick={() => controller.setState('sidebar', 'search')}>
+=======
+          <Button variant='ghost' onClick={() => controller.setState('sidebar', 'navigator')}>
+            <List className={getSize(5)} />
+          </Button>
+          <Button variant='ghost' onClick={() => controller.setState('sidebar', 'search')}>
+>>>>>>> main
             <MagnifyingGlass className={getSize(5)} />
           </Button>
         </div>
         <div>
+<<<<<<< HEAD
           <Button onClick={toggleSidebar}>
+=======
+          <Button variant='ghost' onClick={toggleSidebar}>
+>>>>>>> main
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -138,6 +165,11 @@ const SidebarSurface = () => {
   );
 };
 
+<<<<<<< HEAD
+=======
+SidebarSurface.displayName = SIDEBAR_SURFACE_NAME;
+
+>>>>>>> main
 const MainSurface = () => {
   return (
     <div className='flex flex-col grow overflow-y-scroll'>
@@ -264,6 +296,7 @@ const Component3 = () => (
 // Layout
 //
 
+<<<<<<< HEAD
 const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
   const { displayState } = useContext(PanelSidebarContext);
   const toggleSidebar = useTogglePanelSidebar();
@@ -273,6 +306,18 @@ const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
             <Button onClick={toggleSidebar}>
+=======
+const PANEL_SIDEBAR_CONTENT_NAME = 'PanelSidebarContent';
+
+const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
+  const { sidebarOpen, openSidebar } = useSidebar(PANEL_SIDEBAR_CONTENT_NAME);
+  return (
+    <div className='flex grow overflow-hidden'>
+      {!sidebarOpen && (
+        <div className='flex flex-col h-full px-2'>
+          <div className='flex h-[32px] items-center'>
+            <Button variant='ghost' onClick={openSidebar}>
+>>>>>>> main
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -283,6 +328,11 @@ const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
+<<<<<<< HEAD
+=======
+PanelSidebarContent.displayName = PANEL_SIDEBAR_CONTENT_NAME;
+
+>>>>>>> main
 const Layout = () => {
   // Decouple router.
   const { controller } = useContext(SurfaceControllerContext);
@@ -294,6 +344,7 @@ const Layout = () => {
   }, [main]);
 
   return (
+<<<<<<< HEAD
     <PanelSidebarProvider
       inlineStart
       slots={{
@@ -308,6 +359,20 @@ const Layout = () => {
         <Surface id='debug' />
       </PanelSidebarContent>
     </PanelSidebarProvider>
+=======
+    <MainRoot>
+      <MainOverlay />
+      <SidebarRoot>
+        <Surface id='sidebar' element={<SidebarSurface />} />
+      </SidebarRoot>
+      <Main>
+        <PanelSidebarContent>
+          <Surface id='main' element={<MainSurface />} />
+          <Surface id='debug' />
+        </PanelSidebarContent>
+      </Main>
+    </MainRoot>
+>>>>>>> main
   );
 };
 
@@ -324,7 +389,11 @@ const TestApp = () => {
   };
 
   const Root = () => (
+<<<<<<< HEAD
     <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]}>
+=======
+    <ThemeProvider appNs='kai' rootDensity='fine' resourceExtensions={[osTranslations, appkitTranslations]} tx={appTx}>
+>>>>>>> main
       <SurfaceControllerContextProvider components={components}>
         <Layout />
       </SurfaceControllerContextProvider>

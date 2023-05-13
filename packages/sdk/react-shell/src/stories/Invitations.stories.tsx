@@ -99,7 +99,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
 const Invitations = ({ id }: { id: number }) => {
   const client = useClient();
-  const networkStatus = useNetworkStatus().state;
+  const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
   const [panel, setPanel] = useState<PanelType>();
 
@@ -145,7 +145,7 @@ const Invitations = ({ id }: { id: number }) => {
       {/* <ToolTip content='Toggle Network'> */}
       <Button
         onClick={() =>
-          client.mesh.setConnectionState(
+          client.mesh.updateConfig(
             networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE
           )
         }

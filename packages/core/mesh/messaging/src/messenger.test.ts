@@ -8,7 +8,7 @@ import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
@@ -36,10 +36,10 @@ const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
 };
 
 describe('Messenger', () => {
-  let broker: TestBroker;
+  let broker: SignalServerRunner;
 
   beforeAll(async () => {
-    broker = await createTestBroker();
+    broker = await runTestSignalServer();
   });
 
   afterAll(() => {

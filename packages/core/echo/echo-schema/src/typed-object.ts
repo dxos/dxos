@@ -270,6 +270,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
         } else {
           const sub = this._createProxy({}, key);
+          this._mutate(this._model.builder().set(key, {}).build());
           for (const [subKey, subValue] of Object.entries(value)) {
             sub[subKey] = subValue;
           }

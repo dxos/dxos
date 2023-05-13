@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { ComponentProps, ComponentPropsWithRef, forwardRef, ReactNode } from 'react';
+import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Density, Elevation } from '@dxos/aurora-types';
 
@@ -28,8 +28,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', ...rootSlot }, ref) => {
     const { inGroup } = useButtonGroupContext(BUTTON_NAME);
     const { tx } = useThemeContext();
-    const { elevation } = useElevationContext();
-    const density = useDensityContext();
+    const elevation = useElevationContext(propsElevation);
+    const density = useDensityContext(propsDensity);
     return (
       <button
         ref={ref}
@@ -41,8 +41,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             variant,
             inGroup,
             disabled: rootSlot.disabled,
-            density: propsDensity ?? density,
-            elevation: propsElevation ?? elevation
+            density,
+            elevation
           },
           rootSlot.className
         )}
@@ -56,13 +56,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = BUTTON_NAME;
 
-interface ButtonGroupProps extends ComponentProps<'div'> {
-  children?: ReactNode;
-}
+type ButtonGroupProps = ComponentPropsWithoutRef<'div'> & { elevation?: Elevation };
 
-const ButtonGroup = ({ children, ...divProps }: ButtonGroupProps) => {
+const ButtonGroup = ({ children, elevation: propsElevation, ...divProps }: ButtonGroupProps) => {
   const { tx } = useThemeContext();
-  const { elevation } = useElevationContext();
+  const elevation = useElevationContext(propsElevation);
   return (
     <div role='none' {...divProps} className={tx('button.group', 'button-group', { elevation }, divProps.className)}>
       <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>

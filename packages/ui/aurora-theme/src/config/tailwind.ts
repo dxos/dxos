@@ -6,6 +6,7 @@ import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
+import tailwindTouch from 'tailwindcss-touch';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
@@ -619,7 +620,7 @@ export const tailwindConfig = ({
       ...extensions
     )
   },
-  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
+  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix(), tailwindTouch()],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {

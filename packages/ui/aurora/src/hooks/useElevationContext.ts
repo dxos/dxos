@@ -4,6 +4,11 @@
 
 import { useContext } from 'react';
 
+import { Elevation } from '@dxos/aurora-types';
+
 import { ElevationContext } from '../components';
 
-export const useElevationContext = () => useContext(ElevationContext);
+export const useElevationContext = (propsElevation?: Elevation) => {
+  const { elevation } = useContext(ElevationContext);
+  return propsElevation ?? elevation;
+};

@@ -5,8 +5,8 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { MainRoot, Main, MainOverlay } from '@dxos/aurora';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
-import { PanelSidebarProvider } from '@dxos/react-shell';
 
 import { Surface, Sidebar } from '../containers';
 import { createPath, defaultFrameId, useAppRouter, useAppState } from '../hooks';
@@ -39,15 +39,13 @@ const SpacePage = () => {
   }
 
   return (
-    <PanelSidebarProvider
-      inlineStart
-      slots={{
-        main: { className: 'pbs-header bs-full overflow-hidden' },
-        content: { className: '!block-start-appbar', children: <Sidebar onNavigate={(path) => navigate(path)} /> }
-      }}
-    >
-      <SpacePanel />
-    </PanelSidebarProvider>
+    <MainRoot>
+      <MainOverlay />
+      <Sidebar className='!block-start-appbar' onNavigate={(path) => navigate(path)} />
+      <Main className='pbs-header bs-full overflow-hidden'>
+        <SpacePanel />
+      </Main>
+    </MainRoot>
   );
 };
 

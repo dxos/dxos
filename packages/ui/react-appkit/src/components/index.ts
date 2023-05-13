@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Alert';
 export * from './AuthChoices';
 export * from './Avatar';
-export * from './Checkbox';
 export * from './CompoundButton';
 export * from './DeviceList';
 export * from './Dialog';

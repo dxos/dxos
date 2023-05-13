@@ -5,8 +5,9 @@
 import { Stack as StackIcon } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Document } from '@braneframe/types';
 import { Space } from '@dxos/client';
-import { Document, DocumentStack } from '@dxos/kai-types';
+import { DocumentStack } from '@dxos/kai-types';
 
 import { FrameRuntime } from '../../registry';
 

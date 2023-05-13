@@ -3,9 +3,10 @@
 //
 
 import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-icons/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Document } from '@braneframe/types';
 import {
   Button,
   DensityProvider,
@@ -13,17 +14,18 @@ import {
   ThemeContext,
   useId,
   useThemeContext,
-  useTranslation
+  useTranslation,
+  useSidebar
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
 import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
-import { PanelSidebarContext, useShell } from '@dxos/react-shell';
+import { useShell } from '@dxos/react-shell';
 
-import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
 import { useOctokitContext } from '../OctokitProvider';
 import { Separator } from '../Separator';
+import { HiddenSpacesTree } from './HiddenSpacesTree';
 import { SpaceTreeItem } from './SpaceTreeItem';
 
 const DocumentTree = observer(() => {
@@ -33,27 +35,35 @@ const DocumentTree = observer(() => {
   const { t } = useTranslation('composer');
   const identity = useIdentity();
   return (
-    <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow flex flex-col plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
             return <SpaceTreeItem key={space.key.toHex()} space={space} />;
           })}
       </TreeRoot>
+      <div role='none' className='grow' />
+      <HiddenSpacesTree
+        hiddenSpaces={spaces.filter(
+          (space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden === true
+        )}
+      />
     </div>
   );
 });
+
+const SIDEBAR_CONTENT_NAME = 'SidebarContent';
 
 const SidebarContent = () => {
   const client = useClient();
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
@@ -66,7 +76,7 @@ const SidebarContent = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.createSpace();
-    const document = await space.db.add(new ComposerDocument());
+    const document = await space.db.add(new Document());
     return navigate(getPath(space.key, document.id));
   };
 
@@ -142,7 +152,7 @@ const SidebarContent = () => {
                 <Button
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
-                  onClick={() => setDisplayState(displayState === 'show' ? 'hide' : 'show')}
+                  onClick={closeSidebar}
                   className='pli-1'
                 >
                   <ArrowLineLeft className={getSize(4)} />
@@ -182,13 +192,16 @@ const SidebarContent = () => {
   );
 };
 
+SidebarContent.displayName = SIDEBAR_CONTENT_NAME;
+
+const SIDEBAR_TOGGLE_NAME = 'SidebarToggle';
+
 const SidebarToggle = () => {
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { openSidebar, sidebarOpen } = useSidebar(SIDEBAR_TOGGLE_NAME);
   const { t } = useTranslation('os');
-  const open = displayState === 'show';
   const themeContext = useThemeContext();
   const button = (
-    <Button data-testid='composer.toggleSidebar' onClick={() => setDisplayState('show')} className='p-0 is-[40px]'>
+    <Button data-testid='composer.toggleSidebar' onClick={openSidebar} className='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
@@ -197,11 +210,11 @@ const SidebarToggle = () => {
       <div
         role='none'
         className={mx(
-          'fixed block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200',
-          open ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
+          'fixed block-start-0 pointer-coarse:block-end-0 pointer-coarse:block-start-auto p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          sidebarOpen && 'opacity-0 pointer-events-none'
         )}
       >
-        {open ? (
+        {sidebarOpen ? (
           button
         ) : (
           <Tooltip content={t('open sidebar label')} tooltipLabelsTrigger side='right'>
@@ -212,5 +225,7 @@ const SidebarToggle = () => {
     </ThemeContext.Provider>
   );
 };
+
+SidebarToggle.displayName = SIDEBAR_TOGGLE_NAME;
 
 export { SidebarContent, SidebarToggle };

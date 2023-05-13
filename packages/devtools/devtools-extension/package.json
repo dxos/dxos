@@ -33,7 +33,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
-    "webextension-polyfill": "^0.8.0"
+    "webextension-polyfill": "^0.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -41,13 +41,17 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/kai-framework": "workspace:*",
+<<<<<<< HEAD
     "@sentry/vite-plugin": "^0.4.0",
+=======
+    "@sentry/vite-plugin": "^0.7.2",
+>>>>>>> main
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@types/webextension-polyfill": "^0.8.0",
+    "@types/webextension-polyfill": "^0.10.0",
     "@vitejs/plugin-react": "^3.0.1",
     "body-parser": "1.19.0",
     "chalk": "^4.1.0",

@@ -6,17 +6,22 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
+import { Button, Main, MainOverlay, MainRoot, useSidebar } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-import { PanelSidebarContext } from '@dxos/react-shell';
 
 import '@dxosTheme';
 
 import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 import { Sidebar } from './Sidebar';
+
+const SidebarInvoker = () => {
+  const { openSidebar } = useSidebar();
+  return <Button onClick={openSidebar}>Open</Button>;
+};
 
 const Test = () => {
   const navigate = useNavigate();
@@ -39,11 +44,13 @@ const Test = () => {
               frames: defaultFrames
             }}
           >
-            <div className='flex h-[100vh] w-[300px] bg-white'>
-              <PanelSidebarContext.Provider value={{ displayState: 'show', setDisplayState: () => {} }}>
-                <Sidebar onNavigate={() => {}} />
-              </PanelSidebarContext.Provider>
-            </div>
+            <MainRoot>
+              <MainOverlay />
+              <Sidebar onNavigate={() => {}} />
+              <Main>
+                <SidebarInvoker />
+              </Main>
+            </MainRoot>
           </AppStateProvider>
         </FrameRegistryContextProvider>
       </MetagraphProvider>

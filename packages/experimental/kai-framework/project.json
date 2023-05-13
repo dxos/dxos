@@ -53,6 +53,7 @@
         "{options.outputPath}"
       ]
     },
+<<<<<<< HEAD
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
@@ -81,6 +82,8 @@
         "{options.resultsPath}"
       ]
     },
+=======
+>>>>>>> main
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
