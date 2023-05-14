@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AgentEnv } from './agent-env';
+
 export type TestParams<S> = {
   testId: string;
   outDir: string;
@@ -14,6 +16,7 @@ export type AgentParams<S, C> = {
   config: C;
 
   // environment: {
+  testId: string;
   spec: S;
   agents: Record<string, C>;
   // }
@@ -33,7 +36,7 @@ export type AgentResult = {
 export interface TestPlan<S, C> {
   init(params: TestParams<S>): Promise<C[]>; // 1
 
-  run(params: AgentParams<S, C>): Promise<void>; // N
+  run(env: AgentEnv<S, C>): Promise<void>; // N
 
   finish(params: TestParams<S>, results: PlanResults): Promise<any>;
 }

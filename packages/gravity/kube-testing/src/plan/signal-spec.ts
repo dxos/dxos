@@ -12,7 +12,8 @@ import { range } from '@dxos/util';
 import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
-import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
+import { AgentEnv } from './agent-env';
+import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
   servers: number;
@@ -65,7 +66,8 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     });
   }
 
-  async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async run(env: AgentEnv<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+    const { agentId, agents, spec, config } = env.params;
     log.info('start', { agentId });
 
     const ctx = new Context();
@@ -140,6 +142,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     scheduleTaskInterval(
       ctx,
       async () => {
+        await env.syncBarrier(`iteration-${testCounter}`);
         await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
         testCounter++;
       },
@@ -155,7 +158,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await this.builder.destroy();
     switch (params.spec.type) {
       case 'discovery': {
-        return analyzeSwarmEvents(results);
+        return analyzeSwarmEvents(params, results);
       }
       case 'signaling': {
         return analyzeMessages(results);
