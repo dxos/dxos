@@ -13,7 +13,8 @@ import React, {
   forwardRef,
   PropsWithChildren,
   SetStateAction,
-  useCallback
+  useCallback,
+  useRef
 } from 'react';
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
@@ -82,27 +83,30 @@ const MainRoot = ({
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
-type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>>;
+type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
 
-const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, forwardedRef) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
-  const { tx } = useThemeContext();
-  const ref = useForwardedRef(forwardedRef);
-  useSwipeToDismiss(ref, () => setSidebarOpen(false), 48, 'left', 0);
-  return (
-    <DialogContent
-      forceMount
-      onOpenAutoFocus={(event) => isLg && event.preventDefault()}
-      onCloseAutoFocus={(event) => isLg && event.preventDefault()}
-      {...props}
-      className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, className)}
-      ref={ref}
-    >
-      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
-    </DialogContent>
-  );
-});
+const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
+  ({ className, children, swipeToDismiss, ...props }, forwardedRef) => {
+    const [isLg] = useMediaQuery('lg', { ssr: false });
+    const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
+    const { tx } = useThemeContext();
+    const ref = useForwardedRef(forwardedRef);
+    const noopRef = useRef(null);
+    useSwipeToDismiss(swipeToDismiss ? ref : noopRef, () => setSidebarOpen(false), 48, 'left', 0);
+    return (
+      <DialogContent
+        forceMount
+        onOpenAutoFocus={(event) => isLg && event.preventDefault()}
+        onCloseAutoFocus={(event) => isLg && event.preventDefault()}
+        {...props}
+        className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, className)}
+        ref={ref}
+      >
+        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      </DialogContent>
+    );
+  }
+);
 
 Sidebar.displayName = SIDEBAR_NAME;
 
