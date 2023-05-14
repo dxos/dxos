@@ -5,7 +5,7 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { MainRoot, Main, MainOverlay } from '@dxos/aurora';
+import { Main, useSidebar } from '@dxos/aurora';
 import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
 
 import { Surface, Sidebar } from '../containers';
@@ -23,6 +23,7 @@ const SpacePage = () => {
   const navigate = useNavigate(); // TODO(burdon): Factor out router (party of app state).
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+  const { sidebarOpen } = useSidebar();
 
   if (!space && spaces.length > 0 && !spaceInvitationCode) {
     return <Navigate to={createPath({ spaceKey: spaces[0].key, frame: frame?.module.id ?? defaultFrameId })} />;
@@ -39,13 +40,17 @@ const SpacePage = () => {
   }
 
   return (
-    <MainRoot>
-      <MainOverlay />
-      <Sidebar className='!block-start-appbar' onNavigate={(path) => navigate(path)} />
-      <Main className='pbs-header bs-full overflow-hidden'>
+    // TODO(burdon): Discuss with will; Main seems too heavy and assumes too much about sidebar.
+    //  Also, `<main>` should be the content not the container that contains the sidebar.
+    <div className='flex flex-col h-full overflow-hidden'>
+      <Sidebar
+        className={['!block-start-appbar md:is-sidebar', !sidebarOpen && 'md:-inline-start-sidebar']}
+        onNavigate={(path) => navigate(path)}
+      />
+      <Main className={['flex flex-col pbs-header bs-full overflow-hidden', sidebarOpen && 'md:pis-sidebar']}>
         <SpacePanel />
       </Main>
-    </MainRoot>
+    </div>
   );
 };
 
