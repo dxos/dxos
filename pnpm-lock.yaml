@@ -2909,7 +2909,6 @@ importers:
       tailwindcss: ~3.2.7
       typescript: ^4.8.4
       url-join: ^5.0.0
-      vfile-matter: ^4.0.1
       vite: ^4.3.0
       vite-plugin-fonts: ^0.7.0
       vite-plugin-inspect: ^0.7.15
@@ -2981,7 +2980,6 @@ importers:
       simple-peer: 9.11.0
       string-hash: 1.1.3
       url-join: 5.0.0
-      vfile-matter: 4.0.1
     devDependencies:
       '@babel/core': 7.21.3
       '@dxos/aurora-theme': link:../../ui/aurora-theme
@@ -37463,14 +37461,6 @@ packages:
       '@types/unist': 2.0.6
       vfile: 5.3.6
 
-  /vfile-matter/4.0.1:
-    resolution: {integrity: sha512-ZeACdaxCOxhePpoLO4A5y/VgI9EuWBXu+sUk65aQ7lXBZDFg7X0tuOzigLJUtsQzazFt6K2m9SdlDxZdfL5vVg==}
-    dependencies:
-      is-buffer: 2.0.5
-      vfile: 5.3.6
-      yaml: 2.2.2
-    dev: false
-
   /vfile-message/2.0.4:
     resolution: {integrity: sha512-DjssxRGkMvifUOJre00juHoP9DPWuzjxKuMDrhNbk2TdaYYBNMStsNhEOt3idrtI12VQYM/1+iM0KOzXi4pxwQ==}
     dependencies:
@@ -39376,6 +39366,7 @@ packages:
   /yaml/2.2.2:
     resolution: {integrity: sha512-CBKFWExMn46Foo4cldiChEzn7S7SRV+wqiluAb6xmueD/fGyRHIhX8m14vVGgeFWjN540nKCNVj6P21eQjgTuA==}
     engines: {node: '>= 14'}
+    dev: true
 
   /yargs-parser/18.1.3:
     resolution: {integrity: sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==}
