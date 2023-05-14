@@ -13,7 +13,8 @@ import React, {
   forwardRef,
   PropsWithChildren,
   SetStateAction,
-  useCallback, useRef
+  useCallback,
+  useRef
 } from 'react';
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
