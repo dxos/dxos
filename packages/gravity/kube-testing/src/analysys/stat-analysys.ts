@@ -5,9 +5,11 @@
 import { Series } from 'danfojs-node';
 
 import { log } from '@dxos/log';
+import { entry, range } from '@dxos/util';
 
-import { PlanResults } from '../plan/spec-base';
-import { LogReader, TraceEvent } from './logging';
+import { SignalTestSpec } from '../plan/signal-spec';
+import { PlanResults, TestParams } from '../plan/spec-base';
+import { LogReader, TraceEvent, zapPreprocessor } from './logging';
 
 const seriesToJson = (s: Series) => {
   const indexes = s.index;
@@ -93,60 +95,113 @@ export const analyzeMessages = async (results: PlanResults) => {
   });
 };
 
-export const analyzeSwarmEvents = async (results: PlanResults) => {
+export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: PlanResults) => {
   const start = Date.now();
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
    */
-  const topics = new Map<string, Map<string, { join?: number; leave?: number; seen: Map<string, number> }>>();
+  const topics = new Map<
+    string,
+    Map<
+      string,
+      {
+        join?: number;
+        leave?: number;
+        processed?: number;
+        seen: Map<
+          string,
+          {
+            discover?: number;
+            notify?: number;
+          }
+        >;
+      }
+    >
+  >();
 
   const reader = getReader(results);
 
-  for await (const entry of reader) {
-    if (entry.message !== 'dxos.test.signal') {
-      continue;
-    }
-    const data: TraceEvent = entry.context;
+  for (const i of range(params.spec.servers)) {
+    reader.addFile(`${params.outDir}/signal-${i}.log`, { preprocessor: zapPreprocessor });
+  }
 
-    //
-    // Propagate map
-    //
-    if (
-      data.type === 'JOIN_SWARM' ||
-      data.type === 'LEAVE_SWARM' ||
-      data.type === 'PEER_AVAILABLE' ||
-      data.type === 'PEER_LEFT'
-    ) {
-      if (!topics.has(data.topic)) {
-        topics.set(data.topic, new Map());
-      }
-      if (!topics.get(data.topic)!.has(data.peerId)) {
-        topics.get(data.topic)!.set(data.peerId, { join: undefined, leave: undefined, seen: new Map() });
-      }
-    }
-    switch (data.type) {
-      case 'JOIN_SWARM': {
-        topics.get(data.topic)!.get(data.peerId)!.join = entry.timestamp;
-        break;
-      }
-      case 'LEAVE_SWARM': {
-        topics.get(data.topic)!.get(data.peerId)!.leave = entry.timestamp;
-        break;
-      }
-      case 'PEER_AVAILABLE': {
-        const oldTimestamp = topics.get(data.topic)!.get(data.peerId)!.seen.get(data.discoveredPeer);
-        if (oldTimestamp && oldTimestamp < entry.timestamp) {
-          break;
+  for await (const logEntry of reader) {
+    switch (logEntry.message) {
+      case 'dxos.test.signal': {
+        const data: TraceEvent = logEntry.context;
+
+        switch (data.type) {
+          case 'JOIN_SWARM': {
+            const timings = entry(topics, data.topic)
+              .orInsert(new Map())
+              .deep(data.peerId)
+              .orInsert({ join: undefined, leave: undefined, seen: new Map() }).value;
+
+            timings.join = logEntry.timestamp;
+            break;
+          }
+          case 'LEAVE_SWARM': {
+            const timings = entry(topics, data.topic)
+              .orInsert(new Map())
+              .deep(data.peerId)
+              .orInsert({ join: undefined, leave: undefined, seen: new Map() }).value;
+
+            timings.leave = logEntry.timestamp;
+            break;
+          }
+          case 'PEER_AVAILABLE': {
+            const timings = entry(topics, data.topic)
+              .orInsert(new Map())
+              .deep(data.peerId)
+              .orInsert({ join: undefined, leave: undefined, seen: new Map() }).value;
+
+            const discoverTimings = entry(timings.seen, data.discoveredPeer).orInsert({}).value;
+
+            if (discoverTimings.discover && discoverTimings.discover < logEntry.timestamp) {
+              break;
+            }
+
+            discoverTimings.discover = logEntry.timestamp;
+            break;
+          }
         }
-        topics.get(data.topic)!.get(data.peerId)!.seen.set(data.discoveredPeer, entry.timestamp);
+        break;
+      }
+      case 'process event': {
+        const data: { swarm: string; peer: string } = logEntry.context;
+
+        const timings = entry(topics, data.swarm)
+          .orInsert(new Map())
+          .deep(data.peer)
+          .orInsert({ join: undefined, leave: undefined, seen: new Map() }).value;
+
+        timings.processed = logEntry.timestamp;
+        break;
+      }
+      case 'notify client': {
+        const data: { swarm: string; peer: string; discovered: string } = logEntry.context;
+
+        const timings = entry(topics, data.swarm)
+          .orInsert(new Map())
+          .deep(data.peer)
+          .orInsert({ join: undefined, leave: undefined, seen: new Map() }).value;
+
+        const discoverTimings = entry(timings.seen, data.discovered).orInsert({}).value;
+
+        if (!discoverTimings.notify) {
+          discoverTimings.notify = logEntry.timestamp;
+        }
         break;
       }
     }
   }
+
   let failures = 0;
   let ignored = 0;
   const discoverLag = [0];
-  const failureTtt = []; // Time Together on Topic
+  const processLag = [0];
+  const notifyLag = [0];
+  const failureTtt = [0]; // Time Together on Topic
 
   for (const [_, peersPerTopic] of topics.entries()) {
     for (const [peerId, timings] of peersPerTopic.entries()) {
@@ -182,20 +237,35 @@ export const analyzeSwarmEvents = async (results: PlanResults) => {
           continue;
         }
 
-        if (!timings.seen.has(expectedPeer)) {
+        if (!timings.seen.get(expectedPeer)?.discover) {
           failureTtt.push(timeTogetherOnTopic);
           failures++;
           continue;
         }
-        const discoverTime = timings.seen.get(expectedPeer)!;
-        discoverLag.push(discoverTime - expectedPeerTimings.join);
+        const discoverStats = timings.seen.get(expectedPeer)!;
+        discoverLag.push(discoverStats.discover! - expectedPeerTimings.join);
+
+        if (discoverStats.notify) {
+          notifyLag.push(discoverStats.notify! - expectedPeerTimings.join!);
+        }
+      }
+
+      if (timings.processed && timings.join) {
+        processLag.push(timings.processed - timings.join);
       }
     }
   }
 
   log.info(`analyzeSwarmEvents: ${Date.now() - start}ms`);
 
+  const processLagS = new Series(processLag);
+  const notifyLagS = new Series(notifyLag);
+
   return getStats(discoverLag, {
+    processMean: processLagS.mean(),
+    processStd: processLagS.std(),
+    notifyMean: notifyLagS.mean(),
+    notifyStd: notifyLagS.std(),
     ignored,
     failures,
     failureRate: failures / (discoverLag.length + failures),
