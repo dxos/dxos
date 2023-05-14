@@ -14,25 +14,25 @@ export const botModules: Module[] = [
   {
     id: 'dxos.module.bot.store',
     type: 'dxos:type/bot',
-    displayName: 'StoreBot',
+    displayName: 'Store',
     description: 'Secure storage.'
   },
   {
     id: 'dxos.module.bot.mail',
     type: 'dxos:type/bot',
-    displayName: 'MailBot',
+    displayName: 'EMail',
     description: 'Email sync.'
   },
   {
     id: 'dxos.module.bot.chess',
     type: 'dxos:type/bot',
-    displayName: 'ChessBot',
+    displayName: 'Chess',
     description: 'Basic chess engine.'
   },
   {
     id: 'dxos.module.bot.kai',
     type: 'dxos:type/bot',
-    displayName: 'KaiBot',
+    displayName: 'Kai',
     description: 'Research and task assistant.'
   }
 ];

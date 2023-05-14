@@ -33,8 +33,8 @@ export const bool = (value?: string) => value === 'true' || value === '1';
 
 export const optionsKeys = [
   'experimental.search',
-  'experimental.frames',
-  'experimental.bots',
+  'experimental.plugins',
+  'experimental.functions',
   'experimental.metagraph'
 ];
 
@@ -62,7 +62,7 @@ export type AppState = {
 };
 
 const defaultAppState: AppState = {
-  frames: []
+  frames: [] // TODO(burdon): Plugins.
 };
 
 type ActionType = {
