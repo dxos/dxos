@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
 import highlight from 'rehype-highlight';
+import remarkFrontmatter from 'remark-frontmatter';
 
 import { mx } from '@dxos/aurora-theme';
 
@@ -96,14 +97,49 @@ export const Presenter = ({
           className={mx('flex flex-col absolute transition', content[0] === '#' && defaultPadding, defaultStyles)}
           style={props}
         >
-          {/* TODO(burdon): Wrap images. */}
-          <ReactMarkdown rehypePlugins={[[highlight], [addClasses, classes]]}>{content}</ReactMarkdown>
+          <ReactMarkdown
+            components={components}
+            remarkPlugins={[
+              // TODO(burdon): How to get frontmatter?
+              [remarkFrontmatter, ['yaml']]
+              // () => (tree) => {
+              //   console.log('#', tree);
+              // }
+            ]}
+            rehypePlugins={[[highlight], [addClasses, classes]]}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
       )}
-      <div className='absolute top-0 left-0'>{topLeft}</div>
-      <div className='absolute top-0 right-0'>{topRight}</div>
-      <div className='absolute bottom-0 left-0'>{bottomLeft}</div>
-      <div className='absolute bottom-0 right-0'>{bottomRight}</div>
+
+      <>
+        <div className='absolute top-0 left-0'>{topLeft}</div>
+        <div className='absolute top-0 right-0'>{topRight}</div>
+        <div className='absolute bottom-0 left-0'>{bottomLeft}</div>
+        <div className='absolute bottom-0 right-0'>{bottomRight}</div>
+      </>
     </div>
   );
 };
+
+// TODO(burdon): Factor out.
+const ImageWrapper = ({ node, ...props }: { node: any }) => {
+  const { alt, src } = props as { alt: string; src: string };
+  const [label, className] = alt.split(':');
+  const classes: Record<string, string> = {
+    fullscreen: 'absolute h-full left-0 right-0 top-0 bottom-0 bg-contain bg-center',
+    right: 'absolute w-1/2 h-full right-0 top-0 bottom-0 bg-contain bg-center',
+    main: 'mt-16 w-full h-[1000px] bg-contain bg-center bg-no-repeat'
+  };
+
+  // TODO(burdon): Format based on frontmatter layout.
+  const clazz = classes[className];
+  return clazz ? (
+    <div className={clazz} style={{ backgroundImage: `url(${src})` }} title={label} />
+  ) : (
+    <img alt={label} src={src} />
+  );
+};
+
+const components = { img: ImageWrapper };

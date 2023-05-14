@@ -19,8 +19,17 @@ export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 // prettier-ignore
 const defaultSlides = [
   [
-    '![DXOS](https://dev.kube.dxos.org/ipfs/gateway/QmbsKuxFkcn7YHtUd882dcZ4SapLeqEKnzXHs2t6iPBaon)'
-  ].join('\n'),
+    '---',
+    'title: DXOS',
+    'layout: fullscreen',
+    '---',
+    '# DXOS',
+    '![DXOS:fullscreen](https://dev.kube.dxos.org/ipfs/gateway/QmbsKuxFkcn7YHtUd882dcZ4SapLeqEKnzXHs2t6iPBaon)'
+  ],
+  [
+    '# Testing',
+    '![DXOS:main](https://dev.kube.dxos.org/ipfs/gateway/QmbgS5NVa6HzAFfFZqHQowav28hDDY8XGMvZj5SPe26JDq)'
+  ],
   [
     '# DXOS',
     'An alternative to the cloud for realtime collaborative applications.',
@@ -30,7 +39,7 @@ const defaultSlides = [
     '- `MESH`: Decentralized networks',
     '- `KUBE`: Decentralized infrastructure',
     '- `META`: Decentralized metagraph'
-  ].join('\n'),
+  ],
   [
     '# ECHO',
     '- Replicated graph database',
@@ -40,8 +49,9 @@ const defaultSlides = [
     '- Strongly-typed objects',
     '- Realtime subscriptions',
     '- Simple API',
-    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/QmRCqEGBRojS8AtQfFm3P6CMfdTWtqjM4e7JcCGfGY7eZR)'
-  ].join('\n'),
+    '',
+    '![ECHO:right](https://dev.kube.dxos.org/ipfs/gateway/QmRCqEGBRojS8AtQfFm3P6CMfdTWtqjM4e7JcCGfGY7eZR)'
+  ],
   [
     '# Hello World',
     '```tsx',
@@ -61,7 +71,7 @@ const defaultSlides = [
     '  return <ul>{tasks.map(task => <li key={task.id}>{task.title}</li>)}</ul>',
     '}',
     '```'
-  ].join('\n'),
+  ],
   [
     '# HALO',
     '- Decentralized identity',
@@ -69,8 +79,9 @@ const defaultSlides = [
     '- Verifiable credentials',
     '- Resource access control',
     '- Universal keychain',
-    '![HALO](https://dev.kube.dxos.org/ipfs/gateway/QmQ4mvUsnJ5ajv9Apespk95LW2qGQG6z9cFP1Y1uiTuPxv)'
-  ].join('\n'),
+    '',
+    '![HALO:right](https://dev.kube.dxos.org/ipfs/gateway/QmQ4mvUsnJ5ajv9Apespk95LW2qGQG6z9cFP1Y1uiTuPxv)'
+  ],
   [
     '# MESH',
     '- Resilient P2P networks',
@@ -78,8 +89,9 @@ const defaultSlides = [
     '- Signaling, ICE (STUN/TURN)',
     '- Protobuf Service RPCs',
     '- Presences',
-    '![MESH](https://dev.kube.dxos.org/ipfs/gateway/QmaJcvRfUBdfkUCXyZCtibABSR16tVcUzCNBaoSKzv5Mtp)'
-  ].join('\n'),
+    '',
+    '![MESH:right](https://dev.kube.dxos.org/ipfs/gateway/QmaJcvRfUBdfkUCXyZCtibABSR16tVcUzCNBaoSKzv5Mtp)'
+  ],
   [
     '# KUBE',
     '- Decentralized infrastructure',
@@ -88,23 +100,25 @@ const defaultSlides = [
     '- Resolvers (compute agents)',
     '- Storage (IPFS)',
     '- Extensible',
-    '![KUBE](https://dev.kube.dxos.org/ipfs/gateway/QmdagBsa7wRWoNDYyL8Ks7tSNr3vSSHc1RCAFizuKG4t4G)'
-  ].join('\n'),
+    '',
+    '![KUBE:right](https://dev.kube.dxos.org/ipfs/gateway/QmdagBsa7wRWoNDYyL8Ks7tSNr3vSSHc1RCAFizuKG4t4G)'
+  ],
   [
     '# DMG',
     '- Permissionless metadata graph',
     '- App registry',
     '- Service registry',
     '- Git, NPM, Docker',
-    '![META](https://dev.kube.dxos.org/ipfs/gateway/QmTTp66sqj2eQzjgMpnJUcFrvhJSbv9Xvi9bsfHSU1C4in)'
-  ].join('\n'),
+    '',
+    '![META:right](https://dev.kube.dxos.org/ipfs/gateway/QmTTp66sqj2eQzjgMpnJUcFrvhJSbv9Xvi9bsfHSU1C4in)'
+  ],
   [
     '# Join us!',
     '- https://dxos.org',
     '- hello@dxos.org',
     '- join our Discord: https://discord.gg/BgQrZutd'
-  ].join('\n')
-];
+  ]
+].map(lines => lines.join('\n'));
 
 export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
   Icon: PresentationIcon,

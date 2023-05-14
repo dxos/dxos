@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AppWindow, CaretLeft, Info, Graph, Robot, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
+import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
@@ -11,17 +11,15 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { observer, useClient, useKeyStore, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { observer, useClient, useNetworkStatus, useSpaces } from '@dxos/react-client';
 
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
   Section,
   SearchResults,
-  bool,
   createPath,
   getIcon,
-  optionsKeys,
   useAppRouter,
   useAppState,
   useCreateInvitation,
@@ -34,6 +32,8 @@ import { FrameList } from './FrameList';
 import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
 import { Separator, SpaceListPanel } from './SpaceListPanel';
 
+const SIDEBAR_NAME = 'KaiFrameworkSidebar';
+
 export type SidebarProps = {
   onNavigate: (path: string) => void;
   className?: ClassNameValue;
@@ -41,17 +41,22 @@ export type SidebarProps = {
 
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
-const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
-  const [options] = useKeyStore(optionsKeys);
+  // const [options] = useKeyStore(optionsKeys);
+  const getOption = (key: string, def = true): boolean => {
+    // return options.get(key) === 'true';
+    return true;
+  };
 
   const theme = useTheme();
   const client = useClient();
   const spaces = useSpaces();
   const startInvitation = useCreateInvitation();
+
+  const [showFrames, setShowFrames] = useState(false);
 
   // TODO(burdon): Error if conditional filter.
   // const objects = useQuery(space, frame?.runtime.filter?.());
@@ -190,13 +195,17 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
           {/* Search/Frames */}
           {!showSpacePanel && (
             <div className='flex flex-col overflow-hidden space-y-2'>
-              {(bool(options.get('experimental.search')) && (
+              {(getOption('experimental.search') && (
                 <SearchPanel space={space} onResults={handleSearchResults} onSelect={handleSearchSelect} />
               )) || <div className='mt-2' />}
 
               {/* Items if not actively searching. */}
               {!showSearchResults && (
-                <FrameContent showDeletedObjects={showDeletedObjects} handleObjectAction={handleObjectAction} />
+                <FrameContent
+                  showFrames={getOption('experimental.plugins')}
+                  showDeletedObjects={showDeletedObjects}
+                  handleObjectAction={handleObjectAction}
+                />
               )}
             </div>
           )}
@@ -228,10 +237,29 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
             </div>
 
             {/* Experimental */}
-            {(bool(options.get('experimental.bots')) || bool(options.get('experimental.metagraph'))) && (
+            {(getOption('experimental.plugins') ||
+              getOption('experimental.functions') ||
+              getOption('experimental.metagraph')) && (
               <>
                 <Separator />
-                {bool(options.get('experimental.bots')) && (
+
+                {/* Frame registry dialog. */}
+                <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
+                {getOption('experimental.plugins') && (
+                  <div>
+                    <Button
+                      variant='ghost'
+                      title='Select frame.'
+                      className='mli-2 p-0 px-2 items-center'
+                      onClick={() => setShowFrames(true)}
+                    >
+                      <PuzzlePiece className={getSize(6)} />
+                      <div className='pl-2 text-sm'>Plugins</div>
+                    </Button>
+                  </div>
+                )}
+
+                {getOption('experimental.functions') && (
                   <div>
                     <Button
                       variant='ghost'
@@ -239,13 +267,13 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                       className='mli-2 p-0 px-2 items-center'
                       onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
                     >
-                      <Robot className={getSize(6)} />
-                      <div className='pl-2 text-sm'>Manage Bots</div>
+                      <Function className={getSize(6)} />
+                      <div className='pl-2 text-sm'>Functions</div>
                     </Button>
                   </div>
                 )}
 
-                {bool(options.get('experimental.metagraph')) && (
+                {getOption('experimental.metagraph') && (
                   <div>
                     <Button
                       variant='ghost'
@@ -289,62 +317,52 @@ Sidebar.displayName = SIDEBAR_NAME;
 
 // TODO(burdon): Factor out.
 const FrameContent = ({
+  showFrames,
   showDeletedObjects,
   handleObjectAction
 }: {
+  showFrames: boolean;
   showDeletedObjects?: boolean;
   handleObjectAction: (action: ObjectAction) => void;
 }) => {
-  const [options] = useKeyStore(optionsKeys);
   const { space, frame } = useAppRouter(); // TODO(burdon): Factor out.
-  const [showFrames, setShowFrames] = useState(false);
   const { Plugin } = frame?.runtime ?? {};
 
   if (!space) {
     return null;
   }
 
+  const showObjects = !Plugin && frame?.runtime.filter;
+
   return (
     <div className='flex flex-col w-full overflow-y-scroll space-y-4'>
       {/* Frame list filter. */}
-      {bool(options.get('experimental.frames')) && <FrameList />}
+      {showFrames && <FrameList />}
 
-      {/* Generic object list. */}
-      {!Plugin && frame?.runtime.filter && (
-        <div className='flex w-full overflow-hidden'>
-          <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
-        </div>
-      )}
+      {(Plugin || showObjects) && (
+        <div className='border-t border-b pt-2 pb-2'>
+          {/* Generic object list. */}
+          {!Plugin && frame?.runtime.filter && (
+            <div className='flex w-full overflow-hidden'>
+              <ObjectList frameDef={frame.runtime} showDeleted={showDeletedObjects} onAction={handleObjectAction} />
+            </div>
+          )}
 
-      {/* Frame-specific plugin. */}
-      {/* TODO(burdon): Plugin spec (space, onSelect). */}
-      {Plugin && (
-        <div className='flex w-full overflow-hidden'>
-          <Suspense>
-            <Plugin
-              space={space}
-              onSelect={(objectId: string | undefined) => {
-                const object = objectId ? space.db.getObjectById(objectId) : undefined;
-                handleObjectAction({ type: ObjectActionType.SELECT, object });
-              }}
-            />
-          </Suspense>
-        </div>
-      )}
-
-      {/* Frame registry dialog. */}
-      <FrameRegistryDialog open={showFrames} onClose={() => setShowFrames(false)} />
-      {bool(options.get('experimental.frames')) && (
-        <div>
-          <Button
-            variant='ghost'
-            title='Select frame.'
-            className='mli-2 p-0 px-2 items-center'
-            onClick={() => setShowFrames(true)}
-          >
-            <AppWindow className={getSize(6)} />
-            <div className='pl-2 text-sm'>Frames</div>
-          </Button>
+          {/* Frame-specific plugin. */}
+          {/* TODO(burdon): Plugin spec (space, onSelect). */}
+          {Plugin && (
+            <div className='flex w-full overflow-hidden'>
+              <Suspense>
+                <Plugin
+                  space={space}
+                  onSelect={(objectId: string | undefined) => {
+                    const object = objectId ? space.db.getObjectById(objectId) : undefined;
+                    handleObjectAction({ type: ObjectActionType.SELECT, object });
+                  }}
+                />
+              </Suspense>
+            </div>
+          )}
         </div>
       )}
     </div>
