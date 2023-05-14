@@ -11,8 +11,8 @@ void runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
-    agents: 5,
-    peersPerAgent: 5,
+    agents: 10,
+    peersPerAgent: 10,
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
@@ -22,7 +22,7 @@ void runPlan({
     topicsPerAgent: 1,
     startWaitTime: 1_000,
     discoverTimeout: 5_000,
-    repeatInterval: 200,
+    repeatInterval: 1_000,
     agentWaitTime: 5_000,
     duration: 20_000,
     type: 'discovery'
@@ -32,6 +32,6 @@ void runPlan({
     staggerAgents: 5,
     randomSeed: PublicKey.random().toHex()
     // repeatAnalysis:
-    //   '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-05-12T13:19:57-3c1d/test.json'
+    //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
   }
 });
