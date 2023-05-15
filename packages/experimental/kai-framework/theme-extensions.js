@@ -13,13 +13,8 @@ module.exports = {
   // https://tailwindcss.com/docs/theme#extending-the-default-theme
   kaiThemeExtension: {
     spacing: {
-      // TODO(burdon): Remove.
-      appbar: '0px',
-      header: '0px',
-
       sidebar: '300px',
 
-      // TODO(burdon): Hack.
       // Standardize column width for tiles (based on iPhone Pro 12).
       column: '390px'
     },
