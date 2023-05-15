@@ -60,7 +60,7 @@ export const Root = () => {
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
       <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-          <ErrorProvider>
+          <ErrorProvider config={configProvider}>
             <Outlet />
           </ErrorProvider>
         </ClientProvider>

@@ -21,7 +21,7 @@ export const Root: FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <ThemeProvider appNs='console' rootDensity='fine' resourceExtensions={[appkitTranslations, osTranslations]}>
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={fromHost}>
             <Fullscreen>
