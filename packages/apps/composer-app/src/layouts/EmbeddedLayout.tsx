@@ -42,7 +42,9 @@ const EmbeddedLayoutImpl = () => {
       )}
       <ButtonGroup className='fixed inline-end-2 block-end-2 z-[70]'>
         <Button onClick={handleCloseEmbed}>{t('close label', { ns: 'appkit' })}</Button>
-        <Button onClick={handleSaveAndCloseEmbed}>{t('save and close label')}</Button>
+        <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
+          {t('save and close label')}
+        </Button>
       </ButtonGroup>
     </>
   );
