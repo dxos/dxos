@@ -54,6 +54,7 @@ const setupComposer = () => {
     composer.setAttribute('id', composerId);
     composer.setAttribute('src', `${baseUrl.href}embedded/${window.location.href}`);
     composer.setAttribute('style', composerStyles);
+    composer.setAttribute('allow', 'clipboard-write *');
     Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
 
     let stale = false;
