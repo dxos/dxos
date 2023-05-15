@@ -3,4 +3,5 @@
 //
 
 export * from './DocumentPage';
+export * from './EmbeddedFirstRunPage';
 export * from './FirstRunPage';

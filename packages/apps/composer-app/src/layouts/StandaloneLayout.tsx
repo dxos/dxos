@@ -5,6 +5,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { Document } from '@braneframe/types';
 import { Button, useTranslation, MainRoot, Main, Sidebar, MainOverlay } from '@dxos/aurora';
 import { defaultOsButtonColors } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
@@ -12,8 +13,9 @@ import { useTelemetry, Toast } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
 import { ShellProvider, useShell } from '@dxos/react-shell';
 
-import { SidebarContent, SidebarToggle, OctokitProvider } from '../../components';
-import { namespace, abbreviateKey, getPath } from '../../router';
+import { SidebarContent, SidebarToggle, OctokitProvider } from '../components';
+import { namespace, abbreviateKey, getPath } from '../router';
+import type { OutletContext } from './OutletContext';
 
 const InvitationToast = ({
   invitation,
@@ -40,14 +42,17 @@ const InvitationToast = ({
   ) : null;
 };
 
-export const DocumentLayout = () => {
+export const StandaloneLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace });
   useIdentity({ login: true });
 
-  const { spaceKey } = useParams();
-  const spaces = useSpaces({ all: true });
-  const space = spaces.find((space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY);
+  const { spaceKey, docKey } = useParams();
+  const allSpaces = useSpaces({ all: true });
+  const space = allSpaces.find(
+    (space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY
+  );
+  const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
   const invitations = useSpaceInvitations(space?.key);
 
   const [searchParams] = useSearchParams();
@@ -78,7 +83,7 @@ export const DocumentLayout = () => {
             <SidebarContent />
           </Sidebar>
           <Main className='min-bs-full'>
-            <Outlet context={{ space }} />
+            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
             <SidebarToggle />
           </Main>
         </MainRoot>

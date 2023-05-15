@@ -8,11 +8,18 @@
     "96": "icon/96.png",
     "128": "icon/128.png"
   },
+  "permissions": [
+    "webNavigation"
+  ],
   "{{chrome}}.action": {
     "default_popup": "src/popup.html"
   },
   "{{firefox}}.browser_action": {
     "default_popup": "src/popup.html"
+  },
+  "background": {
+    "{{chrome}}.service_worker": "src/background.ts",
+    "{{firefox}}.scripts": ["src/background.ts"]
   },
   "content_scripts": [
     {
