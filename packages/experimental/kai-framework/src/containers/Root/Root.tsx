@@ -37,7 +37,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
       rootDensity='fine'
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>

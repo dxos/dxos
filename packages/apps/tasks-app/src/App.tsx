@@ -49,7 +49,7 @@ export const App = withProfiler(() => {
       resourceExtensions={[appkitTranslations, osTranslations, tasksTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
