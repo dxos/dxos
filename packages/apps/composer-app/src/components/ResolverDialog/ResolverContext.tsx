@@ -106,7 +106,7 @@ const DocumentsQueryableDocumentResolverProvider = ({
     // todo(thure): Won't this always be the case initially?
     if (documents.length === 0) {
       window.addEventListener('message', handler);
-      window.parent.postMessage({ type: 'request-initial-data' }, '*');
+      window.parent.postMessage({ type: 'request-initial-data' }, 'https://github.com');
       return () => window.removeEventListener('message', handler);
     } else {
       setDocument(documents[0] as Document);

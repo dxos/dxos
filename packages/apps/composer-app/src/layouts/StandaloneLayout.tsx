@@ -2,22 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { Button, useTranslation, MainRoot, Main, Sidebar, MainOverlay } from '@dxos/aurora';
 import { defaultOsButtonColors } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout, Text } from '@dxos/client';
+import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
 import { useTelemetry, Toast } from '@dxos/react-appkit';
-import {
-  SpaceState,
-  useIdentity,
-  useInvitationStatus,
-  useQuery,
-  useSpaceInvitations,
-  useSpaces
-} from '@dxos/react-client';
+import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
 import { ShellProvider, useShell } from '@dxos/react-shell';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../components';

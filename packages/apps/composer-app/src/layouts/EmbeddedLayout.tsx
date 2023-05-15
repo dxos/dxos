@@ -24,7 +24,7 @@ const EmbeddedLayoutImpl = () => {
   const { document } = useContext(DocumentResolverContext);
 
   const handleCloseEmbed = useCallback(() => {
-    window.parent.postMessage({ type: 'close-embed' }, '*');
+    window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
   }, []);
 
   const handleSaveAndCloseEmbed = useCallback(() => {
