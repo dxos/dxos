@@ -4,12 +4,13 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useMediaQuery } from '@dxos/aurora';
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   ThemeProvider,
@@ -24,18 +25,9 @@ import { ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 
-import composerTranslations from '../../translations';
-import { DocumentLayout } from '../DocumentLayout';
+import composerTranslations from '../translations';
 
-// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
-const configOverride: ConfigProto = window.location.hostname.includes('localhost')
-  ? {}
-  : {
-      runtime: {
-        client: { remoteSource: `https://${window.location.hostname.replace('composer', 'halo')}/vault.html` }
-      }
-    };
-const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
@@ -69,7 +61,7 @@ export const Root = () => {
       <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
           <ErrorProvider>
-            <DocumentLayout />
+            <Outlet />
           </ErrorProvider>
         </ClientProvider>
       </ErrorBoundary>

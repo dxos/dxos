@@ -51,5 +51,11 @@ export const composer = {
   'invitation ready for auth code message': 'An invitation is ready for its authentication code',
   'view invitations label': 'View',
   'hidden spaces tree label': 'Hidden spaces',
-  'unhide space label': 'Un-hide space'
+  'unhide space label': 'Un-hide space',
+  'empty space message': 'No documents – click plus ☝ to get started',
+  'resolver tree label': 'Choose a Space to collaborate on documents in this repository',
+  'resolver no spaces message': 'You aren’t in any spaces yet',
+  'resolver create space label': 'Create a space for this repository',
+  'save and close label': 'Save & close',
+  'resolver init document message': 'Syncing this document, one moment…'
 };

@@ -4,4 +4,5 @@
 
 export * from './Separator';
 export * from './Sidebar';
+export * from './ResolverDialog';
 export * from './OctokitProvider';

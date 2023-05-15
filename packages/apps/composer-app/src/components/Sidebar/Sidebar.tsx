@@ -12,49 +12,19 @@ import {
   DensityProvider,
   ElevationProvider,
   ThemeContext,
-  useId,
   useThemeContext,
   useTranslation,
   useSidebar
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { Tooltip, Avatar, Dialog, Input, TreeRoot } from '@dxos/react-appkit';
-import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { Tooltip, Avatar, Dialog, Input } from '@dxos/react-appkit';
+import { ShellLayout, useClient, useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
 import { getPath } from '../../router';
 import { useOctokitContext } from '../OctokitProvider';
 import { Separator } from '../Separator';
-import { HiddenSpacesTree } from './HiddenSpacesTree';
-import { SpaceTreeItem } from './SpaceTreeItem';
-
-const DocumentTree = observer(() => {
-  // TODO(wittjosiah): Fetch all spaces and render pending spaces differently.
-  const spaces = useSpaces({ all: true });
-  const treeLabel = useId('treeLabel');
-  const { t } = useTranslation('composer');
-  const identity = useIdentity();
-  return (
-    <div className='grow flex flex-col plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
-      <span className='sr-only' id={treeLabel}>
-        {t('sidebar tree label')}
-      </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
-        {spaces
-          .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
-          .map((space) => {
-            return <SpaceTreeItem key={space.key.toHex()} space={space} />;
-          })}
-      </TreeRoot>
-      <div role='none' className='grow' />
-      <HiddenSpacesTree
-        hiddenSpaces={spaces.filter(
-          (space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden === true
-        )}
-      />
-    </div>
-  );
-});
+import { SidebarTree } from './SidebarTree';
 
 const SIDEBAR_CONTENT_NAME = 'SidebarContent';
 
@@ -160,7 +130,7 @@ const SidebarContent = () => {
               </Tooltip>
             </div>
             <Separator flush />
-            <DocumentTree />
+            <SidebarTree />
             <Separator flush />
             {identity && (
               <div role='none' className='shrink-0 flex items-center gap-1 pli-3 plb-1.5'>
