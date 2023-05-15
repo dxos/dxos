@@ -129,10 +129,12 @@ const ImageWrapper = ({ node, ...props }: { node: any }) => {
   const [label, className] = alt.split(':');
   const classes: Record<string, string> = {
     fullscreen: 'absolute h-full left-0 right-0 top-0 bottom-0 bg-contain bg-center',
-    right: 'absolute w-1/2 h-full right-0 top-0 bottom-0 bg-contain bg-center',
+    // TODO(burdon): More control.
+    right: 'absolute w-1/3 h-full right-0 top-0 bottom-0 bg-contain bg-center',
     main: 'mt-16 w-full h-[1000px] bg-contain bg-center bg-no-repeat'
   };
 
+  // TODO(burdon): Error: <div> cannot appear as a descendant of <p>.
   // TODO(burdon): Format based on frontmatter layout.
   const clazz = classes[className];
   return clazz ? (

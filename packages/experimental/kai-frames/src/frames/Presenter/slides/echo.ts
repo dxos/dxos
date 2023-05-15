@@ -5,7 +5,27 @@
 // prettier-ignore
 const slides = [
   [
-    '# E C H O',
+    '---',
+    'title: DXOS',
+    'layout: fullscreen',
+    '---',
+    '# DXOS',
+    '![DXOS:fullscreen](https://dev.kube.dxos.org/ipfs/gateway/QmbsKuxFkcn7YHtUd882dcZ4SapLeqEKnzXHs2t6iPBaon)'
+  ],
+  [
+    '# ECHO',
+    '- Replicated graph database',
+    '- Eventually consistent',
+    '- Multiplexed data pipelines',
+    '- End-to-end encryption',
+    '- Strongly-typed objects',
+    '- Realtime subscriptions',
+    '- Simple API',
+    '',
+    '![ECHO:right](https://dev.kube.dxos.org/ipfs/gateway/QmRCqEGBRojS8AtQfFm3P6CMfdTWtqjM4e7JcCGfGY7eZR)'
+  ],
+  [
+    '# ECHO',
     '## Eventually Consistent Hierarchical Objects',
     '- Decentralized graph database',
     '- Structured and unstructured data (text, JSON records, files)',
