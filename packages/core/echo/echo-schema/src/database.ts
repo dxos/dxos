@@ -66,7 +66,7 @@ export class EchoDatabase {
   }
 
   /**
-   * Add object to th database.
+   * Add object to the database.
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {

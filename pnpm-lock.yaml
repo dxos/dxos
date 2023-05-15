@@ -352,6 +352,7 @@ importers:
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.7.2
+      '@types/lodash.update': ^4.10.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/showdown': ^2.0.0
@@ -359,6 +360,7 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       isomorphic-fetch: ^3.0.0
       jszip: ^3.10.1
+      lodash.update: ^4.10.2
       octokit: ^2.0.14
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -388,6 +390,7 @@ importers:
       '@sentry/react': 7.42.0_react@18.2.0
       isomorphic-fetch: 3.0.0
       jszip: 3.10.1
+      lodash.update: 4.10.2
       octokit: 2.0.14
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -401,6 +404,7 @@ importers:
       '@octokit/openapi-types': 16.0.0
       '@remix-run/router': 1.0.2
       '@sentry/vite-plugin': 0.7.2
+      '@types/lodash.update': 4.10.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@types/showdown': 2.0.0
@@ -413,13 +417,17 @@ importers:
 
   packages/apps/composer-extension:
     specifiers:
+      '@types/webextension-polyfill': ^0.10.0
       typescript: ^4.8.4
       vite: ^4.3.0
       vite-plugin-web-extension: ^3.0.7
+      webextension-polyfill: ^0.10.0
     devDependencies:
+      '@types/webextension-polyfill': 0.10.0
       typescript: 4.8.4
       vite: 4.3.1
       vite-plugin-web-extension: 3.0.7
+      webextension-polyfill: 0.10.0
 
   packages/apps/halo-app:
     specifiers:
@@ -3884,6 +3892,23 @@ importers:
       faker: 5.5.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+
+  packages/gravity/kube-publishing:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/cli': workspace:*
+      '@dxos/log': workspace:*
+      '@types/node': ^18.11.9
+      ts-node: 10.9.1
+      typescript: ^4.8.4
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/log': link:../../common/log
+    devDependencies:
+      '@dxos/cli': link:../../devtools/cli
+      '@types/node': 18.11.9
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
+      typescript: 4.8.4
 
   packages/gravity/kube-testing:
     specifiers:
@@ -15652,6 +15677,12 @@ packages:
 
   /@types/lodash.toarray/4.4.7:
     resolution: {integrity: sha512-8cMZKAuMyngqE0ffoPXRg0pEVn660Mklzb13iVYoyfexWKTzDnscsTmivMF+Y5l0EzpQZsNt0yK/S1kg4sxdTw==}
+    dependencies:
+      '@types/lodash': 4.14.191
+    dev: true
+
+  /@types/lodash.update/4.10.7:
+    resolution: {integrity: sha512-S+s8ORbtkYZl+9EfhVyRZ7TAr7wEl/YRUzNdoTbjiiL2Ef8U/4mjiFo/J5bhWLJ8b8/GCnujXRCAv8EN9BI1VA==}
     dependencies:
       '@types/lodash': 4.14.191
     dev: true
@@ -28436,6 +28467,10 @@ packages:
   /lodash.uniqby/4.7.0:
     resolution: {integrity: sha512-e/zcLx6CSbmaEgFHCA7BnoQKyCtKMxnuWrJygbwPs/AIn+IMKl66L8/s+wBUn5LRw2pZx3bUHibiV1b6aTWIww==}
     dev: true
+
+  /lodash.update/4.10.2:
+    resolution: {integrity: sha512-0d/9zvc/+lN6QruE81yEuoslwtgKSDStWJY5rgTolfSKiRMonCD3OYAR1Ea2hewjY+KDYzRw73+10Jxs7HwZsQ==}
+    dev: false
 
   /lodash.values/4.3.0:
     resolution: {integrity: sha512-r0RwvdCv8id9TUblb/O7rYPwVy6lerCbcawrfdo9iC/1t1wsNMJknO79WNBgwkH0hIeJ08jmvvESbFpNb4jH0Q==}
