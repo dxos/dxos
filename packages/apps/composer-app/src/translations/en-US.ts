@@ -57,5 +57,8 @@ export const composer = {
   'resolver no spaces message': 'You aren’t in any spaces yet',
   'resolver create space label': 'Create a space for this repository',
   'save and close label': 'Save & close',
-  'resolver init document message': 'Syncing this document, one moment…'
+  'resolver init document message': 'Syncing this document, one moment…',
+  'comment stale title': 'No longer in-sync',
+  'comment stale body':
+    'The document in Github was updated in another session. To re-sync, please save your changes, reload the page, and choose to edit from Github again.'
 };
