@@ -52,7 +52,7 @@ export const SpacePickerTreeItem = ({
           <MockListItemOpenTrigger />
         )}
         <TreeItemHeading
-          className='grow break-words pbs-2 text-base font-medium'
+          className='grow break-words pbs-1 text-base font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
           {spaceDisplayName}
