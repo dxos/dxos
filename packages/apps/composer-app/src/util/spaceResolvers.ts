@@ -42,3 +42,22 @@ export const bindSpace = (space: Space, identityHex: string, source: string, id:
       return [];
   }
 };
+
+const ghDisplayName = (id: string): string => {
+  const [ghOwner, ghRepo, ghResource, ...etc] = id.split('/');
+  switch (ghResource) {
+    case 'issues':
+      return `${ghOwner}/${ghRepo} #${etc[0]}`;
+    default:
+      return `${ghOwner}/${ghRepo} ${[ghResource, ...etc].join('/')}`;
+  }
+};
+
+export const displayName = (source: string, id: string): string => {
+  switch (source) {
+    case 'com.github':
+      return ghDisplayName(id);
+    default:
+      return id;
+  }
+};

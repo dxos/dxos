@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { Space, useIdentity, useQuery, useSpaces, Text } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
-import { matchSpace } from '../../util';
+import { displayName, matchSpace } from '../../util';
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 
 const useLocationIdentifier = () => {
@@ -79,6 +79,7 @@ const DocumentsQueryableDocumentResolverProvider = ({
   children
 }: PropsWithChildren<{ space: Space; source: string; id: string }>) => {
   const [document, setDocument] = useState<Document | null>(null);
+  const defaultDisplayName = displayName(source, id);
 
   const documents = useQuery(space, (obj) => {
     const keys = obj.meta?.keys;
@@ -96,7 +97,8 @@ const DocumentsQueryableDocumentResolverProvider = ({
           meta: {
             keys: [{ source, id }]
           },
-          content: new Text(event.data.content)
+          content: new Text(event.data.content),
+          title: defaultDisplayName
         });
         space.db.add(nextDocument);
         setDocument(nextDocument);
