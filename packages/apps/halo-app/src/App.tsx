@@ -104,7 +104,7 @@ export const App = withProfiler(() => {
       fallback={<Fallback message='Loading...' />}
       appNs='halo'
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
