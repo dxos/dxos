@@ -16,7 +16,3 @@ export const run = async (command: string, args: string[], options?: SpawnOption
       resolve();
     });
   });
-
-export const log = (message: string) => {
-  console.log(`\x1b[33m [${new Date().toISOString()}] ${message}\x1b[0m`);
-};

@@ -22,7 +22,61 @@ export class TestRunner {
   private _testId = Date.now();
 
   constructor(private readonly _spec: PublishTestSpec) {
-    this._appPath = `${os.tmpdir()}/kube-publishing/${this._spec.appName}`;
+    this._appPath = `${os.tmpdir()}/dxos/kube/publishing/${this._spec.appName}`;
+  }
+
+  async run() {
+    // Prepare test env.
+    log.info('starting test', {
+      outDir: this._appPath,
+      testId: this._testId
+    });
+
+    if (!fs.existsSync(this._appPath)) {
+      log.info('checking out app');
+      fs.mkdirSync(this._appPath, { recursive: true });
+      await this._checkoutApp();
+    }
+
+    log.info('modifying app');
+    await this._modifyApp(this._appPath, `${this._testId}step1`);
+
+    log.info('implementing randomness');
+    await this._modifyBuildStep();
+
+    log.info('publishing app');
+    await this._pubishApp();
+
+    log.info('building files map');
+    const currentPath = path.join(this._appPath, this._spec.outDir);
+    await this._buildFilesMap(currentPath, currentPath);
+
+    log.info('waiting before start checking', { delay: this._spec.pubishDelayMs });
+    await sleep(this._spec.pubishDelayMs);
+
+    for (let i = 0; i < this._spec.checksCount; i++) {
+      log.info(`starting checking cycle ${i}`);
+      const result = await this._checkFileHashes();
+      const isPassed = Object.values(result).every((val) => val.match);
+
+      const testResult = {
+        testId: this._testId,
+        testStep: i,
+        isPassed,
+        filesTotal: Object.keys(result).length,
+        filesMatched: Object.values(result).filter((val) => val.match).length,
+        filesNotMatched: Object.values(result).filter((val) => !val.match).length,
+        filesInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.HIT).length,
+        filesNotInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.MISS).length,
+        filesInCacheButExpired: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.EXPIRED).length,
+        filesNotSupposedToBeCached: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.BYPASS)
+          .length,
+        filesNotCachedByCf: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.DYNAMIC).length
+      };
+
+      log.info('cycle result', testResult);
+      await sleep(this._spec.checksIntervalMs);
+    }
   }
 
   private async _checkoutApp() {
@@ -86,7 +140,7 @@ export class TestRunner {
     }
   }
 
-  private async _evaluateAppFiles(): Promise<EvaluationResult> {
+  private async _checkFileHashes(): Promise<EvaluationResult> {
     const result: EvaluationResult = {};
     for await (const [pathDiff, expectedHash] of Object.entries(this._filesMap)) {
       const kubeFilePath = `https://${this._spec.appName}.${this._spec.kubeEndpoint}${pathDiff}`;
@@ -105,59 +159,5 @@ export class TestRunner {
     }
 
     return result;
-  }
-
-  async run() {
-    // Prepare test env.
-    log.info('starting test', {
-      outDir: this._appPath,
-      testId: this._testId
-    });
-
-    if (!fs.existsSync(this._appPath)) {
-      log.info('checking out app');
-      fs.mkdirSync(this._appPath, { recursive: true });
-      await this._checkoutApp();
-    }
-
-    log.info('modifying app');
-    await this._modifyApp(this._appPath, `${this._testId}step1`);
-
-    log.info('implementing randomness');
-    await this._modifyBuildStep();
-
-    log.info('publishing app');
-    await this._pubishApp();
-
-    log.info('building files map');
-    const currentPath = path.join(this._appPath, this._spec.outDir);
-    await this._buildFilesMap(currentPath, currentPath);
-
-    log.info('waiting before start checking', { delay: this._spec.pubishDelayMs });
-    await sleep(this._spec.pubishDelayMs);
-
-    for (let i = 0; i < this._spec.checksCount; i++) {
-      log.info(`starting checking cycle ${i}`);
-      const result = await this._evaluateAppFiles();
-      const isPassed = Object.values(result).every((val) => val.match);
-
-      const testResult = {
-        testId: this._testId,
-        testStep: i,
-        isPassed,
-        filesTotal: Object.keys(result).length,
-        filesMatched: Object.values(result).filter((val) => val.match).length,
-        filesNotMatched: Object.values(result).filter((val) => !val.match).length,
-        filesInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.HIT).length,
-        filesNotInCache: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.MISS).length,
-        filesInCacheButExpired: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.EXPIRED).length,
-        filesNotSupposedToBeCached: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.BYPASS)
-          .length,
-        filesNotCachedByCf: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.DYNAMIC).length
-      };
-
-      log.info('cycle result', testResult);
-      await sleep(this._spec.checksIntervalMs);
-    }
   }
 }
