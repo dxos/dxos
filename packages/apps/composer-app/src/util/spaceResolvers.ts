@@ -10,11 +10,6 @@ import { Space } from '@dxos/client';
 // todo(thure): Why is the value that gets set in `ghBind` always undefined by the time this is called?
 const ghMatch = (space: Space, identityHex: string, id: string): boolean => {
   const [ghOwner, ghRepo, ..._ghEtc] = id.split('/');
-  console.log(
-    '[gh match]',
-    ['members', identityHex, 'github', 'repos'],
-    get(space.properties, ['members', identityHex, 'github', 'repos'])
-  );
   return get(space.properties, ['members', identityHex, 'github', 'repos'], []).includes(`${ghOwner}/${ghRepo}`);
 };
 
@@ -36,7 +31,6 @@ const ghBind = (space: Space, identityHex: string, id: string): string[] => {
   update(space.properties, ['members', identityHex, 'github', 'repos'], (ghBindings) => {
     return [...(ghBindings ?? []), `${ghOwner}/${ghRepo}`];
   });
-  console.log('[updated repos]', space.properties.members?.[identityHex]?.github?.repos);
   return space.properties.members?.[identityHex]?.github?.repos ?? [];
 };
 

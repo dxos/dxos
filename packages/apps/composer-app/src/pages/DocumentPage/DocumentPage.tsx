@@ -490,6 +490,7 @@ export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
   const { space, document, layout } = useOutletContext<OutletContext>();
   const embedded = layout === 'embedded';
+  const [staleDialogOpen, setStaleDialogOpen] = useState(false);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -498,8 +499,7 @@ export const DocumentPage = observer(() => {
       }
 
       if (event.data.type === 'comment-stale') {
-        // TODO(wittjosiah): Display in UI.
-        alert('comment stale');
+        setStaleDialogOpen(true);
       }
     };
 
@@ -511,6 +511,18 @@ export const DocumentPage = observer(() => {
 
   return (
     <div role='none'>
+      <Dialog
+        open={staleDialogOpen}
+        onOpenChange={setStaleDialogOpen}
+        title={t('comment stale title')}
+        closeTriggers={[
+          <Button key='c1' variant='primary'>
+            {t('confirm label', { ns: 'appkit' })}
+          </Button>
+        ]}
+      >
+        <p className='plb-2'>{t('comment stale body')}</p>
+      </Dialog>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />
