@@ -14,8 +14,8 @@ module.exports = {
       files: ['**/*.{ts,tsx,js,jsx}'],
       rules: {
         '@rushstack/packlets/mechanics': ['error'],
-        '@rushstack/packlets/circular-deps': ['error']
-      }
-    }
-  ]
+        '@rushstack/packlets/circular-deps': ['error'],
+      },
+    },
+  ],
 };

@@ -14,12 +14,12 @@ module.exports = {
         classPropertiesAllowed: false,
         disallowPrototype: false,
         returnStyle: 'unchanged',
-        singleReturnOnly: false
-      }
+        singleReturnOnly: false,
+      },
     ],
     'brace-style': 'off',
     'comma-spacing': 'off',
-    'comma-dangle': ['error', 'always-multiline'],
+    'comma-dangle': 'off',
     curly: ['error', 'all'],
     'func-call-spacing': 'off',
     'generator-star-spacing': 'off',
@@ -27,11 +27,11 @@ module.exports = {
     'import/newline-after-import': [
       'error',
       {
-        count: 1
+        count: 1,
         // TODO(wittjosiah): This option exists but seems unreleased.
         //   https://github.com/import-js/eslint-plugin-import/pull/2399#issuecomment-1103636483
         // considerComments: true
-      }
+      },
     ],
     'import/order': [
       'error',
@@ -40,21 +40,21 @@ module.exports = {
           {
             pattern: '@{mui,material-ui}/**',
             group: 'external',
-            position: 'after'
+            position: 'after',
           },
           {
             pattern: '@{dxos,braneframe}/**',
             group: 'internal',
-            position: 'before'
-          }
+            position: 'before',
+          },
         ],
         pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**', '@{mui,material-ui}/**'],
         'newlines-between': 'always',
         groups: [['builtin', 'external'], 'internal'],
         alphabetize: {
-          order: 'asc'
-        }
-      }
+          order: 'asc',
+        },
+      },
     ],
     indent: 'off',
     'multiline-ternary': 'off',
@@ -65,8 +65,8 @@ module.exports = {
     'no-restricted-imports': [
       'error',
       {
-        patterns: ['**/dist', '**/src/**', '!./**', '!../**']
-      }
+        patterns: ['**/dist', '**/src/**', '!./**', '!../**'],
+      },
     ],
     'no-unused-expressions': 'off',
     'no-unused-vars': 'off',
@@ -75,8 +75,8 @@ module.exports = {
     'no-void': [
       'error',
       {
-        allowAsStatement: true
-      }
+        allowAsStatement: true,
+      },
     ],
     'padded-blocks': 'off',
     'prettier/prettier': 'error',
@@ -89,10 +89,10 @@ module.exports = {
       {
         vars: 'all',
         varsIgnorePattern: '^_',
-        args: 'none'
-      }
+        args: 'none',
+      },
     ],
     'yield-star-spacing': 'off',
-    'n/handle-callback-err': 'off'
-  }
+    'n/handle-callback-err': 'off',
+  },
 };
