@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/echo/timeframe.proto";
@@ -27,6 +28,10 @@ message EchoMetadata {
 
   /// List of the data spaces.
   repeated SpaceMetadata spaces = 11;
+}
+
+message SpaceCache {
+  optional google.protobuf.Struct properties = 1;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.
@@ -54,7 +59,8 @@ message SpaceMetadata {
 
   optional string snapshot = 7;
 
-  optional string properties = 9;
+
+  optional SpaceCache cache = 9;
 }
 
 /// Information needed to bootstrap an Identity.
