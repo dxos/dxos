@@ -25,16 +25,19 @@ const MESSAGE_NAME = 'Message';
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
 
 const Message = forwardRef<HTMLDivElement, MessageProps>(
-  ({
-    asChild,
-    valence,
-    elevation: propsElevation,
-    className,
-    titleId: propsTitleId,
-    descriptionId: propsDescriptionId,
-    children,
-    ...props
-  }) => {
+  (
+    {
+      asChild,
+      valence,
+      elevation: propsElevation,
+      className,
+      titleId: propsTitleId,
+      descriptionId: propsDescriptionId,
+      children,
+      ...props
+    },
+    forwardedRef
+  ) => {
     const { tx } = useThemeContext();
     const titleId = useId('message__title', propsTitleId);
     const descriptionId = useId('message__description', propsDescriptionId);
@@ -47,6 +50,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
           className={tx('message.root', 'message', { valence, elevation }, className)}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
+          ref={forwardedRef}
         >
           {children}
         </Root>
@@ -61,16 +65,18 @@ type MessageTitleProps = Omit<ComponentPropsWithRef<typeof Primitive.h2>, 'id'> 
 
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
-const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(({ asChild, className, children, ...props }) => {
-  const { tx } = useThemeContext();
-  const { titleId } = useMessageContext(MESSAGE_TITLE_NAME);
-  const Root = asChild ? Slot : Primitive.h2;
-  return (
-    <Root {...props} className={tx('message.title', 'message__title', {}, className)} id={titleId}>
-      {children}
-    </Root>
-  );
-});
+const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
+  ({ asChild, className, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { titleId } = useMessageContext(MESSAGE_TITLE_NAME);
+    const Root = asChild ? Slot : Primitive.h2;
+    return (
+      <Root {...props} className={tx('message.title', 'message__title', {}, className)} id={titleId} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  }
+);
 
 MessageTitle.displayName = MESSAGE_TITLE_NAME;
 
@@ -78,16 +84,23 @@ type MessageBodyProps = Omit<ComponentPropsWithRef<typeof Primitive.h2>, 'id'> &
 
 const MESSAGE_BODY_NAME = 'MessageBody';
 
-const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(({ asChild, className, children, ...props }) => {
-  const { tx } = useThemeContext();
-  const { descriptionId } = useMessageContext(MESSAGE_BODY_NAME);
-  const Root = asChild ? Slot : Primitive.p;
-  return (
-    <Root {...props} className={tx('message.body', 'message__body', {}, className)} id={descriptionId}>
-      {children}
-    </Root>
-  );
-});
+const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
+  ({ asChild, className, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { descriptionId } = useMessageContext(MESSAGE_BODY_NAME);
+    const Root = asChild ? Slot : Primitive.p;
+    return (
+      <Root
+        {...props}
+        className={tx('message.body', 'message__body', {}, className)}
+        id={descriptionId}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
+    );
+  }
+);
 
 MessageBody.displayName = MESSAGE_BODY_NAME;
 
