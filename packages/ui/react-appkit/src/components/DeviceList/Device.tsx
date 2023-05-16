@@ -41,7 +41,7 @@ export const Device = (props: DeviceProps) => {
           />
         )
       }}
-      className='mbe-2'
+      className='mbe-2 p-2 rounded'
     />
   );
 };

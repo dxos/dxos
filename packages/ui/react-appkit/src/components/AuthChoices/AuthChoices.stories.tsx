@@ -6,7 +6,6 @@ import '@dxosTheme';
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 
 import { Group } from '../Group';
 import { AuthChoices, AuthChoicesProps } from './AuthChoices';
@@ -29,7 +28,7 @@ export const Default = {
           className: 'mb-4 text-3xl',
           children: t('auth choices label')
         }}
-        className={mx('p-5 rounded-xl max-w-md mx-auto my-4')}
+        className='p-5 rounded-xl max-w-md mx-auto my-4'
       >
         <AuthChoices {...args} />
       </Group>

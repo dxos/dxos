@@ -24,7 +24,7 @@ const ContactsPage = () => {
         }
       />
       <Group
-        className='mlb-4'
+        className='mlb-4 p-2 rounded'
         label={{
           level: 2,
           children: t('empty contacts message'),
