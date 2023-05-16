@@ -3,7 +3,7 @@
 //
 import React, { useEffect } from 'react';
 
-import { InvitationResult, Identity } from '@dxos/react-client';
+import { InvitationResult, Identity, useInvitationStatus } from '@dxos/react-client';
 import { useId, useTranslation } from '@dxos/react-components';
 
 import { Panel, Content, Maxie, MaxieItem } from '../Panel';
@@ -24,7 +24,7 @@ export type JoinPanelMode = 'default' | 'halo-only';
 export type JoinPanelComponentProps = {
   mode?: JoinPanelMode;
   state: JoinState;
-  send?: JoinSend;
+  send: JoinSend;
   identity?: Identity | null;
   hasIosKeyboard?: boolean;
   initialInvitationCode?: string;
@@ -48,8 +48,11 @@ export const JoinPanelComponent = ({
 
   useEffect(() => {
     // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
-    const stateStack = state?.configuration?.[0].id.split('.');
-    const innermostState = stateStack?.[stateStack.length - 1];
+    const stateStack = state?.configuration?.[0]?.id?.split?.('.');
+    if (!stateStack) {
+      return;
+    }
+    const innermostState = stateStack?.[stateStack?.length - 1];
     const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus~="${autoFocusValue}"]`);
     if ($nextAutofocus && !(hasIosKeyboard && $nextAutofocus.hasAttribute('data-prevent-ios-autofocus'))) {
@@ -165,6 +168,8 @@ export const JoinPanelComponent = ({
     acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
   });
 
+  const haloInvitationStatus = useInvitationStatus(state?.context?.halo?.invitationObservable);
+
   return (
     <Panel
       title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
@@ -190,8 +195,8 @@ export const JoinPanelComponent = ({
             <AdditionMethodSelector
               {...{
                 active: isChoosingIdentityMethod,
-                joinState,
-                joinSend
+                joinState: state,
+                joinSend: send
               }}
             />
           </MaxieItem>
@@ -199,8 +204,8 @@ export const JoinPanelComponent = ({
             <IdentityInput
               {...{
                 active: isCreatingIdentity,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 method: 'create identity'
               }}
             />
@@ -209,8 +214,8 @@ export const JoinPanelComponent = ({
             <IdentityInput
               {...{
                 active: isRecoveringIdentity,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 method: 'recover identity'
               }}
             />
@@ -219,8 +224,8 @@ export const JoinPanelComponent = ({
             <InvitationInput
               {...{
                 active: isAcceptingInvitation,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Halo'
               }}
             />
@@ -229,8 +234,8 @@ export const JoinPanelComponent = ({
             <InvitationRescuer
               {...{
                 active: isFailingOrConnectingHaloInvitation,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Halo'
               }}
             />
@@ -239,8 +244,8 @@ export const JoinPanelComponent = ({
             <InvitationAuthenticator
               {...{
                 active: isAuthenticatingHaloInvitation,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Halo',
                 ...(isHaloAuthenticationFailed && { failed: true })
               }}
@@ -250,10 +255,12 @@ export const JoinPanelComponent = ({
             <InvitationAccepted
               {...{
                 active: isHaloInvitationSuccessful,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Halo',
-                doneActionParent,
+                identity,
+                invitationStatus: haloInvitationStatus,
+                // doneActionParent,
                 onDone
               }}
             />
@@ -262,10 +269,10 @@ export const JoinPanelComponent = ({
             <IdentityAdded
               {...{
                 active: isIdentityAdded,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 mode,
-                doneActionParent,
+                // doneActionParent,
                 onDone
               }}
             />
@@ -274,8 +281,8 @@ export const JoinPanelComponent = ({
             <InvitationInput
               {...{
                 active: isEnteringInvitationCode,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Space'
               }}
             />
@@ -284,8 +291,8 @@ export const JoinPanelComponent = ({
             <InvitationRescuer
               {...{
                 active: isFailingOrConnectingSpaceInvitation,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Space'
               }}
             />
@@ -294,8 +301,8 @@ export const JoinPanelComponent = ({
             <InvitationAuthenticator
               {...{
                 active: isAuthenticatingSpaceInvitation,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Space',
                 ...(isSpaceAuthenticationFailed && { failed: true })
               }}
@@ -305,10 +312,10 @@ export const JoinPanelComponent = ({
             <InvitationAccepted
               {...{
                 active: isSpaceInvitationSuccessful,
-                joinState,
-                joinSend,
+                joinState: state,
+                joinSend: send,
                 Kind: 'Space',
-                doneActionParent,
+                // doneActionParent,
                 onDone
               }}
             />

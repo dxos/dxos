@@ -4,7 +4,7 @@
 
 import React, { cloneElement } from 'react';
 
-import { InvitationResult, useInvitationStatus, useIdentity } from '@dxos/react-client';
+import { InvitationResult, Identity, InvitationStatus } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-components';
 
 import { Content, Button, Heading } from '../../Panel';
@@ -52,21 +52,19 @@ const InvitationAcceptedComponent = ({
 };
 
 export interface InvitationAcceptedProps extends Omit<InvitationAcceptedComponentProps, 'onDone'> {
+  identity?: Identity | null;
+  invitationStatus?: InvitationStatus | null;
   onDone?: (result: InvitationResult | null) => any;
 }
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { Kind, doneActionParent: _doneActionParent, onDone, ...viewStateProps } = props;
-  const activeInvitation =
-    viewStateProps.joinState?.context[Kind.toLowerCase() as 'halo' | 'space'].invitationObservable;
-  const invitationStatus = useInvitationStatus(activeInvitation);
-  const identity = useIdentity();
+  const { Kind, doneActionParent: _doneActionParent, onDone, invitationStatus, identity, ...viewStateProps } = props;
   return (
     <ViewState {...viewStateProps}>
       <InvitationAcceptedComponent
         {...props}
         screenName={identity?.profile?.displayName}
-        onDone={() => onDone?.(invitationStatus?.result)}
+        onDone={() => onDone?.(invitationStatus?.result ?? null)}
       />
     </ViewState>
   );
