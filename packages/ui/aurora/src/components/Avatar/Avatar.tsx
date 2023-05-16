@@ -100,12 +100,12 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
           weight='fill'
           className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
-      ) : (
+      ) : status ? (
         <Circle
           weight='fill'
           className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
-      )}
+      ) : null}
     </AvatarRootPrimitive>
   );
 });
