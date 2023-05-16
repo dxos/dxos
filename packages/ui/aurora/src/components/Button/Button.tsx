@@ -3,6 +3,8 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Density, Elevation } from '@dxos/aurora-types';
@@ -10,11 +12,11 @@ import { Density, Elevation } from '@dxos/aurora-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
-interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<'button'>> {
+interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';
   density?: Density;
   elevation?: Elevation;
-  disabled?: boolean;
+  asChild?: boolean;
 }
 
 type ButtonGroupContextValue = { inGroup?: boolean };
@@ -25,13 +27,14 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
 });
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', ...rootSlot }, ref) => {
+  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', asChild, ...rootSlot }, ref) => {
     const { inGroup } = useButtonGroupContext(BUTTON_NAME);
     const { tx } = useThemeContext();
     const elevation = useElevationContext(propsElevation);
     const density = useDensityContext(propsDensity);
+    const Root = asChild ? Slot : Primitive.button;
     return (
-      <button
+      <Root
         ref={ref}
         {...rootSlot}
         className={tx(
@@ -49,7 +52,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...(rootSlot.disabled && { disabled: true })}
       >
         {children}
-      </button>
+      </Root>
     );
   }
 );
