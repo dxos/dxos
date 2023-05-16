@@ -6,9 +6,7 @@ import React, { Context, createContext, PropsWithChildren, useContext, useEffect
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { Loading } from '@dxos/react-appkit';
 import { Space, useIdentity, useQuery, useSpaces, Text, observer } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
@@ -41,23 +39,14 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
   const identityHex = identity?.identityKey.toHex();
   const [source, id] = useLocationIdentifier();
   const spaces = useSpaces({ all: true });
-  const { t } = useTranslation('appkit');
 
   const [nextSpace, setSpace] = useState<Space | null>(null);
-  const [ready, setReady] = useState(false);
 
   const space = useMemo(
     () =>
       nextSpace ?? (identityHex ? spaces.find((space) => matchSpace(space, identityHex, source, id)) ?? null : null),
     [spaces, identityHex, source, id]
   );
-
-  // [thure] This effect is intended to cause the context to wait a moment if at first no space is found, to avoid false
-  // negatives due to replication time.
-  useEffect(() => {
-    !space && setTimeout(() => setReady(false), 0);
-    setTimeout(() => setReady(true), !space ? 1e3 : 0);
-  }, [identityHex, source, id]);
 
   return (
     <ShellProvider
@@ -68,13 +57,9 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
         console.warn('TODO: onJoinedSpace', nextSpaceKey);
       }}
     >
-      {space || ready ? (
-        <SpaceResolverContext.Provider value={{ space, setSpace, source, id, identityHex }}>
-          {children}
-        </SpaceResolverContext.Provider>
-      ) : (
-        <Loading label={t('generic loading label')} />
-      )}
+      <SpaceResolverContext.Provider value={{ space, setSpace, source, id, identityHex }}>
+        {children}
+      </SpaceResolverContext.Provider>
     </ShellProvider>
   );
 });
