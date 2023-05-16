@@ -19,6 +19,7 @@ module.exports = {
     ],
     'brace-style': 'off',
     'comma-spacing': 'off',
+    'comma-dangle': ['error', 'always-multiline'],
     curly: ['error', 'all'],
     'func-call-spacing': 'off',
     'generator-star-spacing': 'off',
