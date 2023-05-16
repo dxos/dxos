@@ -89,7 +89,11 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
 };
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
-  return mx('rounded-md overflow-hidden', contentElevation({ elevation: props.elevation }), ...etc);
+  return mx(
+    'rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
+    contentElevation({ elevation: props.elevation }),
+    ...etc
+  );
 };
 
 export const buttonTheme: Theme<AppButtonStyleProps> = {
