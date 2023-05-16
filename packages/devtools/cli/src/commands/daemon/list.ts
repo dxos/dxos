@@ -15,10 +15,18 @@ export default class List extends BaseCommand {
 
     log.info('Listing processes...');
     const list = await promisify(pm2.list.bind(pm2))()
-    log.info('Processes:', { list });
 
     pm2.disconnect()
 
-    return list;
+    const result = list.map(proc => ({
+      name: proc.name,
+      pid: proc.pid,
+      cpu: proc.monit?.cpu,
+      memory: proc.monit?.memory,
+    }));
+
+    console.log(result)
+
+    return result;
   }
 }
