@@ -16,6 +16,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
@@ -133,7 +134,8 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter
+    databaseRouter: DatabaseRouter,
+    cache?: SpaceCache
   ) {
     assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
@@ -156,6 +158,10 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+
+    if (cache?.properties) {
+      this._cachedProperties = Object.freeze({ name: 'Loading...', ...cache.properties }) as Properties;
+    }
   }
 
   get key() {
