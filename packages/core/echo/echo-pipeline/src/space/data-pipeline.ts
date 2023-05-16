@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { scheduleTask, scheduleTaskInterval, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SpaceCache } from '@dxos/protocols/src/proto/gen/dxos/echo/metadata';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
@@ -54,6 +55,8 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Flag to disable automatic local snapshots.
  */
 const DISABLE_SNAPSHOT_CACHE = true;
+
+const CACHING_INTERVAL = 5_000;
 
 /**
  * Controls data pipeline in the space.
@@ -134,6 +137,9 @@ export class DataPipeline {
       await this._consumePipeline();
     });
 
+    // Save cache in interval.
+    scheduleTaskInterval(this._ctx, () => this._saveCache(), CACHING_INTERVAL);
+
     this._isOpen = true;
   }
 
@@ -150,6 +156,7 @@ export class DataPipeline {
 
     // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
+      await this._saveCache();
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
         if (!DISABLE_SNAPSHOT_CACHE) {
@@ -218,6 +225,27 @@ export class DataPipeline {
     const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
     await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
     this._targetTimeframe = newTimeframe;
+  }
+
+  private async _saveCache() {
+    const cache: SpaceCache = {};
+
+    {
+      // Add properties to cache.
+      const properties = this._itemManager.items
+        .map((item) => item.state)
+        .filter((state) => state.type && state.type === 'dxos.sdk.client.Properties')[0];
+      if (properties) {
+        cache.properties = properties.data;
+      }
+    }
+
+    {
+      // Save cache.
+      if (Object.keys(cache).length > 0) {
+        await this._params.metadataStore.setCache(this._params.spaceKey, cache);
+      }
+    }
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {

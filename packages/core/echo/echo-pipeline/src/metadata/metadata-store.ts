@@ -10,7 +10,7 @@ import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { EchoMetadata, SpaceMetadata, IdentityRecord } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -164,8 +164,8 @@ export class MetadataStore {
     await this._save();
   }
 
-  async setSpaceProperties(spaceKey: PublicKey, properties: string) {
-    this._getSpace(spaceKey).properties = properties;
+  async setCache(spaceKey: PublicKey, cache: SpaceCache) {
+    this._getSpace(spaceKey).cache = cache;
     await this._save();
   }
 
