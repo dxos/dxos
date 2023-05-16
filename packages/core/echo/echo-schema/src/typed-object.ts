@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
@@ -62,7 +63,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   // prettier-ignore
   constructor(
     initialProps?: T,
-    private readonly _schemaType?: EchoSchemaType
+    private readonly _schemaType?: EchoSchemaType,
+    private readonly _opts?: TypedObjectOpts
   ) {
     super(DocumentModel);
 
@@ -348,6 +350,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
+        if (this._opts?.readOnlyAccess) {
+          log.warn('Read only access');
+          return false;
+        }
         if (!isValidKey(property)) {
           return Reflect.set(this, property, value, receiver);
         }
@@ -406,6 +412,10 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
  */
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
+export type TypedObjectOpts = {
+  readOnlyAccess?: boolean;
+};
+
 type TypedObjectConstructor = {
   /**
    * Create a new document.
@@ -415,6 +425,7 @@ type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType,
+    opts?: TypedObjectOpts
   ): TypedObject<T>;
 };
 

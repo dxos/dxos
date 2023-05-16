@@ -122,11 +122,7 @@ export class SpaceProxy implements Space {
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  // TODO(dmaretskyi): Cache properties in the metadata.
-  private _cachedProperties = new Properties({
-    name: 'Loading...',
-  });
-
+  private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
   // prettier-ignore
@@ -135,7 +131,7 @@ export class SpaceProxy implements Space {
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
     databaseRouter: DatabaseRouter,
-    cache?: SpaceCache
+    cache: SpaceCache = {}
   ) {
     assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
@@ -159,9 +155,7 @@ export class SpaceProxy implements Space {
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
 
-    if (cache?.properties) {
-      this._cachedProperties = Object.freeze({ name: 'Loading...', ...cache.properties }) as Properties;
-    }
+      this._cachedProperties = new Properties({ name: 'Loading...', ...cache.properties }, { readOnlyAccess: true });
   }
 
   get key() {
@@ -190,6 +184,7 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
+    console.log('cached properties', this._cachedProperties.toJSON());
     if (this._currentState !== SpaceState.READY) {
       return this._cachedProperties;
     } else {
