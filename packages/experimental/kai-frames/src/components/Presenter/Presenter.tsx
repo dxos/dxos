@@ -2,16 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { h } from 'hastscript';
 import React, { ReactNode, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';
 import highlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
+import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { defaultClasses, defaultPadding, defaultStyles } from './styles';
+import { defaultClasses, defaultPadding, defaultSlideClasses } from './styles';
 
 /**
  * Compute CSS properties to transform DIV to be full screen.
@@ -92,21 +94,22 @@ export const Presenter = ({
   return (
     <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-black')}>
       {width && height && (
-        <div
-          // TODO(burdon): Full bleed app.
-          className={mx('flex flex-col absolute transition', content[0] === '#' && defaultPadding, defaultStyles)}
-          style={props}
-        >
+        <div className={mx('flex flex-col absolute transition overflow-hidden')} style={props}>
           <ReactMarkdown
             components={components}
+            // Markdown to HTML.
+            // prettier-ignore
             remarkPlugins={[
-              // TODO(burdon): How to get frontmatter?
-              [remarkFrontmatter, ['yaml']]
-              // () => (tree) => {
-              //   console.log('#', tree);
-              // }
+              [remarkFrontmatter, 'yaml'],
+              remarkParseFrontmatter
             ]}
-            rehypePlugins={[[highlight], [addClasses, classes]]}
+            // HTML processing.
+            // prettier-ignore
+            rehypePlugins={[
+              highlight,
+              [addClasses, classes],
+              slideLayout
+            ]}
           >
             {content}
           </ReactMarkdown>
@@ -123,25 +126,62 @@ export const Presenter = ({
   );
 };
 
-// TODO(burdon): Factor out.
-const ImageWrapper = ({ node, ...props }: { node: any }) => {
-  const { alt, src } = props as { alt: string; src: string };
-  const [label, className] = alt.split(':');
-  const classes: Record<string, string> = {
-    fullscreen: 'absolute h-full left-0 right-0 top-0 bottom-0 bg-contain bg-center',
-    // TODO(burdon): More control.
-    right: 'absolute w-1/3 h-full right-0 top-0 bottom-0 bg-contain bg-center',
-    main: 'mt-16 w-full h-[1000px] bg-contain bg-center bg-no-repeat'
+/**
+ * Rehype plugin to format DOM based on frontmatter.
+ * https://github.com/unifiedjs/unified#plugin
+ * TODO(burdon): See tools/presenter: remarkPluginLayout
+ *  E.g., layout image from front-matter.
+ */
+const slideLayout =
+  (options = {}) =>
+  (tree: any, file: any) => {
+    const {
+      data: { frontmatter = {} }
+    } = file;
+
+    let content = tree.children;
+    const { layout, image } = frontmatter;
+    if (image) {
+      const img = h('div', {
+        class: 'flex grow shrink-0 bg-cover bg-center bg-no-repeat',
+        style: {
+          backgroundImage: `url(${image})`
+        }
+      });
+
+      switch (layout) {
+        case 'fullscreen': {
+          content = img;
+          break;
+        }
+
+        case 'columns': {
+          content = h('div', { class: 'flex grow grid grid-cols-2' }, [
+            h('div', { class: defaultPadding }, [content]),
+            img
+          ]);
+          break;
+        }
+
+        case 'rows': {
+          content = h('div', { class: 'flex grow flex-col' }, [
+            h('div', { class: defaultPadding }, [content]),
+            h('div', { class: ['flex grow pt-0', defaultPadding] }, [img])
+          ]);
+          break;
+        }
+      }
+    } else {
+      content = h('div', { class: ['flex grow flex-col', defaultPadding] }, [content]);
+    }
+
+    const root = h('div', { class: ['flex flex-col grow', defaultSlideClasses] }, [content]);
+    tree.children = [root];
   };
 
-  // TODO(burdon): Error: <div> cannot appear as a descendant of <p>.
-  // TODO(burdon): Format based on frontmatter layout.
-  const clazz = classes[className];
-  return clazz ? (
-    <div className={clazz} style={{ backgroundImage: `url(${src})` }} title={label} />
-  ) : (
-    <img alt={label} src={src} />
-  );
+const ImageWrapper = ({ node, ...props }: { node: any }) => {
+  const { alt = '', src } = props as { alt: string; src: string };
+  return <img alt={alt} src={src} />;
 };
 
 const components = { img: ImageWrapper };

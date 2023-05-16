@@ -20,7 +20,6 @@ export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
   title: 'title',
   filter: () => Presentation.filter(),
   onCreate: async (space: Space) => {
-    console.log('>>>>', slides.echo);
     const presentation = await space.db.add(new Presentation({ stack: new DocumentStack({ title: 'DXOS Deck' }) }));
     slides.echo.forEach((content) => {
       presentation!.stack.sections.push(
