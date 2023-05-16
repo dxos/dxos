@@ -155,15 +155,12 @@ export class MetadataStore {
   }
 
   async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    const space = this._getSpace(spaceKey);
-
-    space.dataTimeframe = timeframe;
+    this._getSpace(spaceKey).dataTimeframe = timeframe;
     await this._save();
   }
 
   async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
-    const space = this._getSpace(spaceKey);
-    space.snapshot = snapshot;
+    this._getSpace(spaceKey).snapshot = snapshot;
     await this._save();
   }
 
