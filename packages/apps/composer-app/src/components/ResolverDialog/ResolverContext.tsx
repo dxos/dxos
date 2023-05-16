@@ -7,7 +7,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
-import { Space, useIdentity, useQuery, useSpaces, Text } from '@dxos/react-client';
+import { Space, useIdentity, useQuery, useSpaces, Text, observer } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
 import { displayName, matchSpace } from '../../util';
@@ -31,7 +31,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
   setSpace: (_space) => {}
 });
 
-export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
+export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
@@ -45,7 +45,7 @@ export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
   const space = useMemo(
     () =>
       nextSpace ?? (identityHex ? spaces.find((space) => matchSpace(space, identityHex, source, id)) ?? null : null),
-    [nextSpace, identityHex, source, id]
+    [spaces, nextSpace, identityHex, source, id]
   );
 
   return (
@@ -62,7 +62,7 @@ export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
       </SpaceResolverContext.Provider>
     </ShellProvider>
   );
-};
+});
 
 const defaultDocumentResolverContext: DocumentResolverProps = {
   document: null,
