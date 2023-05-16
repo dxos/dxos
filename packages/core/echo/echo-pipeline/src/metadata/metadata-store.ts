@@ -119,6 +119,12 @@ export class MetadataStore {
     }
   }
 
+  _getSpace(spaceKey: PublicKey): SpaceMetadata {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+    return space;
+  }
+
   /**
    * Clears storage - doesn't work for now.
    */
@@ -149,25 +155,26 @@ export class MetadataStore {
   }
 
   async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
+    const space = this._getSpace(spaceKey);
 
     space.dataTimeframe = timeframe;
     await this._save();
   }
 
   async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
+    const space = this._getSpace(spaceKey);
     space.snapshot = snapshot;
     await this._save();
   }
 
-  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
+  async setSpaceProperties(spaceKey: PublicKey, properties: string) {
+    const space = this._getSpace(spaceKey);
+    space.properties = properties;
+    await this._save();
+  }
 
+  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
+    const space = this._getSpace(spaceKey);
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();

@@ -53,6 +53,8 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional string snapshot = 7;
+
+  optional string properties = 9;
 }
 
 /// Information needed to bootstrap an Identity.
