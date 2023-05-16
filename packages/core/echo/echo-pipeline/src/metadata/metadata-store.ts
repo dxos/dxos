@@ -168,8 +168,7 @@ export class MetadataStore {
   }
 
   async setSpaceProperties(spaceKey: PublicKey, properties: string) {
-    const space = this._getSpace(spaceKey);
-    space.properties = properties;
+    this._getSpace(spaceKey).properties = properties;
     await this._save();
   }
 
