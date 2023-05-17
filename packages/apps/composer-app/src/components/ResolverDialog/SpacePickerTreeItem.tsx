@@ -3,82 +3,115 @@
 //
 
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Document } from '@braneframe/types';
-import { Button, MockListItemOpenTrigger, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  MockListItemOpenTrigger,
+  Tag,
+  TooltipArrow,
+  TooltipContent,
+  TooltipPortal,
+  TooltipRoot,
+  TooltipTrigger,
+  useTranslation,
+} from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
 import { TreeBranch, TreeItem, TreeItemBody, TreeItemHeading, TreeItemOpenTrigger } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
-import { useQuery } from '@dxos/react-client';
+import { observer, useQuery } from '@dxos/react-client';
 
-import { bindSpace, getSpaceDisplayName } from '../../util';
+import { bindSpace, getSpaceDisplayName, matchSpace } from '../../util';
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { ResolverProps } from './ResolverProps';
 
-export const SpacePickerTreeItem = ({
-  identityHex,
-  space,
-  source,
-  id,
-  setSpace
-}: Pick<ResolverProps, 'setSpace'> & { identityHex: string; space: Space; source: string; id: string }) => {
-  const { t } = useTranslation('composer');
-  const spaceSate = useMulticastObservable(space.state);
-  const disabled = spaceSate !== SpaceState.READY;
-  const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
-  const documents = useQuery(space, Document.filter());
-  const hasDocuments = documents.length > 0;
+export const SpacePickerTreeItem = observer(
+  ({
+    identityHex,
+    space,
+    source,
+    id,
+    setSpace,
+  }: Pick<ResolverProps, 'setSpace'> & { identityHex: string; space: Space; source: string; id: string }) => {
+    const { t } = useTranslation('composer');
+    const spaceSate = useMulticastObservable(space.state);
+    const disabled = spaceSate !== SpaceState.READY;
+    const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
+    const documents = useQuery(space, Document.filter());
+    const hasDocuments = documents.length > 0;
 
-  const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
-  const OpenTriggerIcon = open ? CaretDown : CaretRight;
+    const nBoundMembers = useMemo(() => {
+      return Object.keys(space.properties.members ?? {}).filter((identityHex) =>
+        matchSpace(space, identityHex, source, id),
+      ).length;
+    }, [source, id, space.properties]);
 
-  return (
-    <TreeItem
-      collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className={['mbe-2 block', disabled && defaultDisabled]}
-      {...(disabled && { 'aria-disabled': true })}
-    >
-      <div role='none' className='flex items-center gap-1'>
-        {hasDocuments ? (
-          <TreeItemOpenTrigger>
-            <OpenTriggerIcon />
-          </TreeItemOpenTrigger>
-        ) : (
-          <MockListItemOpenTrigger />
-        )}
-        <TreeItemHeading
-          className='grow break-words pbs-1 text-base font-medium'
-          data-testid='composer.spaceTreeItemHeading'
-        >
-          {spaceDisplayName}
-        </TreeItemHeading>
-        <Button
-          density='fine'
-          className='shrink-0'
-          onClick={() => {
-            if (identityHex) {
-              bindSpace(space, identityHex, source, id);
-              setSpace(space);
-            }
-          }}
-        >
-          Select
-        </Button>
-      </div>
-      <TreeItemBody>
-        {hasDocuments && (
-          <TreeBranch>
-            {documents.map((document) => (
-              <DocumentTreeItem key={document.id} document={document} />
-            ))}
-          </TreeBranch>
-        )}
-      </TreeItemBody>
-    </TreeItem>
-  );
-};
+    const OpenTriggerIcon = open ? CaretDown : CaretRight;
+
+    return (
+      <TreeItem
+        collapsible
+        open={open}
+        onOpenChange={setOpen}
+        className={['mbe-2 block', disabled && defaultDisabled]}
+        {...(disabled && { 'aria-disabled': true })}
+      >
+        <div role='none' className='flex items-center gap-2'>
+          {hasDocuments ? (
+            <TreeItemOpenTrigger>
+              <OpenTriggerIcon />
+            </TreeItemOpenTrigger>
+          ) : (
+            <MockListItemOpenTrigger />
+          )}
+          <TreeItemHeading
+            className='grow break-words pbs-1 text-base font-medium'
+            data-testid='composer.spaceTreeItemHeading'
+          >
+            {spaceDisplayName}
+          </TreeItemHeading>
+          {nBoundMembers > 0 && (
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <Tag palette='info' aria-label={t('bound members message', { count: nBoundMembers })}>
+                  {nBoundMembers}
+                </Tag>
+              </TooltipTrigger>
+              <TooltipPortal>
+                <TooltipContent side='bottom'>
+                  <TooltipArrow />
+                  {t('bound members message', { count: nBoundMembers })}
+                </TooltipContent>
+              </TooltipPortal>
+            </TooltipRoot>
+          )}
+          <Button
+            density='fine'
+            className='shrink-0'
+            onClick={() => {
+              if (identityHex) {
+                bindSpace(space, identityHex, source, id);
+                setSpace(space);
+              }
+            }}
+          >
+            Select
+          </Button>
+        </div>
+        <TreeItemBody>
+          {hasDocuments && (
+            <TreeBranch>
+              {documents.map((document) => (
+                <DocumentTreeItem key={document.id} document={document} />
+              ))}
+            </TreeBranch>
+          )}
+        </TreeItemBody>
+      </TreeItem>
+    );
+  },
+);
