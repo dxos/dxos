@@ -10,7 +10,7 @@ import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback 
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -153,7 +153,10 @@ export class SpaceProxy implements Space {
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
 
-      this._cachedProperties = new Properties({}, { readOnly: true });
+    this._cachedProperties = new Properties({}, { readOnly: true });
+    if (this._data.cache?.properties) {
+      setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
+    }
   }
 
   get key() {

@@ -8,6 +8,7 @@ import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
@@ -166,3 +167,8 @@ export abstract class EchoObject<T extends Model = any> {
     }
   }
 }
+
+export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
+  assert(obj._stateMachine);
+  obj._stateMachine.reset(snapshot);
+};
