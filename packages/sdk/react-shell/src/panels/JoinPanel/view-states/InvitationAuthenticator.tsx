@@ -71,7 +71,7 @@ const PureInvitationAuthenticatorContent = ({
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
+          classNames='grow flex items-center gap-2 pli-2 order-2'
           onClick={onAuthenticate}
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
@@ -82,7 +82,7 @@ const PureInvitationAuthenticatorContent = ({
         </Button>
         <Button
           disabled={disabled}
-          className='flex items-center gap-2 pis-2 pie-4'
+          classNames='flex items-center gap-2 pis-2 pie-4'
           onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >

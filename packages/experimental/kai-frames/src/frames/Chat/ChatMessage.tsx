@@ -35,13 +35,13 @@ export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete:
   return (
     <div className='flex shrink-0 w-full px-1'>
       <div>
-        <Button variant='ghost' className='p-0' onClick={onSelect}>
+        <Button variant='ghost' classNames='p-0' onClick={onSelect}>
           <UserCircle className={mx(getSize(6), getColor(message.from.name ?? 'unknown'))} />
         </Button>
       </div>
       <div className='w-full px-2 py-1'>{message.subject}</div>
       <div>
-        <Button variant='ghost' className='p-0 text-zinc-400' onClick={onDelete}>
+        <Button variant='ghost' classNames='p-0 text-zinc-400' onClick={onDelete}>
           <X className={mx(getSize(4))} />
         </Button>
       </div>

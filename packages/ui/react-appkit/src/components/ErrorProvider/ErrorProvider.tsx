@@ -82,7 +82,7 @@ export const ErrorProvider = ({ children, config, isDev = true }: ErrorProviderP
                   <Button
                     variant='ghost'
                     onClick={() => setErrorDialogOpen(true)}
-                    className={valenceColorText('warning')}
+                    classNames={valenceColorText('warning')}
                   >
                     <Warning weight='duotone' className={getSize(6)} />
                   </Button>
@@ -90,7 +90,7 @@ export const ErrorProvider = ({ children, config, isDev = true }: ErrorProviderP
               ) : (
                 <Button
                   variant='ghost'
-                  className={
+                  classNames={
                     clientContextValue?.status === SystemStatus.ACTIVE
                       ? valenceColorText('success')
                       : !clientContextValue?.status

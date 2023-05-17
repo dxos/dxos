@@ -60,7 +60,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
+          classNames='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
@@ -71,7 +71,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         <Button
           disabled={disabled}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-          className='flex items-center gap-2 pis-2 pie-4'
+          classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />

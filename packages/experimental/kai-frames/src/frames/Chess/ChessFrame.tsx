@@ -111,10 +111,10 @@ const Play: FC<{
 
       <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
-          <Button className='ml-2' onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
+          <Button classNames='ml-2' onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
           </Button>
-          <Button className='ml-1' onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
+          <Button classNames='ml-1' onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
             <CaretRight weight='thin' className={getSize(6)} />
           </Button>
         </div>

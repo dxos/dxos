@@ -60,7 +60,7 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
         <div className='order-1'>
           <DropdownMenu
             trigger={
-              <Button variant='ghost' className='p-2'>
+              <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(5)} />
               </Button>
             }

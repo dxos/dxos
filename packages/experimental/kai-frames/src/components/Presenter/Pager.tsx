@@ -81,16 +81,16 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onMove, onC
 
   return (
     <div className='flex m-4 items-center text-gray-400'>
-      <Button variant='ghost' className='p-0' onClick={() => onMove?.(1)}>
+      <Button variant='ghost' classNames='p-0' onClick={() => onMove?.(1)}>
         <CaretDoubleLeft className={mx(getSize(6))} />
       </Button>
-      <Button variant='ghost' className='p-0' onClick={() => handleMove(-1)}>
+      <Button variant='ghost' classNames='p-0' onClick={() => handleMove(-1)}>
         <CaretLeft className={mx(getSize(8))} />
       </Button>
-      <Button variant='ghost' className='p-0' onClick={() => handleMove(1)}>
+      <Button variant='ghost' classNames='p-0' onClick={() => handleMove(1)}>
         <CaretRight className={mx(getSize(8))} />
       </Button>
-      <Button variant='ghost' className='p-0' onClick={() => onMove?.(count)}>
+      <Button variant='ghost' classNames='p-0' onClick={() => onMove?.(count)}>
         <CaretDoubleRight className={mx(getSize(6))} />
       </Button>
     </div>

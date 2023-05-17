@@ -45,7 +45,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
       triggerIsInToolbar
     >
       {onClickManageSpace && (
-        <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
+        <Button classNames='flex w-full gap-2' onClick={onClickManageSpace}>
           <Gear className={getSize(5)} />
           <span>{t('manage space label')}</span>
         </Button>

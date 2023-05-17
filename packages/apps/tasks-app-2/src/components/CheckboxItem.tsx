@@ -65,7 +65,7 @@ export const CheckboxItem = forwardRef<Ref, CheckBoxItemProps>((props, ref) => {
         />
       </div>
       <div role='none' className='actions'>
-        <Button className='rounded-full p-2 border-none' onClick={onDeleteClicked}>
+        <Button classNames='rounded-full p-2 border-none' onClick={onDeleteClicked}>
           <X className={getSize(4)} />
         </Button>
       </div>

@@ -125,7 +125,7 @@ export const Dialog = ({
 
             {closeLabel && (
               <TooltipRoot>
-                <TooltipContent className='z-[51]'>{closeLabel}</TooltipContent>
+                <TooltipContent classNames='z-[51]'>{closeLabel}</TooltipContent>
                 <TooltipTrigger asChild>
                   <DialogPrimitive.Close
                     className={mx(

@@ -72,7 +72,7 @@ export const Tooltip = ({
       forceMount
       {...slots.content}
       side={side ?? slots.content?.side ?? 'top'}
-      className={[zIndex, !compact && 'px-4 py-2.5', !isOpen && 'sr-only', slots.content?.className]}
+      classNames={[zIndex, !compact && 'px-4 py-2.5', !isOpen && 'sr-only', slots.content?.classNames]}
     >
       {content}
     </TooltipContent>

@@ -69,14 +69,14 @@ export const SpacesPage = ({
               dialogProps={{
                 defaultOpen: Boolean(invitationParam),
                 openTrigger: (
-                  <Button className='grow flex gap-1'>
+                  <Button classNames='grow flex gap-1'>
                     <Rocket className={getSize(5)} />
                     {t('join space label', { ns: 'appkit' })}
                   </Button>
                 ),
               }}
             />
-            <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+            <Button variant='primary' onClick={handleCreateSpace} classNames='grow flex gap-1'>
               <Plus className={getSize(5)} />
               {t('create space label', { ns: 'appkit' })}
             </Button>

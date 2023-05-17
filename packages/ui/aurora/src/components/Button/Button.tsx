@@ -27,7 +27,7 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
 });
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', asChild, ...rootSlot }, ref) => {
+  ({ children, density: propsDensity, elevation: propsElevation, variant = 'default', asChild, ...props }, ref) => {
     const { inGroup } = useButtonGroupContext(BUTTON_NAME);
     const { tx } = useThemeContext();
     const elevation = useElevationContext(propsElevation);
@@ -36,20 +36,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Root
         ref={ref}
-        {...rootSlot}
+        {...props}
         className={tx(
           'button.root',
           'button',
           {
             variant,
             inGroup,
-            disabled: rootSlot.disabled,
+            disabled: props.disabled,
             density,
             elevation,
           },
-          rootSlot.className,
+          props.classNames,
         )}
-        {...(rootSlot.disabled && { disabled: true })}
+        {...(props.disabled && { disabled: true })}
       >
         {children}
       </Root>

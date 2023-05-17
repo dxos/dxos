@@ -31,7 +31,7 @@ export const Device = (props: DeviceProps) => {
               <p>
                 {props.displayName}
                 {props.isCurrentDevice && (
-                  <Tag palette='info' className='mli-2 align-middle'>
+                  <Tag palette='info' classNames='mli-2 align-middle'>
                     {t('current device label')}
                   </Tag>
                 )}

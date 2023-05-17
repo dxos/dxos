@@ -68,7 +68,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
 
         <Button
           variant='ghost'
-          className={mx(selected ? 'flex' : 'invisible')}
+          classNames={[selected ? 'flex' : 'invisible']}
           title='Share space'
           onClick={(event) =>
             onAction({

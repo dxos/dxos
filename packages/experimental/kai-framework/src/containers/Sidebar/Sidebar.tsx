@@ -154,7 +154,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   const Icon = getIcon(space.properties.icon);
 
   return (
-    <NaturalSidebar className={className}>
+    <NaturalSidebar classNames={className}>
       <DensityProvider density='fine'>
         <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
           {/* Header */}
@@ -170,13 +170,13 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
               <div className='flex shrink-0 items-center'>
                 <Button
                   variant='ghost'
-                  className='flex p-0 px-1'
+                  classNames='flex p-0 px-1'
                   data-testid='sidebar.showSpaceList'
                   onClick={() => setShowSpacePanel((show) => !show)}
                 >
                   <Info className={getSize(5)} />
                 </Button>
-                <Button variant='ghost' className='p-0 pr-2' onClick={toggleSidebar}>
+                <Button variant='ghost' classNames='p-0 pr-2' onClick={toggleSidebar}>
                   {sidebarOpen && <CaretLeft className={getSize(6)} />}
                 </Button>
               </div>
@@ -222,7 +222,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                   variant='ghost'
                   data-testid='space-share'
                   title='Share space'
-                  className='p-0 items-center'
+                  classNames='p-0 items-center'
                   onClick={(event) =>
                     handleSpaceAction({
                       action: IntentAction.SPACE_SHARE,
@@ -250,7 +250,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                     <Button
                       variant='ghost'
                       title='Select frame.'
-                      className='mli-2 p-0 px-2 items-center'
+                      classNames='mli-2 p-0 px-2 items-center'
                       onClick={() => setShowFrames(true)}
                     >
                       <PuzzlePiece className={getSize(6)} />
@@ -264,7 +264,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                     <Button
                       variant='ghost'
                       title='Show bot console.'
-                      className='mli-2 p-0 px-2 items-center'
+                      classNames='mli-2 p-0 px-2 items-center'
                       onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.BOTS }))}
                     >
                       <Function className={getSize(6)} />
@@ -278,7 +278,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                     <Button
                       variant='ghost'
                       title='Show metagraph.'
-                      className='mli-2 p-0 px-2 items-center'
+                      classNames='mli-2 p-0 px-2 items-center'
                       onClick={() => onNavigate(createPath({ spaceKey: space.key, section: Section.DMG }))}
                     >
                       <Graph className={getSize(6)} />
@@ -295,7 +295,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
               <Button
                 variant='ghost'
                 title='Toggle connection state.'
-                className='mli-2 p-0 px-2 items-center'
+                classNames='mli-2 p-0 px-2 items-center'
                 onClick={handleToggleConnection}
               >
                 {connectionState === ConnectionState.ONLINE ? (

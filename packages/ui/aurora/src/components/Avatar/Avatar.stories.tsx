@@ -43,8 +43,8 @@ const StorybookAvatar = ({
         <AvatarImage href={imgSrc} />
         <AvatarFallback href={jdenticon} />
       </Avatar>
-      <AvatarLabel className='block'>{label}</AvatarLabel>
-      <AvatarDescription className='block'>{description}</AvatarDescription>
+      <AvatarLabel classNames='block'>{label}</AvatarLabel>
+      <AvatarDescription classNames='block'>{description}</AvatarDescription>
     </AvatarRoot>
   );
 };
