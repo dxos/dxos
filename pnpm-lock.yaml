@@ -4373,6 +4373,7 @@ importers:
       '@radix-ui/react-dialog': ^1.0.3
       '@radix-ui/react-primitive': ^1.0.2
       '@radix-ui/react-slot': ^1.0.1
+      '@radix-ui/react-tooltip': ^1.0.5
       '@radix-ui/react-use-controllable-state': ^1.0.0
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -4390,6 +4391,7 @@ importers:
       '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
+      '@radix-ui/react-tooltip': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       i18next: 21.10.0
       jdenticon: 3.2.0
