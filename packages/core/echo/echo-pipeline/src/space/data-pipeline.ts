@@ -235,12 +235,8 @@ export class DataPipeline {
       }
     }
 
-    {
-      // Save cache.
-      if (Object.keys(cache).length > 0) {
-        await this._params.metadataStore.setCache(this._params.spaceKey, cache);
-      }
-    }
+    // Save cache.
+    await this._params.metadataStore.setCache(this._params.spaceKey, cache);
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
