@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, scheduleTaskInterval, synchronized, trackLeaks } from '@dxos/async';
+import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -55,8 +55,6 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Flag to disable automatic local snapshots.
  */
 const DISABLE_SNAPSHOT_CACHE = true;
-
-const CACHING_INTERVAL = 5_000;
 
 /**
  * Controls data pipeline in the space.
@@ -136,9 +134,6 @@ export class DataPipeline {
     scheduleTask(this._ctx, async () => {
       await this._consumePipeline();
     });
-
-    // Save cache in interval.
-    scheduleTaskInterval(this._ctx, () => this._saveCache(), CACHING_INTERVAL);
 
     this._isOpen = true;
   }
@@ -256,15 +251,17 @@ export class DataPipeline {
     }
 
     if (
-      !DISABLE_SNAPSHOT_CACHE &&
       Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
       timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
     ) {
-      this._lastSnapshotSaveTime = Date.now();
+      await this._saveCache();
 
-      const snapshot = await this._saveSnapshot(timeframe);
-      this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-      log('save', { snapshot });
+      if (!DISABLE_SNAPSHOT_CACHE) {
+        this._lastSnapshotSaveTime = Date.now();
+        const snapshot = await this._saveSnapshot(timeframe);
+        this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+        log('save', { snapshot });
+      }
     }
   }
 
