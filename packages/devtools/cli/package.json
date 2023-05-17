@@ -46,6 +46,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
+    "@dxos/websocket-rpc": "workspace:^0.1.41",
     "@oclif/core": "^2.6.5",
     "@oclif/plugin-help": "^5.2.8",
     "@oclif/plugin-plugins": "^2.4.3",

@@ -3,6 +3,7 @@
 
 import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../base-command';
+import { runDaemon } from '../../daemon/run';
 
 export default class Run extends BaseCommand {
   static override enableJsonFlag = true;
@@ -20,9 +21,7 @@ export default class Run extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags: { listen, profile } } = await this.parse(Run);
-    setInterval(() => {
-      console.log('Running daemon...', { listen, profile })
-    }, 1000)
+    runDaemon({ listen: listen!, profile: profile! });
     await new Promise(() => {})
   }
 }
