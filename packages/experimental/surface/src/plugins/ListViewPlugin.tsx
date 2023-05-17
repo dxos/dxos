@@ -2,17 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren, createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 
 import { definePlugin, usePluginContext } from '../framework';
 
+export type ListViewItem = {
+  text: string;
+};
+
 export type ListViewProps = {
-  items?: string[];
+  items?: ListViewItem[];
 };
 
 export const ListView = (props: ListViewProps) => {
   const { items } = props;
-  return <div>{items?.length ? items.map((v, i) => <div key={i}>{v}</div>) : 'no items'}</div>;
+  return <div>{items?.length ? items.map((v, i) => <div key={i}>{v?.text}</div>) : 'no items'}</div>;
 };
 
 const Context = createContext<{
@@ -32,7 +36,7 @@ export const ListViewPlugin = definePlugin({
     id: 'ListViewPlugin'
   },
   provides: {
-    context: (props: PropsWithChildren) => {
+    context: ({ children }) => {
       const { plugins } = usePluginContext();
       const initialValue = useMemo(() => {
         return {

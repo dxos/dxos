@@ -2,37 +2,43 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext } from 'react';
+import React, { PropsWithChildren, createContext, useContext } from 'react';
 
-import { usePlugin } from './App';
+import { Plugin } from './Plugin';
+import { usePluginContext } from './PluginContext';
 
-type SurfaceContextType = {};
+export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 
-const SurfaceContext = createContext<SurfaceContextType | undefined>(undefined);
+export type SurfaceProps = PropsWithChildren<{
+  name?: string;
+  data?: any;
+  component?: string | string[];
+  surfaces?: Record<string, Partial<SurfaceProps>>;
+  limit?: number | undefined;
+  direction?: Direction;
+}>;
 
-export type SurfaceProps = {
-  id?: string; // TODO(burdon): Hierarchical ID.
-  plugin: string;
-  component?: string;
+type SurfaceContextValue = SurfaceProps & {
+  parent?: SurfaceContextValue;
+  root?: SurfaceContextValue;
 };
 
-/**
- * A Surface is a UI portal that contains a single root component from a designated plugin.
- * Surfaces are dynamically configurable by the App based on the application state.
- * Surfaces are nested and can be used to create a hierarchy of UI components.
- */
-export const Surface = ({ id, plugin: pluginId, component }: SurfaceProps) => {
-  const plugin = usePlugin(pluginId);
-  const Component = plugin.components[component || 'main'];
-  if (!Component) {
-    return null;
-  }
+const SurfaceContext = createContext<SurfaceContextValue | null>(null);
 
-  return (
-    <SurfaceContext.Provider value={{}}>
-      <Component />
-    </SurfaceContext.Provider>
-  );
+export const useSurfaceContext = () => useContext(SurfaceContext);
+
+const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
+  // if specified in options.component, grab a component by name
+  // otherwise iterate through plugins where plugin.provides.component(datum) returns something
+  // pass children down to the components or just render any children otherwise
+
+  return [];
 };
 
-export const useSurface = () => {};
+export const Surface = (props: SurfaceProps) => {
+  const { plugins } = usePluginContext();
+  const parent = useSurfaceContext();
+  const components = resolveComponents(plugins, props, parent);
+  const currentContext = { ...props, ...(parent ? { parent, root: parent.root ?? parent } : {}) };
+  return <SurfaceContext.Provider value={currentContext}>{components}</SurfaceContext.Provider>;
+};

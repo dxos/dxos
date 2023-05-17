@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DebugPlugin';
-export * from './StackPlugin';
-export * from './SettingsPlugin';
+export * from './SplitViewPlugin';
+export * from './ListViewPlugin';
+export * from './ClientPlugin';
+export * from './ThemePlugin';
