@@ -58,7 +58,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/todomvc/**/*.{ts,js}"
+          "packages/apps/todomvc/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
