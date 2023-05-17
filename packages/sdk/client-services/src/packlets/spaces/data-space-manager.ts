@@ -240,9 +240,9 @@ export class DataSpaceManager {
           if (this._isOpen) {
             this.updated.emit();
           }
-        }
+        },
       },
-      cache: metadata.cache
+      cache: metadata.cache,
     });
 
     await dataSpace.open();

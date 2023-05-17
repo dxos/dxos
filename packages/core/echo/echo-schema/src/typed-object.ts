@@ -425,7 +425,7 @@ type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType,
-    opts?: TypedObjectOpts
+    opts?: TypedObjectOpts,
   ): TypedObject<T>;
 };
 

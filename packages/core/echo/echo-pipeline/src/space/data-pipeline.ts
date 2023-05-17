@@ -13,8 +13,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { SpaceCache } from '@dxos/protocols/src/proto/gen/dxos/echo/metadata';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
@@ -123,7 +123,7 @@ export class DataPipeline {
     // Create database backend.
     const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
       (data: DataMessage) => ({ data }),
-      this._pipeline.writer ?? failUndefined(),
+      this._pipeline.writer ?? failUndefined()
     );
 
     this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
@@ -192,8 +192,8 @@ export class DataPipeline {
               feedKey,
               seq,
               timeframe: data.timeframe,
-              memberKey: feedInfo.assertion.identityKey,
-            },
+              memberKey: feedInfo.assertion.identityKey
+            }
           });
 
           // Timeframe clock is not updated yet
@@ -210,7 +210,7 @@ export class DataPipeline {
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe,
-      database: this.databaseBackend!.createSnapshot(),
+      database: this.databaseBackend!.createSnapshot()
     };
   }
 

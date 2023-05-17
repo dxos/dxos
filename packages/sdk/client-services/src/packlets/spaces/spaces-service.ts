@@ -170,9 +170,9 @@ export class SpacesServiceImpl implements SpacesService {
           this._identityManager.identity?.identityKey.equals(member.key) ||
           space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE
+            : SpaceMember.PresenceState.OFFLINE,
       })),
-      cache: space.cache
+      cache: space.cache,
     };
   }
 }
