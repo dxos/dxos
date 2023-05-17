@@ -7,10 +7,10 @@ import React, { FC, PropsWithChildren } from 'react';
 import { Plugin } from './Plugin';
 
 export const compose = (contexts: FC<PropsWithChildren>[]) => {
-  return contexts.reduce((Acc, Next) => ({ children }) => (
-    <Next>
-      <Acc>{children}</Acc>
-    </Next>
+  return [...contexts].reverse().reduce((Acc, Next) => ({ children }) => (
+    <Acc>
+      <Next>{children}</Next>
+    </Acc>
   ));
 };
 
