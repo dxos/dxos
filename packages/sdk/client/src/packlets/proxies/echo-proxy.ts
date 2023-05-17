@@ -127,7 +127,7 @@ export class EchoProxy implements Echo {
 
         let spaceProxy = this._spacesMap.get(space.spaceKey);
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter, space.cache);
+          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => this._updateSpaceList());

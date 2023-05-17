@@ -350,7 +350,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
-        if (this._opts?.readOnlyAccess) {
+        if (this._opts?.readOnly) {
           log.warn('Read only access');
           return false;
         }
@@ -413,7 +413,7 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
 export type TypedObjectOpts = {
-  readOnlyAccess?: boolean;
+  readOnly?: boolean;
 };
 
 type TypedObjectConstructor = {
