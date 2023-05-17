@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, schema } from './defs';
+import { base, data, proxy, readOnly, schema } from './defs';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
@@ -113,6 +113,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   // TODO(burdon): Method on TypedObject vs EchoObject?
   get [schema](): EchoSchemaType | undefined {
     return this[base]?._schemaType;
+  }
+
+  /**
+   * Returns boolean. If `true`, read only access is activated.
+   */
+  get [readOnly](): boolean {
+    return !!this[base]?._opts?.readOnly;
   }
 
   /** Deletion. */
