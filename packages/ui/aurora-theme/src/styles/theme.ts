@@ -15,7 +15,8 @@ import {
   inputOsTheme,
   mainTheme,
   messageTheme,
-  avatarTheme
+  avatarTheme,
+  tooltipTheme
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -26,7 +27,8 @@ export const theme: Theme<Record<string, any>> = {
   list: listTheme,
   main: mainTheme,
   message: messageTheme,
-  avatar: avatarTheme
+  avatar: avatarTheme,
+  tooltip: tooltipTheme
 };
 
 export const osTheme: Theme<Record<string, any>> = {

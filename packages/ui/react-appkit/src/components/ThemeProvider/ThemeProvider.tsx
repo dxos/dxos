@@ -8,10 +8,14 @@ import {
   Viewport as ToastViewport,
   ToastViewportProps
 } from '@radix-ui/react-toast';
-import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import React, { PropsWithChildren } from 'react';
 
-import { ThemeProvider as AuroraThemeProvider, ThemeProviderProps as AuroraThemeProviderProps } from '@dxos/aurora';
+import {
+  ThemeProvider as AuroraThemeProvider,
+  ThemeProviderProps as AuroraThemeProviderProps,
+  TooltipProvider,
+  TooltipProviderProps
+} from '@dxos/aurora';
 import { mx, osTx, appTx } from '@dxos/aurora-theme';
 
 export type ThemeProviderProps = AuroraThemeProviderProps &
