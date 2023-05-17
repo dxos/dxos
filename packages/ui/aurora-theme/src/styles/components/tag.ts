@@ -36,7 +36,7 @@ const paletteColorMap: Record<Exclude<TagStyleProps['palette'], undefined>, stri
 };
 
 export const tagRoot: ComponentFunction<TagStyleProps> = ({ palette = 'neutral' }, ...etc) =>
-  mx('text-xs font-semibold pli-2 plb-0.5 rounded', paletteColorMap[palette], ...etc);
+  mx('text-xs font-semibold pli-2 plb-0.5 rounded cursor-default', paletteColorMap[palette], ...etc);
 
 export const tagTheme: Theme<TagStyleProps> = {
   root: tagRoot,
