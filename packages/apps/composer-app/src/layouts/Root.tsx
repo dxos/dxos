@@ -19,7 +19,7 @@ import {
   ErrorProvider,
   Fallback,
   ResetDialog,
-  ServiceWorkerToast
+  ServiceWorkerToast,
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
@@ -35,12 +35,12 @@ export const Root = () => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
       log.error(err);
-    }
+    },
   });
 
   const [prefersDark] = useMediaQuery('(prefers-color-scheme: dark)', { ssr: false, fallback: true });

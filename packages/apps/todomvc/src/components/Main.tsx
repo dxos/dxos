@@ -22,7 +22,7 @@ export const Main = () => {
   useEffect(() => {
     if (client.services instanceof IFrameClientServicesProxy) {
       return client.services.joinedSpace.on((spaceKey) =>
-        navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() }))
+        navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() })),
       );
     }
   }, []);
