@@ -62,4 +62,6 @@ export const composer = {
   'comment stale body':
     'The document in Github was updated in another session. To re-sync, please save your changes, reload the page, and choose to edit from Github again.',
   'open in composer label': 'Open in Composer',
+  'bound members message_one': 'One member uses this space for this repository',
+  'bound members message_other': '{{count}} members use this space for this repository',
 };
