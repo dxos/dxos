@@ -33,7 +33,7 @@ export const ProfileList = ({ identities }: ProfileListProps) => {
                 <p>
                   {identity.profile?.displayName ?? humanize(identityHex)}
                   {identityHex === myIdentityHex && (
-                    <Tag palette='info' className='mli-2 align-middle'>
+                    <Tag palette='info' classNames='mli-2 align-middle'>
                       {t('current identity label')}
                     </Tag>
                   )}

@@ -53,7 +53,7 @@ const AvatarRoot = ({
 
 type AvatarProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
-const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, ...props }, forwardedRef) => {
+const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
   const { tx } = useThemeContext();
   const imageSizeNumber = size === 'px' ? 1 : size * 4;
@@ -64,7 +64,7 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
     <AvatarRootPrimitive
       role='img'
       {...props}
-      className={tx('avatar.root', 'avatar', { size, variant }, className)}
+      className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
       ref={forwardedRef}
       aria-labelledby={labelId}
       aria-describedby={descriptionId}
@@ -116,7 +116,7 @@ type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 };
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
-  ({ asChild, srOnly, className, ...props }, forwardedRef) => {
+  ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
@@ -125,7 +125,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
         {...props}
         id={labelId}
         ref={forwardedRef}
-        className={tx('avatar.label', 'avatar__label', { srOnly }, className)}
+        className={tx('avatar.label', 'avatar__label', { srOnly }, classNames)}
       />
     );
   },
@@ -137,7 +137,7 @@ type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof 
 };
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
-  ({ asChild, srOnly, className, ...props }, forwardedRef) => {
+  ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
@@ -146,7 +146,7 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
         {...props}
         id={descriptionId}
         ref={forwardedRef}
-        className={tx('avatar.description', 'avatar__description', { srOnly }, className)}
+        className={tx('avatar.description', 'avatar__description', { srOnly }, classNames)}
       />
     );
   },

@@ -57,7 +57,7 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
     <Root
       {...{
         document,
-        ...fileProps
+        ...fileProps,
       }}
     >
       <Composer
@@ -68,9 +68,9 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
         slots={{
           root: {
             role: 'none',
-            className: 'pli-6 mbs-4'
+            className: 'pli-6 mbs-4',
           },
-          editor: { className: 'pbe-20' }
+          editor: { className: 'pbe-20' },
         }}
       />
     </Root>
@@ -98,7 +98,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const fileProps = useTextFile({
     editorRef,
-    content
+    content,
   });
 
   const docGhId = useMemo<GhIdentifier | null>(() => {
@@ -109,7 +109,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         return {
           owner,
           repo,
-          issueNumber: parseInt(rest[0], 10)
+          issueNumber: parseInt(rest[0], 10),
         };
       } else if (type === 'blob') {
         const [ref, ...pathParts] = rest;
@@ -117,7 +117,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           owner,
           repo,
           ref,
-          path: pathParts.join('/')
+          path: pathParts.join('/'),
         };
       } else {
         return null;
@@ -162,7 +162,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
         if (!Array.isArray(data) && data.type === 'file') {
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: atob(data.content) }
+            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: atob(data.content) },
           });
         } else {
           log.error('Did not receive file with content from Github.');
@@ -188,7 +188,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const { data } = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
         editorRef.current.view.dispatch({
-          changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' }
+          changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: data.body ?? '' },
         });
       } catch (err) {
         log.error('Failed to import from Github issue', err);
@@ -213,14 +213,14 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         const { sha: fileSha } = fileData;
         const {
           data: {
-            object: { sha: baseSha }
-          }
+            object: { sha: baseSha },
+          },
         } = await octokit.rest.git.getRef({ owner, repo, ref: `heads/${ref}` });
         await octokit.rest.git.createRef({
           owner,
           repo,
           ref: `refs/heads/${branchName}`,
-          sha: baseSha
+          sha: baseSha,
         });
         await octokit.rest.repos.createOrUpdateFileContents({
           owner,
@@ -229,16 +229,16 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           message: commitMessage,
           branch: branchName,
           sha: fileSha,
-          content: btoa(content.toString())
+          content: btoa(content.toString()),
         });
         const {
-          data: { html_url: prUrl }
+          data: { html_url: prUrl },
         } = await octokit.rest.pulls.create({
           owner,
           repo,
           head: branchName,
           base: ref,
-          title: commitMessage
+          title: commitMessage,
         });
         setGhResponseUrl(prUrl);
         setExportViewState('response');
@@ -259,12 +259,12 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
       try {
         const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const {
-          data: { html_url: issueUrl }
+          data: { html_url: issueUrl },
         } = await octokit.rest.issues.update({
           owner,
           repo,
           issue_number: issueNumber,
-          body: content.toString()
+          body: content.toString(),
         });
         setGhResponseUrl(issueUrl);
         setExportViewState('response');
@@ -346,7 +346,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         {...{
           document,
           ...fileProps,
-          dropdownMenuContent
+          dropdownMenuContent,
         }}
       >
         <Composer
@@ -358,15 +358,15 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
             root: {
               role: 'none',
               className: 'shrink-0 grow flex flex-col',
-              'data-testid': 'composer.markdownRoot'
+              'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
               markdownTheme: {
                 '&, & .cm-scroller': { display: 'flex', flexDirection: 'column', flex: '1 0 auto', inlineSize: '100%' },
                 '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-                '& .cm-line': { paddingInline: '1.5rem' }
-              }
-            }
+                '& .cm-line': { paddingInline: '1.5rem' },
+              },
+            },
           }}
         />
       </Root>
@@ -384,7 +384,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         closeTriggers={[
           <Button key='done' variant='primary'>
             {t('done label', { ns: 'os' })}
-          </Button>
+          </Button>,
         ]}
       >
         <Input
@@ -396,7 +396,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           {...(ghUrlValue.length > 0 &&
             !ghId && {
               validationValence: 'error',
-              validationMessage: t('error github markdown path message')
+              validationMessage: t('error github markdown path message'),
             })}
         />
       </Dialog>
@@ -409,11 +409,11 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           <Button
             key='done'
             variant='primary'
-            className='bg-warning-600 dark:bg-warning-600 hover:bg-warning-700 dark:hover:bg-warning-700'
+            classNames='bg-warning-600 dark:bg-warning-600 hover:bg-warning-700 dark:hover:bg-warning-700'
             onClick={handleGhImport}
           >
             {t('import from github label')}
-          </Button>
+          </Button>,
         ]}
       >
         <p className='plb-2'>{t('confirm import body')}</p>
@@ -444,8 +444,8 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
                       >
                         _
                       </a>
-                    )
-                  }
+                    ),
+                  },
                 }}
               />
             </p>
@@ -518,7 +518,7 @@ export const DocumentPage = observer(() => {
         closeTriggers={[
           <Button key='c1' variant='primary'>
             {t('confirm label', { ns: 'appkit' })}
-          </Button>
+          </Button>,
         ]}
       >
         <p className='plb-2'>{t('comment stale body')}</p>

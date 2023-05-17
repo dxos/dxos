@@ -178,12 +178,12 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
     <div className='flex flex-col bg-zinc-300'>
       <div className='flex mx-3 justify-end'>
         {localVideoRef.current && localVideoRef.current!.srcObject && (
-          <Button className='p-1' variant='ghost' onClick={handleStop}>
+          <Button classNames='p-1' variant='ghost' onClick={handleStop}>
             <VideoCameraSlash className={getSize(6)} />
           </Button>
         )}
         {localVideoRef.current && !localVideoRef.current!.srcObject && (
-          <Button className='p-1' variant='ghost' onClick={handleStart}>
+          <Button classNames='p-1' variant='ghost' onClick={handleStart}>
             <VideoCamera className={getSize(6)} />
           </Button>
         )}

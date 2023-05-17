@@ -19,7 +19,7 @@ import type { OutletContext } from './OutletContext';
 
 const InvitationToast = ({
   invitation,
-  spaceKey
+  spaceKey,
 }: {
   invitation: CancellableInvitationObservable;
   spaceKey: PublicKey;
@@ -35,8 +35,8 @@ const InvitationToast = ({
       actionTriggers={[
         {
           altText: 'View',
-          trigger: <Button onClick={handleViewInvitations}>{t('view invitations label')}</Button>
-        }
+          trigger: <Button onClick={handleViewInvitations}>{t('view invitations label')}</Button>,
+        },
       ]}
     />
   ) : null;
@@ -50,7 +50,7 @@ export const StandaloneLayout = () => {
   const { spaceKey, docKey } = useParams();
   const allSpaces = useSpaces({ all: true });
   const space = allSpaces.find(
-    (space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY
+    (space) => abbreviateKey(space.key) === spaceKey && space.state.get() === SpaceState.READY,
   );
   const document = space && docKey ? (space.db.getObjectById(docKey) as Document) : undefined;
   const invitations = useSpaceInvitations(space?.key);
@@ -77,12 +77,12 @@ export const StandaloneLayout = () => {
             {...{
               className: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
               onOpenAutoFocus: (event) => event.preventDefault(),
-              onCloseAutoFocus: (event) => event.preventDefault()
+              onCloseAutoFocus: (event) => event.preventDefault(),
             }}
           >
             <SidebarContent />
           </Sidebar>
-          <Main className='min-bs-full'>
+          <Main classNames='min-bs-full'>
             <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
             <SidebarToggle />
           </Main>

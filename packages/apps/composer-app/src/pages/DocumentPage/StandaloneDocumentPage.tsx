@@ -19,7 +19,7 @@ export const StandaloneDocumentPage = observer(
     dropdownMenuContent,
     handleFileImport,
     fileImportDialogOpen,
-    setFileImportDialogOpen
+    setFileImportDialogOpen,
   }: PropsWithChildren<{
     document: Document;
     dropdownMenuContent?: ReactNode;
@@ -48,14 +48,14 @@ export const StandaloneDocumentPage = observer(
                 root: { className: 'shrink-0 grow pis-6 plb-2' },
                 input: {
                   'data-testid': 'composer.documentTitle',
-                  className: 'text-center'
-                } as HTMLAttributes<HTMLInputElement>
+                  className: 'text-center',
+                } as HTMLAttributes<HTMLInputElement>,
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
               <DropdownMenu
                 trigger={
-                  <Button className='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
+                  <Button classNames='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
                 }
@@ -84,7 +84,7 @@ export const StandaloneDocumentPage = observer(
                 <FilePlus weight='duotone' className={getSize(8)} />
                 <span>{t('upload file message')}</span>
               </FileUploader>
-              <Button className='block is-full' onClick={() => setFileImportDialogOpen?.(false)}>
+              <Button classNames='block is-full' onClick={() => setFileImportDialogOpen?.(false)}>
                 {t('cancel label', { ns: 'appkit' })}
               </Button>
             </Dialog>
@@ -92,5 +92,5 @@ export const StandaloneDocumentPage = observer(
         </ThemeContext.Provider>
       </>
     );
-  }
+  },
 );

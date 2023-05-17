@@ -158,7 +158,7 @@ export const EditableList = ({
       <div className='flex'>
         <DensityProvider density={density}>
           {variant === 'ordered-draggable' && <MockListItemDragHandle />}
-          {completable && <ListItemEndcap className='invisible' />}
+          {completable && <ListItemEndcap classNames='invisible' />}
           <Input
             variant='subdued'
             label={t('new list item input label')}
@@ -191,7 +191,7 @@ export const EditableList = ({
               <Button
                 variant='ghost'
                 {...slots.addItemButton}
-                className={['p-1', slots.addItemButton?.className]}
+                classNames={['p-1', slots.addItemButton?.classNames]}
                 onClick={onClickAdd}
               >
                 <Plus className={getSize(4)} />
@@ -234,10 +234,10 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
       >
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
         {selectable && (
-          <ListItemEndcap className='items-center'>
+          <ListItemEndcap classNames='items-center'>
             <InputRoot id={`${id}__checkbox`}>
               <Checkbox
-                className={slots?.selectableCheckbox?.className}
+                classNames={slots?.selectableCheckbox?.className}
                 checked={completed}
                 defaultChecked={defaultCompleted}
                 onCheckedChange={onChangeCompleted}
@@ -245,7 +245,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
             </InputRoot>
           </ListItemEndcap>
         )}
-        <ListItemHeading className='sr-only'>{title}</ListItemHeading>
+        <ListItemHeading classNames='sr-only'>{title}</ListItemHeading>
         <Input
           {...{
             variant: 'subdued',
@@ -269,7 +269,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         {onClickDelete && (
           <ListItemEndcap>
             <Tooltip content={t('delete list item label')} side='left' tooltipLabelsTrigger>
-              <Button variant='ghost' className='p-1' onClick={onClickDelete}>
+              <Button variant='ghost' classNames='p-1' onClick={onClickDelete}>
                 <X className={getSize(4)} />
               </Button>
             </Tooltip>

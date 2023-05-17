@@ -30,7 +30,7 @@ export const ResolverDialog = () => {
             ) : (
               <h1 className='text-lg font-system-normal'>{t('resolver init document message')}</h1>
             )}
-            <Button className='is-full' onClick={handleJoinSpace}>
+            <Button classNames='is-full' onClick={handleJoinSpace}>
               {t('join space label', { ns: 'appkit' })}
             </Button>
           </div>

@@ -18,7 +18,7 @@ export type ListItemButtonProps = ListItemProps & {
 export const ListItemButton = ({ slots, onClick, selected, ...rest }: ListItemButtonProps) => {
   return (
     <ListItem
-      className={[
+      classNames={[
         'flex items-center overflow-hidden cursor-pointer px-2 py-1',
         selected && 'bg-highlight-bg dark:bg-dark-highlight-bg',
       ]}

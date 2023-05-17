@@ -41,13 +41,13 @@ const useListDensity = ({ density, variant }: Pick<ListProps, 'density' | 'varia
   return variant === 'ordered-draggable' ? 'coarse' : contextDensity ?? 'coarse';
 };
 
-const List = forwardRef<HTMLOListElement, ListProps>(({ className, children, ...props }, forwardedRef) => {
+const List = forwardRef<HTMLOListElement, ListProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const density = useListDensity(props);
 
   return (
     <DensityProvider density={density}>
-      <ListPrimitive {...props} className={tx('list.root', 'list', {}, className)} ref={forwardedRef}>
+      <ListPrimitive {...props} className={tx('list.root', 'list', {}, classNames)} ref={forwardedRef}>
         {children}
       </ListPrimitive>
     </DensityProvider>
@@ -57,7 +57,7 @@ const List = forwardRef<HTMLOListElement, ListProps>(({ className, children, ...
 type ListItemEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
 const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
-  ({ children, className, asChild, ...props }, forwardedRef) => {
+  ({ children, classNames, asChild, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const density = useDensityContext();
     const { tx } = useThemeContext();
@@ -65,7 +65,7 @@ const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
       <Root
         {...(!asChild && { role: 'none' })}
         {...props}
-        className={tx('list.item.endcap', 'list__listItem__endcap', { density }, className)}
+        className={tx('list.item.endcap', 'list__listItem__endcap', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -75,7 +75,7 @@ const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
 );
 
 const MockListItemOpenTrigger = ({
-  className,
+  classNames,
   ...props
 }: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const density = useDensityContext();
@@ -84,31 +84,31 @@ const MockListItemOpenTrigger = ({
     <div
       role='none'
       {...props}
-      className={tx('list.item.openTrigger', 'list__listItem__openTrigger--mock', { density }, className)}
+      className={tx('list.item.openTrigger', 'list__listItem__openTrigger--mock', { density }, classNames)}
     />
   );
 };
 
 const MockListItemDragHandle = ({
-  className,
+  classNames,
   ...props
 }: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const { tx } = useThemeContext();
   return (
-    <div role='none' {...props} className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, className)} />
+    <div role='none' {...props} className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, classNames)} />
   );
 };
 
 type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;
 
 const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
-  ({ children, className, ...props }, forwardedRef) => {
+  ({ children, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const density = useDensityContext();
     return (
       <ListPrimitiveItemHeading
         {...props}
-        className={tx('list.item.heading', 'list__listItem__heading', { density }, className)}
+        className={tx('list.item.heading', 'list__listItem__heading', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -120,12 +120,12 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
 type ListItemDragHandleProps = ThemedClassName<ListPrimitiveItemDragHandleProps>;
 
 const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemDragHandleProps>(
-  ({ className, children, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <ListPrimitiveItemDragHandle
         {...props}
-        className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, className)}
+        className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, classNames)}
         ref={forwardedRef}
       >
         {children || (
@@ -139,7 +139,7 @@ const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemDragHandleProps>(
 type ListItemOpenTriggerProps = ThemedClassName<ListPrimitiveItemOpenTriggerProps>;
 
 const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerProps>(
-  ({ __listItemScope, className, children, ...props }, forwardedRef) => {
+  ({ __listItemScope, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const density = useDensityContext();
     const { toggleOpenLabel } = useListContext(LIST_NAME, __listItemScope);
@@ -148,7 +148,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     return (
       <ListPrimitiveItemOpenTrigger
         {...props}
-        className={tx('list.item.openTrigger', 'list__listItem__openTrigger', { density }, className)}
+        className={tx('list.item.openTrigger', 'list__listItem__openTrigger', { density }, classNames)}
         ref={forwardedRef}
       >
         {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
@@ -167,13 +167,13 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
 
 type ListItemProps = ThemedClassName<ListPrimitiveItemProps>;
 
-const ListItem = forwardRef<HTMLLIElement, ListItemProps>(({ className, children, ...props }, forwardedRef) => {
+const ListItem = forwardRef<HTMLLIElement, ListItemProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
     <ListPrimitiveItem
       {...props}
-      className={tx('list.item.root', 'list__listItem', { density }, className)}
+      className={tx('list.item.root', 'list__listItem', { density }, classNames)}
       ref={forwardedRef}
     >
       {children}

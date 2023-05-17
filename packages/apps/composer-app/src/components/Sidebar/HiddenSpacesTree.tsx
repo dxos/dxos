@@ -15,7 +15,7 @@ import {
   TreeItemBody,
   TreeItemHeading,
   TreeItemOpenTrigger,
-  TreeRoot
+  TreeRoot,
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useIdentity } from '@dxos/react-client';
@@ -32,13 +32,13 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
   const disabled = spaceSate !== SpaceState.READY;
   const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
   return (
-    <TreeItem className='flex mis-1 mie-1.5'>
-      <TreeItemHeading className='grow'>{spaceDisplayName}</TreeItemHeading>
+    <TreeItem classNames='flex mis-1 mie-1.5'>
+      <TreeItemHeading classNames='grow'>{spaceDisplayName}</TreeItemHeading>
       <Tooltip content={t('unhide space label')} tooltipLabelsTrigger side='top' zIndex='z-[31]'>
         <Button
           variant='ghost'
           data-testid='composer.unhideSpace'
-          className='shrink-0 pli-1'
+          classNames='shrink-0 pli-1'
           onClick={() => handleUnhideSpace(space)}
         >
           <Eye className={getSize(4)} />
@@ -63,12 +63,12 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
           ...space.properties.members,
           [identityHex]: {
             ...space.properties.members?.[identityHex],
-            hidden: false
-          }
+            hidden: false,
+          },
         };
       }
     },
-    [identity]
+    [identity],
   );
 
   return (
@@ -77,7 +77,7 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
         <TreeItemOpenTrigger>
           <OpenTriggerIcon />
         </TreeItemOpenTrigger>
-        <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-system-medium'>
+        <TreeItemHeading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
           {t('hidden spaces tree label')}
         </TreeItemHeading>
       </div>
@@ -100,8 +100,8 @@ export const HiddenSpacesTree = (props: HiddenSpacesTreeProps) => {
       <span className='sr-only' id={treeLabel}>
         {t('hidden spaces tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' className='shrink-0'>
-        <TreeItem collapsible className='mis-1 block'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' classNames='shrink-0'>
+        <TreeItem collapsible classNames='mis-1 block'>
           <HiddenSpacesBranch {...props} />
         </TreeItem>
       </TreeRoot>
