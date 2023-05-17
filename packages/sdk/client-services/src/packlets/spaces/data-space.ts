@@ -22,6 +22,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
@@ -57,6 +58,7 @@ export type DataSpaceParams = {
   memberKey: PublicKey;
   snapshotId?: string | undefined;
   callbacks?: DataSpaceCallbacks;
+  cache?: SpaceCache;
 };
 
 @trackLeaks('open', 'close')
@@ -72,6 +74,7 @@ export class DataSpace {
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
   private readonly _callbacks: DataSpaceCallbacks;
+  private readonly _cache?: SpaceCache;
 
   private _state = SpaceState.CLOSED;
 
@@ -106,6 +109,7 @@ export class DataSpace {
     });
 
     this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
+    this._cache = params.cache;
   }
 
   get key() {
@@ -135,6 +139,10 @@ export class DataSpace {
 
   get notarizationPlugin() {
     return this._notarizationPluginConsumer.processor;
+  }
+
+  get cache() {
+    return this._cache;
   }
 
   async open() {
