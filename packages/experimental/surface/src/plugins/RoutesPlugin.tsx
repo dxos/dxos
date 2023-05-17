@@ -15,7 +15,7 @@ export const EntityContainer = () => {
   const { entityId, spaceId } = useParams();
   const space = useSpace(spaceId);
   const entity = space?.db.query((e) => e._id === entityId).objects?.[0];
-  return <Surface data={entity} limit={1}></Surface>;
+  return <Surface data={entity} limit={1} />;
 };
 
 export const SpaceContainer = () => {
