@@ -30,7 +30,7 @@ export const useSurfaceContext = () => useContext(SurfaceContext);
 const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
   // if specified in options.component, grab a component by name
   // otherwise iterate through plugins where plugin.provides.component(datum) returns something
-  // pass children down to the components or just render any children otherwise
+  // pass children down to the components via plugin.provides.component(data, { children }) or just render any children otherwise
 
   return [];
 };
