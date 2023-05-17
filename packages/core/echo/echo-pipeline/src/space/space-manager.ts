@@ -80,14 +80,14 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      onSessionAuth: onNetworkConnection
+      onSessionAuth: onNetworkConnection,
     });
 
     const space = new Space({
       spaceKey,
       protocol,
       genesisFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey)
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
     });
     this._spaces.set(space.key, space);
     log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));

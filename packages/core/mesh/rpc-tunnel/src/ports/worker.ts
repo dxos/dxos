@@ -28,9 +28,9 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
     port.postMessage(
       {
         channel,
-        payload
+        payload,
       },
-      [payload]
+      [payload],
     );
   },
 
@@ -51,5 +51,5 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
       return () => {
         port.onmessage = null;
       };
-    })
+    }),
 });

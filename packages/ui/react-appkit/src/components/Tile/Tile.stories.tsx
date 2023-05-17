@@ -11,43 +11,43 @@ import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
 
 export default {
-  component: BaseTile
+  component: BaseTile,
 } as any;
 
 const props = {
   title: 'Example',
-  description: 'This is an example card.'
+  description: 'This is an example card.',
 };
 
 export const Base = {
   args: {
     label: { children: props.title },
-    children: props.description
-  }
+    children: props.description,
+  },
 };
 
 const example = new TypedObject(props);
 
 export const Default = {
   render: DefaultTile.render,
-  args: { data: example }
+  args: { data: example },
 };
 
 const step1 = new EchoTask({ title: 'step 1', description: 'Build component', completed: true });
 
 export const Task = {
   render: TaskTile.render,
-  args: { data: step1 }
+  args: { data: step1 },
 };
 
 const taskList = new EchoTaskList({
   title: 'My Tasks',
-  tasks: [step1, new EchoTask({ title: 'step 2' }), new EchoTask({ title: 'step 3' })]
+  tasks: [step1, new EchoTask({ title: 'step 2' }), new EchoTask({ title: 'step 3' })],
 });
 
 export const TaskList = {
   render: TaskListTile.render,
-  args: { data: taskList }
+  args: { data: taskList },
 };
 
 export const Generic = {
@@ -59,6 +59,6 @@ export const Generic = {
     </>
   ),
   args: {
-    data: [step1, taskList, example]
-  }
+    data: [step1, taskList, example],
+  },
 };

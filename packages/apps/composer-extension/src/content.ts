@@ -13,7 +13,7 @@ const srOnly = Object.entries({
   overflow: 'hidden',
   position: 'absolute',
   'white-space': 'nowrap',
-  width: '1px'
+  width: '1px',
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
 const composerStyles = Object.entries({
@@ -22,7 +22,7 @@ const composerStyles = Object.entries({
   width: '100%',
   height: '100%',
   'min-height': '30rem',
-  'margin-bottom': '-5px'
+  'margin-bottom': '-5px',
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
 const setupComposer = () => {

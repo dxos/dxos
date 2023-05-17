@@ -61,7 +61,7 @@ export class GridLayout implements Layout {
     const bounds = this.getBounds(location);
     return {
       x: bounds.x + bounds.width / 2 - this.dimensions.width / 2,
-      y: bounds.y + bounds.height / 2 - this.dimensions.height / 2
+      y: bounds.y + bounds.height / 2 - this.dimensions.height / 2,
     };
   }
 
@@ -76,7 +76,7 @@ export class GridLayout implements Layout {
         location.y * (this._options.dimensions.height + this._options.padding) -
         this._options.dimensions.height / 2,
       width: this._options.dimensions.width,
-      height: this._options.dimensions.height
+      height: this._options.dimensions.height,
     };
   }
 }

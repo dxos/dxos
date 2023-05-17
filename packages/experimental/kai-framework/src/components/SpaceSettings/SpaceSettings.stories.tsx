@@ -11,7 +11,7 @@ import { SpaceSettings } from './SpaceSettings';
 
 export default {
   component: SpaceSettings,
-  decorators: [ClientSpaceDecorator()]
+  decorators: [ClientSpaceDecorator()],
 };
 
 const Test = () => {
@@ -25,5 +25,5 @@ const Test = () => {
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

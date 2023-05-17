@@ -40,7 +40,7 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
           value={organization.name}
           onChange={({ target: { value } }) => (organization.name = value)}
           slots={{
-            input: { spellCheck: false }
+            input: { spellCheck: false },
           }}
         />
         <div>

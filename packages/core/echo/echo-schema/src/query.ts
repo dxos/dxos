@@ -37,7 +37,7 @@ export class Query<T extends TypedObject = TypedObject> {
     private readonly _objects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
     filter: Filter<any> | Filter<any>[],
-    options?: QueryOptions
+    options?: QueryOptions,
   ) {
     this._filters.push(filterDeleted(options?.deleted));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));

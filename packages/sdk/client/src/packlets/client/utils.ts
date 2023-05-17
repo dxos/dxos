@@ -13,7 +13,7 @@ import { ClientServicesProvider } from './service-definitions';
  */
 export const fromIFrame = (
   config: Config = new Config(),
-  options: Omit<Partial<IFrameClientServicesProxyOptions>, 'source'> = {}
+  options: Omit<Partial<IFrameClientServicesProxyOptions>, 'source'> = {},
 ): ClientServicesProvider => {
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.

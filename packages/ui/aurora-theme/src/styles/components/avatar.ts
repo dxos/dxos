@@ -31,7 +31,7 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
       : status === 'active'
       ? 'text-success-350 dark:text-success-250'
       : 'text-neutral-350 dark:text-neutral-250',
-    ...etc
+    ...etc,
   );
 
 export const avatarTheme: Theme<AvatarStyleProps> = {
@@ -39,5 +39,5 @@ export const avatarTheme: Theme<AvatarStyleProps> = {
   label: avatarLabel,
   description: avatarDescription,
   statusIcon: avatarStatusIcon,
-  frame: avatarFrame
+  frame: avatarFrame,
 };

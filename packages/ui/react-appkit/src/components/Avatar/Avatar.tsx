@@ -13,7 +13,7 @@ import {
   AvatarImage,
   useJdenticonHref,
   AvatarLabel,
-  AvatarDescription
+  AvatarDescription,
 } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
@@ -65,9 +65,9 @@ export const Avatar = forwardRef(
       variant = 'square',
       status,
       size = 10,
-      slots = {}
+      slots = {},
     }: PropsWithChildren<AvatarProps>,
-    ref: ForwardedRef<HTMLSpanElement>
+    ref: ForwardedRef<HTMLSpanElement>,
   ) => {
     const jdenticon = useJdenticonHref(fallbackValue, size);
     return (
@@ -86,5 +86,5 @@ export const Avatar = forwardRef(
         </AvatarRoot>
       </>
     );
-  }
+  },
 );

@@ -17,11 +17,11 @@ import {
   ListItemHeading,
   arrayMove,
   DragEndEvent,
-  MockListItemOpenTrigger
+  MockListItemOpenTrigger,
 } from './List';
 
 export default {
-  component: List
+  component: List,
 };
 
 export const Default = {
@@ -29,8 +29,8 @@ export const Default = {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
         id: `listItem-${index}`,
-        text: `List item ${index + 1}`
-      }))
+        text: `List item ${index + 1}`,
+      })),
     );
     const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
@@ -62,8 +62,8 @@ export const Default = {
   },
   args: {
     selectable: true,
-    variant: 'ordered-draggable'
-  }
+    variant: 'ordered-draggable',
+  },
 };
 
 export const Collapsible = {
@@ -72,8 +72,8 @@ export const Collapsible = {
       [...Array(12)].map((_, index) => ({
         id: `listItem-${index}`,
         text: `List item ${index + 1}`,
-        body: `Collapsible content for item ${index + 1}`
-      }))
+        body: `Collapsible content for item ${index + 1}`,
+      })),
     );
 
     return (
@@ -93,6 +93,6 @@ export const Collapsible = {
   },
   args: {
     variant: 'unordered',
-    toggleOpenLabel: 'Open/close storybook list item'
-  }
+    toggleOpenLabel: 'Open/close storybook list item',
+  },
 };

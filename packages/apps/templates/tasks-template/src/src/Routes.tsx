@@ -17,13 +17,13 @@ export const Routes = () => {
       children: [
         {
           path: '/',
-          element: <SpacesPage />
+          element: <SpacesPage />,
         },
         {
           path: '/spaces/:spaceId',
-          element: <SpacePage />
-        }
-      ]
-    }
+          element: <SpacePage />,
+        },
+      ],
+    },
   ]);
 };

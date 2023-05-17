@@ -90,7 +90,7 @@ export class MetagraphClient implements Metagraph {
 
         await observable.fetch();
         return observable;
-      }
+      },
     };
   }
 }
@@ -108,7 +108,7 @@ export class MetagraphClientFake implements Metagraph {
 
         await observable.fetch();
         return observable;
-      }
+      },
     };
   }
 }

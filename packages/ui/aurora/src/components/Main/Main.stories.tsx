@@ -34,5 +34,5 @@ const StoryMain = (_args: StoryMainArgs) => {
 export default { component: StoryMain };
 
 export const Default = {
-  args: {}
+  args: {},
 };

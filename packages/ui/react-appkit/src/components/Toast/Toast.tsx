@@ -36,7 +36,7 @@ export const Toast = ({
   closeTrigger,
   actionTriggers,
   initiallyOpen,
-  slots = {}
+  slots = {},
 }: ToastProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
 
@@ -61,7 +61,7 @@ export const Toast = ({
           'translate-x-radix-toast-swipe-move-x',
           'radix-swipe-cancel:translate-x-0 radix-swipe-cancel:duration-200 radix-swipe-cancel:ease-[ease]',
           defaultFocus,
-          slots.root?.className
+          slots.root?.className,
         )}
       >
         <ElevationProvider elevation='chrome'>
@@ -75,7 +75,7 @@ export const Toast = ({
               {...slots.headingInner}
               className={mx(
                 'w-full radix flex flex-col justify-center min-h-full gap-1',
-                slots.headingInner?.className
+                slots.headingInner?.className,
               )}
             >
               <ToastPrimitive.Title className={mx('text-md font-medium', titleVisuallyHidden && 'sr-only')}>
@@ -91,7 +91,7 @@ export const Toast = ({
             {...slots.actions}
             className={mx(
               'flex flex-col px-3 py-2 gap-1 items-stretch justify-center min-h-full',
-              slots.actions?.className
+              slots.actions?.className,
             )}
           >
             {(actionTriggers || []).map(({ altText, trigger }, index) => (

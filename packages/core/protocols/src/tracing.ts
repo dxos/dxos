@@ -32,8 +32,8 @@ export const trace: Trace = {
         command: 'begin',
         id,
         parent: parentId,
-        data
-      }
+        data,
+      },
     };
   },
 
@@ -43,8 +43,8 @@ export const trace: Trace = {
         command: 'end',
         id,
         status: status ?? 'ok',
-        data
-      }
+        data,
+      },
     };
   },
 
@@ -53,8 +53,8 @@ export const trace: Trace = {
       span: {
         command: 'update',
         id,
-        data
-      }
+        data,
+      },
     };
   },
 
@@ -68,9 +68,9 @@ export const trace: Trace = {
           errorMessage: error.message,
           errorName: error.name,
           errorStack: error.stack,
-          ...data
-        }
-      }
+          ...data,
+        },
+      },
     };
-  }
+  },
 };

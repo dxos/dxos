@@ -65,7 +65,7 @@ export const withLogical = (prevConfig: Config): Config => {
       'logical.rounded-es': [{ 'rounded-es': getRounded() }],
       'logical.rounded-ee': [{ 'rounded-ee': getRounded() }],
       'logical.divide-b': [{ 'divide-b': getLengthWithEmpty() }],
-      'logical.divide-i': [{ 'divide-i': getLengthWithEmpty() }]
+      'logical.divide-i': [{ 'divide-i': getLengthWithEmpty() }],
     },
     conflictingClassGroups: {
       'inset-block': ['logical.block-start', 'logical.block-end'],
@@ -85,7 +85,7 @@ export const withLogical = (prevConfig: Config): Config => {
         'logical.rounded-ss',
         'logical.rounded-se',
         'logical.rounded-es',
-        'logical.rounded-ee'
+        'logical.rounded-ee',
       ],
       'logical.rounded-bs': ['logical.rounded-ss', 'logical.rounded-se'],
       'logical.rounded-be': ['logical.rounded-es', 'logical.rounded-ee'],
@@ -95,9 +95,9 @@ export const withLogical = (prevConfig: Config): Config => {
         'logical.border-color-bs',
         'logical.border-color-be',
         'logical.border-color-is',
-        'logical.border-color-ie'
+        'logical.border-color-ie',
       ],
-      border: ['logical.border-bs', 'logical.border-be', 'logical.border-is', 'logical.border-ie']
-    }
+      border: ['logical.border-bs', 'logical.border-be', 'logical.border-is', 'logical.border-ie'],
+    },
   });
 };

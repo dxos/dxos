@@ -17,7 +17,7 @@ const colors = [
   'text-green-500',
   'text-orange-500',
   'text-purple-500',
-  'text-cyan-500'
+  'text-cyan-500',
 ];
 
 // TODO(burdon): Presence.
@@ -30,7 +30,7 @@ const getColor = (username: string) => colors[hash(username) % colors.length];
 export const ChatMessage: FC<{ message: Message; onSelect: () => void; onDelete: () => void }> = ({
   message,
   onSelect,
-  onDelete
+  onDelete,
 }) => {
   return (
     <div className='flex shrink-0 w-full px-1'>

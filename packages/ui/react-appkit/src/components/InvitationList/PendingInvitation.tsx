@@ -47,7 +47,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                   fallbackValue={wrapper.get().invitationId}
                   label={<InvitationStatus {...{ status, haltedAt }} className='grow' />}
                 />
-              )
+              ),
             }}
             actions={
               <>
@@ -58,7 +58,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                     {...{
                       copyLabel: t('copy space invite code short label', { ns: 'appkit' }),
                       displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
-                      value: createInvitationUrl(invitationCode!)
+                      value: createInvitationUrl(invitationCode!),
                     }}
                   />
                 )}

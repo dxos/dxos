@@ -24,7 +24,7 @@ describe('HypercoreFactory', () => {
       Array.from({ length: numFeeds }).map(async () => {
         const { publicKey, secretKey } = createKeyPair();
         return await factory.openFeed(publicKey, { secretKey });
-      })
+      }),
     );
 
     // Write data.

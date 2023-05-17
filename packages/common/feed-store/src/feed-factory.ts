@@ -51,7 +51,7 @@ export class FeedFactory<T extends {}> {
       const dir = this._root.createDirectory(publicKey.toHex());
       const { type, native } = dir.getOrCreateFile(filename);
       log('created', {
-        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`
+        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`,
       });
 
       return native;
@@ -75,9 +75,9 @@ export class FeedFactory<T extends {}> {
       {
         secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
         crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined,
-        onwrite: options?.onwrite
+        onwrite: options?.onwrite,
       },
-      options
+      options,
     );
 
     return hypercore(this._storage(publicKey), key, opts);

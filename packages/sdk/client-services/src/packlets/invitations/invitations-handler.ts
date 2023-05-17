@@ -10,7 +10,7 @@ import {
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY
+  ON_CLOSE_DELAY,
 } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
@@ -68,7 +68,7 @@ export class InvitationsHandler {
       authMethod = Invitation.AuthMethod.SHARED_SECRET,
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random()
+      swarmKey = PublicKey.random(),
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -83,7 +83,7 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
-      ...protocol.getInvitationContext()
+      ...protocol.getInvitationContext(),
     };
 
     const stream = new PushStream<Invitation>();
@@ -91,7 +91,7 @@ export class InvitationsHandler {
       onError: (err) => {
         void ctx.dispose();
         stream.error(err);
-      }
+      },
     });
 
     ctx.onDispose(() => {
@@ -110,7 +110,7 @@ export class InvitationsHandler {
         introduce: async ({ profile }) => {
           log('guest introduced itself', {
             guestProfile: profile,
-            ...protocol.toJSON()
+            ...protocol.toJSON(),
           });
 
           guestProfile = profile;
@@ -122,7 +122,7 @@ export class InvitationsHandler {
           //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
           return {
             spaceKey: authMethod === Invitation.AuthMethod.NONE ? protocol.getInvitationContext().spaceKey : undefined,
-            authMethod
+            authMethod,
           };
         },
 
@@ -220,7 +220,7 @@ export class InvitationsHandler {
             log.error('failed', err);
             stream.error(err);
           }
-        }
+        },
       });
 
       return extension;
@@ -234,7 +234,7 @@ export class InvitationsHandler {
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
-        topology: new StarTopology(topic)
+        topology: new StarTopology(topic),
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -248,7 +248,7 @@ export class InvitationsHandler {
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation.State.CANCELLED });
         await ctx.dispose();
-      }
+      },
     });
 
     return observable;
@@ -278,7 +278,7 @@ export class InvitationsHandler {
           stream.error(err);
         }
         void ctx.dispose();
-      }
+      },
     });
 
     ctx.onDispose(() => {
@@ -315,7 +315,7 @@ export class InvitationsHandler {
               // 1. Introduce guest to host.
               log('introduce', { ...protocol.toJSON() });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce(
-                protocol.createIntroduction()
+                protocol.createIntroduction(),
               );
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
@@ -388,7 +388,7 @@ export class InvitationsHandler {
             log('auth failed', err);
             stream.error(err);
           }
-        }
+        },
       });
 
       return extension;
@@ -403,7 +403,7 @@ export class InvitationsHandler {
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
-        topology: new StarTopology(topic)
+        topology: new StarTopology(topic),
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -420,7 +420,7 @@ export class InvitationsHandler {
       onAuthenticate: async (code: string) => {
         // TODO(burdon): Reset creates a race condition? Event?
         authenticated.wake(code);
-      }
+      },
     });
 
     return observable;

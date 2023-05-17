@@ -20,7 +20,7 @@ export const ListItemButton = ({ slots, onClick, selected, ...rest }: ListItemBu
     <ListItem
       className={[
         'flex items-center overflow-hidden cursor-pointer px-2 py-1',
-        selected && 'bg-highlight-bg dark:bg-dark-highlight-bg'
+        selected && 'bg-highlight-bg dark:bg-dark-highlight-bg',
       ]}
       onClick={onClick}
       {...rest}

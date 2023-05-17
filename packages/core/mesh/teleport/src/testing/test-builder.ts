@@ -53,10 +53,10 @@ export class TestBuilder {
     assert(this._peers.has(peer1));
 
     const connection1 = Array.from(peer1.connections).find((connection) =>
-      connection.remotePeerId.equals(peer2.peerId)
+      connection.remotePeerId.equals(peer2.peerId),
     );
     const connection2 = Array.from(peer2.connections).find((connection) =>
-      connection.remotePeerId.equals(peer1.peerId)
+      connection.remotePeerId.equals(peer1.peerId),
     );
 
     assert(connection1);
@@ -119,12 +119,12 @@ export class TestConnection {
   constructor(
     public readonly localPeerId: PublicKey,
     public readonly remotePeerId: PublicKey,
-    public readonly initiator: boolean
+    public readonly initiator: boolean,
   ) {
     this.teleport = new Teleport({
       initiator,
       localPeerId,
-      remotePeerId
+      remotePeerId,
     });
   }
 }

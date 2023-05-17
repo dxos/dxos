@@ -51,7 +51,7 @@ class SurfaceController {
 }
 
 const SurfaceControllerContext = React.createContext<{ controller: SurfaceController }>({
-  controller: new SurfaceController()
+  controller: new SurfaceController(),
 });
 
 const SurfaceControllerContextProvider: FC<{
@@ -191,7 +191,7 @@ const Navigator: FC = () => {
     { label: 'Reset' },
     { label: 'Component 1', component: 'component-1' },
     { label: 'Component 2', component: 'component-2', objects: ['1'] },
-    { label: 'Component 3', component: 'component-3', objects: ['2', '3', '4'] }
+    { label: 'Component 3', component: 'component-3', objects: ['2', '3', '4'] },
   ];
 
   return (
@@ -239,7 +239,7 @@ const Search = () => {
         slots={{
           root: { className: 'w-full p-2' },
           // TODO(burdon): Classname ignored.
-          input: { className: 'w-full', autoFocus: true, spellCheck: false }
+          input: { className: 'w-full', autoFocus: true, spellCheck: false },
         }}
       />
     </div>
@@ -347,12 +347,12 @@ const TestApp = () => {
           children: [
             {
               path: '/:main/:object',
-              element: <Root />
-            }
-          ]
-        }
-      ]
-    }
+              element: <Root />,
+            },
+          ],
+        },
+      ],
+    },
   ]);
 
   return <RouterProvider router={router} />;
@@ -362,10 +362,10 @@ export default {
   component: Surface,
   decorators: [FullscreenDecorator(), ClientSpaceDecorator()],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <TestApp />
+  render: () => <TestApp />,
 };

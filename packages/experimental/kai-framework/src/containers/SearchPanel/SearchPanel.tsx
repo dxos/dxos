@@ -47,7 +47,7 @@ export const SearchPanel = ({ space, onResults, onSelect }: SearchPanelProps) =>
         <Searchbar
           slots={{
             root: { className: 'flex overflow-hidden pl-1', variant: 'subdued' },
-            input: { autoFocus: true }
+            input: { autoFocus: true },
           }}
           onSearch={handleSearch}
         />

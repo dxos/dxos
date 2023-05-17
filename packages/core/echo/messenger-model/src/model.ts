@@ -34,7 +34,7 @@ export class MessengerModel extends Model<Message[], Message> {
   static meta: ModelMeta = {
     type: 'dxos:model/messenger',
     stateMachine: () => new MessengerModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.model.messenger.Message')
+    mutationCodec: schema.getCodecForType('dxos.echo.model.messenger.Message'),
   };
 
   get messages(): Message[] {
@@ -45,7 +45,7 @@ export class MessengerModel extends Model<Message[], Message> {
     const receipt = await this.write({
       text: message.text,
       timestamp: Date.now().toString(),
-      sender: message.sender
+      sender: message.sender,
     });
 
     await receipt.waitToBeProcessed();

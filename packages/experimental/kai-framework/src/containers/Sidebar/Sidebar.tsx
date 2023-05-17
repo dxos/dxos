@@ -23,7 +23,7 @@ import {
   useAppRouter,
   useAppState,
   useCreateInvitation,
-  useTheme
+  useTheme,
 } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
@@ -226,7 +226,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
                   onClick={(event) =>
                     handleSpaceAction({
                       action: IntentAction.SPACE_SHARE,
-                      data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+                      data: { spaceKey: space.key, modifier: event.getModifierState('Shift') },
                     })
                   }
                 >
@@ -319,7 +319,7 @@ Sidebar.displayName = SIDEBAR_NAME;
 const FrameContent = ({
   showFrames,
   showDeletedObjects,
-  handleObjectAction
+  handleObjectAction,
 }: {
   showFrames: boolean;
   showDeletedObjects?: boolean;

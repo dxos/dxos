@@ -11,7 +11,7 @@ import { YText, YXmlFragment } from '@dxos/text-model';
 
 export const useTextFile = ({
   content,
-  editorRef
+  editorRef,
 }: {
   content: YText | YXmlFragment | undefined;
   editorRef: RefObject<MarkdownComposerRef>;
@@ -37,7 +37,7 @@ export const useTextFile = ({
           const data = new Uint8Array(await file.arrayBuffer());
           const md = new TextDecoder('utf-8').decode(data);
           editorRef.current.view.dispatch({
-            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md }
+            changes: { from: 0, to: editorRef.current.view.state.doc.length, insert: md },
           });
         } catch (err) {
           log.catch(err);
@@ -45,7 +45,7 @@ export const useTextFile = ({
         setFileImportDialogOpen(false);
       }
     },
-    [content]
+    [content],
   );
 
   return { fileImportDialogOpen, setFileImportDialogOpen, handleFileExport, handleFileImport };

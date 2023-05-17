@@ -19,7 +19,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 type DescriptionProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
@@ -33,7 +33,7 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 type ErrorMessageProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
@@ -47,7 +47,7 @@ const ErrorMessage = forwardRef<HTMLSpanElement, ErrorMessageProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 type ValidationProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
@@ -66,7 +66,7 @@ const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
         </Root>
       );
     }
-  }
+  },
 );
 
 type DescriptionAndValidationProps = ComponentPropsWithRef<typeof Primitive.p> & { asChild?: boolean };
@@ -80,7 +80,7 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
         {children}
       </Root>
     );
-  }
+  },
 );
 
 export { Label, Validation, Description, DescriptionAndValidation, ErrorMessage };

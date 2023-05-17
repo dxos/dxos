@@ -27,7 +27,7 @@ export const MemoryNetworkManagerProvider =
   () =>
     new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
+      transportFactory: MemoryTransportFactory,
     });
 
 export const WebsocketNetworkManagerProvider =
@@ -35,7 +35,7 @@ export const WebsocketNetworkManagerProvider =
   () =>
     new NetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createWebRTCTransportFactory()
+      transportFactory: createWebRTCTransportFactory(),
     });
 
 export type TestAgentBuilderOptions = {
@@ -96,7 +96,7 @@ export class TestAgent {
     private readonly _networkManagerProvider: NetworkManagerProvider,
     private readonly _feedBuilder: TestFeedBuilder,
     public readonly identityKey: PublicKey,
-    public readonly deviceKey: PublicKey
+    public readonly deviceKey: PublicKey,
   ) {
     this.keyring = this._feedBuilder.keyring;
     this.feedStore = this._feedBuilder.createFeedStore();
@@ -117,14 +117,14 @@ export class TestAgent {
   createSpaceManager() {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
-      networkManager: this._networkManagerProvider()
+      networkManager: this._networkManagerProvider(),
     });
   }
 
   async createSpace(
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
-    genesisKey?: PublicKey
+    genesisKey?: PublicKey,
   ): Promise<[Space, DataPipeline]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
@@ -147,13 +147,13 @@ export class TestAgent {
       memberKey: identityKey,
       spaceKey,
       feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
-      snapshotId: undefined
+      snapshotId: undefined,
     });
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
-      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey)
+      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
     })
       .setControlFeed(controlFeed)
       .setDataFeed(dataFeed);
@@ -163,7 +163,7 @@ export class TestAgent {
         const pipeline = await space.createDataPipeline({ start });
         await pipeline.start();
         return pipeline;
-      }
+      },
     });
 
     this._spaces.set(spaceKey, space);
@@ -176,21 +176,21 @@ export class TestAgent {
       swarmIdentity: {
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: this._networkManagerProvider(),
       onSessionAuth: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',
-          (gossip ?? this.createGossip()).createExtension({ remotePeerId: session.remotePeerId })
+          (gossip ?? this.createGossip()).createExtension({ remotePeerId: session.remotePeerId }),
         );
-      }
+      },
     });
   }
 
   createGossip() {
     return new Gossip({
-      localPeerId: this.deviceKey
+      localPeerId: this.deviceKey,
     });
   }
 
@@ -199,7 +199,7 @@ export class TestAgent {
       announceInterval: 30,
       offlineTimeout: 200,
       identityKey: this.identityKey,
-      gossip: gossip ?? this.createGossip()
+      gossip: gossip ?? this.createGossip(),
     });
   }
 }

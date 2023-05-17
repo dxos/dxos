@@ -24,11 +24,11 @@ export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
     slides.echo.forEach((content) => {
       presentation!.stack.sections.push(
         new DocumentStack.Section({
-          object: new Document({ content: new Text(content) })
-        })
+          object: new Document({ content: new Text(content) }),
+        }),
       );
     });
 
     return presentation;
-  }
+  },
 };

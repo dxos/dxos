@@ -19,7 +19,7 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from
  */
 // TODO(burdon): Replace with useCallback?
 export const useStateRef = <V>(
-  initialValue?: V | (() => V)
+  initialValue?: V | (() => V),
 ): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {
   const [value, setValue] = useState<V | undefined>(initialValue);
   const ref = useRef<V>();

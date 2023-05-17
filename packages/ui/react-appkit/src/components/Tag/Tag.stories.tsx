@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Tag } from './Tag';
 
 export default {
-  component: Tag
+  component: Tag,
 };
 
 export const Default = { args: { children: 'Hello' } };

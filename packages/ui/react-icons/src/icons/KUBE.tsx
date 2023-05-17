@@ -14,7 +14,7 @@ const weights = new Map<IconWeight, ReactElement>([
         fillRule: 'evenodd',
         clipRule: 'evenodd',
         strokeLinejoin: 'round',
-        strokeMiterlimit: 2
+        strokeMiterlimit: 2,
       }}
     >
       <g transform='matrix(0.239925,0,0,0.239925,0,0)'>
@@ -44,8 +44,8 @@ const weights = new Map<IconWeight, ReactElement>([
       <g transform='matrix(0.239925,0,0,0.239925,0,0)'>
         <path d='M995.005,229.366L520.378,996.709L545.183,1012.05L1019.81,244.708L995.005,229.366Z' />
       </g>
-    </g>
-  ]
+    </g>,
+  ],
 ]);
 
 const KUBEIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);

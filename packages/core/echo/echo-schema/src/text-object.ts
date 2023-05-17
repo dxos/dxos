@@ -64,7 +64,7 @@ export class Text extends EchoObject<TextModel> {
     return {
       '@id': this.id,
       '@model': TextModel.meta.type,
-      text: this.text
+      text: this.text,
     };
   }
 

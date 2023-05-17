@@ -15,8 +15,8 @@ export default {
   argTypes: {
     onClickBack: { action: 'back' },
     onClickNext: { action: 'next' },
-    onChangeDisplayName: { action: 'change' }
-  }
+    onChangeDisplayName: { action: 'change' },
+  },
 };
 
 const render = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: string }) => {
@@ -27,7 +27,7 @@ const render = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: stri
       label={{
         level: 1,
         className: 'mb-2 text-3xl',
-        children: t(rootLabel)
+        children: t(rootLabel),
       }}
       className='p-5 rounded-xl max-w-md mx-auto my-4'
     >
@@ -43,8 +43,8 @@ export const CreateProfile = {
     rootLabel: 'create profile label',
     inputLabel: 'displayName label',
     inputPlaceholder: 'displayName placeholder',
-    inputProps: { slots: { input: { autoComplete: 'displayName' } } }
-  }
+    inputProps: { slots: { input: { autoComplete: 'displayName' } } },
+  },
 };
 
 export const JoinSpace = {
@@ -57,8 +57,8 @@ export const JoinSpace = {
     nextLabel: 'redeem invitation label',
     onChange: () => {},
     onNext: () => {},
-    onBack: () => {}
-  }
+    onBack: () => {},
+  },
 };
 
 export const RestoreProfile = {
@@ -70,8 +70,8 @@ export const RestoreProfile = {
     nextLabel: 'validate seed phrase label',
     onChange: () => {},
     onNext: () => {},
-    onBack: () => {}
-  }
+    onBack: () => {},
+  },
 };
 
 export const RestoreProfileWithError = {
@@ -87,7 +87,7 @@ export const RestoreProfileWithError = {
     inputProps: {
       validationMessage: 'This only has 3 of the required 24 words',
       validationValence: 'error',
-      initialValue: 'squirrels potatoes dolphins'
-    }
-  }
+      initialValue: 'squirrels potatoes dolphins',
+    },
+  },
 };

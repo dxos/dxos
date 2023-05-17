@@ -21,28 +21,28 @@ export const createRouter = (initialState: Partial<AppState> = {}, children?: Re
       children: [
         {
           path: '/settings',
-          element: <SettingsPage />
+          element: <SettingsPage />,
         },
         {
           path: '/:spaceKey',
-          element: <SpacePage />
+          element: <SpacePage />,
         },
         {
           path: '/:spaceKey/:section',
-          element: <SpacePage />
+          element: <SpacePage />,
         },
         {
           path: '/:spaceKey/:section/:frame',
-          element: <SpacePage />
+          element: <SpacePage />,
         },
         {
           path: '/:spaceKey/:section/:frame/:objectId',
-          element: <SpacePage />
+          element: <SpacePage />,
         },
         {
           path: '/',
-          element: <SpacePage />
-        }
-      ]
-    }
+          element: <SpacePage />,
+        },
+      ],
+    },
   ]);

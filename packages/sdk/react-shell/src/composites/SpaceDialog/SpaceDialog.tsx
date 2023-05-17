@@ -23,7 +23,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
     <PanelDialog
       {...{
         slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(), ...slots?.root } },
-        titleId
+        titleId,
       }}
     >
       <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
@@ -31,7 +31,7 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
           {...{
             ...spacePanelProps,
             titleId,
-            doneActionParent: <Close asChild />
+            doneActionParent: <Close asChild />,
           }}
         />
       </ThemeContext.Provider>

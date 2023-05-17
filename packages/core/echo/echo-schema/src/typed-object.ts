@@ -36,7 +36,7 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => ({ '@id': id })
+  onRef: (id, obj) => ({ '@id': id }),
 };
 
 /**
@@ -132,8 +132,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
       ...this[base]._convert({
-        onRef: (id, obj?) => obj ?? { '@id': id }
-      })
+        onRef: (id, obj?) => obj ?? { '@id': id },
+      }),
     };
   }
 
@@ -168,14 +168,14 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@id': this.id,
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
-      ...convert(this._model?.toObject())
+      ...convert(this._model?.toObject()),
     };
   }
 
   [inspect.custom](
     depth: number,
     options: InspectOptionsStylized,
-    inspect_: (value: any, options?: InspectOptionsStylized) => string
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
@@ -322,7 +322,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         // TODO(burdon): Return other properties?
         return {
           enumerable: true,
-          configurable: true
+          configurable: true,
         };
       },
 
@@ -354,7 +354,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
         this._set(getProperty(property as string), value);
         return true;
-      }
+      },
     });
   }
 
@@ -414,7 +414,7 @@ type TypedObjectConstructor = {
    */
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    _schemaType?: EchoSchemaType
+    _schemaType?: EchoSchemaType,
   ): TypedObject<T>;
 };
 

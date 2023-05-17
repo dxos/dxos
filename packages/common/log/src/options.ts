@@ -15,7 +15,7 @@ import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './process
 export const processors: { [index: string]: LogProcessor } = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
-  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
+  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
 };
 
 const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
@@ -44,8 +44,8 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
       // TODO(burdon): Node only.
       file: process!.env?.LOG_CONFIG,
       filter: process!.env?.LOG_FILTER,
-      processor: process!.env?.LOG_PROCESSOR
-    }
+      processor: process!.env?.LOG_PROCESSOR,
+    },
   );
 
   // TODO(burdon): Verbose option.
@@ -55,6 +55,6 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
     options,
     filters: parseFilter(options.filter ?? LogLevel.INFO),
     processors: options.processor ? [processors[options.processor]] : DEFAULT_PROCESSORS,
-    prefix: options.prefix
+    prefix: options.prefix,
   };
 };

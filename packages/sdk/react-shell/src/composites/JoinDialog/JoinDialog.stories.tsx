@@ -17,7 +17,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { JoinDialog } from './JoinDialog';
 
 export default {
-  component: JoinDialog
+  component: JoinDialog,
 };
 
 const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
@@ -70,5 +70,5 @@ const JoinClientDecorator = (Story: StoryFn, { args }: StoryContext) => {
 };
 
 export const Default = {
-  decorators: [JoinClientDecorator]
+  decorators: [JoinClientDecorator],
 };

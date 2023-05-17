@@ -26,11 +26,11 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer,
         signer: keyring,
-        subject
+        subject,
       });
 
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
@@ -47,18 +47,18 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer,
         signer: keyring,
-        subject
+        subject,
       });
 
       // Tamper with the signature.
       credential.proof.value[0]++;
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -73,18 +73,18 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer,
         signer: keyring,
-        subject
+        subject,
       });
 
       // Tamper with the credential.
       credential.issuer = spaceKey;
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -99,19 +99,19 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer,
         signer: keyring,
         subject,
-        nonce: PublicKey.random().asUint8Array()
+        nonce: PublicKey.random().asUint8Array(),
       });
 
       // Remove the nonce.
       credential.proof.nonce = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -126,18 +126,18 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer,
         signer: keyring,
-        subject
+        subject,
       });
 
       // Tamper with the credential.
       credential.proof.nonce = PublicKey.random().asUint8Array();
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
   });
@@ -155,12 +155,12 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -168,13 +168,13 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
@@ -192,12 +192,12 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -205,19 +205,19 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       credential.proof.chain = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -234,12 +234,12 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -247,21 +247,21 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       credential.proof.chain!.credential.proof.value = randomBytes(
-        credential.proof.chain!.credential.proof.value.length
+        credential.proof.chain!.credential.proof.value.length,
       );
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -277,25 +277,25 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       credential.proof.chain!.credential = await createCredential({
@@ -303,15 +303,15 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
-        subject
+        subject,
       });
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -327,12 +327,12 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -340,28 +340,28 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       credential.proof.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device,
-          identityKey: identity2
+          identityKey: identity2,
         },
         subject: device,
         issuer: identity2,
-        signer: keyring
+        signer: keyring,
       });
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
 
@@ -378,7 +378,7 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device2,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device2,
           issuer: identity,
@@ -389,14 +389,14 @@ describe('verifier', () => {
               assertion: {
                 '@type': 'dxos.halo.credentials.AuthorizedDevice',
                 deviceKey: device1,
-                identityKey: identity
+                identityKey: identity,
               },
               subject: device1,
               issuer: identity,
-              signer: keyring
-            })
-          }
-        })
+              signer: keyring,
+            }),
+          },
+        }),
       };
 
       const credential = await createCredential({
@@ -404,13 +404,13 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device2,
-        chain
+        chain,
       });
 
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
@@ -429,7 +429,7 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device2,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device2,
           issuer: identity,
@@ -440,14 +440,14 @@ describe('verifier', () => {
               assertion: {
                 '@type': 'dxos.halo.credentials.AuthorizedDevice',
                 deviceKey: device1,
-                identityKey: identity
+                identityKey: identity,
               },
               subject: device1,
               issuer: identity,
-              signer: keyring
-            })
-          }
-        })
+              signer: keyring,
+            }),
+          },
+        }),
       };
 
       const credential = await createCredential({
@@ -455,28 +455,28 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device2,
-        chain
+        chain,
       });
 
       credential.proof.chain!.credential.proof.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device1,
-          identityKey: identity
+          identityKey: identity,
         },
         subject: device1,
         issuer: device2,
-        signer: keyring
+        signer: keyring,
       });
 
       expect(await verifyCredential(credential)).toMatchObject({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
   });

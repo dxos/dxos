@@ -65,8 +65,8 @@ export class Timeframe implements Equatable {
   withoutKeys(keys: PublicKey[]): Timeframe {
     return new Timeframe(
       this.frames().filter(([frameKey]) =>
-        keys.every((key) => Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0)
-      )
+        keys.every((key) => Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0),
+      ),
     );
   }
 

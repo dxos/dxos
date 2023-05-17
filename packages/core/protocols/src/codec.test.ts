@@ -15,7 +15,7 @@ describe('Codec', () => {
     // TODO(burdon): Test substitutions.
     const buffer = codec.encode({
       key: 'key-1',
-      value: 'value-1'
+      value: 'value-1',
     });
 
     const { key, value } = codec.decode(buffer);

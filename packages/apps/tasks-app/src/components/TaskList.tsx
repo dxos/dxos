@@ -120,7 +120,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                     setCaretPosition(titleRef.current, caret);
                   }
                 }
-              }
+              },
             }}
           />
         ))}

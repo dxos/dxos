@@ -74,7 +74,7 @@ describe('Event', () => {
     const ctx = new Context({
       onError: (err) => {
         error = err;
-      }
+      },
     });
 
     event.on(ctx, () => {

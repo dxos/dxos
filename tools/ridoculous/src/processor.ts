@@ -42,7 +42,7 @@ export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, o
       const f = path.format({
         ...parts,
         base: undefined,
-        ext: html ? '.html' : '.md'
+        ext: html ? '.html' : '.md',
       });
       const outFilename = path.join(outDir ?? '', path.relative(baseDir ?? '.', f));
       console.log(`Updating: ${chalk.green(outFilename)}`);

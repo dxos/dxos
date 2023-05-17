@@ -35,7 +35,7 @@ export const optionsKeys = [
   'experimental.search',
   'experimental.plugins',
   'experimental.functions',
-  'experimental.metagraph'
+  'experimental.metagraph',
 ];
 
 export type AppState = {
@@ -62,7 +62,7 @@ export type AppState = {
 };
 
 const defaultAppState: AppState = {
-  frames: [] // TODO(burdon): Plugins.
+  frames: [], // TODO(burdon): Plugins.
 };
 
 type ActionType = {
@@ -136,7 +136,7 @@ const AppStateContext: Context<AppReducer | undefined> = createContext<AppReduce
 // https://beta.reactjs.org/learn/scaling-up-with-reducer-and-context
 export const AppStateProvider: FC<{ children: ReactNode; initialState?: Partial<AppState> }> = ({
   children,
-  initialState
+  initialState,
 }) => {
   const [state, dispatch] = useReducer(reducer, Object.assign({}, defaultAppState, initialState));
 
@@ -153,7 +153,7 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: Partial<
     },
     setShowDeletedObjects: (show: boolean) => {
       dispatch({ type: 'set-show-deleted-objects', show });
-    }
+    },
   };
 
   // prettier-ignore

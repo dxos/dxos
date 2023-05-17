@@ -117,7 +117,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                     goUp();
                   }
                 }
-              }
+              },
             }}
           />
         ))}

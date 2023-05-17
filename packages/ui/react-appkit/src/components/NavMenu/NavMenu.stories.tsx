@@ -8,7 +8,7 @@ import React from 'react';
 import { NavMenu } from './NavMenu';
 
 export default {
-  component: NavMenu
+  component: NavMenu,
 };
 
 export const Default = {
@@ -17,7 +17,7 @@ export const Default = {
       {
         triggerLinkProps: { href: '#Hello' },
         children: 'Hello',
-        active: true
+        active: true,
       },
       {
         children: 'How’s it going?',
@@ -34,16 +34,16 @@ export const Default = {
               </div>
             </div>
           </div>
-        )
+        ),
       },
       {
         triggerLinkProps: { href: '#Goodbye' },
         tooltip: {
           content: 'More info about Goodbye',
-          slots: { content: { sideOffset: 8 } }
+          slots: { content: { sideOffset: 8 } },
         },
-        children: 'Goodbye'
-      }
-    ]
-  }
+        children: 'Goodbye',
+      },
+    ],
+  },
 };

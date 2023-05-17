@@ -15,7 +15,7 @@ export const mapJsonToHierarchy = (data: any, prefix?: string): TreeViewItem[] =
     return Object.values(data).map((value, i) => {
       const key = String(i);
       const item: TreeViewItem = {
-        id: createKey(key, prefix)
+        id: createKey(key, prefix),
       };
 
       if (isScalar(value)) {
@@ -33,7 +33,7 @@ export const mapJsonToHierarchy = (data: any, prefix?: string): TreeViewItem[] =
     const item: TreeViewItem = {
       id: createKey(key, prefix),
       title: key,
-      items: isScalar(value) ? undefined : mapJsonToHierarchy(value, key)
+      items: isScalar(value) ? undefined : mapJsonToHierarchy(value, key),
     };
 
     if (isScalar(value)) {
@@ -86,7 +86,7 @@ export type TreeViewProps = {
 
 export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selected, expanded = [] }) => {
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
-    expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
+    expanded?.reduce((map, id) => ({ ...map, [id]: true }), {}),
   );
 
   const handleToggle = (item: TreeViewItem) => {
@@ -116,7 +116,7 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
           className={mx(
             'flex select-none cursor-pointer pl-3',
             slots.root?.className,
-            item.id === selected && slots.selected?.className
+            item.id === selected && slots.selected?.className,
           )}
           onClick={() => handleSelection(item)}
         >

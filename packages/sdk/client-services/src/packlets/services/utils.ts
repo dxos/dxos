@@ -16,7 +16,7 @@ import { LocalClientServices } from './local-client-services';
 export const fromHost = (config: Config = new Config()): ClientServicesProvider => {
   return new LocalClientServices({
     config,
-    ...setupNetworking(config)
+    ...setupNetworking(config),
   });
 };
 
@@ -30,13 +30,13 @@ const setupNetworking = (config: Config, options: Partial<NetworkManagerOptions>
     const {
       signalManager = new WebsocketSignalManager(signals),
       transportFactory = createWebRTCTransportFactory({
-        iceServers: config.get('runtime.services.ice')
-      })
+        iceServers: config.get('runtime.services.ice'),
+      }),
     } = options;
 
     return {
       signalManager,
-      transportFactory
+      transportFactory,
     };
   }
 
@@ -47,6 +47,6 @@ const setupNetworking = (config: Config, options: Partial<NetworkManagerOptions>
   const transportFactory = MemoryTransportFactory;
   return {
     signalManager,
-    transportFactory
+    transportFactory,
   };
 };

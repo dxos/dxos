@@ -53,7 +53,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
     encoding.writeVarUint(encoderAwarenessState, messageAwareness);
     encoding.writeVarUint8Array(
       encoderAwarenessState,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._clientId])
+      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._clientId]),
     );
     void this._space.postMessage(this._channel, encoding.toUint8Array(encoderAwarenessState));
   }
@@ -69,7 +69,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
     encoding.writeVarUint(encoderAwareness, messageAwareness);
     encoding.writeVarUint8Array(
       encoderAwareness,
-      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients)
+      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients),
     );
     void this._space.postMessage(this._channel, encoding.toUint8Array(encoderAwareness));
   }
@@ -99,7 +99,7 @@ export class SpaceAwarenessProvider extends Observable<any> {
         encoding.writeVarUint(encoder, messageAwareness);
         encoding.writeVarUint8Array(
           encoder,
-          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys()))
+          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
         );
         sendReply = true;
         break;

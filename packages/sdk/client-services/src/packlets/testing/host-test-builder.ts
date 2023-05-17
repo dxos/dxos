@@ -11,7 +11,7 @@ import {
   MetadataStore,
   SigningContext,
   SpaceManager,
-  valueEncoding
+  valueEncoding,
 } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -30,13 +30,13 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
   return new ClientServicesHost({
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
-    transportFactory: MemoryTransportFactory
+    transportFactory: MemoryTransportFactory,
   });
 };
 
 export const createServiceContext = ({
   signalContext = new MemorySignalManagerContext(),
-  storage = createStorage({ type: StorageType.RAM })
+  storage = createStorage({ type: StorageType.RAM }),
 }: {
   signalContext?: MemorySignalManagerContext;
   storage?: Storage;
@@ -44,7 +44,7 @@ export const createServiceContext = ({
   const signalManager = new MemorySignalManager(signalContext);
   const networkManager = new NetworkManager({
     signalManager,
-    transportFactory: MemoryTransportFactory
+    transportFactory: MemoryTransportFactory,
   });
 
   const modelFactory = createDefaultModelFactory();
@@ -59,7 +59,7 @@ export const createPeers = async (numPeers: number) => {
       const peer = createServiceContext({ signalContext });
       await peer.open();
       return peer;
-    })
+    }),
   );
 };
 
@@ -112,9 +112,9 @@ export class TestPeer {
         root: this.storage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     }));
   }
 
@@ -129,14 +129,14 @@ export class TestPeer {
   get networkManager() {
     return (this._props.networkManager ??= new NetworkManager({
       signalManager: new MemorySignalManager(this.signalContext),
-      transportFactory: MemoryTransportFactory
+      transportFactory: MemoryTransportFactory,
     }));
   }
 
   get spaceManager() {
     return (this._props.spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
     }));
   }
 }
@@ -151,10 +151,10 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
     credentialSigner: createCredentialSignerWithChain(
       keyring,
       {
-        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey)
+        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey),
       },
-      deviceKey
+      deviceKey,
     ),
-    recordCredential: async () => {} // No-op.
+    recordCredential: async () => {}, // No-op.
   };
 };

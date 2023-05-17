@@ -21,7 +21,7 @@ test('example', () => {
     expect(key.buffer).to.deep.equal(testKey.buffer);
     return {
       key: key.toString('hex'),
-      name
+      name,
     };
   });
 

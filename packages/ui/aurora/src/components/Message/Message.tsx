@@ -36,7 +36,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
       children,
       ...props
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const { tx } = useThemeContext();
     const titleId = useId('message__title', propsTitleId);
@@ -56,7 +56,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
         </Root>
       </MessageProvider>
     );
-  }
+  },
 );
 
 Message.displayName = MESSAGE_NAME;
@@ -75,7 +75,7 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 MessageTitle.displayName = MESSAGE_TITLE_NAME;
@@ -99,7 +99,7 @@ const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 MessageBody.displayName = MESSAGE_BODY_NAME;

@@ -17,18 +17,18 @@ const main = async () => {
   const { version } = await readPkg();
 
   const parser = new ArgumentParser({
-    description: 'Protobuf compiler'
+    description: 'Protobuf compiler',
   });
 
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
   parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', {
-    help: 'Base path to resolve fully qualified packages'
+    help: 'Base path to resolve fully qualified packages',
   });
   parser.add_argument('-o', '--outDir', {
     help: 'Output directory path',
-    required: true
+    required: true,
   });
 
   const { proto, substitutions, baseDir, outDir } = parser.parse_args();

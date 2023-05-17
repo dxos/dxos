@@ -23,7 +23,7 @@ const PureInvitationAcceptedContent = ({
   result,
   Kind,
   doneActionParent,
-  active
+  active,
 }: InvitationAcceptedProps & { result: InvitationResult | null }) => {
   const disabled = !active;
   const { t } = useTranslation('os');
@@ -52,7 +52,7 @@ const PureInvitationAcceptedContent = ({
 };
 
 const InvitationAcceptedContent = (
-  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable }
+  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable },
 ) => {
   const { result } = useInvitationStatus(props.activeInvitation);
   return <PureInvitationAcceptedContent {...props} result={result} />;

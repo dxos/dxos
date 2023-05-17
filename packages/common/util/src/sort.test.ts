@@ -14,7 +14,7 @@ const data = [
   { i: 2, idx: 1, label: 'lemon' },
   { i: 3, idx: 2, label: 'Banana', enabled: false },
   { i: 4, idx: 2, label: 'banana', enabled: true },
-  { i: 5, label: 'peach' }
+  { i: 5, label: 'peach' },
 ];
 
 describe('Sort', () => {
@@ -50,8 +50,8 @@ describe('Sort', () => {
       compareMulti([
         compareObject('idx', compareScalar(true)),
         compareObject('label', compareString()),
-        compareObject('enabled', compareScalar(false))
-      ])
+        compareObject('enabled', compareScalar(false)),
+      ]),
     );
     expect(copy).to.deep.eq([data[0], data[2], data[4], data[3], data[1], data[5]]);
   });

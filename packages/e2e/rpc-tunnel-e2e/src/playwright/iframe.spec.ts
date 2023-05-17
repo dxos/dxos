@@ -9,7 +9,7 @@ import type { Page } from 'playwright';
 import { setupPage } from '@dxos/test/playwright';
 
 const config = {
-  baseUrl: 'http://localhost:5173'
+  baseUrl: 'http://localhost:5173',
 };
 
 test.describe('iframe', () => {
@@ -18,7 +18,7 @@ test.describe('iframe', () => {
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: `${config.baseUrl}/iframe.html`,
-      waitFor: (page) => page.isVisible(':has-text("value")')
+      waitFor: (page) => page.isVisible(':has-text("value")'),
     });
 
     page = result.page;

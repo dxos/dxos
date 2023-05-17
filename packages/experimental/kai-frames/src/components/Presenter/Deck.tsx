@@ -25,7 +25,7 @@ export const Deck = ({
   slide: controlledSlide = 1,
   fullscreen,
   onSlideChange,
-  onToggleFullscreen
+  onToggleFullscreen,
 }: DeckProps) => {
   const [slide, setSlide] = useState(controlledSlide); // TODO(burdon): Move up.
   useEffect(() => {

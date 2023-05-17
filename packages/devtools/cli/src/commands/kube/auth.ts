@@ -20,7 +20,7 @@ export default class Auth extends BaseCommand {
     // TODO(egorgripasov): Find AuthorizedDevice by KubeAccess credential.
     const { deviceKey } = client.halo.device!;
     const authDeviceCreds = await queryCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', (cred) =>
-      PublicKey.equals(cred.subject.id, deviceKey!)
+      PublicKey.equals(cred.subject.id, deviceKey!),
     );
 
     if (!authDeviceCreds.length) {
@@ -33,7 +33,7 @@ export default class Auth extends BaseCommand {
 
       // Find proper KubeAccess credential.
       const kubeAccessCreds = await queryCredentials(client, 'dxos.halo.credentials.KubeAccess', (cred) =>
-        PublicKey.equals(cred.issuer, kubeKey)
+        PublicKey.equals(cred.issuer, kubeKey),
       );
 
       if (!kubeAccessCreds.length) {
@@ -46,11 +46,11 @@ export default class Auth extends BaseCommand {
       // Create presentation.
       const presentation = await client.halo.presentCredentials({
         ids: credsToPresent as PublicKey[],
-        nonce
+        nonce,
       });
 
       return supervisor.rpc.authenticate({
-        presentation
+        presentation,
       });
     });
   }

@@ -38,13 +38,13 @@ export const SingleInputStep = ({
   cancelPendingLabel,
   loadingLabel,
   inputPlaceholder,
-  inputProps
+  inputProps,
 }: SingleInputStepProps) => {
   const { t } = useTranslation('appkit');
   const onKeyUp = useCallback((e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onNext(), [onNext]);
   const inputSlots = useMemo(
     () => ({ ...inputProps?.slots, input: { onKeyUp, autoFocus: true, ...inputProps?.slots?.input } }),
-    [onKeyUp, inputProps?.slots]
+    [onKeyUp, inputProps?.slots],
   );
   return (
     <>

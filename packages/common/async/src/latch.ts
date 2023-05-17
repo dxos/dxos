@@ -55,6 +55,6 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
 
       return i;
     },
-    (err: Error) => doReject(err)
+    (err: Error) => doReject(err),
   ];
 };

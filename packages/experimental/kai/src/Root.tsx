@@ -16,7 +16,7 @@ import {
   configProvider,
   defaultFrames,
   kaiTranslations,
-  useClientProvider
+  useClientProvider,
 } from '@dxos/kai-framework';
 import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
@@ -31,7 +31,7 @@ import { osTranslations } from '@dxos/react-shell';
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
-    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
+    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules]),
   };
 
   // TODO(burdon): Factor out config.

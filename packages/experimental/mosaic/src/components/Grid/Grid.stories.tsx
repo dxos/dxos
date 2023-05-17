@@ -36,7 +36,7 @@ const Test = () => {
     return range(num).map(() => {
       return createItem({
         x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
-        y: faker.datatype.number({ min: -layout.range.y, max: layout.range.y })
+        y: faker.datatype.number({ min: -layout.range.y, max: layout.range.y }),
       });
     });
   });
@@ -66,18 +66,18 @@ const Test = () => {
       slots={{
         tile: {
           root: {
-            className: 'bg-green-50 select-none cursor-pointer text-black shadow'
+            className: 'bg-green-50 select-none cursor-pointer text-black shadow',
           },
           selected: {
-            className: 'shadow-lg ring-1 ring-orange-200'
-          }
+            className: 'shadow-lg ring-1 ring-orange-200',
+          },
         },
         cell: {
           showLocation: true,
           over: {
-            className: 'bg-zinc-200'
-          }
-        }
+            className: 'bg-zinc-200',
+          },
+        },
       }}
     />
   );
@@ -91,13 +91,13 @@ export default {
       <div className='flex flex-col h-screen w-full'>
         <Story />
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

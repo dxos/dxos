@@ -56,12 +56,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         ? [spec.serverOverride]
         : randomArraySlice(
             this.builder.servers.map((server) => server.url()),
-            spec.serversPerAgent
+            spec.serversPerAgent,
           );
 
       return {
         servers,
-        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex())
+        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()),
       };
     });
   }
@@ -77,9 +77,9 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
       range(spec.peersPerAgent).map(() =>
         this.builder.createPeer({
           signals: config.servers.map((server) => ({ server })),
-          peerId: PublicKey.random()
-        })
-      )
+          peerId: PublicKey.random(),
+        }),
+      ),
     );
 
     const testRun = async (peer: TestPeer) => {
@@ -94,13 +94,13 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
               err: {
                 name: err.name,
                 message: err.message,
-                stack: err.stack
+                stack: err.stack,
               },
               peerId: peer.peerId.toHex(),
-              iterationId: testCounter
-            })
+              iterationId: testCounter,
+            }),
           );
-        }
+        },
       });
 
       log.trace(
@@ -108,8 +108,8 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         checkType<TraceEvent>({
           type: 'ITERATION_START',
           peerId: peer.peerId.toHex(),
-          iterationId: testCounter
-        })
+          iterationId: testCounter,
+        }),
       );
 
       switch (spec.type) {
@@ -128,7 +128,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         case 'signaling': {
           await cancelWithContext(
             context,
-            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
+            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0])),
           );
           break;
         }
@@ -146,7 +146,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
         testCounter++;
       },
-      spec.repeatInterval
+      spec.repeatInterval,
     );
 
     await sleep(spec.duration);

@@ -7,7 +7,7 @@ import {
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
   Replay,
-  setTag
+  setTag,
 } from '@sentry/browser';
 import { CaptureConsole, HttpClient } from '@sentry/integrations';
 import { BrowserTracing } from '@sentry/tracing';
@@ -36,7 +36,7 @@ export const init = (options: InitOptions) => {
         new CaptureConsole({ levels: ['error', 'warn'] }),
         new HttpClient({ failedRequestStatusCodes: [[400, 599]] }),
         ...(options.tracing ? [new BrowserTracing()] : []),
-        ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : [])
+        ...(options.replay ? [new Replay({ blockAllMedia: true, maskAllText: true })] : []),
       ],
       replaysSessionSampleRate: options.replaySampleRate,
       replaysOnErrorSampleRate: options.replaySampleRateOnError,
@@ -45,7 +45,7 @@ export const init = (options: InitOptions) => {
       beforeSend: (event) => {
         options.onError?.(event);
         return event;
-      }
+      },
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {

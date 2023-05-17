@@ -29,7 +29,7 @@ export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
 export const ThemeContext = createContext<ThemeContextValue>({
   tx: (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode: 'dark',
-  hasIosKeyboard: false
+  hasIosKeyboard: false,
 });
 
 export const ThemeProvider = ({
@@ -40,7 +40,7 @@ export const ThemeProvider = ({
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
   rootElevation = 'base',
-  rootDensity = 'coarse'
+  rootDensity = 'coarse',
 }: ThemeProviderProps) => {
   return (
     <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
@@ -48,7 +48,7 @@ export const ThemeProvider = ({
         {...{
           fallback,
           resourceExtensions,
-          appNs
+          appNs,
         }}
       >
         <ElevationProvider elevation={rootElevation}>

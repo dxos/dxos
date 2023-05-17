@@ -6,7 +6,7 @@ import React, { ReactNode } from 'react';
 
 const style = {
   white: { c1: '#f8f8f8', c2: '#d3d3d3' },
-  black: { c1: '#565252', c2: '#444242' }
+  black: { c1: '#565252', c2: '#444242' },
 };
 
 /**
@@ -146,7 +146,7 @@ const pieces: Record<string, (style: any) => ReactNode> = {
         strokeWidth='24'
       />
     </svg>
-  )
+  ),
 };
 
 export const riohachaPieces: Record<string, ReactNode> = {
@@ -162,5 +162,5 @@ export const riohachaPieces: Record<string, ReactNode> = {
   bN: pieces.n(style.black),
   bB: pieces.b(style.black),
   bQ: pieces.q(style.black),
-  bK: pieces.k(style.black)
+  bK: pieces.k(style.black),
 };

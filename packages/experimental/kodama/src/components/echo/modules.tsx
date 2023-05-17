@@ -50,7 +50,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     <SpacePanel space={space}>
                       <SpaceMembers spaceKey={space.key} />
                     </SpacePanel>
-                  )
+                  ),
                 },
                 {
                   id: 'feeds',
@@ -59,7 +59,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     <SpacePanel space={space}>
                       <SpaceFeeds spaceKey={space.key} />
                     </SpacePanel>
-                  )
+                  ),
                 },
                 {
                   id: 'share',
@@ -72,11 +72,11 @@ export const createEchoMenu = (): MenuItem | undefined => {
                         }}
                       />
                     </SpacePanel>
-                  )
-                }
+                  ),
+                },
               ]
             : [],
-        [space]
+        [space],
       );
 
       return (
@@ -87,7 +87,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
             {
               id: 'spaces',
               label: 'Spaces',
-              component: () => <SpaceView />
+              component: () => <SpaceView />,
             },
             ...spaceItems,
             {
@@ -104,7 +104,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     }}
                   />
                 );
-              }
+              },
             },
             {
               id: 'create',
@@ -120,11 +120,11 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     }}
                   />
                 );
-              }
-            }
+              },
+            },
           ]}
         />
       );
-    }
+    },
   };
 };

@@ -29,5 +29,5 @@ export const halo = {
   'disable telemetry label': 'Disable app telemetry',
   'empty apps message': 'No apps to display… yet',
   'empty contacts message': 'No contacts to display… yet',
-  'device invitations label': 'Devices pending authentication'
+  'device invitations label': 'Devices pending authentication',
 };

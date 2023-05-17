@@ -13,7 +13,7 @@ import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
 
 export default {
-  title: 'testing/decorators'
+  title: 'testing/decorators',
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -23,7 +23,7 @@ const JsonPanel = ({ value }: { value: any }) => (
       // code whiteSpace: 'pre-wrap',
       // code wordBreak: 'break-all',
       overflow: 'hidden',
-      textOverflow: 'ellipsis'
+      textOverflow: 'ellipsis',
     }}
   >
     {JSON.stringify(value, undefined, 2)}
@@ -38,7 +38,7 @@ const ClientStory = () => {
 
 export const WithClient = {
   render: () => <ClientStory />,
-  decorators: [ClientDecorator({ count: 2 })]
+  decorators: [ClientDecorator({ count: 2 })],
 };
 
 const ClientSpace = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
@@ -61,5 +61,5 @@ const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 
 export const WithClientSpace = {
   render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })]
+  decorators: [ClientDecorator({ clients })],
 };
