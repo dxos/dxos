@@ -6,3 +6,4 @@ export * from './SplitViewPlugin';
 export * from './ListViewPlugin';
 export * from './ClientPlugin';
 export * from './ThemePlugin';
+export * from './RoutesPlugin';
