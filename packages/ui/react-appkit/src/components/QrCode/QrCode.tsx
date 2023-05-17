@@ -3,6 +3,7 @@
 //
 
 import { QrCode as QrCodeIcon, CopySimple } from '@phosphor-icons/react';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
 
@@ -10,7 +11,7 @@ import { Button, ButtonGroup, ButtonProps, Size, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Popover } from '../Popover';
-import { TooltipContent, TooltipContentProps, TooltipRoot, TooltipTrigger } from '../Tooltip';
+import { TooltipContent, TooltipRoot, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 
 interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
   value: string;
@@ -31,9 +32,9 @@ export interface FullQrCodeProps extends SharedQrCodeProps {
 export type QrCodeProps = FullQrCodeProps;
 
 interface CompactQrCodeSlots {
-  qrTooltipContent?: Omit<TooltipContentProps, 'children'>;
+  qrTooltipContent?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;
   qrButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
-  copyTooltipContent?: Omit<TooltipContentProps, 'children'>;
+  copyTooltipContent?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;
   copyButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }

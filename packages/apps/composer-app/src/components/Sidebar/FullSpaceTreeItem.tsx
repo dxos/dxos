@@ -42,8 +42,7 @@ import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react
 import { useShell } from '@dxos/react-shell';
 
 import { abbreviateKey, getPath } from '../../router';
-import { backupSpace, restoreSpace } from '../../util';
-import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
+import { backupSpace, restoreSpace, getSpaceDisplayName } from '../../util';
 import { Separator } from '../Separator';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 
