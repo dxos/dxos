@@ -7,7 +7,7 @@ import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useCallback, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Button, ButtonGroup, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, ButtonGroup, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useShell } from '@dxos/react-shell';
@@ -17,7 +17,7 @@ import {
   DocumentResolverContext,
   DocumentResolverProvider,
   SpaceResolverContext,
-  SpaceResolverProvider
+  SpaceResolverProvider,
 } from '../components';
 import { EmbeddedFirstRunPage } from '../pages';
 import { abbreviateKey } from '../router';
@@ -28,7 +28,6 @@ const EmbeddedLayoutImpl = () => {
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const shell = useShell();
-  const { tx } = useThemeContext();
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
