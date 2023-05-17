@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
+import "dxos/echo/model/document.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
 
@@ -31,7 +31,8 @@ message EchoMetadata {
 }
 
 message SpaceCache {
-  optional google.protobuf.Struct properties = 1;
+  /// Properties snapshot.
+  optional dxos.echo.model.document.ObjectSnapshot properties = 1;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.
