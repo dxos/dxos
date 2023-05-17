@@ -32,7 +32,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
   const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
 
   return (
-    <div role='group' className={mx(group({ elevation: 'group' }), 'mbe-2')}>
+    <div role='group' className={mx(group({ elevation: 'group' }), 'mbe-2 p-2 rounded')}>
       {wrapper.get() ? (
         <>
           <HeadingWithActions
