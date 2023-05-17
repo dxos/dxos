@@ -23,13 +23,13 @@ export default {
       <div className='flex flex-col items-center h-screen w-full bg-zinc-100'>
         <Story />
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

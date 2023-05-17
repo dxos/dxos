@@ -27,7 +27,7 @@ describe('Queries', () => {
       new TypedObject({ idx: 6, title: 'Task 6', label: 'blue' }),
       new TypedObject({ idx: 7, title: 'Task 7', label: 'blue' }),
       new TypedObject({ idx: 8, title: 'Task 8', label: 'blue' }),
-      new TypedObject({ idx: 9, title: 'Task 9' })
+      new TypedObject({ idx: 9, title: 'Task 9' }),
     ];
 
     for (const object of objects) {

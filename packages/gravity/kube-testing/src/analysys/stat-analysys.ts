@@ -16,7 +16,7 @@ const seriesToJson = (s: Series) => {
   return Object.fromEntries(
     (s.values as Array<number>).map((val, i) => {
       return [indexes[i], val];
-    })
+    }),
   );
 };
 
@@ -51,7 +51,7 @@ export const mapToJson = (m: Map<string, any>) => {
       };
       const decoded: any = decodeVal(val);
       return [key, decoded];
-    })
+    }),
   );
 };
 
@@ -91,7 +91,7 @@ export const analyzeMessages = async (results: PlanResults) => {
   return getStats(lagTimes, {
     failures,
     failureRate: failures / (lagTimes.length + failures),
-    ...(await analyzeRunFailures(reader))
+    ...(await analyzeRunFailures(reader)),
   });
 };
 
@@ -223,7 +223,7 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
 
         const timeTogetherOnTopic = Math.min(
           expectedPeerTimings.leave - timings.join,
-          timings.leave - expectedPeerTimings.join
+          timings.leave - expectedPeerTimings.join,
         );
 
         if (timeTogetherOnTopic < 0) {
@@ -270,7 +270,7 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
     failures,
     failureRate: failures / (discoverLag.length + failures),
     fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN,
-    ...(await analyzeRunFailures(reader))
+    ...(await analyzeRunFailures(reader)),
   });
 };
 
@@ -336,6 +336,6 @@ const analyzeRunFailures = async (reader: LogReader) => {
   return {
     runs,
     runErrors: errors,
-    runErrorsRate: errors / runs
+    runErrorsRate: errors / runs,
   };
 };

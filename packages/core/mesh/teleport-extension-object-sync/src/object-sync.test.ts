@@ -41,15 +41,15 @@ describe('ObjectSync', () => {
                 payload: {
                   '@type': 'google.protobuf.Any',
                   type_url: 'test',
-                  value: Buffer.from(id)
-                }
+                  value: Buffer.from(id),
+                },
               };
             },
             setObject: async (data: DataObject) => {
               // console.log('setObject', data);
-            }
-          })
-        )
+            },
+          }),
+        ),
     });
 
     const peer2 = await testBuilder.createPeer({
@@ -61,9 +61,9 @@ describe('ObjectSync', () => {
             },
             setObject: async (data: DataObject) => {
               // console.log('setObject', data);
-            }
-          })
-        )
+            },
+          }),
+        ),
     });
 
     await testBuilder.connect(peer1, peer2);
@@ -74,8 +74,8 @@ describe('ObjectSync', () => {
       payload: {
         '@type': 'google.protobuf.Any',
         type_url: 'test',
-        value: Buffer.from('test')
-      }
+        value: Buffer.from('test'),
+      },
     });
   });
 });

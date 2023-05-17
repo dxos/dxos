@@ -22,7 +22,7 @@ describe.skip('rapid API', () => {
     // TODO(burdon): Remove: free-tier but credit card on file.
     const service = {
       name: 'countries-cities',
-      path: '/location/country/list'
+      path: '/location/country/list',
     };
 
     const host = `https://${service.name}.p.rapidapi.com`;
@@ -32,8 +32,8 @@ describe.skip('rapid API', () => {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': getKey(config, 'com.rapidApi.api_key')!,
-        'X-RapidAPI-Host': host
-      }
+        'X-RapidAPI-Host': host,
+      },
     });
 
     const data = await response.json();

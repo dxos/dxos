@@ -23,5 +23,5 @@ export const messageBody: ComponentFunction<MessageStyleProps> = (_props, ...etc
 export const messageTheme: Theme<MessageStyleProps> = {
   root: messageRoot,
   title: messageTitle,
-  body: messageBody
+  body: messageBody,
 };

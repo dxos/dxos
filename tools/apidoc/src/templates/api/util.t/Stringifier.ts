@@ -154,12 +154,12 @@ export class Stringifier {
     const headerSeparatorMap: { [key in Alignment]: string } = {
       left: ':--',
       right: '--:',
-      center: ':-:'
+      center: ':-:',
     };
     return [
       `|${headers.join('|')}|`,
       `|${headers.map((_h, i) => headerSeparatorMap[alignment ? alignment[i] : 'left']).join('|')}|`,
-      ...rows.filter(Boolean)
+      ...rows.filter(Boolean),
     ].join(os.EOL);
   }
 
@@ -172,7 +172,7 @@ export class Stringifier {
       sources = !options?.subset,
       comment = !options?.subset,
       subset,
-      level = 1
+      level = 1,
     } = { ...options };
 
     const groups = atype.type?.type === 'reflection' ? atype.type?.declaration?.groups : [];
@@ -199,10 +199,10 @@ export class Stringifier {
         ?.map((child) =>
           atype.type?.type === 'reflection'
             ? this.stringify(reflectionById(atype.type.declaration!, child as any), { ...options, level: level + 2 })
-            : ''
+            : '',
         )
         .join(os.EOL + os.EOL)}
-      `
+      `,
         )
         .join(os.EOL + os.EOL)}
       `
@@ -218,14 +218,14 @@ export class Stringifier {
       comment = !hasSubset,
       headers = !hasSubset,
       subset,
-      style = 'list'
+      style = 'list',
     } = { ...options };
     const constructors = reflectionsOfKind(aclass, ReflectionKind.Constructor);
     const properties = reflectionsOfKind(aclass, ReflectionKind.Property, ReflectionKind.Accessor).filter(
-      (r) => !r.flags.isPrivate
+      (r) => !r.flags.isPrivate,
     );
     const functions = reflectionsOfKind(aclass, ReflectionKind.Method, ReflectionKind.Function).filter(
-      (r) => !r.flags.isPrivate
+      (r) => !r.flags.isPrivate,
     );
     return text`
     ${title && `# Class \`${aclass.name}\``}
@@ -250,7 +250,7 @@ export class Stringifier {
           : this.table({
               headers: ['Name', 'Description'],
               alignment: ['left', 'left'],
-              rows: properties.map((p) => this.propertyRow(p))
+              rows: properties.map((p) => this.propertyRow(p)),
             })
       }`
     }

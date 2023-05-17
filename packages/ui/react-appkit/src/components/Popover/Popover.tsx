@@ -36,7 +36,7 @@ export const Popover = ({
   initiallyOpen,
   mountAsSibling,
   triggerIsInToolbar,
-  slots = {}
+  slots = {},
 }: PopoverProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
   const onKeyUp = useCallback(
@@ -47,7 +47,7 @@ export const Popover = ({
       }
       slots.trigger?.onKeyUp?.(e);
     },
-    [slots.trigger?.onKeyUp]
+    [slots.trigger?.onKeyUp],
   );
 
   const popoverContent = (
@@ -59,7 +59,7 @@ export const Popover = ({
         'rounded-lg p-4 shadow-xl elevated-buttons',
         'bg-white dark:bg-neutral-800',
         defaultFocus,
-        slots.content?.className
+        slots.content?.className,
       )}
     >
       <PopoverPrimitive.Arrow className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)} />
@@ -71,7 +71,7 @@ export const Popover = ({
             'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
             defaultFocus,
             defaultHover,
-            slots.close?.className
+            slots.close?.className,
           )}
           aria-label={closeLabel}
           data-keyupid='close'
@@ -81,7 +81,7 @@ export const Popover = ({
             className={mx(
               getSize(4),
               'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
-              slots.closeIcon?.className
+              slots.closeIcon?.className,
             )}
           />
         </PopoverPrimitive.Close>

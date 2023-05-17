@@ -17,12 +17,12 @@ const postprocessProtobufJson = (protobufJson: ProtobufJson): ProtobufJson => {
   const newNested = Object.fromEntries(
     Object.entries(protobufJson.nested)
       .sort((b, a) => b[0].localeCompare(a[0]))
-      .map(([key, value]) => [key, postprocessProtobufJson(value)])
+      .map(([key, value]) => [key, postprocessProtobufJson(value)]),
   );
 
   return {
     ...protobufJson,
-    nested: newNested
+    nested: newNested,
   };
 };
 

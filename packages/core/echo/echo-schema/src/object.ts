@@ -66,9 +66,9 @@ export abstract class EchoObject<T extends Model = any> {
         return {
           feedKey: PublicKey.from('00'),
           seq: 0,
-          waitToBeProcessed: () => Promise.resolve()
+          waitToBeProcessed: () => Promise.resolve(),
         };
-      }
+      },
     );
   }
 
@@ -161,7 +161,7 @@ export abstract class EchoObject<T extends Model = any> {
     } else {
       assert(this._database);
       return this._database._backend.mutate(
-        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation))
+        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation)),
       );
     }
   }

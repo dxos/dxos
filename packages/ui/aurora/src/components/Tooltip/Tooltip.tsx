@@ -14,7 +14,7 @@ import {
   TooltipPortalProps as TooltipPortalPrimitiveProps,
   TooltipPortal as TooltipPortalPrimitive,
   TooltipArrowProps as TooltipArrowPrimitiveProps,
-  TooltipArrow as TooltipArrowPrimitive
+  TooltipArrow as TooltipArrowPrimitive,
 } from '@radix-ui/react-tooltip';
 import React, { forwardRef, FunctionComponent } from 'react';
 
@@ -71,5 +71,5 @@ export type {
   TooltipPortalProps,
   TooltipTriggerProps,
   TooltipArrowProps,
-  TooltipContentProps
+  TooltipContentProps,
 };

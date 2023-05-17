@@ -14,7 +14,7 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
   [LogLevel.INFO]: 'white',
   [LogLevel.WARN]: 'yellow',
-  [LogLevel.ERROR]: 'red'
+  [LogLevel.ERROR]: 'red',
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
@@ -61,14 +61,14 @@ export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, messag
     chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
     message,
     context,
-    error
+    error,
   ];
 };
 
 export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
   chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
   chalk[LEVEL_COLORS[level]](shortLevelName[level]),
-  message
+  message,
 ];
 
 // TODO(burdon): Config option.
@@ -93,7 +93,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     // https://nodejs.org/api/util.html#utilinspectobject-options
     parts.context = inspect(
       pickBy(context, (value?: unknown) => value !== undefined),
-      { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false }
+      { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false },
     );
   }
 

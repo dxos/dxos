@@ -33,7 +33,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
       (error) => {
         log.catch(error);
         setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
-      }
+      },
     );
   };
   return (
@@ -50,8 +50,8 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           root: { className: 'm-0' },
           input: {
             'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
+          } as ComponentPropsWithoutRef<'input'>,
         }}
         {...(validationMessage.length && { validationValence: 'error', validationMessage })}
         data-testid='identity-input'

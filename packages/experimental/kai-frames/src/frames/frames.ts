@@ -30,104 +30,104 @@ export const frameModules: Module[] = [
     id: 'dxos.module.frame.contact',
     type: 'dxos:type/frame',
     displayName: 'Contacts',
-    description: 'Address book.'
+    description: 'Address book.',
   },
   {
     id: 'dxos.module.frame.table',
     type: 'dxos:type/frame',
     displayName: 'Table',
-    description: 'Generic data browser.'
+    description: 'Generic data browser.',
   },
   {
     id: 'dxos.module.frame.kanban',
     type: 'dxos:type/frame',
     displayName: 'Kanban',
-    description: 'Card based pipelines.'
+    description: 'Card based pipelines.',
   },
   {
     id: 'dxos.module.frame.task',
     type: 'dxos:type/frame',
     displayName: 'Tasks',
-    description: 'Projects and task management.'
+    description: 'Projects and task management.',
   },
   {
     id: 'dxos.module.frame.inbox',
     type: 'dxos:type/frame',
     displayName: 'Inbox',
-    description: 'Universal message inbox.'
+    description: 'Universal message inbox.',
   },
   {
     id: 'dxos.module.frame.chat',
     type: 'dxos:type/frame',
     displayName: 'Chat',
-    description: 'Real time messaging.'
+    description: 'Real time messaging.',
   },
   {
     id: 'dxos.module.frame.calendar',
     type: 'dxos:type/frame',
     displayName: 'Calendar',
-    description: 'Calendar and time management tools.'
+    description: 'Calendar and time management tools.',
   },
   {
     id: 'dxos.module.frame.document',
     type: 'dxos:type/frame',
     displayName: 'Documents',
-    description: 'Realtime structured document editing.'
+    description: 'Realtime structured document editing.',
   },
   {
     id: 'dxos.module.frame.stack',
     type: 'dxos:type/frame',
     displayName: 'Stacks',
-    description: 'Dynamic structured documents.'
+    description: 'Dynamic structured documents.',
   },
   {
     id: 'dxos.module.frame.presenter',
     type: 'dxos:type/frame',
     displayName: 'Presenter',
-    description: 'Slide presentations.'
+    description: 'Slide presentations.',
   },
   {
     id: 'dxos.module.frame.note',
     type: 'dxos:type/frame',
     displayName: 'Notes',
-    description: 'Brainstorming notes.'
+    description: 'Brainstorming notes.',
   },
   {
     id: 'dxos.module.frame.file',
     type: 'dxos:type/frame',
     displayName: 'Files',
-    description: 'Distributed file sharing.'
+    description: 'Distributed file sharing.',
   },
   {
     id: 'dxos.module.frame.sketch',
     type: 'dxos:type/frame',
     displayName: 'Sketch',
-    description: 'Vector drawings.'
+    description: 'Vector drawings.',
   },
   {
     id: 'dxos.module.frame.explorer',
     type: 'dxos:type/frame',
     displayName: 'Explorer',
-    description: 'Graphical User Interface and Data Explorer.'
+    description: 'Graphical User Interface and Data Explorer.',
   },
   {
     id: 'dxos.module.frame.maps',
     type: 'dxos:type/frame',
     displayName: 'Maps',
-    description: 'Community contributed street maps.'
+    description: 'Community contributed street maps.',
   },
   {
     id: 'dxos.module.frame.chess',
     type: 'dxos:type/frame',
     displayName: 'Games',
-    description: 'Peer-to-peer and engine powered games.'
+    description: 'Peer-to-peer and engine powered games.',
   },
   {
     id: 'dxos.module.frame.sandbox',
     type: 'dxos:type/frame',
     displayName: 'Script',
-    description: 'Frame and Bot script editor.'
-  }
+    description: 'Frame and Bot script editor.',
+  },
 ];
 
 /**
@@ -150,7 +150,7 @@ export const frameRuntimeMap: { [type: string]: FrameRuntime<any> } = {
   'dxos.module.frame.explorer': ExplorerFrameRuntime,
   'dxos.module.frame.maps': MapFrameRuntime,
   'dxos.module.frame.chess': ChessFrameRuntime,
-  'dxos.module.frame.sandbox': SandboxFrameRuntime
+  'dxos.module.frame.sandbox': SandboxFrameRuntime,
 };
 
 /**
@@ -158,5 +158,5 @@ export const frameRuntimeMap: { [type: string]: FrameRuntime<any> } = {
  */
 export const frameDefs: FrameDef<any>[] = Object.entries(frameRuntimeMap).map(([type, runtime]) => ({
   module: frameModules.find((module) => module.id === type)!,
-  runtime
+  runtime,
 }));

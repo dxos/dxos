@@ -22,7 +22,7 @@ const MAX_NUM_FEEDS = 3;
 class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
   readonly feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring })
+    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
   });
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
@@ -70,11 +70,11 @@ const assertState = async (model: Model, real: Real) => {
           agent,
           feedKey,
           expectedLength,
-          feedLength: feed.length
+          feedLength: feed.length,
         });
         await asyncTimeout(
           Event.wrap(feed, 'download').waitForCondition(() => feed.length === expectedLength),
-          100
+          100,
         );
       }
     }
@@ -134,12 +134,12 @@ const factory =
         feedOwner: new ComplexMap(PublicKey.hash),
         feeds: new ComplexMap(PublicKey.hash),
         agent1: new ComplexSet(PublicKey.hash),
-        agent2: new ComplexSet(PublicKey.hash)
+        agent2: new ComplexSet(PublicKey.hash),
       },
       real: {
         agent1: new TestAgent(keyring, peer1),
-        agent2: new TestAgent(keyring, peer2)
-      }
+        agent2: new TestAgent(keyring, peer2),
+      },
     };
   };
 
@@ -159,8 +159,8 @@ describe('stress-tests', () => {
       [
         new OpenFeedCommand('agent1', feedKey),
         new OpenFeedCommand('agent2', feedKey),
-        new WriteToFeedCommand('agent1', feedKey, 10)
-      ]
+        new WriteToFeedCommand('agent1', feedKey, 10),
+      ],
     );
   });
 
@@ -183,8 +183,8 @@ describe('stress-tests', () => {
         new WriteToFeedCommand('agent1', feedKey1, 10),
         new OpenFeedCommand('agent1', feedKey2),
         new OpenFeedCommand('agent2', feedKey2),
-        new WriteToFeedCommand('agent1', feedKey2, 10)
-      ]
+        new WriteToFeedCommand('agent1', feedKey2, 10),
+      ],
     );
   });
 
@@ -204,7 +204,7 @@ describe('stress-tests', () => {
 
         fc
           .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
-          .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count))
+          .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
       ];
 
       await fc.assert(
@@ -220,7 +220,7 @@ describe('stress-tests', () => {
             await system.real.agent1.destroy();
             await system.real.agent2.destroy();
           }
-        })
+        }),
       );
     })
     .timeout(100_000);

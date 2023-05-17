@@ -41,12 +41,12 @@ export const StackFrame = observer(() => {
               placeholder='Title'
               slots={{
                 root: {
-                  className: 'py-4'
+                  className: 'py-4',
                 },
                 input: {
                   className: 'border-0 text-2xl text-black',
-                  spellCheck: false // TODO(burdon): Config.
-                }
+                  spellCheck: false, // TODO(burdon): Config.
+                },
               }}
               value={stack.title ?? ''}
               onChange={(event) => {
@@ -58,8 +58,8 @@ export const StackFrame = observer(() => {
           <Stack<DocumentStack.Section>
             slots={{
               section: {
-                className: 'py-4'
-              }
+                className: 'py-4',
+              },
             }}
             sections={stack.sections}
             onMoveSection={handleMoveSection}

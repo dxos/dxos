@@ -18,7 +18,7 @@ for (const evt of stats.failures) {
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
-    exchangedMessages: 0
+    exchangedMessages: 0,
   };
   counters.failures++;
   statsPerPeer.set(peer, counters);
@@ -29,7 +29,7 @@ for (const evt of stats.exchangedMessages) {
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
-    exchangedMessages: 0
+    exchangedMessages: 0,
   };
   counters.exchangedMessages++;
   statsPerPeer.set(peer, counters);
@@ -40,7 +40,7 @@ for (const evt of stats.discoveredPeers) {
   const counters = statsPerPeer.get(peer) ?? {
     failures: 0,
     discoveredPeers: 0,
-    exchangedMessages: 0
+    exchangedMessages: 0,
   };
 
   counters.discoveredPeers++;

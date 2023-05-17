@@ -70,7 +70,7 @@ export class EchoProxy implements Echo {
 
   toJSON() {
     return {
-      spaces: this._spacesMap.size
+      spaces: this._spacesMap.size,
     };
   }
 
@@ -109,7 +109,7 @@ export class EchoProxy implements Echo {
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE
+      kind: Invitation.Kind.SPACE,
     }));
     await this._invitationProxy.open();
 

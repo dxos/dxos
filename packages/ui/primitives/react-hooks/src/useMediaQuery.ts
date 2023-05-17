@@ -17,7 +17,7 @@ const breakpointMediaQueries: Record<string, string> = {
   md: '(min-width: 768px)',
   lg: '(min-width: 1024px)',
   xl: '(min-width: 1280px)',
-  '2xl': '(min-width: 1536px)'
+  '2xl': '(min-width: 1536px)',
 };
 
 /**
@@ -32,7 +32,7 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
   const { ssr = true, fallback } = options;
 
   const queries = (Array.isArray(query) ? query : [query]).map((query) =>
-    query in breakpointMediaQueries ? breakpointMediaQueries[query] : query
+    query in breakpointMediaQueries ? breakpointMediaQueries[query] : query,
   );
 
   let fallbackValues = Array.isArray(fallback) ? fallback : [fallback];
@@ -41,7 +41,7 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
   const [value, setValue] = useState(() => {
     return queries.map((query, index) => ({
       media: query,
-      matches: ssr ? !!fallbackValues[index] : document.defaultView?.matchMedia(query).matches
+      matches: ssr ? !!fallbackValues[index] : document.defaultView?.matchMedia(query).matches,
     }));
   });
 
@@ -49,8 +49,8 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
     setValue(
       queries.map((query) => ({
         media: query,
-        matches: document.defaultView?.matchMedia(query).matches
-      }))
+        matches: document.defaultView?.matchMedia(query).matches,
+      })),
     );
 
     const mql = queries.map((query) => document.defaultView?.matchMedia(query));

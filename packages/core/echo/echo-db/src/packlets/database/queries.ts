@@ -48,7 +48,7 @@ export enum ShowDeletedOption {
   /**
    * Return only deleted items.
    */
-  SHOW_DELETED_ONLY = 2
+  SHOW_DELETED_ONLY = 2,
 }
 
 export type QueryOptions = {

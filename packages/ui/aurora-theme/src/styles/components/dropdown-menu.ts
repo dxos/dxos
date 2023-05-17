@@ -15,7 +15,7 @@ export const dropdownMenuItem: ComponentFunction<DropdownMenuStyleProps> = (_sty
     'text-neutral-900 data-[highlighted]:bg-neutral-50 dark:text-neutral-100 dark:data-[highlighted]:bg-neutral-900',
     subduedFocus,
     dataDisabled,
-    ...etc
+    ...etc,
   );
 
 export const dropdownMenuTheme: Theme<DropdownMenuStyleProps> = { item: dropdownMenuItem };

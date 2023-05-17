@@ -24,7 +24,7 @@ export class CredentialConsumer<T extends CredentialProcessor> {
   constructor(
     public readonly processor: T,
     private readonly _onOpen: () => Promise<void>,
-    private readonly _onClose: () => Promise<void>
+    private readonly _onClose: () => Promise<void>,
   ) {}
 
   /**

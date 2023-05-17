@@ -10,7 +10,7 @@ import { Button } from '@dxos/aurora';
 import { Dialog } from './Dialog';
 
 export default {
-  component: Dialog
+  component: Dialog,
 };
 
 export const Default = {
@@ -20,10 +20,10 @@ export const Default = {
       <Button key='cancel'>Close trigger 1</Button>,
       <Button key='save' variant='primary'>
         Close trigger 2
-      </Button>
+      </Button>,
     ],
     title: 'Dialog title',
     children: 'Dialog content',
-    closeLabel: 'Close'
-  }
+    closeLabel: 'Close',
+  },
 };

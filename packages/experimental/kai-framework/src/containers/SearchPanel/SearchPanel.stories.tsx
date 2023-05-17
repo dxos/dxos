@@ -14,8 +14,8 @@ export default {
   component: SearchPanel,
   decorators: [ClientSpaceDecorator()],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 const Test = () => {
@@ -40,5 +40,5 @@ const Test = () => {
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

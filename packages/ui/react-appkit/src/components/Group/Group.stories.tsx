@@ -7,13 +7,13 @@ import '@dxosTheme';
 import { Group } from './Group';
 
 export default {
-  component: Group
+  component: Group,
 };
 
 export const Default = {
   args: {
     label: { level: 3, children: 'Hello' },
     children: 'This is a group.',
-    elevation: 'group'
-  }
+    elevation: 'group',
+  },
 };

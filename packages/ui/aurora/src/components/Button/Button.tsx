@@ -23,7 +23,7 @@ type ButtonGroupContextValue = { inGroup?: boolean };
 const BUTTON_GROUP_NAME = 'ButtonGroup';
 const BUTTON_NAME = 'Button';
 const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
-  inGroup: false
+  inGroup: false,
 });
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -45,16 +45,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             inGroup,
             disabled: rootSlot.disabled,
             density,
-            elevation
+            elevation,
           },
-          rootSlot.className
+          rootSlot.className,
         )}
         {...(rootSlot.disabled && { disabled: true })}
       >
         {children}
       </Root>
     );
-  }
+  },
 );
 
 Button.displayName = BUTTON_NAME;

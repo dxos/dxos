@@ -120,7 +120,7 @@ export class DataPipeline {
     // Create database backend.
     const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
       (data: DataMessage) => ({ data }),
-      this._pipeline.writer ?? failUndefined()
+      this._pipeline.writer ?? failUndefined(),
     );
 
     this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
@@ -185,8 +185,8 @@ export class DataPipeline {
               feedKey,
               seq,
               timeframe: data.timeframe,
-              memberKey: feedInfo.assertion.identityKey
-            }
+              memberKey: feedInfo.assertion.identityKey,
+            },
           });
 
           // Timeframe clock is not updated yet
@@ -203,7 +203,7 @@ export class DataPipeline {
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe,
-      database: this.databaseBackend!.createSnapshot()
+      database: this.databaseBackend!.createSnapshot(),
     };
   }
 

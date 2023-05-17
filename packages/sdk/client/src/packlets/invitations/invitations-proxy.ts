@@ -30,7 +30,7 @@ const createObservable = <T>(rpcStream: Stream<T>): Observable<T> => {
       } else {
         pushStream.complete();
       }
-    }
+    },
   );
 
   return pushStream.observable;
@@ -95,7 +95,7 @@ export class InvitationsProxy {
           index >= 0 &&
             cacheUpdate.emit([
               ...cache.get().slice(0, index),
-              ...cache.get().slice(index + 1)
+              ...cache.get().slice(index + 1),
             ] as AuthenticatingInvitationObservable[]);
         });
       }
@@ -125,7 +125,7 @@ export class InvitationsProxy {
       authMethod: Invitation.AuthMethod.SHARED_SECRET,
       state: Invitation.State.INIT,
       swarmKey: PublicKey.random(),
-      ...this._getInvitationContext()
+      ...this._getInvitationContext(),
     };
   }
 
@@ -145,7 +145,7 @@ export class InvitationsProxy {
         const invitationId = observable.get().invitationId;
         assert(invitationId, 'Invitation missing identifier');
         await this._invitationsService.cancelInvitation({ invitationId });
-      }
+      },
     });
     this._createdUpdate.emit([...this._created.get(), observable]);
 
@@ -173,7 +173,7 @@ export class InvitationsProxy {
         const invitationId = observable.get().invitationId;
         assert(invitationId, 'Invitation missing identifier');
         await this._invitationsService.authenticate({ invitationId, authCode });
-      }
+      },
     });
     this._acceptedUpdate.emit([...this._accepted.get(), observable]);
 

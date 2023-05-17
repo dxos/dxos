@@ -28,12 +28,12 @@ describe('presentation verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -41,13 +41,13 @@ describe('presentation verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       const presentation = await signPresentation({
@@ -55,7 +55,7 @@ describe('presentation verifier', () => {
         signer: keyring,
         signerKey: device,
         chain,
-        nonce: randomBytes(32)
+        nonce: randomBytes(32),
       });
 
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
@@ -73,12 +73,12 @@ describe('presentation verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device,
           issuer: identity,
-          signer: keyring
-        })
+          signer: keyring,
+        }),
       };
 
       const credential = await createCredential({
@@ -86,13 +86,13 @@ describe('presentation verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
         subject,
         signingKey: device,
-        chain
+        chain,
       });
 
       const presentation = await signPresentation({
@@ -101,10 +101,10 @@ describe('presentation verifier', () => {
         signerKey: device,
         chain: {
           ...chain,
-          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } }
+          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } },
         },
 
-        nonce: randomBytes(32)
+        nonce: randomBytes(32),
       });
 
       expect(await verifyPresentation(presentation)).to.deep.contain({ kind: 'fail' });
@@ -123,18 +123,18 @@ describe('presentation verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: signingKey,
         signer: keyring,
-        subject
+        subject,
       });
 
       const presentation = await signPresentation({
         presentation: { credentials: [credential] },
         signer: keyring,
         signerKey: signingKey,
-        nonce: randomBytes(32)
+        nonce: randomBytes(32),
       });
 
       expect(await verifyPresentationSignature(presentation, presentation.proofs![0])).to.deep.equal({ kind: 'pass' });
@@ -151,24 +151,24 @@ describe('presentation verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random()
+          genesisFeedKey: PublicKey.random(),
         },
         issuer: signingKey,
         signer: keyring,
-        subject
+        subject,
       });
 
       const presentation = await signPresentation({
         presentation: { credentials: [credential] },
         signer: keyring,
         signerKey: signingKey,
-        nonce: randomBytes(32)
+        nonce: randomBytes(32),
       });
 
       expect(
-        await verifyPresentationSignature(presentation, { ...presentation.proofs![0], creationDate: new Date(0) })
+        await verifyPresentationSignature(presentation, { ...presentation.proofs![0], creationDate: new Date(0) }),
       ).to.deep.contain({
-        kind: 'fail'
+        kind: 'fail',
       });
     });
   });

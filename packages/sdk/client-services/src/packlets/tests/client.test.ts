@@ -96,10 +96,10 @@ const getNodeConfig = async (reset = false) => {
         storage: {
           persistent: true,
           storageType: Runtime.Client.Storage.StorageDriver.NODE,
-          path // TODO(burdon): Change to root.
-        }
-      }
-    }
+          path, // TODO(burdon): Change to root.
+        },
+      },
+    },
   });
 };
 

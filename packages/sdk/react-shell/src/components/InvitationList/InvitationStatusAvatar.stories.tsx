@@ -21,11 +21,11 @@ const statuses = [
   Invitation.State.SUCCESS,
   Invitation.State.CANCELLED,
   Invitation.State.TIMEOUT,
-  Invitation.State.ERROR
+  Invitation.State.ERROR,
 ];
 
 export default {
-  component: InvitationStatusAvatar
+  component: InvitationStatusAvatar,
 };
 
 export const Default = {
@@ -49,6 +49,6 @@ export const Default = {
           </div>
         </ThemeContext.Provider>
       );
-    }
-  ]
+    },
+  ],
 };

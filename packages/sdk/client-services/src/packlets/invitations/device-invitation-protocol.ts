@@ -15,7 +15,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(
     private readonly _keyring: Keyring,
     private readonly _getIdentity: () => Identity,
-    private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
+    private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
   toJSON(): object {
@@ -24,7 +24,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
-      kind: Invitation.Kind.DEVICE
+      kind: Invitation.Kind.DEVICE,
     };
   }
 
@@ -38,8 +38,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         identityKey: identity.identityKey,
         haloSpaceKey: identity.haloSpaceKey,
         genesisFeedKey: identity.haloGenesisFeedKey,
-        controlTimeframe: identity.controlPipeline.state.timeframe
-      }
+        controlTimeframe: identity.controlPipeline.state.timeframe,
+      },
     };
   }
 
@@ -56,8 +56,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       device: {
         deviceKey,
         controlFeedKey,
-        dataFeedKey
-      }
+        dataFeedKey,
+      },
     };
   }
 
@@ -75,7 +75,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       haloGenesisFeedKey: genesisFeedKey,
       controlFeedKey,
       dataFeedKey,
-      controlTimeframe
+      controlTimeframe,
     });
 
     return { identityKey };

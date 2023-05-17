@@ -70,7 +70,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 type ListItemDragHandleProps = ComponentPropsWithRef<typeof Primitive.div>;
@@ -83,7 +83,7 @@ const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemScopedProps<ListIt
         {children}
       </div>
     );
-  }
+  },
 );
 
 type ListItemOpenTriggerProps = ListItemScopedProps<CollapsibleTriggerProps>;
@@ -102,7 +102,7 @@ const PureListItem = forwardRef<
     props: ListItemScopedProps<
       ListScopedProps<ListItemProps & { id: string } & Partial<DraggableListItemContextValue>>
     >,
-    forwardedRef
+    forwardedRef,
   ) => {
     const {
       __listScope,
@@ -125,13 +125,13 @@ const PureListItem = forwardRef<
     const [selected = false, setSelected] = useControllableState({
       prop: propsSelected,
       defaultProp: defaultSelected,
-      onChange: onSelectedChange
+      onChange: onSelectedChange,
     });
 
     const [open = false, setOpen] = useControllableState({
       prop: propsOpen,
       defaultProp: defaultOpen,
-      onChange: onOpenChange
+      onChange: onOpenChange,
     });
 
     const headingId = useId('listItem__heading');
@@ -166,13 +166,13 @@ const PureListItem = forwardRef<
         )}
       </ListItemProvider>
     );
-  }
+  },
 );
 
 const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
   (props: ListItemScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-      id: props.id
+      id: props.id,
     });
     const ref = useComposedRefs(forwardedRef, setNodeRef) as ComponentPropsWithRef<typeof Primitive.li>['ref'];
 
@@ -182,16 +182,16 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
         style={{
           ...props.style,
           transform: CSS.Transform.toString(transform),
-          transition
+          transition,
         }}
         ref={ref}
         {...{
           draggableAttributes: attributes,
-          draggableListeners: listeners
+          draggableListeners: listeners,
         }}
       />
     );
-  }
+  },
 );
 
 const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
@@ -215,7 +215,7 @@ export {
   ListItemOpenTrigger,
   createListItemScope,
   useListItemContext,
-  LIST_ITEM_NAME
+  LIST_ITEM_NAME,
 };
 
 export type {
@@ -224,5 +224,5 @@ export type {
   ListItemCollapsibleContentProps,
   ListItemDragHandleProps,
   ListItemOpenTriggerProps,
-  ListItemScopedProps
+  ListItemScopedProps,
 };

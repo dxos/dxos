@@ -11,7 +11,7 @@ import { Avatar } from '@dxos/react-appkit';
 export const IdentityListItem = ({
   identity,
   presence,
-  onClick
+  onClick,
 }: {
   identity: Identity;
   presence?: SpaceMember['presence'];
@@ -39,10 +39,10 @@ export const IdentityListItem = ({
               >
                 {t('identity offline description')}
               </p>
-            )
+            ),
           }),
           ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
-          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } }
+          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } },
         }}
       />
     </li>

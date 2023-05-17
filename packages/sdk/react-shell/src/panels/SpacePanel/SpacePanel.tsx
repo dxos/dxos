@@ -94,7 +94,7 @@ export const SpacePanel = (props: SpacePanelProps) => {
   };
 
   const [panelState] = useReducer(reducer, {
-    activeView: 'current space'
+    activeView: 'current space',
   });
 
   // TODO(wittjosiah): Use ViewState or similar.

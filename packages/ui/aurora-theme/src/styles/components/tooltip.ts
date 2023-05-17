@@ -14,7 +14,7 @@ export const tooltipContent: ComponentFunction<TooltipStyleProps> = (_props, ...
     'inline-flex items-center rounded-md plb-2 pli-3',
     'shadow-lg bg-white dark:bg-neutral-800',
     defaultTooltip,
-    ...etc
+    ...etc,
   );
 
 export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
@@ -22,5 +22,5 @@ export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...et
 
 export const tooltipTheme: Theme<TooltipStyleProps> = {
   content: tooltipContent,
-  arrow: tooltipArrow
+  arrow: tooltipArrow,
 };

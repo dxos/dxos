@@ -16,6 +16,6 @@ browser.webNavigation.onHistoryStateUpdated.addListener((event) => {
   const port = tabPorts.get(event.tabId);
   port?.postMessage({
     type: 'history-state-updated',
-    url: event.url
+    url: event.url,
   });
 });

@@ -33,7 +33,7 @@ export class OwnershipScope {
     return {
       className: this.constr.name,
       info: this.getInfo(),
-      parent: this.parent
+      parent: this.parent,
     };
   }
 }

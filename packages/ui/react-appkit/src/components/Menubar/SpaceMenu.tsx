@@ -38,9 +38,9 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
             'button.root',
             'button button--popover-trigger',
             {},
-            'pointer-events-auto flex items-center gap-1'
-          )
-        }
+            'pointer-events-auto flex items-center gap-1',
+          ),
+        },
       }}
       triggerIsInToolbar
     >

@@ -9,7 +9,7 @@ import { hideBin } from 'yargs/helpers';
 import { executeDirectoryTemplate, inquire, z } from '@dxos/plate';
 
 const things = {
-  package: path.resolve(__dirname, './templates/package')
+  package: path.resolve(__dirname, './templates/package'),
 };
 
 const main = async () => {
@@ -19,7 +19,7 @@ const main = async () => {
       description: 'allow overwriting existing files',
       requiresArg: false,
       type: 'boolean',
-      default: false
+      default: false,
     })
     .command({
       command: '*',
@@ -32,8 +32,8 @@ const main = async () => {
         }
         const { outputDirectory } = await inquire(
           z.object({
-            outputDirectory: z.string().describe('destination directory')
-          })
+            outputDirectory: z.string().describe('destination directory'),
+          }),
         );
         const names = outputDirectory.split('/');
         const name = names[names.length - 1];
@@ -42,12 +42,12 @@ const main = async () => {
           overwrite: overwrite ? !!overwrite : false,
           templateDirectory: path.resolve(__dirname, 'templates', thing),
           input: {
-            name: `@dxos/${name}`
-          }
+            name: `@dxos/${name}`,
+          },
         });
         void result.save();
         console.log('done');
-      }
+      },
     })
     .help().argv;
 };

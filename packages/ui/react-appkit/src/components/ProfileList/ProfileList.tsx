@@ -51,7 +51,7 @@ export const ProfileList = ({ identities }: ProfileListProps) => {
       label={{
         level: 2,
         children: t('empty members message'),
-        className: mx('text-xl', defaultDisabled)
+        className: mx('text-xl', defaultDisabled),
       }}
       elevation='base'
     />

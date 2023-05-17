@@ -25,13 +25,13 @@ export const PanelPopover = ({ slots, children, ...popoverProps }: ComponentProp
           collisionPadding: 8,
           sideOffset: 4,
           ...slots?.content,
-          className: mx(defaultSurface, slots?.content?.className)
+          className: mx(defaultSurface, slots?.content?.className),
         },
         trigger: {
           ...slots?.trigger,
-          className: mx('', slots?.trigger?.className)
+          className: mx('', slots?.trigger?.className),
         },
-        ...slots
+        ...slots,
       }}
       {...popoverProps}
     >

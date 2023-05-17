@@ -63,7 +63,7 @@ describe('Arrays', () => {
     expect(task.subtasks.map((subtask: TypedObject) => subtask.title)).toEqual([
       'New subtask 1',
       'Subtask 2',
-      'Subtask 3'
+      'Subtask 3',
     ]);
   });
 

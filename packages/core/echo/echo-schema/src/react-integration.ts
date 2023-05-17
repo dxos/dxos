@@ -31,7 +31,7 @@ export const getCurrentReactComponent = (): ReactComponentInfo | undefined => {
       return {
         fileName: typeof fileName === 'string' ? fileName : undefined,
         lineNumber: typeof lineNumber === 'number' ? lineNumber : undefined,
-        columnNumber: typeof columnNumber === 'number' ? columnNumber : undefined
+        columnNumber: typeof columnNumber === 'number' ? columnNumber : undefined,
       };
     }
   } catch (err) {

@@ -185,7 +185,7 @@ describe('FeedQueue', () => {
         // Write blocks.
         setTimeout(async () => {
           await builder.generator.writeBlocks(feed.createFeedWriter(), {
-            count: numBlocks
+            count: numBlocks,
           });
           expect(feed.properties.length).to.eq(numBlocks);
           expect(queue.length).to.eq(numBlocks);
@@ -214,7 +214,7 @@ describe('FeedQueue', () => {
       const updatedPromise = queue.updated.waitForCount(1);
       // Write blocks.
       await builder.generator.writeBlocks(feed.createFeedWriter(), {
-        count: numBlocks
+        count: numBlocks,
       });
       expect(feed.properties.length).to.eq(numBlocks);
       expect(queue.length).to.eq(numBlocks);
@@ -251,7 +251,7 @@ describe('FeedQueue', () => {
 
     // Write blocks.
     await builder.generator.writeBlocks(feed.createFeedWriter(), {
-      count: numBlocks
+      count: numBlocks,
     });
     expect(feed.properties.length).to.eq(numBlocks);
 

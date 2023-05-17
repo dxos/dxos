@@ -52,27 +52,27 @@ describe('Agent', () => {
       startSequence: {
         commands: [
           {
-            createProfile: {}
-          }
-        ]
+            createProfile: {},
+          },
+        ],
       },
       testSequences: [
         {
           commands: [
             {
               createSpace: {
-                id: 'space-1'
-              }
+                id: 'space-1',
+              },
             },
             {
               createSpaceInvitation: {
                 id: 'space-1',
-                swarmKey: swarmKey.toHex()
-              }
-            }
-          ]
-        }
-      ]
+                swarmKey: swarmKey.toHex(),
+              },
+            },
+          ],
+        },
+      ],
     };
 
     const spec2: AgentSpec = {
@@ -80,21 +80,21 @@ describe('Agent', () => {
       startSequence: {
         commands: [
           {
-            createProfile: {}
-          }
-        ]
+            createProfile: {},
+          },
+        ],
       },
       testSequences: [
         {
           commands: [
             {
               acceptSpaceInvitation: {
-                swarmKey: swarmKey.toHex()
-              }
-            }
-          ]
-        }
-      ]
+                swarmKey: swarmKey.toHex(),
+              },
+            },
+          ],
+        },
+      ],
     };
 
     // TODO(burdon): Capture logs/stats.
@@ -107,13 +107,13 @@ describe('Agent', () => {
       config,
       services: testBuilder.createLocal(),
       spec: spec1,
-      stateMachine: testStateMachineFactory(spec1.stateMachine!)
+      stateMachine: testStateMachineFactory(spec1.stateMachine!),
     });
     const agent2 = new Agent({
       config,
       services: testBuilder.createLocal(),
       spec: spec2,
-      stateMachine: testStateMachineFactory(spec2.stateMachine!)
+      stateMachine: testStateMachineFactory(spec2.stateMachine!),
     });
 
     // Initialize.
@@ -184,7 +184,7 @@ class HostAgentStateMachine extends AgentStateMachine {
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
         authMethod: Invitation.AuthMethod.NONE,
-        swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
+        swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey),
       });
 
       const trigger = new Trigger();
@@ -196,7 +196,7 @@ class HostAgentStateMachine extends AgentStateMachine {
         },
         (err: Error) => {
           throw err;
-        }
+        },
       );
 
       await trigger.wait();
@@ -220,7 +220,7 @@ class GuestAgentStateMachine extends AgentStateMachine {
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey),
-        state: Invitation.State.INIT
+        state: Invitation.State.INIT,
       });
 
       const trigger = new Trigger();
@@ -232,7 +232,7 @@ class GuestAgentStateMachine extends AgentStateMachine {
         },
         (err: Error) => {
           throw err;
-        }
+        },
       );
 
       await trigger.wait();

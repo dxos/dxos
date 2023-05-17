@@ -14,7 +14,7 @@ import { array } from '../util';
 
 const colorHash = new ColorHash({
   lightness: 0.95,
-  saturation: 0.6
+  saturation: 0.6,
 });
 
 type PackageDependencyBuilderOptions = {
@@ -30,7 +30,7 @@ type PackageDependencyBuilderOptions = {
 export class PackageDependencyBuilder {
   constructor(
     private readonly _workspace: WorkspaceProcessor,
-    private readonly _options: PackageDependencyBuilderOptions
+    private readonly _options: PackageDependencyBuilderOptions,
   ) {}
 
   /**
@@ -121,7 +121,7 @@ export class PackageDependencyBuilder {
         content.push(
           `| ${link} | ${
             array(project.dependencies).some((sub) => sub.package.name === packageName) ? '&check;' : ''
-          } |`
+          } |`,
         );
       });
 
@@ -139,20 +139,20 @@ export class PackageDependencyBuilder {
     const flowchart = new Flowchart({
       linkStyle: {
         stroke: '#333',
-        'stroke-width': '1px'
-      }
+        'stroke-width': '1px',
+      },
     });
 
     flowchart
       .addClassDef('def', {
         fill: '#fff',
         stroke: '#333',
-        'stroke-width': '1px'
+        'stroke-width': '1px',
       })
       .addClassDef('root', {
         fill: '#fff',
         stroke: '#333',
-        'stroke-width': '4px'
+        'stroke-width': '4px',
       });
 
     const visited = new Set<Project>();
@@ -173,7 +173,7 @@ export class PackageDependencyBuilder {
           ) {
             flowchart.addLink({
               source: safeName(current.package.name),
-              target: safeName(sub.package.name)
+              target: safeName(sub.package.name),
             });
           }
 
@@ -209,7 +209,7 @@ export class PackageDependencyBuilder {
             folder = {
               label: name,
               packages: [],
-              folders: new Map<string, Folder>()
+              folders: new Map<string, Folder>(),
             };
 
             folders.set(name, folder);
@@ -249,12 +249,12 @@ export class PackageDependencyBuilder {
                 ? {
                     fill: colorHash.hex(parent.label),
                     stroke: '#333',
-                    'stroke-dasharray': '5 5'
+                    'stroke-dasharray': '5 5',
                   }
                 : {
                     fill: colorHash.hex(folder.label),
-                    stroke: '#333'
-                  }
+                    stroke: '#333',
+                  },
             });
 
             folder.packages.forEach((packageName) => {
@@ -262,7 +262,7 @@ export class PackageDependencyBuilder {
                 id: safeName(packageName),
                 label: packageName,
                 className: packageName === project.package.name ? 'root' : 'def',
-                href: path.join(baseUrl, this._workspace.getProjectByPackage(packageName)!.subDir, docsDir)
+                href: path.join(baseUrl, this._workspace.getProjectByPackage(packageName)!.subDir, docsDir),
               });
             });
 

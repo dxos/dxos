@@ -14,7 +14,7 @@ import { ProfileInitializer } from '@dxos/react-client/testing';
 import { SpaceList } from './SpaceList';
 
 export default {
-  component: SpaceList
+  component: SpaceList,
 };
 
 export const Default = {
@@ -41,6 +41,6 @@ export const Default = {
           </ProfileInitializer>
         </ClientProvider>
       );
-    }
-  ]
+    },
+  ],
 };

@@ -79,7 +79,7 @@ export class ControlPipeline {
           if (msg.data.payload.credential) {
             const result = await this._spaceStateMachine.process(
               msg.data.payload.credential.credential,
-              PublicKey.from(msg.feedKey)
+              PublicKey.from(msg.feedKey),
             );
             if (!result) {
               log.warn('processing failed', { msg });

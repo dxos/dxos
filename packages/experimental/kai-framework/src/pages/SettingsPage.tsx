@@ -49,7 +49,7 @@ const SettingsPage = () => {
             <div className='text-sm'>
               v{config.values.runtime?.app?.build?.version} [
               {formatDistance(new Date(config.values.runtime?.app?.build?.timestamp ?? ''), Date.now(), {
-                addSuffix: true
+                addSuffix: true,
               })}
               ]
             </div>

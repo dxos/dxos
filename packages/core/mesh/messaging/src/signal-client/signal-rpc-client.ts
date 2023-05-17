@@ -53,7 +53,7 @@ export class SignalRPCClient {
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        Signal: schema.getService('dxos.mesh.signal.Signal')
+        Signal: schema.getService('dxos.mesh.signal.Signal'),
       },
       noHandshake: true,
       port: {
@@ -76,11 +76,11 @@ export class SignalRPCClient {
               cb(msg.data as any);
             }
           };
-        }
+        },
       },
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
 
     this._socket.onopen = async () => {
@@ -139,7 +139,7 @@ export class SignalRPCClient {
     assert(this._rpc, 'Rpc is not initialized');
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
-      peer: peerId.asUint8Array()
+      peer: peerId.asUint8Array(),
     });
     await swarmStream.waitUntilReady();
     return swarmStream;
@@ -151,7 +151,7 @@ export class SignalRPCClient {
     await this._connectTrigger.wait();
     assert(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
-      peer: peerId.asUint8Array()
+      peer: peerId.asUint8Array(),
     });
     await messageStream.waitUntilReady();
     return messageStream;
@@ -165,7 +165,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload
+      payload,
     });
   }
 }

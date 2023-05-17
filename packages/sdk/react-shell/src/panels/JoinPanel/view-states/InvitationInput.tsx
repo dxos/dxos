@@ -31,7 +31,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
   const handleNext = () =>
     joinSend({
       type: `set${Kind}InvitationCode`,
-      code: inputValue
+      code: inputValue,
     });
 
   return (
@@ -46,8 +46,8 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
           input: {
             'data-autofocus': `inputting${Kind}InvitationCode`,
             'data-testid': `${Kind.toLowerCase()}-invitation-input`,
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
+          } as ComponentPropsWithoutRef<'input'>,
         }}
       />
       <div role='none' className='grow' />

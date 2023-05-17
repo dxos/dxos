@@ -24,11 +24,11 @@ export const createKubeMenu = (): MenuItem => {
                 <Panel>
                   <KubeStatus />
                 </Panel>
-              )
-            }
+              ),
+            },
           ]}
         />
       );
-    }
+    },
   };
 };

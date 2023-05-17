@@ -23,7 +23,7 @@ import {
   contentElevation,
   getSize,
   computeSize,
-  sizeValue
+  sizeValue,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -67,14 +67,14 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
   defaultPlaceholder,
   subduedFocus,
-  props.disabled && defaultDisabled
+  props.disabled && defaultDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-neutral-900 dark:text-white',
   defaultPlaceholder,
   props.density === 'fine' ? defaultFine : defaultCoarse,
-  props.disabled && defaultDisabled
+  props.disabled && defaultDisabled,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
@@ -82,7 +82,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
   inputValence(props.validationValence),
   props.disabled && defaultDisabled,
-  props.focused && staticFocus
+  props.focused && staticFocus,
 ];
 
 export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
@@ -97,7 +97,7 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
         inputValence(props.validationValence) || neutralInputValence,
         !props.disabled && contentElevation(props),
         ...sharedDefaultInputStyles(props),
-        ...etc
+        ...etc,
       );
 
 export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
@@ -112,7 +112,7 @@ export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) 
         inputValence(props.validationValence) ||
           'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent',
         ...sharedDefaultInputStyles(props),
-        ...etc
+        ...etc,
       );
 
 export const inputAppCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
@@ -121,7 +121,7 @@ export const inputAppCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 
     'flex items-center justify-center rounded text-white',
     'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
     defaultFocus,
-    ...etc
+    ...etc,
   );
 
 export const inputOsCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
@@ -130,7 +130,7 @@ export const inputOsCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }
     'flex items-center justify-center rounded text-white',
     'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
     osFocus,
-    ...etc
+    ...etc,
   );
 
 export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
@@ -159,11 +159,11 @@ export const inputTheme = {
   label: inputLabel,
   description: inputDescription,
   validation: inputValidation,
-  descriptionAndValidation: inputDescriptionAndValidation
+  descriptionAndValidation: inputDescriptionAndValidation,
 };
 
 export const inputOsTheme = {
   ...inputTheme,
   input: inputOsInput,
-  checkbox: inputOsCheckbox
+  checkbox: inputOsCheckbox,
 };

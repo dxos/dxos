@@ -23,7 +23,7 @@ export class CancellableInvitationObservable extends MulticastObservable<Invitat
   constructor({
     subscriber,
     initialInvitation,
-    onCancel
+    onCancel,
   }: {
     subscriber: Observable<Invitation> | Subscriber<Invitation>;
     initialInvitation: Invitation;
@@ -48,7 +48,7 @@ export class AuthenticatingInvitationObservable extends CancellableInvitationObs
     subscriber,
     initialInvitation,
     onCancel,
-    onAuthenticate
+    onAuthenticate,
   }: {
     subscriber: Observable<Invitation> | Subscriber<Invitation>;
     initialInvitation: Invitation;
@@ -82,7 +82,7 @@ export const wrapObservable = async (observable: CancellableInvitationObservable
       (err: Error) => {
         subscription.unsubscribe();
         reject(err);
-      }
+      },
     );
   });
 };

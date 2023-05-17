@@ -48,7 +48,7 @@ const createProps = ({ width, height }: { width: number; height: number }) => {
     top: (height - nominalHeight) / 2,
     width: nominalWidth,
     height: nominalHeight,
-    transform: `scale(${scale})`
+    transform: `scale(${scale})`,
   };
 };
 
@@ -69,24 +69,24 @@ export const Presenter = ({
   topLeft,
   topRight,
   bottomLeft,
-  bottomRight
+  bottomRight,
 }: PresenterProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,
     width = 0,
-    height = 0
+    height = 0,
   } = useResizeDetector({
     refreshMode: 'debounce',
     refreshRate: 200,
     refreshOptions: {
-      leading: true
+      leading: true,
     },
     onResize: (width, height) => {
       if (width && height) {
         setProps(createProps({ width, height }));
       }
-    }
+    },
   });
 
   // TODO(burdon): Reconcile highlight colors with markdown editor.
@@ -136,7 +136,7 @@ const slideLayout =
   (options = {}) =>
   (tree: any, file: any) => {
     const {
-      data: { frontmatter = {} }
+      data: { frontmatter = {} },
     } = file;
 
     let content = tree.children;
@@ -145,8 +145,8 @@ const slideLayout =
       const img = h('div', {
         class: 'flex grow shrink-0 bg-cover bg-center bg-no-repeat',
         style: {
-          backgroundImage: `url(${image})`
-        }
+          backgroundImage: `url(${image})`,
+        },
       });
 
       switch (layout) {
@@ -158,7 +158,7 @@ const slideLayout =
         case 'columns': {
           content = h('div', { class: 'flex grow grid grid-cols-2' }, [
             h('div', { class: defaultPadding }, [content]),
-            img
+            img,
           ]);
           break;
         }
@@ -166,7 +166,7 @@ const slideLayout =
         case 'rows': {
           content = h('div', { class: 'flex grow flex-col' }, [
             h('div', { class: defaultPadding }, [content]),
-            h('div', { class: ['flex grow pt-0', defaultPadding] }, [img])
+            h('div', { class: ['flex grow pt-0', defaultPadding] }, [img]),
           ]);
           break;
         }

@@ -28,15 +28,15 @@ export const generateTypes = (schemaTypes: EchoSchemaType[]) => {
       {
         Header: 'id',
         accessor: (object) => PublicKey.from(object.id).truncate(),
-        width: 120
-      }
+        width: 120,
+      },
     ];
 
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
         const column: TableColumn<TypedObject> = {
           Header: noCase(field.name),
-          accessor: field.name
+          accessor: field.name,
         };
 
         switch (field.type.kind) {
@@ -63,7 +63,7 @@ export const generateTypes = (schemaTypes: EchoSchemaType[]) => {
       subFilter:
         (match = '') =>
         (object: TypedObject) =>
-          JSON.stringify(object.toJSON()).toLowerCase().includes(match)
+          JSON.stringify(object.toJSON()).toLowerCase().includes(match),
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 };

@@ -14,7 +14,7 @@ import { randomInt } from '@dxos/util';
 const PATH_TO_KUBE_REPO =
   {
     mykola: '/Users/mykola/Documents/dev/kube/',
-    dmaretskyi: '/Users/dmaretskyi/Projects/kube/'
+    dmaretskyi: '/Users/dmaretskyi/Projects/kube/',
   }[execSync('whoami').toString().trim()] ?? raise(new Error('Who are you?'));
 const BIN_PATH = './cmds/signal-test/main.go';
 
@@ -48,9 +48,9 @@ export const runSignal = async (num: number, outFolder: string, signalArguments:
     env: {
       GOLOG_FILE: `${outFolder}/signal-${num}.log`,
       GOLOG_OUTPUT: 'file',
-      GOLOG_LOG_FMT: 'json'
+      GOLOG_LOG_FMT: 'json',
     },
-    shell: true
+    shell: true,
   });
   await runner.waitUntilStarted();
   return runner;

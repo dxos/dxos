@@ -17,7 +17,7 @@ export const useMulticastObservable = <T>(observable: MulticastObservable<T>): T
       const subscription = observable.subscribe(listener);
       return () => subscription.unsubscribe();
     },
-    [observable]
+    [observable],
   );
 
   // useSyncExternalStore will resubscribe to the observable and update the value if the subscribeFn changes.

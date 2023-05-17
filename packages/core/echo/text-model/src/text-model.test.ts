@@ -56,7 +56,7 @@ describe.skip('TextModel', () => {
       'test',
       { objectId: 'test' },
       PublicKey.random(),
-      new MockFeedWriter()
+      new MockFeedWriter(),
     );
 
     const _text = faker.lorem.lines(1);
@@ -68,7 +68,7 @@ describe.skip('TextModel', () => {
       'test',
       snapshot,
       PublicKey.random(),
-      new MockFeedWriter()
+      new MockFeedWriter(),
     );
     // expect(model2.model.textContent).toBe(text);
   });

@@ -27,7 +27,7 @@ import {
   LIST_ITEM_NAME,
   useListItemContext,
   arrayMove,
-  DragEndEvent
+  DragEndEvent,
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -71,7 +71,7 @@ const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 const MockListItemOpenTrigger = ({
@@ -114,7 +114,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
         {children}
       </ListPrimitiveItemHeading>
     );
-  }
+  },
 );
 
 type ListItemDragHandleProps = ThemedClassName<ListPrimitiveItemDragHandleProps>;
@@ -133,7 +133,7 @@ const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemDragHandleProps>(
         )}
       </ListPrimitiveItemDragHandle>
     );
-  }
+  },
 );
 
 type ListItemOpenTriggerProps = ThemedClassName<ListPrimitiveItemOpenTriggerProps>;
@@ -156,13 +156,13 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
           <Icon
             {...{
               weight: 'bold',
-              className: tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})
+              className: tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {}),
             }}
           />
         )}
       </ListPrimitiveItemOpenTrigger>
     );
-  }
+  },
 );
 
 type ListItemProps = ThemedClassName<ListPrimitiveItemProps>;
@@ -196,7 +196,7 @@ export {
   useListItemContext,
   LIST_NAME,
   LIST_ITEM_NAME,
-  arrayMove
+  arrayMove,
 };
 
 export type {
@@ -209,5 +209,5 @@ export type {
   ListItemDragHandleProps,
   ListItemOpenTriggerProps,
   ListItemCollapsibleContentProps,
-  DragEndEvent
+  DragEndEvent,
 };

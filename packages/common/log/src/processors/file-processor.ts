@@ -26,9 +26,9 @@ export const createFileProcessor = ({ path, level }: { path: string; level: LogL
       ...entry,
       timestamp: Date.now(),
       meta: {
-        ...entry.meta
+        ...entry.meta,
       },
-      context: jsonify(getContextFromEntry(entry))
+      context: jsonify(getContextFromEntry(entry)),
     };
     delete record.meta?.bugcheck;
     delete record.meta?.scope;

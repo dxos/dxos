@@ -15,26 +15,26 @@ export const botModules: Module[] = [
     id: 'dxos.module.bot.store',
     type: 'dxos:type/bot',
     displayName: 'Store',
-    description: 'Secure storage.'
+    description: 'Secure storage.',
   },
   {
     id: 'dxos.module.bot.mail',
     type: 'dxos:type/bot',
     displayName: 'EMail',
-    description: 'Email sync.'
+    description: 'Email sync.',
   },
   {
     id: 'dxos.module.bot.chess',
     type: 'dxos:type/bot',
     displayName: 'Chess',
-    description: 'Basic chess engine.'
+    description: 'Basic chess engine.',
   },
   {
     id: 'dxos.module.bot.kai',
     type: 'dxos:type/bot',
     displayName: 'Kai',
-    description: 'Research and task assistant.'
-  }
+    description: 'Research and task assistant.',
+  },
 ];
 
 // TODO(burdon): Bot KMS in HALO?
@@ -45,7 +45,7 @@ export const botKeys: { [key: string]: string } = {
   'com.protonmail.password': 'COM_PROTONMAIL_PASSWORD',
   'com.protonmail.tls': 'COM_PROTONMAIL_TLS',
   'com.openai.org_id': 'COM_OPENAI_ORG_ID',
-  'com.openai.api_key': 'COM_OPENAI_API_KEY'
+  'com.openai.api_key': 'COM_OPENAI_API_KEY',
 };
 
 export const getBotEnvs = (keyMap: Map<string, string>) => {

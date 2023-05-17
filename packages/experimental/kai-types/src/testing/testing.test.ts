@@ -23,7 +23,7 @@ test('generate test data', async () => {
     contacts: { min: 1, max: 1 },
     events: { min: 1, max: 1 },
     documents: { min: 1, max: 1 },
-    messages: { min: 1, max: 1 }
+    messages: { min: 1, max: 1 },
   });
 
   await generator.generate();

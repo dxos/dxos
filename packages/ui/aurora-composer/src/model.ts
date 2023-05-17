@@ -75,8 +75,8 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Co
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName
+          name: identity.profile?.displayName,
         }
-      : undefined
+      : undefined,
   };
 };

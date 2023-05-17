@@ -16,7 +16,7 @@ describe('WebRTCTransport', () => {
     const connection = new WebRTCTransport({
       initiator: true,
       stream: new Duplex(),
-      sendSignal: async () => {}
+      sendSignal: async () => {},
     });
 
     let callsCounter = 0;
@@ -42,7 +42,7 @@ describe('WebRTCTransport', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection2.signal(signal);
-      }
+      },
     });
     afterTest(() => connection1.destroy());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -54,7 +54,7 @@ describe('WebRTCTransport', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection1.signal(signal);
-      }
+      },
     });
     afterTest(() => connection2.destroy());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());

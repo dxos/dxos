@@ -15,7 +15,7 @@ export const SpaceList: FC<{
   onSelect: (spaceKey: PublicKey) => void;
 }> = ({
   spaceKey, // TODO(burdon): Selection not set.
-  onSelect
+  onSelect,
 }) => {
   const spaces = useSpaces();
 
@@ -28,7 +28,7 @@ export const SpaceList: FC<{
       items={spaces.map((space) => ({
         id: space.key.toHex(),
         key: truncateKey(space.key),
-        text: space.properties.name
+        text: space.properties.name,
       }))}
     />
   );

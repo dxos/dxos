@@ -94,7 +94,7 @@ export const DevicesPanel = (props: DevicesPanelProps) => {
   };
 
   const [panelState] = useReducer(reducer, {
-    activeView: 'device list'
+    activeView: 'device list',
   });
 
   // TODO(wittjosiah): Use ViewState or similar.

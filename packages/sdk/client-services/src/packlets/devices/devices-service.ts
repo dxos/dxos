@@ -26,8 +26,8 @@ export class DevicesServiceImpl implements DevicesService {
           next({
             devices: Array.from(deviceKeys.values()).map((key) => ({
               deviceKey: key,
-              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED
-            }))
+              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+            })),
           });
         }
       };
@@ -41,10 +41,10 @@ export class DevicesServiceImpl implements DevicesService {
             subscriptions.add(
               this._identityManager.identity.stateUpdate.on(() => {
                 update();
-              })
+              }),
             );
           }
-        })
+        }),
       );
 
       update();

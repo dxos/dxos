@@ -74,7 +74,7 @@ export class TestPeer {
     }
     log.trace('dxos.test.signal.start', {
       eventType: 'AGENT_START',
-      peerId: this.peerId
+      peerId: this.peerId,
     });
 
     this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic }) => {
@@ -91,8 +91,8 @@ export class TestPeer {
           peerId: this.peerId.toHex(),
           type,
           topic: topic.toHex(),
-          discoveredPeer
-        })
+          discoveredPeer,
+        }),
       );
     });
 
@@ -103,8 +103,8 @@ export class TestPeer {
           type: 'RECEIVE_MESSAGE',
           sender: message.author.toHex(),
           receiver: message.recipient.toHex(),
-          message: Buffer.from(message.payload.value).toString('hex')
-        })
+          message: Buffer.from(message.payload.value).toString('hex'),
+        }),
       );
     });
 
@@ -117,8 +117,8 @@ export class TestPeer {
       'dxos.test.signal.start',
       checkType<TraceEvent>({
         type: 'AGENT_STOP',
-        peerId: this.peerId.toHex()
-      })
+        peerId: this.peerId.toHex(),
+      }),
     );
     await this._ctx.dispose();
     await this.signalManager.close();
@@ -134,8 +134,8 @@ export class TestPeer {
       checkType<TraceEvent>({
         type: 'JOIN_SWARM',
         topic: topic.toHex(),
-        peerId: this.peerId.toHex()
-      })
+        peerId: this.peerId.toHex(),
+      }),
     );
     await this.signalManager.join({ topic, peerId: this.peerId });
   }
@@ -146,8 +146,8 @@ export class TestPeer {
       checkType<TraceEvent>({
         type: 'LEAVE_SWARM',
         topic: topic.toHex(),
-        peerId: this.peerId.toHex()
-      })
+        peerId: this.peerId.toHex(),
+      }),
     );
     await this.signalManager.leave({ topic, peerId: this.peerId });
   }
@@ -158,8 +158,8 @@ export class TestPeer {
       recipient: to,
       payload: {
         type_url: 'example.Message',
-        value: randomBytes(32)
-      }
+        value: randomBytes(32),
+      },
     };
 
     log.trace(
@@ -168,8 +168,8 @@ export class TestPeer {
         type: 'SENT_MESSAGE',
         sender: message.author.toHex(),
         receiver: message.recipient.toHex(),
-        message: Buffer.from(message.payload.value).toString('hex')
-      })
+        message: Buffer.from(message.payload.value).toString('hex'),
+      }),
     );
     await this.signalManager.sendMessage(message);
   }

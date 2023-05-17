@@ -17,7 +17,7 @@ export const OrganizationCard = ({
   selected,
   temporary,
   onSelect,
-  onAction
+  onAction,
 }: CardProps<Organization>) => {
   return (
     <Card slots={slots}>

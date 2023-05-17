@@ -21,7 +21,7 @@ export const InvitationListContainer = ({ spaceKey, createInvitationUrl }: Invit
     (invitation: CancellableInvitationObservable) => {
       void invitation.cancel();
     },
-    [space]
+    [space],
   );
   return <InvitationList invitations={invitations} {...{ onClickRemove, createInvitationUrl }} />;
 };

@@ -22,7 +22,7 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
         const subscription = space.invitations.subscribe(() => listener());
         return () => subscription.unsubscribe();
       },
-      () => space?.invitations.get()
+      () => space?.invitations.get(),
     ) ?? [];
 
   return invitations;
@@ -32,7 +32,7 @@ export const useSpaceInvitation = (spaceKey?: PublicKey, invitationId?: string) 
   const invitations = useSpaceInvitations(spaceKey);
   const invitation = useMemo(
     () => invitations.find((invitation) => invitation.get().invitationId === invitationId),
-    [invitations]
+    [invitations],
   );
   return useInvitationStatus(invitation);
 };

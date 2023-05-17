@@ -31,14 +31,14 @@ const StoryTooltip = ({ content }: StoryTooltipProps) => (
 );
 
 export default {
-  component: StoryTooltip
+  component: StoryTooltip,
 };
 
 export const Default = {
   args: {
-    content: 'This is the tooltip content'
+    content: 'This is the tooltip content',
   },
   parameters: {
-    chromatic: { delay: 500 }
-  }
+    chromatic: { delay: 500 },
+  },
 };

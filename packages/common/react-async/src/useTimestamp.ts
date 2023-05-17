@@ -24,7 +24,7 @@ export const useTimestamp = (deps?: any[]): [number, () => void, number | undefi
     timestamp: number;
     previous?: number;
   }>({
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 
   useEffect(() => {

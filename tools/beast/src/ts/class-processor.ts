@@ -10,7 +10,7 @@ import {
   Project,
   PropertyDeclaration,
   SourceFile,
-  Type
+  Type,
 } from 'ts-morph';
 
 import { log } from '@dxos/log';
@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 export enum Cardinality {
   Default,
   Map = 'Map',
-  Set = 'Set'
+  Set = 'Set',
 }
 
 export type ClassProperty = {
@@ -126,7 +126,7 @@ export class ClassProcessor {
       name,
       type: 'interface',
       methods: methods?.map(({ name }) => ({ name })) ?? [],
-      properties: properties?.map(({ name }) => ({ name })) ?? []
+      properties: properties?.map(({ name }) => ({ name })) ?? [],
     };
 
     this._classes.set(name, classDef);
@@ -147,7 +147,7 @@ export class ClassProcessor {
       name,
       type: 'class',
       methods: [],
-      properties: []
+      properties: [],
     };
 
     this._classes.set(name, classDef);
@@ -260,7 +260,7 @@ export class ClassProcessor {
           cardinality,
           initializer: !!initializer,
           readonly: isReadonly,
-          classDef: propertyClassDef
+          classDef: propertyClassDef,
         });
       }
     } else {

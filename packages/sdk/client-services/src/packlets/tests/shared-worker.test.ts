@@ -26,15 +26,15 @@ const setup = (getConfig: Provider<MaybePromise<Config>>) => {
   void workerRuntime.createSession({
     systemPort: systemPorts[1],
     appPort: appPorts[1],
-    shellPort: shellPorts[1]
+    shellPort: shellPorts[1],
   });
   const clientProxy = new IFrameProxyRuntime({
     config: getConfig,
     systemPort: systemPorts[0],
-    shellPort: shellPorts[0]
+    shellPort: shellPorts[0],
   });
   const client = new Client({
-    services: new ClientServicesProxy(appPorts[0])
+    services: new ClientServicesProxy(appPorts[0]),
   });
 
   return { workerRuntime, clientProxy, client };
@@ -58,7 +58,7 @@ describe('Shared worker', () => {
     const promise = Promise.all([
       // This error should be propagated to client.initialize() call.
       workerRuntime.start().catch(() => {}),
-      clientProxy.open('*').catch(() => {})
+      clientProxy.open('*').catch(() => {}),
     ]);
 
     await expect(client.initialize()).to.be.rejectedWith('Test error');
@@ -82,7 +82,7 @@ describe('Shared worker', () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({
-      services: fromIFrame(testBuilder.config)
+      services: fromIFrame(testBuilder.config),
     });
 
     await client.initialize();

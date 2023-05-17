@@ -79,8 +79,8 @@ export const ContactStack = observer(({ space, object }: CardProps<Contact>) => 
           <Stack<DocumentStack.Section>
             slots={{
               section: {
-                className: 'py-4'
-              }
+                className: 'py-4',
+              },
             }}
             sections={stack.sections}
             StackSection={StackSection}

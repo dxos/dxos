@@ -11,7 +11,7 @@ import {
   createCredentialSignerWithKey,
   createCredentialSignerWithChain,
   ProfileStateMachine,
-  CredentialConsumer
+  CredentialConsumer,
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
@@ -64,20 +64,20 @@ export class Identity {
       new DeviceStateMachine({
         identityKey: this.identityKey,
         deviceKey: this.deviceKey,
-        onUpdate: () => this.stateUpdate.emit()
-      })
+        onUpdate: () => this.stateUpdate.emit(),
+      }),
     );
     this._profileStateMachine = this.space.spaceState.registerProcessor(
       new ProfileStateMachine({
         identityKey: this.identityKey,
-        onUpdate: () => this.stateUpdate.emit()
-      })
+        onUpdate: () => this.stateUpdate.emit(),
+      }),
     );
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => this.authorizedDeviceKeys,
       update: this.stateUpdate,
-      authTimeout: AUTH_TIMEOUT
+      authTimeout: AUTH_TIMEOUT,
     });
   }
 
@@ -132,7 +132,7 @@ export class Identity {
     return {
       deviceKey: this.deviceKey,
       controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
-      dataFeedKey: this.space.dataFeedKey ?? failUndefined()
+      dataFeedKey: this.space.dataFeedKey ?? failUndefined(),
     };
   }
 
@@ -145,7 +145,7 @@ export class Identity {
     return createCredentialSignerWithChain(
       this._signer,
       this._deviceStateMachine.processor.deviceCredentialChain,
-      this.deviceKey
+      this.deviceKey,
     );
   }
 
@@ -162,7 +162,7 @@ export class Identity {
       hostDevice: this.deviceKey,
       deviceKey,
       controlFeedKey,
-      dataFeedKey
+      dataFeedKey,
     });
     const signer = this.getIdentityCredentialSigner();
     await writeMessages(
@@ -173,8 +173,8 @@ export class Identity {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             identityKey: this.identityKey,
-            deviceKey
-          }
+            deviceKey,
+          },
         }),
         await signer.createCredential({
           subject: controlFeedKey,
@@ -183,8 +183,8 @@ export class Identity {
             spaceKey: this.haloSpaceKey,
             deviceKey,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL
-          }
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
         }),
         await signer.createCredential({
           subject: dataFeedKey,
@@ -193,10 +193,10 @@ export class Identity {
             spaceKey: this.haloSpaceKey,
             deviceKey,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.DATA
-          }
-        })
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential } }))
+            designation: AdmittedFeed.Designation.DATA,
+          },
+        }),
+      ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
     );
   }
 }

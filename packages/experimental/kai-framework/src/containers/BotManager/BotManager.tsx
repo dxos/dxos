@@ -38,35 +38,35 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotR
         <Ghost className={mx(getSize(6), 'text-gray-400')} />
       ),
     accessor: (record) => record.state,
-    width: 48
+    width: 48,
   },
   {
     Header: 'name',
     accessor: (record) => record.name,
-    width: 200
+    width: 200,
   },
   {
     Header: 'port',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => record.port,
-    width: 80
+    width: 80,
   },
   {
     Header: 'container',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => PublicKey.from(record.id).toHex().slice(0, 12),
-    width: 120
+    width: 120,
   },
   {
     Header: 'image',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => PublicKey.from(record.image.split(':')[1]).toHex().slice(0, 12),
-    width: 120
+    width: 120,
   },
   {
     Header: 'created',
     accessor: (record) => formatDistance(new Date(record.created), Date.now(), { addSuffix: true }),
-    width: 160
+    width: 160,
   },
   {
     id: '__delete',
@@ -77,8 +77,8 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotR
           <X />
         </Button>
       );
-    }
-  }
+    },
+  },
 ];
 
 export const BotManager = () => {
@@ -118,13 +118,13 @@ export const BotManager = () => {
         name: record.Labels['dxos.bot.name'],
         port: record.Ports[0]?.PublicPort,
         created: new Date(record.Created * 1000).getTime(),
-        state: record.State
+        state: record.State,
       }));
 
       setRecords(records);
       setStatus('');
     }),
-    [botClient]
+    [botClient],
   );
 
   const handleFlush = async () => {
@@ -187,7 +187,7 @@ export const BotManager = () => {
           data={records}
           slots={{
             header: { className: 'bg-paper-1-bg' },
-            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' },
           }}
         />
       </div>
