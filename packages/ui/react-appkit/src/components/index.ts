@@ -34,7 +34,6 @@ export * from './SingleInputStep';
 export * from './SpaceList';
 export * from './SpacesPage';
 export * from './StatusIndicator';
-export * from './Tag';
 export * from './ThemeProvider';
 export * from './Tile';
 export * from './Toast';
