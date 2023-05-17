@@ -16,8 +16,8 @@ export const DocumentTreeItem = observer(({ document }: { document: Document }) 
   const { t } = useTranslation('composer');
   const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
-    <TreeItem className='flex gap-2'>
-      <TreeItemHeading className='contents'>
+    <TreeItem classNames='flex gap-2'>
+      <TreeItemHeading classNames='contents'>
         <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
         <span className='grow mbs-2 text-sm no-leading'>{document.title || t('untitled document title')}</span>
       </TreeItemHeading>

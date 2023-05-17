@@ -32,7 +32,7 @@ const PureInvitationAcceptedContent = ({
     <Button
       onClick={() => onDone?.(result)}
       disabled={disabled}
-      className='flex items-center gap-2 pli-2'
+      classNames='flex items-center gap-2 pli-2'
       data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
       data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
     >

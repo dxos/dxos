@@ -17,7 +17,7 @@ const ContactsPage = () => {
         className='mlb-4'
         heading={{ children: t('contacts label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1'>
+          <Button variant='primary' classNames='grow flex gap-1'>
             <Plus className={getSize(5)} />
             {t('add contact label', { ns: 'appkit' })}
           </Button>
@@ -28,7 +28,7 @@ const ContactsPage = () => {
         label={{
           level: 2,
           children: t('empty contacts message'),
-          className: mx('text-xl', defaultDisabled)
+          className: mx('text-xl', defaultDisabled),
         }}
         elevation='base'
       />

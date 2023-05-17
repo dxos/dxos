@@ -11,7 +11,7 @@ import {
   FilePlus,
   PaperPlaneTilt,
   Plus,
-  Upload
+  Upload,
 } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
@@ -35,7 +35,7 @@ import {
   TreeItem,
   TreeItemBody,
   TreeItemHeading,
-  TreeItemOpenTrigger
+  TreeItemOpenTrigger,
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
@@ -73,8 +73,8 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         ...space.properties.members,
         [identityHex]: {
           ...space.properties.members?.[identityHex],
-          hidden: true
-        }
+          hidden: true,
+        },
       };
       if (spaceKey === abbreviateKey(space.key)) {
         navigate('/');
@@ -101,7 +101,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
       collapsible
       open={open}
       onOpenChange={setOpen}
-      className={['mbe-2 block', disabled && defaultDisabled]}
+      classNames={['mbe-2 block', disabled && defaultDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
@@ -111,7 +111,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           />
         </TreeItemOpenTrigger>
         <TreeItemHeading
-          className='grow break-words pbs-1.5 text-sm font-medium'
+          classNames='grow break-words pbs-1.5 text-sm font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
           {spaceDisplayName}
@@ -127,13 +127,13 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             }
           }}
         >
-          <TooltipContent className='z-[31]' side='bottom'>
+          <TooltipContent classNames='z-[31]' side='bottom'>
             {t('space options label')}
           </TooltipContent>
           <DropdownMenu
             trigger={
               <TooltipTrigger asChild>
-                <Button variant='ghost' data-testid='composer.openSpaceMenu' className='shrink-0 pli-1'>
+                <Button variant='ghost' data-testid='composer.openSpaceMenu' classNames='shrink-0 pli-1'>
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
               </TooltipTrigger>
@@ -146,9 +146,9 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                     suppressNextTooltip.current = true;
                   }
                   return setOpetionsMenuOpen(nextOpen);
-                }
+                },
               },
-              content: { className: 'z-[31]' }
+              content: { className: 'z-[31]' },
             }}
           >
             <DropdownMenuItem asChild>
@@ -189,7 +189,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           <Button
             variant='ghost'
             data-testid='composer.createDocument'
-            className='shrink-0 pli-1'
+            classNames='shrink-0 pli-1'
             onClick={handleCreate}
           >
             <span className='sr-only'>{t('create document label')}</span>
@@ -209,7 +209,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             role='none'
             className={mx(
               'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
-              defaultDescription
+              defaultDescription,
             )}
           >
             {t('empty space message')}
@@ -234,7 +234,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           <FilePlus weight='duotone' className={getSize(8)} />
           <span>{t('upload file message')}</span>
         </FileUploader>
-        <Button className='block is-full' onClick={() => setRestoreDialogOpen?.(false)}>
+        <Button classNames='block is-full' onClick={() => setRestoreDialogOpen?.(false)}>
           {t('cancel label', { ns: 'appkit' })}
         </Button>
       </Dialog>

@@ -41,7 +41,7 @@ export const JoinHeading = forwardRef(
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2 z-[1]')}
+        classNames={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2 z-[1]')}
         data-testid='join-exit'
       >
         <X weight='bold' className={getSize(4)} />

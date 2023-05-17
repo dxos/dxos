@@ -57,7 +57,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           createInvitationUrl={createInvitationUrl}
         />
         <Button
-          className='is-full flex gap-2 mbs-2'
+          classNames='is-full flex gap-2 mbs-2'
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {

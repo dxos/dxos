@@ -80,11 +80,11 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
           </Label>
           {bareInput}
           {(description || validationMessage) && (
-            <DescriptionAndValidation className={slots.description?.className}>
+            <DescriptionAndValidation classNames={slots.description?.className}>
               {validationMessage && (
-                <Validation className={slots.validation?.className}>{validationMessage} </Validation>
+                <Validation classNames={slots.validation?.className}>{validationMessage} </Validation>
               )}
-              <Description srOnly={descriptionVisuallyHidden} className={slots.description?.className}>
+              <Description srOnly={descriptionVisuallyHidden} classNames={slots.description?.className}>
                 {description}
               </Description>
             </DescriptionAndValidation>

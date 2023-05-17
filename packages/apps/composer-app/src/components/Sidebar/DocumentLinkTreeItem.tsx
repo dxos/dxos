@@ -19,7 +19,7 @@ export const DocumentLinkTreeItem = observer(({ document, linkTo }: { document: 
   const active = docKey === document.id;
   const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
-    <TreeItem className='pis-4'>
+    <TreeItem classNames='pis-4'>
       <TreeItemHeading asChild>
         <Link
           to={linkTo}
@@ -27,13 +27,13 @@ export const DocumentLinkTreeItem = observer(({ document, linkTo }: { document: 
             'button.root',
             'tree-item__heading--link',
             { variant: 'ghost' },
-            'is-full text-base p-0 font-normal items-start gap-1'
+            'is-full text-base p-0 font-normal items-start gap-1',
           )}
           data-testid='composer.documentTreeItemHeading'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
-          <ListItemEndcap className='is-6 flex items-center'>
+          <ListItemEndcap classNames='is-6 flex items-center'>
             <Circle
               weight='fill'
               className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}

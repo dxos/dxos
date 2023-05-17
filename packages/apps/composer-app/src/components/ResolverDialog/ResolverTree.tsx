@@ -25,7 +25,7 @@ export const ResolverTree = observer(() => {
         {t('resolver tree label')}
       </h1>
       <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' classNames='shrink-0'>
         {spaces.map((space) => {
           return (
             <SpacePickerTreeItem
@@ -43,7 +43,7 @@ export const ResolverTree = observer(() => {
       </h1>
       <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
       <Button
-        className='block is-full'
+        classNames='block is-full'
         onClick={async () => {
           const space = await client.createSpace();
           bindSpace(space, identityHex!, source!, id!);

@@ -61,7 +61,7 @@ export const ManageSpacePage = ({
             <Button
               variant='primary'
               onClick={handleCreateInvitation}
-              className='flex gap-1 items-center'
+              classNames='flex gap-1 items-center'
               disabled={!space}
             >
               <span>{t('create invitation label')}</span>

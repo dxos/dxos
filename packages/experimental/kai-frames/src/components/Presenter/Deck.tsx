@@ -44,7 +44,7 @@ export const Deck = ({
 
   const Expand = () => {
     return (
-      <Button variant='ghost' className='mx-2 my-4 text-gray-400' onClick={() => onToggleFullscreen?.(!fullscreen)}>
+      <Button variant='ghost' classNames='mx-2 my-4 text-gray-400' onClick={() => onToggleFullscreen?.(!fullscreen)}>
         <ArrowsOut className={mx(getSize(8))} />
       </Button>
     );

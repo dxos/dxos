@@ -14,7 +14,7 @@ import {
   ThemeContext,
   useThemeContext,
   useTranslation,
-  useSidebar
+  useSidebar,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Tooltip, Avatar, Dialog, Input } from '@dxos/react-appkit';
@@ -71,7 +71,7 @@ const SidebarContent = () => {
             closeTriggers={[
               <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
                 {t('done label', { ns: 'os' })}
-              </Button>
+              </Button>,
             ]}
           >
             <Input
@@ -81,7 +81,7 @@ const SidebarContent = () => {
               onChange={({ target: { value } }) => setPatValue(value)}
               slots={{
                 root: { className: 'mlb-2' },
-                input: { autoFocus: true, spellCheck: false, className: 'font-mono' }
+                input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
               }}
             />
           </Dialog>
@@ -98,7 +98,7 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.createSpace'
                   onClick={handleCreateSpace}
-                  className='pli-1'
+                  classNames='pli-1'
                 >
                   <Planet className={getSize(4)} />
                 </Button>
@@ -109,7 +109,7 @@ const SidebarContent = () => {
                 side='bottom'
                 tooltipLabelsTrigger
               >
-                <Button variant='ghost' data-testid='composer.joinSpace' onClick={handleJoinSpace} className='pli-1'>
+                <Button variant='ghost' data-testid='composer.joinSpace' onClick={handleJoinSpace} classNames='pli-1'>
                   <Intersect className={getSize(4)} />
                 </Button>
               </Tooltip>
@@ -123,7 +123,7 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
                   onClick={closeSidebar}
-                  className='pli-1'
+                  classNames='pli-1'
                 >
                   <ArrowLineLeft className={getSize(4)} />
                 </Button>
@@ -148,7 +148,7 @@ const SidebarContent = () => {
                     variant='ghost'
                     data-testid='composer.openUserSettingsDialog'
                     onClick={() => setSettingsDialogOpen(true)}
-                    className='pli-1'
+                    classNames='pli-1'
                   >
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
                   </Button>
@@ -171,7 +171,7 @@ const SidebarToggle = () => {
   const { t } = useTranslation('os');
   const themeContext = useThemeContext();
   const button = (
-    <Button data-testid='composer.toggleSidebar' onClick={openSidebar} className='p-0 is-[40px]'>
+    <Button data-testid='composer.toggleSidebar' onClick={openSidebar} classNames='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
@@ -181,7 +181,7 @@ const SidebarToggle = () => {
         role='none'
         className={mx(
           'fixed block-start-0 pointer-coarse:block-end-0 pointer-coarse:block-start-auto p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
-          sidebarOpen && 'opacity-0 pointer-events-none'
+          sidebarOpen && 'opacity-0 pointer-events-none',
         )}
       >
         {sidebarOpen ? (

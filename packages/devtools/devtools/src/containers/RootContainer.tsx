@@ -27,7 +27,7 @@ const Footer = () => {
         onClick={async () => {
           await services?.SystemService.reset();
         }}
-        className='w-full'
+        classNames='w-full'
       >
         <span className='mis-2'>Reset Storage</span>
       </Button>

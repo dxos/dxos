@@ -36,7 +36,7 @@ export const SpaceThemes: FC<{ selected: string; onSelect: (selected: string) =>
     <div className='flex'>
       <div className='grid grid-cols-6'>
         {themes.map(({ id, classes }) => (
-          <Button key={id} variant='ghost' className='p-0' onClick={() => onSelect(id)}>
+          <Button key={id} variant='ghost' classNames='p-0' onClick={() => onSelect(id)}>
             <div className={mx('m-2', selected === id && 'ring-2 ring-black')}>
               <Square className={mx(getSize(6), classes.header, 'text-transparent')} />
             </div>
@@ -52,7 +52,7 @@ export const SpaceIcons: FC<{ selected: string; onSelect: (selected: string) => 
     <div className='flex'>
       <div className='grid grid-cols-6'>
         {icons.map(({ id, Icon }) => (
-          <Button key={id} variant='ghost' className='p-0' onClick={() => onSelect(id)}>
+          <Button key={id} variant='ghost' classNames='p-0' onClick={() => onSelect(id)}>
             <div className={mx('m-1 p-1', selected === id && 'rounded ring-2 ring-black')}>
               <Icon className={getSize(6)} />
             </div>

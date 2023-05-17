@@ -21,7 +21,7 @@ export const SidebarTree = observer(() => {
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' className='shrink-0'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' classNames='shrink-0'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
@@ -31,7 +31,7 @@ export const SidebarTree = observer(() => {
       <div role='none' className='grow' />
       <HiddenSpacesTree
         hiddenSpaces={spaces.filter(
-          (space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden === true
+          (space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,
         )}
       />
     </div>

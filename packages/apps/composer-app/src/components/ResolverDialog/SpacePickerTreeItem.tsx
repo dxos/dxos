@@ -57,7 +57,7 @@ export const SpacePickerTreeItem = observer(
         collapsible
         open={open}
         onOpenChange={setOpen}
-        className={['mbe-2 block', disabled && defaultDisabled]}
+        classNames={['mbe-2 block', disabled && defaultDisabled]}
         {...(disabled && { 'aria-disabled': true })}
       >
         <div role='none' className='flex items-center gap-2'>
@@ -69,7 +69,7 @@ export const SpacePickerTreeItem = observer(
             <MockListItemOpenTrigger />
           )}
           <TreeItemHeading
-            className='grow break-words pbs-1 text-base font-medium'
+            classNames='grow break-words pbs-1 text-base font-medium'
             data-testid='composer.spaceTreeItemHeading'
           >
             {spaceDisplayName}
@@ -91,7 +91,7 @@ export const SpacePickerTreeItem = observer(
           )}
           <Button
             density='fine'
-            className='shrink-0'
+            classNames='shrink-0'
             onClick={() => {
               if (identityHex) {
                 bindSpace(space, identityHex, source, id);

@@ -58,7 +58,7 @@ export const SingleInputStep = ({
         slots={inputSlots}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
-        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} className='order-last'>
+        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} classNames='order-last'>
           {nextLabel ?? t('next label')}
         </Button>
         {onBack && (
