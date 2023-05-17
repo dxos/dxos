@@ -34,13 +34,13 @@ export const createRouter = (): Router =>
           children: [
             {
               path: '*',
-              element: <DocumentPage />
+              element: <DocumentPage />,
             },
             {
               path: '',
-              element: <EmbeddedFirstRunPage />
-            }
-          ]
+              element: <EmbeddedFirstRunPage />,
+            },
+          ],
         },
         {
           path: '/',
@@ -48,18 +48,18 @@ export const createRouter = (): Router =>
           children: [
             {
               path: '/:spaceKey/:docKey',
-              element: <DocumentPage />
+              element: <DocumentPage />,
             },
             {
               path: '/:spaceKey',
-              element: <FirstRunPage />
+              element: <FirstRunPage />,
             },
             {
               path: '/',
-              element: <FirstRunPage />
-            }
-          ]
-        }
-      ]
-    }
+              element: <FirstRunPage />,
+            },
+          ],
+        },
+      ],
+    },
   ]);

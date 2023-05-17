@@ -19,7 +19,7 @@ export const OctokitContext: Context<OctokitContextValue> = createContext<Octoki
   pat: '',
   setPat: async () => {},
   patError: null,
-  octokit: null
+  octokit: null,
 });
 
 const GhPatKey = 'com.github.pat';
@@ -46,7 +46,7 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
           log.warn('Failed to authenticate Octokit from PAT', err);
           setPatError('failed');
           setOctokit(null);
-        }
+        },
       );
     } else {
       setOctokit(null);

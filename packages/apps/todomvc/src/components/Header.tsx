@@ -16,5 +16,5 @@ export const Header = forwardRef(
         data-testid={onKeyDown ? 'new-todo' : 'todo-placeholder'}
       />
     </header>
-  )
+  ),
 );

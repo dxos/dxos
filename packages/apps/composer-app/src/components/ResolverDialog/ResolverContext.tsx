@@ -28,7 +28,7 @@ const useLocationIdentifier = () => {
 
 export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<SpaceResolverProps>({
   space: null,
-  setSpace: (_space) => {}
+  setSpace: (_space) => {},
 });
 
 export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
@@ -45,7 +45,7 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
   const space = useMemo(
     () =>
       nextSpace ?? (identityHex ? spaces.find((space) => matchSpace(space, identityHex, source, id)) ?? null : null),
-    [spaces, nextSpace, identityHex, source, id]
+    [spaces, nextSpace, identityHex, source, id],
   );
 
   return (
@@ -66,7 +66,7 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
 
 const defaultDocumentResolverContext: DocumentResolverProps = {
   document: null,
-  setDocument: (_document) => {}
+  setDocument: (_document) => {},
 };
 
 export const DocumentResolverContext: Context<DocumentResolverProps> =
@@ -76,7 +76,7 @@ const DocumentsQueryableDocumentResolverProvider = ({
   space,
   source,
   id,
-  children
+  children,
 }: PropsWithChildren<{ space: Space; source: string; id: string }>) => {
   const [document, setDocument] = useState<Document | null>(null);
   const defaultDisplayName = displayName(source, id);
@@ -95,10 +95,10 @@ const DocumentsQueryableDocumentResolverProvider = ({
       if (event.data.type === 'initial-data') {
         const nextDocument = new Document({
           meta: {
-            keys: [{ source, id }]
+            keys: [{ source, id }],
           },
           content: new Text(event.data.content),
-          title: defaultDisplayName
+          title: defaultDisplayName,
         });
         space.db.add(nextDocument);
         setDocument(nextDocument);
