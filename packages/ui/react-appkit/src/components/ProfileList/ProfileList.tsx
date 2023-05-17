@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { Tag, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, group, mx } from '@dxos/aurora-theme';
 import type { Identity } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
@@ -11,7 +11,6 @@ import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';
 import { Group } from '../Group';
-import { Tag } from '../Tag';
 
 export interface ProfileListProps {
   identities: Identity[];
@@ -34,7 +33,7 @@ export const ProfileList = ({ identities }: ProfileListProps) => {
                 <p>
                   {identity.profile?.displayName ?? humanize(identityHex)}
                   {identityHex === myIdentityHex && (
-                    <Tag valence='info' className='mli-2 align-middle'>
+                    <Tag palette='info' className='mli-2 align-middle'>
                       {t('current identity label')}
                     </Tag>
                   )}

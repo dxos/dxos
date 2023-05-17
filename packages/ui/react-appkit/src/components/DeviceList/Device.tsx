@@ -4,12 +4,11 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation, Tag } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 
 import { Avatar } from '../Avatar';
 import { Group } from '../Group';
-import { Tag } from '../Tag';
 
 export interface DeviceProps {
   publicKey: PublicKey;
@@ -32,7 +31,7 @@ export const Device = (props: DeviceProps) => {
               <p>
                 {props.displayName}
                 {props.isCurrentDevice && (
-                  <Tag valence='info' className='mli-2 align-middle'>
+                  <Tag palette='info' className='mli-2 align-middle'>
                     {t('current device label')}
                   </Tag>
                 )}
