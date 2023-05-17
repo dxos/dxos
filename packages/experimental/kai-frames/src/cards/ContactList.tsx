@@ -16,7 +16,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
-    <List density='coarse' aria-labelledby='todo' className='is-full'>
+    <List density='coarse' aria-labelledby='todo' classNames='is-full'>
       {contacts.map((contact) => (
         <ContactListItem key={contact.id} contact={contact} />
       ))}
@@ -28,7 +28,7 @@ export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) 
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <ListItem className='mbe-1 is-full'>
+    <ListItem classNames='mbe-1 is-full'>
       <ListItemEndcap>
         <User className={mx(getSize(5), 'mlb-2.5')} />
       </ListItemEndcap>

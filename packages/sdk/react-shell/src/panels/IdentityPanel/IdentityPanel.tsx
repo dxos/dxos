@@ -35,7 +35,7 @@ export const IdentityPanel = ({
             fallbackValue={identity.identityKey.toHex()}
             label={identity.profile?.displayName ?? ''}
           />
-          <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
+          <Button onClick={onClickManageProfile ?? defaultManageProfile} classNames='is-full'>
             {t('manage profile label')}
           </Button>
         </div>

@@ -57,7 +57,7 @@ export const FullQrCode = ({ value, label, size, density, elevation, slots = {} 
         <Button
           {...{ density, elevation }}
           {...slots.button}
-          className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
+          classNames={['overflow-hidden p-0', getSize(size ?? 32), slots.button?.className]}
           onClick={copyValue}
         >
           <QRCodeSVG
@@ -101,7 +101,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.qrButton}
-              className={mx('border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+              classNames={['border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className]}
               aria-labelledby={labelId}
             >
               <QrCodeIcon className={getSize(5)} />
@@ -128,7 +128,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.copyButton}
-              className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
+              classNames={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
               onClick={copyValue}
             >
               <CopySimple className={getSize(5)} />
@@ -142,7 +142,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.qrButton}
-              className={mx('border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+              classNames={['border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className]}
             >
               <QrCodeIcon className={getSize(5)} />
               {displayQrLabel}
@@ -166,7 +166,7 @@ export const CompactQrCode = ({
         <Button
           {...{ density, elevation }}
           {...slots.copyButton}
-          className={mx('flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className)}
+          classNames={['flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className]}
           onClick={copyValue}
         >
           <CopySimple className={getSize(5)} />

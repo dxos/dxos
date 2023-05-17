@@ -89,7 +89,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
-  ({ __inputScope, className, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -109,7 +109,7 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
             elevation,
             validationValence,
           },
-          className,
+          classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
@@ -121,7 +121,7 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
-  ({ __inputScope, className, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -141,7 +141,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
             elevation,
             validationValence,
           },
-          className,
+          classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
@@ -164,7 +164,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
       onCheckedChange: propsOnCheckedChange,
       size,
       weight = 'bold',
-      className,
+      classNames,
       ...props
     },
     forwardedRef,
@@ -189,7 +189,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', 'input--checkbox', { size }, className),
+          className: tx('input.checkbox', 'input--checkbox', { size }, classNames),
         }}
         ref={forwardedRef}
       >

@@ -106,7 +106,7 @@ export const CalendarFrame = () => {
             <Button
               key={v}
               variant='ghost'
-              className={mx('text-gray-300', v === view && 'text-gray-700')}
+              classNames={['text-gray-300', v === view && 'text-gray-700']}
               onClick={() => setView(v)}
             >
               <Icon weight='light' className={getSize(6)} />

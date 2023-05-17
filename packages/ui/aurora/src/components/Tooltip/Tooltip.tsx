@@ -39,12 +39,12 @@ const TooltipTrigger = TooltipTriggerPrimitive;
 
 type TooltipArrowProps = ThemedClassName<TooltipArrowPrimitiveProps>;
 
-const TooltipArrow = forwardRef<SVGSVGElement, TooltipArrowProps>(({ className, ...props }, forwardedRef) => {
+const TooltipArrow = forwardRef<SVGSVGElement, TooltipArrowProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <TooltipArrowPrimitive
       {...props}
-      className={tx('tooltip.arrow', 'tooltip__arrow', {}, className)}
+      className={tx('tooltip.arrow', 'tooltip__arrow', {}, classNames)}
       ref={forwardedRef}
     />
   );
@@ -52,12 +52,12 @@ const TooltipArrow = forwardRef<SVGSVGElement, TooltipArrowProps>(({ className, 
 
 type TooltipContentProps = ThemedClassName<TooltipContentPrimitiveProps>;
 
-const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ className, ...props }, forwardedRef) => {
+const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <TooltipContentPrimitive
       {...props}
-      className={tx('tooltip.content', 'tooltip', {}, className)}
+      className={tx('tooltip.content', 'tooltip', {}, classNames)}
       ref={forwardedRef}
     />
   );

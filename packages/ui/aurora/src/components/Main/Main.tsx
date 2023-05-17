@@ -86,7 +86,7 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
-  ({ className, children, swipeToDismiss, ...props }, forwardedRef) => {
+  ({ classNames, children, swipeToDismiss, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
     const { tx } = useThemeContext();
@@ -99,7 +99,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         onOpenAutoFocus={(event) => isLg && event.preventDefault()}
         onCloseAutoFocus={(event) => isLg && event.preventDefault()}
         {...props}
-        className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, className)}
+        className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
         ref={ref}
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
@@ -113,14 +113,14 @@ Sidebar.displayName = SIDEBAR_NAME;
 type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
 
 const Main = forwardRef<HTMLDivElement, MainProps>(
-  ({ asChild, className, children, ...props }: MainProps, forwardedRef) => {
+  ({ asChild, classNames, children, ...props }: MainProps, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'main';
 
     return (
-      <Root {...props} className={tx('main.content', 'main', { isLg, sidebarOpen }, className)} ref={forwardedRef}>
+      <Root {...props} className={tx('main.content', 'main', { isLg, sidebarOpen }, classNames)} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -131,7 +131,7 @@ Main.displayName = MAIN_NAME;
 
 type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
 
-const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, ...props }, forwardedRef) => {
+const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { sidebarOpen, setSidebarOpen } = useMainContext(MAIN_NAME);
   const { tx } = useThemeContext();
@@ -139,7 +139,7 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ className, .
     <div
       onClick={() => setSidebarOpen(false)}
       {...props}
-      className={tx('main.overlay', 'main__overlay', { isLg, sidebarOpen }, className)}
+      className={tx('main.overlay', 'main__overlay', { isLg, sidebarOpen }, classNames)}
       data-open={sidebarOpen}
       aria-hidden='true'
       data-aria-hidden='true'

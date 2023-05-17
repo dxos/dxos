@@ -98,7 +98,7 @@ export const ExplorerFrame = () => {
             variant='ghost'
             key={type}
             title={label}
-            className={mx('mx-1', view === type && 'text-black')}
+            classNames={['mx-1', view === type && 'text-black']}
             onClick={() => setView(type)}
           >
             <Icon className={getSize(6)} />

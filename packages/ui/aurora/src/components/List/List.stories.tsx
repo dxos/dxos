@@ -51,7 +51,7 @@ export const Default = {
             <ListItemEndcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
-            <ListItemHeading className='grow pbs-2'>{text}</ListItemHeading>
+            <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
             <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>
@@ -81,7 +81,7 @@ export const Collapsible = {
         {items.map(({ id, text, body }, index) => (
           <ListItem key={id} id={id} collapsible={index !== 2}>
             {index !== 2 ? <ListItemOpenTrigger /> : <MockListItemOpenTrigger />}
-            <ListItemHeading className='grow pbs-2'>{text}</ListItemHeading>
+            <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
             <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
             </ListItemEndcap>

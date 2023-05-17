@@ -123,7 +123,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
         ))}
       </List>
       <div role='none' className='my-5'>
-        <Button className='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
+        <Button classNames='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
           <Plus className={getSize(5)} />
         </Button>
       </div>
