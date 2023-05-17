@@ -9,7 +9,7 @@ import { Select } from './Select';
 
 export default {
   component: Select,
-  actions: { argTypesRegex: '^on.*' }
+  actions: { argTypesRegex: '^on.*' },
 };
 
 const Item = Select.Item;

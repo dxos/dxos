@@ -123,7 +123,7 @@ export class SpaceProxy implements Space {
 
   // TODO(dmaretskyi): Cache properties in the metadata.
   private _cachedProperties = new Properties({
-    name: 'Loading...'
+    name: 'Loading...',
   });
 
   private _properties?: TypedObject;
@@ -347,7 +347,7 @@ export class SpaceProxy implements Space {
     await this._clientServices.services.SpacesService.postMessage({
       spaceKey: this.key,
       channel,
-      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' }
+      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
     });
   }
 

@@ -27,7 +27,7 @@ export interface JoinSpaceHeadingProps {
 export const JoinHeading = forwardRef(
   (
     { mode, titleId, joinState, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
-    ref: ForwardedRef<HTMLDivElement>
+    ref: ForwardedRef<HTMLDivElement>,
   ) => {
     const { t } = useTranslation('os');
 
@@ -59,7 +59,7 @@ export const JoinHeading = forwardRef(
           className={mx(
             defaultDescription,
             'font-body font-system-normal text-center text-sm grow pbe-2',
-            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0')
+            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0'),
           )}
           id={titleId}
         >
@@ -71,5 +71,5 @@ export const JoinHeading = forwardRef(
         </div>
       </div>
     );
-  }
+  },
 );

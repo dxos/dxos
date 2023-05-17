@@ -37,7 +37,7 @@ const InputRoot = ({
   descriptionId: propsDescriptionId,
   errorMessageId: propsErrorMessageId,
   validationValence = 'neutral',
-  children
+  children,
 }: InputScopedProps<InputRootProps>) => {
   const id = useId('input', propsId);
   const descriptionId = useId('input__description', propsDescriptionId);

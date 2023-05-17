@@ -10,5 +10,5 @@ import echo from './echo';
 
 export const slides = {
   echo,
-  dxos
+  dxos,
 };

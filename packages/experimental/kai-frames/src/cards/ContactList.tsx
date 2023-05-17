@@ -40,7 +40,7 @@ export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) 
           value={contact.name}
           onChange={({ target: { value } }) => (contact.name = value)}
           slots={{
-            input: { spellCheck: false }
+            input: { spellCheck: false },
           }}
         />
         <div role='none' className='text-sm text-secondary-text'>

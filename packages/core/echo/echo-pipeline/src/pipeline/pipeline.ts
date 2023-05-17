@@ -61,8 +61,8 @@ export class PipelineState {
         .filter((feed) => feed.length > 0)
         .map((feed) => ({
           feedKey: feed.key,
-          index: feed.length - 1
-        }))
+          index: feed.length - 1,
+        })),
     );
   }
 
@@ -100,19 +100,19 @@ export class PipelineState {
   async waitUntilReachedTargetTimeframe({
     ctx = new Context(),
     timeout,
-    breakOnStall = true
+    breakOnStall = true,
   }: WaitUntilReachedTargetParams = {}) {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
-      target: this.targetTimeframe
+      target: this.targetTimeframe,
     });
 
     this._reachedTargetPromise ??= Promise.race([
       this._timeframeClock.update.waitForCondition(() => {
         return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
       }),
-      ...(breakOnStall ? [this._iterator.stalled.discardParameter().waitForCount(1)] : [])
+      ...(breakOnStall ? [this._iterator.stalled.discardParameter().waitForCount(1)] : []),
     ]);
 
     let done = false;
@@ -132,9 +132,9 @@ export class PipelineState {
             timeout,
             current: this.timeframe,
             target: this.targetTimeframe,
-            dependencies: Timeframe.dependencies(this.targetTimeframe, this.timeframe)
+            dependencies: Timeframe.dependencies(this.targetTimeframe, this.timeframe),
           });
-        })
+        }),
       ]);
     } else {
       return this._reachedTargetPromise;
@@ -185,7 +185,7 @@ export class Pipeline implements PipelineAccessor {
   // Inbound feed stream.
   private readonly _feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
     start: startAfter(this._initialTimeframe),
-    stallTimeout: 1000
+    stallTimeout: 1000,
   });
 
   // External state accessor.
@@ -238,9 +238,9 @@ export class Pipeline implements PipelineAccessor {
     this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
       (payload: FeedMessage.Payload) => ({
         timeframe: this._timeframeClock.timeframe,
-        payload
+        payload,
       }),
-      feed.createFeedWriter()
+      feed.createFeedWriter(),
     );
   }
 

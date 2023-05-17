@@ -13,18 +13,18 @@ test('createBounds', () => {
     {
       p1: [0, 0],
       p2: [0, 0],
-      bounds: { x: 0, y: 0, width: 0, height: 0 }
+      bounds: { x: 0, y: 0, width: 0, height: 0 },
     },
     {
       p1: [0, 0],
       p2: [5, 5],
-      bounds: { x: 0, y: 0, width: 5, height: 5 }
+      bounds: { x: 0, y: 0, width: 5, height: 5 },
     },
     {
       p1: [0, 0],
       p2: [-5, -5],
-      bounds: { x: -5, y: -5, width: 5, height: 5 }
-    }
+      bounds: { x: -5, y: -5, width: 5, height: 5 },
+    },
   ];
 
   tests.forEach(({ p1, p2, bounds }) => {

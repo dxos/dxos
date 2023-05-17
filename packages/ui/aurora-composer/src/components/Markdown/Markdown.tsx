@@ -10,7 +10,7 @@ import {
   defaultHighlightStyle,
   foldKeymap,
   indentOnInput,
-  syntaxHighlighting
+  syntaxHighlighting,
 } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
@@ -27,7 +27,7 @@ import {
   highlightSpecialChars,
   placeholder,
   rectangularSelection,
-  EditorView
+  EditorView,
 } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
@@ -68,13 +68,13 @@ const hexadecimalPaletteSeries: (keyof typeof configPalettes)[] = [
   'purple' as const,
   'fuchsia' as const,
   'pink' as const,
-  'rose' as const
+  'rose' as const,
 ];
 
 const shadeKeys = {
   color: '450' as const,
   highlightDark: '800' as const,
-  highlightLight: '100' as const
+  highlightLight: '100' as const,
 };
 
 export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
@@ -88,7 +88,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
     useImperativeHandle(forwardedRef, () => ({
       editor: parent,
       state,
-      view
+      view,
     }));
 
     useEffect(() => {
@@ -105,7 +105,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           colorLight:
             configPalettes[hexadecimalPaletteSeries[peerColorDigit]][
               shadeKeys[themeMode === 'dark' ? 'highlightDark' : 'highlightLight']
-            ]
+            ],
         });
       }
     }, [provider, peer, themeMode]);
@@ -142,7 +142,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ...historyKeymap,
             ...foldKeymap,
             ...completionKeymap,
-            ...lintKeymap
+            ...lintKeymap,
           ]),
           EditorView.lineWrapping,
           // Theme
@@ -155,8 +155,8 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           syntaxHighlighting(markdownDarkHighlighting),
 
           // Collaboration
-          ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : [])
-        ]
+          ...(content instanceof YText ? [yCollab(content, provider?.awareness)] : []),
+        ],
       });
 
       setState(state);
@@ -176,5 +176,5 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
     }, [parent, content, provider?.awareness, themeMode]);
 
     return <div key={id} {...slots.root} ref={setParent} />;
-  }
+  },
 );

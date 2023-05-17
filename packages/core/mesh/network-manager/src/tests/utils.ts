@@ -31,7 +31,7 @@ export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: 
   const swarms = peers.map((peer) => peer.createSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.join(topology?.())));
   await Promise.all(
-    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0))
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0)),
   );
   return swarms;
 };
@@ -43,7 +43,7 @@ export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
   const swarms = peers.map((peer) => peer.getSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.leave()));
   await Promise.all(
-    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0))
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0)),
   );
   return swarms;
 };

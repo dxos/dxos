@@ -61,5 +61,5 @@ export const composer = {
   'comment stale title': 'No longer in-sync',
   'comment stale body':
     'The document in Github was updated in another session. To re-sync, please save your changes, reload the page, and choose to edit from Github again.',
-  'open in composer label': 'Open in Composer'
+  'open in composer label': 'Open in Composer',
 };

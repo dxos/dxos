@@ -52,7 +52,7 @@ export class SupervisorRpcPeer {
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        Supervisor: schema.getService('dxos.service.supervisor.Supervisor')
+        Supervisor: schema.getService('dxos.service.supervisor.Supervisor'),
       },
       exposed: {},
       handlers: {},
@@ -70,8 +70,8 @@ export class SupervisorRpcPeer {
               cb(msg.data as any);
             }
           };
-        }
-      }
+        },
+      },
     });
   }
 

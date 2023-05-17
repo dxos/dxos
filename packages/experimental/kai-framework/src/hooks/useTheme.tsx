@@ -14,7 +14,7 @@ import {
   Factory,
   Presentation,
   Rocket,
-  Users
+  Users,
 } from '@phosphor-icons/react';
 import { FC, useState } from 'react';
 
@@ -25,52 +25,52 @@ import { useAppRouter } from '../hooks';
 export const icons: { id: string; Icon: FC<any> }[] = [
   {
     id: 'bug',
-    Icon: Bug
+    Icon: Bug,
   },
   {
     id: 'atom',
-    Icon: Atom
+    Icon: Atom,
   },
   {
     id: 'suitcase',
-    Icon: Bag
+    Icon: Bag,
   },
   {
     id: 'presentation',
-    Icon: Presentation
+    Icon: Presentation,
   },
   {
     id: 'plane',
-    Icon: AirplaneTakeoff
+    Icon: AirplaneTakeoff,
   },
   {
     id: 'bank',
-    Icon: Bank
+    Icon: Bank,
   },
   {
     id: 'building',
-    Icon: Buildings
+    Icon: Buildings,
   },
   {
     id: 'party',
-    Icon: Confetti
+    Icon: Confetti,
   },
   {
     id: 'factory',
-    Icon: Factory
+    Icon: Factory,
   },
   {
     id: 'rocket',
-    Icon: Rocket
+    Icon: Rocket,
   },
   {
     id: 'sport',
-    Icon: Basketball
+    Icon: Basketball,
   },
   {
     id: 'team',
-    Icon: Users
-  }
+    Icon: Users,
+  },
 ];
 
 export type Theme = {
@@ -87,86 +87,86 @@ export const themes: Theme[] = [
     id: 'slate',
     classes: {
       header: 'bg-slate-400',
-      border: 'border-slate-300'
-    }
+      border: 'border-slate-300',
+    },
   },
   {
     id: 'zinc',
     classes: {
       header: 'bg-zinc-400',
-      border: 'border-zinc-300'
-    }
+      border: 'border-zinc-300',
+    },
   },
   {
     id: 'red',
     classes: {
       header: 'bg-red-400',
-      border: 'border-red-300'
-    }
+      border: 'border-red-300',
+    },
   },
   {
     id: 'orange',
     classes: {
       header: 'bg-orange-400',
-      border: 'border-orange-300'
-    }
+      border: 'border-orange-300',
+    },
   },
   {
     id: 'emerald',
     classes: {
       header: 'bg-emerald-400',
-      border: 'border-emerald-300'
-    }
+      border: 'border-emerald-300',
+    },
   },
   {
     id: 'cyan',
     classes: {
       header: 'bg-cyan-400',
-      border: 'border-cyan-300'
-    }
+      border: 'border-cyan-300',
+    },
   },
   {
     id: 'sky',
     classes: {
       header: 'bg-sky-400',
-      border: 'border-sky-300'
-    }
+      border: 'border-sky-300',
+    },
   },
   {
     id: 'blue',
     classes: {
       header: 'bg-blue-400',
-      border: 'border-blue-300'
-    }
+      border: 'border-blue-300',
+    },
   },
   {
     id: 'indigo',
     classes: {
       header: 'bg-indigo-400',
-      border: 'border-indigo-300'
-    }
+      border: 'border-indigo-300',
+    },
   },
   {
     id: 'fuchsia',
     classes: {
       header: 'bg-fuchsia-400',
-      border: 'border-fuchsia-300'
-    }
+      border: 'border-fuchsia-300',
+    },
   },
   {
     id: 'violet',
     classes: {
       header: 'bg-violet-400',
-      border: 'border-violet-300'
-    }
+      border: 'border-violet-300',
+    },
   },
   {
     id: 'pink',
     classes: {
       header: 'bg-pink-400',
-      border: 'border-pink-300'
-    }
-  }
+      border: 'border-pink-300',
+    },
+  },
 ];
 
 export const getIcon = (icon: string | undefined) => {

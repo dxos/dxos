@@ -15,7 +15,7 @@ export const useDevices = (): Device[] => {
       const subscription = client.halo.devices.subscribe(listener);
       return () => subscription.unsubscribe();
     },
-    () => client.halo.devices.get()
+    () => client.halo.devices.get(),
   );
 
   return devices;

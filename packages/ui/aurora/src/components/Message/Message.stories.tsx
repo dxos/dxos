@@ -26,13 +26,13 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 );
 
 export default {
-  component: StoryMessage
+  component: StoryMessage,
 };
 
 export const Default = {
   args: {
     valence: 'error',
     title: 'Alert title',
-    body: 'Alert content'
-  }
+    body: 'Alert content',
+  },
 };

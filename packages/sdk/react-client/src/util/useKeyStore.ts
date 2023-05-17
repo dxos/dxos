@@ -11,7 +11,7 @@ import { useEffect, useMemo, useReducer } from 'react';
 // TODO(burdon): Move to react-client.
 // NOTE: Will be replaced by HALO.
 export const useKeyStore = (
-  defaultKeys: string[] = []
+  defaultKeys: string[] = [],
 ): [Map<string, string>, (key: string, value: string) => void] => {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const keyMap = useMemo(() => new Map<string, string>(), []);

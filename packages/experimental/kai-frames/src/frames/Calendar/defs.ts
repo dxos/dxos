@@ -11,5 +11,5 @@ const CalendarFrame = React.lazy(() => import('./CalendarFrame'));
 
 export const CalendarFrameRuntime: FrameRuntime<any> = {
   Icon: CalendarIcon,
-  Component: CalendarFrame
+  Component: CalendarFrame,
 };

@@ -22,7 +22,7 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
     __CONFIG_ENVS__: envPath ?? resolve(CWD, 'dx-env.yml'),
     // Dev config is supplied in place of dynamics locally.
     // When deployed with dynamic=true it is overridden by KUBE config.
-    __CONFIG_DYNAMICS__: devPath ?? resolve(CWD, 'dx-dev.yml')
+    __CONFIG_DYNAMICS__: devPath ?? resolve(CWD, 'dx-dev.yml'),
   };
 
   return Object.entries(KEYS_TO_FILE).reduce(
@@ -63,14 +63,14 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
 
       return {
         ...prev,
-        [key]: content
+        [key]: content,
       };
     },
     {
       __DXOS_CONFIG__: { dynamic, publicUrl },
       __CONFIG_DEFAULTS__: {},
       __CONFIG_ENVS__: {},
-      __CONFIG_DYNAMICS__: {}
-    }
+      __CONFIG_DYNAMICS__: {},
+    },
   );
 };

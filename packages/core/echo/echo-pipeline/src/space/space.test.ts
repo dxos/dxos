@@ -30,12 +30,12 @@ describe('space/space', () => {
       const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
         ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-        await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA)
+        await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
       ];
 
       for (const credential of credentials) {
         await space.controlPipeline.writer.write({
-          credential: { credential }
+          credential: { credential },
         });
       }
 
@@ -70,12 +70,12 @@ describe('space/space', () => {
         const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
           ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-          await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA)
+          await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
         ];
 
         for (const credential of credentials) {
           await space.controlPipeline.writer.write({
-            credential: { credential }
+            credential: { credential },
           });
         }
 
@@ -112,12 +112,12 @@ describe('space/space', () => {
         agent2.deviceKey,
         space2.controlFeedKey!,
         space2.dataFeedKey!,
-        space1.genesisFeedKey
+        space1.genesisFeedKey,
       );
 
       for (const credential of credentials) {
         await space1.controlPipeline.writer.write({
-          credential: { credential }
+          credential: { credential },
         });
       }
     }

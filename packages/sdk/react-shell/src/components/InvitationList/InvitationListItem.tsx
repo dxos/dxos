@@ -26,7 +26,7 @@ export const InvitationListItem = ({
   invitation,
   value,
   onClickRemove,
-  createInvitationUrl
+  createInvitationUrl,
 }: InvitationListItemProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('qrLabel');

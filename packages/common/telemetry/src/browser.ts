@@ -17,7 +17,7 @@ export const init = ({ apiKey, enable = true }: InitOptions) => {
   try {
     const contents = snippet.min({
       apiKey,
-      page: false
+      page: false,
     });
 
     const script = document.createElement('script');
@@ -32,7 +32,7 @@ export const page = ({ identityId: userId, ...options }: PageOptions = {}) => {
   try {
     (window as any).analytics?.page({
       ...options,
-      userId
+      userId,
     });
   } catch (err) {
     log.catch('Failed to track page', err);
@@ -43,7 +43,7 @@ export const event = ({ identityId: userId, name: event, ...options }: EventOpti
   try {
     (window as any).analytics?.track({
       ...options,
-      event
+      event,
     });
   } catch (err) {
     log.catch('Failed to track event', err);

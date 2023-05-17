@@ -30,12 +30,12 @@ export const SpaceFeeds: FC<{
           value: (key) => truncateKey(key),
           width: 20,
           color: 'green',
-          label: 'feed'
+          label: 'feed',
         },
         {
           key: 'length',
-          label: 'blocks'
-        }
+          label: 'blocks',
+        },
       ]}
       rows={feeds}
     />

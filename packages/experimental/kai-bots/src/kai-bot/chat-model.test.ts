@@ -24,7 +24,7 @@ describe.skip('ChatModel', () => {
     const config = getConfig()!;
     return new ChatModel({
       organization: getKey(config, 'com.openai.org_id')!,
-      apiKey: getKey(config, 'com.openai.api_key')!
+      apiKey: getKey(config, 'com.openai.api_key')!,
     });
   };
 
@@ -42,49 +42,49 @@ describe.skip('ChatModel', () => {
       person: [
         {
           key: 'name',
-          resolver: (person) => `write a short bio about ${person.name}.`
+          resolver: (person) => `write a short bio about ${person.name}.`,
         },
         {
           key: 'bio',
           // TODO(burdon): Lookup value or run resolver.
-          resolver: (person) => `write a short bio about ${person.name}.`
+          resolver: (person) => `write a short bio about ${person.name}.`,
         },
         {
           key: 'employers',
           type: {
             array: true,
-            entity: 'organization'
+            entity: 'organization',
           },
-          resolver: (person) => `list the places where ${person.name} worked.`
-        }
+          resolver: (person) => `list the places where ${person.name} worked.`,
+        },
       ],
 
       // TODO(burdon): RDF: VC is a kind of Organization.
       organization: [
         {
-          key: 'name'
+          key: 'name',
         },
         {
           key: 'summary',
-          resolver: (organization) => `write a short summary about ${organization.name}.`
+          resolver: (organization) => `write a short summary about ${organization.name}.`,
         },
         {
           key: 'executives',
           type: {
             array: true,
-            entity: 'person'
+            entity: 'person',
           },
-          resolver: (organization) => `list the names of the executives at ${organization}.`
+          resolver: (organization) => `list the names of the executives at ${organization}.`,
         },
         {
           key: 'investments',
           type: {
             array: true,
-            entity: 'organization'
+            entity: 'organization',
           },
-          resolver: (organization) => `list 10 major investments of ${organization.name}.`
-        }
-      ]
+          resolver: (organization) => `list 10 major investments of ${organization.name}.`,
+        },
+      ],
     };
 
     // TODO(burdon): Extract name and company from email/calendar event and create a Stack for the company.
@@ -99,10 +99,10 @@ describe.skip('ChatModel', () => {
           name: "Ciaran O'Leary",
           employers: [
             {
-              name: 'Blue Yard'
-            }
-          ]
-        }
+              name: 'Blue Yard',
+            },
+          ],
+        },
       },
       {
         entity: 'person',
@@ -110,10 +110,10 @@ describe.skip('ChatModel', () => {
           name: 'Alex Brunicki',
           employers: [
             {
-              name: 'Backed VC'
-            }
-          ]
-        }
+              name: 'Backed VC',
+            },
+          ],
+        },
       },
       {
         entity: 'organization',
@@ -121,10 +121,10 @@ describe.skip('ChatModel', () => {
           name: 'DXOS',
           summary: [
             'DXOS is an Web3 operating system for the creation of decentralized applications based on a new kind of database technology called ECHO.',
-            'DXOS does not require the cloud or a blockchain.'
-          ].join('')
-        }
-      }
+            'DXOS does not require the cloud or a blockchain.',
+          ].join(''),
+        },
+      },
     ];
   });
 });

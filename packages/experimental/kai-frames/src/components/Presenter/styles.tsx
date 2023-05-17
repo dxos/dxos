@@ -10,7 +10,7 @@ export const defaultClasses = {
   ul: 'ml-12 list-square',
   li: 'pl-6 text-[60px]',
   p: 'pb-12 text-[60px]',
-  pre: 'w-full my-[16px] p-[32px] text-[40px] bg-zinc-100'
+  pre: 'w-full my-[16px] p-[32px] text-[40px] bg-zinc-100',
 };
 
 export const defaultSlideClasses = 'bg-white leading-relaxed font-mono';

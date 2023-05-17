@@ -67,7 +67,7 @@ describe('observable values', () => {
       onError: (err) => {
         failed = err;
         setDone();
-      }
+      },
     });
 
     {

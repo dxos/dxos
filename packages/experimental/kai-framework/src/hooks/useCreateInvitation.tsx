@@ -35,7 +35,7 @@ export const useCreateInvitation = () => {
       const observable = space.createInvitation({
         swarmKey,
         type: Invitation.Type.MULTIUSE,
-        authMethod: Invitation.AuthMethod.NONE
+        authMethod: Invitation.AuthMethod.NONE,
       });
 
       const subscription = observable.subscribe(
@@ -48,7 +48,7 @@ export const useCreateInvitation = () => {
         (error: any) => {
           log.error(error);
           subscription.unsubscribe();
-        }
+        },
       );
     } else {
       void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });

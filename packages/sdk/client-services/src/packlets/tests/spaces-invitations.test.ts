@@ -31,8 +31,8 @@ describe('Spaces/invitations', () => {
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: space1 as SpaceProxy,
-        guest: client2
-      })
+        guest: client2,
+      }),
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);

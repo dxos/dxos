@@ -81,14 +81,14 @@ export class SignalClient implements SignalMethods {
    * Swarm events streams. Keys represent actually joined topic and peerId.
    */
   private readonly _swarmStreams = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, Stream<SwarmEvent>>(
-    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
   /**
    * Represent desired joined topic and peerId.
    */
   private readonly _joinedTopics = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
-    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
   /**
@@ -115,7 +115,7 @@ export class SignalClient implements SignalMethods {
     receivedMessages: 0,
     reconnectCounter: 0,
     joinCounter: 0,
-    leaveCounter: 0
+    leaveCounter: 0,
   };
 
   /**
@@ -125,7 +125,7 @@ export class SignalClient implements SignalMethods {
   constructor(
     private readonly _host: string,
     private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>,
-    private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>
+    private readonly _onSwarmEvent: (params: { topic: PublicKey; swarmEvent: SwarmEvent }) => Promise<void>,
   ) {
     if (!this._host.startsWith('wss://') && !this._host.startsWith('ws://')) {
       throw new Error(`Signal server requires a websocket URL. Provided: ${this._host}`);
@@ -148,7 +148,7 @@ export class SignalClient implements SignalMethods {
           log.warn('SignalClient error:', err);
         }
         this._scheduleReconcileAfterError();
-      }
+      },
     });
 
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
@@ -165,7 +165,7 @@ export class SignalClient implements SignalMethods {
           this._reconcileTask!.schedule();
         }
       },
-      RECONCILE_INTERVAL
+      RECONCILE_INTERVAL,
     );
 
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
@@ -199,7 +199,7 @@ export class SignalClient implements SignalMethods {
       error: this._lastError?.message,
       reconnectIn: this._reconnectAfter,
       connectionStarted: this._connectionStarted,
-      lastStateChange: this._lastStateChange
+      lastStateChange: this._lastStateChange,
     };
   }
 
@@ -245,7 +245,7 @@ export class SignalClient implements SignalMethods {
       () => {
         this._reconcileTask!.schedule();
       },
-      ERROR_RECONCILE_DELAY
+      ERROR_RECONCILE_DELAY,
     );
   }
 
@@ -309,8 +309,8 @@ export class SignalClient implements SignalMethods {
             this._setState(SignalState.ERROR);
 
             this._reconnectTask!.schedule();
-          }
-        }
+          },
+        },
       });
     } catch (err: any) {
       if (this._state !== SignalState.CONNECTED && this._state !== SignalState.CONNECTING) {
@@ -379,7 +379,7 @@ export class SignalClient implements SignalMethods {
 
       const swarmStream = await asyncTimeout(
         cancelWithContext(this._connectionCtx!, client.join({ topic, peerId })),
-        5000
+        5000,
       );
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
@@ -418,14 +418,14 @@ export class SignalClient implements SignalMethods {
 
       const messageStream = await asyncTimeout(
         cancelWithContext(this._connectionCtx!, client.receiveMessages(peerId)),
-        5000
+        5000,
       );
       messageStream.subscribe(async (message: SignalMessage) => {
         this._performance.receivedMessages++;
         await this._onMessage({
           author: PublicKey.from(message.author),
           recipient: PublicKey.from(message.recipient),
-          payload: message.payload
+          payload: message.payload,
         });
       });
 

@@ -26,7 +26,7 @@ import { ShellProvider } from '../ShellProvider';
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
-    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
+    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules]),
   };
 
   // TODO(burdon): Factor out config.

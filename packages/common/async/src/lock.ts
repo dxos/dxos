@@ -86,7 +86,7 @@ interface LockableClass {
 export const synchronized = (
   target: any,
   propertyName: string,
-  descriptor: TypedPropertyDescriptor<(...args: any) => any>
+  descriptor: TypedPropertyDescriptor<(...args: any) => any>,
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function (this: any & LockableClass, ...args: any) {

@@ -9,7 +9,7 @@ import {
   SystemStatus,
   SystemStatusResponse,
   SystemService,
-  UpdateSystemStatusRequest
+  UpdateSystemStatusRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { MaybePromise } from '@dxos/util';
 

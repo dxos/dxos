@@ -6,7 +6,7 @@ import {
   Provider as ToastProvider,
   ToastProviderProps,
   Viewport as ToastViewport,
-  ToastViewportProps
+  ToastViewportProps,
 } from '@radix-ui/react-toast';
 import React, { PropsWithChildren } from 'react';
 
@@ -14,7 +14,7 @@ import {
   ThemeProvider as AuroraThemeProvider,
   ThemeProviderProps as AuroraThemeProviderProps,
   TooltipProvider,
-  TooltipProviderProps
+  TooltipProviderProps,
 } from '@dxos/aurora';
 import { mx, osTx, appTx } from '@dxos/aurora-theme';
 
@@ -44,7 +44,7 @@ export const ThemeProvider = ({
           {...toastViewportProps}
           className={mx(
             'z-[70] fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
-            toastViewportProps?.className
+            toastViewportProps?.className,
           )}
         />
       </ToastProvider>

@@ -41,7 +41,7 @@ export const sizeWidthMap = new Map<Size, string>([
   [64, 'is-64'],
   [72, 'is-72'],
   [80, 'is-80'],
-  [96, 'is-96']
+  [96, 'is-96'],
 ]);
 
 export const sizeHeightMap = new Map<Size, string>([
@@ -79,7 +79,7 @@ export const sizeHeightMap = new Map<Size, string>([
   [64, 'bs-64'],
   [72, 'bs-72'],
   [80, 'bs-80'],
-  [96, 'bs-96']
+  [96, 'bs-96'],
 ]);
 
 const sizes = new Set(sizeWidthMap.keys());

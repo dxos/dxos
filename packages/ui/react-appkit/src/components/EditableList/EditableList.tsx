@@ -24,7 +24,7 @@ import {
   useListContext,
   LIST_NAME,
   MockListItemDragHandle,
-  InputRoot
+  InputRoot,
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
@@ -91,8 +91,8 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
     (event: KeyboardEvent<Element>) => {
       const inputsInScope = Array.from(
         document.querySelectorAll<HTMLInputElement>(
-          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`
-        )
+          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`,
+        ),
       );
       const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
       switch (event.key) {
@@ -113,7 +113,7 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
         }
       }
     },
-    [hostId]
+    [hostId],
   );
 
   return { onListItemInputKeyDown, hostAttrs, itemAttrs };
@@ -130,7 +130,7 @@ export const EditableList = ({
   itemIdOrder,
   onMoveItem,
   density: propsDensity,
-  slots = {}
+  slots = {},
 }: EditableListProps) => {
   const { t } = useTranslation('appkit');
   const density = useListDensity({ density: propsDensity, variant });
@@ -167,14 +167,14 @@ export const EditableList = ({
             {...{
               value: nextItemTitle,
               defaultValue: defaultNextItemTitle,
-              onChange: onChangeNextItemTitle
+              onChange: onChangeNextItemTitle,
             }}
             slots={{
               ...slots.addItemInput,
               root: {
                 ...slots.addItemInput?.root,
-                className: mx('grow', slots.addItemInput?.root?.className)
-              }
+                className: mx('grow', slots.addItemInput?.root?.className),
+              },
             }}
           />
           <ListItemEndcap>
@@ -216,9 +216,9 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
       title,
       onChangeTitle,
       onClickDelete,
-      slots = {}
+      slots = {},
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const { t } = useTranslation('appkit');
     const { variant, selectable } = useListContext(LIST_NAME, __listScope);
@@ -229,7 +229,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
-          onSelectedChange: onChangeCompleted
+          onSelectedChange: onChangeCompleted,
         }}
       >
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
@@ -256,12 +256,12 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
               ...slots.input,
               root: {
                 ...slots.input?.root,
-                className: mx('grow', slots.input?.root?.className)
-              }
+                className: mx('grow', slots.input?.root?.className),
+              },
             },
             value: title,
             defaultValue: defaultTitle,
-            onChange: onChangeTitle
+            onChange: onChangeTitle,
           }}
         >
           {title ?? defaultTitle}
@@ -277,5 +277,5 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         )}
       </ListItem>
     );
-  }
+  },
 );

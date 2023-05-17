@@ -11,7 +11,7 @@ import { ElevationProvider } from '../ElevationProvider';
 import { Button, ButtonGroup, ButtonProps } from './Button';
 
 export default {
-  component: Button
+  component: Button,
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
@@ -54,7 +54,7 @@ export const Default = {
       )}
     </Container>
   ),
-  args: { children: 'Hello', disabled: false, variant: 'default' }
+  args: { children: 'Hello', disabled: false, variant: 'default' },
 };
 
 export const Primary = { ...Default, args: { variant: 'primary', children: 'Hello' } };

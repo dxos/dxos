@@ -10,7 +10,7 @@ import {
   NodeGlobalsPolyfillPlugin,
   FixMemdownPlugin,
   FixGracefulFsPlugin,
-  NodeModulesPlugin
+  NodeModulesPlugin,
 } from '@dxos/esbuild-plugins';
 
 export interface BuildTestsOpts {
@@ -67,6 +67,6 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     format: 'iife',
     sourcemap: 'inline',
     outfile: join(opts.outDir, 'bundle.js'),
-    plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()]
+    plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()],
   });
 };

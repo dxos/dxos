@@ -34,7 +34,7 @@ export class InvitationsManager extends ShellManager {
 
     const { page } = await setupPage(this._browser, {
       url: storybookUrl('invitations--default'),
-      waitFor: (page) => page.getByTestId('invitations.identity-header').first().isVisible()
+      waitFor: (page) => page.getByTestId('invitations.identity-header').first().isVisible(),
     });
 
     this.page = page;
@@ -137,7 +137,7 @@ export class InvitationsManager extends ShellManager {
           (window as any)[`peer${id}space`].createInvitation(options);
         }
       },
-      { id, type, options }
+      { id, type, options },
     );
     return this._invitationCode.wait();
   }

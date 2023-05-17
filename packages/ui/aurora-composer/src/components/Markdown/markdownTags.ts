@@ -16,7 +16,7 @@ export const markdownTags = {
   inlineCode: Tag.define(),
   url: Tag.define(),
   linkReference: Tag.define(),
-  linkLabel: Tag.define()
+  linkLabel: Tag.define(),
 };
 
 export const markdownTagsExtension: MarkdownConfig = {
@@ -32,7 +32,7 @@ export const markdownTagsExtension: MarkdownConfig = {
       InlineCode: markdownTags.inlineCode,
       URL: markdownTags.url,
       LinkReference: markdownTags.linkReference,
-      LinkLabel: markdownTags.linkLabel
-    })
-  ]
+      LinkLabel: markdownTags.linkLabel,
+    }),
+  ],
 };

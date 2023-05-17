@@ -61,7 +61,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               peer.on('signal', (data) => {
                 void space.postMessage(
                   getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }),
-                  { command: 'signal', data, initiator: false }
+                  { command: 'signal', data, initiator: false },
                 );
               });
               peer.on('stream', (stream) => {
@@ -95,7 +95,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               break;
             }
           }
-        }
+        },
       );
       ctx.onDispose(() => unsubscribe());
     });
@@ -136,20 +136,20 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
           }
           const { data } = payload;
           peer.signal(data);
-        }
+        },
       );
 
       peer.on('signal', async (data) => {
         await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
           command: 'signal',
           data,
-          initiator: true
+          initiator: true,
         });
       });
 
       // Initiate connection.
       await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
-        command: 'connect'
+        command: 'connect',
       });
 
       const cleanup = (err?: Error) => {

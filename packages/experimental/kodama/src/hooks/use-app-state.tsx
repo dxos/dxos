@@ -19,7 +19,7 @@ export interface ActionHandler {
 
 enum ActionType {
   SET_ERROR,
-  SET_SPACE_KEY
+  SET_SPACE_KEY,
 }
 
 type Action = {
@@ -32,13 +32,13 @@ const appStateReducer = (state: AppState, action: Action) => {
     case ActionType.SET_ERROR: {
       return {
         ...state,
-        error: action.value
+        error: action.value,
       };
     }
     case ActionType.SET_SPACE_KEY: {
       return {
         ...state,
-        spaceKey: action.value
+        spaceKey: action.value,
       };
     }
   }
@@ -60,9 +60,9 @@ export const AppStateProvider: FC<{
       },
       setSpaceKey: (spaceKey: PublicKey) => {
         dispatch({ type: ActionType.SET_SPACE_KEY, value: spaceKey });
-      }
+      },
     }),
-    [dispatch]
+    [dispatch],
   );
 
   return <AppStateContext.Provider value={[state, handler]}>{children}</AppStateContext.Provider>;

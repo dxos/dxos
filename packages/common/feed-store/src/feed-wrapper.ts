@@ -29,7 +29,7 @@ export class FeedWrapper<T extends {}> {
 
   constructor(
     private _hypercore: Hypercore<T>,
-    private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
+    private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
   ) {
     assert(this._hypercore);
     assert(this._key);
@@ -45,7 +45,7 @@ export class FeedWrapper<T extends {}> {
       feedKey: this._key,
       length: this.properties.length,
       opened: this.properties.opened,
-      closed: this.properties.closed
+      closed: this.properties.closed,
     };
   }
 
@@ -72,7 +72,7 @@ export class FeedWrapper<T extends {}> {
           this.push(data);
           cb();
         });
-      }
+      },
     });
     this._hypercore.createReadStream(opts).pipe(transform, (err) => {
       // Ignore errors.
@@ -101,7 +101,7 @@ export class FeedWrapper<T extends {}> {
           log('write complete', { feed: this._key, seq });
           const receipt: WriteReceipt = {
             feedKey: this.key,
-            seq
+            seq,
           };
 
           await afterWrite?.(receipt);
@@ -114,7 +114,7 @@ export class FeedWrapper<T extends {}> {
             this._writeLock.wake();
           }
         }
-      }
+      },
     };
   }
 
@@ -140,7 +140,7 @@ export class FeedWrapper<T extends {}> {
       log.warn('Closing feed with pending writes', {
         feed: this._key,
         count: this._pendingWrites.size,
-        pendingWrites: Array.from(this._pendingWrites.values()).map((stack) => stack.getStack())
+        pendingWrites: Array.from(this._pendingWrites.values()).map((stack) => stack.getStack()),
       });
     }
     this._closed = true;

@@ -11,5 +11,5 @@ const TableFrame = React.lazy(() => import('./TableFrame'));
 
 export const TableFrameRuntime: FrameRuntime<any> = {
   Icon: TableIcon,
-  Component: TableFrame
+  Component: TableFrame,
 };

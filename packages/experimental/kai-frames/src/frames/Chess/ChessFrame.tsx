@@ -129,7 +129,7 @@ const Play: FC<{
 const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: () => void }> = ({
   pieces,
   onSelect,
-  onCreate
+  onCreate,
 }) => {
   const { space } = useFrameContext();
   const games = useQuery(space, Game.filter());

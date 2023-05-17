@@ -13,7 +13,7 @@ import {
   SigningContext,
   createMappedFeedWriter,
   SnapshotManager,
-  DataPipeline
+  DataPipeline,
 } from '@dxos/echo-pipeline';
 import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
@@ -96,13 +96,13 @@ export class DataSpace {
       memberKey: params.memberKey,
       spaceKey: this._inner.key,
       feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
-      snapshotId: params.snapshotId
+      snapshotId: params.snapshotId,
     });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
       update: this._inner.stateUpdate,
-      authTimeout: AUTH_TIMEOUT
+      authTimeout: AUTH_TIMEOUT,
     });
 
     this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
@@ -193,7 +193,7 @@ export class DataSpace {
     // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
-      breakOnStall: false
+      breakOnStall: false,
     });
 
     await this._createWritableFeeds();
@@ -203,10 +203,10 @@ export class DataSpace {
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
-          credential: { credential }
+          credential: { credential },
         }),
-        this._inner.controlPipeline.writer
-      )
+        this._inner.controlPipeline.writer,
+      ),
     );
 
     await this._dataPipeline.open({
@@ -214,14 +214,14 @@ export class DataSpace {
         const pipeline = await this._inner.createDataPipeline({ start });
         await pipeline.start();
         return pipeline;
-      }
+      },
     });
 
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
     await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
-      breakOnStall: false
+      breakOnStall: false,
     });
 
     log('data pipeline ready');
@@ -248,9 +248,9 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL
-          }
-        })
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+        }),
       );
     }
     if (!this.inner.dataFeedKey) {
@@ -265,9 +265,9 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.DATA
-          }
-        })
+            designation: AdmittedFeed.Designation.DATA,
+          },
+        }),
       );
     }
 

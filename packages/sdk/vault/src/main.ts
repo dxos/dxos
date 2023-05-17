@@ -15,6 +15,6 @@ void startIFrameRuntime(
     // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.
     new SharedWorker(new URL('./shared-worker', import.meta.url), {
       type: 'module',
-      name: 'dxos-vault'
-    })
+      name: 'dxos-vault',
+    }),
 );

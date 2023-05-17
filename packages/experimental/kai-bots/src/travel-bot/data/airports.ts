@@ -57,7 +57,7 @@ export class Airports {
       : undefined;
 
     return this._airports.filter(
-      (airport) => (!matchText || matchText(airport)) && (!matchFilter || matchFilter(airport))
+      (airport) => (!matchText || matchText(airport)) && (!matchFilter || matchFilter(airport)),
     );
   }
 }
@@ -83,13 +83,13 @@ export const fetchAirports = async (): Promise<Airport[]> => {
           name: record.name,
           location: {
             latitude: Number(record.latitude_deg),
-            longitude: Number(record.longitude_deg)
+            longitude: Number(record.longitude_deg),
           },
           continent: record.continent,
           country: record.iso_country,
           region: record.iso_region,
           municipality: record.municipality,
-          link: record.wikipedia_link
+          link: record.wikipedia_link,
         });
       }
     }

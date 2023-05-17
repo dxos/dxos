@@ -14,7 +14,7 @@ import React, {
   PropsWithChildren,
   SetStateAction,
   useCallback,
-  useRef
+  useRef,
 } from 'react';
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
@@ -39,7 +39,7 @@ const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME
   setSidebarOpen: (nextOpen) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
     console.warn('Attempt to set sidebar state without initializing `MainRoot`');
-  }
+  },
 });
 
 const useSidebar = (consumerName = GENERIC_CONSUMER_NAME) => {
@@ -49,7 +49,7 @@ const useSidebar = (consumerName = GENERIC_CONSUMER_NAME) => {
     setSidebarOpen,
     toggleSidebar: useCallback(() => setSidebarOpen(!sidebarOpen), [sidebarOpen, setSidebarOpen]),
     openSidebar: useCallback(() => setSidebarOpen(true), [setSidebarOpen]),
-    closeSidebar: useCallback(() => setSidebarOpen(false), [setSidebarOpen])
+    closeSidebar: useCallback(() => setSidebarOpen(false), [setSidebarOpen]),
   };
 };
 
@@ -70,7 +70,7 @@ const MainRoot = ({
   const [sidebarOpen = isLg, setSidebarOpen] = useControllableState<boolean>({
     prop: propsSidebarOpen,
     defaultProp: defaultSidebarOpen,
-    onChange: onSidebarOpenChange
+    onChange: onSidebarOpenChange,
   });
   return (
     <MainProvider {...{ ...props, sidebarOpen, setSidebarOpen }}>
@@ -105,7 +105,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
       </DialogContent>
     );
-  }
+  },
 );
 
 Sidebar.displayName = SIDEBAR_NAME;
@@ -124,7 +124,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         {children}
       </Root>
     );
-  }
+  },
 );
 
 Main.displayName = MAIN_NAME;

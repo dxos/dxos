@@ -19,8 +19,8 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
       subject: space.key,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceGenesis',
-        spaceKey: space.key
-      }
+        spaceKey: space.key,
+      },
     }),
 
     await createCredential({
@@ -32,8 +32,8 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         spaceKey: space.key,
         role: SpaceMember.Role.ADMIN,
         profile: signingContext.profile,
-        genesisFeedKey: space.controlFeedKey ?? failUndefined()
-      }
+        genesisFeedKey: space.controlFeedKey ?? failUndefined(),
+      },
     }),
 
     await signingContext.credentialSigner.createCredential({
@@ -43,8 +43,8 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL
-      }
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
     }),
 
     await signingContext.credentialSigner.createCredential({
@@ -54,14 +54,14 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA
-      }
-    })
+        designation: AdmittedFeed.Designation.DATA,
+      },
+    }),
   ];
 
   for (const credential of credentials) {
     await space.controlPipeline.writer.write({
-      credential: { credential }
+      credential: { credential },
     });
   }
 

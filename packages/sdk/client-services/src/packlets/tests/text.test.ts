@@ -44,7 +44,7 @@ const assertState = async (model: Model, real: Real) => {
         const text = (document.content.doc as Doc).getText('utf8');
         if (text.toString() !== model.text) {
           throw new Error(
-            `Text mismatch for peer ${peerId.truncate()}: ${JSON.stringify({ expected: model.text, actual: text })}`
+            `Text mismatch for peer ${peerId.truncate()}: ${JSON.stringify({ expected: model.text, actual: text })}`,
           );
         }
       } else if (model.peers.has(peerId)) {
@@ -166,7 +166,7 @@ describe('Client text replication', () => {
         .map(([peerId, index, text]) => new InsertTextCommand(peerId, index, text)),
       fc
         .tuple(peerId, fc.integer({ min: 0, max: 100 }), fc.integer({ min: 1, max: 10 }))
-        .map(([peerId, index, length]) => new RemoveTextCommand(peerId, index, length))
+        .map(([peerId, index, length]) => new RemoveTextCommand(peerId, index, length)),
     ];
     const commands = fc.commands(allCommands, { size: 'medium' });
 
@@ -175,12 +175,12 @@ describe('Client text replication', () => {
       const setup: ModelRunSetup<Model, Real> = () => ({
         model: {
           text: initialContent,
-          peers: new ComplexSet<PublicKey>(PublicKey.hash)
+          peers: new ComplexSet<PublicKey>(PublicKey.hash),
         },
         real: {
           spaceKey: PublicKey.random(),
-          peers
-        }
+          peers,
+        },
       });
 
       await fc.asyncModelRun(setup, commands);
@@ -194,9 +194,9 @@ describe('Client text replication', () => {
           new CreatePeerCommand(peerIds[0]),
           new CreatePeerCommand(peerIds[1]),
           new RemoveTextCommand(peerIds[0], 7, 5),
-          new InsertTextCommand(peerIds[1], 7, 'DXOS')
-        ]
-      ]
+          new InsertTextCommand(peerIds[1], 7, 'DXOS'),
+        ],
+      ],
     ];
 
     await fc.assert(model, { examples });

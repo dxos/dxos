@@ -48,7 +48,7 @@ export const Tile = <T extends {} = {}>({
   slots = {},
   Content,
   onClick,
-  onDelete
+  onDelete,
 }: TileProps<T>) => {
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
@@ -59,11 +59,11 @@ export const Tile = <T extends {} = {}>({
           lensModel
             ? Object.assign(transform, {
                 x: transform.x / lensModel.zoom,
-                y: transform.y / lensModel.zoom
+                y: transform.y / lensModel.zoom,
               })
-            : transform
+            : transform,
         )
-      : undefined
+      : undefined,
   };
 
   return (
@@ -75,7 +75,7 @@ export const Tile = <T extends {} = {}>({
         'group flex flex-col overflow-hidden',
         isDragging && 'opacity-80',
         slots.root?.className,
-        selected && slots?.selected?.className
+        selected && slots?.selected?.className,
       )}
       style={style}
       onClick={(event) => {

@@ -13,6 +13,6 @@ export const initSentry = (namespace: string, config: Config) => {
     enable: Boolean(SENTRY_DESTINATION),
     destination: SENTRY_DESTINATION,
     environment,
-    release
+    release,
   });
 };

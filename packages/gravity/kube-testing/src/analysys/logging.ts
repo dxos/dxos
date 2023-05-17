@@ -14,7 +14,7 @@ export enum TestingEvent {
 
   // Swarm events.
   JOIN_SWARM = '',
-  LEAVE_SWARM = ''
+  LEAVE_SWARM = '',
 }
 
 export type TraceEvent =
@@ -75,7 +75,7 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
           }
 
           return JSON.parse(line);
-        })
+        }),
     ];
   }
 
@@ -111,6 +111,6 @@ export const zapPreprocessor = (entry: any): SerializedLogEntry => {
     timestamp: new Date(ts).getTime(),
     message: msg,
     context: rest,
-    meta: {}
+    meta: {},
   };
 };

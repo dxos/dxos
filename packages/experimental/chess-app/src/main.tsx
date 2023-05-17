@@ -13,6 +13,6 @@ import { Chessboard } from './Chessboard';
   createRoot(document.getElementById('root')!).render(
     <div>
       <Chessboard model={{ chess: new Chess() }} />
-    </div>
+    </div>,
   );
 })();

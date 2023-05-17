@@ -27,7 +27,7 @@ export const start = async (client: Client, options: Options = {}) => {
       <AppStateProvider debug={debug}>
         <App />
       </AppStateProvider>
-    </ClientProvider>
+    </ClientProvider>,
   );
 
   await waitUntilExit();

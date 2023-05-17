@@ -25,7 +25,7 @@ class TestBuilder {
       timeout: this._timeout,
       retries: this._retries,
       tags: this._tags,
-      environments: this._environments
+      environments: this._environments,
     };
   }
 

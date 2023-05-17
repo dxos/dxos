@@ -23,7 +23,7 @@ export const InvitationEmoji = ({ invitationId, size = 'lg', ...rootProps }: Inv
         getSize(size === 'sm' ? 8 : 12),
         'inline-flex items-center justify-center leading-none',
         size === 'sm' ? 'text-2xl' : 'text-5xl bg-neutral-300 dark:bg-neutral-700 rounded-full',
-        rootProps.className
+        rootProps.className,
       )}
     >
       <span role='none'>{invitationEmoji}</span>

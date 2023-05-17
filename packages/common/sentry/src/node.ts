@@ -7,7 +7,7 @@ import {
   init as naturalInit,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
-  setTag
+  setTag,
 } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
@@ -41,7 +41,7 @@ export const init = (options: InitOptions) => {
         options.onError?.(event);
 
         return event;
-      }
+      },
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {

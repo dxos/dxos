@@ -41,7 +41,7 @@ export class WebRTCTransport implements Transport {
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
-      config: this.params.webrtcConfig
+      config: this.params.webrtcConfig,
     });
 
     this._peer.on('signal', async (data) => {
@@ -70,7 +70,7 @@ export class WebRTCTransport implements Transport {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.warn('report after webrtc error', {
               config: this.params.webrtcConfig,
-              stats
+              stats,
             });
           });
         }
@@ -110,6 +110,6 @@ export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFacto
   createTransport: (params) =>
     new WebRTCTransport({
       ...params,
-      webrtcConfig
-    })
+      webrtcConfig,
+    }),
 });

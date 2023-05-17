@@ -15,7 +15,7 @@ import {
   TooltipContent as AuroraTooltipContent,
   TooltipArrow,
   TooltipTriggerProps,
-  TooltipTrigger
+  TooltipTrigger,
 } from '@dxos/aurora';
 
 export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = forwardRef<
@@ -62,7 +62,7 @@ export const Tooltip = ({
   mountAsSibling,
   triggerIsInToolbar,
   zIndex = 'z-[2]',
-  slots = {}
+  slots = {},
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');

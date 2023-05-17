@@ -70,75 +70,75 @@ export const markdownTheme = {
 
   '.cm-tooltip': {
     border: 'none',
-    backgroundColor: tooltipBackground
+    backgroundColor: tooltipBackground,
   },
   '.cm-tooltip .cm-tooltip-arrow:before': {
     borderTopColor: 'transparent',
-    borderBottomColor: 'transparent'
+    borderBottomColor: 'transparent',
   },
   '.cm-tooltip .cm-tooltip-arrow:after': {
     borderTopColor: tooltipBackground,
-    borderBottomColor: tooltipBackground
+    borderBottomColor: tooltipBackground,
   },
   '.cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
       backgroundColor: highlightBackground,
-      color: ivory
-    }
+      color: ivory,
+    },
   },
   '&.cm-focused': {
-    outline: 'none'
+    outline: 'none',
   },
   '& .cm-line': {
-    paddingInline: 0
+    paddingInline: 0,
   },
   '& .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa'
+    background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa',
   },
   '.dark & .cm-selectionBackground': {
-    background: get(tokens, 'extend.colors.primary.500', '#00ffff') + 'aa'
+    background: get(tokens, 'extend.colors.primary.500', '#00ffff') + 'aa',
   },
   '& .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.100', '#00ffff') + '44'
+    background: get(tokens, 'extend.colors.primary.100', '#00ffff') + '44',
   },
   '.dark & .cm-selectionMatch': {
-    background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44'
+    background: get(tokens, 'extend.colors.primary.400', '#00ffff') + '44',
   },
   '& .cm-content': {
-    caretColor: 'black'
+    caretColor: 'black',
   },
   '.dark & .cm-content': {
-    caretColor: cursor
+    caretColor: cursor,
   },
   '& .cm-cursor': {
-    borderLeftColor: 'black'
+    borderLeftColor: 'black',
   },
   '.dark & .cm-cursor': {
-    borderLeftColor: cursor
+    borderLeftColor: cursor,
   },
   '.cm-placeholder': {
-    fontFamily: get(tokens, 'fontFamily.body', []).join(',')
+    fontFamily: get(tokens, 'fontFamily.body', []).join(','),
   },
   '& .cm-scroller': {
-    fontFamily: get(tokens, 'fontFamily.mono', []).join(',')
+    fontFamily: get(tokens, 'fontFamily.mono', []).join(','),
   },
   '& .cm-activeLine': {
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
   },
   '.dark & .cm-activeLine': {
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
   },
   '& .cm-ySelectionInfo': {
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
     padding: '2px 4px',
-    marginBlockStart: '-4px'
+    marginBlockStart: '-4px',
   },
   '& .cm-ySelection': {
-    display: 'inline-block'
+    display: 'inline-block',
   },
   '& .cm-ySelectionCaret': {
     display: 'inline-block',
-    verticalAlign: 'top'
+    verticalAlign: 'top',
   },
   ...Object.keys(get(tokens, 'extend.fontSize', {})).reduce((acc: Record<string, any>, fontSize) => {
     const height = get(tokens, ['extend', 'fontSize', fontSize, 1, 'lineHeight']);
@@ -147,7 +147,7 @@ export const markdownTheme = {
     acc[`& .text-${fontSize} + .cm-ySelection + .cm-ySelectionCaret`] = { height };
     acc[`& .text-${fontSize} + .cm-widgetBuffer + .cm-ySelectionCaret`] = { height };
     return acc;
-  }, {})
+  }, {}),
 };
 
 export const markdownDarkHighlighting = HighlightStyle.define(
@@ -186,20 +186,20 @@ export const markdownDarkHighlighting = HighlightStyle.define(
         tags.processingInstruction,
         tags.string,
         tags.inserted,
-        tags.invalid
+        tags.invalid,
       ],
       color: 'inherit !important',
-      opacity: '0.5'
+      opacity: '0.5',
     },
     {
       tag: [tags.link, tags.url],
       color: 'inherit !important',
-      textDecoration: 'none !important'
+      textDecoration: 'none !important',
     },
     {
       tag: [tags.function(tags.variableName), tags.labelName],
       color: malibu,
-      fontFamily: monospace
+      fontFamily: monospace,
     },
     {
       tag: [
@@ -213,9 +213,9 @@ export const markdownDarkHighlighting = HighlightStyle.define(
         markdownTags.linkLabel,
         markdownTags.linkReference,
         tags.processingInstruction,
-        tags.meta
+        tags.meta,
       ],
-      class: mark
+      class: mark,
     },
     { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
     { tag: tags.heading1, class: heading[1] },
@@ -226,7 +226,7 @@ export const markdownDarkHighlighting = HighlightStyle.define(
     { tag: tags.heading6, class: heading[6] },
     { tag: tags.strikethrough, class: strikethrough },
     { tag: tags.emphasis, class: italic },
-    { tag: tags.strong, class: bold }
+    { tag: tags.strong, class: bold },
   ],
-  { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } }
+  { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } },
 );

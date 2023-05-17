@@ -28,7 +28,7 @@ const PureInvitationAuthenticatorContent = ({
   joinState,
   Kind,
   onChange,
-  onAuthenticate
+  onAuthenticate,
 }: {
   disabled?: boolean;
   joinSend: JoinSend;
@@ -59,12 +59,12 @@ const PureInvitationAuthenticatorContent = ({
             'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
             'data-prevent-ios-autofocus': true,
             'data-testid': `${invitationType}-auth-code-input`,
-            'data-1p-ignore': true
-          } as ComponentPropsWithoutRef<'input'>
+            'data-1p-ignore': true,
+          } as ComponentPropsWithoutRef<'input'>,
         }}
         {...(failed && {
           validationValence: 'error',
-          validationMessage: t('failed to authenticate message')
+          validationMessage: t('failed to authenticate message'),
         })}
       />
       <div role='none' className='grow' />
@@ -100,7 +100,7 @@ const InvitationAuthenticatorContent = ({
   disabled,
   invitation,
   Kind,
-  failed
+  failed,
 }: {
   joinSend: JoinSend;
   joinState?: JoinState;
@@ -123,7 +123,7 @@ const InvitationAuthenticatorContent = ({
         (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
       }
     },
-    [authenticate, pinValue]
+    [authenticate, pinValue],
   );
   return (
     <PureInvitationAuthenticatorContent

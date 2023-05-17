@@ -12,7 +12,7 @@ import {
   MulticastObservable,
   observableError,
   ObservableProvider,
-  Trigger
+  Trigger,
 } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
@@ -75,7 +75,7 @@ export class HaloProxy implements Halo {
   toJSON() {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),
-      deviceKey: this.device?.deviceKey.truncate()
+      deviceKey: this.device?.deviceKey.truncate(),
     };
   }
 
@@ -120,7 +120,7 @@ export class HaloProxy implements Halo {
 
     assert(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.DEVICE
+      kind: Invitation.Kind.DEVICE,
     }));
     await this._invitationProxy.open();
 
@@ -131,7 +131,7 @@ export class HaloProxy implements Halo {
       data.identity &&
         log.trace('dxos.halo.identity', {
           identityKey: data.identity.identityKey,
-          displayName: data.identity.profile?.displayName
+          displayName: data.identity.profile?.displayName,
         });
       this._identityChanged.emit(data.identity ?? null);
     });
@@ -213,7 +213,7 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
     const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: identity.spaceKey!
+      spaceKey: identity.spaceKey!,
     });
     this._subscriptions.add(() => stream.close());
 
@@ -233,7 +233,7 @@ export class HaloProxy implements Halo {
           newCredentials.length !== observable.value?.length ||
           !newCredentials.every(
             (credential, index) =>
-              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!)
+              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!),
           )
         ) {
           observable.setValue(newCredentials);
@@ -244,7 +244,7 @@ export class HaloProxy implements Halo {
         if (err) {
           observableError(observable, err);
         }
-      }
+      },
     );
 
     return observable;
@@ -289,7 +289,7 @@ export class HaloProxy implements Halo {
     }
     return this._serviceProvider.services.SpacesService.writeCredentials({
       spaceKey: identity.spaceKey!,
-      credentials
+      credentials,
     });
   }
 
@@ -312,19 +312,19 @@ export class HaloProxy implements Halo {
       },
       onError: (err) => {
         log.catch(err);
-      }
+      },
     });
 
     const credentials = await asyncTimeout(
       trigger.wait(),
       THROW_TIMEOUT_ERROR_AFTER,
-      new ApiError('Timeout while waiting for credentials')
+      new ApiError('Timeout while waiting for credentials'),
     );
     return this._serviceProvider.services.IdentityService.signPresentation({
       presentation: {
-        credentials
+        credentials,
       },
-      nonce
+      nonce,
     });
   }
 }

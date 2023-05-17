@@ -60,7 +60,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   const cid = await uploadToIPFS(publishFolder, config, {
     timeout: timeout || '10m',
     pin,
-    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined
+    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
   });
 
   verbose && bar.update(total);

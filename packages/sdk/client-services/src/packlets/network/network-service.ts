@@ -15,7 +15,7 @@ export class NetworkServiceImpl implements NetworkService {
       const update = () => {
         next({
           swarm: this.networkManager.connectionState,
-          signaling: this.signalManager.getStatus().map(({ host, state }) => ({ server: host, state }))
+          signaling: this.signalManager.getStatus().map(({ host, state }) => ({ server: host, state })),
         });
       };
 

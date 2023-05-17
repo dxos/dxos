@@ -7,7 +7,7 @@ import {
   MemorySignalManager,
   MemorySignalManagerContext,
   SignalManager,
-  WebsocketSignalManager
+  WebsocketSignalManager,
 } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
@@ -22,7 +22,7 @@ import {
   TransportFactory,
   WebRTCTransport,
   WebRTCTransportProxyFactory,
-  WebRTCTransportService
+  WebRTCTransportService,
 } from '../transport';
 import { TestWireProtocol } from './test-wire-protocol';
 
@@ -93,37 +93,37 @@ export class TestPeer {
         this._proxy = createProtoRpcPeer({
           port: proxyPort,
           requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         this._service = createProtoRpcPeer({
           port: servicePort,
           exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           handlers: { BridgeService: new WebRTCTransportService() },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
       } else {
         transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params)
+          createTransport: (params) => new WebRTCTransport(params),
         };
       }
     }
 
     return new NetworkManager({
       signalManager: this._signalManager,
-      transportFactory
+      transportFactory,
     });
   }
 
@@ -188,7 +188,7 @@ export class TestSwarmConnection {
       topic: this.topic,
       peerId: this.peer.peerId,
       protocolProvider: this.protocol.factory,
-      topology
+      topology,
     });
 
     return this;

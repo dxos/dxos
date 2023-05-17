@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 
 export const IdentityPanel = ({
   identity,
-  onClickManageProfile
+  onClickManageProfile,
 }: {
   identity: Identity;
   onClickManageProfile?: () => void;

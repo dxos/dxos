@@ -17,7 +17,7 @@ import { compareObject, compareString } from '@dxos/util';
 const iconTypes: { [index: string]: { Icon: FC<any>; color: string } } = {
   'dxos:type/bot': { Icon: Robot, color: 'text-green-400' },
   'dxos:type/frame': { Icon: AppWindow, color: 'text-orange-400' },
-  'dxos:type/schema': { Icon: Code, color: 'text-blue-400' }
+  'dxos:type/schema': { Icon: Code, color: 'text-blue-400' },
 };
 
 // TODO(burdon): Re-use in console.
@@ -29,28 +29,28 @@ const columns: TableColumn<Module>[] = [
     Cell: ({ value }: any) => {
       const { Icon, color } = iconTypes[value] ?? Circle;
       return <Icon weight='duotone' className={mx(getSize(6), color)} />;
-    }
+    },
   },
   {
     Header: 'type',
     accessor: ({ type }) => type,
-    width: 80
+    width: 80,
   },
   {
     Header: 'module',
     accessor: ({ id, name }) => id ?? name,
-    width: 160
+    width: 160,
   },
   {
     Header: 'version',
     accessor: ({ build }) => build?.version,
-    width: 80
+    width: 80,
   },
   {
     Header: 'description',
     accessor: ({ description }) => description,
-    width: 240
-  }
+    width: 240,
+  },
 ];
 
 export const MetagraphPanel = () => {
@@ -80,7 +80,7 @@ export const MetagraphPanel = () => {
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start py-1 font-mono font-thin' }
+          cell: { className: 'align-start py-1 font-mono font-thin' },
         }}
       />
     </div>

@@ -119,8 +119,8 @@ describe('Client services', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-      })
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
     );
 
     // Check same identity.
@@ -171,8 +171,8 @@ describe('Client services', () => {
       performInvitation({
         host: hostSpace as SpaceProxy,
         guest: client2,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-      })
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
     );
 
     expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
@@ -199,20 +199,20 @@ describe('Client services', () => {
             identity: {
               identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 1'
-              }
+                displayName: 'Peer 1',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
+            presence: SpaceMember.PresenceState.ONLINE,
           },
           {
             identity: {
               identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 2'
-              }
+                displayName: 'Peer 2',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
-          }
+            presence: SpaceMember.PresenceState.ONLINE,
+          },
         ]);
       }, 3_000);
     }

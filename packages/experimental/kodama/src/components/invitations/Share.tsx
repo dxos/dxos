@@ -47,13 +47,13 @@ export const Share: FC<{
         },
         (err: Error) => {
           setStatus({ error: err });
-        }
+        },
       );
     },
     () => {
       clear();
     },
-    []
+    [],
   );
 
   return (

@@ -16,8 +16,8 @@ import '@dxosTheme';
 export default {
   component: PresenterFrame,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 // TODO(burdon): Decorator to enable bots to auto-join (fixed topic).
@@ -28,7 +28,7 @@ export const Default = {
     <TestFrameContainer<Presentation> onCreate={PresenterFrameRuntime.onCreate!}>
       <PresenterFrame />
     </TestFrameContainer>
-  )
+  ),
 };
 
 export const Deck = {
@@ -37,5 +37,5 @@ export const Deck = {
     <TestFrameContainer<Presentation> onCreate={PresenterFrameRuntime.onCreate!} state={{ fullscreen: true }}>
       <PresenterFrame />
     </TestFrameContainer>
-  )
+  ),
 };

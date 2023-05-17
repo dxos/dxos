@@ -35,7 +35,7 @@ export const Card = ({ slots = {}, children }: CardProps) => {
         styles.frame,
         styles.body,
         styles.divide,
-        slots.root?.className
+        slots.root?.className,
       )}
     >
       {children}

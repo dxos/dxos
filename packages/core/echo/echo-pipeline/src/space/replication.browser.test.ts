@@ -28,9 +28,9 @@ describe('replication', () => {
         root: storage.createDirectory('feeds1'),
         signer: keyring1,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     });
 
     const keyring2 = new Keyring();
@@ -39,13 +39,13 @@ describe('replication', () => {
         root: storage.createDirectory('feeds2'),
         signer: keyring2,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     });
 
     const feed1 = await feedStore1.openFeed(await keyring1.createKey(), {
-      writable: true
+      writable: true,
     });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
@@ -54,7 +54,7 @@ describe('replication', () => {
     stream1.pipe(stream2).pipe(stream1);
 
     await feed1.append({
-      timeframe: new Timeframe([[feed1.key, 123]])
+      timeframe: new Timeframe([[feed1.key, 123]]),
     });
 
     await waitForExpect(() => {

@@ -58,7 +58,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
                     <Rocket className={getSize(5)} />
                     {t('join space label', { ns: 'appkit' })}
                   </Button>
-                )
+                ),
               }}
             />
             <Button
@@ -75,7 +75,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
           </>
         }
         heading={{
-          children: t('spaces label')
+          children: t('spaces label'),
         }}
       />
 

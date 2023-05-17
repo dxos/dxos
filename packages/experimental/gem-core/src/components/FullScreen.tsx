@@ -11,7 +11,7 @@ import React, { ReactNode } from 'react';
 export const FullScreen = ({
   children,
   style,
-  className
+  className,
 }: {
   children?: ReactNode;
   style?: any;
@@ -27,7 +27,7 @@ export const FullScreen = ({
         right: 0,
         top: 0,
         bottom: 0,
-        ...style
+        ...style,
       }}
     >
       {children}

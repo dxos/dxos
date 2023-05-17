@@ -49,7 +49,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.finish(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
-      summary.results
+      summary.results,
     );
     return;
   }
@@ -70,23 +70,23 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   fs.mkdirSync(outDir, { recursive: true });
 
   log.info('starting plan', {
-    outDir
+    outDir,
   });
 
   const agentsArray = await plan.init({
     spec,
     outDir,
-    testId
+    testId,
   });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
 
   log.info('starting agents', {
-    count: agentsArray.length
+    count: agentsArray.length,
   });
 
   const children: ChildProcess[] = [];
   const planResults: PlanResults = {
-    agents: {}
+    agents: {},
   };
   const promises: Promise<void>[] = [];
 
@@ -101,7 +101,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         agents,
         testId,
         outDir: join(outDir, agentId),
-        config: agentConfig
+        config: agentConfig,
       };
 
       if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
@@ -113,8 +113,8 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       const childProcess = fork(process.argv[1], {
         env: {
           ...process.env,
-          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams)
-        }
+          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+        },
       });
       children.push(childProcess);
       promises.push(
@@ -124,16 +124,16 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
             planResults.agents[agentId] = {
               exitCode,
               outDir: agentParams.outDir,
-              logFile: join(agentParams.outDir, AGENT_LOG_FILE)
+              logFile: join(agentParams.outDir, AGENT_LOG_FILE),
             };
-          })
+          }),
       );
     }
 
     await Promise.all(promises);
 
     log.info('test complete', {
-      summary: join(outDir, 'test.json')
+      summary: join(outDir, 'test.json'),
     });
   }
 
@@ -143,9 +143,9 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       {
         spec,
         outDir,
-        testId
+        testId,
       },
-      planResults
+      planResults,
     );
   } catch (err) {
     log.warn('error finishing plan', err);
@@ -157,10 +157,10 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     stats,
     params: {
       testId,
-      outDir
+      outDir,
     },
     results: planResults,
-    agents
+    agents,
   };
   writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
 

@@ -24,13 +24,13 @@ export class TestAgent extends TestPeerBase {
   constructor({ peerId = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions = {}) {
     super(peerId);
     this.gossip = new Gossip({
-      localPeerId: peerId
+      localPeerId: peerId,
     });
     this.presence = new Presence({
       announceInterval,
       offlineTimeout,
       identityKey: peerId,
-      gossip: this.gossip
+      gossip: this.gossip,
     });
   }
 
@@ -47,7 +47,7 @@ export class TestAgent extends TestPeerBase {
         const expectedConnections = agents.map((agent) => agent.peerId.toHex());
         return expectedConnections.every((value) => connections.includes(value));
       }),
-      timeout
+      timeout,
     );
   }
 

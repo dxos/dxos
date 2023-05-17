@@ -82,7 +82,7 @@ export const CompactQrCode = ({
   copyLabel,
   density,
   elevation,
-  slots = {}
+  slots = {},
 }: CompactQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
@@ -109,7 +109,7 @@ export const CompactQrCode = ({
           }
           slots={{
             content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'bottom' },
-            trigger: { asChild: true }
+            trigger: { asChild: true },
           }}
         >
           <div role='none' className='overflow-hidden rounded-md'>
@@ -150,7 +150,7 @@ export const CompactQrCode = ({
           }
           slots={{
             content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' },
-            trigger: { asChild: true }
+            trigger: { asChild: true },
           }}
         >
           <div role='none' className='overflow-hidden rounded-md'>

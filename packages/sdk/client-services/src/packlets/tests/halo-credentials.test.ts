@@ -24,10 +24,10 @@ describe('Halo', () => {
         client: {
           storage: {
             persistent: true, // TODO(burdon): Note required if path set.
-            path: `/tmp/dxos/client/${PublicKey.random().toHex()}`
-          }
-        }
-      }
+            path: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
+          },
+        },
+      },
     });
 
     const testBuilder = new TestBuilder(config);
@@ -48,14 +48,14 @@ describe('Halo', () => {
             trigger.wake();
           }
         },
-        onError: (err) => log.catch(err)
+        onError: (err) => log.catch(err),
       });
       await asyncTimeout(trigger.wait(), 500);
 
       const nonce = new Uint8Array([0, 0, 0, 0]);
       const presentation = await client.halo.presentCredentials({
         ids: credentials.value!.map(({ id }) => id!),
-        nonce: new Uint8Array([0, 0, 0, 0])
+        nonce: new Uint8Array([0, 0, 0, 0]),
       });
       expect(presentation.credentials?.length).to.equal(2);
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
@@ -84,7 +84,7 @@ describe('Halo', () => {
       },
       onError: (error) => {
         throw error;
-      }
+      },
     });
     await asyncTimeout(trigger.wait(), 500);
 

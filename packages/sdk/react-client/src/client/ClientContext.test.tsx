@@ -57,7 +57,7 @@ describe('Client hook', function () {
         override render() {
           return this.props.children;
         }
-      }
+      },
     });
 
     expect(error).toBeDefined();
@@ -70,10 +70,10 @@ describe('Client hook', function () {
       runtime: {
         client: {
           storage: {
-            persistent: false
-          }
-        }
-      }
+            persistent: false,
+          },
+        },
+      },
     });
 
     const client = new Client({ config, services: fromHost(config) });
@@ -99,7 +99,7 @@ describe('ClientProvider', () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />
-      </ClientProvider>
+      </ClientProvider>,
     );
 
     await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
@@ -111,7 +111,7 @@ describe('ClientProvider', () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />
-      </ClientProvider>
+      </ClientProvider>,
     );
 
     await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
@@ -124,7 +124,7 @@ describe('ClientProvider', () => {
     const { rerender } = render(
       <ClientProvider client={client}>
         <TestComponent />
-      </ClientProvider>
+      </ClientProvider>,
     );
 
     await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
@@ -135,7 +135,7 @@ describe('ClientProvider', () => {
     rerender(
       <ClientProvider client={newClient}>
         <TestComponent />
-      </ClientProvider>
+      </ClientProvider>,
     );
 
     await act(() => waitForCondition(() => newClient.status.get() === SystemStatus.ACTIVE && !client.initialized));

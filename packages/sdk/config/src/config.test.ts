@@ -25,29 +25,29 @@ test('Basic config', () => {
     {
       runtime: {
         props: {
-          title: 'testing'
-        }
-      }
+          title: 'testing',
+        },
+      },
     },
     {
       runtime: {
         app: {
-          theme: 'light'
-        }
-      }
-    }
+          theme: 'light',
+        },
+      },
+    },
   );
 
   expect(config.values).toEqual({
     version: 1,
     runtime: {
       app: {
-        theme: 'light'
+        theme: 'light',
       },
       props: {
-        title: 'testing'
-      }
-    }
+        title: 'testing',
+      },
+    },
   });
 });
 
@@ -60,24 +60,24 @@ test('Runtime and module config', () => {
             name: 'example:app/tasks',
             record: {
               web: {
-                entryPoint: 'main.js'
-              }
-            }
-          }
-        ]
-      }
+                entryPoint: 'main.js',
+              },
+            },
+          },
+        ],
+      },
     },
     {
       runtime: {
         services: {
           signaling: [
             {
-              server: 'ws://localhost:4000'
-            }
-          ]
-        }
-      }
-    }
+              server: 'ws://localhost:4000',
+            },
+          ],
+        },
+      },
+    },
   );
 
   expect(config.values).toEqual({
@@ -88,21 +88,21 @@ test('Runtime and module config', () => {
           name: 'example:app/tasks',
           record: {
             web: {
-              entryPoint: 'main.js'
-            }
-          }
-        }
-      ]
+              entryPoint: 'main.js',
+            },
+          },
+        },
+      ],
     },
     runtime: {
       services: {
         signaling: [
           {
-            server: 'ws://localhost:4000'
-          }
-        ]
-      }
-    }
+            server: 'ws://localhost:4000',
+          },
+        ],
+      },
+    },
   });
 });
 
@@ -114,23 +114,23 @@ test.skip('Mapping', () => {
     {
       runtime: {
         client: {
-          tag: 'testing'
-        }
-      }
+          tag: 'testing',
+        },
+      },
     } as any,
-    mapFromKeyValues(envmap, process.env)
+    mapFromKeyValues(envmap, process.env),
   );
 
   expect(config.values).toEqual({
     runtime: {
       client: {
         id: 900,
-        tag: 'testing'
+        tag: 'testing',
       },
       server: {
-        endpoint: 'http://localhost'
-      }
-    }
+        endpoint: 'http://localhost',
+      },
+    },
   });
 
   const values = mapToKeyValues(envmap, config.values);
@@ -138,7 +138,7 @@ test.skip('Mapping', () => {
   expect(values).toEqual({
     TEST_CLIENT_ID: 900,
     TEST_CLIENT_TAG: 'testing',
-    TEST_SERVER_ENDPOINT: 'http://localhost'
+    TEST_SERVER_ENDPOINT: 'http://localhost',
   });
 });
 
@@ -146,16 +146,16 @@ test.skip('mapToKeyValuesping', () => {
   const config = new Config(
     {
       client: {
-        tag: 'testing'
-      }
+        tag: 'testing',
+      },
     } as any,
-    defaults as any
+    defaults as any,
   );
 
   const values = mapToKeyValues(envmap, config.values);
 
   expect(values).toEqual({
     TEST_CLIENT_ID: 123,
-    TEST_CLIENT_TAG: 'testing'
+    TEST_CLIENT_TAG: 'testing',
   });
 });

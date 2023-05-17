@@ -24,22 +24,22 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
       meta: {
         ...meta,
         memberKey: PublicKey.random(),
-        timeframe: new Timeframe([[meta.feedKey, meta.seq]])
-      }
-    })
+        timeframe: new Timeframe([[meta.feedKey, meta.seq]]),
+      },
+    }),
   );
 
   const itemManager = new ItemManager(modelFactory);
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {
     backend,
-    itemManager
+    itemManager,
   };
 };
 
 export const createRemoteDatabaseFromDataServiceHost = async (
   modelFactory: ModelFactory,
-  dataServiceHost: DataServiceHost
+  dataServiceHost: DataServiceHost,
 ) => {
   const dataServiceSubscriptions = new DataServiceSubscriptions();
   const dataService = new DataServiceImpl(dataServiceSubscriptions);
@@ -52,7 +52,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {
     itemManager,
-    backend
+    backend,
   };
 };
 
@@ -64,15 +64,15 @@ export const testLocalDatabase = async (create: DataPipeline, check: DataPipelin
         {
           objectId,
           genesis: {
-            modelType: DocumentModel.meta.type
-          }
-        }
-      ]
-    }
+            modelType: DocumentModel.meta.type,
+          },
+        },
+      ],
+    },
   });
 
   await asyncTimeout(
     check.databaseBackend!._itemDemuxer.mutation.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    500
+    500,
   );
 };

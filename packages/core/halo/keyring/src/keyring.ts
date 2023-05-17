@@ -22,8 +22,8 @@ export class Keyring implements Signer {
 
   constructor(
     private readonly _storage: Directory = createStorage({
-      type: StorageType.RAM
-    }).createDirectory('keyring')
+      type: StorageType.RAM,
+    }).createDirectory('keyring'),
   ) {
     assert(subtleCrypto, 'SubtleCrypto not available in this environment.');
   }
@@ -35,11 +35,11 @@ export class Keyring implements Signer {
       await subtleCrypto.sign(
         {
           name: 'ECDSA',
-          hash: 'SHA-256'
+          hash: 'SHA-256',
         },
         keyPair.privateKey,
-        message
-      )
+        message,
+      ),
     );
   }
 
@@ -47,10 +47,10 @@ export class Keyring implements Signer {
     const keyPair = await subtleCrypto.generateKey(
       {
         name: 'ECDSA',
-        namedCurve: 'P-256'
+        namedCurve: 'P-256',
       },
       true,
-      ['sign', 'verify']
+      ['sign', 'verify'],
     );
 
     await this._setKey(keyPair);
@@ -80,21 +80,21 @@ export class Keyring implements Signer {
           record.publicKey,
           {
             name: 'ECDSA',
-            namedCurve: 'P-256'
+            namedCurve: 'P-256',
           },
           true,
-          ['verify']
+          ['verify'],
         ),
         privateKey: await subtleCrypto.importKey(
           'pkcs8',
           record.privateKey,
           {
             name: 'ECDSA',
-            namedCurve: 'P-256'
+            namedCurve: 'P-256',
           },
           true,
-          ['sign']
-        )
+          ['sign'],
+        ),
       };
 
       this._keyCache.set(publicKey, keyPair);
@@ -110,7 +110,7 @@ export class Keyring implements Signer {
 
     const record: KeyRecord = {
       publicKey: publicKey.asUint8Array(),
-      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey))
+      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)),
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());

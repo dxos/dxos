@@ -49,13 +49,13 @@ export const FrameContainer = ({ frame }: EmbeddedFrameProps) => {
       const port = createIFramePort({
         channel: 'frame',
         iframe: iframeRef.current,
-        origin: '*'
+        origin: '*',
       });
 
       const rpc = createProtoRpcPeer({
         port,
         exposed: clientServiceBundle,
-        handlers: (client as any)._services.services
+        handlers: (client as any)._services.services,
       });
 
       rpc.open().catch(console.error);

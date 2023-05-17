@@ -38,16 +38,16 @@ export const createModelMutation = (objectId: string, mutation: Any): EchoObject
       objectId,
       mutations: [
         {
-          model: mutation
-        }
-      ]
-    }
-  ]
+          model: mutation,
+        },
+      ],
+    },
+  ],
 });
 
 export const encodeModelMutation = (meta: ModelMeta, mutation: any): WithTypeUrl<Any> =>
   (meta.mutationCodec as ProtoCodec).encodeAsAny(mutation);
 
 export const genesisMutation = (objectId: string, modelType: string) => ({
-  objects: [{ objectId, genesis: { modelType } }]
+  objects: [{ objectId, genesis: { modelType } }],
 });
