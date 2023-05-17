@@ -169,6 +169,6 @@ export abstract class EchoObject<T extends Model = any> {
 }
 
 export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
-  assert(obj._stateMachine);
-  obj._stateMachine.reset(snapshot);
+  assert(obj[base]._stateMachine);
+  obj[base]._stateMachine.reset(snapshot);
 };
