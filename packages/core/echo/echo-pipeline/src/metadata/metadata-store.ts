@@ -10,7 +10,7 @@ import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { EchoMetadata, SpaceMetadata, IdentityRecord } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -119,6 +119,12 @@ export class MetadataStore {
     }
   }
 
+  _getSpace(spaceKey: PublicKey): SpaceMetadata {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+    return space;
+  }
+
   /**
    * Clears storage - doesn't work for now.
    */
@@ -149,25 +155,22 @@ export class MetadataStore {
   }
 
   async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
-    space.dataTimeframe = timeframe;
+    this._getSpace(spaceKey).dataTimeframe = timeframe;
     await this._save();
   }
 
   async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
+    this._getSpace(spaceKey).snapshot = snapshot;
+    await this._save();
+  }
 
-    space.snapshot = snapshot;
+  async setCache(spaceKey: PublicKey, cache: SpaceCache) {
+    this._getSpace(spaceKey).cache = cache;
     await this._save();
   }
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
+    const space = this._getSpace(spaceKey);
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();

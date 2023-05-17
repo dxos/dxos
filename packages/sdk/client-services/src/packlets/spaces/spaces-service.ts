@@ -172,6 +172,7 @@ export class SpacesServiceImpl implements SpacesService {
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
+      cache: space.cache,
     };
   }
 }

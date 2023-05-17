@@ -242,6 +242,7 @@ export class DataSpaceManager {
           }
         },
       },
+      cache: metadata.cache,
     });
 
     await dataSpace.open();

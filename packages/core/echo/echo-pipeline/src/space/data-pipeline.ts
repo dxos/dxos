@@ -8,11 +8,13 @@ import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { ItemManager } from '@dxos/echo-db';
+import { ItemManager, getStateMachineFromItem } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -150,6 +152,7 @@ export class DataPipeline {
 
     // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
+      await this._saveCache();
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
         if (!DISABLE_SNAPSHOT_CACHE) {
@@ -220,6 +223,27 @@ export class DataPipeline {
     this._targetTimeframe = newTimeframe;
   }
 
+  private async _saveCache() {
+    const cache: SpaceCache = {};
+
+    try {
+      // Add properties to cache.
+      const propertiesItem = this._itemManager.items.find(
+        (item) =>
+          item.modelMeta?.type === 'dxos:model/document' &&
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+      );
+      if (propertiesItem) {
+        cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
+      }
+    } catch (err) {
+      log.warn('Failed to cache properties', err);
+    }
+
+    // Save cache.
+    await this._params.metadataStore.setCache(this._params.spaceKey, cache);
+  }
+
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
       this._lastTimeframeSaveTime = Date.now();
@@ -228,15 +252,17 @@ export class DataPipeline {
     }
 
     if (
-      !DISABLE_SNAPSHOT_CACHE &&
       Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
       timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
     ) {
-      this._lastSnapshotSaveTime = Date.now();
+      await this._saveCache();
 
-      const snapshot = await this._saveSnapshot(timeframe);
-      this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-      log('save', { snapshot });
+      if (!DISABLE_SNAPSHOT_CACHE) {
+        this._lastSnapshotSaveTime = Date.now();
+        const snapshot = await this._saveSnapshot(timeframe);
+        this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+        log('save', { snapshot });
+      }
     }
   }
 
