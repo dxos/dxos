@@ -34,8 +34,8 @@ import { namespace } from './util';
     },
     onRegisterError: (error) => {
       log.error('Failed to register vault service worker', error);
-    }
-  })
+    },
+  }),
 };
 
 void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
@@ -44,6 +44,6 @@ void startIFrameRuntime(
     // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.
     new SharedWorker(new URL('@dxos/vault/shared-worker', import.meta.url), {
       type: 'module',
-      name: 'dxos-vault'
-    })
+      name: 'dxos-vault',
+    }),
 );

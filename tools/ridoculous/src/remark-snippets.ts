@@ -17,13 +17,13 @@ type Type = {
 
 const langType: { [key: string]: Type } = {
   '.sh': {
-    lang: 'bash'
+    lang: 'bash',
   },
   '.js': {
-    lang: 'javascript'
+    lang: 'javascript',
   },
   '.json': {
-    lang: 'json'
+    lang: 'json',
   },
   // TODO(burdon): Extract definitions.
   //  https://tsdoc.org
@@ -36,7 +36,7 @@ const langType: { [key: string]: Type } = {
       const parser = new TSDocParser();
       parser.parseString(content);
       return content;
-    }
+    },
   },
   '.proto': {
     lang: 'protobuf',
@@ -57,11 +57,11 @@ const langType: { [key: string]: Type } = {
       }
 
       return content;
-    }
+    },
   },
   '.yml': {
-    lang: 'yaml'
-  }
+    lang: 'yaml',
+  },
 };
 
 /**
@@ -145,12 +145,12 @@ export function remarkSnippets() {
                       pkgName ? u('inlineCode', { value: pkgName }) : null,
                       u('link', { url: path.relative(rootDir, filePath) }, [
                         u('inlineCode', {
-                          value: `[${relPath ?? path.basename(filePath)}]`
-                        })
+                          value: `[${relPath ?? path.basename(filePath)}]`,
+                        }),
                       ]),
-                      u('html', { value: '</sub>' })
-                    ].filter(Boolean) as any[]
-                  )
+                      u('html', { value: '</sub>' }),
+                    ].filter(Boolean) as any[],
+                  ),
                 );
               }
 

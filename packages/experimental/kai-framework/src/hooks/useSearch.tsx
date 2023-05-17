@@ -65,7 +65,7 @@ const matchFilter = (text: string) => {
               snippet = [
                 value.slice(Math.max(0, idx - 16), idx),
                 value.slice(idx, idx + str.length),
-                value.slice(idx + str.length)
+                value.slice(idx + str.length),
               ];
             }
             break;
@@ -89,7 +89,7 @@ const matchFilter = (text: string) => {
           rank,
           title,
           snippet,
-          Icon
+          Icon,
         };
       }
     }
@@ -101,7 +101,7 @@ export const useSearch = (space: Space | undefined, text: string): SearchResults
   const objects = useQuery(space); // TODO(burdon): Filter by type.
   const sorted = useMemo(
     () => (objects.map(matchFilter(text)).filter(Boolean) as SearchResult[]).sort(sortByRank),
-    [objects, text]
+    [objects, text],
   );
 
   return { text, results: sorted };

@@ -5,7 +5,7 @@ import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import {
   DropdownMenuCheckboxItemProps,
   DropdownMenuItemProps,
-  DropdownMenuSubContentProps
+  DropdownMenuSubContentProps,
 } from '@radix-ui/react-dropdown-menu';
 import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
 
@@ -34,7 +34,7 @@ export const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps
         className={tx('dropdownMenu.item', 'dropdownMenu__item', {}, className)}
       />
     );
-  }
+  },
 );
 
 export const DropdownMenuSeparator = ({
@@ -71,7 +71,7 @@ export const DropdownMenuCheckboxItem = forwardRef<HTMLDivElement, DropdownMenuC
         className={tx('dropdownMenu.item', 'dropdownMenu__item--checkbox', {}, className)}
       />
     );
-  }
+  },
 );
 
 export const DropdownMenuSubTrigger = ({
@@ -98,12 +98,12 @@ export const DropdownMenuSubContent = forwardRef<HTMLDivElement, DropdownMenuSub
             'origin-radix-dropdown-menu radix-side-right:animate-scale-in',
             'w-full rounded-md px-1 py-1 text-sm shadow-md',
             'bg-white dark:bg-neutral-800',
-            className
+            className,
           )}
         />
       </DropdownMenuPrimitive.Portal>
     );
-  }
+  },
 );
 
 export const DropdownMenuItemIndicator = DropdownMenuPrimitive.ItemIndicator;
@@ -126,7 +126,7 @@ export const DropdownMenu = ({ trigger, children, slots = {} }: DropdownMenuProp
             'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
             'w-48 rounded-lg p-1 shadow-md md:w-56',
             'bg-white dark:bg-neutral-800',
-            slots.content?.className
+            slots.content?.className,
           )}
         >
           {children}

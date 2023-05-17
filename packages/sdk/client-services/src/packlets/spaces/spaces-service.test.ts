@@ -30,7 +30,7 @@ describe('SpacesService', () => {
       async () => {
         await serviceContext.initialized.wait();
         return serviceContext.dataSpaceManager!;
-      }
+      },
     );
   });
 
@@ -69,7 +69,7 @@ describe('SpacesService', () => {
       const existingSpaces = [
         await spacesService.createSpace(),
         await spacesService.createSpace(),
-        await spacesService.createSpace()
+        await spacesService.createSpace(),
       ];
 
       const query = spacesService.querySpaces();

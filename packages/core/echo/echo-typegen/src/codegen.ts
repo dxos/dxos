@@ -57,7 +57,7 @@ export const createType = (field: pb.Field): string => {
       }
 
       return stringifyFullyQualifiedName(
-        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!))
+        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!)),
       );
     } else {
       switch (field.type) {

@@ -83,7 +83,7 @@ export class Item<M extends Model = Model> {
    */
   constructor(protected readonly _itemManager: ItemManager, private readonly _id: ItemID) {
     this._initialState = {
-      objectId: _id
+      objectId: _id,
     };
   }
 
@@ -125,7 +125,7 @@ export class Item<M extends Model = Model> {
       objectId: this.id,
       parentId: this.parent,
       deleted: this.deleted,
-      type: this.modelMeta?.type
+      type: this.modelMeta?.type,
     })})`;
   }
 
@@ -191,7 +191,7 @@ export class Item<M extends Model = Model> {
     assert(this.modelMeta);
     return {
       mutation,
-      decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value)
+      decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value),
     };
   }
 
@@ -251,7 +251,7 @@ export class Item<M extends Model = Model> {
     log('process message', {
       mutation: queueEntry,
       reorder,
-      apply
+      apply,
     });
 
     // Perform state updates.
@@ -281,13 +281,13 @@ export class Item<M extends Model = Model> {
     const commonSnapshot: EchoObject = {
       objectId: this._id,
       genesis: {
-        modelType: this.modelType
+        modelType: this.modelType,
       },
       snapshot: {
         ...this._initialState.snapshot,
         parentId: this.parent ?? undefined,
-        deleted: this.deleted
-      }
+        deleted: this.deleted,
+      },
     };
 
     if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') {
@@ -296,16 +296,16 @@ export class Item<M extends Model = Model> {
         ...commonSnapshot,
         snapshot: {
           ...commonSnapshot.snapshot,
-          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot())
-        }
+          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot()),
+        },
       };
     } else {
       return {
         ...commonSnapshot,
         mutations: [
           ...(this._initialState.mutations ?? []),
-          ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation)
-        ]
+          ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation),
+        ],
       };
     }
   }
@@ -325,7 +325,7 @@ export class Item<M extends Model = Model> {
 
     this._initialState = snapshot;
     this._initialStateMutations = (this._initialState.mutations ?? []).map((mutation) =>
-      this._decodeMutation(mutation)
+      this._decodeMutation(mutation),
     );
     log('resetToSnapshot', { needsReset, snapshot });
 

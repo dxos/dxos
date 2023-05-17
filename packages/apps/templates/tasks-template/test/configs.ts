@@ -14,6 +14,6 @@ export const configs: ExtractInput<typeof config>[] = [
     pwa: false,
     react: true,
     storybook: false,
-    tailwind: true
-  }
+    tailwind: true,
+  },
 ];

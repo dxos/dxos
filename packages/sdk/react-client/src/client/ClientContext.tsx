@@ -22,7 +22,7 @@ export type ClientContextProps = {
 };
 
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
-  undefined
+  undefined,
 );
 
 /**
@@ -81,7 +81,7 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  onInitialized
+  onInitialized,
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<SystemStatus | null>(null);

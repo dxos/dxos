@@ -7,7 +7,7 @@ import {
   AvatarProps as AvatarRootPrimitiveProps,
   Image as AvatarImagePrimitive,
   ImageLoadingStatus,
-  Fallback as AvatarFallbackPrimitive
+  Fallback as AvatarFallbackPrimitive,
 } from '@radix-ui/react-avatar';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -43,7 +43,7 @@ const AvatarRoot = ({
   status,
   children,
   labelId: propsLabelId,
-  descriptionId: propsDescriptionId
+  descriptionId: propsDescriptionId,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
@@ -128,7 +128,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
         className={tx('avatar.label', 'avatar__label', { srOnly }, className)}
       />
     );
-  }
+  },
 );
 
 type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
@@ -149,7 +149,7 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
         className={tx('avatar.description', 'avatar__description', { srOnly }, className)}
       />
     );
-  }
+  },
 );
 
 type AvatarMaskedImageProps = ComponentPropsWithRef<'image'>;
@@ -170,7 +170,7 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
         <AvatarMaskedImage {...props} ref={forwardedRef} />
       </AvatarImagePrimitive>
     );
-  }
+  },
 );
 
 type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
@@ -188,7 +188,7 @@ const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delay
 const useJdenticonHref = (value: string, size: Size) => {
   return useMemo(
     () => `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`,
-    [value]
+    [value],
   );
 };
 
@@ -200,7 +200,7 @@ export {
   AvatarLabel,
   AvatarDescription,
   useJdenticonHref,
-  useAvatarContext
+  useAvatarContext,
 };
 
 export type {
@@ -211,5 +211,5 @@ export type {
   AvatarImageProps,
   AvatarFallbackProps,
   AvatarLabelProps,
-  AvatarDescriptionProps
+  AvatarDescriptionProps,
 };

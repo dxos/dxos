@@ -21,7 +21,7 @@ const InvitationActions = ({
   disabled,
   joinSend,
   joinState,
-  Kind
+  Kind,
 }: {
   invitationState?: Invitation.State;
   disabled?: boolean;
@@ -67,7 +67,7 @@ const InvitationActions = ({
                 ? 'timeout status label'
                 : invitationState === Invitation.State.CANCELLED
                 ? 'cancelled status label'
-                : 'error status label'
+                : 'error status label',
             )}
           </ViewStateHeading>
           <div role='none' className='grow' />

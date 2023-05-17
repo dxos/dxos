@@ -14,7 +14,7 @@ export default class List extends BaseCommand {
   static override description = 'List spaces.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags()
+    ...ux.table.flags(),
   };
 
   async run(): Promise<any> {

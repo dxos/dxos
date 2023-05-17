@@ -9,7 +9,7 @@ import {
   CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
-  PublicKey
+  PublicKey,
 } from '@dxos/client';
 import { log } from '@dxos/log';
 
@@ -86,10 +86,10 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
         ...((action.status === Invitation.State.ERROR ||
           action.status === Invitation.State.CANCELLED ||
           action.status === Invitation.State.TIMEOUT) && {
-          haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt
+          haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt,
         }),
         observable:
-          action.status === Invitation.State.CONNECTING ? action.observable ?? prev.observable : prev.observable
+          action.status === Invitation.State.CONNECTING ? action.observable ?? prev.observable : prev.observable,
       } as InvitationReducerState;
     },
     null,
@@ -97,9 +97,9 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       return {
         status: Invitation.State.INIT,
         result: { spaceKey: null, identityKey: null, swarmKey: null },
-        observable: initialObservable
+        observable: initialObservable,
       };
-    }
+    },
   );
 
   // Handle unmount
@@ -111,7 +111,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
         case Invitation.State.READY_FOR_AUTHENTICATION:
         case Invitation.State.AUTHENTICATING: {
           dispatch({
-            status: invitation.state
+            status: invitation.state,
           });
           break;
         }
@@ -122,8 +122,8 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
             result: {
               spaceKey: invitation.spaceKey || null,
               identityKey: invitation.identityKey || null,
-              swarmKey: invitation.swarmKey || null
-            }
+              swarmKey: invitation.swarmKey || null,
+            },
           });
           break;
         }
@@ -159,7 +159,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       log('authenticating...', { authCode });
       return (state.observable as AuthenticatingInvitationObservable).authenticate(authCode);
     },
-    [state.observable]
+    [state.observable],
   );
 
   const cancel = useCallback(async () => state.observable?.cancel(), [state.observable]);
@@ -177,7 +177,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       id: invitation?.invitationId,
       invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
       authCode: invitation?.authCode,
-      authMethod: invitation?.authMethod
+      authMethod: invitation?.authMethod,
     };
 
     // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.

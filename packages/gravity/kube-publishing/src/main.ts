@@ -14,7 +14,7 @@ const main = async () => {
     pubishDelayMs: 30_000,
     checksCount: 10,
     checksIntervalMs: 20_000,
-    randomFilesCount: 5
+    randomFilesCount: 5,
   };
 
   const testRunner = new TestRunner(testSpec);

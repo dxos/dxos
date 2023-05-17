@@ -11,5 +11,5 @@ const ChatFrame = React.lazy(() => import('./ChatFrame'));
 
 export const ChatFrameRuntime: FrameRuntime<any> = {
   Icon: ChatIcon,
-  Component: ChatFrame
+  Component: ChatFrame,
 };

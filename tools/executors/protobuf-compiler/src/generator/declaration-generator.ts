@@ -16,7 +16,7 @@ const f = ts.factory;
 
 export function* createDeclarations(
   types: protobufjs.ReflectionObject[],
-  ctx: GeneratorContext
+  ctx: GeneratorContext,
 ): Generator<ts.Statement> {
   for (const obj of types) {
     if (obj instanceof protobufjs.Enum) {
@@ -33,7 +33,7 @@ export function* createDeclarations(
           [f.createToken(ts.SyntaxKind.ExportKeyword)],
           f.createIdentifier(obj.name),
           f.createModuleBlock(nested),
-          ts.NodeFlags.Namespace
+          ts.NodeFlags.Namespace,
         );
       }
     } else if (obj instanceof protobufjs.Namespace) {
@@ -69,7 +69,7 @@ export const createTypeDictionary = (root: protobufjs.NamespaceBase) =>
           undefined,
           f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
           undefined,
-          getTypeReference(type)
-        )
-      )
+          getTypeReference(type),
+        ),
+      ),
   );

@@ -5,5 +5,5 @@
 const { kaiThemeExtension } = require('@dxos/kai-framework/theme-extensions');
 
 module.exports = {
-  kaiThemeExtension
+  kaiThemeExtension,
 };

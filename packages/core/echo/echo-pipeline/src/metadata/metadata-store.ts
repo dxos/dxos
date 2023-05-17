@@ -30,7 +30,7 @@ const emptyEchoMetadata = (): EchoMetadata => ({
   version: STORAGE_VERSION,
   spaces: [],
   created: new Date(),
-  updated: new Date()
+  updated: new Date(),
 });
 
 export class MetadataStore {
@@ -95,7 +95,7 @@ export class MetadataStore {
       ...this._metadata,
       version: STORAGE_VERSION,
       created: this._metadata.created ?? new Date(),
-      updated: new Date()
+      updated: new Date(),
     };
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
@@ -141,7 +141,7 @@ export class MetadataStore {
   async addSpace(record: SpaceMetadata) {
     assert(
       !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
-      'Cannot overwrite existing space in metadata'
+      'Cannot overwrite existing space in metadata',
     );
 
     (this._metadata.spaces ??= []).push(record);

@@ -20,7 +20,7 @@ export const useContacts = (): Contact[] => {
       const subscription = client.halo.contacts.subscribe(listener);
       return () => subscription.unsubscribe();
     },
-    () => client.halo.contacts.get()
+    () => client.halo.contacts.get(),
   );
 
   return contacts;

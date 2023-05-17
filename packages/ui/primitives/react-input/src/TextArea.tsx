@@ -19,13 +19,13 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           'aria-describedby': descriptionId,
           ...(validationValence === 'error' && {
             'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId
+            'aria-errormessage': errorMessageId,
           }),
-          ref: forwardedRef
+          ref: forwardedRef,
         }}
       />
     );
-  }
+  },
 );
 
 export { TextArea };

@@ -12,5 +12,5 @@ export {
   basename,
   extname,
   format,
-  parse
+  parse,
 } from 'path-browserify';

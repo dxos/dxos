@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { IdentityListItem } from './IdentityListItem';
 
 export default {
-  component: IdentityListItem
+  component: IdentityListItem,
 };
 
 export const Default = {
@@ -15,9 +15,9 @@ export const Default = {
     identity: {
       identityKey: {
         toHex: () => '888',
-        truncate: () => '888..888'
-      }
+        truncate: () => '888..888',
+      },
     },
-    presence: 0
-  }
+    presence: 0,
+  },
 };

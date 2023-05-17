@@ -43,23 +43,23 @@ describe.skip('Code analysis', () => {
         ...pick(struct, ['name', 'isExported']),
         properties: struct.properties
           ?.map((p) => p.type && pick(p, ['name', 'type', 'scope', 'isReadonly']))
-          .filter(Boolean)
+          .filter(Boolean),
       };
 
       flowchart.addNode({
-        id: root.getName()!
+        id: root.getName()!,
       });
 
       info.properties!.forEach((p: any) => {
         const ref = builder.getClass(p.type);
         if (ref) {
           flowchart.addNode({
-            id: ref.getName()!
+            id: ref.getName()!,
           });
 
           flowchart.addLink({
             source: root.getName()!,
-            target: ref.getName()!
+            target: ref.getName()!,
           });
 
           // TODO(burdon): Prevent loops.

@@ -19,7 +19,7 @@ const main = async () => {
       description: 'allow overwriting existing files',
       requiresArg: false,
       type: 'boolean',
-      default: false
+      default: false,
     })
     .command({
       command: '*',
@@ -36,14 +36,14 @@ const main = async () => {
             outputDirectory: pkg,
             overwrite: overwrite ? !!overwrite : false,
             input: await catFiles(['package.json', 'README.yml'], {
-              relativeTo: pkg
-            })
+              relativeTo: pkg,
+            }),
           });
           return result.save();
         });
         await Promise.all(promises);
         console.log(packages.length, 'packages conformed');
-      }
+      },
     })
     .help().argv;
 };

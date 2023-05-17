@@ -20,7 +20,7 @@ import { defaultSurface } from '../../styles';
 import { InvitationList } from './InvitationList';
 
 export default {
-  component: InvitationList
+  component: InvitationList,
 };
 
 export const Default = {
@@ -64,6 +64,6 @@ export const Default = {
           </ThemeContext.Provider>
         </ClientProvider>
       );
-    }
-  ]
+    },
+  ],
 };

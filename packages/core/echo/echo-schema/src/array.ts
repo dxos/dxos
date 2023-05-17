@@ -70,7 +70,7 @@ export class EchoArray<T> implements Array<T> {
         } else {
           return Reflect.set(target, property, value, receiver);
         }
-      }
+      },
     });
   }
 
@@ -140,7 +140,7 @@ export class EchoArray<T> implements Array<T> {
         .arrayInsert(
           this._property!,
           start,
-          items.map((item) => this._encode(item))
+          items.map((item) => this._encode(item)),
         )
         .commit();
 
@@ -203,12 +203,12 @@ export class EchoArray<T> implements Array<T> {
   reduceRight(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T): T;
   reduceRight(
     callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T,
-    initialValue: T
+    initialValue: T,
   ): T;
 
   reduceRight<U>(
     callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U,
-    initialValue: U
+    initialValue: U,
   ): U;
 
   reduceRight<U>(callbackfn: any, initialValue?: any): T | U {
@@ -217,7 +217,7 @@ export class EchoArray<T> implements Array<T> {
 
   find<S extends T>(
     predicate: (this: void, value: T, index: number, obj: T[]) => value is S,
-    thisArg?: any
+    thisArg?: any,
   ): S | undefined;
 
   find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): T | undefined;
@@ -271,7 +271,7 @@ export class EchoArray<T> implements Array<T> {
 
   flatMap<U, This = undefined>(
     callback: (this: This, value: T, index: number, array: T[]) => U | readonly U[],
-    thisArg?: This | undefined
+    thisArg?: This | undefined,
   ): U[] {
     return Array.from(this.values()).flatMap(callback, thisArg);
   }
@@ -292,7 +292,7 @@ export class EchoArray<T> implements Array<T> {
         .builder()
         .arrayPush(
           this._property!,
-          items.map((item) => this._encode(item))
+          items.map((item) => this._encode(item)),
         )
         .commit();
     } else {
@@ -343,7 +343,7 @@ export class EchoArray<T> implements Array<T> {
           typeof value === 'boolean' ||
           typeof value === 'number' ||
           typeof value === 'string',
-        `Invalid type: ${JSON.stringify(value)}`
+        `Invalid type: ${JSON.stringify(value)}`,
       );
       return value;
     }
@@ -404,7 +404,7 @@ const encodeRecords = (value: any, document: TypedObject): any => {
     return value.map((value) => encodeRecords(value, document));
   } else if (typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)])
+      Object.entries(value).map(([key, value]): [string, any] => [key, encodeRecords(value, document)]),
     );
   }
   return value;
@@ -417,7 +417,7 @@ const decodeRecords = (value: any, document: TypedObject): any => {
     return value.map((value) => decodeRecords(value, document));
   } else if (typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)])
+      Object.entries(value).map(([key, value]): [string, any] => [key, decodeRecords(value, document)]),
     );
   }
   return value;

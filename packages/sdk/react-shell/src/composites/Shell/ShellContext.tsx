@@ -10,7 +10,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -20,7 +20,7 @@ import {
   type ShellController,
   ShellDisplay,
   ShellLayout,
-  type Space
+  type Space,
 } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
@@ -57,7 +57,7 @@ export const useShell = (): {
   };
 
   return {
-    setLayout
+    setLayout,
   };
 };
 export type ShellProviderProps = PropsWithChildren<{
@@ -76,7 +76,7 @@ export const ShellProvider = ({
   haloInvitationCode,
   spaceInvitationCode,
   onJoinedSpace,
-  children
+  children,
 }: ShellProviderProps) => {
   //
   // IFrame Shell
@@ -101,7 +101,7 @@ export const ShellProvider = ({
   const client = useClient();
   const identity = useIdentity();
   const [display, setDisplay] = useState(
-    !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE
+    !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE,
   );
 
   const shellRuntime = useMemo(() => {
@@ -112,14 +112,14 @@ export const ShellProvider = ({
     if (spaceInvitationCode) {
       return new MemoryShellRuntime({
         layout: ShellLayout.JOIN_SPACE,
-        invitationCode: spaceInvitationCode
+        invitationCode: spaceInvitationCode,
       });
     }
 
     if (haloInvitationCode) {
       return new MemoryShellRuntime({
         layout: ShellLayout.INITIALIZE_IDENTITY,
-        invitationCode: haloInvitationCode
+        invitationCode: haloInvitationCode,
       });
     }
 
@@ -141,7 +141,7 @@ export const ShellProvider = ({
         setDisplay(ShellDisplay.FULLSCREEN);
       }
     },
-    [space, shellRuntime]
+    [space, shellRuntime],
   );
 
   useEffect(() => {

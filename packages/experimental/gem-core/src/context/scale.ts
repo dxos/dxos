@@ -75,9 +75,9 @@ export class Scale {
         x: point[0],
         y: point[1] - height2,
         width: width2,
-        height: height2
+        height: height2,
       };
-    }
+    },
   };
 
   /**
@@ -107,7 +107,7 @@ export class Scale {
       const [x, y] = point;
       return {
         x: FractionUtil.toFraction(x / this._gridSize),
-        y: FractionUtil.toFraction(-y / this._gridSize)
+        y: FractionUtil.toFraction(-y / this._gridSize),
       };
     },
 
@@ -119,8 +119,8 @@ export class Scale {
         x,
         y: FractionUtil.subtract(y, height),
         width,
-        height
+        height,
       };
-    }
+    },
   };
 }

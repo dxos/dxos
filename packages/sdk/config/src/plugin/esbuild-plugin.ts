@@ -20,6 +20,6 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
         define[key] = JSON.stringify(value);
         return define;
       }, esbuildOptions.define);
-    }
+    },
   };
 };

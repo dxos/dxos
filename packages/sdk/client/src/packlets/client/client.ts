@@ -121,7 +121,7 @@ export class Client {
       initialized: this.initialized,
       echo: this._echo,
       halo: this._halo,
-      mesh: this._mesh
+      mesh: this._mesh,
     };
   }
 
@@ -244,7 +244,7 @@ export class Client {
       (err) => {
         trigger.wake(err);
         this._statusUpdate.emit(null);
-      }
+      },
     );
 
     const err = await trigger.wait();

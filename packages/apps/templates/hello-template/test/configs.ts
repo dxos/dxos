@@ -14,7 +14,7 @@ export const configs: ExtractInput<typeof config>[] = [
     dxosUi: false,
     react: false,
     storybook: false,
-    tailwind: false
+    tailwind: false,
   },
   {
     name: 'tailwind',
@@ -23,7 +23,7 @@ export const configs: ExtractInput<typeof config>[] = [
     dxosUi: false,
     react: false,
     storybook: false,
-    tailwind: true
+    tailwind: true,
   },
   {
     name: 'dxosui',
@@ -32,7 +32,7 @@ export const configs: ExtractInput<typeof config>[] = [
     dxosUi: true,
     react: true,
     storybook: false,
-    tailwind: true
+    tailwind: true,
   },
   {
     name: 'max',
@@ -41,6 +41,6 @@ export const configs: ExtractInput<typeof config>[] = [
     dxosUi: true,
     react: true,
     storybook: true,
-    tailwind: true
-  }
+    tailwind: true,
+  },
 ];

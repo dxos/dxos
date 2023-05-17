@@ -19,12 +19,12 @@ export interface DragOptions<N> {
 
 export const defaultOptions: DragOptions<any> = {
   linkMod: 'metaKey',
-  freezeMod: 'shiftKey'
+  freezeMod: 'shiftKey',
 };
 
 enum Mode {
   MOVE = 0,
-  LINK = 1
+  LINK = 1,
 }
 
 /**
@@ -35,7 +35,7 @@ enum Mode {
 export const createSimulationDrag = <N>(
   context: SVGContext,
   simulation: Simulation<GraphLayoutNode<N>, GraphLayoutLink<N>>,
-  options: DragOptions<N> = defaultOptions
+  options: DragOptions<N> = defaultOptions,
 ) => {
   let mode: Mode;
   let source: GraphLayoutNode<N>;

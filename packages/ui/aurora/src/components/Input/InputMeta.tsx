@@ -15,7 +15,7 @@ import {
   LabelProps as LabelPrimitiveProps,
   useInputContext,
   Validation as ValidationPrimitive,
-  ValidationProps as ValidationPrimitiveProps
+  ValidationProps as ValidationPrimitiveProps,
 } from '@dxos/react-input';
 
 import { useThemeContext } from '../../hooks';
@@ -46,7 +46,7 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
         {children}
       </DescriptionPrimitive>
     );
-  }
+  },
 );
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
@@ -62,14 +62,14 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
           'input.validation',
           `input__validation-message input__validation-message--${validationValence}`,
           { srOnly, validationValence },
-          className
+          className,
         )}
         ref={forwardedRef}
       >
         {children}
       </ValidationPrimitive>
     );
-  }
+  },
 );
 
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
@@ -86,7 +86,7 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
         {children}
       </DescriptionAndValidationPrimitive>
     );
-  }
+  },
 );
 
 export { Label, Description, Validation, DescriptionAndValidation };

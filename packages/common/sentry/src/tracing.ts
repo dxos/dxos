@@ -20,7 +20,7 @@ export const configureTracing = () => {
     // Configure root transaction.
     TX = getCurrentHub().startTransaction({
       name: 'DXOS Core Tracing',
-      op: 'dxos'
+      op: 'dxos',
     });
     assert(TX, 'Failed to create trace');
     if (typeof window !== 'undefined') {
@@ -60,7 +60,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
     if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
       setUser({
         id: context.identityKey,
-        username: context.displayName
+        username: context.displayName,
       });
     }
 
@@ -90,8 +90,8 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
             op: entry.message,
             data: {
               ...context.span.data,
-              '@dxos/log': logContext
-            }
+              '@dxos/log': logContext,
+            },
           });
           SPAN_MAP.set(context.span.id, span);
           break;

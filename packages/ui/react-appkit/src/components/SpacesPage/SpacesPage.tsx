@@ -29,7 +29,7 @@ const invitationCodeFromUrl = (text: string) => {
 
 export const SpacesPage = ({
   onSpaceCreate,
-  spacePath = '/spaces/:space'
+  spacePath = '/spaces/:space',
 }: {
   onSpaceCreate?: (space: Space) => MaybePromise<void>;
   spacePath?: string;
@@ -51,7 +51,7 @@ export const SpacesPage = ({
 
   const handleJoin = useCallback(
     ({ spaceKey }: InvitationResult) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() })),
-    [spacePath]
+    [spacePath],
   );
 
   // TODO(burdon): ???
@@ -73,7 +73,7 @@ export const SpacesPage = ({
                     <Rocket className={getSize(5)} />
                     {t('join space label', { ns: 'appkit' })}
                   </Button>
-                )
+                ),
               }}
             />
             <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
@@ -83,7 +83,7 @@ export const SpacesPage = ({
           </>
         }
         heading={{
-          children: t('spaces label')
+          children: t('spaces label'),
         }}
       />
 

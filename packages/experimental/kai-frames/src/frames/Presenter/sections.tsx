@@ -31,7 +31,7 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         Icon: Article,
         onAction: (stack, section) => {
           insert(stack, section, new Document());
-        }
+        },
       },
       {
         id: File.type.name,
@@ -43,9 +43,9 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
           const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
           const document = new Document({ content: new Text(`![${object?.name}](${url})`, TextKind.PLAIN) });
           stack.sections.splice(idx, 0, new DocumentStack.Section({ object: document }));
-        }
-      }
-    ]
+        },
+      },
+    ],
   ];
 
   if (section) {
@@ -57,8 +57,8 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         onAction: (stack, section) => {
           const idx = stack.sections.findIndex(({ id }) => id === section!.id);
           stack.sections.splice(idx, 1);
-        }
-      }
+        },
+      },
     ]);
   }
 
@@ -81,8 +81,8 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
           slots={{
             editor: {
               placeholder: 'Text...',
-              spellCheck: false // TODO(burdon): Config.
-            }
+              spellCheck: false, // TODO(burdon): Config.
+            },
           }}
         />
       );

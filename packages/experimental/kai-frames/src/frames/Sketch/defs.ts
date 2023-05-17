@@ -19,5 +19,5 @@ export const SketchFrameRuntime: FrameRuntime<Sketch> = {
   filter: () => Sketch.filter(),
   onCreate: async (space: Space) => {
     return space.db.add(new Sketch());
-  }
+  },
 };

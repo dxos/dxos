@@ -16,7 +16,7 @@ void runPlan({
     serversPerAgent: 1,
     signalArguments: [
       // 'p2pserver'
-      'globalsubserver'
+      'globalsubserver',
     ],
     topicCount: 1,
     topicsPerAgent: 1,
@@ -25,13 +25,13 @@ void runPlan({
     repeatInterval: 1_000,
     agentWaitTime: 5_000,
     duration: 20_000,
-    type: 'discovery'
+    type: 'discovery',
     // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
   },
   options: {
     staggerAgents: 5,
-    randomSeed: PublicKey.random().toHex()
+    randomSeed: PublicKey.random().toHex(),
     // repeatAnalysis:
     //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
-  }
+  },
 });

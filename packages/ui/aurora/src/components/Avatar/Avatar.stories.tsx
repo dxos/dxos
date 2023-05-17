@@ -14,7 +14,7 @@ import {
   AvatarImage,
   AvatarLabel,
   AvatarRoot,
-  useJdenticonHref
+  useJdenticonHref,
 } from './Avatar';
 
 type StorybookAvatarProps = {
@@ -34,7 +34,7 @@ const StorybookAvatar = ({
   label,
   description,
   fallbackValue,
-  imgSrc
+  imgSrc,
 }: StorybookAvatarProps) => {
   const jdenticon = useJdenticonHref(fallbackValue ?? '', size);
   return (
@@ -50,7 +50,7 @@ const StorybookAvatar = ({
 };
 
 export default {
-  component: StorybookAvatar
+  component: StorybookAvatar,
 };
 
 export const Default = {
@@ -60,6 +60,6 @@ export const Default = {
     description: 'Status',
     status: 'active',
     variant: 'circle',
-    size: 12
-  }
+    size: 12,
+  },
 };

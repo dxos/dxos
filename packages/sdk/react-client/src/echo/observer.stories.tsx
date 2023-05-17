@@ -13,7 +13,7 @@ import { observer } from './observer';
 import { useSpace } from './useSpaces';
 
 export default {
-  title: 'echo/observer'
+  title: 'echo/observer',
 };
 
 const Observed = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
@@ -52,7 +52,7 @@ const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 
 export const Default = {
   render: (args: { id: number }) => <Observed {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })]
+  decorators: [ClientDecorator({ clients })],
 };
 
 // TODO(wittjosiah): Make observer work with forwardRef.

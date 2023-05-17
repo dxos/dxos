@@ -29,7 +29,7 @@ export class TestRunner {
     // Prepare test env.
     log.info('starting test', {
       outDir: this._appPath,
-      testId: this._testId
+      testId: this._testId,
     });
 
     if (!fs.existsSync(this._appPath)) {
@@ -71,7 +71,7 @@ export class TestRunner {
         filesInCacheButExpired: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.EXPIRED).length,
         filesNotSupposedToBeCached: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.BYPASS)
           .length,
-        filesNotCachedByCf: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.DYNAMIC).length
+        filesNotCachedByCf: Object.values(result).filter((val) => val.cacheStatus === CacheStatus.DYNAMIC).length,
       };
 
       log.info('cycle result', testResult);
@@ -111,7 +111,7 @@ export class TestRunner {
     // TODO(egorgripasov): Read/preserve original build script to make test more extensible.
     const newPackageJson = packageJson.replace(
       /"build": .*/g,
-      `"build": "NODE_OPTIONS=\\"--max-old-space-size=4096\\" tsc --noEmit && vite build && for i in {1..${this._spec.randomFilesCount}}; do base64 /dev/urandom | head -c 5000000 > ./out/test-app/file_$RANDOM$RANDOM_$i.js; done",`
+      `"build": "NODE_OPTIONS=\\"--max-old-space-size=4096\\" tsc --noEmit && vite build && for i in {1..${this._spec.randomFilesCount}}; do base64 /dev/urandom | head -c 5000000 > ./out/test-app/file_$RANDOM$RANDOM_$i.js; done",`,
     );
     fs.writeFileSync(path.join(this._appPath, 'package.json'), newPackageJson, 'utf8');
   }
@@ -119,7 +119,7 @@ export class TestRunner {
   private async _pubishApp() {
     // TODO(egorgripasov): Consider using the DX lib directly.
     await run('npx', ['dx', 'app', 'publish', '--verbose', '--config', path.join(process.cwd(), './config.yml')], {
-      cwd: this._appPath
+      cwd: this._appPath,
     });
   }
 
@@ -154,7 +154,7 @@ export class TestRunner {
 
       result[kubeFilePath] = {
         match: expectedHash === kubeFileHash,
-        cacheStatus
+        cacheStatus,
       };
     }
 

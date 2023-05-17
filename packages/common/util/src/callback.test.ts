@@ -17,7 +17,7 @@ describe('callbacks', () => {
   test('calls array of callbacks', () => {
     const counters = {
       foo: 0,
-      bar: 0
+      bar: 0,
     };
 
     const handlers = new Set<Callback>();
@@ -28,7 +28,7 @@ describe('callbacks', () => {
     handlers.add({
       foo: (value: number) => {
         counters.foo += value;
-      }
+      },
     });
     handlers.add({
       foo: (value: number) => {
@@ -36,7 +36,7 @@ describe('callbacks', () => {
       },
       bar: () => {
         counters.bar++;
-      }
+      },
     });
     proxy.foo(20);
     proxy.bar?.();

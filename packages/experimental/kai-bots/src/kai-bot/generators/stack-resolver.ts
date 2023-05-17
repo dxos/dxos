@@ -50,19 +50,19 @@ export class ContactStackResolver implements Resolver<DocumentStack> {
     const messages: ChatCompletionRequestMessage[] = [
       {
         role: 'user',
-        content: `${organization} is a company`
+        content: `${organization} is a company`,
       },
       {
         role: 'user',
-        content: `${name} works for ${organization}`
-      }
+        content: `${name} works for ${organization}`,
+      },
     ];
 
     // TODO(burdon): Factor out method.
     const addTextSection = async (prompt: string, title: string) => {
       messages.push({
         role: 'user',
-        content: prompt
+        content: prompt,
       });
 
       log('request', { messages });

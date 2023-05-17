@@ -20,7 +20,7 @@ describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new TestStream(),
-    sendSignal = async () => {}
+    sendSignal = async () => {},
   }: {
     initiator?: boolean;
     stream?: NodeJS.ReadWriteStream;
@@ -35,14 +35,14 @@ describe('WebRTCTransportProxy', () => {
     const rpcService = createProtoRpcPeer({
       requested: {},
       exposed: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
       },
       handlers: { BridgeService: webRTCTransportService },
       port: port1,
       noHandshake: true,
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
     await rpcService.open();
     afterTest(() => rpcService.close());
@@ -50,13 +50,13 @@ describe('WebRTCTransportProxy', () => {
     // Starting RPC client
     const rpcClient = createProtoRpcPeer({
       requested: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
       },
       port: port2,
       noHandshake: true,
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
     await rpcClient.open();
     afterTest(() => rpcClient.close());
@@ -65,7 +65,7 @@ describe('WebRTCTransportProxy', () => {
       initiator,
       stream,
       sendSignal,
-      bridgeService: rpcClient.rpc.BridgeService
+      bridgeService: rpcClient.rpc.BridgeService,
     });
     afterTest(async () => await webRTCTransportProxy.destroy());
 
@@ -100,7 +100,7 @@ describe('WebRTCTransportProxy', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection2.signal(signal);
-      }
+      },
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
@@ -111,7 +111,7 @@ describe('WebRTCTransportProxy', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection1.signal(signal);
-      }
+      },
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
     await TestStream.assertConnectivity(stream1, stream2);
@@ -129,26 +129,26 @@ describe('WebRTCTransportProxy', () => {
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       service = createProtoRpcPeer({
         exposed: {
-          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
         },
         handlers: { BridgeService: webRTCTransportService },
         port: port1,
         noHandshake: true,
         encodingOptions: {
-          preserveAny: true
-        }
+          preserveAny: true,
+        },
       });
       await service.open();
 
       rpcClient = createProtoRpcPeer({
         requested: {
-          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
         },
         port: port2,
         noHandshake: true,
         encodingOptions: {
-          preserveAny: true
-        }
+          preserveAny: true,
+        },
       });
       await rpcClient.open();
     });
@@ -167,7 +167,7 @@ describe('WebRTCTransportProxy', () => {
           await sleep(10);
           await proxy2.signal(signal);
         },
-        bridgeService: rpcClient.rpc.BridgeService
+        bridgeService: rpcClient.rpc.BridgeService,
       });
       afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
@@ -179,7 +179,7 @@ describe('WebRTCTransportProxy', () => {
           await sleep(10);
           await proxy1.signal(signal);
         },
-        bridgeService: rpcClient.rpc.BridgeService
+        bridgeService: rpcClient.rpc.BridgeService,
       });
       afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 

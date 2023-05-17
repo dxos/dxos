@@ -24,7 +24,7 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
 
   const ipfsClient = create({
     url: ipfsServer,
-    timeout: timeout || '1m'
+    timeout: timeout || '1m',
   });
 
   if (!fs.existsSync(path)) {
@@ -35,7 +35,7 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
     for await (const file of ipfsClient.addAll(globSource(path, '**/*'), {
       progress,
       pin,
-      wrapWithDirectory: true
+      wrapWithDirectory: true,
     })) {
       const fullPath = join(path, file.path);
 
@@ -53,7 +53,7 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
             path: fullPath,
             cid: file.cid.toString(),
             localSize: localContent.length,
-            remoteSize: remoteContent.length
+            remoteSize: remoteContent.length,
           });
         }
       }

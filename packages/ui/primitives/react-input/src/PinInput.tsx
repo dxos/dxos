@@ -29,7 +29,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       segmentHeight = '100%',
       ...props
     }: InputScopedProps<PinInputProps>,
-    forwardedRef
+    forwardedRef,
   ) => {
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
     const width = getSegmentCssWidth(segmentPadding);
@@ -42,13 +42,13 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           key={index}
           className={segmentClassName?.({
             focused: !!(inputFocused && state),
-            validationValence
+            validationValence,
           })}
           data-state={state}
           style={{ width, height: segmentHeight }}
         />
       ),
-      [segmentClassName, inputFocused, validationValence]
+      [segmentClassName, inputFocused, validationValence],
     );
 
     return (
@@ -64,15 +64,15 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           'aria-describedby': descriptionId,
           ...(validationValence === 'error' && {
             'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId
+            'aria-errormessage': errorMessageId,
           }),
           inputRef,
           renderSegment,
-          className: inputClassName
+          className: inputClassName,
         }}
       />
     );
-  }
+  },
 );
 
 export { PinInput };

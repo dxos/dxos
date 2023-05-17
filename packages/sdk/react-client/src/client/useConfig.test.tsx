@@ -37,10 +37,10 @@ describe('Config hook', () => {
       runtime: {
         client: {
           storage: {
-            persistent: false
-          }
-        }
-      }
+            persistent: false,
+          },
+        },
+      },
     });
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();

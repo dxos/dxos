@@ -83,7 +83,7 @@ export class GraphBuilder<N> {
     this._graph.links.push({
       id: `${this._idAccessor(source)}-${this._idAccessor(target)}`,
       source: this._idAccessor(source),
-      target: this._idAccessor(target)
+      target: this._idAccessor(target),
     });
 
     update && this.update();

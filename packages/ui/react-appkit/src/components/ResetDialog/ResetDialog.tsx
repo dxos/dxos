@@ -46,7 +46,7 @@ export const ResetDialog = ({
   isDev = false,
   defaultOpen,
   open,
-  onOpenChange
+  onOpenChange,
 }: FatalErrorProps) => {
   const { t } = useTranslation('appkit');
 

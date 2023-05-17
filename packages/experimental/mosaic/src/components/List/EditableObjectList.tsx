@@ -46,7 +46,7 @@ export const EditableObjectList = <T extends Object>({
   slots = {},
   onSelect,
   onUpdate,
-  onCreate
+  onCreate,
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
@@ -86,7 +86,7 @@ export const EditableObjectList = <T extends Object>({
                 // TODO(burdon): Input classname not propagated.
                 slots={{
                   root: { className: 'flex w-full overflow-hidden pl-1' },
-                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length }
+                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length },
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}

@@ -24,7 +24,7 @@ export type StackMenuProps = {
 
 export const StackAction = ({
   action,
-  onAction
+  onAction,
 }: {
   action: StackAction;
   onAction?: (action: StackAction, section?: any) => void;

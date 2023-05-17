@@ -29,7 +29,7 @@ export interface ManageSpacePageProps {
 
 export const ManageSpacePage = ({
   createInvitationUrl = defaultCreateInvitationUrl,
-  spacesPath = '/'
+  spacesPath = '/',
 }: ManageSpacePageProps) => {
   const { t } = useTranslation('appkit');
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export const ManageSpacePage = ({
   const members = useMembers(spaceKey);
   const memberProfiles = useMemo(
     () => members.map(({ identity }) => identity).filter((identity): identity is Identity => !!identity),
-    [members]
+    [members],
   );
   const invitations = useSpaceInvitations(space?.key);
 
@@ -54,7 +54,7 @@ export const ManageSpacePage = ({
       <HeadingWithActions
         heading={{
           level: 2,
-          children: t('space members label', { ns: 'appkit' })
+          children: t('space members label', { ns: 'appkit' }),
         }}
         actions={
           <>

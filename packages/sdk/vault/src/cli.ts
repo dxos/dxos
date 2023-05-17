@@ -13,24 +13,24 @@ const main = async () => {
     .option('configPath', {
       description: 'Path to the config file',
       requiresArg: false,
-      type: 'string'
+      type: 'string',
     })
     .option('envPath', {
       description: 'Path to the env file',
       requiresArg: false,
-      type: 'string'
+      type: 'string',
     })
     .option('devPath', {
       description: 'Path to the dev file',
       requiresArg: false,
-      type: 'string'
+      type: 'string',
     })
     .command({
       command: '*',
       describe: 'Start the vault server',
       handler: async (args: { configPath: string; envPath: string; devPath: string }) => {
         await startVault({ config: args });
-      }
+      },
     }).argv;
 };
 

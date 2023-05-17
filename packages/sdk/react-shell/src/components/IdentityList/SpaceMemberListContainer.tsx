@@ -21,12 +21,12 @@ export const SpaceMemberListContainer = ({ spaceKey, includeSelf, onSelect }: Sp
     () =>
       includeSelf
         ? allUnsortedMembers.sort((a) =>
-            a.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1
+            a.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
           )
         : allUnsortedMembers.filter(
-            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey)
+            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),
           ),
-    [allUnsortedMembers]
+    [allUnsortedMembers],
   );
   return <SpaceMemberList members={members} onSelect={onSelect} />;
 };

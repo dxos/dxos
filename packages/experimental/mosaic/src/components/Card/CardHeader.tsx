@@ -31,7 +31,7 @@ export const CardHeader = ({ slots = {}, gutter, icon, action, children }: CardH
       className={mx(
         'flex w-full h-[40px] overflow-hidden items-center text-lg px-2',
         styles.heading,
-        slots.root?.className
+        slots.root?.className,
       )}
     >
       {(gutter || icon) && <Icon>{icon}</Icon>}

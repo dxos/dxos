@@ -69,7 +69,7 @@ export class TimeframeClock {
       log('check if reached', {
         target,
         current: this._timeframe,
-        deps: Timeframe.dependencies(target, this._timeframe)
+        deps: Timeframe.dependencies(target, this._timeframe),
       });
 
       return Timeframe.dependencies(target, this._timeframe).isEmpty();

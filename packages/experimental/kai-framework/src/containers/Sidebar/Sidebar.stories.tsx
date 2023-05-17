@@ -32,7 +32,7 @@ const Test = () => {
 
   // TODO(burdon): Factor out providers or create decorator for Kai storybooks.
   const metagraphContext = {
-    client: new MetagraphClientFake(frameModules)
+    client: new MetagraphClientFake(frameModules),
   };
 
   return (
@@ -41,7 +41,7 @@ const Test = () => {
         <FrameRegistryContextProvider frameDefs={frameDefs}>
           <AppStateProvider
             initialState={{
-              frames: defaultFrames
+              frames: defaultFrames,
             }}
           >
             <MainRoot>
@@ -67,12 +67,12 @@ export default {
     reactRouter: {
       routePath: '/:spaceKey',
       routeParams: {
-        spaceKey: 'invalid'
-      }
-    }
-  }
+        spaceKey: 'invalid',
+      },
+    },
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

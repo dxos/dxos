@@ -22,7 +22,7 @@ import { DeckEditor } from './DeckEditor';
 enum View {
   EDITOR = 1,
   MARKDOWN = 2,
-  SPLIT = 3
+  SPLIT = 3,
 }
 
 export const PresenterFrame = observer(() => {

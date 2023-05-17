@@ -23,20 +23,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
     private readonly _keyring: Keyring,
-    private readonly _spaceKey?: PublicKey
+    private readonly _spaceKey?: PublicKey,
   ) {}
 
   toJSON(): object {
     return {
       deviceKey: this._signingContext.deviceKey,
-      spaceKey: this._spaceKey
+      spaceKey: this._spaceKey,
     };
   }
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.SPACE,
-      spaceKey: this._spaceKey
+      spaceKey: this._spaceKey,
     };
   }
 
@@ -55,7 +55,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       identityKey,
       space.key,
       space.inner.genesisFeedKey,
-      guestProfile
+      guestProfile,
     );
 
     // TODO(dmaretskyi): Refactor.
@@ -69,14 +69,14 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space: {
         credential: spaceMemberCredential,
         controlTimeframe: space.inner.controlPipeline.state.timeframe,
-        dataTimeframe: space.dataPipeline.pipelineState?.timeframe
-      }
+        dataTimeframe: space.dataPipeline.pipelineState?.timeframe,
+      },
     };
   }
 
   createIntroduction(): IntroductionRequest {
     return {
-      profile: this._signingContext.profile
+      profile: this._signingContext.profile,
     };
   }
 
@@ -90,8 +90,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         identityKey: this._signingContext.identityKey,
         deviceKey: this._signingContext.deviceKey,
         controlFeedKey,
-        dataFeedKey
-      }
+        dataFeedKey,
+      },
     };
   }
 
@@ -107,7 +107,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
-      dataTimeframe
+      dataTimeframe,
     });
 
     await this._signingContext.recordCredential(credential);

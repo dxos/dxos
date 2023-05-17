@@ -23,7 +23,7 @@ export interface ErrorContextState {
 export const ErrorContext = createContext<ErrorContextState>({
   errors: [],
   addError: () => {},
-  resetErrors: () => {}
+  resetErrors: () => {},
 });
 
 // TODO(burdon): Override if dev-only?
@@ -56,7 +56,7 @@ export const ErrorProvider = ({ children, config, isDev = true }: ErrorProviderP
       error && addError(error);
       return true; // Prevent default.
     },
-    []
+    [],
   );
 
   // Register global error handlers.

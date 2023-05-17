@@ -32,9 +32,9 @@ export const mx = extendTailwindMerge(
         'font-system-extrabold',
         'font-system-black',
         // Arbitrary numbers
-        validators.isArbitraryNumber
-      ]
-    }
+        validators.isArbitraryNumber,
+      ],
+    },
   },
-  withLogical
+  withLogical,
 );

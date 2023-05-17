@@ -18,7 +18,7 @@ import { SpaceListItem } from '../../components';
 import { ShellProvider, useShell } from './ShellContext';
 
 export default {
-  component: ShellProvider
+  component: ShellProvider,
 };
 
 const ShellControls = () => {
@@ -83,5 +83,5 @@ export const Default = {
       </ShellProvider>
     );
   },
-  decorators: [ClientDecorator()]
+  decorators: [ClientDecorator()],
 };
