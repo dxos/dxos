@@ -5,6 +5,7 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
+import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '@dxos/aurora';
 import {
   defaultFocus,
   defaultHover,
@@ -14,8 +15,6 @@ import {
   primaryAppButtonColors,
   surfaceElevation
 } from '@dxos/aurora-theme';
-
-import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 
 interface NavMenuItemSharedProps {
   children: ReactNode;
