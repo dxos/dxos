@@ -339,3 +339,7 @@ export class Item<M extends Model = Model> {
     }
   }
 }
+
+export const getStateMachineFromItem = (item: Item) => {
+  return item._stateMachine;
+};

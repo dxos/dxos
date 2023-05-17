@@ -8,14 +8,14 @@ import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { ItemManager } from '@dxos/echo-db';
+import { ItemManager, getStateMachineFromItem } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { ObjectSnapshot } from '@dxos/protocols/src/proto/gen/dxos/echo/model/document';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
@@ -228,14 +228,14 @@ export class DataPipeline {
 
     try {
       // Add properties to cache.
-      const properties = this._itemManager.items
-        .find(
-          (item) =>
-            item.modelMeta?.type === 'dxos:model/document' &&
-            (item._stateMachine?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
-        )
-        ?._stateMachine?.snapshot() as ObjectSnapshot;
-      cache.properties = properties;
+      const propertiesItem = this._itemManager.items.find(
+        (item) =>
+          item.modelMeta?.type === 'dxos:model/document' &&
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+      );
+      if (propertiesItem) {
+        cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
+      }
     } catch (err) {
       log.warn('Failed to cache properties', err);
     }
