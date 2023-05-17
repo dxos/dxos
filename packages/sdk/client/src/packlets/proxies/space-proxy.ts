@@ -184,7 +184,6 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
-    console.log('cached properties', this._cachedProperties.toJSON());
     if (this._currentState !== SpaceState.READY) {
       return this._cachedProperties;
     } else {
