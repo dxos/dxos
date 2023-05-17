@@ -13,19 +13,21 @@ type StoryTooltipProps = {
 };
 
 const StoryTooltip = ({ content }: StoryTooltipProps) => (
-  <TooltipProvider>
-    <TooltipRoot defaultOpen>
-      <TooltipTrigger asChild>
-        <Button>Trigger tooltip</Button>
-      </TooltipTrigger>
-      <TooltipPortal>
-        <TooltipContent side='right'>
-          <TooltipArrow />
-          {content}
-        </TooltipContent>
-      </TooltipPortal>
-    </TooltipRoot>
-  </TooltipProvider>
+  <div role='none' style={{ minWidth: '320px' }}>
+    <TooltipProvider>
+      <TooltipRoot defaultOpen>
+        <TooltipTrigger asChild>
+          <Button>Trigger tooltip</Button>
+        </TooltipTrigger>
+        <TooltipPortal>
+          <TooltipContent side='right'>
+            <TooltipArrow />
+            {content}
+          </TooltipContent>
+        </TooltipPortal>
+      </TooltipRoot>
+    </TooltipProvider>
+  </div>
 );
 
 export default {
@@ -35,5 +37,8 @@ export default {
 export const Default = {
   args: {
     content: 'This is the tooltip content'
+  },
+  parameters: {
+    chromatic: { delay: 500 }
   }
 };
