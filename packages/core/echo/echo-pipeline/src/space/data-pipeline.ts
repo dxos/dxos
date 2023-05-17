@@ -15,6 +15,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { ObjectSnapshot } from '@dxos/protocols/src/proto/gen/dxos/echo/model/document';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
@@ -121,7 +122,7 @@ export class DataPipeline {
     // Create database backend.
     const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
       (data: DataMessage) => ({ data }),
-      this._pipeline.writer ?? failUndefined()
+      this._pipeline.writer ?? failUndefined(),
     );
 
     this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
@@ -187,8 +188,8 @@ export class DataPipeline {
               feedKey,
               seq,
               timeframe: data.timeframe,
-              memberKey: feedInfo.assertion.identityKey
-            }
+              memberKey: feedInfo.assertion.identityKey,
+            },
           });
 
           // Timeframe clock is not updated yet
@@ -205,7 +206,7 @@ export class DataPipeline {
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe,
-      database: this.databaseBackend!.createSnapshot()
+      database: this.databaseBackend!.createSnapshot(),
     };
   }
 
@@ -225,14 +226,18 @@ export class DataPipeline {
   private async _saveCache() {
     const cache: SpaceCache = {};
 
-    {
+    try {
       // Add properties to cache.
       const properties = this._itemManager.items
-        .map((item) => item.state)
-        .filter((state) => state.type && state.type === 'dxos.sdk.client.Properties')[0];
-      if (properties) {
-        cache.properties = properties.data;
-      }
+        .find(
+          (item) =>
+            item.modelMeta?.type === 'dxos:model/document' &&
+            (item._stateMachine?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+        )
+        ?._stateMachine?.snapshot() as ObjectSnapshot;
+      cache.properties = properties;
+    } catch (err) {
+      log.warn('Failed to cache properties', err);
     }
 
     // Save cache.

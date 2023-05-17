@@ -72,8 +72,9 @@ export class Item<M extends Model = Model> {
 
   /**
    * Model state-machine.
+   * @internal
    */
-  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
+  _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   /**
    * Items are constructed by the `Database` object.
