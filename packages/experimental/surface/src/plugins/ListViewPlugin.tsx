@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MaybePromise } from 'packages/common/util/src';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { definePlugin, usePluginContext, Plugin } from '../framework';
+
+export type MaybePromise<T> = T | Promise<T>;
 
 export type ListViewItem = {
   text: string;
