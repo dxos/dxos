@@ -4,7 +4,7 @@
 
 import { FC, PropsWithChildren } from 'react';
 
-export interface Plugin {
+export interface Plugin<TProvides = {}> {
   meta: {
     id: string;
   };
@@ -12,7 +12,7 @@ export interface Plugin {
     context?: FC<PropsWithChildren>;
     component?: <P extends PropsWithChildren = PropsWithChildren>(datum: any, props?: Partial<P>) => FC<P>;
     components?: Record<string, FC>;
-  };
+  } & TProvides;
 }
 
 export const definePlugin = (plugin: Plugin) => {

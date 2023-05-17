@@ -6,7 +6,6 @@ import React, { PropsWithChildren, createContext, useContext } from 'react';
 
 import { Surface, definePlugin, usePluginContext } from '../framework';
 
-import { RouterActions } from '../Actions';
 
 export type SplitViewProps = {};
 
@@ -18,12 +17,10 @@ export const useSplitViewContext = () => useContext(Context);
 
 export const SplitView = (props: SplitViewProps) => {
   const { sidebarOpen } = useSplitViewContext();
-  const { dispatch } = usePluginContext();
   return (
     <div>
       {sidebarOpen ? <Surface name='sidebar' /> : null}
       <Surface name='main' />
-      <button onClick={() => dispatch({ type: 'navigate', to: '/foo' })}>Navigate to foo</button>
     </div>
   );
 };
