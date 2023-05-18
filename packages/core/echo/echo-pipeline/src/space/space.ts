@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
-import { FeedInfo } from '@dxos/credentials';
+import { CredentialConsumer, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -62,6 +62,7 @@ export class Space {
   private readonly _controlPipeline: ControlPipeline;
   private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
+  private readonly _dataPipelineCredentialConsumer: CredentialConsumer<any>;
 
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
@@ -133,6 +134,7 @@ export class Space {
         await pipeline.start();
       }
     });
+    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(this._dataPipeline.createCredentialProcessor());
   }
 
   @logInfo
@@ -229,6 +231,7 @@ export class Space {
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
+    await this._dataPipelineCredentialConsumer.close();
 
     this._isOpen = false;
     log('closed');
@@ -236,6 +239,7 @@ export class Space {
 
   async initializeDataPipeline() {
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
+    await this._dataPipelineCredentialConsumer.open();
     await this._dataPipeline.open()
   }
 }

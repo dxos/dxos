@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { FeedInfo } from '@dxos/credentials';
+import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { ItemManager, getStateMachineFromItem } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -108,6 +108,19 @@ export class DataPipeline {
   setTargetTimeframe(timeframe: Timeframe) {
     this._targetTimeframe = timeframe;
     this._pipeline?.state.setTargetTimeframe(timeframe);
+  }
+
+  createCredentialProcessor(): CredentialProcessor {
+    return {
+      process: async (credential) => {
+        const assertion = getCredentialAssertion(credential);
+        if(assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+          return;
+        }
+
+        log.info('new epoch', { credential });
+      }
+    }
   }
 
   @synchronized
