@@ -35,6 +35,11 @@ export type DataPipelineParams = {
   spaceKey: PublicKey;
   feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined;
   snapshotId: string | undefined;
+
+  /**
+   * Could be called multiple times.
+   */
+  onPipelineCreated: (pipeline: Pipeline) => Promise<void>;
 };
 
 /**
@@ -65,7 +70,6 @@ const DISABLE_SNAPSHOT_CACHE = true;
 @trackLeaks('open', 'close')
 export class DataPipeline {
   private _ctx = new Context();
-  private _spaceContext!: PipelineFactory;
   private _pipeline?: Pipeline;
   private _snapshot?: SpaceSnapshot;
   private _targetTimeframe?: Timeframe;
@@ -83,6 +87,10 @@ export class DataPipeline {
 
   get isOpen() {
     return this._isOpen;
+  }
+
+  get pipeline() {
+    return this._pipeline;
   }
 
   get pipelineState() {
@@ -103,18 +111,18 @@ export class DataPipeline {
   }
 
   @synchronized
-  async open(spaceContext: PipelineFactory) {
+  async open() {
     if (this._isOpen) {
       return;
     }
 
-    this._spaceContext = spaceContext;
     if (this._params.snapshotId && !DISABLE_SNAPSHOT_CACHE) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
       this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
     }
 
-    this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
+    this._pipeline = new Pipeline(this.getStartTimeframe());
+    await this._params.onPipelineCreated(this._pipeline);
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
     }

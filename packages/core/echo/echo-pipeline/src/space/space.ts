@@ -60,13 +60,12 @@ export class Space {
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
+  private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
-  private _dataPipeline?: Pipeline;
-  private _dataPipeline2: DataPipeline;
 
   constructor(params: SpaceParams) {
     assert(params.spaceKey && params.feedProvider);
@@ -87,9 +86,9 @@ export class Space {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
         await this._addFeedLock.executeSynchronized(async () => {
-          if (this._dataPipeline) {
-            if (!this._dataPipeline.hasFeed(info.key)) {
-              return this._dataPipeline.addFeed(await this._feedProvider(info.key));
+          if (this._dataPipeline.pipeline) {
+            if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
+              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key));
             }
           }
         });
@@ -110,7 +109,7 @@ export class Space {
     this.protocol = params.protocol;
     this.protocol.addFeed(params.genesisFeed);
 
-    this._dataPipeline2 = new DataPipeline({
+    this._dataPipeline = new DataPipeline({
       modelFactory: params.modelFactory,
       metadataStore: params.metadataStore,
       snapshotManager: params.snapshotManager,
@@ -118,6 +117,21 @@ export class Space {
       spaceKey: this._key,
       feedInfoProvider: (feedKey) => this._controlPipeline.spaceState.feeds.get(feedKey),
       snapshotId: params.snapshotId,
+      onPipelineCreated: async (pipeline) => {
+        if (this._dataFeed) {
+          pipeline.setWriteFeed(this._dataFeed);
+        }
+
+        // Add existing feeds.
+        await this._addFeedLock.executeSynchronized(async () => {
+          for (const feed of this._controlPipeline.spaceState.feeds.values()) {
+            if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
+              await pipeline.addFeed(await this._feedProvider(feed.key));
+            }
+          }
+        });
+        await pipeline.start();
+      }
     });
   }
 
@@ -154,7 +168,7 @@ export class Space {
   }
 
   get dataPipeline(): DataPipeline {
-    return this._dataPipeline2;
+    return this._dataPipeline;
   }
 
   get snapshotManager(): SnapshotManager {
@@ -171,7 +185,7 @@ export class Space {
   setDataFeed(feed: FeedWrapper<FeedMessage>) {
     assert(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
-    this._dataPipeline?.setWriteFeed(feed);
+    this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
   }
 
@@ -210,7 +224,7 @@ export class Space {
       return;
     }
 
-    await this._dataPipeline2.close();
+    await this._dataPipeline.close();
 
     // Closes in reverse order to open.
     await this.protocol.stop();
@@ -221,36 +235,7 @@ export class Space {
   }
 
   async initializeDataPipeline() {
-    await this._dataPipeline2.open({
-      openPipeline: async (start) => {
-        const pipeline = await this.createDataPipeline({ start });
-        await pipeline.start();
-        return pipeline;
-      },
-    });
-  }
-
-  // TODO(dmaretskyi): Make reusable.
-  async createDataPipeline({ start }: CreatePipelineParams) {
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    assert(!this._dataPipeline, 'Data pipeline already initialized.');
-
-    const pipeline = new Pipeline(start);
-    if (this._dataFeed) {
-      pipeline.setWriteFeed(this._dataFeed);
-    }
-
-    this._dataPipeline = pipeline;
-
-    // Add existing feeds.
-    await this._addFeedLock.executeSynchronized(async () => {
-      for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-        if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-          await pipeline.addFeed(await this._feedProvider(feed.key));
-        }
-      }
-    });
-
-    return pipeline;
+    await this._dataPipeline.open()
   }
 }

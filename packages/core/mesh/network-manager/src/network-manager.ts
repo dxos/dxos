@@ -183,7 +183,7 @@ export class NetworkManager {
    */
   async leaveSwarm(topic: PublicKey) {
     if (!this._swarms.has(topic)) {
-      log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
+      // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
       return;
     }
 
