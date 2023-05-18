@@ -43,13 +43,6 @@ const EmbeddedLayoutImpl = () => {
 
   return (
     <>
-      {space && document ? (
-        <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
-      ) : source && id && identityHex ? (
-        <ResolverDialog />
-      ) : (
-        <EmbeddedFirstRunPage />
-      )}
       <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
         <Button disabled={!space} onClick={handleInvite}>
           {t('create invitation label', { ns: 'appkit' })}
@@ -71,6 +64,13 @@ const EmbeddedLayoutImpl = () => {
           </Button>
         </ButtonGroup>
       </div>
+      {space && document ? (
+        <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
+      ) : source && id && identityHex ? (
+        <ResolverDialog />
+      ) : (
+        <EmbeddedFirstRunPage />
+      )}
     </>
   );
 };

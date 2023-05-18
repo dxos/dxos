@@ -75,7 +75,7 @@ export const StandaloneLayout = () => {
           <MainOverlay />
           <Sidebar
             {...{
-              className: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
+              classNames: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
               onOpenAutoFocus: (event) => event.preventDefault(),
               onCloseAutoFocus: (event) => event.preventDefault(),
             }}
