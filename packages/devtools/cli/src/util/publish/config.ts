@@ -31,9 +31,9 @@ export const loadConfig = async (configPath: string = EXTENSION_CONFIG_FILENAME)
     package: {
       modules: dxConfig.package.modules.map((module: PackageModule) =>
         defaultsDeep(module, {
-          build: { command: DEFAULT_BUILD_COMMAND }
-        })
-      )
-    }
+          build: { command: DEFAULT_BUILD_COMMAND },
+        }),
+      ),
+    },
   });
 };

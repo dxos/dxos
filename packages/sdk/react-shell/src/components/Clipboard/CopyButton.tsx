@@ -22,7 +22,7 @@ export const CopyButton = ({ value }: CopyButtonProps) => {
   const isCopied = textValue === value;
   return (
     <Button
-      className='inline-flex flex-col justify-center'
+      classNames='inline-flex flex-col justify-center'
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >

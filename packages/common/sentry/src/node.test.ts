@@ -24,7 +24,7 @@ describe('Node error reporting', () => {
       destination: MOCK_DESTINATION,
       release: 'test',
       transport: sentryTransport,
-      scrubFilenames: true
+      scrubFilenames: true,
     });
   });
 

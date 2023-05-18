@@ -3,3 +3,5 @@
 //
 
 export * from './backup';
+export * from './spaceResolvers';
+export * from './getSpaceDisplayName';

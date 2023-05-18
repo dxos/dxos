@@ -21,7 +21,7 @@ export const Editor = ({ document, onChange }: EditorProps) => {
     // https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.typescript.CompilerOptions.html
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       jsx: 'react',
-      noLib: true
+      noLib: true,
       // TODO(burdon): Error.
       // https://github.com/microsoft/monaco-editor/issues/2249
       // allowNonTsExtensions: true

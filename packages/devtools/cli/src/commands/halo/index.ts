@@ -25,7 +25,7 @@ export default class Halo extends BaseCommand {
         this.log(`Display name: ${profile?.displayName}`);
         return {
           identityKey: identityKey.toHex(),
-          profile
+          profile,
         };
       }
     });

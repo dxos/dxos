@@ -10,7 +10,7 @@ module.exports = {
     spacing: {
       appbar: '48px',
       framepicker: '40px',
-      topbars: '88px'
-    }
-  }
+      topbars: '88px',
+    },
+  },
 };

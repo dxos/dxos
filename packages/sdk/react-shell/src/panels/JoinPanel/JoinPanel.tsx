@@ -17,7 +17,7 @@ import {
   InvitationAuthenticator,
   InvitationRescuer,
   InvitationInput,
-  InvitationAccepted
+  InvitationAccepted,
 } from './view-states';
 
 export const JoinPanel = ({
@@ -27,7 +27,7 @@ export const JoinPanel = ({
   onExit,
   doneActionParent,
   onDone,
-  preventExit
+  preventExit,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -39,9 +39,9 @@ export const JoinPanel = ({
       mode,
       identity,
       ...(initialInvitationCode && {
-        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode }
-      })
-    }
+        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
+      }),
+    },
   });
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export const JoinPanel = ({
             {...{
               joinState,
               joinSend,
-              active: joinState.matches({ choosingIdentity: 'choosingAuthMethod' })
+              active: joinState.matches({ choosingIdentity: 'choosingAuthMethod' }),
             }}
           />
           <IdentityInput
@@ -80,7 +80,7 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: joinState.matches({ choosingIdentity: 'creatingIdentity' }),
-              method: 'create identity'
+              method: 'create identity',
             }}
           />
           <IdentityInput
@@ -88,7 +88,7 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: joinState.matches({ choosingIdentity: 'recoveringIdentity' }),
-              method: 'recover identity'
+              method: 'recover identity',
             }}
           />
           <InvitationInput
@@ -96,9 +96,9 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: joinState.matches({
-                choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' }
+                choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' },
               }),
-              Kind: 'Halo'
+              Kind: 'Halo',
             }}
           />
           <InvitationRescuer
@@ -108,16 +108,16 @@ export const JoinPanel = ({
               active: [
                 {
                   choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' }
-                  }
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' },
+                  },
                 },
                 {
                   choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' }
-                  }
-                }
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' },
+                  },
+                },
               ].some(joinState.matches),
-              Kind: 'Halo'
+              Kind: 'Halo',
             }}
           />
           <InvitationAuthenticator
@@ -127,30 +127,30 @@ export const JoinPanel = ({
               active: [
                 {
                   choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' }
-                  }
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' },
+                  },
                 },
                 {
                   choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' }
-                  }
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' },
+                  },
                 },
                 {
                   choosingIdentity: {
                     acceptingHaloInvitation: {
-                      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
-                    }
-                  }
-                }
+                      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
+                    },
+                  },
+                },
               ].some(joinState.matches),
               Kind: 'Halo',
               ...(joinState.matches({
                 choosingIdentity: {
                   acceptingHaloInvitation: {
-                    acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode'
-                  }
-                }
-              }) && { failed: true })
+                    acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
+                  },
+                },
+              }) && { failed: true }),
             }}
           />
           <InvitationAccepted
@@ -160,14 +160,14 @@ export const JoinPanel = ({
               active: [
                 {
                   choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' }
-                  }
+                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' },
+                  },
                 },
-                'finishingJoiningHalo'
+                'finishingJoiningHalo',
               ].some(joinState.matches),
               Kind: 'Halo',
               doneActionParent,
-              onDone
+              onDone,
             }}
           />
           <IdentityAdded
@@ -176,10 +176,10 @@ export const JoinPanel = ({
               joinSend,
               mode,
               active: joinState.matches({
-                choosingIdentity: 'confirmingAddedIdentity'
+                choosingIdentity: 'confirmingAddedIdentity',
               }),
               doneActionParent,
-              onDone
+              onDone,
             }}
           />
           <InvitationInput
@@ -187,9 +187,9 @@ export const JoinPanel = ({
               joinState,
               joinSend,
               active: joinState.matches({
-                acceptingSpaceInvitation: 'inputtingSpaceInvitationCode'
+                acceptingSpaceInvitation: 'inputtingSpaceInvitationCode',
               }),
-              Kind: 'Space'
+              Kind: 'Space',
             }}
           />
           <InvitationRescuer
@@ -198,13 +198,13 @@ export const JoinPanel = ({
               joinSend,
               active: [
                 {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' }
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' },
                 },
                 {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' }
-                }
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' },
+                },
               ].some(joinState.matches),
-              Kind: 'Space'
+              Kind: 'Space',
             }}
           />
           <InvitationAuthenticator
@@ -213,23 +213,23 @@ export const JoinPanel = ({
               joinSend,
               active: [
                 {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' }
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' },
                 },
                 {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' }
+                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' },
                 },
                 {
                   acceptingSpaceInvitation: {
-                    acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
-                  }
-                }
+                    acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
+                  },
+                },
               ].some(joinState.matches),
               Kind: 'Space',
               ...(joinState.matches({
                 acceptingSpaceInvitation: {
-                  acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode'
-                }
-              }) && { failed: true })
+                  acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
+                },
+              }) && { failed: true }),
             }}
           />
           <InvitationAccepted
@@ -239,7 +239,7 @@ export const JoinPanel = ({
               active: joinState.matches('finishingJoiningSpace'),
               Kind: 'Space',
               doneActionParent,
-              onDone
+              onDone,
             }}
           />
         </div>

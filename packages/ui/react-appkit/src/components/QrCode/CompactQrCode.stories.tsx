@@ -7,13 +7,13 @@ import '@dxosTheme';
 import { CompactQrCode } from './QrCode';
 
 export default {
-  component: CompactQrCode
+  component: CompactQrCode,
 };
 
 export const Compact = {
   args: {
     copyLabel: 'Copy',
     displayQrLabel: 'Display QR',
-    value: 'https://dxos.org'
-  }
+    value: 'https://dxos.org',
+  },
 };

@@ -69,11 +69,11 @@ export class TestClient {
               close();
             }
           }, 10);
-        })
+        }),
     };
 
     return {
-      TestStreamService
+      TestStreamService,
     };
   }
 

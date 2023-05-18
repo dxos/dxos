@@ -10,7 +10,7 @@ export class TSFile extends File<string> {
   protected override async serialize(): Promise<string> {
     const content = this.content?.toString() ?? '';
     const formatted = prettier.format(content, {
-      parser: 'typescript'
+      parser: 'typescript',
     });
     return formatted;
   }

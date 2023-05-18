@@ -24,8 +24,8 @@ export const routes = [
     children: [
       {
         path: '/test',
-        element: <Test />
-      }
-    ]
-  }
+        element: <Test />,
+      },
+    ],
+  },
 ];

@@ -80,14 +80,14 @@ export class TestBuilder<T extends {}> {
       root: this.root,
       signer: this.keyring,
       hypercore: {
-        valueEncoding: this._properties.valueEncoding
-      }
+        valueEncoding: this._properties.valueEncoding,
+      },
     });
   }
 
   createFeedStore() {
     return new FeedStore<T>({
-      factory: this.createFeedFactory()
+      factory: this.createFeedFactory(),
     });
   }
 }
@@ -99,7 +99,7 @@ export class TestItemBuilder extends TestBuilder<TestItem> {
   constructor() {
     super({
       valueEncoding: defaultValueEncoding,
-      generator: defaultTestGenerator
+      generator: defaultTestGenerator,
     });
   }
 

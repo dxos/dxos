@@ -18,9 +18,9 @@ const AppsPage = () => {
       modules.map((module) => ({
         module,
         // TODO(burdon): KUBE should add url to Module def.
-        launchUrl: `https://${module.name}.dxos.org`
+        launchUrl: `https://${module.name}.dxos.org`,
       })),
-    [modules]
+    [modules],
   );
 
   return (

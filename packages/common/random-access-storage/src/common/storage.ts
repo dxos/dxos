@@ -11,7 +11,7 @@ export enum StorageType {
   CHROME = 'chrome',
   FIREFOX = 'firefox',
   NODE = 'node',
-  WEBFS = 'webfs'
+  WEBFS = 'webfs',
 }
 
 export interface Storage {

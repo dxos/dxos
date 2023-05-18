@@ -27,7 +27,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/composer-extension/**/*.{ts,tsx,js,jsx}"
+          "packages/apps/composer-extension/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [

@@ -39,7 +39,7 @@ const circleProps: ComponentPropsWithoutRef<'circle'> = {
   cy: svgSize / 2,
   r: radius,
   strokeWidth,
-  strokeDasharray: `${segment - gap} ${2 * segment + gap}`
+  strokeDasharray: `${segment - gap} ${2 * segment + gap}`,
 };
 
 export const InvitationStatusAvatar = ({
@@ -47,7 +47,7 @@ export const InvitationStatusAvatar = ({
   status,
   haltedAt,
   slots = {},
-  invitationId
+  invitationId,
 }: InvitationStatusAvatarProps) => {
   const resolvedColor = resolvedStrokeColor(status);
   const halted =

@@ -31,7 +31,7 @@ describe('Serializer', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
         '@model': 'dxos:model/document',
-        title: 'Test'
+        title: 'Test',
       });
     }
 
@@ -56,12 +56,12 @@ describe('Serializer', () => {
         title: 'Main task',
         subtasks: [
           new TypedObject({
-            title: 'Subtask 1'
+            title: 'Subtask 1',
           }),
           new TypedObject({
-            title: 'Subtask 2'
-          })
-        ]
+            title: 'Subtask 2',
+          }),
+        ],
       });
       db.add(obj);
       await db.flush();
@@ -108,7 +108,7 @@ describe('Serializer', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': text.id,
         '@model': 'dxos:model/text',
-        text: content
+        text: content,
       });
     }
 

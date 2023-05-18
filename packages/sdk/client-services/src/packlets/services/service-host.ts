@@ -81,7 +81,7 @@ export class ClientServicesHost {
     connectionLog,
     storage,
     // TODO(wittjosiah): Turn this on by default.
-    lockKey
+    lockKey,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
     this._modelFactory = modelFactory;
@@ -96,7 +96,7 @@ export class ClientServicesHost {
           onAcquire: () => {
             this._opening || this.open();
           },
-          onRelease: () => this.close()
+          onRelease: () => this.close(),
         })
       : undefined;
 
@@ -117,14 +117,14 @@ export class ClientServicesHost {
 
       onReset: async () => {
         await this.reset();
-      }
+      },
     });
 
     this._loggingService = new LoggingServiceImpl();
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService
+      SystemService: this._systemService,
     });
   }
 
@@ -164,9 +164,9 @@ export class ClientServicesHost {
     const {
       connectionLog = true,
       transportFactory = createWebRTCTransportFactory({
-        iceServers: this._config?.get('runtime.services.ice')
+        iceServers: this._config?.get('runtime.services.ice'),
       }),
-      signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? [])
+      signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
     } = options;
     this._signalManager = signalManager;
 
@@ -174,7 +174,7 @@ export class ClientServicesHost {
     this._networkManager = new NetworkManager({
       log: connectionLog,
       transportFactory,
-      signalManager
+      signalManager,
     });
   }
 
@@ -202,7 +202,7 @@ export class ClientServicesHost {
       this._storage,
       this._networkManager,
       this._signalManager,
-      this._modelFactory
+      this._modelFactory,
     );
 
     // TODO(burdon): Start to think of DMG (dynamic services).
@@ -212,7 +212,7 @@ export class ClientServicesHost {
       IdentityService: new IdentityServiceImpl(this._serviceContext),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
-        this._serviceContext.getInvitationHandler(invitation)
+        this._serviceContext.getInvitationHandler(invitation),
       ),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
@@ -224,7 +224,7 @@ export class ClientServicesHost {
         async () => {
           await this._serviceContext.initialized.wait();
           return this._serviceContext.dataSpaceManager!;
-        }
+        },
       ),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
@@ -237,8 +237,8 @@ export class ClientServicesHost {
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
         config: this._config,
-        context: this._serviceContext
-      })
+        context: this._serviceContext,
+      }),
     });
 
     await this._serviceContext.open();

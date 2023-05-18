@@ -70,7 +70,7 @@ export class IFrameHostRuntime {
     try {
       this._config = await getAsyncValue(this._configProvider);
       this._transportFactory = createWebRTCTransportFactory({
-        iceServers: this._config.get('runtime.services.ice')
+        iceServers: this._config.get('runtime.services.ice'),
       });
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices = new LocalClientServices({
@@ -79,7 +79,7 @@ export class IFrameHostRuntime {
         signalManager: signals
           ? new WebsocketSignalManager(signals)
           : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-        transportFactory: this._transportFactory
+        transportFactory: this._transportFactory,
       });
 
       const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
@@ -98,13 +98,13 @@ export class IFrameHostRuntime {
           }
 
           return handler(method, params);
-        }
+        },
       };
 
       this._clientRpc = new ClientRpcServer({
         serviceRegistry: this._clientServices.host.serviceRegistry,
         port: this._appPort,
-        ...middleware
+        ...middleware,
       });
 
       await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);

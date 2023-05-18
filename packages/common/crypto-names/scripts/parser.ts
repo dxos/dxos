@@ -31,19 +31,19 @@ const parse = (source: string, target: string) => {
 
   const cleaned = {
     animals: clean(animals),
-    adjectives: clean(adjectives)
+    adjectives: clean(adjectives),
   };
 
   const selected = {
     animals: select(cleaned.animals, 256),
-    adjectives: select(cleaned.adjectives, 256)
+    adjectives: select(cleaned.adjectives, 256),
   };
 
   console.log(
     JSON.stringify({
       animals: selected.animals.length,
-      adjectives: selected.adjectives.length
-    })
+      adjectives: selected.adjectives.length,
+    }),
   );
 
   fs.writeFileSync(source, JSON.stringify(cleaned, undefined, 2));

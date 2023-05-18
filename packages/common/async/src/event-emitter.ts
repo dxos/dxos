@@ -21,7 +21,7 @@ export const onEvent = (eventEmitter: EventEmitter, eventName: string, callback:
 export const addListener = (eventEmitter: EventEmitter, eventName: string, callback: () => void) => {
   const off = onEvent(eventEmitter, eventName, callback);
   return {
-    remove: () => off()
+    remove: () => off(),
   };
 };
 
@@ -33,7 +33,7 @@ export const waitForEvent = (
   eventName: string,
   test?: (args: any) => boolean,
   timeout?: number,
-  error?: Error | string
+  error?: Error | string,
 ): Promise<any> => {
   let off;
 

@@ -24,7 +24,7 @@ const JoinIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
   const acceptInvitation = useCallback((invitation: Invitation) => client.halo.acceptInvitation(invitation), [client]);
 

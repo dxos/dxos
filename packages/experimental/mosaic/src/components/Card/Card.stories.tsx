@@ -30,7 +30,7 @@ import { CardHeader } from './CardHeader';
 // TODO(burdon): Factor out default semantic colors.
 
 const styles = {
-  header: 'bg-blue-300 dark:bg-zinc-800'
+  header: 'bg-blue-300 dark:bg-zinc-800',
 };
 
 // TODO(burdon): Test embedded table/lists (e.g., checkbox in side gutter).
@@ -53,7 +53,7 @@ const Test = () => {
             scrollbar
             slots={{
               root: { className: 'h-[160px]' },
-              body: { className: 'pt-2.5' }
+              body: { className: 'pt-2.5' },
             }}
           >
             {faker.lorem.sentences(32)}
@@ -61,7 +61,7 @@ const Test = () => {
           <CardContent
             icon={<Envelope className={getSize(6)} />}
             slots={{
-              body: { className: 'pt-2.5' }
+              body: { className: 'pt-2.5' },
             }}
           >
             {faker.internet.email()}
@@ -101,13 +101,13 @@ export default {
       <div className='flex flex-col items-center h-screen w-full bg-zinc-100'>
         <Story />
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

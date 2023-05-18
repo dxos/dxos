@@ -23,7 +23,7 @@ describe('identity/authenticator', () => {
     const authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
       update: new Event(),
-      authTimeout: 10
+      authTimeout: 10,
     });
 
     const nonce = new Uint8Array([2, 1, 3, 7]);

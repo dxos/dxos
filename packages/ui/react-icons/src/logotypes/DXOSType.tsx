@@ -18,7 +18,7 @@ const DXOSType: FC<{ className?: string }> = ({ className = defaultSize }) => {
         fillRule: 'evenodd',
         clipRule: 'evenodd',
         strokeLinejoin: 'round',
-        strokeMiterlimit: 2
+        strokeMiterlimit: 2,
       }}
     >
       <g transform='matrix(1,0,0,1,-21.333,-794.383)'>

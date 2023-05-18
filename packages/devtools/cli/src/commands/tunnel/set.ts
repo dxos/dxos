@@ -16,14 +16,14 @@ export default class Set extends BaseCommand {
     ...BaseCommand.flags,
     app: Flags.string({
       description: 'Application name',
-      required: true
+      required: true,
     }),
     enabled: Flags.boolean({
-      description: 'Enable tunnel.'
+      description: 'Enable tunnel.',
     }),
     disabled: Flags.boolean({
-      description: 'Disable tunnel.'
-    })
+      description: 'Disable tunnel.',
+    }),
   };
 
   async run(): Promise<any> {

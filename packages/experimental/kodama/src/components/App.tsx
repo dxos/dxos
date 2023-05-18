@@ -40,17 +40,17 @@ export const App = () => {
             <Panel>
               <Config />
             </Panel>
-          )
+          ),
         },
         {
           id: 'quit',
           label: 'Quit',
           exec: () => {
             process.exit();
-          }
-        }
+          },
+        },
       ].filter(Boolean) as MenuItem[],
-    [profile]
+    [profile],
   );
 
   return (

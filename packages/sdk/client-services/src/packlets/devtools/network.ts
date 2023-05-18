@@ -13,7 +13,7 @@ import {
   SubscribeToNetworkTopicsResponse,
   SubscribeToSignalStatusResponse,
   SignalResponse,
-  SubscribeToSwarmInfoResponse
+  SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
@@ -39,9 +39,9 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
         message: {
           author: message.author.asUint8Array(),
           recipient: message.recipient.asUint8Array(),
-          payload: message.payload
+          payload: message.payload,
         },
-        receivedAt: new Date()
+        receivedAt: new Date(),
       });
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
@@ -59,7 +59,7 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: N
         const topics = networkManager.topics;
         const labeledTopics = topics.map((topic) => ({
           topic,
-          label: networkManager.getSwarm(topic)?.label ?? topic.toHex()
+          label: networkManager.getSwarm(topic)?.label ?? topic.toHex(),
         }));
         next({ topics: labeledTopics });
       } catch (err: any) {
@@ -85,7 +85,7 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Netwo
 
 export const getNetworkPeers = (
   { networkManager }: { networkManager: NetworkManager },
-  request: GetNetworkPeersRequest
+  request: GetNetworkPeersRequest,
 ): GetNetworkPeersResponse => {
   if (!request.topic) {
     throw new Error('Expected a network topic');
@@ -95,7 +95,7 @@ export const getNetworkPeers = (
   return {
     peers: map?.peers.map((peer) => ({
       ...peer,
-      connections: peer.connections.map((connection) => connection.asUint8Array())
-    }))
+      connections: peer.connections.map((connection) => connection.asUint8Array()),
+    })),
   };
 };

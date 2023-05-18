@@ -44,24 +44,24 @@ export class BrowserReporter {
             suite: this._currentSuite,
             test: test.title,
             message: error.message,
-            stack: error.stack
-          })
+            stack: error.stack,
+          }),
         );
       })
       .on('test end', (test) => {
         console.log(
           JSON.stringify({
             event: 'test end',
-            test: this.getResult(test)
-          })
+            test: this.getResult(test),
+          }),
         );
       })
       .once('end', () => {
         console.log(
           JSON.stringify({
             event: 'end',
-            stats
-          })
+            stats,
+          }),
         );
       });
   }
@@ -83,7 +83,7 @@ export class BrowserReporter {
       status: test.isPassed() ? 'passed' : test.isFailed() ? 'failed' : 'pending',
       duration: test.duration,
       speed: test.speed,
-      currentRetry: this.getRetry(fullTitle)
+      currentRetry: this.getRetry(fullTitle),
     };
   }
 }

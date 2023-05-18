@@ -33,12 +33,12 @@ export const DocumentFrame = observer(() => {
             placeholder='Title'
             slots={{
               root: {
-                className: 'w-full pb-8'
+                className: 'w-full pb-8',
               },
               input: {
                 className: 'border-0 text-2xl text-black',
-                spellCheck
-              }
+                spellCheck,
+              },
             }}
             value={document?.title ?? ''}
             onChange={(event) => {
@@ -57,8 +57,8 @@ export const DocumentFrame = observer(() => {
             slots={{
               editor: {
                 className: 'kai-composer',
-                spellCheck
-              }
+                spellCheck,
+              },
             }}
           />
         </div>

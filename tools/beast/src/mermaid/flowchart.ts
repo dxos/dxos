@@ -74,15 +74,15 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
       section(
         Array.from(this._nodes.values())
           .map((node) => Flowchart.renderNode(node).map((str) => line(str, indent + 1)))
-          .flat()
+          .flat(),
       ),
 
       // Recursively render subgraphs.
       section(
         Array.from(this._subGraphs.values())
           .map((subgraph) => ['', subgraph.build(indent + 1)].flat())
-          .flat()
-      )
+          .flat(),
+      ),
     ]
       .filter(Boolean)
       .flat() as string[];
@@ -103,7 +103,7 @@ type FlowchartOptions = {
 
 export const FlowchartDefaultOptions: FlowchartOptions = {
   direction: 'LR',
-  curve: 'basis'
+  curve: 'basis',
 };
 
 /**
@@ -121,8 +121,8 @@ export class Flowchart implements Diagram, SubgraphBuilder {
     this._options = defaultsDeep({}, options, FlowchartDefaultOptions);
     this._config = {
       flowchart: {
-        curve: this._options.curve
-      }
+        curve: this._options.curve,
+      },
     };
   }
 
@@ -148,7 +148,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
     const sections = [
       section(
         'Classes',
-        Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
+        Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef)),
       ),
       section('Nodes', this._root.build()),
       section(
@@ -157,15 +157,15 @@ export class Flowchart implements Diagram, SubgraphBuilder {
           this._options.linkStyle &&
             Flowchart.renderLinkStyle({
               id: 'default',
-              properties: this._options.linkStyle
+              properties: this._options.linkStyle,
             }),
           Array.from(this._links.values())
             .map((link, i) => Flowchart.renderLink(link, i))
-            .flat()
+            .flat(),
         ]
           .filter(Boolean)
-          .flat()
-      )
+          .flat(),
+      ),
     ]
       .filter(Boolean)
       .flat();
@@ -176,7 +176,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
       '',
       `flowchart ${this._options.direction}`,
       ...sections.flat(),
-      '```'
+      '```',
     ].flat() as string[];
   }
 
@@ -238,14 +238,14 @@ export class Flowchart implements Diagram, SubgraphBuilder {
       node.style && Flowchart.renderStyle({ id: node.id, properties: node.style }),
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
-      node.href && `click ${node.id} "${node.href}"`
+      node.href && `click ${node.id} "${node.href}"`,
     ].filter(Boolean) as string[];
   }
 
   static renderLink(link: Link, i: number): string[] {
     return [
       `${link.source} --> ${link.target}`,
-      link.style && Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
+      link.style && Flowchart.renderLinkStyle({ id: String(i), properties: link.style }),
     ].filter(Boolean);
   }
 }

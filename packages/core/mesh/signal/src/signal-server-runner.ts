@@ -47,7 +47,7 @@ export class SignalServerRunner {
     port = 8080,
     timeout = 5_000,
     env = {},
-    shell = false
+    shell = false,
   }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
@@ -65,7 +65,7 @@ export class SignalServerRunner {
       binCommand: this._binCommand,
       signalArguments: this._signalArguments,
       cwd: this._cwd,
-      port: this._port
+      port: this._port,
     });
     if (this._cwd && !fs.existsSync(this._cwd)) {
       throw new Error(`CWD not exists: ${this._cwd}`);
@@ -75,8 +75,8 @@ export class SignalServerRunner {
       shell: this._shell,
       env: {
         ...process.env,
-        ...this._env
-      }
+        ...this._env,
+      },
     });
 
     server.stdout.on('data', (data) => {
@@ -152,7 +152,7 @@ const OS = process.platform;
 // TODO(burdon): Convert to TestBuilder pattern.
 export const runTestSignalServer = async ({
   port,
-  mode = 'server'
+  mode = 'server',
 }: {
   port?: number;
 
@@ -175,7 +175,7 @@ export const runTestSignalServer = async ({
     binCommand: binPath,
     signalArguments: [mode],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
-    port: port ?? randomInt(10000, 50000)
+    port: port ?? randomInt(10000, 50000),
   });
   await server.waitUntilStarted();
   return server;

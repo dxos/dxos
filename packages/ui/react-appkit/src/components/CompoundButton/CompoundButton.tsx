@@ -42,7 +42,7 @@ export const CompoundButton = ({
     'button button--compound',
     styleProps,
     'flex items-center gap-4 plb-2.5',
-    slots.root?.className
+    slots.root?.className,
   );
   return (
     <button
@@ -69,7 +69,7 @@ export const CompoundButton = ({
               'text-xs mbe-1',
               variant === 'primary' ? primaryDescription : defaultDescription,
               isOs ? 'font-system-normal' : 'font-normal',
-              slots.description?.className
+              slots.description?.className,
             )}
           >
             {description}

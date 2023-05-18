@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useMounted } from '../src';
 
 export default {
-  title: 'react-async/unmounted'
+  title: 'react-async/unmounted',
 };
 
 const AsyncComponent = ({ nocheck = false }: { nocheck?: boolean }) => {

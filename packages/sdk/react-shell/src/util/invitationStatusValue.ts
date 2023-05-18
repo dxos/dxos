@@ -18,5 +18,5 @@ export const invitationStatusValue = new Map<Invitation.State, number>([
   [Invitation.State.CONNECTED, 2],
   [Invitation.State.READY_FOR_AUTHENTICATION, 3],
   [Invitation.State.AUTHENTICATING, 4],
-  [Invitation.State.SUCCESS, 5]
+  [Invitation.State.SUCCESS, 5],
 ]);

@@ -22,7 +22,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
   const sharedButtonProps = {
     disabled,
     after: <CaretRight className={getSize(4)} weight='bold' />,
-    slots: { label: { className: 'text-sm' } }
+    slots: { label: { className: 'text-sm' } },
   };
 
   return (

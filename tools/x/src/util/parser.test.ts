@@ -79,7 +79,7 @@ describe('Log parser', () => {
 
     const report: LogReport = {
       jobUrl: 'https://circleci.com/api/v1.1/project/gh/dxos/dxos/3378',
-      sections
+      sections,
     };
 
     const printer = new LogPrinter(console.log, process.cwd());

@@ -26,7 +26,7 @@ export class TextIndex {
     this._minisearch = new MiniSearch({
       idField: 'id',
       fields,
-      extractField: getter
+      extractField: getter,
     });
   }
 
@@ -46,7 +46,7 @@ export class TextIndex {
     if (!results) {
       results = this._minisearch.search(text).map((result) => ({
         ...result,
-        item: this._items.find((item) => item.id === result.id)
+        item: this._items.find((item) => item.id === result.id),
       }));
 
       this._cache.set(text, results);

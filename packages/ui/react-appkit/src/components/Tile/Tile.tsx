@@ -22,7 +22,7 @@ export const DefaultTile: Tile<TypedObject> = {
     <BaseTile label={{ children: data ? data.title : 'Unknown object' }}>
       <pre>{JSON.stringify(data, null, 2)}</pre>
     </BaseTile>
-  )
+  ),
 };
 
 export const TaskListTile: Tile<TaskList> = {
@@ -37,7 +37,7 @@ export const TaskListTile: Tile<TaskList> = {
         ))}
       </ul>
     </BaseTile>
-  )
+  ),
 };
 
 export const TaskTile: Tile<Task> = {
@@ -50,19 +50,19 @@ export const TaskTile: Tile<Task> = {
             <input type='checkbox' checked={data.completed} className='mr-2' disabled />
             {data.title}
           </>
-        )
+        ),
       }}
     >
       {data.description}
     </BaseTile>
-  )
+  ),
 };
 
 export const ALL_CARDS = [
   TaskListTile,
   TaskTile,
   // NOTE: Must be last.
-  DefaultTile
+  DefaultTile,
 ];
 
 export const GenericTile: Tile<TypedObject>['render'] = ({ data }) => {

@@ -17,7 +17,7 @@ export const ServiceWorkerToastContainer = (props: ServiceWorkerToastContainerPr
   const {
     needRefresh: [needRefresh, _setNeedRefresh],
     offlineReady: [offlineReady, _setOfflineReady],
-    updateServiceWorker
+    updateServiceWorker,
   } = props;
 
   return needRefresh ? (

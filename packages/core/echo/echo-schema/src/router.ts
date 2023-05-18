@@ -94,7 +94,7 @@ export class DatabaseRouter {
       unsubscribe: () => {
         unsubscribe();
         subscribed = false;
-      }
+      },
     };
 
     return handle;

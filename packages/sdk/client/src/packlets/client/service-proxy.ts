@@ -46,7 +46,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     await asyncTimeout(
       this._proxy.open(),
       this._timeout,
-      new RemoteServiceConnectionTimeout('Failed to establish dxrpc connection', { timeout: this._timeout })
+      new RemoteServiceConnectionTimeout('Failed to establish dxrpc connection', { timeout: this._timeout }),
     );
   }
 

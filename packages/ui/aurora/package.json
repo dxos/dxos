@@ -18,12 +18,16 @@
     "chromatic": "chromatic --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
   },
   "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-input": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@radix-ui/react-avatar": "^1.0.2",
     "@radix-ui/react-checkbox": "^1.0.3",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-primitive": "^1.0.2",
     "@radix-ui/react-slot": "^1.0.1",
+    "@radix-ui/react-tooltip": "^1.0.5",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "i18next": "^21.10.0",
     "jdenticon": "^3.2.0",
@@ -32,9 +36,6 @@
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-input": "workspace:*",
-    "@dxos/react-list": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

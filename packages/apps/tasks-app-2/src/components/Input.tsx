@@ -34,7 +34,7 @@ export const Input = forwardRef<Ref, InputProps>((props, ref) => {
           'input__input',
           { disabled },
           'block w-full px-2.5 py-2 border-0 bg-transparent dark:bg-transparent',
-          className
+          className,
         )}
         {...rest}
       ></input>

@@ -18,7 +18,7 @@ describe('Invitation utils', () => {
       kind: Invitation.Kind.SPACE,
       authMethod: Invitation.AuthMethod.NONE,
       state: Invitation.State.INIT,
-      swarmKey: PublicKey.random()
+      swarmKey: PublicKey.random(),
     };
 
     const encoded = InvitationEncoder.encode(invitation);
@@ -33,14 +33,14 @@ describe('Invitation utils', () => {
       kind: Invitation.Kind.SPACE,
       authMethod: Invitation.AuthMethod.NONE,
       state: Invitation.State.INIT,
-      swarmKey: PublicKey.random()
+      swarmKey: PublicKey.random(),
     };
 
     const encoded = InvitationEncoder.encode({
       ...invitation,
       authCode: 'example',
       identityKey: PublicKey.random(),
-      spaceKey: PublicKey.random()
+      spaceKey: PublicKey.random(),
     });
     const decoded = InvitationEncoder.decode(encoded);
     expect(decoded.authCode).to.not.exist;

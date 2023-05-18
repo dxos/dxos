@@ -12,7 +12,7 @@ import { ThemeProvider } from '../ThemeProvider';
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 
 export default {
-  component: EditableList
+  component: EditableList,
 } as any;
 
 type EditableListItemData = { id: string; title: string; completed: boolean };
@@ -27,11 +27,11 @@ export const Default = {
           const item = {
             id: `${listId}--listItem-${randomString()}`,
             title: `${listId} item ${index + 1}`,
-            completed: false
+            completed: false,
           };
           acc[item.id] = item;
           return acc;
-        }, {})
+        }, {}),
       );
       const [itemOrder, setItemOrder] = useState(Object.keys(items));
       const updateItem = (id: string, props: Partial<EditableListItemData>) => {
@@ -46,7 +46,7 @@ export const Default = {
           const addedItem = {
             id: `${listId}--listItem-${randomString()}`,
             title: nextItemTitle,
-            completed: false
+            completed: false,
           };
           setItems({ ...items, [addedItem.id]: addedItem });
           setItemOrder([...itemOrder, addedItem.id]);
@@ -62,7 +62,7 @@ export const Default = {
           setItemOrder(nextItemOrder);
           setItems(nextItems);
         },
-        [items, itemOrder]
+        [items, itemOrder],
       );
 
       const onAddItemKeyDown = useCallback(
@@ -73,7 +73,7 @@ export const Default = {
             onListItemInputKeyDown(event);
           }
         },
-        [onListItemInputKeyDown, addItem]
+        [onListItemInputKeyDown, addItem],
       );
 
       return (
@@ -90,7 +90,7 @@ export const Default = {
           slots={{
             root: hostAttrs as ComponentPropsWithoutRef<'div'>,
             addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } },
-            addItemButton: { disabled: nextItemTitle.length < 1 }
+            addItemButton: { disabled: nextItemTitle.length < 1 },
           }}
         >
           {itemOrder.map((id) => {
@@ -106,7 +106,7 @@ export const Default = {
                   onChangeTitle: ({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
                     updateItem(id, { title: value }),
                   completed,
-                  onChangeCompleted: (nextCompleted: boolean) => updateItem(id, { completed: nextCompleted })
+                  onChangeCompleted: (nextCompleted: boolean) => updateItem(id, { completed: nextCompleted }),
                 }}
               />
             );
@@ -122,5 +122,5 @@ export const Default = {
       </ThemeProvider>
     );
   },
-  args: {}
+  args: {},
 };

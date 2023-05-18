@@ -25,7 +25,7 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
 
     const receipt: WriteReceipt = {
       feedKey: this.feedKey,
-      seq: this.messages.length - 1
+      seq: this.messages.length - 1,
     };
 
     await afterWrite?.(receipt);

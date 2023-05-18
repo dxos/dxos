@@ -256,5 +256,5 @@ const _createMeta = (feedKey: PublicKey, seq: number): MutationMetaWithTimeframe
   feedKey,
   memberKey: feedKey,
   seq,
-  timeframe: new Timeframe()
+  timeframe: new Timeframe(),
 });

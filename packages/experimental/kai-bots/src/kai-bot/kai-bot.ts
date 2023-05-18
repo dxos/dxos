@@ -18,7 +18,7 @@ export class KaiBot extends Bot {
   override async onInit() {
     this._chatModel = new ChatModel({
       organization: process.env.COM_OPENAI_ORG_ID ?? getKey(this.config, 'com.openai.org_id')!,
-      apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(this.config, 'com.openai.api_key')!
+      apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(this.config, 'com.openai.api_key')!,
     });
   }
 

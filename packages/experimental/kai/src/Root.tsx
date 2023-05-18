@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { MainOverlay, MainRoot } from '@dxos/aurora';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import {
   AppState,
@@ -15,7 +16,7 @@ import {
   configProvider,
   defaultFrames,
   kaiTranslations,
-  useClientProvider
+  useClientProvider,
 } from '@dxos/kai-framework';
 import { typeModules } from '@dxos/kai-types';
 import { MetagraphClientFake } from '@dxos/metagraph';
@@ -30,7 +31,7 @@ import { osTranslations } from '@dxos/react-shell';
 export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider(initialState.dev ?? false);
   const metagraphContext = {
-    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules])
+    client: new MetagraphClientFake([...botModules, ...frameModules, ...typeModules]),
   };
 
   // TODO(burdon): Factor out config.
@@ -41,14 +42,17 @@ export const Root: FC<PropsWithChildren<{ initialState?: Partial<AppState> }>> =
       rootDensity='fine'
       resourceExtensions={[appkitTranslations, kaiTranslations, osTranslations]}
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider client={clientProvider}>
             <MetagraphProvider value={metagraphContext}>
               <FrameRegistryContextProvider frameDefs={frameDefs}>
                 <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                   <ShellProvider>
-                    <Outlet />
+                    <MainRoot>
+                      <MainOverlay />
+                      <Outlet />
+                    </MainRoot>
                     {children}
                   </ShellProvider>
                 </AppStateProvider>

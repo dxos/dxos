@@ -43,13 +43,13 @@ export const ChatFrame = () => {
       void space?.db.add(
         new Message({
           source: {
-            resolver: 'dxos.module.frame.chat'
+            resolver: 'dxos.module.frame.chat',
           },
           subject: text,
           date: new Date().toISOString(),
           from: new Message.Recipient({ name: username }),
-          ref: `${frame?.module.id}/${objectId}`
-        })
+          ref: `${frame?.module.id}/${objectId}`,
+        }),
       );
     }
   };

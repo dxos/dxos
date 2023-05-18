@@ -33,7 +33,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
         'flex flex-col overflow-hidden first:mt-0 px-2 hover:bg-hover-bg',
         // TODO(burdon): Border based on space properties.
         // 'border-l-[0.25rem]', theme.classes.border,
-        selected && 'z-10 hover:bg-selection-bg bg-selection-bg'
+        selected && 'z-10 hover:bg-selection-bg bg-selection-bg',
       )}
     >
       <div className={mx('flex w-full overflow-hidden px-0 items-center')}>
@@ -42,7 +42,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
           onClick={(event) =>
             onAction({
               action: IntentAction.SPACE_SELECT,
-              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') },
             })
           }
         >
@@ -57,7 +57,7 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
             placeholder={t('space title placeholder')}
             slots={{
               root: { className: 'w-full' },
-              input: { autoFocus: !space.properties.name?.length }
+              input: { autoFocus: !space.properties.name?.length },
             }}
             value={space.properties.name ?? ''}
             onChange={(event) => {
@@ -68,12 +68,12 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
 
         <Button
           variant='ghost'
-          className={mx(selected ? 'flex' : 'invisible')}
+          classNames={[selected ? 'flex' : 'invisible']}
           title='Share space'
           onClick={(event) =>
             onAction({
               action: IntentAction.SPACE_SHARE,
-              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') }
+              data: { spaceKey: space.key, modifier: event.getModifierState('Shift') },
             })
           }
           data-testid='space-share'

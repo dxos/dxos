@@ -24,7 +24,7 @@ const CreateIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
 
   const onNext = useCallback(() => {
@@ -51,7 +51,7 @@ const CreateIdentityPage = () => {
           inputPlaceholder: t('displayName placeholder'),
           onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
-          onBack: () => history.back()
+          onBack: () => history.back(),
         }}
       />
     </main>

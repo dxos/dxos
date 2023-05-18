@@ -24,7 +24,7 @@ export const TodoItem = ({
   onDestroy,
   onCancel,
   onEdit,
-  onSave
+  onSave,
 }: TodoItemProps) => {
   const [editText, setEditText] = useState(title);
 
@@ -52,7 +52,7 @@ export const TodoItem = ({
         handleSubmit();
       }
     },
-    [setEditText, onCancel, handleSubmit]
+    [setEditText, onCancel, handleSubmit],
   );
 
   const handleChange = useCallback(
@@ -60,7 +60,7 @@ export const TodoItem = ({
       const input: any = event.target;
       setEditText(input.value);
     },
-    [setEditText]
+    [setEditText],
   );
 
   return (

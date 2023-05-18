@@ -38,14 +38,14 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
             'button.root',
             'button button--popover-trigger',
             {},
-            'pointer-events-auto flex items-center gap-1'
-          )
-        }
+            'pointer-events-auto flex items-center gap-1',
+          ),
+        },
       }}
       triggerIsInToolbar
     >
       {onClickManageSpace && (
-        <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
+        <Button classNames='flex w-full gap-2' onClick={onClickManageSpace}>
           <Gear className={getSize(5)} />
           <span>{t('manage space label')}</span>
         </Button>

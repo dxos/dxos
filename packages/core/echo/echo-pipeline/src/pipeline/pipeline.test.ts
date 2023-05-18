@@ -46,13 +46,13 @@ describe('pipeline/Pipeline', () => {
                   batch: {
                     objects: [
                       {
-                        objectId: `${feedIdx}-${msgIdx}`
-                      }
-                    ]
-                  }
-                }
-              }
-            })
+                        objectId: `${feedIdx}-${msgIdx}`,
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
           );
         }
       });
@@ -70,11 +70,11 @@ describe('pipeline/Pipeline', () => {
           batch: {
             objects: [
               {
-                objectId: `local-${msgIdx}`
-              }
-            ]
-          }
-        }
+                objectId: `local-${msgIdx}`,
+              },
+            ],
+          },
+        },
       });
     }
 
@@ -188,7 +188,7 @@ describe('pipeline/Pipeline', () => {
                 console.log('empty endtimeframe', {
                   id: agent.id,
                   endTimeframe: agent.pipeline.state.endTimeframe,
-                  feeds: agent.pipeline.getFeeds().map((feed) => [feed.key.toString(), feed.length])
+                  feeds: agent.pipeline.getFeeds().map((feed) => [feed.key.toString(), feed.length]),
                 });
               }
               await asyncTimeout(agent.pipeline.state.waitUntilTimeframe(agent.pipeline.state.endTimeframe), 1000);
@@ -212,15 +212,15 @@ describe('pipeline/Pipeline', () => {
                     messages: agent.messages.length,
                     feeds: agent.pipeline.getFeeds().map((feed) => [feed.key, feed.length]),
                     timeframe: agent.pipeline.state.timeframe,
-                    endTimeframe: agent.pipeline.state.endTimeframe
+                    endTimeframe: agent.pipeline.state.endTimeframe,
                   })),
                   feeds: real.feedStore.feeds.map((feed) => [feed.key, feed.length]),
-                  targets
+                  targets,
                 },
                 false,
                 null,
-                true
-              )
+                true,
+              ),
             );
             throw err;
           }
@@ -254,9 +254,9 @@ describe('pipeline/Pipeline', () => {
         [
           fc.tuple(anAgentId, fc.integer({ min: 1, max: 10 })).map(([agent, count]) => new WriteCommand(agent, count)),
           fc.constant(new SyncCommand()),
-          anAgentId.map((agent) => new RestartCommand(agent))
+          anAgentId.map((agent) => new RestartCommand(agent)),
         ],
-        { size: 'large' }
+        { size: 'large' },
       );
 
       const model = fc.asyncProperty(commands, async (commands) => {
@@ -270,8 +270,8 @@ describe('pipeline/Pipeline', () => {
           model: {},
           real: {
             feedStore,
-            agents
-          }
+            agents,
+          },
         });
 
         try {
@@ -284,7 +284,7 @@ describe('pipeline/Pipeline', () => {
 
       const examples: [commands: Iterable<fc.AsyncCommand<Model, Real, boolean>>][] = [
         [[new WriteCommand(agentIds[0], 10), new WriteCommand(agentIds[1], 10), new SyncCommand()]],
-        [[new WriteCommand(agentIds[0], 4), new RestartCommand(agentIds[0]), new SyncCommand()]]
+        [[new WriteCommand(agentIds[0], 4), new RestartCommand(agentIds[0]), new SyncCommand()]],
       ];
 
       await fc.assert(model, { examples });

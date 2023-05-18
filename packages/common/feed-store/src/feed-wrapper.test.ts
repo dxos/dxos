@@ -90,15 +90,15 @@ describe('FeedWrapper', () => {
     const feed = new FeedWrapper<TestItem>(
       feedFactory.createFeed(key, {
         writable: true,
-        valueEncoding: defaultValueEncoding
+        valueEncoding: defaultValueEncoding,
       }),
-      key
+      key,
     );
 
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await feed.append({
         id: String(i + 1),
-        value: faker.lorem.sentence()
+        value: faker.lorem.sentence(),
       });
     }
 
@@ -116,9 +116,9 @@ describe('FeedWrapper', () => {
     const feed = new FeedWrapper(
       factory.createFeed(key, {
         writable: true,
-        valueEncoding: defaultValueEncoding
+        valueEncoding: defaultValueEncoding,
       }),
-      key
+      key,
     );
 
     // TODO(burdon): Use generator.
@@ -126,7 +126,7 @@ describe('FeedWrapper', () => {
       await sleep(faker.datatype.number({ min: 0, max: 20 }));
       await feed.append({
         id: String(i + 1),
-        value: faker.lorem.sentence()
+        value: faker.lorem.sentence(),
       });
     }
 
@@ -181,7 +181,7 @@ describe('FeedWrapper', () => {
             const block = {
               id: String(i + 1),
               index: i,
-              value: faker.lorem.sentence()
+              value: faker.lorem.sentence(),
             };
 
             const seq = await writer.write(block);

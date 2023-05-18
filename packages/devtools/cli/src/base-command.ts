@@ -27,7 +27,7 @@ import {
   SupervisorRpcPeer,
   SENTRY_DESTINATION,
   TelemetryContext,
-  TELEMETRY_API_KEY
+  TELEMETRY_API_KEY,
 } from './util';
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
@@ -60,14 +60,14 @@ export abstract class BaseCommand extends Command {
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
       default: async (context: any) => join(context.config.configDir, 'dx.yml'),
-      aliases: ['c']
+      aliases: ['c'],
     }),
 
     timeout: Flags.integer({
       description: 'Timeout in seconds',
       default: 30,
-      aliases: ['t']
-    })
+      aliases: ['t'],
+    }),
 
     // TODO(mykola): Implement JSON args.
   };
@@ -119,8 +119,8 @@ export abstract class BaseCommand extends Command {
         sampleRate: 1.0,
         scrubFilenames: mode !== 'full',
         properties: {
-          group
-        }
+          group,
+        },
       });
     }
 
@@ -130,7 +130,7 @@ export abstract class BaseCommand extends Command {
       Telemetry.init({
         apiKey: TELEMETRY_API_KEY,
         batchSize: 20,
-        enable: Boolean(TELEMETRY_API_KEY) && mode !== 'disabled'
+        enable: Boolean(TELEMETRY_API_KEY) && mode !== 'disabled',
       });
     }
 
@@ -154,7 +154,7 @@ export abstract class BaseCommand extends Command {
     const configExists = await exists(configFile);
     const configContent = await readFile(
       configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
-      'utf-8'
+      'utf-8',
     );
     if (!configExists) {
       void writeFile(configFile, configContent, 'utf-8');
@@ -185,8 +185,8 @@ export abstract class BaseCommand extends Command {
       properties: {
         ...this._telemetryContext,
         status: this._failing ? 'failure' : 'success',
-        duration: endTime.getTime() - this._startTime.getTime()
-      }
+        duration: endTime.getTime() - this._startTime.getTime(),
+      },
     });
   }
 
@@ -287,7 +287,7 @@ export abstract class BaseCommand extends Command {
 
     this._telemetryContext = {
       ...this._telemetryContext,
-      ...values
+      ...values,
     };
   }
 }

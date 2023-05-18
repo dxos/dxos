@@ -30,18 +30,18 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   public remoteWantList = new Set<string>();
 
   constructor(
-    private readonly _syncParams: ObjectSyncExtensionParams // to not conflict with the base class
+    private readonly _syncParams: ObjectSyncExtensionParams, // to not conflict with the base class
   ) {
     super({
       exposed: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
       },
       requested: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
       },
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
   }
 
@@ -66,8 +66,8 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
         push: async (data) => {
           log('received', { data });
           await this._syncParams.onPush(data);
-        }
-      }
+        },
+      },
     };
   }
 

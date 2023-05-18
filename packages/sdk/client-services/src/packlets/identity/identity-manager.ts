@@ -58,7 +58,7 @@ export class IdentityManager {
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _spaceManager: SpaceManager
+    private readonly _spaceManager: SpaceManager,
   ) {}
 
   get identity() {
@@ -78,7 +78,7 @@ export class IdentityManager {
       await this._identity.ready();
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
-        displayName: this._identity.profileDocument?.displayName
+        displayName: this._identity.profileDocument?.displayName,
       });
       this.stateUpdate.emit();
     }
@@ -101,8 +101,8 @@ export class IdentityManager {
         key: await this._keyring.createKey(),
         genesisFeedKey: controlFeedKey,
         controlFeedKey,
-        dataFeedKey: await this._keyring.createKey()
-      }
+        dataFeedKey: await this._keyring.createKey(),
+      },
     };
 
     const identity = await this._constructIdentity(identityRecord);
@@ -120,8 +120,8 @@ export class IdentityManager {
         await generator.createFeedAdmission(
           identityRecord.haloSpace.key,
           identityRecord.haloSpace.dataFeedKey,
-          AdmittedFeed.Designation.DATA
-        )
+          AdmittedFeed.Designation.DATA,
+        ),
       ];
 
       if (displayName) {
@@ -134,7 +134,7 @@ export class IdentityManager {
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          credential: { credential }
+          credential: { credential },
         });
       }
     }
@@ -148,7 +148,7 @@ export class IdentityManager {
     await this._identity.ready();
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
-      displayName: this._identity.profileDocument?.displayName
+      displayName: this._identity.profileDocument?.displayName,
     });
     this.stateUpdate.emit();
 
@@ -171,8 +171,8 @@ export class IdentityManager {
         genesisFeedKey: params.haloGenesisFeedKey,
         controlFeedKey: params.controlFeedKey,
         dataFeedKey: params.dataFeedKey,
-        controlTimeframe: params.controlTimeframe
-      }
+        controlTimeframe: params.controlTimeframe,
+      },
     };
     const identity = await this._constructIdentity(identityRecord);
 
@@ -182,7 +182,7 @@ export class IdentityManager {
     await this._identity.ready();
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
-      displayName: this._identity.profileDocument?.displayName
+      displayName: this._identity.profileDocument?.displayName,
     });
 
     this.stateUpdate.emit();
@@ -197,7 +197,7 @@ export class IdentityManager {
     // Must be created before the space so the feeds are writable.
     assert(identityRecord.haloSpace.controlFeedKey);
     const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.controlFeedKey, {
-      writable: true
+      writable: true,
     });
     assert(identityRecord.haloSpace.dataFeedKey);
     const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, { writable: true });
@@ -207,9 +207,9 @@ export class IdentityManager {
       swarmIdentity: {
         peerKey: identityRecord.deviceKey,
         credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
-        credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)
+        credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
       },
-      identityKey: identityRecord.identityKey
+      identityKey: identityRecord.identityKey,
     });
     space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
@@ -218,7 +218,7 @@ export class IdentityManager {
       space,
       signer: this._keyring,
       identityKey: identityRecord.identityKey,
-      deviceKey: identityRecord.deviceKey
+      deviceKey: identityRecord.deviceKey,
     });
     log('done', { identityKey: identityRecord.identityKey });
 
@@ -234,10 +234,10 @@ export class IdentityManager {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.key,
-        genesisFeedKey: spaceRecord.genesisFeedKey
+        genesisFeedKey: spaceRecord.genesisFeedKey,
       },
       swarmIdentity,
-      onNetworkConnection: () => {}
+      onNetworkConnection: () => {},
     });
   }
 }

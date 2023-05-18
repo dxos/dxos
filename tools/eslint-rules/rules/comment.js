@@ -35,7 +35,7 @@ const FORMATTED_TODO_PATTERN = new RegExp(/^\s/.source + TODO_REMOVE_PATTERN.sou
  * This can be used in a few different ways in the actual schema.
  */
 const DEFAULTS = {
-  ignorePattern: 'ignore|code'
+  ignorePattern: 'ignore|code',
 };
 
 /**
@@ -61,7 +61,7 @@ const getNormalizedOptions = (rawOptions, which) => Object.assign({}, DEFAULTS, 
  */
 const getAllNormalizedOptions = (rawOptions = {}) => ({
   Line: getNormalizedOptions(rawOptions, 'line'),
-  Block: getNormalizedOptions(rawOptions, 'block')
+  Block: getNormalizedOptions(rawOptions, 'block'),
 });
 
 /**
@@ -94,10 +94,10 @@ module.exports = {
 
     docs: {
       description: 'enforce proper comment format',
-      url: 'https://github.com/dxos/eng/blob/main/docs/content/general/writing-code.md#comments'
+      url: 'https://github.com/dxos/eng/blob/main/docs/content/general/writing-code.md#comments',
     },
 
-    schema: []
+    schema: [],
   },
 
   create: (context) => {
@@ -206,7 +206,7 @@ module.exports = {
         context.report({
           node: null, // Intentionally using loc instead
           loc: comment.loc,
-          message: 'Comments must be formatted correctly'
+          message: 'Comments must be formatted correctly',
         });
       }
     };
@@ -220,7 +220,7 @@ module.exports = {
         const comments = sourceCode.getAllComments();
 
         comments.filter((token) => token.type !== 'Shebang').forEach(processComment);
-      }
+      },
     };
-  }
+  },
 };

@@ -24,5 +24,5 @@ export const StackFrameRuntime: FrameRuntime<DocumentStack> = {
     const section = new DocumentStack.Section({ object: new Document() });
     stack.sections.push(section);
     return space.db.add(stack);
-  }
+  },
 };

@@ -31,7 +31,7 @@ const initialState: Partial<AppState> = {
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA)
+  pwa: bool(import.meta.env.VITE_PWA),
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 
@@ -43,12 +43,12 @@ const PWA = () => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err: any) => {
       captureException(err);
       log.error(err);
-    }
+    },
   });
 
   return needRefresh ? (

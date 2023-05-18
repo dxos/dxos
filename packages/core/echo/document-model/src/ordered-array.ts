@@ -21,7 +21,7 @@ const encodeValue = (value: any): any => {
     return Object.fromEntries(
       Object.entries(value).map(([key, value]) => {
         return [key, encodeValue(value)];
-      })
+      }),
     );
   }
   return value;
@@ -37,7 +37,7 @@ const decodeValue = (value: any): any => {
     return Object.fromEntries(
       Object.entries(value).map(([key, value]) => {
         return [key, decodeValue(value)];
-      })
+      }),
     );
   }
   return value;
@@ -87,7 +87,7 @@ export class OrderedArray {
   encodeSnapshot(): YJS {
     return {
       id: new Uint8Array(),
-      payload: Y.encodeStateAsUpdateV2(this.doc)
+      payload: Y.encodeStateAsUpdateV2(this.doc),
     };
   }
 
@@ -104,7 +104,7 @@ export class OrderedArray {
     const cb = (update: any) => {
       updateReceived = {
         id: new Uint8Array(),
-        payload: update
+        payload: update,
       };
     };
 
@@ -123,7 +123,7 @@ export class OrderedArray {
       // The transaction was a no-op.
       return {
         id: new Uint8Array(),
-        payload: new Uint8Array()
+        payload: new Uint8Array(),
       };
     }
   }

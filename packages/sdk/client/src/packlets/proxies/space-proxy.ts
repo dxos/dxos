@@ -10,7 +10,7 @@ import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback 
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -121,11 +121,7 @@ export class SpaceProxy implements Space {
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  // TODO(dmaretskyi): Cache properties in the metadata.
-  private _cachedProperties = new Properties({
-    name: 'Loading...'
-  });
-
+  private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
   // prettier-ignore
@@ -156,6 +152,11 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+
+    this._cachedProperties = new Properties({}, { readOnly: true });
+    if (this._data.cache?.properties) {
+      setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
+    }
   }
 
   get key() {
@@ -347,7 +348,7 @@ export class SpaceProxy implements Space {
     await this._clientServices.services.SpacesService.postMessage({
       spaceKey: this.key,
       channel,
-      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' }
+      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
     });
   }
 

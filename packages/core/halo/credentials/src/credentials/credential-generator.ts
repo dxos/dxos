@@ -20,7 +20,7 @@ export class CredentialGenerator {
   constructor(
     private readonly _signer: Signer,
     private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey
+    private readonly _deviceKey: PublicKey,
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class CredentialGenerator {
   async createSpaceGenesis(
     spaceKey: PublicKey,
     controlKey: PublicKey,
-    creatorProfile?: ProfileDocument
+    creatorProfile?: ProfileDocument,
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -38,8 +38,8 @@ export class CredentialGenerator {
         subject: spaceKey,
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceGenesis',
-          spaceKey
-        }
+          spaceKey,
+        },
       }),
 
       await createCredential({
@@ -51,11 +51,11 @@ export class CredentialGenerator {
           spaceKey,
           role: SpaceMember.Role.ADMIN,
           profile: creatorProfile,
-          genesisFeedKey: controlKey
-        }
+          genesisFeedKey: controlKey,
+        },
       }),
 
-      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL)
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
     ];
   }
 
@@ -70,7 +70,7 @@ export class CredentialGenerator {
     deviceKey: PublicKey,
     controlKey: PublicKey,
     dataKey: PublicKey,
-    genesisFeedKey: PublicKey
+    genesisFeedKey: PublicKey,
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -81,12 +81,12 @@ export class CredentialGenerator {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.MEMBER,
-          genesisFeedKey
-        }
+          genesisFeedKey,
+        },
       }),
 
       await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA)
+      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA),
     ];
   }
 
@@ -102,8 +102,8 @@ export class CredentialGenerator {
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
         identityKey: this._identityKey,
-        deviceKey
-      }
+        deviceKey,
+      },
     });
   }
 
@@ -113,7 +113,7 @@ export class CredentialGenerator {
   async createFeedAdmission(
     spaceKey: PublicKey,
     feedKey: PublicKey,
-    designation: AdmittedFeed.Designation
+    designation: AdmittedFeed.Designation,
   ): Promise<Credential> {
     return createCredential({
       signer: this._signer,
@@ -124,8 +124,8 @@ export class CredentialGenerator {
         spaceKey,
         identityKey: this._identityKey,
         deviceKey: this._deviceKey,
-        designation
-      }
+        designation,
+      },
     });
   }
 
@@ -136,8 +136,8 @@ export class CredentialGenerator {
       subject: this._identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile
-      }
+        profile,
+      },
     });
   }
 }
@@ -146,7 +146,7 @@ export class CredentialGenerator {
 export const createDeviceAuthorization = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
-  deviceKey: PublicKey
+  deviceKey: PublicKey,
 ): Promise<TypedMessage[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -154,14 +154,14 @@ export const createDeviceAuthorization = async (
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
         identityKey,
-        deviceKey
-      }
-    })
+        deviceKey,
+      },
+    }),
   ]);
 
   return credentials.map((credential) => ({
     '@type': 'dxos.echo.feed.CredentialsMessage',
-    credential
+    credential,
   }));
 };
 
@@ -171,7 +171,7 @@ export const createAdmissionCredentials = async (
   identityKey: PublicKey,
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
-  profile?: ProfileDocument
+  profile?: ProfileDocument,
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -181,12 +181,12 @@ export const createAdmissionCredentials = async (
         spaceKey,
         role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
         profile,
-        genesisFeedKey
-      }
-    })
+        genesisFeedKey,
+      },
+    }),
   ]);
 
   return credentials.map((credential) => ({
-    credential: { credential }
+    credential: { credential },
   }));
 };

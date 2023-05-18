@@ -31,8 +31,8 @@ export const TaskList = observer((props: TaskListProps) => {
         list.tasks ||= [];
         list.tasks.push(
           new Expando({
-            type: 'task'
-          })
+            type: 'task',
+          }),
         );
       }}
     />

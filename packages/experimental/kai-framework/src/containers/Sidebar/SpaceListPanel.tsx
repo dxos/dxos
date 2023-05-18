@@ -67,7 +67,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
 
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Create new space'
           data-testid='sidebar.createSpace'
           onClick={handleCreateSpace}
@@ -77,7 +77,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
         </Button>
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Join a space'
           data-testid='sidebar.joinSpace'
           onClick={handleJoinSpace}
@@ -87,7 +87,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
         </Button>
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Close settings'
           data-testid='sidebar.closeSettings'
           onClick={onClose}

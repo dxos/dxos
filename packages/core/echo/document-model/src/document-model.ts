@@ -38,7 +38,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
   snapshot(): ObjectSnapshot {
     return {
       root: ValueUtil.createMessage(this._object.data),
-      type: this._object.type
+      type: this._object.type,
     };
   }
 }
@@ -70,7 +70,7 @@ export class MutationBuilder {
     this._mutations.push({
       operation: ObjectMutation.Operation.YJS,
       key,
-      mutation
+      mutation,
     });
 
     return this;
@@ -131,7 +131,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     type: 'dxos:model/document',
     stateMachine: () => new DocumentModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
-    snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot'),
   };
 
   get type() {
@@ -157,7 +157,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
   async set(key: string, value: unknown) {
     validateKey(key);
     await this._makeMutation({
-      mutations: [MutationUtil.createFieldMutation(key, value)]
+      mutations: [MutationUtil.createFieldMutation(key, value)],
     });
   }
 
@@ -183,7 +183,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
   // TODO(burdon): Remove.
   async setProperties(properties: any) {
     await this._makeMutation({
-      mutations: MutationUtil.createMultiFieldMutation(properties)
+      mutations: MutationUtil.createMultiFieldMutation(properties),
     });
   }
 
@@ -193,9 +193,9 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
         {
           operation: ObjectMutation.Operation.SET_ADD,
           key,
-          value: ValueUtil.createMessage(value)
-        }
-      ]
+          value: ValueUtil.createMessage(value),
+        },
+      ],
     });
   }
 
@@ -205,9 +205,9 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
         {
           operation: ObjectMutation.Operation.SET_DELETE,
           key,
-          value: ValueUtil.createMessage(value)
-        }
-      ]
+          value: ValueUtil.createMessage(value),
+        },
+      ],
     });
   }
 
@@ -217,9 +217,9 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
         {
           operation: ObjectMutation.Operation.ARRAY_PUSH,
           key,
-          value: ValueUtil.createMessage(value)
-        }
-      ]
+          value: ValueUtil.createMessage(value),
+        },
+      ],
     });
   }
 

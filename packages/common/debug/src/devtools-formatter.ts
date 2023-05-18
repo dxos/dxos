@@ -58,7 +58,7 @@ const register = () => {
         }
 
         return formatter.body();
-      }
+      },
     });
   }
 };

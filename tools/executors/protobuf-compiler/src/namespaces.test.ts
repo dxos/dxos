@@ -20,6 +20,6 @@ test('split namespaces', async () => {
   const namespaces = splitSchemaIntoNamespaces(root);
 
   expect(Array.from(namespaces.keys()).sort()).toEqual(
-    ['example.testing.any', 'example.testing.types', 'example.testing.util', 'google.protobuf'].sort()
+    ['example.testing.any', 'example.testing.types', 'example.testing.util', 'google.protobuf'].sort(),
   );
 });

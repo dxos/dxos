@@ -26,7 +26,7 @@ export const until = <T = void>(cb: UntilCallback<T>, timeout?: number): Promise
           (error: Error) => {
             t && clearTimeout(t);
             reject(error);
-          }
+          },
         );
       } catch (err) {
         reject(err);

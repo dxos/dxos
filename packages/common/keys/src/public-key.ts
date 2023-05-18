@@ -211,12 +211,12 @@ export class PublicKey implements Equatable {
       'blueBright',
       'magentaBright',
       'cyanBright',
-      'whiteBright'
+      'whiteBright',
     ];
     const color = colors[this.getInsecureHash(colors.length)];
 
     return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(
-      inspect.colors.reset![0]
+      inspect.colors.reset![0],
     )})`;
   }
 
@@ -237,7 +237,7 @@ export class PublicKey implements Equatable {
           'blue',
           'magenta',
           'darkcyan',
-          'black'
+          'black',
         ];
         const color = colors[this.getInsecureHash(colors.length)];
 
@@ -246,9 +246,9 @@ export class PublicKey implements Equatable {
           {},
           ['span', {}, 'PublicKey('],
           ['span', { style: `color: ${color};` }, this.truncate()],
-          ['span', {}, ')']
+          ['span', {}, ')'],
         ];
-      }
+      },
     };
   }
 

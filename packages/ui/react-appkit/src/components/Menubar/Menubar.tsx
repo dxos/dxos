@@ -39,7 +39,7 @@ export const Menubar = ({ children }: MenubarProps) => {
         className={mx(
           'fixed inset-inline-0 block-start-0 z-[2] transition-[backdrop-filter,background-color]',
           'flex items-center gap-x-2 gap-y-4 pli-4 bs-16',
-          atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20'
+          atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20',
         )}
       >
         {children}

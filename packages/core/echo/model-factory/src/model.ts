@@ -21,7 +21,7 @@ export abstract class Model<TState = any, TMutation = any> {
     private readonly _meta: ModelMeta,
     private readonly _itemId: ItemID,
     protected readonly _getState: () => TState,
-    private readonly _mutationWriter?: MutationWriter<TMutation>
+    private readonly _mutationWriter?: MutationWriter<TMutation>,
   ) {}
 
   toString() {
@@ -31,7 +31,7 @@ export abstract class Model<TState = any, TMutation = any> {
   toJSON() {
     return {
       id: this.itemId,
-      type: this._meta.type
+      type: this._meta.type,
     };
   }
 
