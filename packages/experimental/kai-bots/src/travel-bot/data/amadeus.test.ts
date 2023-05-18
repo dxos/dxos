@@ -19,7 +19,7 @@ describe.skip('amadeus', () => {
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
     amadeus = new Amadeus({
       clientId: getKey(config, 'com.amadeus.client_id')!,
-      clientSecret: getKey(config, 'com.amadeus.client_secret')!
+      clientSecret: getKey(config, 'com.amadeus.client_secret')!,
     });
   });
 
@@ -52,32 +52,32 @@ describe.skip('amadeus', () => {
           originLocationCode: origin,
           destinationLocationCode: destination,
           departureDateTimeRange: {
-            date: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' })
-          }
+            date: formatISO9075(add(Date.now(), { days: 7 }), { representation: 'date' }),
+          },
         },
         {
           id: '2',
           originLocationCode: destination,
           destinationLocationCode: origin,
           departureDateTimeRange: {
-            date: formatISO9075(add(Date.now(), { days: 14 }), { representation: 'date' })
-          }
-        }
+            date: formatISO9075(add(Date.now(), { days: 14 }), { representation: 'date' }),
+          },
+        },
       ],
       travelers: [
         {
           id: '1',
-          travelerType: 'ADULT'
-        }
+          travelerType: 'ADULT',
+        },
       ],
       searchCriteria: {
         flightFilters: {
           cabinRestrictions: [{ cabin: 'BUSINESS', originDestinationIds: ['1', '2'] }],
           carrierRestrictions: {
-            includedCarrierCodes: ['AF']
-          }
-        }
-      }
+            includedCarrierCodes: ['AF'],
+          },
+        },
+      },
     };
 
     // TODO(burdon): Filter for nonstop.

@@ -41,20 +41,20 @@ export class GossipExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService')
+        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
       },
       exposed: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService')
+        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
       },
       handlers: {
         GossipService: {
           announce: async (message: GossipMessage) => {
             log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onAnnounce?.(message);
-          }
-        }
+          },
+        },
       },
-      port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
+      port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' }),
     });
     await this._rpc.open();
     this._opened.wake();

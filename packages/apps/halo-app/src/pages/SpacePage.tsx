@@ -18,7 +18,7 @@ const SpacePage = () => {
   const members = useMembers(spaceKey);
   const memberProfiles = useMemo(
     () => members.map(({ identity }) => identity).filter((identity): identity is Identity => !!identity),
-    [members]
+    [members],
   );
 
   return (

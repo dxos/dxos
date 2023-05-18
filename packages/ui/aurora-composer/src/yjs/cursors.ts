@@ -14,7 +14,7 @@ const cursorColors = [
   { color: '#ee6352', light: '#ee635233' },
   { color: '#9ac2c9', light: '#9ac2c933' },
   { color: '#8acb88', light: '#8acb8833' },
-  { color: '#1be7ff', light: '#1be7ff33' }
+  { color: '#1be7ff', light: '#1be7ff33' },
 ];
 
 // Select a random color for this user.

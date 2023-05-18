@@ -16,10 +16,10 @@ export const createAuthProvider =
   async (nonce) => {
     const credential = await signer.createCredential({
       assertion: {
-        '@type': 'dxos.halo.credentials.Auth'
+        '@type': 'dxos.halo.credentials.Auth',
       },
       subject: signer.getIssuer(),
-      nonce
+      nonce,
     });
 
     return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);

@@ -22,10 +22,10 @@ const JsonTreeBranch = ({ data, prefix }: JsonTreeNodeProps) => {
         return (
           <TreeItem key={id} id={id} collapsible={!valueIsScalar}>
             {valueIsScalar ? (
-              <TreeItemHeading className='flex items-center'>{String(value)}</TreeItemHeading>
+              <TreeItemHeading classNames='flex items-center'>{String(value)}</TreeItemHeading>
             ) : (
               <>
-                <TreeItemHeading className='flex items-center'>{key}</TreeItemHeading>
+                <TreeItemHeading classNames='flex items-center'>{key}</TreeItemHeading>
                 <TreeItemBody asChild>
                   <TreeBranch>
                     <JsonTreeBranch data={value} prefix={id} />

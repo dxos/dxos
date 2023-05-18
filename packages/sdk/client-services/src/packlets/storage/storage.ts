@@ -16,7 +16,7 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     storageType,
     keyStorage,
-    persistent = false
+    persistent = false,
   } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
@@ -35,8 +35,8 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   return {
     storage: createStorage({
       type: persistent ? toStorageType(storageType) : StorageType.RAM,
-      root: `${path}/`
-    })
+      root: `${path}/`,
+    }),
   };
 };
 

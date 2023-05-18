@@ -12,7 +12,7 @@ test.describe('Smoke test', () => {
   test('connects to shared worker', async ({ browser }) => {
     await setupPage(browser, {
       url: 'http://localhost:5173/src/testing',
-      waitFor: async (page) => page.isVisible(':text("Success!")')
+      waitFor: async (page) => page.isVisible(':text("Success!")'),
     });
   });
 });

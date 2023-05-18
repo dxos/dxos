@@ -15,7 +15,7 @@ export type Logger = (message?: string, ...args: any[]) => void;
 export const mapModules = (modules: PackageModule[]) => {
   return modules.map((mod) => ({
     key: mod.name,
-    bundle: CID.decode(mod.bundle!).toString()
+    bundle: CID.decode(mod.bundle!).toString(),
   }));
 };
 
@@ -23,7 +23,7 @@ export const mapTunnels = (tunnels: TunnelResponse[]) => {
   return tunnels.map((tunnel) => ({
     key: tunnel.name,
     enabled: tunnel.enabled,
-    url: tunnel.url
+    url: tunnel.url,
   }));
 };
 
@@ -32,15 +32,15 @@ export const printModules = (modules: PackageModule[], flags = {}) => {
     mapModules(modules),
     {
       key: {
-        header: 'Name'
+        header: 'Name',
       },
       bundle: {
-        header: 'Bundle'
-      }
+        header: 'Bundle',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };
 
@@ -49,17 +49,17 @@ export const printTunnels = (tunnels: TunnelResponse[], flags = {}) => {
     mapTunnels(tunnels),
     {
       key: {
-        header: 'App'
+        header: 'App',
       },
       enabled: {
-        header: 'Enabled'
+        header: 'Enabled',
       },
       url: {
-        header: 'URL'
-      }
+        header: 'URL',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };

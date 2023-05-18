@@ -22,7 +22,7 @@ const config = {
   // Menubar with OSX notch is 40.
   // TODO(burdon): Detect OS.
   margin: parseInt(process.env.TEST_MARGIN ?? '24'),
-  spacing: parseInt(process.env.TEST_SPACING ?? '8')
+  spacing: parseInt(process.env.TEST_SPACING ?? '8'),
 };
 
 /**
@@ -36,8 +36,8 @@ const createLaunchers = () => {
     (bounds) =>
       new Launcher(config.baseUrl, chromium, {
         headless: false,
-        args: Launcher.createPositionalArgs(bounds)
-      })
+        args: Launcher.createPositionalArgs(bounds),
+      }),
   );
 };
 
@@ -49,7 +49,7 @@ const test = async () => {
     launchers.map(async (launcher) => {
       await launcher.open();
       await launcher.page.goto(launcher.url('/'));
-    })
+    }),
   );
 
   // afterTest(async () => {

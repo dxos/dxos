@@ -15,8 +15,8 @@ export default class List extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     type: Flags.string({
-      description: 'Type'
-    })
+      description: 'Type',
+    }),
   };
 
   async run(): Promise<any> {

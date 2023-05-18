@@ -11,5 +11,5 @@ const TaskFrame = React.lazy(() => import('./TaskFrame'));
 
 export const TaskFrameRuntime: FrameRuntime<any> = {
   Icon: TaskIcon,
-  Component: TaskFrame
+  Component: TaskFrame,
 };

@@ -12,9 +12,9 @@ const defaultFlightQuery: Partial<FlightQuery> = {
   travelers: [
     {
       id: '1',
-      travelerType: 'ADULT'
-    }
-  ]
+      travelerType: 'ADULT',
+    },
+  ],
 };
 
 // TODO(burdon): Builder pattern?

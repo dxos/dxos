@@ -310,7 +310,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   toJSON() {
     return {
-      listenerCount: this.listenerCount()
+      listenerCount: this.listenerCount(),
     };
   }
 

@@ -67,10 +67,10 @@ export class ShellRuntimeImpl implements ShellRuntime {
             this._invitationCode = request.invitationCode;
             this._spaceKey = request.spaceKey;
             this.layoutUpdate.emit(request);
-          }
-        }
+          },
+        },
       },
-      port: this._port
+      port: this._port,
     });
 
     await this._appRpc.open();

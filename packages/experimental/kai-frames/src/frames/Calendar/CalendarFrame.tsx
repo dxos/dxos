@@ -30,11 +30,11 @@ const mapEvents = (event: EventType) => ({
   title: event.title,
   start: new Date(event.start),
   end: new Date(event.end),
-  resource: event
+  resource: event,
 });
 
 const locales = {
-  'en-US': enUS
+  'en-US': enUS,
 };
 
 const localizer = dateFnsLocalizer({
@@ -42,14 +42,14 @@ const localizer = dateFnsLocalizer({
   parse,
   startOfWeek,
   getDay,
-  locales
+  locales,
 });
 
 const views = [
   { view: Views.MONTH, Icon: GridFour },
   { view: Views.WEEK, Icon: SquareHalf },
   { view: Views.DAY, Icon: Article },
-  { view: Views.AGENDA, Icon: Tray }
+  { view: Views.AGENDA, Icon: Tray },
 ];
 
 /**
@@ -81,15 +81,15 @@ export const CalendarFrame = () => {
               ))}
             </div>
           </div>
-        )
+        ),
       },
 
       // TODO(burdon): Remove time (currently via CSS).
       event: ({ event }: { event: Event }) => {
         return <div>{event.title}</div>;
-      }
+      },
     }),
-    []
+    [],
   );
 
   return (
@@ -106,7 +106,7 @@ export const CalendarFrame = () => {
             <Button
               key={v}
               variant='ghost'
-              className={mx('text-gray-300', v === view && 'text-gray-700')}
+              classNames={['text-gray-300', v === view && 'text-gray-700']}
               onClick={() => setView(v)}
             >
               <Icon weight='light' className={getSize(6)} />

@@ -80,12 +80,12 @@ export class NotarizationPlugin implements CredentialProcessor {
     credentials,
     timeout = DEFAULT_NOTARIZE_TIMEOUT,
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
-    successDelay = DEFAULT_SUCCESS_DELAY
+    successDelay = DEFAULT_SUCCESS_DELAY,
   }: NotarizeParams) {
     log('notarize', { credentials });
     assert(
       credentials.every((credential) => credential.id),
-      'Credentials must have an id'
+      'Credentials must have an id',
     );
 
     const errors = new Trigger();
@@ -94,7 +94,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         log.warn('Notarization error', { err });
         void ctx.dispose();
         errors.throw(err);
-      }
+      },
     });
     opCtx?.onDispose(() => ctx.dispose());
 
@@ -105,12 +105,12 @@ export class NotarizationPlugin implements CredentialProcessor {
         () => {
           log.warn('Notarization timeout', {
             timeout,
-            peers: Array.from(this._extensions).map((extension) => extension.remotePeerId)
+            peers: Array.from(this._extensions).map((extension) => extension.remotePeerId),
           });
           void ctx.dispose();
           errors.throw(new TimeoutError(timeout, 'Notarization timed out'));
         },
-        timeout
+        timeout,
       );
     }
 
@@ -137,7 +137,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         peersTried.add(peer);
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
         await peer.rpc.NotarizationService.notarize({
-          credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!))
+          credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!)),
         });
         log('success');
         await sleep(successDelay); // wait before trying with a new peer
@@ -209,7 +209,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         log('extension closed', { peer: extension.localPeerId });
         this._extensions.delete(extension);
       },
-      onNotarize: this._onNotarize.bind(this)
+      onNotarize: this._onNotarize.bind(this),
     });
     return extension;
   }
@@ -225,11 +225,11 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
   constructor(private readonly _params: NotarizationTeleportExtensionParams) {
     super({
       requested: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService')
+        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
       },
       exposed: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService')
-      }
+        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
+      },
     });
   }
 
@@ -238,8 +238,8 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
       NotarizationService: {
         notarize: async (request) => {
           await this._params.onNotarize(request);
-        }
-      }
+        },
+      },
     };
   }
 

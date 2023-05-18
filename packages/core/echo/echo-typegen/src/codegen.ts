@@ -57,7 +57,7 @@ export const createType = (field: pb.Field): string => {
       }
 
       return stringifyFullyQualifiedName(
-        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!))
+        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!)),
       );
     } else {
       switch (field.type) {
@@ -190,8 +190,8 @@ export const createObjectClass = (type: pb.Type) => {
       return ${name}.type.createFilter(opts);
       }
 
-      constructor(opts?: Partial<${name}Props>) {
-        super({ ...opts}, ${name}.type);
+      constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOpts) {
+        super({ ...initValues}, ${name}.type, opts);
       }
       ${fields}
     }

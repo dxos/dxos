@@ -21,7 +21,7 @@ export const useSwipeToDismiss = (
   onDismiss: () => void,
   distanceBeforeDismiss = 100,
   direction = 'right',
-  offset = 0
+  offset = 0,
 ) => {
   const node = ref.current;
   const directionValue = direction === 'right' ? 1 : -1;
@@ -77,7 +77,7 @@ export const useSwipeToDismiss = (
         setPositionLeft(nextPositionLeft);
       }
     },
-    [removing, pressedPosition, direction, node, remove]
+    [removing, pressedPosition, direction, node, remove],
   );
 
   const onMouseDown = useCallback((event: MouseEvent | TouchEvent) => {

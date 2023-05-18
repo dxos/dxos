@@ -7,12 +7,12 @@ import '@dxosTheme';
 import { QrCode } from './QrCode';
 
 export default {
-  component: QrCode
+  component: QrCode,
 };
 
 export const Default = {
   args: {
     label: 'Click to copy this code’s value',
-    value: 'https://dxos.org'
-  }
+    value: 'https://dxos.org',
+  },
 };

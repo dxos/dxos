@@ -43,8 +43,8 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 2, max: 5 },
-      messages: { min: 5, max: 10 }
-    }
+      messages: { min: 5, max: 10 },
+    },
   ) {}
 
   async generate() {
@@ -59,11 +59,11 @@ export class Generator {
           city: city.name,
           coordinates: {
             lat: city.coordinates[1],
-            lng: city.coordinates[0]
+            lng: city.coordinates[0],
           },
           // TODO(mykola): Add zip and state.
           state: 'NY',
-          zip: '11205'
+          zip: '11205',
         };
 
         // Projects.
@@ -80,16 +80,16 @@ export class Generator {
                 const task = await this.createTask();
                 task.completed = faker.datatype.boolean();
                 return task;
-              })
+              }),
             );
 
             tasks.forEach((task: Task) => project.tasks.push(task));
             return project;
-          })
+          }),
         );
 
         return organization;
-      })
+      }),
     );
 
     // Contacts.
@@ -103,7 +103,7 @@ export class Generator {
         }
 
         return contact;
-      })
+      }),
     );
 
     // Events.
@@ -112,7 +112,7 @@ export class Generator {
         const event = await this.createEvent();
         event.members.push(...faker.random.arrayElements(contacts, faker.datatype.number(2)));
         return event;
-      })
+      }),
     );
 
     // Documents.
@@ -123,7 +123,7 @@ export class Generator {
       range(this._options.messages).map(async () => {
         const contact = faker.random.arrayElement(contacts);
         return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
-      })
+      }),
     );
 
     // Chat.
@@ -131,7 +131,7 @@ export class Generator {
       range(this._options.messages).map(async () => {
         const contact = faker.random.arrayElement(contacts);
         return this.createMessage(contact, 'dxos.module.frame.chat', 1);
-      })
+      }),
     );
   }
 
@@ -182,7 +182,7 @@ export class Generator {
 // TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
 export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
-    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))])
+    schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),
   ]);
 
   // https://prosemirror.net/docs/guide/#doc
@@ -205,7 +205,7 @@ export const createOrganization = () => {
   return new Organization({
     name: faker.company.companyName(),
     website: faker.internet.url(),
-    description: faker.lorem.sentences(2)
+    description: faker.lorem.sentences(2),
   });
 };
 
@@ -213,14 +213,14 @@ export const createProject = (tag?: string) => {
   return new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
     url: faker.internet.url(),
-    tag: tag ?? faker.random.arrayElement(tags)
+    tag: tag ?? faker.random.arrayElement(tags),
   });
 };
 
 export const createTask = (assignee?: Contact) => {
   return new Task({
     title: faker.lorem.sentence(2),
-    assignee
+    assignee,
   });
 };
 
@@ -235,10 +235,10 @@ export const createContact = () => {
           city: faker.address.city(),
           state: faker.address.stateAbbr(),
           zip: faker.address.zipCode(),
-          coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) }
+          coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) },
         }
       : undefined,
-    tag: faker.datatype.number(10) > 7 ? faker.random.arrayElement(tags) : undefined
+    tag: faker.datatype.number(10) > 7 ? faker.random.arrayElement(tags) : undefined,
   });
 };
 
@@ -249,7 +249,7 @@ export const createEvent = () => {
   return new Event({
     title: faker.lorem.sentence(3),
     start: start.toISOString(),
-    end: end.toISOString()
+    end: end.toISOString(),
   });
 };
 
@@ -271,7 +271,7 @@ export const createMessage = (from?: Contact, resolver?: string, recent = 14) =>
     source: stripKeys({
       // TODO(burdon): Strip keys in TypedObject constructor.
       resolver,
-      guid: PublicKey.random().toHex()
+      guid: PublicKey.random().toHex(),
     }),
     // TODO(burdon): Batch some messages closer.
     date: faker.date.recent(recent, new Date()).toISOString(),
@@ -285,9 +285,9 @@ export const createMessage = (from?: Contact, resolver?: string, recent = 14) =>
     from: new Message.Recipient({
       email: from?.email ?? faker.internet.email(),
       name: from?.name ?? faker.name.findName(),
-      contact: from
+      contact: from,
     }),
     subject: faker.lorem.sentence(),
-    body: faker.lorem.paragraphs(3)
+    body: faker.lorem.paragraphs(3),
   });
 };

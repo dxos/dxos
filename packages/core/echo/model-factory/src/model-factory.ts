@@ -73,7 +73,7 @@ export class ModelFactory {
     itemId: ItemID,
     _snapshot: EchoObject,
     _memberKey: PublicKey, // TODO(burdon): Change to client ID?
-    _writeStream?: FeedWriter<Any>
+    _writeStream?: FeedWriter<Any>,
   ): any {
     assert(itemId);
     const _constructor = this._models.get(modelType)?.constructor;

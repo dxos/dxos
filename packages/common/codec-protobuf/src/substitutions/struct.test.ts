@@ -19,9 +19,9 @@ describe('structSubstitutions', () => {
       second: 2,
       flag: true,
       text: 'hello',
-      objectArray: [{ first: 1 }, { second: 2 }]
+      objectArray: [{ first: 1 }, { second: 2 }],
     },
-    array: [1, 2, 3, 4, 5]
+    array: [1, 2, 3, 4, 5],
   };
 
   const encodedStruct = {
@@ -41,19 +41,19 @@ describe('structSubstitutions', () => {
               listValue: {
                 values: [
                   { structValue: { fields: { first: { numberValue: 1 } } } },
-                  { structValue: { fields: { second: { numberValue: 2 } } } }
-                ]
-              }
-            }
-          }
-        }
+                  { structValue: { fields: { second: { numberValue: 2 } } } },
+                ],
+              },
+            },
+          },
+        },
       },
       array: {
         listValue: {
-          values: [{ numberValue: 1 }, { numberValue: 2 }, { numberValue: 3 }, { numberValue: 4 }, { numberValue: 5 }]
-        }
-      }
-    }
+          values: [{ numberValue: 1 }, { numberValue: 2 }, { numberValue: 3 }, { numberValue: 4 }, { numberValue: 5 }],
+        },
+      },
+    },
   };
 
   test('can encode and decode a struct', async () => {

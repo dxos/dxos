@@ -15,7 +15,7 @@ import { FeedWrapper } from './feed-wrapper';
 import { FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
-  live: true // Keep reading until closed.
+  live: true, // Keep reading until closed.
 };
 
 export type FeedQueueOptions = {};
@@ -27,7 +27,7 @@ export class FeedQueue<T extends {}> {
   public updated = new Event<FeedQueue<T>>();
 
   private readonly _messageTrigger = new Trigger<FeedBlock<T>>({
-    autoReset: true
+    autoReset: true,
   });
 
   private _feedConsumer?: Writable;
@@ -50,7 +50,7 @@ export class FeedQueue<T extends {}> {
       feedKey: this._feed.key,
       index: this.index,
       length: this.length,
-      open: this.isOpen
+      open: this.isOpen,
     };
   }
 
@@ -106,12 +106,12 @@ export class FeedQueue<T extends {}> {
         this._currentBlock = {
           feedKey: this._feed.key,
           seq: this._index,
-          data
+          data,
         };
 
         this._messageTrigger.wake(this._currentBlock);
         this.updated.emit(this);
-      }
+      },
     });
 
     const onClose = () => {

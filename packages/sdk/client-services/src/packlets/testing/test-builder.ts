@@ -26,11 +26,11 @@ export const testConfigWithLocalSignal = new Config({
       signaling: [
         {
           // TODO(burdon): Port numbers and global consts?
-          server: 'ws://localhost:4000/.well-known/dx/signal'
-        }
-      ]
-    }
-  }
+          server: 'ws://localhost:4000/.well-known/dx/signal',
+        },
+      ],
+    },
+  },
 });
 
 /**
@@ -63,15 +63,15 @@ export class TestBuilder {
       return {
         signalManager: new WebsocketSignalManager(signals),
         transportFactory: createWebRTCTransportFactory({
-          iceServers: this._config.get('runtime.services.ice')
-        })
+          iceServers: this._config.get('runtime.services.ice'),
+        }),
       };
     }
 
     // Memory transport with shared context.
     return {
       signalManager: new MemorySignalManager(this._signalManagerContext),
-      transportFactory: MemoryTransportFactory
+      transportFactory: MemoryTransportFactory,
     };
   }
 
@@ -83,7 +83,7 @@ export class TestBuilder {
       config: this._config,
       modelFactory: this._modelFactory,
       storage: this.storage,
-      ...this.networking
+      ...this.networking,
     });
   }
 
@@ -95,7 +95,7 @@ export class TestBuilder {
       config: this._config,
       modelFactory: this._modelFactory,
       storage: this.storage,
-      ...this.networking
+      ...this.networking,
     });
   }
 
@@ -107,7 +107,7 @@ export class TestBuilder {
     const server = createProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
-      port: hostPort
+      port: hostPort,
     });
     // TODO(dmaretskyi): Refactor.
 
@@ -127,7 +127,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
 
   await asyncTimeout(
     check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000
+    1000,
   );
 
   return result;
@@ -169,7 +169,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
                     }
                   }
                 },
-                (err) => raise(err)
+                (err) => raise(err),
               );
               break;
             }
@@ -180,11 +180,11 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
             }
           }
         },
-        (err) => raise(err)
+        (err) => raise(err),
       );
 
       await Promise.all([hostDone.wait(), guestDone.wait()]);
-    })
+    }),
   );
 
   return rootSpace.key;

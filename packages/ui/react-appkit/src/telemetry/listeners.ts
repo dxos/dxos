@@ -29,9 +29,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
             ?.filter((el) => Boolean(el.tagName))
             .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
             .reverse()
-            .join('>')
-        }
-      })
+            .join('>'),
+        },
+      }),
     );
   };
 
@@ -44,9 +44,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
         properties: {
           ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
-          timeAway: now.getTime() - lastFocusEvent.getTime()
-        }
-      })
+          timeAway: now.getTime() - lastFocusEvent.getTime(),
+        },
+      }),
     );
     lastFocusEvent = now;
   };
@@ -61,9 +61,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
         properties: {
           ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
-          timeSpent
-        }
-      })
+          timeSpent,
+        },
+      }),
     );
     lastFocusEvent = now;
     totalTime = totalTime + timeSpent;
@@ -77,9 +77,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
         properties: {
           ...BASE_TELEMETRY_PROPERTIES,
           href: window.location.href,
-          timeSpent: totalTime
-        }
-      })
+          timeSpent: totalTime,
+        },
+      }),
     );
   };
 
@@ -93,9 +93,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
           href: window.location.href,
           message: event.message,
           filename: event.filename,
-          stack: (event.error as Error).stack
-        }
-      })
+          stack: (event.error as Error).stack,
+        },
+      }),
     );
   };
 

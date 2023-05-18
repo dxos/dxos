@@ -29,6 +29,7 @@
     "@dxos/util": "workspace:*",
     "danfojs-node": "^1.1.2",
     "faker": "^5.5.3",
+    "redis": "^4.6.6",
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {

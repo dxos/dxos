@@ -4,4 +4,4 @@
 
 import { ClassNameValue } from '@dxos/aurora-types';
 
-export type ThemedClassName<P> = Omit<P, 'className'> & { className?: ClassNameValue };
+export type ThemedClassName<P> = Omit<P, 'className'> & { classNames?: ClassNameValue };

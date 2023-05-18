@@ -32,7 +32,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
   const { cancel, status, haltedAt, authCode, invitationCode } = useInvitationStatus(wrapper);
 
   return (
-    <div role='group' className={mx(group({ elevation: 'group' }), 'mbe-2')}>
+    <div role='group' className={mx(group({ elevation: 'group' }), 'mbe-2 p-2 rounded')}>
       {wrapper.get() ? (
         <>
           <HeadingWithActions
@@ -47,7 +47,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                   fallbackValue={wrapper.get().invitationId}
                   label={<InvitationStatus {...{ status, haltedAt }} className='grow' />}
                 />
-              )
+              ),
             }}
             actions={
               <>
@@ -58,7 +58,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                     {...{
                       copyLabel: t('copy space invite code short label', { ns: 'appkit' }),
                       displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
-                      value: createInvitationUrl(invitationCode!)
+                      value: createInvitationUrl(invitationCode!),
                     }}
                   />
                 )}
@@ -69,11 +69,11 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                 status === Invitation.State.SUCCESS ? (
                   <>
                     <Tooltip content={t('remove label')} tooltipLabelsTrigger>
-                      <Button className='flex md:hidden gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
+                      <Button classNames='flex md:hidden gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
                         <XCircle className={getSize(5)} />
                       </Button>
                     </Tooltip>
-                    <Button className='hidden md:flex gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
+                    <Button classNames='hidden md:flex gap-1 items-center' onClick={() => onClickRemove(wrapper)}>
                       <XCircle className={getSize(5)} />
                       <span>{t('remove label')}</span>
                     </Button>
@@ -81,11 +81,11 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                 ) : (
                   <>
                     <Tooltip content={t('cancel label')} tooltipLabelsTrigger>
-                      <Button className='flex md:hidden gap-1 items-center' onClick={cancel}>
+                      <Button classNames='flex md:hidden gap-1 items-center' onClick={cancel}>
                         <ProhibitInset className={getSize(5)} />
                       </Button>
                     </Tooltip>
-                    <Button className='hidden md:flex gap-1 items-center' onClick={cancel}>
+                    <Button classNames='hidden md:flex gap-1 items-center' onClick={cancel}>
                       <ProhibitInset className={getSize(5)} />
                       <span>{t('cancel label')}</span>
                     </Button>

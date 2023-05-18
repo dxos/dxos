@@ -173,13 +173,13 @@ test.describe('Invitations', () => {
       const invitation1 = await manager.createInvitation(0, 'device');
       const [authCode1] = await Promise.all([
         manager.getAuthCode(),
-        manager.acceptInvitation(1, 'device', invitation1)
+        manager.acceptInvitation(1, 'device', invitation1),
       ]);
 
       const invitation2 = await manager.createInvitation(0, 'device');
       const [authCode2] = await Promise.all([
         manager.getAuthCode(),
-        manager.acceptInvitation(2, 'device', invitation2)
+        manager.acceptInvitation(2, 'device', invitation2),
       ]);
 
       await manager.authenticateInvitation('device', authCode1, manager.peer(1));

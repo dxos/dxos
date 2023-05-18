@@ -34,7 +34,7 @@ export const ThemePlugins = (options: {
           } catch (_err) {}
           return { path: `./${relative(options.outdir, join('fonts', basename(args.path)))}`, external: true };
         });
-      }
+      },
     },
     // TODO(thure): theme.css must be part of entryPoints in order to be processed with `stylePlugin`, but this should not be necessary. ESBuild would not load theme.css using stylePlugin if referenced within index.ts(x) as with the Vite plugin.
     // TODO(thure): Note also that because it is an entryPoint, the developer has to reference the built theme.css from `index.html`, which is inflexible and possibly inconvenient.
@@ -43,11 +43,11 @@ export const ThemePlugins = (options: {
       postcss: {
         plugins: [
           tailwindcss(
-            tailwindConfig({ env: process.env.NODE_ENV, content: options.content, extensions: options.extensions })
+            tailwindConfig({ env: process.env.NODE_ENV, content: options.content, extensions: options.extensions }),
           ),
-          autoprefixer as any
-        ]
-      }
-    })
+          autoprefixer as any,
+        ],
+      },
+    }),
   ];
 };

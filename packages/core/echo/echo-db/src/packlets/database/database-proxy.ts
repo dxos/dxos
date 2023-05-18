@@ -83,7 +83,7 @@ export class DatabaseProxy {
 
     assert(!this._entities);
     this._entities = this._service.subscribe({
-      spaceKey: this._spaceKey
+      spaceKey: this._spaceKey,
     });
     this._entities.subscribe(
       async (msg) => {
@@ -91,7 +91,7 @@ export class DatabaseProxy {
           clientTag: msg.clientTag,
           feedKey: msg.feedKey,
           seq: msg.seq,
-          objectCount: msg.batch.objects?.length ?? 0
+          objectCount: msg.batch.objects?.length ?? 0,
         });
 
         const objectsUpdated: Item[] = [];
@@ -104,7 +104,7 @@ export class DatabaseProxy {
             assert(msg.seq !== undefined);
             batch.receipt = {
               feedKey: msg.feedKey,
-              seq: msg.seq
+              seq: msg.seq,
             };
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
@@ -125,7 +125,7 @@ export class DatabaseProxy {
         if (err) {
           log.warn('Connection closed', err);
         }
-      }
+      },
     );
 
     // Wait for initial set of items.
@@ -142,7 +142,7 @@ export class DatabaseProxy {
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
-          modelType: object.genesis.modelType
+          modelType: object.genesis.modelType,
         });
       } else {
         entity = this._itemManager.entities.get(object.objectId);
@@ -174,7 +174,7 @@ export class DatabaseProxy {
       assert(objectMutation.genesis.modelType);
       entity = this._itemManager.constructItem({
         itemId: objectMutation.objectId,
-        modelType: objectMutation.genesis.modelType
+        modelType: objectMutation.genesis.modelType,
       });
     } else {
       entity = this._itemManager.entities.get(objectMutation.objectId);
@@ -229,7 +229,7 @@ export class DatabaseProxy {
       .write({
         batch: batch.data,
         spaceKey: this._spaceKey,
-        clientTag: batch.clientTag!
+        clientTag: batch.clientTag!,
       })
       .then(
         (receipt) => {
@@ -238,7 +238,7 @@ export class DatabaseProxy {
         },
         (err) => {
           batch.receiptTrigger!.throw(err);
-        }
+        },
       );
   }
 
@@ -271,7 +271,7 @@ export class DatabaseProxy {
       const batch = this._currentBatch!;
       return {
         objectsUpdated,
-        batch
+        batch,
       };
     } finally {
       if (batchCreated) {
@@ -298,7 +298,7 @@ export class DatabaseProxy {
     } catch (err) {
       log.error('timeout waiting for mutations to flush', {
         timeout: FLUSH_TIMEOUT,
-        mutationTags: Array.from(this._pendingBatches.keys())
+        mutationTags: Array.from(this._pendingBatches.keys()),
       });
     }
 

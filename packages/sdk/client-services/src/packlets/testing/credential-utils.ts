@@ -9,7 +9,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const createMockCredential = async ({
   signer,
-  issuer
+  issuer,
 }: {
   signer: Signer;
   issuer: PublicKey;
@@ -22,7 +22,7 @@ export const createMockCredential = async ({
       '@type': 'example.testing.rpc.MessageWithAny',
       payload: {
         '@type': 'google.protobuf.Any',
-        value: Buffer.from('test')
-      }
-    }
+        value: Buffer.from('test'),
+      },
+    },
   });

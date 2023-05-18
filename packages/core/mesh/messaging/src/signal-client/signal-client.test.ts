@@ -16,7 +16,7 @@ import { SignalClient } from './signal-client';
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example',
-  value: Buffer.from('1')
+  value: Buffer.from('1'),
 };
 
 describe('SignalClient', () => {
@@ -37,7 +37,7 @@ describe('SignalClient', () => {
   const waitForSubscription = async (signal: SignalClient, peerId: PublicKey) => {
     await asyncTimeout(
       signal._reconciled.waitForCondition(() => signal._messageStreams.has(peerId)),
-      500
+      500,
     );
   };
 
@@ -50,7 +50,7 @@ describe('SignalClient', () => {
       async (msg) => {
         received.wake(msg);
       },
-      async () => {}
+      async () => {},
     );
     api1.open();
     afterTest(() => api1.close());
@@ -64,7 +64,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
     await api2.sendMessage(message);
     expect(await received.wait()).toEqual(message);
@@ -85,7 +85,7 @@ describe('SignalClient', () => {
         if (!!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)) {
           trigger1.wake();
         }
-      }
+      },
     );
     api1.open();
     afterTest(() => api1.close());
@@ -98,7 +98,7 @@ describe('SignalClient', () => {
         if (!!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer)) {
           trigger2.wake();
         }
-      }
+      },
     );
     api2.open();
     afterTest(() => api2.close());
@@ -120,7 +120,7 @@ describe('SignalClient', () => {
       async (msg) => {
         received.wake(msg);
       },
-      async () => {}
+      async () => {},
     );
     api1.open();
     afterTest(() => api1.close());
@@ -131,7 +131,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
     await api1.sendMessage(message);
 
@@ -148,7 +148,7 @@ describe('SignalClient', () => {
       async (msg) => {
         received.emit(msg);
       },
-      async () => {}
+      async () => {},
     );
     client1.open();
     afterTest(() => client1.close());
@@ -164,7 +164,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
 
     {
@@ -201,7 +201,7 @@ describe('SignalClient', () => {
       async (msg) => {
         received.emit(msg);
       },
-      async () => {}
+      async () => {},
     );
     client1.open();
     afterTest(() => client1.close());
@@ -213,7 +213,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
 
     await client1.subscribeMessages(peer1);
@@ -257,14 +257,14 @@ describe('SignalClient', () => {
       const api1 = new SignalClient(
         broker1.url(),
         async () => {},
-        async () => {}
+        async () => {},
       );
       api1.open();
       afterTest(() => api1.close());
       const api2 = new SignalClient(
         broker2.url(),
         async () => {},
-        async () => {}
+        async () => {},
       );
       api2.open();
       afterTest(() => api2.close());
@@ -298,7 +298,7 @@ describe('SignalClient', () => {
       const api1 = new SignalClient(
         broker1.url(),
         async () => {},
-        async () => {}
+        async () => {},
       );
       api1.open();
       afterTest(() => api1.close());
@@ -315,8 +315,8 @@ describe('SignalClient', () => {
         recipient: peer1,
         payload: {
           type_url: 'something',
-          value: Buffer.from('0')
-        }
+          value: Buffer.from('0'),
+        },
       };
       await api1.sendMessage(message);
 

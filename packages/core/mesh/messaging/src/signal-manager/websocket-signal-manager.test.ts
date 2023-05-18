@@ -26,7 +26,7 @@ describe('WebSocketSignalManager', () => {
   const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>
     client.swarmEvent.waitFor(
       ({ swarmEvent, topic }) =>
-        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic)
+        !!swarmEvent.peerAvailable && peer.equals(swarmEvent.peerAvailable.peer) && expectedTopic.equals(topic),
     );
 
   const expectReceivedMessage = (client: WebsocketSignalManager, expectedMessage: any) => {
@@ -34,7 +34,7 @@ describe('WebSocketSignalManager', () => {
       (msg) =>
         msg.author.equals(expectedMessage.author) &&
         msg.recipient.equals(expectedMessage.recipient) &&
-        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value)
+        PublicKey.from(msg.payload.value).equals(expectedMessage.payload.value),
     );
   };
 
@@ -78,7 +78,7 @@ describe('WebSocketSignalManager', () => {
     const message = {
       author: peer1,
       recipient: peer2,
-      payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) }
+      payload: { type_url: 'google.protobuf.Any', value: Uint8Array.from([1, 2, 3]) },
     };
 
     const received = expectReceivedMessage(client2, message);

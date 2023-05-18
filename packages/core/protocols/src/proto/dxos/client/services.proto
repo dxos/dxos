@@ -10,6 +10,7 @@ import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
+import "dxos/echo/metadata.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -196,7 +197,7 @@ message Space {
 
   repeated SpaceMember members = 10;
 
-  // TODO(dmaretskyi): Inline a snapshot of space.properties here so that inactive spaces still display their title.
+  optional dxos.echo.metadata.SpaceCache cache = 20;
 }
 
 message UpdateSpaceRequest {

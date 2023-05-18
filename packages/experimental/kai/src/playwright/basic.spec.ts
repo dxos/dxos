@@ -48,7 +48,7 @@ test.describe('Basic test', () => {
       await guest.openJoinSpace();
       const [authCode] = await Promise.all([
         host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode)
+        guest.shell.acceptSpaceInvitation(invitationCode),
       ]);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();

@@ -94,10 +94,10 @@ describe('services/space-invitations-protocol', () => {
               }
 
               return false;
-            }
-          }
-        }
-      })
+            },
+          },
+        },
+      }),
     );
 
     expect(attempt).to.eq(1);
@@ -121,7 +121,7 @@ describe('services/space-invitations-protocol', () => {
     }
 
     expect(
-      guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length
+      guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length,
     ).to.equal(2); // own halo + newly joined space.
   });
 
@@ -146,14 +146,14 @@ describe('services/space-invitations-protocol', () => {
             void invitation.cancel();
             return true;
           },
-          onSuccess: () => raise(new Error('invitation success'))
+          onSuccess: () => raise(new Error('invitation success')),
         },
         guest: {
           onConnecting: (invitation) => {
             guestConnected.wake(invitation.get());
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     const { swarmKey: swarmKey1 } = await hostConnected.wait();

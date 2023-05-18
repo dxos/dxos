@@ -42,7 +42,7 @@ const doLayout = (board: NoteBoard, notes: Note[], layout: GridLayout): Item<Not
       const item: Item<Note> = {
         id: note.id,
         location: { x: location.x!, y: location.y! },
-        data: note
+        data: note,
       };
 
       return item;
@@ -121,11 +121,11 @@ export const NoteFrame = () => {
         lensModel={lensModel}
         slots={{
           tile: {
-            root: { className: 'w-sidebar select-none cursor-pointer opacity-100' }
+            root: { className: 'w-sidebar select-none cursor-pointer opacity-100' },
           },
           cell: {
-            over: { className: 'border-4' }
-          }
+            over: { className: 'border-4' },
+          },
         }}
         Content={NoteTile}
         onChange={handleMoveNote}

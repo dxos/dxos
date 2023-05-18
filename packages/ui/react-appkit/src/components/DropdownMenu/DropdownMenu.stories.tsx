@@ -14,7 +14,7 @@ import {
   GridFour,
   LinkSimple,
   CaretRight,
-  Person
+  Person,
 } from '@phosphor-icons/react';
 import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import React, { ReactNode } from 'react';
@@ -30,11 +30,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
 } from './DropdownMenu';
 
 export default {
-  component: DropdownMenu
+  component: DropdownMenu,
 };
 
 interface RadixMenuItem {
@@ -52,41 +52,41 @@ const generalMenuItems: RadixMenuItem[] = [
   {
     label: 'New File',
     icon: <File className='mr-2 h-3.5 w-3.5' />,
-    shortcut: '⌘+N'
+    shortcut: '⌘+N',
   },
   {
     label: 'Settings',
     icon: <Gear className='mr-2 h-3.5 w-3.5' />,
-    shortcut: '⌘+,'
-  }
+    shortcut: '⌘+,',
+  },
 ];
 
 const regionToolMenuItems: RadixMenuItem[] = [
   {
     label: 'Frame',
     icon: <FrameCorners className='mr-2 h-3.5 w-3.5' />,
-    shortcut: '⌘+F'
+    shortcut: '⌘+F',
   },
   {
     label: 'Crop',
     icon: <Crop className='mr-2 h-3.5 w-3.5' />,
-    shortcut: '⌘+S'
-  }
+    shortcut: '⌘+S',
+  },
 ];
 
 const users: User[] = [
   {
     name: 'Adam',
-    url: 'https://github.com/adamwathan.png'
+    url: 'https://github.com/adamwathan.png',
   },
   {
     name: 'Steve',
-    url: 'https://github.com/steveschoger.png'
+    url: 'https://github.com/steveschoger.png',
   },
   {
     name: 'Robin',
-    url: 'https://github.com/robinmalfait.png'
-  }
+    url: 'https://github.com/robinmalfait.png',
+  },
 ];
 
 export const Default = {
@@ -156,6 +156,6 @@ export const Default = {
           </DropdownMenuPortal>
         </DropdownMenuSub>
       </>
-    )
-  }
+    ),
+  },
 };

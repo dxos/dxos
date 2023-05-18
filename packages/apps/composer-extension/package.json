@@ -14,8 +14,10 @@
     "serve": "vite"
   },
   "devDependencies": {
+    "@types/webextension-polyfill": "^0.10.0",
     "typescript": "^4.8.4",
     "vite": "^4.3.0",
-    "vite-plugin-web-extension": "^3.0.7"
+    "vite-plugin-web-extension": "^3.0.7",
+    "webextension-polyfill": "^0.10.0"
   }
 }

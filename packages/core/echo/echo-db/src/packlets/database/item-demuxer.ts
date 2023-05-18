@@ -52,7 +52,7 @@ export class ItemDemuxer {
 
           const entity = this._itemManager.constructItem({
             itemId: objectId,
-            modelType
+            modelType,
           });
 
           setMetadataOnObject(object, meta);
@@ -65,7 +65,7 @@ export class ItemDemuxer {
               // Forward mutations to the item's stream.
               this._itemManager.processMutation(objectId, {
                 ...mutation,
-                meta
+                meta,
               });
             }
           }
@@ -78,7 +78,7 @@ export class ItemDemuxer {
 
   createSnapshot(): EchoSnapshot {
     return {
-      items: this._itemManager.items.map((item) => item.createSnapshot())
+      items: this._itemManager.items.map((item) => item.createSnapshot()),
     };
   }
 
@@ -93,7 +93,7 @@ export class ItemDemuxer {
 
       const obj = this._itemManager.constructItem({
         itemId: item.objectId,
-        modelType: item.genesis.modelType
+        modelType: item.genesis.modelType,
       });
       obj.resetToSnapshot(item);
     }

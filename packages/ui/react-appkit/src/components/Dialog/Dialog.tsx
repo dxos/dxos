@@ -49,12 +49,12 @@ export const Dialog = ({
   open: propsOpen,
   defaultOpen: propsDefaultOpen,
   onOpenChange: propsOnOpenChange,
-  slots = {}
+  slots = {},
 }: DialogProps) => {
   const [open = false, setOpen] = useControllableState({
     prop: propsOpen,
     defaultProp: propsDefaultOpen,
-    onChange: propsOnOpenChange
+    onChange: propsOnOpenChange,
   });
 
   const dialogOverlayAndContent = (
@@ -95,7 +95,7 @@ export const Dialog = ({
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
             'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
             defaultFocus,
-            slots.content?.className
+            slots.content?.className,
           )}
         >
           <ElevationProvider elevation='chrome'>
@@ -106,7 +106,7 @@ export const Dialog = ({
                 'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
                 titleVisuallyHidden && 'sr-only',
                 defaultFocus,
-                slots?.title?.className
+                slots?.title?.className,
               )}
               tabIndex={0}
             >
@@ -125,21 +125,21 @@ export const Dialog = ({
 
             {closeLabel && (
               <TooltipRoot>
-                <TooltipContent className='z-[51]'>{closeLabel}</TooltipContent>
+                <TooltipContent classNames='z-[51]'>{closeLabel}</TooltipContent>
                 <TooltipTrigger asChild>
                   <DialogPrimitive.Close
                     className={mx(
                       'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                       defaultFocus,
                       defaultHover,
-                      slots.close?.className
+                      slots.close?.className,
                     )}
                   >
                     <X
                       className={mx(
                         getSize(4),
                         'text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400',
-                        slots.closeIcon?.className
+                        slots.closeIcon?.className,
                       )}
                     />
                   </DialogPrimitive.Close>

@@ -26,7 +26,7 @@ describe('Logger tracing', () => {
       release: 'test',
       scrubFilenames: true,
       tracing: true,
-      transport: sentryTransport
+      transport: sentryTransport,
     });
 
     Tracing.configureTracing();
@@ -40,17 +40,17 @@ describe('Logger tracing', () => {
     log.trace('test.trace', {
       span: {
         command: 'begin',
-        id: 'test'
-      }
+        id: 'test',
+      },
     });
 
     log.trace('test.trace', {
       span: {
         command: 'end',
         id: 'test',
-        status: 'error'
+        status: 'error',
       },
-      error: new Error('test')
+      error: new Error('test'),
     });
     // Sleep to allow Sentry tracing to flush.
     await sleep(10);

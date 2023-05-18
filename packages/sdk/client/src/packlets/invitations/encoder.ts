@@ -29,8 +29,8 @@ export class InvitationEncoder {
         authMethod: invitation.authMethod,
         swarmKey: invitation.swarmKey,
         state: invitation.state,
-        timeout: invitation.timeout
-      })
+        timeout: invitation.timeout,
+      }),
     );
   }
 }

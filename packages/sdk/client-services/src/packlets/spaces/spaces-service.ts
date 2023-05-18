@@ -16,7 +16,7 @@ import {
   SpacesService,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
-  WriteCredentialsRequest
+  WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -36,7 +36,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
-    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>
+    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
   async createSpace(): Promise<Space> {
@@ -83,7 +83,7 @@ export class SpacesServiceImpl implements SpacesService {
               subscriptions.add(
                 space.dataPipeline.pipelineState.timeframeUpdate
                   .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
-                  .on(ctx, onUpdate)
+                  .on(ctx, onUpdate),
               );
             }
           }
@@ -130,7 +130,7 @@ export class SpacesServiceImpl implements SpacesService {
       const processor = space.spaceState.registerProcessor({
         process: async (credential) => {
           next(credential);
-        }
+        },
       });
       ctx.onDispose(() => processor.close());
       scheduleTask(ctx, () => processor.open());
@@ -157,21 +157,22 @@ export class SpacesServiceImpl implements SpacesService {
         dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
         currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
-        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe
+        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,
           profile: {
-            displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-          }
+            displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+          },
         },
         presence:
           this._identityManager.identity?.identityKey.equals(member.key) ||
           space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE
-      }))
+            : SpaceMember.PresenceState.OFFLINE,
+      })),
+      cache: space.cache,
     };
   }
 }

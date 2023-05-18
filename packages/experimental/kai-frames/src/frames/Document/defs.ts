@@ -21,5 +21,5 @@ export const DocumentFrameRuntime: FrameRuntime<Document> = {
   filter: () => Document.filter(),
   onCreate: async (space: Space) => {
     return space.db.add(new Document({ content: new Text('', TextKind.RICH) }));
-  }
+  },
 };

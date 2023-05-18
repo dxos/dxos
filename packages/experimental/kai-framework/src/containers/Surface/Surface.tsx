@@ -10,14 +10,13 @@ import { FrameContextProvider, FrameState, FrameDef } from '@dxos/kai-frames';
 
 import { createPath, useAppReducer } from '../../hooks';
 
+// TODO(burdon): Generalize to app state.
 export type SurfaceProps = {
   space: Space;
   frame?: FrameDef<any>;
   objectId?: string;
   fullscreen?: boolean;
 };
-
-// TODO(burdon): Loading?
 
 /**
  * Frame component container and context provider.

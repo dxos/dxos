@@ -7,7 +7,7 @@ import {
   AvatarProps as AvatarRootPrimitiveProps,
   Image as AvatarImagePrimitive,
   ImageLoadingStatus,
-  Fallback as AvatarFallbackPrimitive
+  Fallback as AvatarFallbackPrimitive,
 } from '@radix-ui/react-avatar';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -43,7 +43,7 @@ const AvatarRoot = ({
   status,
   children,
   labelId: propsLabelId,
-  descriptionId: propsDescriptionId
+  descriptionId: propsDescriptionId,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
@@ -53,7 +53,7 @@ const AvatarRoot = ({
 
 type AvatarProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
-const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, ...props }, forwardedRef) => {
+const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
   const { tx } = useThemeContext();
   const imageSizeNumber = size === 'px' ? 1 : size * 4;
@@ -64,7 +64,7 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
     <AvatarRootPrimitive
       role='img'
       {...props}
-      className={tx('avatar.root', 'avatar', { size, variant }, className)}
+      className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
       ref={forwardedRef}
       aria-labelledby={labelId}
       aria-describedby={descriptionId}
@@ -100,12 +100,12 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, className, 
           weight='fill'
           className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
-      ) : (
+      ) : status ? (
         <Circle
           weight='fill'
           className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
         />
-      )}
+      ) : null}
     </AvatarRootPrimitive>
   );
 });
@@ -116,7 +116,7 @@ type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 };
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
-  ({ asChild, srOnly, className, ...props }, forwardedRef) => {
+  ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
@@ -125,10 +125,10 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
         {...props}
         id={labelId}
         ref={forwardedRef}
-        className={tx('avatar.label', 'avatar__label', { srOnly }, className)}
+        className={tx('avatar.label', 'avatar__label', { srOnly }, classNames)}
       />
     );
-  }
+  },
 );
 
 type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
@@ -137,7 +137,7 @@ type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof 
 };
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
-  ({ asChild, srOnly, className, ...props }, forwardedRef) => {
+  ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
@@ -146,10 +146,10 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
         {...props}
         id={descriptionId}
         ref={forwardedRef}
-        className={tx('avatar.description', 'avatar__description', { srOnly }, className)}
+        className={tx('avatar.description', 'avatar__description', { srOnly }, classNames)}
       />
     );
-  }
+  },
 );
 
 type AvatarMaskedImageProps = ComponentPropsWithRef<'image'>;
@@ -170,7 +170,7 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
         <AvatarMaskedImage {...props} ref={forwardedRef} />
       </AvatarImagePrimitive>
     );
-  }
+  },
 );
 
 type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
@@ -188,7 +188,7 @@ const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delay
 const useJdenticonHref = (value: string, size: Size) => {
   return useMemo(
     () => `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`,
-    [value]
+    [value],
   );
 };
 
@@ -200,7 +200,7 @@ export {
   AvatarLabel,
   AvatarDescription,
   useJdenticonHref,
-  useAvatarContext
+  useAvatarContext,
 };
 
 export type {
@@ -211,5 +211,5 @@ export type {
   AvatarImageProps,
   AvatarFallbackProps,
   AvatarLabelProps,
-  AvatarDescriptionProps
+  AvatarDescriptionProps,
 };

@@ -10,7 +10,7 @@ import { Button } from '@dxos/aurora';
 import { Toast } from './Toast';
 
 export default {
-  component: Toast
+  component: Toast,
 };
 
 export const Default = {
@@ -19,6 +19,6 @@ export const Default = {
     title: 'Hi, this is a toast',
     description: 'This goes away on its own with a timer.',
     actionTriggers: [{ altText: 'Press F5 to reload the page', trigger: <Button>Reload</Button> }],
-    closeTrigger: <Button>Close</Button>
-  }
+    closeTrigger: <Button>Close</Button>,
+  },
 };

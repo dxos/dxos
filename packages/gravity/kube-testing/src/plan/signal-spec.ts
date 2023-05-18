@@ -12,7 +12,8 @@ import { range } from '@dxos/util';
 import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
-import { AgentParams, PlanResults, TestParams, TestPlan } from './spec-base';
+import { AgentEnv } from './agent-env';
+import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
   servers: number;
@@ -55,17 +56,18 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         ? [spec.serverOverride]
         : randomArraySlice(
             this.builder.servers.map((server) => server.url()),
-            spec.serversPerAgent
+            spec.serversPerAgent,
           );
 
       return {
         servers,
-        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex())
+        topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()),
       };
     });
   }
 
-  async run({ agentId, agents, spec, config, outDir }: AgentParams<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+  async run(env: AgentEnv<SignalTestSpec, SignalAgentConfig>): Promise<void> {
+    const { agentId, agents, spec, config } = env.params;
     log.info('start', { agentId });
 
     const ctx = new Context();
@@ -75,9 +77,9 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
       range(spec.peersPerAgent).map(() =>
         this.builder.createPeer({
           signals: config.servers.map((server) => ({ server })),
-          peerId: PublicKey.random()
-        })
-      )
+          peerId: PublicKey.random(),
+        }),
+      ),
     );
 
     const testRun = async (peer: TestPeer) => {
@@ -92,13 +94,13 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
               err: {
                 name: err.name,
                 message: err.message,
-                stack: err.stack
+                stack: err.stack,
               },
               peerId: peer.peerId.toHex(),
-              iterationId: testCounter
-            })
+              iterationId: testCounter,
+            }),
           );
-        }
+        },
       });
 
       log.trace(
@@ -106,8 +108,8 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         checkType<TraceEvent>({
           type: 'ITERATION_START',
           peerId: peer.peerId.toHex(),
-          iterationId: testCounter
-        })
+          iterationId: testCounter,
+        }),
       );
 
       switch (spec.type) {
@@ -126,7 +128,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
         case 'signaling': {
           await cancelWithContext(
             context,
-            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0]))
+            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0])),
           );
           break;
         }
@@ -140,10 +142,11 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     scheduleTaskInterval(
       ctx,
       async () => {
+        await env.syncBarrier(`iteration-${testCounter}`);
         await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
         testCounter++;
       },
-      spec.repeatInterval
+      spec.repeatInterval,
     );
 
     await sleep(spec.duration);
@@ -155,7 +158,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await this.builder.destroy();
     switch (params.spec.type) {
       case 'discovery': {
-        return analyzeSwarmEvents(results);
+        return analyzeSwarmEvents(params, results);
       }
       case 'signaling': {
         return analyzeMessages(results);

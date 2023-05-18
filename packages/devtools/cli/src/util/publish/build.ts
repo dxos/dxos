@@ -26,16 +26,16 @@ export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
     env: {
       ...process.env,
       ...(module.build!.env ?? {}),
-      CONFIG_DYNAMIC: 'true'
+      CONFIG_DYNAMIC: 'true',
     },
-    stdio: verbose ? 'inherit' : undefined
+    stdio: verbose ? 'inherit' : undefined,
   });
 
   if (error || status !== 0) {
     log(
       `Module ${chalk.bold(module.name)} build failed${
         verbose ? ` with status: ${status}.${error ? '\n' + error : ''}` : '. Re-run with --verbose for more details.'
-      }`
+      }`,
     );
     process.exit(status === null ? 1 : status);
   }

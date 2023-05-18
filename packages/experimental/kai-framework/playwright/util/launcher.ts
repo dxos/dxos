@@ -23,7 +23,7 @@ export class Launcher {
   constructor(
     private readonly _baseUrl: string,
     private readonly _type: BrowserType = chromium,
-    private readonly _launchOptions = {}
+    private readonly _launchOptions = {},
   ) {}
 
   toString() {

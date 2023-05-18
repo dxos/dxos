@@ -79,7 +79,7 @@ export const initializeAppTelemetry = async ({
   namespace,
   config,
   sentryOptions,
-  telemetryOptions
+  telemetryOptions,
 }: AppTelemetryOptions) => {
   try {
     const group = await getTelemetryGroup(namespace);
@@ -102,7 +102,7 @@ export const initializeAppTelemetry = async ({
       sampleRate: 1.0,
       replaySampleRate: 0.1,
       replaySampleRateOnError: 1.0,
-      ...sentryOptions
+      ...sentryOptions,
     });
 
     Sentry.configureTracing();
@@ -111,7 +111,7 @@ export const initializeAppTelemetry = async ({
     Telemetry.init({
       apiKey: TELEMETRY_API_KEY,
       enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled,
-      ...telemetryOptions
+      ...telemetryOptions,
     });
 
     const ipData = await getIPData(config);
@@ -152,7 +152,7 @@ const getIPData = async (config: Config): Promise<IPData | void> => {
         localForage
           .setItem('dxos:telemetry:ipdata', {
             data,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           })
           .catch((err) => Sentry.captureException(err));
 

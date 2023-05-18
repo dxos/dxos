@@ -11,5 +11,5 @@ const MapFrame = React.lazy(() => import('./MapFrame'));
 
 export const MapFrameRuntime: FrameRuntime<any> = {
   Icon: MapIcon,
-  Component: MapFrame
+  Component: MapFrame,
 };

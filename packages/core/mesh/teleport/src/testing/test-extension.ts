@@ -34,13 +34,13 @@ export class TestExtension implements TeleportExtension {
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
       port: context.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService'),
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -49,12 +49,12 @@ export class TestExtension implements TeleportExtension {
           },
           testCall: async (request) => {
             return {
-              data: request.data
+              data: request.data,
             };
-          }
-        }
+          },
+        },
       },
-      timeout: 1000
+      timeout: 1000,
     });
 
     await this._rpc.open();

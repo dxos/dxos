@@ -17,7 +17,7 @@ export class Grid {
     private readonly width: number,
     private readonly height: number,
     private readonly spacing: number,
-    private readonly marginTop: number
+    private readonly marginTop: number,
   ) {}
 
   /**
@@ -41,7 +41,7 @@ export class Grid {
           x: column * (width + this.spacing),
           y: this.marginTop + row * (height + this.spacing),
           width,
-          height
+          height,
         });
       }
     }

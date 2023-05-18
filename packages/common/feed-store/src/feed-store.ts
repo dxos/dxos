@@ -93,7 +93,7 @@ export class FeedStore<T extends {}> {
         //  SpaceProxy.initialize => Database.createItem => ... => FeedWrapper.append
         //  Uncaught Error: Closed [random-access-storage/index.js:181:38]
         await sleep(100);
-      })
+      }),
     );
 
     this._feeds.clear();

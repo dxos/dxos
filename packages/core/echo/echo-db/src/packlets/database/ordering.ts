@@ -31,7 +31,7 @@ export const getInsertionIndex = (existing: MutationInQueue<unknown>[], newEntry
   for (let i = start + 1; i < existing.length; i++) {
     const existingTimeframe = Timeframe.merge(
       existing[i].mutation.meta!.timeframe!,
-      new Timeframe([[PublicKey.from(existing[i].mutation.meta!.feedKey!), existing[i].mutation.meta!.seq! - 1]])
+      new Timeframe([[PublicKey.from(existing[i].mutation.meta!.feedKey!), existing[i].mutation.meta!.seq! - 1]]),
     );
 
     const deps = Timeframe.dependencies(newEntry.mutation.meta!.timeframe!, existingTimeframe);
@@ -97,7 +97,7 @@ export class MutationQueue<T> {
       ? -1
       : this._optimistic.findIndex(
           (message) =>
-            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag
+            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag,
         );
     if (optimisticIndex !== -1) {
       this._optimistic.splice(optimisticIndex, 1);
@@ -113,7 +113,7 @@ export class MutationQueue<T> {
         optimisticIndex > 0 ||
         (optimisticIndex === -1 && this._optimistic.length > 0),
 
-      apply: optimisticIndex === -1
+      apply: optimisticIndex === -1,
     };
   }
 

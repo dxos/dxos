@@ -107,7 +107,7 @@ export class WebsocketSignalManager implements SignalManager {
   async sendMessage({
     author,
     recipient,
-    payload
+    payload,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -137,7 +137,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   private _initContext() {
     this._ctx = new Context({
-      onError: (err) => log.catch(err)
+      onError: (err) => log.catch(err),
     });
   }
 

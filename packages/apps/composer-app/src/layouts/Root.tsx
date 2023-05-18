@@ -4,12 +4,13 @@
 
 import { ErrorBoundary } from '@sentry/react';
 import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useMediaQuery } from '@dxos/aurora';
 import { fromIFrame } from '@dxos/client';
 import { fromHost } from '@dxos/client-services';
-import { Config, ConfigProto, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   ThemeProvider,
@@ -18,24 +19,15 @@ import {
   ErrorProvider,
   Fallback,
   ResetDialog,
-  ServiceWorkerToast
+  ServiceWorkerToast,
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 
-import composerTranslations from '../../translations';
-import { DocumentLayout } from '../DocumentLayout';
+import composerTranslations from '../translations';
 
-// TODO(wittjosiah): Remove once cloudflare proxy stops messing with cache.
-const configOverride: ConfigProto = window.location.hostname.includes('localhost')
-  ? {}
-  : {
-      runtime: {
-        client: { remoteSource: `https://${window.location.hostname.replace('composer', 'halo')}/vault.html` }
-      }
-    };
-const configProvider = async () => new Config(configOverride, await Dynamics(), await Envs(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
@@ -43,12 +35,12 @@ export const Root = () => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
       log.error(err);
-    }
+    },
   });
 
   const [prefersDark] = useMediaQuery('(prefers-color-scheme: dark)', { ssr: false, fallback: true });
@@ -68,8 +60,8 @@ export const Root = () => {
       {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
       <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
         <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>
-          <ErrorProvider>
-            <DocumentLayout />
+          <ErrorProvider config={configProvider} isDev={false}>
+            <Outlet />
           </ErrorProvider>
         </ClientProvider>
       </ErrorBoundary>

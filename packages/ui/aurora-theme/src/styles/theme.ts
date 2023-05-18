@@ -15,7 +15,9 @@ import {
   inputOsTheme,
   mainTheme,
   messageTheme,
-  avatarTheme
+  avatarTheme,
+  tooltipTheme,
+  tagTheme,
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -26,7 +28,9 @@ export const theme: Theme<Record<string, any>> = {
   list: listTheme,
   main: mainTheme,
   message: messageTheme,
-  avatar: avatarTheme
+  avatar: avatarTheme,
+  tooltip: tooltipTheme,
+  tag: tagTheme,
 };
 
 export const osTheme: Theme<Record<string, any>> = {
@@ -34,7 +38,7 @@ export const osTheme: Theme<Record<string, any>> = {
   themeName: () => 'dxos',
   button: buttonOsTheme,
   input: inputOsTheme,
-  list: listOsTheme
+  list: listOsTheme,
 };
 
 export const appTx = <P extends Record<string, any>>(

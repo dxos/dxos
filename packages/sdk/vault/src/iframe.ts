@@ -32,9 +32,9 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
         ThemeProvider,
         { themeVariant: 'os', resourceExtensions: [osTranslations] },
         // NOTE: Using context provider directly to avoid duplicate banners being logged.
-        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
-      )
-    )
+        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin })),
+      ),
+    ),
   );
 };
 
@@ -76,18 +76,18 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
         channel: DEFAULT_INTERNAL_CHANNEL,
         payload: {
           command: 'init',
-          port: messageChannel.port1
-        }
+          port: messageChannel.port1,
+        },
       },
       origin,
-      [messageChannel.port1]
+      [messageChannel.port1],
     );
 
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
       config,
       origin,
       appPort: createWorkerPort({ port: messageChannel.port2 }),
-      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
+      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' }),
     });
 
     await iframeRuntime.start();
@@ -114,11 +114,11 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
         channel: DEFAULT_INTERNAL_CHANNEL,
         payload: {
           command: 'init',
-          port: appPort
-        }
+          port: appPort,
+        },
       },
       origin,
-      [appPort]
+      [appPort],
     );
 
     let shellClientProxy: ClientServicesProvider | undefined;
@@ -130,7 +130,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
       config,
       systemPort: createWorkerPort({ port: systemPort }),
-      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
+      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' }),
     });
 
     await iframeRuntime.open(origin);

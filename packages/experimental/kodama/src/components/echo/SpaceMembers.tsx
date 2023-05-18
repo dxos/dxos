@@ -25,12 +25,12 @@ export const SpaceMembers: FC<{
           value: (key) => truncateKey(key),
           width: 20,
           color: 'green',
-          label: 'key'
+          label: 'key',
         },
         {
           key: 'display_name',
-          label: 'displayName'
-        }
+          label: 'displayName',
+        },
       ]}
       rows={members}
     />

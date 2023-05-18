@@ -17,7 +17,7 @@ describe('space-manager', () => {
   test.skip('invitations', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
-      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
+      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
     afterTest(async () => await builder.close());
 

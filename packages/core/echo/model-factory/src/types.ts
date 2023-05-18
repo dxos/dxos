@@ -83,7 +83,7 @@ export type ModelConstructor<M extends Model> = (new (
   meta: ModelMeta,
   itemId: ItemID,
   getState: () => StateOf<M>,
-  MutationWriter?: MutationWriter<MutationOf<M>>
+  MutationWriter?: MutationWriter<MutationOf<M>>,
 ) => M) & {
   meta: ModelMeta;
 };
