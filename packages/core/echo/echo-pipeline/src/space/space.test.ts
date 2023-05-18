@@ -19,7 +19,7 @@ describe('space/space', () => {
     const builder = new TestAgentBuilder();
     afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
-    const [space, db] = await agent.createSpace();
+    const space = await agent.createSpace();
 
     await space.open();
     expect(space.isOpen).toBeTruthy();
@@ -43,8 +43,8 @@ describe('space/space', () => {
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
-    assert(db.databaseBackend);
-    await testLocalDatabase(db);
+    assert(space.dataPipeline.databaseHost);
+    await testLocalDatabase(space.dataPipeline);
 
     await builder.close();
     expect(space.isOpen).toBeFalsy();
@@ -57,9 +57,9 @@ describe('space/space', () => {
     //
     // Agent 1
     //
-    const [agent1, space1, db1] = await run(async () => {
+    const [agent1, space1] = await run(async () => {
       const agent = await builder.createPeer();
-      const [space, db] = await agent.createSpace(agent.identityKey);
+      const space = await agent.createSpace(agent.identityKey);
 
       await space.open();
       expect(space.isOpen).toBeTruthy();
@@ -82,22 +82,22 @@ describe('space/space', () => {
         await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       }
 
-      return [agent, space, db];
+      return [agent, space];
     });
 
     //
     // Agent 2
     //
-    const [agent2, space2, db2] = await run(async () => {
+    const [agent2, space2] = await run(async () => {
       // NOTE: The genesisKey would be passed as part of the invitation.
       const agent = await builder.createPeer();
-      const [space, db] = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey);
+      const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey);
 
       await space.open();
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
-      return [agent, space, db];
+      return [agent, space];
     });
 
     expect(agent1).toBeDefined();
@@ -134,8 +134,8 @@ describe('space/space', () => {
 
     // TODO(burdon): Write multiple items (extract for all tests).
 
-    await testLocalDatabase(db1, db2);
-    await testLocalDatabase(db2, db1);
+    await testLocalDatabase(space1.dataPipeline, space2.dataPipeline);
+    await testLocalDatabase(space2.dataPipeline, space1.dataPipeline);
 
     await builder.close();
     expect(space1.isOpen).toBeFalsy();

@@ -9,13 +9,17 @@ import { FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
+import { SnapshotManager } from '../dbhost';
+import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
+import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out?
@@ -26,6 +30,13 @@ export type SpaceParams = {
   protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
+  modelFactory: ModelFactory;
+  metadataStore: MetadataStore;
+  snapshotManager: SnapshotManager;
+  memberKey: PublicKey;
+
+  // TODO(dmaretskyi): Superseded by epochs.
+  snapshotId?: string | undefined;
 };
 
 export type CreatePipelineParams = {
@@ -49,20 +60,27 @@ export class Space {
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
+  private readonly _snapshotManager: SnapshotManager;
 
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
   private _dataPipeline?: Pipeline;
+  private _dataPipeline2: DataPipeline;
 
-  constructor({ spaceKey, protocol, genesisFeed, feedProvider }: SpaceParams) {
-    assert(spaceKey && feedProvider);
-    this._key = spaceKey;
-    this._genesisFeedKey = genesisFeed.key;
-    this._feedProvider = feedProvider;
+  constructor(params: SpaceParams) {
+    assert(params.spaceKey && params.feedProvider);
+    this._key = params.spaceKey;
+    this._genesisFeedKey = params.genesisFeed.key;
+    this._feedProvider = params.feedProvider;
+    this._snapshotManager = params.snapshotManager;
 
     // TODO(dmaretskyi): Maybe reuse createPipeline method.
-    this._controlPipeline = new ControlPipeline({ spaceKey, genesisFeed, feedProvider });
+    this._controlPipeline = new ControlPipeline({
+      spaceKey: params.spaceKey,
+      genesisFeed: params.genesisFeed,
+      feedProvider: params.feedProvider,
+    });
 
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
@@ -77,8 +95,8 @@ export class Space {
         });
       }
 
-      if (!info.key.equals(genesisFeed.key)) {
-        this.protocol.addFeed(await feedProvider(info.key));
+      if (!info.key.equals(params.genesisFeed.key)) {
+        this.protocol.addFeed(await params.feedProvider(info.key));
       }
     });
 
@@ -89,8 +107,18 @@ export class Space {
     });
 
     // Start replicating the genesis feed.
-    this.protocol = protocol;
-    this.protocol.addFeed(genesisFeed);
+    this.protocol = params.protocol;
+    this.protocol.addFeed(params.genesisFeed);
+
+    this._dataPipeline2 = new DataPipeline({
+      modelFactory: params.modelFactory,
+      metadataStore: params.metadataStore,
+      snapshotManager: params.snapshotManager,
+      memberKey: params.memberKey,
+      spaceKey: this._key,
+      feedInfoProvider: (feedKey) => this._controlPipeline.spaceState.feeds.get(feedKey),
+      snapshotId: params.snapshotId,
+    });
   }
 
   @logInfo
@@ -123,6 +151,14 @@ export class Space {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
+  }
+
+  get dataPipeline(): DataPipeline {
+    return this._dataPipeline2;
+  }
+
+  get snapshotManager(): SnapshotManager {
+    return this._snapshotManager;
   }
 
   setControlFeed(feed: FeedWrapper<FeedMessage>) {
@@ -174,12 +210,24 @@ export class Space {
       return;
     }
 
+    await this._dataPipeline2.close();
+
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
 
     this._isOpen = false;
     log('closed');
+  }
+
+  async initializeDataPipeline() {
+    await this._dataPipeline2.open({
+      openPipeline: async (start) => {
+        const pipeline = await this.createDataPipeline({ start });
+        await pipeline.start();
+        return pipeline;
+      },
+    });
   }
 
   // TODO(dmaretskyi): Make reusable.

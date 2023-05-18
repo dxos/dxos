@@ -17,7 +17,6 @@ import { ComplexMap } from '@dxos/util';
 import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
-import { DataPipeline } from '../space/data-pipeline';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -118,6 +117,9 @@ export class TestAgent {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
       networkManager: this._networkManagerProvider(),
+      modelFactory: new ModelFactory().registerModel(DocumentModel),
+      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      snapshotStore: new SnapshotStore(createStorage().createDirectory('snapshots')),
     });
   }
 
@@ -125,7 +127,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey,
-  ): Promise<[Space, DataPipeline]> {
+  ): Promise<Space> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -140,34 +142,24 @@ export class TestAgent {
 
     const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
     await metadataStore.addSpace({ key: spaceKey });
-    const dataPipelineController: DataPipeline = new DataPipeline({
-      modelFactory: new ModelFactory().registerModel(DocumentModel),
-      metadataStore,
-      snapshotManager,
-      memberKey: identityKey,
-      spaceKey,
-      feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
-      snapshotId: undefined,
-    });
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
+      modelFactory: new ModelFactory().registerModel(DocumentModel),
+      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      snapshotManager,
+      memberKey: identityKey,
+      snapshotId: undefined,
     })
       .setControlFeed(controlFeed)
       .setDataFeed(dataFeed);
     await space.open();
-    await dataPipelineController.open({
-      openPipeline: async (start) => {
-        const pipeline = await space.createDataPipeline({ start });
-        await pipeline.start();
-        return pipeline;
-      },
-    });
+    await space.initializeDataPipeline();
 
     this._spaces.set(spaceKey, space);
-    return [space, dataPipelineController];
+    return space;
   }
 
   createSpaceProtocol(topic: PublicKey, gossip?: Gossip) {

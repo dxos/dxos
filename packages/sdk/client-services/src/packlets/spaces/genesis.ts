@@ -4,11 +4,11 @@
 
 import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { Space } from '@dxos/echo-pipeline';
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Space } from './space';
-import { SigningContext } from './space-manager';
+import { SigningContext } from './data-space-manager';
 
 export const spaceGenesis = async (keyring: Keyring, signingContext: SigningContext, space: Space) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -14,6 +14,8 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
+import { ModelFactory } from '@dxos/model-factory';
+import { createDefaultModelFactory } from '@dxos/client';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({
@@ -45,6 +47,9 @@ describe('identity/identity-manager', () => {
     const spaceManager = new SpaceManager({
       feedStore,
       networkManager,
+      modelFactory: createDefaultModelFactory(),
+      metadataStore: new MetadataStore(storage.createDirectory('metadata')),
+      snapshotStore: new SnapshotStore(storage.createDirectory('snapshots')),
     });
     const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 

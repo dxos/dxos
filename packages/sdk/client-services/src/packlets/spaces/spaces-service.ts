@@ -145,7 +145,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch ({ spaceKey: _ }: CreateEpochRequest) {
+  async createEpoch({ spaceKey: _ }: CreateEpochRequest) {
     throw new Error('Not implemented');
   }
 

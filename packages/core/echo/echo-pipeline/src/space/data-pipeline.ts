@@ -79,7 +79,7 @@ export class DataPipeline {
   constructor(private readonly _params: DataPipelineParams) {}
 
   public _itemManager!: ItemManager;
-  public databaseBackend?: DatabaseHost;
+  public databaseHost?: DatabaseHost;
 
   get isOpen() {
     return this._isOpen;
@@ -125,11 +125,11 @@ export class DataPipeline {
       this._pipeline.writer ?? failUndefined(),
     );
 
-    this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
+    this.databaseHost = new DatabaseHost(feedWriter, this._snapshot?.database);
     this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
-    await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
+    await this.databaseHost.open(this._itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -163,7 +163,7 @@ export class DataPipeline {
       log.catch(err);
     }
 
-    await this.databaseBackend?.close();
+    await this.databaseHost?.close();
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
@@ -182,7 +182,7 @@ export class DataPipeline {
             continue;
           }
 
-          await this.databaseBackend!.echoProcessor({
+          await this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
@@ -202,11 +202,11 @@ export class DataPipeline {
   }
 
   private _createSnapshot(timeframe: Timeframe): SpaceSnapshot {
-    assert(this.databaseBackend, 'Database backend is not initialized.');
+    assert(this.databaseHost, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe,
-      database: this.databaseBackend!.createSnapshot(),
+      database: this.databaseHost!.createSnapshot(),
     };
   }
 
