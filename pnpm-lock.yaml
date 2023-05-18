@@ -2064,7 +2064,7 @@ importers:
       '@dxos/sentry': workspace:*
       '@dxos/tasks-template': workspace:*
       '@dxos/telemetry': workspace:*
-      '@dxos/websocket-rpc': workspace:^0.1.41
+      '@dxos/websocket-rpc': workspace:*
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
       '@oclif/plugin-plugins': ^2.4.3
@@ -3953,7 +3953,7 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/timeouts': workspace:*
       '@dxos/util': workspace:*
-      '@dxos/websocket-rpc': workspace:^0.1.41
+      '@dxos/websocket-rpc': workspace:*
       '@types/lodash.isequal': ^4.5.0
       '@types/lodash.isequalwith': ^4.4.0
       '@types/node': ^18.11.9
