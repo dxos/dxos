@@ -5,6 +5,7 @@
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 
 import { Surface, definePlugin } from '../framework';
+import { RouterPluginProvides } from './RoutesPlugin';
 
 export type SplitViewProps = {};
 
@@ -24,11 +25,24 @@ export const SplitView = (props: SplitViewProps) => {
   );
 };
 
-export const SplitViewPlugin = definePlugin({
+export const SplitViewPlugin = definePlugin<RouterPluginProvides>({
   meta: {
     id: 'dxos:SplitViewPlugin'
   },
   provides: {
+    router: {
+      routes: () => [
+        {
+          path: '/',
+          element: (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{ sidebar: { component: 'dxos:ListViewPlugin/ListView' } }}
+            />
+          )
+        }
+      ]
+    },
     context: (props: PropsWithChildren) => (
       <Context.Provider value={{ sidebarOpen: true }}>{props.children}</Context.Provider>
     ),

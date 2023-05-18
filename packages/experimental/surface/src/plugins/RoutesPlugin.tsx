@@ -2,46 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-import { useRoutes } from 'react-router';
+import React, { Dispatch, SetStateAction } from 'react';
+import { RouteObject, useRoutes } from 'react-router';
 import { HashRouter } from 'react-router-dom';
 
-import { definePlugin, Surface } from '../framework';
+import { definePlugin, Plugin, usePluginContext } from '../framework';
+
+export type ListViewContextValue = {
+  routes: RouteObject[];
+  setRoutes: Dispatch<SetStateAction<RouteObject[]>>;
+};
+
+export type RouterPluginProvides = {
+  router: {
+    routes: () => RouteObject[];
+  };
+};
+
+export type RouterPlugin = Plugin<RouterPluginProvides>;
+
+const routerPlugins = (plugins: Plugin[]): RouterPlugin[] => {
+  return (plugins as RouterPlugin[]).filter((p) => p.provides?.router);
+};
 
 export const RoutesPlugin = definePlugin({
   meta: {
     id: 'RoutesPlugin'
   },
   provides: {
-    context: ({ children }) => {
-      return <HashRouter>{children}</HashRouter>;
-    },
+    context: ({ children }) => <HashRouter>{children}</HashRouter>,
     components: {
       default: () => {
-        return useRoutes([
-          {
-            path: '/',
-            element: (
-              <Surface
-                component='dxos:SplitViewPlugin/SplitView'
-                surfaces={{ sidebar: { component: 'dxos:ListViewPlugin/ListView' } }}
-              />
-            )
-          },
-          // TODO(wittjosiah): Routes should be registered by plugins.
-          {
-            path: '/space/:spaceId',
-            element: (
-              <Surface
-                component='dxos:SplitViewPlugin/SplitView'
-                surfaces={{
-                  sidebar: { component: 'dxos:ListViewPlugin/ListView' },
-                  main: { component: 'dxos:SpacePlugin/SpaceContainer' }
-                }}
-              />
-            )
-          }
-        ]);
+        const { plugins } = usePluginContext();
+        const routes = routerPlugins(plugins)
+          .map((plugin) => plugin.provides.router.routes())
+          .flat();
+        return useRoutes(routes);
       }
     }
   }

@@ -7,9 +7,12 @@ import React, { useParams } from 'react-router';
 import { MulticastObservable } from '@dxos/async';
 import { useSpace } from '@dxos/react-client';
 
-import { definePlugin, findPlugin } from '../framework';
+import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
 import { GraphPluginProvides } from './ListViewPlugin';
+import { RouterPluginProvides } from './RoutesPlugin';
+
+export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
 
 export const SpaceContainer = () => {
   const { spaceId } = useParams();
@@ -17,11 +20,27 @@ export const SpaceContainer = () => {
   return <pre>{JSON.stringify(space?.properties)}</pre>;
 };
 
-export const SpacePlugin = definePlugin<GraphPluginProvides>({
+export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
     id: 'dxos:SpacePlugin'
   },
   provides: {
+    router: {
+      routes: () => [
+        {
+          path: '/space/:spaceId',
+          element: (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{
+                sidebar: { component: 'dxos:ListViewPlugin/ListView' },
+                main: { component: 'dxos:SpacePlugin/SpaceContainer' }
+              }}
+            />
+          )
+        }
+      ]
+    },
     components: {
       SpaceContainer
     },

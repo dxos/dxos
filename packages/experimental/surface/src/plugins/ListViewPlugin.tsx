@@ -86,7 +86,6 @@ export const ListViewContainer = () => {
   const { spaceId } = useParams();
   const navigate = useNavigate();
   useEffect(() => {
-    console.log({ selected, spaceId });
     if (selected && selected?.id !== spaceId) {
       navigate(`/space/${selected.id}`);
     }
