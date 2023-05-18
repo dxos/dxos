@@ -20,7 +20,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       );
 
       next({
-        spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
+      spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
           const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
             spaceMetadata.key.equals(space.key),
           );
