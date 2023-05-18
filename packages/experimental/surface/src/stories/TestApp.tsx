@@ -6,7 +6,12 @@ import React from 'react';
 
 import { PluginContextProvider } from '../framework';
 import { ThemePlugin, ClientPlugin, SplitViewPlugin, ListViewPlugin, RoutesPlugin } from '../plugins';
+import { SpacePlugin } from '../plugins/SpacePlugin';
 
 export const TestApp = () => {
-  return <PluginContextProvider plugins={[ThemePlugin, ClientPlugin, SplitViewPlugin, ListViewPlugin, RoutesPlugin]} />;
+  return (
+    <PluginContextProvider
+      plugins={[RoutesPlugin, ThemePlugin, ClientPlugin, ListViewPlugin, SplitViewPlugin, SpacePlugin]}
+    />
+  );
 };

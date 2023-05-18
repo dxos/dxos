@@ -32,6 +32,20 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
   // otherwise iterate through plugins where plugin.provides.component(datum) returns something
   // pass children down to the components via plugin.provides.component(data, { children }) or just render any children otherwise
 
+  // TODO(wittjosiah): Handle lists.
+  if (typeof props.component === 'string') {
+    const [pluginId, componentId] = props.component.split('/');
+    const Component = plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
+    return Component ? [<Component key={props.component} />] : [];
+  }
+
+  const contextComponent = props.name && context?.surfaces?.[props.name]?.component;
+  if (typeof contextComponent === 'string') {
+    const [pluginId, componentId] = contextComponent.split('/');
+    const Component = plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
+    return Component ? [<Component key={contextComponent} />] : [];
+  }
+
   return [];
 };
 

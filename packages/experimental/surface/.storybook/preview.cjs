@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/react-appkit';
+// import React, { createElement, useEffect } from 'react';
+// import { ThemeProvider } from '@dxos/react-appkit';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -34,12 +34,12 @@ export const globalTypes = {
   },
 }
 
-const withTheme = (StoryFn, context) => {
-  const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
-    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn)})
-}
+// const withTheme = (StoryFn, context) => {
+//   const theme = context?.parameters?.theme || context?.globals?.theme;
+//   useEffect(()=>{
+//     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
+//   }, [theme])
+//   return createElement(ThemeProvider, {children: createElement(StoryFn)})
+// }
 
-export const decorators = [withTheme];
+// export const decorators = [withTheme];

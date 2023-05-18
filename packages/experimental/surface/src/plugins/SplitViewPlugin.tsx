@@ -4,8 +4,7 @@
 
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 
-import { Surface, definePlugin, usePluginContext } from '../framework';
-
+import { Surface, definePlugin } from '../framework';
 
 export type SplitViewProps = {};
 
@@ -27,11 +26,11 @@ export const SplitView = (props: SplitViewProps) => {
 
 export const SplitViewPlugin = definePlugin({
   meta: {
-    id: 'SplitViewPlugin'
+    id: 'dxos:SplitViewPlugin'
   },
   provides: {
     context: (props: PropsWithChildren) => (
-      <Context.Provider value={{ sidebarOpen: false }}>{props.children}</Context.Provider>
+      <Context.Provider value={{ sidebarOpen: true }}>{props.children}</Context.Provider>
     ),
     components: { SplitView }
   }
