@@ -7,7 +7,6 @@
       "ESNext"
     ],
     "outDir": "dist",
-    "composite": false,
     "rootDirs": [
       "./src"
     ]
