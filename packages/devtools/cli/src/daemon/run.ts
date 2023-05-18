@@ -23,19 +23,19 @@ export const runDaemon = async (params: RunDaemonParams) => {
       services: {
         signaling: [
           {
-            server: 'wss://kube.dxos.org/.well-known/dx/signal'
+            server: 'wss://kube.dxos.org/.well-known/dx/signal',
           },
           {
-            server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
-          }
-        ]
-      }
-    }
+            server: 'wss://dev.kube.dxos.org/.well-known/dx/signal',
+          },
+        ],
+      },
+    },
   });
 
   const client = new Client({
     config,
-    services: fromHost(config)
+    services: fromHost(config),
   });
 
   await client.initialize();
@@ -63,9 +63,9 @@ export const runDaemon = async (params: RunDaemonParams) => {
         },
         onClose: async () => {
           log.info('close', { id });
-        }
+        },
       };
-    }
+    },
   });
 
   await server.open();

@@ -25,7 +25,7 @@ test.skip('connect to local CLI', async () => {
   // })
 
   console.log({
-    spaces: client.spaces.get()
+    spaces: client.spaces.get(),
   });
 
   const space = client.spaces.get()[0];

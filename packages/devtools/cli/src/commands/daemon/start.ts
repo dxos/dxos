@@ -17,8 +17,8 @@ export default class Start extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     profile: Flags.string({
-      description: 'Profile name.'
-    })
+      description: 'Profile name.',
+    }),
   };
 
   async run(): Promise<any> {
@@ -33,9 +33,9 @@ export default class Start extends BaseCommand {
             'daemon',
             'run',
             `--listen=unix://${process.env.HOME}/.dx/run/${params.flags.profile}.sock`,
-            '--profile=' + params.flags.profile!
+            '--profile=' + params.flags.profile!,
           ],
-          name: params.flags.profile!
+          name: params.flags.profile!,
         },
         (err, proc) => {
           if (err) {
@@ -43,7 +43,7 @@ export default class Start extends BaseCommand {
           } else {
             resolve(proc!);
           }
-        }
+        },
       );
     });
 

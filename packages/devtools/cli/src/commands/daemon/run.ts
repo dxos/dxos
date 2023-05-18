@@ -16,16 +16,16 @@ export default class Run extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     listen: Flags.string({
-      description: 'Expose services.'
+      description: 'Expose services.',
     }),
     profile: Flags.string({
-      description: 'Profile to use.'
-    })
+      description: 'Profile to use.',
+    }),
   };
 
   async run(): Promise<any> {
     const {
-      flags: { listen, profile }
+      flags: { listen, profile },
     } = await this.parse(Run);
     await runDaemon({ listen: listen!, profile: profile! });
     await new Promise(() => {});

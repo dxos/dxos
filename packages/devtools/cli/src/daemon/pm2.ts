@@ -21,7 +21,7 @@ const Pm2Api: new (params?: Pm2Params) => typeof pm2 = (pm2 as any).custom;
 
 export const getPm2 = async () => {
   const instance = new Pm2Api({
-    pm2_home: `${process.env.HOME}/.dx/store/pm2`
+    pm2_home: `${process.env.HOME}/.dx/store/pm2`,
   });
 
   const connected = new Trigger();

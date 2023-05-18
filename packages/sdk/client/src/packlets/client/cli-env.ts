@@ -37,7 +37,7 @@ export class CliEnvClientServiceProvider implements ClientServicesProvider {
       url: `ws+unix://${process.env.HOME}/.dx/run/${this._profile}.sock`,
       requested: clientServiceBundle,
       exposed: {},
-      handlers: {}
+      handlers: {},
     });
     await this._client.open();
   }

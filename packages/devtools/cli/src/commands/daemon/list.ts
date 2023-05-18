@@ -27,7 +27,7 @@ export default class List extends BaseCommand {
       name: proc.name,
       pid: proc.pid,
       cpu: proc.monit?.cpu,
-      memory: proc.monit?.memory
+      memory: proc.monit?.memory,
     }));
 
     console.log(result);
