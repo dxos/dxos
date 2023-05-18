@@ -3,7 +3,7 @@
 //
 
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import {
   bracketMatching,
@@ -29,7 +29,7 @@ import {
   rectangularSelection,
   EditorView,
 } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState, KeyboardEvent } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
@@ -85,6 +85,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
     const [view, setView] = useState<EditorView>();
+
     useImperativeHandle(forwardedRef, () => ({
       editor: parent,
       state,
@@ -143,6 +144,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
             ...foldKeymap,
             ...completionKeymap,
             ...lintKeymap,
+            indentWithTab,
           ]),
           EditorView.lineWrapping,
           // Theme
@@ -175,6 +177,15 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       };
     }, [parent, content, provider?.awareness, themeMode]);
 
-    return <div key={id} {...slots.root} ref={setParent} />;
+    const escKeyUp = useCallback(
+      ({ key }: KeyboardEvent) => {
+        if (parent && key === 'Escape') {
+          parent.focus();
+        }
+      },
+      [parent],
+    );
+
+    return <div tabIndex={0} onKeyUp={escKeyUp} key={id} {...slots.root} ref={setParent} />;
   },
 );
