@@ -8,6 +8,7 @@ import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import {
+  CreateEpochRequest,
   PostMessageRequest,
   QueryCredentialsRequest,
   QuerySpacesResponse,
@@ -142,6 +143,10 @@ export class SpacesServiceImpl implements SpacesService {
     for (const credential of credentials ?? []) {
       await space.controlPipeline.writer.write({ credential: { credential } });
     }
+  }
+
+  async createEpoch ({ spaceKey: _ }: CreateEpochRequest) {
+    throw new Error('Not implemented');
   }
 
   private _transformSpace(space: DataSpace): Space {

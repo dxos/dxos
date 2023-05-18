@@ -228,6 +228,10 @@ message QueryCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message CreateEpochRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
@@ -242,6 +246,8 @@ service SpacesService {
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
+
+  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
 }
 
 //
