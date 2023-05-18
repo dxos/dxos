@@ -13,7 +13,20 @@ export type RunDaemonParams = {
 }
 
 export const runDaemon = async (params: RunDaemonParams) => {
-  const config = new Config();
+  const config = new Config({
+    runtime: {
+      services: {
+        signaling: [
+          {
+            "server": "wss://kube.dxos.org/.well-known/dx/signal"
+          },
+          {
+            "server": "wss://dev.kube.dxos.org/.well-known/dx/signal"
+          }
+        ]
+      }
+    }
+  });
 
   const client = new Client({
     config,

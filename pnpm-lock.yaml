@@ -3953,6 +3953,7 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/timeouts': workspace:*
       '@dxos/util': workspace:*
+      '@dxos/websocket-rpc': workspace:^0.1.41
       '@types/lodash.isequal': ^4.5.0
       '@types/lodash.isequalwith': ^4.4.0
       '@types/node': ^18.11.9
@@ -3985,6 +3986,7 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeouts': link:../../common/timeouts
       '@dxos/util': link:../../common/util
+      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       base-x: 3.0.9
       debug: 4.3.4
       lodash.isequal: 4.5.0

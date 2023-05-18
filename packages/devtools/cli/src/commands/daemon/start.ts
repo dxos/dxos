@@ -24,7 +24,7 @@ export default class Start extends BaseCommand {
     const proc = await new Promise<Proc>((resolve, reject) => {
       pm2.start({
         script: process.argv[1],
-        args: ['daemon', 'run', `--listen=unix:///var/run/dxos/${params.flags.profile}.sock`, '--profile=' + params.flags.profile!],
+        args: ['daemon', 'run', `--listen=unix://${process.env.HOME}/.dx/run/${params.flags.profile}.sock`, '--profile=' + params.flags.profile!],
         name: params.flags.profile!,
       }, (err, proc) => {
         if(err) {
