@@ -15,7 +15,7 @@ if [ $BRANCH = "production" ]; then
 
   eval "CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
   eval "CLIENT_SECRET=$"${PACKAGE_ENV}_CLIENT_SECRET""
-  eval "AUTH_CODE=$"${PACKAGE_ENV}_REFRESH_TOKEN""
+  eval "AUTH_CODE=$"${PACKAGE_ENV}_AUTH_CODE""
   eval "APP_ID=$"${PACKAGE_ENV}_APP_ID""
 
   ZIP_PATH=${ROOT}/artifacts/${PACKAGE}.zip
