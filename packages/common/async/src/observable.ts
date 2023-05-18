@@ -101,6 +101,26 @@ export class MulticastObservable<T> extends Observable<T> {
     return new MulticastObservable(this._observable.concat(...observables), this._value as R);
   }
 
+  /**
+   * Concatenates multicast observables without losing the current value.
+   * @param reducer reduces the values of any multicast observables being concatenated into a single value
+   * @param observables observables to concatenate
+   * @returns concatenated observable
+   */
+  losslessConcat<R>(
+    reducer: (currentValue: R, newValues: R[]) => R,
+    ...observables: Array<Observable<R>>
+  ): MulticastObservable<R> {
+    const multicast = observables.filter(
+      (observable): observable is MulticastObservable<R> => observable instanceof MulticastObservable
+    );
+    const value = reducer(
+      this._value as R,
+      multicast.map((observable) => observable.get())
+    );
+    return new MulticastObservable(this._observable.concat(...observables), value);
+  }
+
   private _subscribe(observer: Observer<T>) {
     if (!this._observers.has(observer)) {
       this._observers.add(observer);

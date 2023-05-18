@@ -4,6 +4,7 @@
 
 import React, { useParams } from 'react-router';
 
+import { MulticastObservable } from '@dxos/async';
 import { useSpace } from '@dxos/react-client';
 
 import { definePlugin, findPlugin } from '../framework';
@@ -28,38 +29,40 @@ export const SpacePlugin = definePlugin<GraphPluginProvides>({
       nodes: (plugins, parent) => {
         const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
         if (!clientPlugin) {
-          return [];
+          return MulticastObservable.of([]);
         }
 
         if (parent) {
-          return [];
+          return MulticastObservable.of([]);
         }
 
-        return clientPlugin.provides.client.spaces.get().map((space) => ({
-          id: space.key.toHex(),
-          label: space.properties.name ?? 'Untitled space'
-        }));
+        return clientPlugin.provides.client.spaces.map((spaces) =>
+          spaces.map((space) => ({
+            id: space.key.toHex(),
+            label: space.properties.name ?? 'Untitled space'
+          }))
+        );
       },
       actions: (plugins, parent) => {
         const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
         if (!clientPlugin) {
-          return [];
+          return MulticastObservable.of([]);
         }
 
         if (parent) {
-          return [];
+          return MulticastObservable.of([]);
         }
 
-        return [
+        // TODO(wittjosiah): Disable if no identity.
+        return MulticastObservable.of([
           {
             id: 'dxos:CreateSpace',
             label: 'Create space',
             invoke: async () => {
-              const space = await clientPlugin.provides.client.createSpace();
-              console.log(space);
+              await clientPlugin.provides.client.createSpace();
             }
           }
-        ];
+        ]);
       }
     }
   }

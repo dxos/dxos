@@ -5,6 +5,9 @@
 import React, { UIEvent, FC, createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
+import { MulticastObservable } from '@dxos/async';
+import { useMulticastObservable } from '@dxos/react-async';
+
 import { definePlugin, usePluginContext, Plugin } from '../framework';
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -52,11 +55,10 @@ type GraphNodeAction = {
   invoke: (event: UIEvent) => MaybePromise<void>;
 };
 
-// TODO(wittjosiah): Observable.
 export type GraphPluginProvides = {
   graph: {
-    nodes?: (plugins: Plugin[], parent?: GraphNode) => GraphNode[];
-    actions?: (plugins: Plugin[], parent?: GraphNode) => GraphNodeAction[];
+    nodes?: (plugins: Plugin[], parent?: GraphNode) => MulticastObservable<GraphNode[]>;
+    actions?: (plugins: Plugin[], parent?: GraphNode) => MulticastObservable<GraphNodeAction[]>;
   };
 };
 
@@ -64,18 +66,14 @@ export type GraphPlugin = Plugin<GraphPluginProvides>;
 
 export type ListViewContextValue = {
   items: GraphNode[];
-  setItems(items: GraphNode[]): any;
   actions: GraphNodeAction[];
-  setActions(actions: GraphNodeAction[]): any;
   selected: GraphNode | null;
   setSelected(item: GraphNode | null): any;
 };
 
 const Context = createContext<ListViewContextValue>({
   items: [],
-  setItems: () => {},
   actions: [],
-  setActions: () => {},
   selected: null,
   setSelected: () => {}
 });
@@ -83,7 +81,17 @@ const Context = createContext<ListViewContextValue>({
 export const useListViewContext = () => useContext(Context);
 
 export const ListViewContainer = () => {
-  const { items, actions, setSelected } = useListViewContext();
+  const { items, actions, selected, setSelected } = useListViewContext();
+
+  const { spaceId } = useParams();
+  const navigate = useNavigate();
+  useEffect(() => {
+    console.log({ selected, spaceId });
+    if (selected && selected?.id !== spaceId) {
+      navigate(`/space/${selected.id}`);
+    }
+  }, [selected, spaceId]);
+
   return (
     <div>
       <div>
@@ -105,14 +113,6 @@ const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
   return (plugins as GraphPlugin[]).filter((p) => p.provides?.graph);
 };
 
-const getItems = async (plugins: Plugin[]): Promise<GraphNode[]> => {
-  return (await Promise.all(graphPlugins(plugins).map((p) => p.provides.graph.nodes?.(plugins) ?? []))).flat();
-};
-
-const getActions = async (plugins: Plugin[]): Promise<GraphNodeAction[]> => {
-  return (await Promise.all(graphPlugins(plugins).map((p) => p.provides.graph.actions?.(plugins) ?? []))).flat();
-};
-
 export const ListViewPlugin = definePlugin({
   meta: {
     id: 'dxos:ListViewPlugin'
@@ -120,40 +120,32 @@ export const ListViewPlugin = definePlugin({
   provides: {
     context: ({ children }) => {
       const { plugins } = usePluginContext();
-      const [items, setItems] = useState<GraphNode[]>([]);
-      const [actions, setActions] = useState<GraphNodeAction[]>([]);
       const [selected, setSelected] = useState<GraphNode | null>(null);
-      const initialValue: ListViewContextValue = {
+
+      const items = useMulticastObservable(
+        graphPlugins(plugins)
+          .map((plugin) => plugin.provides.graph.nodes?.(plugins))
+          .filter((nodes): nodes is MulticastObservable<GraphNode[]> => Boolean(nodes))
+          .reduce((acc, observable) => acc.losslessConcat((a, b) => a.concat(...b), observable))
+          .reduce((acc, actions) => acc.concat(...actions))
+      );
+
+      const actions = useMulticastObservable(
+        graphPlugins(plugins)
+          .map((plugin) => plugin.provides.graph.actions?.(plugins))
+          .filter((nodes): nodes is MulticastObservable<GraphNodeAction[]> => Boolean(nodes))
+          .reduce((acc, observable) => acc.losslessConcat((a, b) => a.concat(...b), observable))
+          .reduce((acc, actions) => acc.concat(...actions))
+      );
+
+      const context: ListViewContextValue = {
         items,
         actions,
         selected,
-        setItems,
-        setActions,
         setSelected
       };
 
-      useEffect(() => {
-        const timeout = setTimeout(async () => {
-          const items = await getItems(plugins);
-          const actions = await getActions(plugins);
-
-          setItems(items);
-          setActions(actions);
-        });
-
-        return () => clearTimeout(timeout);
-      }, []);
-
-      const { spaceId } = useParams();
-      const navigate = useNavigate();
-      useEffect(() => {
-        console.log({ selected, spaceId });
-        if (selected && selected?.id !== spaceId) {
-          navigate(`/space/${selected.id}`);
-        }
-      }, [selected, spaceId]);
-
-      return <Context.Provider value={initialValue}>{children}</Context.Provider>;
+      return <Context.Provider value={context}>{children}</Context.Provider>;
     },
     components: { ListView: ListViewContainer }
   }

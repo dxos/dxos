@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { MulticastObservable } from '@dxos/async';
 import { Client, ClientProvider } from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
@@ -27,11 +28,10 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
       graph: {
         actions: (_, parent) => {
           if (parent) {
-            return [];
+            return MulticastObservable.of([]);
           }
-
           // TODO(wittjosiah): This is probably not a graph node action, just to expose it in the story for the moment.
-          return [
+          return MulticastObservable.of([
             {
               id: 'dxos:CreateIdentity',
               label: 'Create identity',
@@ -40,7 +40,7 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
                 console.log(identity);
               }
             }
-          ];
+          ]);
         }
       }
     };

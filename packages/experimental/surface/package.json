@@ -20,6 +20,7 @@
     "@dxos/kai-frames": "workspace:*",
     "@dxos/kai-types": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
