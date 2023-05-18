@@ -1,8 +1,11 @@
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, test } from '@dxos/test'
-import { InvitationEncoder } from '../invitations';
-import { fromCliEnv } from './cli-env'
-import { Client } from './client'
+//
+// Copyright 2023 DXOS.org
+//
+
+import { afterTest, test } from '@dxos/test';
+
+import { fromCliEnv } from './cli-env';
+import { Client } from './client';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {
@@ -11,7 +14,7 @@ test.skip('connect to local CLI', async () => {
   afterTest(() => client.destroy());
 
   // await client.halo.createIdentity({ name: 'test' });
-  console.log({ identity: client.halo.identity.get() })
+  console.log({ identity: client.halo.identity.get() });
 
   // const invitation = client.acceptInvitation(InvitationEncoder.decode('4ZxWyOpQ3b51vdr9azhGPnGqazqS9sLKIn45jHfNukf2AJk8x7Ny2iy62gfZSdouObK7RRSki54UlSx4VWg9J5JyC0gr1qMgpOmgUUTiBtxROe1lr3CsSRKkRBz1fhC68hWyf5TN2yLIcoMZuqYoFZ0L0'))
   // invitation.subscribe(state => {
@@ -22,15 +25,14 @@ test.skip('connect to local CLI', async () => {
   // })
 
   console.log({
-    spaces: client.spaces.get(),
-  })
+    spaces: client.spaces.get()
+  });
 
   const space = client.spaces.get()[0];
   await space.waitUntilReady();
 
+  const { objects } = space.db.query({});
+  console.log(objects.length);
 
-  const { objects } = space.db.query({})
-  console.log(objects.length)
-
-  await new Promise(() => {})
-})
+  await new Promise(() => {});
+});

@@ -1,6 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import pm2 from 'pm2';
+
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import pm2 from 'pm2';
 
 type Pm2Params = {
   cwd?: string; // * @param {String}  [opts.cwd=<current>]         override pm2 cwd for starting scripts
@@ -10,19 +15,19 @@ type Pm2Params = {
   public_key?: string; // * @param {String}  [opts.public_key=null]       pm2 plus bucket public key
   secret_key?: string; // * @param {String}  [opts.secret_key=null]       pm2 plus bucket secret key
   machine_name?: string; // * @param {String}  [opts.machine_name=null]     pm2 plus instance name
-}
+};
 
 const Pm2Api: new (params?: Pm2Params) => typeof pm2 = (pm2 as any).custom;
 
 export const getPm2 = async () => {
   const instance = new Pm2Api({
-    pm2_home: `${process.env.HOME}/.dx/store/pm2`,
+    pm2_home: `${process.env.HOME}/.dx/store/pm2`
   });
 
   const connected = new Trigger();
-  instance.connect(err => {
-    if(err) {
-      connected.throw(err)
+  instance.connect((err) => {
+    if (err) {
+      connected.throw(err);
     } else {
       connected.wake();
     }
@@ -33,4 +38,4 @@ export const getPm2 = async () => {
   log.info('PM2 connected.');
 
   return instance;
-}
+};

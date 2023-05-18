@@ -1,22 +1,27 @@
-import { clientServiceBundle, ClientServices, ClientServicesProvider } from "./service-definitions";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
-import { ServiceBundle } from "@dxos/rpc";
+
+import { clientServiceBundle, ClientServices, ClientServicesProvider } from './service-definitions';
 
 export type FromCliEnvOptions = {
   profile?: string;
-}
+};
 
 /**
  * Connects to locally running CLI daemon.
  */
 export const fromCliEnv = ({ profile = 'default' }: FromCliEnvOptions = {}): ClientServicesProvider => {
   return new CliEnvClientServiceProvider(profile);
-}
+};
 
 export class CliEnvClientServiceProvider implements ClientServicesProvider {
   private _client?: WebsocketRpcClient<ClientServices, {}>;
 
-  constructor(private readonly _profile: string) { }
+  constructor(private readonly _profile: string) {}
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;

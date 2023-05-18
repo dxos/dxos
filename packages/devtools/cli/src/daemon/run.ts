@@ -1,16 +1,21 @@
-import { Client, ClientServices, Config, PublicKey } from "@dxos/client";
-import { fromHost } from "@dxos/client-services";
-import { log } from "@dxos/log";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { assert } from 'node:console';
+import { mkdirSync, rmSync } from 'node:fs';
+import * as http from 'node:http';
+import { dirname } from 'node:path';
+
+import { Client, ClientServices, Config, PublicKey } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
+import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
-import { assert } from "node:console";
-import { mkdir, mkdirSync, rmSync } from "node:fs";
-import * as http from 'node:http'
-import { dirname } from "node:path";
 
 export type RunDaemonParams = {
   profile: string;
   listen: string;
-}
+};
 
 export const runDaemon = async (params: RunDaemonParams) => {
   const config = new Config({
@@ -18,10 +23,10 @@ export const runDaemon = async (params: RunDaemonParams) => {
       services: {
         signaling: [
           {
-            "server": "wss://kube.dxos.org/.well-known/dx/signal"
+            server: 'wss://kube.dxos.org/.well-known/dx/signal'
           },
           {
-            "server": "wss://dev.kube.dxos.org/.well-known/dx/signal"
+            server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
           }
         ]
       }
@@ -39,8 +44,8 @@ export const runDaemon = async (params: RunDaemonParams) => {
   const httpServer = http.createServer();
 
   assert(params.listen.startsWith('unix://'), 'Invalid listen address.');
-  const socketAddr = params.listen.slice(`unix://`.length);
-  mkdirSync(dirname(socketAddr), { recursive: true })
+  const socketAddr = params.listen.slice('unix://'.length);
+  mkdirSync(dirname(socketAddr), { recursive: true });
   rmSync(socketAddr, { force: true });
   httpServer.listen(socketAddr);
 
@@ -65,5 +70,4 @@ export const runDaemon = async (params: RunDaemonParams) => {
 
   await server.open();
   log.info('listening', { socket: params.listen });
-
-}
+};

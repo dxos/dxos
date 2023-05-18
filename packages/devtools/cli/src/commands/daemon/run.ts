@@ -1,7 +1,11 @@
 //
 
+//
+// Copyright 2023 DXOS.org
+//
 
 import { Flags } from '@oclif/core';
+
 import { BaseCommand } from '../../base-command';
 import { runDaemon } from '../../daemon/run';
 
@@ -20,8 +24,10 @@ export default class Run extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags: { listen, profile } } = await this.parse(Run);
-    runDaemon({ listen: listen!, profile: profile! });
-    await new Promise(() => {})
+    const {
+      flags: { listen, profile }
+    } = await this.parse(Run);
+    await runDaemon({ listen: listen!, profile: profile! });
+    await new Promise(() => {});
   }
 }
