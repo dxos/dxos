@@ -66,7 +66,7 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         number: 0,
         previousId: undefined,
         timeframe: new Timeframe(),
-        snapshotCid: undefined
+        snapshotCid: undefined,
       },
     }),
   ];

@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe'
+import { Timeframe } from '@dxos/timeframe';
 
 import { createCredential, CredentialSigner } from './credential-factory';
 
@@ -151,7 +151,7 @@ export class CredentialGenerator {
         '@type': 'dxos.halo.credentials.Epoch',
         number: 0,
         timeframe: new Timeframe(),
-      }
+      },
     });
   }
 }

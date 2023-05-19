@@ -22,7 +22,7 @@ describe('space/space', () => {
     const space = await agent.createSpace();
 
     await space.open();
-    
+
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
@@ -75,7 +75,7 @@ describe('space/space', () => {
         const credentials = [
           ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
           await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
-        await generator.createEpochCredential(space.key),
+          await generator.createEpochCredential(space.key),
         ];
 
         for (const credential of credentials) {

@@ -4,8 +4,18 @@
 
 import expect from 'expect';
 
+import { createDefaultModelFactory } from '@dxos/client';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
-import { MetadataStore, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SnapshotManager, SnapshotStore, Space, SpaceProtocol, valueEncoding } from '@dxos/echo-pipeline';
+import {
+  MetadataStore,
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  SnapshotManager,
+  SnapshotStore,
+  Space,
+  SpaceProtocol,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -17,7 +27,6 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
-import { createDefaultModelFactory } from '@dxos/client';
 
 describe('identity/identity', () => {
   test('create', async () => {
@@ -65,7 +74,9 @@ describe('identity/identity', () => {
       memberKey: identityKey,
       modelFactory: createDefaultModelFactory(),
       metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-      snapshotManager: new SnapshotManager(new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory())),
+      snapshotManager: new SnapshotManager(
+        new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+      ),
       snapshotId: undefined,
     })
       .setControlFeed(controlFeed)
@@ -175,7 +186,9 @@ describe('identity/identity', () => {
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
         metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-        snapshotManager: new SnapshotManager(new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory())),
+        snapshotManager: new SnapshotManager(
+          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        ),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);
@@ -258,7 +271,9 @@ describe('identity/identity', () => {
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
         metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-        snapshotManager: new SnapshotManager(new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory())),
+        snapshotManager: new SnapshotManager(
+          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        ),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);

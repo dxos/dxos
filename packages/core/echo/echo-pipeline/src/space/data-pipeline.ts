@@ -114,13 +114,13 @@ export class DataPipeline {
     return {
       process: async (credential) => {
         const assertion = getCredentialAssertion(credential);
-        if(assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
           return;
         }
 
         log('new epoch', { credential });
-      }
-    }
+      },
+    };
   }
 
   @synchronized

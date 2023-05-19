@@ -165,7 +165,6 @@ describe('Client services', () => {
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
-    debugger;
     const hostSpace = await client1.createSpace();
     log.info('createSpace', { key: hostSpace.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(

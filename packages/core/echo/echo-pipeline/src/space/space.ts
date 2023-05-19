@@ -17,7 +17,7 @@ import { AsyncCallback, Callback } from '@dxos/util';
 
 import { SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
-import { Pipeline, PipelineAccessor } from '../pipeline';
+import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
@@ -132,9 +132,11 @@ export class Space {
           }
         });
         await pipeline.start();
-      }
+      },
     });
-    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(this._dataPipeline.createCredentialProcessor());
+    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(
+      this._dataPipeline.createCredentialProcessor(),
+    );
   }
 
   @logInfo
@@ -239,7 +241,7 @@ export class Space {
 
   async initializeDataPipeline() {
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    await this._dataPipeline.open()
+    await this._dataPipeline.open();
     await this._dataPipelineCredentialConsumer.open();
   }
 }
