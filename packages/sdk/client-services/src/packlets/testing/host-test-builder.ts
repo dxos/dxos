@@ -5,14 +5,7 @@
 import { createDefaultModelFactory } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import {
-  SnapshotStore,
-  DataPipeline,
-  MetadataStore,
-  SigningContext,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
+import { SnapshotStore, DataPipeline, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -21,6 +14,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { ClientServicesHost, ServiceContext } from '../services';
+import { SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -137,6 +131,9 @@ export class TestPeer {
     return (this._props.spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: createDefaultModelFactory(),
+      snapshotStore: this.snapshotStore,
     }));
   }
 }

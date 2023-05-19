@@ -1617,6 +1617,7 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/encoding-down': ^5.0.0
@@ -1653,6 +1654,7 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
+      '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       bip39: 3.0.4
       buffer-json-encoding: 1.0.2

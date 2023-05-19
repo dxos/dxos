@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { FeedInfo } from '@dxos/credentials';
+import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { ItemManager, getStateMachineFromItem } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -35,6 +35,11 @@ export type DataPipelineParams = {
   spaceKey: PublicKey;
   feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined;
   snapshotId: string | undefined;
+
+  /**
+   * Could be called multiple times.
+   */
+  onPipelineCreated: (pipeline: Pipeline) => Promise<void>;
 };
 
 /**
@@ -65,7 +70,6 @@ const DISABLE_SNAPSHOT_CACHE = true;
 @trackLeaks('open', 'close')
 export class DataPipeline {
   private _ctx = new Context();
-  private _spaceContext!: PipelineFactory;
   private _pipeline?: Pipeline;
   private _snapshot?: SpaceSnapshot;
   private _targetTimeframe?: Timeframe;
@@ -79,10 +83,14 @@ export class DataPipeline {
   constructor(private readonly _params: DataPipelineParams) {}
 
   public _itemManager!: ItemManager;
-  public databaseBackend?: DatabaseHost;
+  public databaseHost?: DatabaseHost;
 
   get isOpen() {
     return this._isOpen;
+  }
+
+  get pipeline() {
+    return this._pipeline;
   }
 
   get pipelineState() {
@@ -102,19 +110,32 @@ export class DataPipeline {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
+  createCredentialProcessor(): CredentialProcessor {
+    return {
+      process: async (credential) => {
+        const assertion = getCredentialAssertion(credential);
+        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+          return;
+        }
+
+        log('new epoch', { credential });
+      },
+    };
+  }
+
   @synchronized
-  async open(spaceContext: PipelineFactory) {
+  async open() {
     if (this._isOpen) {
       return;
     }
 
-    this._spaceContext = spaceContext;
     if (this._params.snapshotId && !DISABLE_SNAPSHOT_CACHE) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
       this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
     }
 
-    this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
+    this._pipeline = new Pipeline(this.getStartTimeframe());
+    await this._params.onPipelineCreated(this._pipeline);
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
     }
@@ -125,11 +146,11 @@ export class DataPipeline {
       this._pipeline.writer ?? failUndefined(),
     );
 
-    this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
+    this.databaseHost = new DatabaseHost(feedWriter, this._snapshot?.database);
     this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
-    await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
+    await this.databaseHost.open(this._itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -163,7 +184,7 @@ export class DataPipeline {
       log.catch(err);
     }
 
-    await this.databaseBackend?.close();
+    await this.databaseHost?.close();
     await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
@@ -182,7 +203,7 @@ export class DataPipeline {
             continue;
           }
 
-          await this.databaseBackend!.echoProcessor({
+          await this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
@@ -202,11 +223,11 @@ export class DataPipeline {
   }
 
   private _createSnapshot(timeframe: Timeframe): SpaceSnapshot {
-    assert(this.databaseBackend, 'Database backend is not initialized.');
+    assert(this.databaseHost, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe,
-      database: this.databaseBackend!.createSnapshot(),
+      database: this.databaseHost!.createSnapshot(),
     };
   }
 
