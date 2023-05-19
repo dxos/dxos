@@ -73,13 +73,7 @@ export const StandaloneLayout = () => {
       <OctokitProvider>
         <MainRoot>
           <MainOverlay />
-          <Sidebar
-            {...{
-              classNames: [defaultOsButtonColors, 'backdrop-blur overflow-visible'],
-              onOpenAutoFocus: (event) => event.preventDefault(),
-              onCloseAutoFocus: (event) => event.preventDefault(),
-            }}
-          >
+          <Sidebar swipeToDismiss classNames={[defaultOsButtonColors, 'backdrop-blur overflow-visible']}>
             <SidebarContent />
           </Sidebar>
           <Main classNames='min-bs-full'>

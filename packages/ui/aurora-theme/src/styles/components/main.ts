@@ -14,7 +14,7 @@ export type MainStyleProps = Partial<{
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-30 overscroll-contain overflow-x-hidden overflow-y-auto bg-neutral-25 dark:bg-neutral-900',
+    'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-30 overscroll-contain overflow-x-hidden overflow-y-auto bg-neutral-25 dark:bg-neutral-850',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
     sidebarOpen ? 'inline-start-0' : '-inline-start-[100vw] sm:-inline-start-[270px]',
     surfaceElevation({ elevation: 'chrome' }),
