@@ -8,7 +8,7 @@ import path from 'path';
 
 import { describe, test } from '@dxos/test';
 
-describe.only('App', () => {
+describe('App', () => {
   const tmpFolder = path.join(__dirname, '../../../tmp/dx');
 
   test('create', async () => {
