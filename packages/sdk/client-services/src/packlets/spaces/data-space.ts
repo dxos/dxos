@@ -7,20 +7,12 @@ import { SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import {
-  MetadataStore,
-  Space,
-  SigningContext,
-  createMappedFeedWriter,
-  SnapshotManager,
-  DataPipeline,
-} from '@dxos/echo-pipeline';
+import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
 import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -29,6 +21,7 @@ import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 
 const AUTH_TIMEOUT = 30000;
@@ -47,16 +40,12 @@ export type DataSpaceCallbacks = {
 
 export type DataSpaceParams = {
   inner: Space;
-  modelFactory: ModelFactory;
   metadataStore: MetadataStore;
-  snapshotManager: SnapshotManager;
   gossip: Gossip;
   presence: Presence;
   keyring: Keyring;
   feedStore: FeedStore<FeedMessage>;
   signingContext: SigningContext;
-  memberKey: PublicKey;
-  snapshotId?: string | undefined;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
 };
@@ -64,7 +53,6 @@ export type DataSpaceParams = {
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipeline: DataPipeline;
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -92,15 +80,6 @@ export class DataSpace {
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
-    this._dataPipeline = new DataPipeline({
-      modelFactory: params.modelFactory,
-      metadataStore: params.metadataStore,
-      snapshotManager: params.snapshotManager,
-      memberKey: params.memberKey,
-      spaceKey: this._inner.key,
-      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
-      snapshotId: params.snapshotId,
-    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
@@ -130,7 +109,7 @@ export class DataSpace {
   }
 
   get dataPipeline(): DataPipeline {
-    return this._dataPipeline;
+    return this._inner.dataPipeline;
   }
 
   get presence() {
@@ -156,7 +135,6 @@ export class DataSpace {
     this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
 
-    await this._dataPipeline.close();
     await this.authVerifier.close();
 
     await this._inner.close();
@@ -217,17 +195,11 @@ export class DataSpace {
       ),
     );
 
-    await this._dataPipeline.open({
-      openPipeline: async (start) => {
-        const pipeline = await this._inner.createDataPipeline({ start });
-        await pipeline.start();
-        return pipeline;
-      },
-    });
+    await this._inner.initializeDataPipeline();
 
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
-    await this._dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
+    await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
     });

@@ -12,7 +12,6 @@ import {
   valueEncoding,
   MetadataStore,
   SpaceManager,
-  SigningContext,
   DataServiceSubscriptions,
   SnapshotStore,
 } from '@dxos/echo-pipeline';
@@ -35,7 +34,7 @@ import {
   InvitationProtocol,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager } from '../spaces';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
@@ -88,7 +87,10 @@ export class ServiceContext {
 
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: this.modelFactory,
+      snapshotStore: this.snapshotStore,
     });
 
     this.identityManager = new IdentityManager(
@@ -181,9 +183,7 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory,
       this.feedStore,
-      this.snapshotStore,
     );
     await this.dataSpaceManager.open();
 

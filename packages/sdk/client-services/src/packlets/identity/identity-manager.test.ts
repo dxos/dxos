@@ -4,7 +4,8 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
+import { createDefaultModelFactory } from '@dxos/client';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -45,6 +46,9 @@ describe('identity/identity-manager', () => {
     const spaceManager = new SpaceManager({
       feedStore,
       networkManager,
+      modelFactory: createDefaultModelFactory(),
+      metadataStore: new MetadataStore(storage.createDirectory('metadata')),
+      snapshotStore: new SnapshotStore(storage.createDirectory('snapshots')),
     });
     const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 
