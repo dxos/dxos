@@ -30,7 +30,7 @@ export default class List extends BaseCommand {
       memory: proc.monit?.memory,
     }));
 
-    console.log(result);
+    this.log('Daemons:', result);
 
     return result;
   }
