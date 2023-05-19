@@ -50,7 +50,7 @@ describe('Metagraph queries', () => {
   const testServer = new TestServer({ modules });
 
   beforeAll(() => {
-    testServer.start();
+    testServer.start(7777);
   });
 
   afterAll(() => {
@@ -66,7 +66,7 @@ describe('Metagraph queries', () => {
             dxns: {
               // TODO(burdon): dmg.
               // Test with https://dev.kube.dxos.org/.well-known/dx/registry
-              server: 'http://localhost:8080/modules',
+              server: 'http://localhost:7777/modules',
             },
           },
         },
