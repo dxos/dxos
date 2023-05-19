@@ -88,16 +88,16 @@ export const useSwipeToDismiss = (
   }, [$root, handlePointerDown]);
 
   useEffect(() => {
-    $root && document.body.addEventListener('pointermove', handlePointerMove);
+    $root && document.documentElement.addEventListener('pointermove', handlePointerMove);
     return () => {
-      document.body.removeEventListener('pointermove', handlePointerMove);
+      document.documentElement.removeEventListener('pointermove', handlePointerMove);
     };
   }, [$root, handlePointerMove]);
 
   useEffect(() => {
-    $root && document.body.addEventListener('pointerup', handlePointerUp);
+    $root && document.documentElement.addEventListener('pointerup', handlePointerUp);
     return () => {
-      document.body.removeEventListener('pointerup', handlePointerUp);
+      document.documentElement.removeEventListener('pointerup', handlePointerUp);
     };
   }, [$root, handlePointerUp]);
 };
