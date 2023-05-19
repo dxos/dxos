@@ -5,8 +5,6 @@
 import { Args } from '@oclif/core';
 import { Proc } from 'pm2';
 
-import { log } from '@dxos/log';
-
 import { BaseCommand } from '../../base-command';
 import { getPm2 } from '../../daemon/pm2';
 
