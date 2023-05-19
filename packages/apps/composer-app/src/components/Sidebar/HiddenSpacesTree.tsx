@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight, Eye } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItemScopedProps, useId, useListItemContext, useTranslation } from '@dxos/aurora';
+import { Button, ListItemScopedProps, useId, useListItemContext, useSidebar, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
 import {
@@ -20,7 +20,7 @@ import {
 import { useMulticastObservable } from '@dxos/react-async';
 import { useIdentity } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
+import { getSpaceDisplayName } from '../../util';
 
 export type HiddenSpacesTreeProps = {
   hiddenSpaces?: Space[];
@@ -31,6 +31,7 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
   const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
+  const { sidebarOpen } = useSidebar();
   return (
     <TreeItem classNames='flex mis-1 mie-1.5'>
       <TreeItemHeading classNames='grow'>{spaceDisplayName}</TreeItemHeading>
@@ -40,6 +41,7 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
           data-testid='composer.unhideSpace'
           classNames='shrink-0 pli-1'
           onClick={() => handleUnhideSpace(space)}
+          {...(!sidebarOpen && { tabIndex: -1 })}
         >
           <Eye className={getSize(4)} />
         </Button>
@@ -52,6 +54,7 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
   const { t } = useTranslation('composer');
   const { open } = useListItemContext('HiddenSpacesBranch', __listItemScope);
   const identity = useIdentity();
+  const { sidebarOpen } = useSidebar();
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
@@ -74,7 +77,7 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
   return (
     <>
       <div role='none' className='flex'>
-        <TreeItemOpenTrigger>
+        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon />
         </TreeItemOpenTrigger>
         <TreeItemHeading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
