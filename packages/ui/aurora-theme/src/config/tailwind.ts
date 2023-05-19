@@ -6,7 +6,6 @@ import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
-import tailwindTouch from 'tailwindcss-touch';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
@@ -444,6 +443,10 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
+        screens: {
+          'pointer-fine': { raw: '(pointer: fine)' },
+          'hover-hover': { raw: '(hover: hover)' },
+        },
         colors: {
           ...configPalettes,
           slate: tailwindColors.slate,
@@ -620,7 +623,7 @@ export const tailwindConfig = ({
       ...extensions,
     ),
   },
-  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix(), tailwindTouch()],
+  plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {
