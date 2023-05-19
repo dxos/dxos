@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
-import { SigningContext } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -15,7 +14,7 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { DataSpaceManager } from '../spaces';
+import { DataSpaceManager, SigningContext } from '../spaces';
 import { InvitationProtocol } from './invitation-protocol';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {

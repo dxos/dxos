@@ -238,6 +238,7 @@ export class IdentityManager {
       },
       swarmIdentity,
       onNetworkConnection: () => {},
+      memberKey: identityKey,
     });
   }
 }
