@@ -58,7 +58,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
 
 export const testLocalDatabase = async (create: DataPipeline, check: DataPipeline = create) => {
   const objectId = PublicKey.random().toHex();
-  await create.databaseBackend!.getWriteStream()?.write({
+  await create.databaseHost!.getWriteStream()?.write({
     batch: {
       objects: [
         {
@@ -72,7 +72,7 @@ export const testLocalDatabase = async (create: DataPipeline, check: DataPipelin
   });
 
   await asyncTimeout(
-    check.databaseBackend!._itemDemuxer.mutation.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check._itemManager.entities.has(objectId)),
     500,
   );
 };

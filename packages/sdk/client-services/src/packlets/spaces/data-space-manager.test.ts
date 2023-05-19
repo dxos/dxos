@@ -6,12 +6,10 @@ import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { DocumentModel } from '@dxos/document-model';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { test, describe, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { createSigningContext, HostTestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
@@ -28,9 +26,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer.keyring,
       identity,
-      new ModelFactory().registerModel(DocumentModel),
       peer.feedStore,
-      peer.snapshotStore,
     );
     await dataSpaceManager.open();
     afterTest(() => dataSpaceManager.close());
@@ -56,9 +52,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(DocumentModel),
       peer1.feedStore,
-      peer1.snapshotStore,
     );
     await dataSpaceManager1.open();
     afterTest(() => dataSpaceManager1.close());
@@ -71,9 +65,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(DocumentModel),
       peer2.feedStore,
-      peer1.snapshotStore,
     );
     await dataSpaceManager2.open();
     afterTest(() => dataSpaceManager2.close());
@@ -148,9 +140,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(DocumentModel),
       peer1.feedStore,
-      peer1.snapshotStore,
     );
     await dataSpaceManager1.open();
     afterTest(() => dataSpaceManager1.close());
@@ -163,9 +153,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(DocumentModel),
       peer2.feedStore,
-      peer1.snapshotStore,
     );
     await dataSpaceManager2.open();
     afterTest(() => dataSpaceManager2.close());

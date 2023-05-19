@@ -11,8 +11,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "dx": "./bin/run"
   },
@@ -94,10 +94,10 @@
   "oclif": {
     "bin": "dx",
     "dirname": "dx",
-    "commands": "./dist/commands",
+    "commands": "./dist/src/commands",
     "hooks": {
       "init": [
-        "./dist/hooks/init/config"
+        "./dist/src/hooks/init/config"
       ]
     },
     "plugins": [

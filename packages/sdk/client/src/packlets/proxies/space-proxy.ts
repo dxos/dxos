@@ -25,6 +25,9 @@ import { Properties } from '../proto';
 
 interface Internal {
   get db(): DatabaseProxy;
+
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -143,7 +146,8 @@ export class SpaceProxy implements Space {
 
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
     this._internal = {
-      db: this._dbBackend
+      db: this._dbBackend,
+      createEpoch: this._createEpoch.bind(this),
     };
 
     databaseRouter.register(this.key, this._db);
@@ -386,6 +390,10 @@ export class SpaceProxy implements Space {
     //   spaceKey: this.key,
     //   open
     // });
+  }
+
+  private async _createEpoch() {
+    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key });
   }
 }
 
