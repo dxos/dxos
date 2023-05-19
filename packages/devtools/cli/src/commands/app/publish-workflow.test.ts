@@ -2,34 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect, test } from '@oclif/test';
-import * as fs from 'fs-extra';
-import yaml from 'js-yaml';
+import { expect } from 'chai';
+import fs from 'node:fs';
 import path from 'path';
 
-import { describe } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
-describe.skip('App', () => {
-  const configPath = path.join(__dirname, '../../../config/config-local.yml');
-  const config = yaml.load(String(fs.readFileSync(configPath))) as any;
+describe.only('App', () => {
+  const tmpFolder = path.join(__dirname, '../../../tmp/dx');
 
-  const tmpFolder = './tmp/dx';
-
-  test
-    .stdout()
-    .stderr()
-    .stdin(`mkdir -p ${tmpFolder}`)
-    .stdin(`pushd ${tmpFolder}`)
-
-    .command(['app create', 'test-app', '--json', '--config', configPath])
-    .command(['app publish', '--configPath', './test-app/dx.yml', '--config', configPath])
-    .command(['app list', '--config', configPath])
-
-    .stdin('popd')
-
-    .it('Create and publish app', (ctx) => {
-      console.log(ctx.stderr);
-      console.log(ctx.stdout);
-      expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
-    });
+  test('create', async () => {
+    const appName = 'test-app';
+    expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
+  });
 });
