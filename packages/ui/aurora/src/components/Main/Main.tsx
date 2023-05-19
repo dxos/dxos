@@ -92,18 +92,19 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     const { tx } = useThemeContext();
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
-    useSwipeToDismiss(swipeToDismiss ? ref : noopRef, () => setSidebarOpen(false), 48, 'left', 0);
+    useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
+      onDismiss: () => setSidebarOpen(false),
+    });
+    const Root = isLg ? Primitive.div : DialogContent;
     return (
-      <DialogContent
-        forceMount
-        onOpenAutoFocus={(event) => isLg && event.preventDefault()}
-        onCloseAutoFocus={(event) => isLg && event.preventDefault()}
+      <Root
+        {...(!isLg && { forceMount: true })}
         {...props}
         className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
         ref={ref}
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
-      </DialogContent>
+      </Root>
     );
   },
 );
