@@ -55,17 +55,20 @@ export const useSwipeToDismiss = (
     ({ screenX }: PointerEvent) => {
       if ($root) {
         const delta = Math.min(screenX - gestureStartX, 0);
-        if (motionState === MotionState.FOLLOWING) {
-          if (Math.abs(delta) > dismissThreshold) {
-            setIdle();
-            onDismiss?.();
-          } else {
-            $root.style.setProperty('inset-inline-start', `${offset + delta}px`);
-          }
-        } else if (motionState === MotionState.DEBOUNCING) {
-          if (Math.abs(delta) > debounceThreshold) {
-            setFollowing();
-          }
+        switch (motionState) {
+          case MotionState.FOLLOWING:
+            if (Math.abs(delta) > dismissThreshold) {
+              setIdle();
+              onDismiss?.();
+            } else {
+              $root.style.setProperty('inset-inline-start', `${offset + delta}px`);
+            }
+            break;
+          case MotionState.DEBOUNCING:
+            if (Math.abs(delta) > debounceThreshold) {
+              setFollowing();
+            }
+            break;
         }
       }
     },
