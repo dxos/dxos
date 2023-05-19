@@ -25,7 +25,8 @@ export const useSwipeToDismiss = (
   { onDismiss, dismissThreshold = 64, debounceThreshold = 8, offset = 0 /* side = 'inline-start' */ }: Options,
 ) => {
   const $root = ref.current;
-  // const dK = direction === 'right' ? 1 : -1;
+  // todo(thure): Implement other sides.
+  // const dK = direction === 'inline-start' ? 1 : -1;
 
   const [motionState, setMotionState] = useState<MotionState>(MotionState.IDLE);
   const [gestureStartX, setGestureStartX] = useState(0);
@@ -80,13 +81,6 @@ export const useSwipeToDismiss = (
   }, [setIdle]);
 
   useEffect(() => {
-    console.log(
-      '[motionState]',
-      motionState === MotionState.IDLE ? 'idle' : motionState === MotionState.FOLLOWING ? 'following' : 'debouncing',
-    );
-  }, [motionState]);
-
-  useEffect(() => {
     $root?.addEventListener('pointerdown', handlePointerDown);
     return () => {
       $root?.removeEventListener('pointerdown', handlePointerDown);
@@ -94,16 +88,16 @@ export const useSwipeToDismiss = (
   }, [$root, handlePointerDown]);
 
   useEffect(() => {
-    document.body.addEventListener('pointermove', handlePointerMove);
+    $root && document.body.addEventListener('pointermove', handlePointerMove);
     return () => {
       document.body.removeEventListener('pointermove', handlePointerMove);
     };
-  }, [handlePointerMove]);
+  }, [$root, handlePointerMove]);
 
   useEffect(() => {
-    document.body.addEventListener('pointerup', handlePointerUp);
+    $root && document.body.addEventListener('pointerup', handlePointerUp);
     return () => {
       document.body.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [handlePointerUp]);
+  }, [$root, handlePointerUp]);
 };
