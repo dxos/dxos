@@ -28,6 +28,7 @@ export default class Run extends BaseCommand {
       flags: { listen, profile },
     } = await this.parse(Run);
     await runDaemon({ listen: listen!, profile: profile! });
-    await new Promise(() => {});
+
+    this.log('daemon started');
   }
 }
