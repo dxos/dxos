@@ -19,7 +19,7 @@ const StoryMain = (_args: StoryMainArgs) => {
   return (
     <MainRoot defaultSidebarOpen>
       <MainOverlay />
-      <Sidebar>
+      <Sidebar swipeToDismiss>
         <p>Sidebar content, hi!</p>
         <SidebarToggle />
       </Sidebar>
