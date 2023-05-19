@@ -7,6 +7,7 @@ import { failUndefined } from '@dxos/debug';
 import { Space } from '@dxos/echo-pipeline';
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 
 import { SigningContext } from './data-space-manager';
 
@@ -55,6 +56,17 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
         designation: AdmittedFeed.Designation.DATA,
+      },
+    }),
+
+    await signingContext.credentialSigner.createCredential({
+      subject: space.key ?? failUndefined(),
+      assertion: {
+        '@type': 'dxos.halo.credentials.Epoch',
+        number: 0,
+        previousId: undefined,
+        timeframe: new Timeframe(),
+        snapshotCid: undefined
       },
     }),
   ];

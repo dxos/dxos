@@ -226,12 +226,12 @@ export class Space {
       return;
     }
 
+    await this._dataPipelineCredentialConsumer.close();
     await this._dataPipeline.close();
 
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
-    await this._dataPipelineCredentialConsumer.close();
 
     this._isOpen = false;
     log('closed');
@@ -239,7 +239,7 @@ export class Space {
 
   async initializeDataPipeline() {
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    await this._dataPipelineCredentialConsumer.open();
     await this._dataPipeline.open()
+    await this._dataPipelineCredentialConsumer.open();
   }
 }

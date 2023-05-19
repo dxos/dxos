@@ -148,7 +148,7 @@ export class TestAgent {
       genesisFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
       modelFactory: new ModelFactory().registerModel(DocumentModel),
-      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      metadataStore,
       snapshotManager,
       memberKey: identityKey,
       snapshotId: undefined,

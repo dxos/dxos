@@ -118,7 +118,7 @@ export class DataPipeline {
           return;
         }
 
-        log.info('new epoch', { credential });
+        log('new epoch', { credential });
       }
     }
   }

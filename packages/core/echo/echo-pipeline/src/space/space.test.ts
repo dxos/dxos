@@ -22,6 +22,7 @@ describe('space/space', () => {
     const space = await agent.createSpace();
 
     await space.open();
+    
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
@@ -31,6 +32,7 @@ describe('space/space', () => {
       const credentials = [
         ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
         await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+        await generator.createEpochCredential(space.key),
       ];
 
       for (const credential of credentials) {
@@ -42,6 +44,8 @@ describe('space/space', () => {
       // TODO(burdon): Debugging only.
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
+
+    await space.initializeDataPipeline();
 
     assert(space.dataPipeline.databaseHost);
     await testLocalDatabase(space.dataPipeline);
@@ -71,6 +75,7 @@ describe('space/space', () => {
         const credentials = [
           ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
           await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+        await generator.createEpochCredential(space.key),
         ];
 
         for (const credential of credentials) {
@@ -81,6 +86,8 @@ describe('space/space', () => {
 
         await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       }
+
+      await space.initializeDataPipeline();
 
       return [agent, space];
     });
@@ -121,6 +128,8 @@ describe('space/space', () => {
         });
       }
     }
+
+    await space2.initializeDataPipeline();
 
     {
       // Initial data exchange.

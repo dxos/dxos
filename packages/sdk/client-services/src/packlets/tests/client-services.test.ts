@@ -160,13 +160,14 @@ describe('Client services', () => {
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
-    log('initialized');
+    log.info('initialized');
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
+    debugger;
     const hostSpace = await client1.createSpace();
-    log('createSpace', { key: hostSpace.key });
+    log.info('createSpace', { key: hostSpace.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: hostSpace as SpaceProxy,
@@ -179,7 +180,7 @@ describe('Client services', () => {
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
-    log('Invitation complete');
+    log.info('Invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
