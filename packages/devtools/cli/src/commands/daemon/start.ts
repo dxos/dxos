@@ -25,7 +25,7 @@ export default class Start extends BaseCommand {
     const pm2 = await getPm2();
     const params = await this.parse(Start);
 
-    const proc = await new Promise<Proc>((resolve, reject) => {
+    const proc = await new Promise<Proc[]>((resolve, reject) => {
       pm2.start(
         {
           script: process.argv[1],
@@ -41,13 +41,17 @@ export default class Start extends BaseCommand {
           if (err) {
             reject(err);
           } else {
-            resolve(proc!);
+            // Return type does not equal to runtime return type im PM2.
+            resolve(proc! as Proc[]);
           }
         },
       );
     });
 
-    log.info('Started:', { id: proc.pm_id, name: proc.name });
+    if (proc.length === 0) {
+      throw new Error('Daemon is not started');
+    }
+    log.info('Started:', { id: proc[0].pm_id, name: proc[0].name });
     pm2.disconnect();
   }
 }
