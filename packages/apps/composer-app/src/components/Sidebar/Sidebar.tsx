@@ -33,7 +33,7 @@ const SidebarContent = () => {
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
+  const { sidebarOpen, closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
@@ -99,6 +99,7 @@ const SidebarContent = () => {
                   data-testid='composer.createSpace'
                   onClick={handleCreateSpace}
                   classNames='pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <Planet className={getSize(4)} />
                 </Button>
@@ -109,7 +110,13 @@ const SidebarContent = () => {
                 side='bottom'
                 tooltipLabelsTrigger
               >
-                <Button variant='ghost' data-testid='composer.joinSpace' onClick={handleJoinSpace} classNames='pli-1'>
+                <Button
+                  variant='ghost'
+                  data-testid='composer.joinSpace'
+                  onClick={handleJoinSpace}
+                  classNames='pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
+                >
                   <Intersect className={getSize(4)} />
                 </Button>
               </Tooltip>
@@ -124,6 +131,7 @@ const SidebarContent = () => {
                   data-testid='composer.toggleSidebarWithinSidebar'
                   onClick={closeSidebar}
                   classNames='pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <ArrowLineLeft className={getSize(4)} />
                 </Button>
@@ -149,6 +157,7 @@ const SidebarContent = () => {
                     data-testid='composer.openUserSettingsDialog'
                     onClick={() => setSettingsDialogOpen(true)}
                     classNames='pli-1'
+                    {...(!sidebarOpen && { tabIndex: -1 })}
                   >
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
                   </Button>

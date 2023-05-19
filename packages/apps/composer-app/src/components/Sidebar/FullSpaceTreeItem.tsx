@@ -18,7 +18,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { Button, useTranslation } from '@dxos/aurora';
+import { Button, useSidebar, useTranslation } from '@dxos/aurora';
 import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
 import {
@@ -58,6 +58,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
+  const { sidebarOpen } = useSidebar();
 
   const handleCreate = useCallback(async () => {
     const document = await space.db.add(new Document());
@@ -101,11 +102,11 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
       collapsible
       open={open}
       onOpenChange={setOpen}
-      classNames={['mbe-2 block', disabled && defaultDisabled]}
+      classNames={['mbe-1 block', disabled && defaultDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItemOpenTrigger>
+        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon
             {...(hasActiveDocument && !open && { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' })}
           />
@@ -133,7 +134,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           <DropdownMenu
             trigger={
               <TooltipTrigger asChild>
-                <Button variant='ghost' data-testid='composer.openSpaceMenu' classNames='shrink-0 pli-1'>
+                <Button
+                  variant='ghost'
+                  data-testid='composer.openSpaceMenu'
+                  classNames='shrink-0 pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
+                >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
               </TooltipTrigger>
@@ -191,6 +197,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             data-testid='composer.createDocument'
             classNames='shrink-0 pli-1'
             onClick={handleCreate}
+            {...(!sidebarOpen && { tabIndex: -1 })}
           >
             <span className='sr-only'>{t('create document label')}</span>
             <Plus className={getSize(4)} />
