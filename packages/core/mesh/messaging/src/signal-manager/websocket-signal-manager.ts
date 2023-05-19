@@ -46,6 +46,9 @@ export class WebsocketSignalManager implements SignalManager {
   ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
+      if (this._servers.has(host.server)) {
+        continue;
+      }
       const server = new SignalClient(
         host.server,
         async (message) => this.onMessage.emit(message),

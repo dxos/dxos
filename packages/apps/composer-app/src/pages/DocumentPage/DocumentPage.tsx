@@ -10,7 +10,7 @@ import { useOutletContext } from 'react-router-dom';
 import { Document } from '@braneframe/types';
 import { Button, useTranslation, Trans } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
-import { getSize } from '@dxos/aurora-theme';
+import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
@@ -357,7 +357,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           slots={{
             root: {
               role: 'none',
-              className: 'shrink-0 grow flex flex-col',
+              className: mx(defaultFocus, 'shrink-0 grow flex flex-col'),
               'data-testid': 'composer.markdownRoot',
             } as HTMLAttributes<HTMLDivElement>,
             editor: {
