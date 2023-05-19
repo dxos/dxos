@@ -11,8 +11,7 @@ export const runCommand = async (command: string, cwd: string) => {
 
   return await exec(`
     mkdir -p ${cwd} &&
-    pushd ${cwd} &&
-    ${bin} ${command} &&
-    popd
+    cd ${cwd} &&
+    ${bin} ${command}
   `);
 };
