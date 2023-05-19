@@ -86,7 +86,7 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
 
 const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
-  ({ classNames, children, swipeToDismiss = true, ...props }, forwardedRef) => {
+  ({ classNames, children, swipeToDismiss, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
     const { tx } = useThemeContext();
