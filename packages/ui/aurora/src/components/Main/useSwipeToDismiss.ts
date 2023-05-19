@@ -6,124 +6,98 @@
 
 import { RefObject, useCallback, useEffect, useState } from 'react';
 
-const getScreenX = (event: MouseEvent | TouchEvent) => {
-  let screenX;
-  if (event instanceof TouchEvent) {
-    screenX = event.touches[0].screenX;
-  } else {
-    screenX = (event as MouseEvent).screenX;
-  }
-  return screenX;
-};
+enum MotionState {
+  IDLE,
+  DEBOUNCING,
+  FOLLOWING,
+}
+
+type Options = Partial<{
+  onDismiss: () => void;
+  dismissThreshold: number;
+  debounceThreshold: number;
+  side: 'inline-start' | 'inline-end';
+  offset: number;
+}>;
 
 export const useSwipeToDismiss = (
   ref: RefObject<HTMLElement | null>,
-  onDismiss: () => void,
-  distanceBeforeDismiss = 100,
-  direction = 'right',
-  offset = 0,
+  { onDismiss, dismissThreshold = 64, debounceThreshold = 8, offset = 0 /* side = 'inline-start' */ }: Options,
 ) => {
-  const node = ref.current;
-  const directionValue = direction === 'right' ? 1 : -1;
+  const $root = ref.current;
+  // todo(thure): Implement other sides.
+  // const dK = direction === 'inline-start' ? 1 : -1;
 
-  const [removing, setRemoving] = useState(false);
-  const [pressedPosition, setPressedPosition] = useState(0);
-  const [positionLeft, setPositionLeft] = useState(0);
-  const [animate, setAnimate] = useState(false);
+  const [motionState, setMotionState] = useState<MotionState>(MotionState.IDLE);
+  const [gestureStartX, setGestureStartX] = useState(0);
 
-  const remove = useCallback(() => {
-    onDismiss();
-    setTimeout(() => {
-      setRemoving(false);
-      setPositionLeft(0);
-      setPressedPosition(0);
-      setAnimate(false);
-    }, 200);
-  }, [node, onDismiss]);
+  const setIdle = useCallback(() => {
+    setMotionState(MotionState.IDLE);
+    $root?.style.removeProperty('inset-inline-start');
+    $root?.style.setProperty('transition-duration', '200ms');
+  }, [$root]);
 
-  const onMouseUp = useCallback(() => {
-    if (!node) {
-      return;
-    }
-    setAnimate(true);
-    if (!removing && positionLeft * directionValue >= (node.offsetWidth * distanceBeforeDismiss) / 100) {
-      setPositionLeft(positionLeft + node.offsetWidth * directionValue);
-      setRemoving(true);
-      remove();
-    } else {
-      setPositionLeft(0);
-    }
-    setPressedPosition(0);
-  }, [node, removing, positionLeft, directionValue, distanceBeforeDismiss]);
+  const setFollowing = useCallback(() => {
+    setMotionState(MotionState.FOLLOWING);
+    $root?.style.setProperty('transition-duration', '0ms');
+  }, [$root]);
 
-  const onMouseMove = useCallback(
-    (event: MouseEvent | TouchEvent) => {
-      event.preventDefault();
-      if (!node || removing) {
-        return;
-      }
-
-      const screenX = getScreenX(event);
-
-      if (pressedPosition) {
-        let nextPositionLeft = screenX - pressedPosition;
-
-        if (direction === 'right') {
-          nextPositionLeft = nextPositionLeft < 0 ? 0 : nextPositionLeft;
-        } else {
-          nextPositionLeft = nextPositionLeft > 0 ? 0 : nextPositionLeft;
-        }
-
-        setPositionLeft(nextPositionLeft);
+  const handlePointerDown = useCallback(
+    ({ screenX }: PointerEvent) => {
+      if (motionState === MotionState.IDLE) {
+        setMotionState(MotionState.DEBOUNCING);
+        setGestureStartX(screenX);
       }
     },
-    [removing, pressedPosition, direction, node, remove],
+    [motionState],
   );
 
-  const onMouseDown = useCallback((event: MouseEvent | TouchEvent) => {
-    const screenX = getScreenX(event);
-    setPressedPosition(screenX);
-    setAnimate(false);
-  }, []);
+  const handlePointerMove = useCallback(
+    ({ screenX }: PointerEvent) => {
+      if ($root) {
+        const delta = Math.min(screenX - gestureStartX, 0);
+        switch (motionState) {
+          case MotionState.FOLLOWING:
+            if (Math.abs(delta) > dismissThreshold) {
+              setIdle();
+              onDismiss?.();
+            } else {
+              $root.style.setProperty('inset-inline-start', `${offset + delta}px`);
+            }
+            break;
+          case MotionState.DEBOUNCING:
+            if (Math.abs(delta) > debounceThreshold) {
+              setFollowing();
+            }
+            break;
+        }
+      }
+    },
+    [$root, motionState, gestureStartX],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    setIdle();
+  }, [setIdle]);
 
   useEffect(() => {
-    node?.addEventListener('mousedown', onMouseDown);
-    node?.addEventListener('touchstart', onMouseDown);
+    $root?.addEventListener('pointerdown', handlePointerDown);
     return () => {
-      node?.removeEventListener('mousedown', onMouseDown);
-      node?.removeEventListener('touchstart', onMouseDown);
+      $root?.removeEventListener('pointerdown', handlePointerDown);
     };
-  }, [node, onMouseDown]);
+  }, [$root, handlePointerDown]);
 
   useEffect(() => {
-    node?.addEventListener('mouseup', onMouseUp);
-    node?.addEventListener('mousemove', onMouseMove);
-
-    node?.addEventListener('touchmove', onMouseMove, { passive: false });
-    node?.addEventListener('touchend', onMouseUp);
-
+    $root && document.documentElement.addEventListener('pointermove', handlePointerMove);
     return () => {
-      node?.removeEventListener('mouseup', onMouseUp);
-      node?.removeEventListener('mousemove', onMouseMove);
-
-      node?.removeEventListener('touchmove', onMouseMove);
-      node?.removeEventListener('touchend', onMouseMove);
+      document.documentElement.removeEventListener('pointermove', handlePointerMove);
     };
-  }, [onMouseUp, onMouseDown, onMouseMove]);
+  }, [$root, handlePointerMove]);
 
   useEffect(() => {
-    if (!node) {
-      return;
-    }
-    if (positionLeft === 0) {
-      node.style.removeProperty('inset-inline-start');
-    } else {
-      node.style.setProperty('inset-inline-start', `${offset + positionLeft}px`);
-    }
-    if (animate) {
-      node.style.setProperty('transition-duration', '200ms');
-    } else {
-      node.style.setProperty('transition-duration', '0ms');
-    }
-  }, [animate, positionLeft]);
+    $root && document.documentElement.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      document.documentElement.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [$root, handlePointerUp]);
 };
