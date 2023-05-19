@@ -98,7 +98,7 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.createSpace'
                   onClick={handleCreateSpace}
-                  classNames='pli-1'
+                  classNames='pli-2 pointer-fine:pli-1'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <Planet className={getSize(4)} />
@@ -114,7 +114,7 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.joinSpace'
                   onClick={handleJoinSpace}
-                  classNames='pli-1'
+                  classNames='pli-2 pointer-fine:pli-1'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <Intersect className={getSize(4)} />
@@ -130,7 +130,7 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
                   onClick={closeSidebar}
-                  classNames='pli-1'
+                  classNames='pli-2 pointer-fine:pli-1'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <ArrowLineLeft className={getSize(4)} />
@@ -141,7 +141,7 @@ const SidebarContent = () => {
             <SidebarTree />
             <Separator flush />
             {identity && (
-              <div role='none' className='shrink-0 flex items-center gap-1 pli-3 plb-1.5'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 pointer-fine:pie-3 plb-1.5'>
                 <Avatar
                   size={6}
                   variant='circle'
@@ -156,7 +156,7 @@ const SidebarContent = () => {
                     variant='ghost'
                     data-testid='composer.openUserSettingsDialog'
                     onClick={() => setSettingsDialogOpen(true)}
-                    classNames='pli-1'
+                    classNames='pli-2 pointer-fine:pli-1'
                     {...(!sidebarOpen && { tabIndex: -1 })}
                   >
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
@@ -189,7 +189,7 @@ const SidebarToggle = () => {
       <div
         role='none'
         className={mx(
-          'fixed block-start-0 pointer-coarse:block-end-0 pointer-coarse:block-start-auto p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          'fixed block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
           sidebarOpen && 'opacity-0 pointer-events-none',
         )}
       >

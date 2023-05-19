@@ -112,7 +112,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           />
         </TreeItemOpenTrigger>
         <TreeItemHeading
-          classNames='grow break-words pbs-1.5 text-sm font-medium'
+          classNames='grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium'
           data-testid='composer.spaceTreeItemHeading'
         >
           {spaceDisplayName}
@@ -137,7 +137,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                 <Button
                   variant='ghost'
                   data-testid='composer.openSpaceMenu'
-                  classNames='shrink-0 pli-1'
+                  classNames='shrink-0 pli-2 pointer-fine:pli-1'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <DotsThreeVertical className={getSize(4)} />
@@ -195,7 +195,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           <Button
             variant='ghost'
             data-testid='composer.createDocument'
-            classNames='shrink-0 pli-1'
+            classNames='shrink-0 pli-2 pointer-fine:pli-1'
             onClick={handleCreate}
             {...(!sidebarOpen && { tabIndex: -1 })}
           >

@@ -21,7 +21,7 @@ export const DocumentLinkTreeItem = observer(({ document, linkTo }: { document: 
   const active = docKey === document.id;
   const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
-    <TreeItem classNames='pis-6'>
+    <TreeItem classNames='pis-7 pointer-fine:pis-6 pie-1 pointer-fine:pie-0'>
       <TreeItemHeading
         asChild
         classNames={appTx(
