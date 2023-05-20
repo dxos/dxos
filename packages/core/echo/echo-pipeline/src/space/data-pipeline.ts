@@ -303,6 +303,8 @@ export class DataPipeline {
     assert(this._isOpen) // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
+    // TODO(dmaretskyi): Reset db to snapshot.
+
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
     await this._pipeline.unpause();
