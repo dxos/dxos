@@ -134,7 +134,8 @@ export class DataPipeline {
       this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
     }
 
-    this._pipeline = new Pipeline(this.getStartTimeframe());
+    this._pipeline = new Pipeline();
+    // TODO(dmaretskyi): Set cursor.
     await this._params.onPipelineCreated(this._pipeline);
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
