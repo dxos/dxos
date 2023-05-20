@@ -4,7 +4,7 @@
 
 import { Event, scheduleTask, trackLeaks } from '@dxos/async';
 import { SpaceState } from '@dxos/client';
-import { Context } from '@dxos/context';
+import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
@@ -196,6 +196,9 @@ export class DataSpace {
     );
 
     await this._inner.initializeDataPipeline();
+
+    // Wait for the first epoch.
+    await cancelWithContext(this._ctx, this._inner.dataPipeline.onNewEpoch.waitForCondition(() => !!this._inner.dataPipeline.currentEpoch));
 
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.

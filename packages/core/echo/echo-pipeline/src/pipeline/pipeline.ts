@@ -83,7 +83,7 @@ export class PipelineState {
   }
 
   get feeds() {
-    return Array.from(this._feeds);
+    return Array.from(this._feeds.values());
   }
 
   async waitUntilTimeframe(target: Timeframe) {
@@ -290,7 +290,9 @@ export class Pipeline implements PipelineAccessor {
   @synchronized
   async pause() {
     assert(this._isStarted, 'Pipeline is not open.');
-    assert(!this._isPaused, 'Pipeline is already paused.');
+    if(this._isPaused) {
+      return;
+    }
 
     this._pauseTrigger.reset();
     await this._processingTrigger.wait();

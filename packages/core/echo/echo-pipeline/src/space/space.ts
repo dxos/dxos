@@ -131,7 +131,6 @@ export class Space {
             }
           }
         });
-        await pipeline.start();
       },
     });
     this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(

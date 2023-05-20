@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -22,6 +22,7 @@ import { createMappedFeedWriter } from '../common';
 import { DatabaseHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
+import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -37,7 +38,7 @@ export type DataPipelineParams = {
   snapshotId: string | undefined;
 
   /**
-   * Could be called multiple times.
+   * Called once.
    */
   onPipelineCreated: (pipeline: Pipeline) => Promise<void>;
 };
@@ -85,6 +86,9 @@ export class DataPipeline {
   public _itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
 
+  public currentEpoch?: Credential;
+  public onNewEpoch = new Event<Credential>();
+
   get isOpen() {
     return this._isOpen;
   }
@@ -119,6 +123,10 @@ export class DataPipeline {
         }
 
         log('new epoch', { credential });
+        await this._processEpoch(assertion);
+
+        this.currentEpoch = credential;
+        this.onNewEpoch.emit(credential);
       },
     };
   }
@@ -135,8 +143,10 @@ export class DataPipeline {
     }
 
     this._pipeline = new Pipeline();
-    // TODO(dmaretskyi): Set cursor.
     await this._params.onPipelineCreated(this._pipeline);
+    await this._pipeline.start();
+    await this._pipeline.pause(); // Start paused until we have the first epoch.
+
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
     }
@@ -286,6 +296,16 @@ export class DataPipeline {
         log('save', { snapshot });
       }
     }
+  }
+
+  @synchronized
+  private async _processEpoch(epoch: Epoch) {
+    assert(this._isOpen) // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
+    assert(this._pipeline);
+
+    await this._pipeline.pause();
+    await this._pipeline.setCursor(epoch.timeframe);
+    await this._pipeline.unpause();
   }
 
   async waitUntilTimeframe(timeframe: Timeframe) {
