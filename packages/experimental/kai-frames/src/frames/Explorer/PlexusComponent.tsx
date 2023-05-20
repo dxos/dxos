@@ -12,9 +12,9 @@ import { Plexus } from '@dxos/plexus';
 const slots = {
   root: undefined,
   grid: {
-    className: undefined
+    className: undefined,
   },
-  plexus: undefined
+  plexus: undefined,
 };
 
 export type PlexusComponentProps<N> = {

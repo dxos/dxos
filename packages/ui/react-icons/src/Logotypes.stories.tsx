@@ -13,7 +13,7 @@ import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 const Icon = () => null;
 
 export default {
-  component: Icon
+  component: Icon,
 };
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
@@ -50,5 +50,5 @@ export const Default = {
         </div>
       </div>
     );
-  }
+  },
 };

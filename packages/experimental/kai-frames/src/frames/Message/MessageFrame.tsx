@@ -179,7 +179,7 @@ const Row: FC<{ children?: ReactNode; gutter?: ReactNode; className?: string; wi
   gutter,
   children,
   className,
-  wide
+  wide,
 }) => {
   return (
     <div className={mx('flex overflow-hidden', className)}>

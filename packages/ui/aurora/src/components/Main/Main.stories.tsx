@@ -19,7 +19,7 @@ const StoryMain = (_args: StoryMainArgs) => {
   return (
     <MainRoot defaultSidebarOpen>
       <MainOverlay />
-      <Sidebar>
+      <Sidebar swipeToDismiss>
         <p>Sidebar content, hi!</p>
         <SidebarToggle />
       </Sidebar>
@@ -34,5 +34,5 @@ const StoryMain = (_args: StoryMainArgs) => {
 export default { component: StoryMain };
 
 export const Default = {
-  args: {}
+  args: {},
 };

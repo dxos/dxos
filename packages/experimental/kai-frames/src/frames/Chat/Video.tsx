@@ -61,7 +61,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               peer.on('signal', (data) => {
                 void space.postMessage(
                   getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }),
-                  { command: 'signal', data, initiator: false }
+                  { command: 'signal', data, initiator: false },
                 );
               });
               peer.on('stream', (stream) => {
@@ -95,7 +95,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
               break;
             }
           }
-        }
+        },
       );
       ctx.onDispose(() => unsubscribe());
     });
@@ -136,20 +136,20 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
           }
           const { data } = payload;
           peer.signal(data);
-        }
+        },
       );
 
       peer.on('signal', async (data) => {
         await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
           command: 'signal',
           data,
-          initiator: true
+          initiator: true,
         });
       });
 
       // Initiate connection.
       await space.postMessage(getChannel({ sender: identity.identityKey, receiver: member.identity.identityKey }), {
-        command: 'connect'
+        command: 'connect',
       });
 
       const cleanup = (err?: Error) => {
@@ -178,12 +178,12 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
     <div className='flex flex-col bg-zinc-300'>
       <div className='flex mx-3 justify-end'>
         {localVideoRef.current && localVideoRef.current!.srcObject && (
-          <Button className='p-1' variant='ghost' onClick={handleStop}>
+          <Button classNames='p-1' variant='ghost' onClick={handleStop}>
             <VideoCameraSlash className={getSize(6)} />
           </Button>
         )}
         {localVideoRef.current && !localVideoRef.current!.srcObject && (
-          <Button className='p-1' variant='ghost' onClick={handleStart}>
+          <Button classNames='p-1' variant='ghost' onClick={handleStart}>
             <VideoCamera className={getSize(6)} />
           </Button>
         )}

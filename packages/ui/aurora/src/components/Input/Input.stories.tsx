@@ -8,15 +8,13 @@ import React from 'react';
 import { MessageValence } from '@dxos/aurora-types';
 
 import {
-  Description,
-  DescriptionAndValidation,
   InputRoot,
-  Label,
   PinInput as NaturalPinInput,
   TextInput as NaturalTextInput,
   TextArea as NaturalTextArea,
-  Validation
+  Checkbox as NaturalCheckbox,
 } from './Input';
+import { Description, DescriptionAndValidation, Label, Validation } from './InputMeta';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -25,13 +23,13 @@ type StoryInputProps = Partial<{
   description: string;
   labelVisuallyHidden: boolean;
   descriptionVisuallyHidden: boolean;
-  size: 'default' | 'pin' | 'textarea';
+  type: 'default' | 'pin' | 'textarea' | 'checkbox';
   validationMessage: string;
   validationValence: MessageValence;
 }>;
 
 const StoryInput = ({
-  size = 'default',
+  type = 'default',
   label,
   description,
   labelVisuallyHidden,
@@ -44,9 +42,10 @@ const StoryInput = ({
   return (
     <InputRoot {...{ validationValence }}>
       <Label srOnly={labelVisuallyHidden}>{label}</Label>
-      {size === 'pin' && <NaturalPinInput {...props} />}
-      {size === 'textarea' && <NaturalTextArea {...props} />}
-      {size === 'default' && <NaturalTextInput {...props} />}
+      {type === 'pin' && <NaturalPinInput {...props} />}
+      {type === 'textarea' && <NaturalTextArea {...props} />}
+      {type === 'checkbox' && <NaturalCheckbox {...props} />}
+      {type === 'default' && <NaturalTextInput {...props} />}
       <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
@@ -68,13 +67,13 @@ export default {
     validationMessage: { control: 'text' },
     validationValence: {
       control: 'select',
-      options: ['success', 'info', 'warning', 'error']
+      options: ['success', 'info', 'warning', 'error'],
     },
-    size: {
+    type: {
       control: 'select',
-      options: ['default', 'textarea', 'pin']
-    }
-  }
+      options: ['default', 'textarea', 'pin'],
+    },
+  },
 };
 
 export const Default = {
@@ -87,8 +86,8 @@ export const Default = {
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    length: 6
-  }
+    length: 6,
+  },
 };
 
 export const DensityFine = {
@@ -102,8 +101,8 @@ export const DensityFine = {
     validationMessage: '',
     validationValence: undefined,
     length: 6,
-    density: 'fine'
-  }
+    density: 'fine',
+  },
 };
 
 export const Subdued = {
@@ -117,32 +116,32 @@ export const Subdued = {
     validationMessage: '',
     validationValence: undefined,
     length: 6,
-    variant: 'subdued'
-  }
+    variant: 'subdued',
+  },
 };
 
 export const Disabled = {
   args: {
     label: 'Disabled',
     placeholder: 'This is a disabled input',
-    disabled: true
-  }
+    disabled: true,
+  },
 };
 
 export const LabelVisuallyHidden = {
   args: {
     label: 'The label is for screen readers',
     labelVisuallyHidden: true,
-    placeholder: 'The label for this input exists but is only read by screen readers'
-  }
+    placeholder: 'The label for this input exists but is only read by screen readers',
+  },
 };
 
 export const InputWithDescription = {
   args: {
     label: 'Described input',
     placeholder: 'This input has an accessible description',
-    description: 'This helper text is accessibly associated with the input.'
-  }
+    description: 'This helper text is accessibly associated with the input.',
+  },
 };
 
 export const InputWithErrorAndDescription = {
@@ -151,8 +150,8 @@ export const InputWithErrorAndDescription = {
     placeholder: 'This input has both an accessible description and a validation error',
     description: 'This description is identified separately in the accessibility tree.',
     validationValence: 'error',
-    validationMessage: 'The input has an error.'
-  }
+    validationMessage: 'The input has an error.',
+  },
 };
 
 export const InputWithValidationAndDescription = {
@@ -161,25 +160,35 @@ export const InputWithValidationAndDescription = {
     placeholder: 'This input is styled to express a validation valence',
     description: 'This description is extra.',
     validationValence: 'success',
-    validationMessage: 'This validation message is really part of the description.'
-  }
+    validationMessage: 'This validation message is really part of the description.',
+  },
 };
 
 export const TextArea = {
   args: {
     label: 'This input is a text area input',
-    size: 'textarea',
+    type: 'textarea',
     description: 'Type a long paragraph',
-    placeholder: 'Lorem ipsum dolor sit amet'
-  }
+    placeholder: 'Lorem ipsum dolor sit amet',
+  },
 };
 
 export const PinInput = {
   args: {
     label: 'This input is a PIN-style input',
-    size: 'pin',
+    type: 'pin',
     length: 6,
     description: 'Type in secret you received',
-    placeholder: '••••••'
-  }
+    placeholder: '••••••',
+  },
+};
+
+export const Checkbox = {
+  args: {
+    label: 'This is a checkbox',
+    type: 'checkbox',
+    description: 'It’s checked, indeterminate, or unchecked',
+    size: 5,
+    weight: 'bold',
+  },
 };

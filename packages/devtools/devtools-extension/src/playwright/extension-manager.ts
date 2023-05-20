@@ -27,7 +27,7 @@ export class ExtensionManager {
       url: `chrome-extension://${this.extensionId}/popup.html`,
       // TODO(wittjosiah): Use data-testid.
       waitFor: (page) => page.locator('body').isVisible(),
-      bridgeLogs: true
+      bridgeLogs: true,
     });
 
     this.page = page;

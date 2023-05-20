@@ -18,7 +18,7 @@ import {
   IntroductionRequest,
   IntroductionResponse,
   InvitationHostService,
-  Options
+  Options,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -52,11 +52,11 @@ export class InvitationHostExtension extends RpcExtension<
   constructor(private readonly _callbacks: InvitationHostExtensionCallbacks) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService')
+        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService')
-      }
+        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+      },
     });
   }
 
@@ -93,8 +93,8 @@ export class InvitationHostExtension extends RpcExtension<
           const response = await this._callbacks.admit(request);
           log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
           return response;
-        }
-      }
+        },
+      },
     };
   }
 
@@ -107,7 +107,7 @@ export class InvitationHostExtension extends RpcExtension<
       if (this._remoteOptions?.role !== Options.Role.GUEST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: Options.Role.GUEST,
-          remoteOptions: this._remoteOptions
+          remoteOptions: this._remoteOptions,
         });
       }
 
@@ -142,11 +142,11 @@ export class InvitationGuestExtension extends RpcExtension<
   constructor(private readonly _callbacks: InvitationGuestExtensionCallbacks) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService')
+        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService')
-      }
+        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+      },
     });
   }
 
@@ -166,8 +166,8 @@ export class InvitationGuestExtension extends RpcExtension<
         },
         admit: () => {
           throw new Error('Method not allowed.');
-        }
-      }
+        },
+      },
     };
   }
 
@@ -182,7 +182,7 @@ export class InvitationGuestExtension extends RpcExtension<
       if (this._remoteOptions?.role !== Options.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: Options.Role.HOST,
-          remoteOptions: this._remoteOptions
+          remoteOptions: this._remoteOptions,
         });
       }
 

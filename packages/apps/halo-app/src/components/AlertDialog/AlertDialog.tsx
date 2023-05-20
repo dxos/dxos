@@ -44,7 +44,7 @@ export const AlertDialog = ({
   children,
   initiallyOpen,
   mountAsSibling,
-  slots = {}
+  slots = {},
 }: AlertDialogProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
   const [confirmDisabled, setConfirmDisabled] = useState(!!destructiveConfirmString);
@@ -90,7 +90,7 @@ export const AlertDialog = ({
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
             'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
             defaultFocus,
-            slots.content?.className
+            slots.content?.className,
           )}
         >
           <AlertDialogPrimitive.Title
@@ -100,7 +100,7 @@ export const AlertDialog = ({
               'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus,
-              slots.title?.className
+              slots.title?.className,
             )}
           >
             {title}

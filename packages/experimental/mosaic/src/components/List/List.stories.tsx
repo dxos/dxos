@@ -58,13 +58,13 @@ export default {
           <Story />
         </div>
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

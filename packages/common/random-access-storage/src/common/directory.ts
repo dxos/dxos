@@ -16,7 +16,7 @@ export class Directory {
     // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
     private readonly _getFiles: () => Map<string, File>,
     private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
-    private readonly _delete: () => Promise<void>
+    private readonly _delete: () => Promise<void>,
   ) {}
 
   toString() {

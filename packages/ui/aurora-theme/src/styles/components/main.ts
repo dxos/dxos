@@ -14,11 +14,11 @@ export type MainStyleProps = Partial<{
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-30 overscroll-contain overflow-x-hidden overflow-y-auto bg-neutral-25 dark:bg-neutral-900',
+    'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-30 overscroll-contain overflow-x-hidden overflow-y-auto bg-neutral-25 dark:bg-neutral-850',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
     sidebarOpen ? 'inline-start-0' : '-inline-start-[100vw] sm:-inline-start-[270px]',
     surfaceElevation({ elevation: 'chrome' }),
-    ...etc
+    ...etc,
   );
 
 export const mainOverlay: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
@@ -27,18 +27,18 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOp
     'transition-opacity duration-200 ease-in-out',
     !isLg && sidebarOpen ? 'opacity-100' : 'opacity-0',
     !isLg && sidebarOpen ? 'block' : 'hidden',
-    ...etc
+    ...etc,
   );
 
 export const mainContent: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
   mx(
     'transition-[padding-inline-start] duration-200 ease-in-out',
     isLg && sidebarOpen ? 'pis-[270px]' : 'pis-0',
-    ...etc
+    ...etc,
   );
 
 export const mainTheme = {
   content: mainContent,
   sidebar: mainSidebar,
-  overlay: mainOverlay
+  overlay: mainOverlay,
 };

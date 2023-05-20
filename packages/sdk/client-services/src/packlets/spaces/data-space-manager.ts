@@ -7,31 +7,31 @@ import assert from 'node:assert';
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
-import { getCredentialAssertion } from '@dxos/credentials';
-import {
-  DataServiceSubscriptions,
-  MetadataStore,
-  SigningContext,
-  SnapshotManager,
-  SnapshotStore,
-  Space,
-  spaceGenesis,
-  SpaceManager
-} from '@dxos/echo-pipeline';
+import { CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
+import { DataServiceSubscriptions, MetadataStore, Space, SpaceManager } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { spaceGenesis } from './genesis';
+
+export interface SigningContext {
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
+  credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
+  recordCredential: (credential: Credential) => Promise<void>;
+  profile?: ProfileDocument;
+}
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -67,9 +67,7 @@ export class DataSpaceManager {
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
-    private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _snapshotStore: SnapshotStore
   ) {}
 
   // TODO(burdon): Remove.
@@ -122,7 +120,7 @@ export class DataSpaceManager {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
-      dataFeedKey
+      dataFeedKey,
     };
 
     log('creating space...', { spaceKey });
@@ -152,7 +150,7 @@ export class DataSpaceManager {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
-      dataTimeframe: opts.dataTimeframe
+      dataTimeframe: opts.dataTimeframe,
     };
 
     const space = await this._constructSpace(metadata);
@@ -175,22 +173,21 @@ export class DataSpaceManager {
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
         return !!space && space.state === SpaceState.READY;
-      })
+      }),
     );
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
     log('construct space', { metadata });
     const gossip = new Gossip({
-      localPeerId: this._signingContext.deviceKey
+      localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
       announceInterval: 500,
       offlineTimeout: 5_000, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey,
-      gossip
+      gossip,
     });
-    const snapshotManager = new SnapshotManager(this._snapshotStore);
 
     const controlFeed =
       metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
@@ -201,38 +198,35 @@ export class DataSpaceManager {
       swarmIdentity: {
         peerKey: this._signingContext.deviceKey,
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
-        credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier)
+        credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
       onNetworkConnection: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId })
+          gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
-        session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
+        session.addExtension('dxos.mesh.teleport.objectsync', space.snapshotManager.objectSync.createExtension());
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-      }
+      },
+      memberKey: this._signingContext.identityKey,
     });
     controlFeed && space.setControlFeed(controlFeed);
     dataFeed && space.setDataFeed(dataFeed);
 
     const dataSpace = new DataSpace({
       inner: space,
-      modelFactory: this._modelFactory,
       metadataStore: this._metadataStore,
-      snapshotManager,
       gossip,
       presence,
-      memberKey: this._signingContext.identityKey,
       keyring: this._keyring,
       feedStore: this._feedStore,
       signingContext: this._signingContext,
-      snapshotId: metadata.snapshot,
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
           this._dataServiceSubscriptions.registerSpace(
             space.key,
-            dataSpace.dataPipeline.databaseBackend!.createDataServiceHost()
+            dataSpace.dataPipeline.databaseHost!.createDataServiceHost(),
           );
         },
         afterReady: async () => {
@@ -240,8 +234,9 @@ export class DataSpaceManager {
           if (this._isOpen) {
             this.updated.emit();
           }
-        }
-      }
+        },
+      },
+      cache: metadata.cache,
     });
 
     await dataSpace.open();

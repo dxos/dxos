@@ -15,7 +15,7 @@ import { Cell, CellSlots } from '../Cell';
 import { Tile, TileContentProps, TileSlots } from '../Tile';
 
 const options = {
-  transitionDelay: 500
+  transitionDelay: 500,
 };
 
 /**
@@ -26,13 +26,13 @@ export class GridLensModel {
 
   private readonly _aspect = {
     zoom: 1,
-    offset: { x: 0, y: 0 }
+    offset: { x: 0, y: 0 },
   };
 
   constructor(
     private readonly _options = {
-      zoomOut: 0.5
-    }
+      zoomOut: 0.5,
+    },
   ) {}
 
   get zoom() {
@@ -99,7 +99,7 @@ export const Grid = <T extends {} = {}>({
   onSelect,
   onChange,
   onCreate,
-  onDelete
+  onDelete,
 }: GridProps<T>) => {
   const lensModel = useMemo(() => controlledLensModel ?? new GridLensModel(), [controlledLensModel]);
   const getItemById = (id?: string) => (id ? items.find((item) => item.id === id) : undefined);
@@ -112,8 +112,8 @@ export const Grid = <T extends {} = {}>({
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 8 // Move 10px before activating.
-    }
+      distance: 8, // Move 10px before activating.
+    },
   });
 
   const [containerStyles, setContainerStyles] = useState<{
@@ -126,7 +126,7 @@ export const Grid = <T extends {} = {}>({
     // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
     transition: `${options.transitionDelay}ms ease-in-out`,
     transitionProperty: 'transform',
-    transform: 'scale(1)'
+    transform: 'scale(1)',
   });
 
   // TODO(burdon): Why is this required?
@@ -142,14 +142,14 @@ export const Grid = <T extends {} = {}>({
       const newStyles = {
         ...styles,
         width: layout.dimensions.width + (width ?? 0),
-        height: layout.dimensions.height + (height ?? 0)
+        height: layout.dimensions.height + (height ?? 0),
       };
 
       // Calculate offset relative to center of layout.
       const center = layout.getCenter(lensModel.offset);
       const offset = {
         x: center.x * lensModel.zoom - (width === undefined ? 0 : Math.round((width - newStyles.width) / 2)),
-        y: center.y * lensModel.zoom - (height === undefined ? 0 : Math.round((height - newStyles.height) / 2))
+        y: center.y * lensModel.zoom - (height === undefined ? 0 : Math.round((height - newStyles.height) / 2)),
       };
 
       // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
@@ -157,7 +157,7 @@ export const Grid = <T extends {} = {}>({
 
       return {
         ...newStyles,
-        transform: `scale(${lensModel.zoom})`
+        transform: `scale(${lensModel.zoom})`,
       };
     });
   };
@@ -226,7 +226,7 @@ export const Grid = <T extends {} = {}>({
             'snap-mandatory snap-both md:snap-none',
             slots.root?.className,
             // Prevents flickering on initial render.
-            visible ? 'visible overflow-auto' : 'invisible overflow-hidden'
+            visible ? 'visible overflow-auto' : 'invisible overflow-hidden',
           )}
         >
           {/* Layout container. */}

@@ -14,7 +14,7 @@ import { FullScreen } from './FullScreen';
 import { SVGContextProvider } from './SVGContextProvider';
 
 export default {
-  title: 'gem-x/D3'
+  title: 'gem-x/D3',
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
@@ -59,7 +59,7 @@ type DataItem = {
 const convertPoints = (array: any) =>
   array.map(([x, y]: [number, number]) => ({
     x: FractionUtil.toFraction(x),
-    y: FractionUtil.toFraction(y)
+    y: FractionUtil.toFraction(y),
   }));
 
 // TODO(burdon): Hook.
@@ -69,14 +69,14 @@ const data: DataItem[] = [
     data: {
       pos: { x: [0, 1], y: [3, 1] },
       r: [3, 2],
-      text: 'Circle'
-    }
+      text: 'Circle',
+    },
   },
   {
     type: 'rect',
     data: {
-      bounds: { x: [-2, 1], y: [1, 1], width: [4, 1], height: [8, 2] }
-    }
+      bounds: { x: [-2, 1], y: [1, 1], width: [4, 1], height: [8, 2] },
+    },
   },
   {
     type: 'text',
@@ -84,9 +84,9 @@ const data: DataItem[] = [
       bounds: { x: [-2, 1], y: [5, 1], width: [4, 1], height: [1, 1] },
       text: 'Text',
       style: {
-        'text-anchor': 'end'
-      }
-    }
+        'text-anchor': 'end',
+      },
+    },
   },
   {
     type: 'rect',
@@ -94,8 +94,8 @@ const data: DataItem[] = [
       bounds: { x: [4, 1], y: [1, 1], width: [4, 1], height: [4, 1] },
       class: 'style-1',
       style: { rx: [1, 1], 'font-size': 24 },
-      text: 'Rect'
-    }
+      text: 'Rect',
+    },
   },
   {
     type: 'path',
@@ -104,11 +104,11 @@ const data: DataItem[] = [
         [8, -2],
         [8, -6],
         [4, -9],
-        [-2, -2]
+        [-2, -2],
       ]),
       curve: 'cardinal',
-      closed: true
-    }
+      closed: true,
+    },
   },
   {
     type: 'path',
@@ -116,11 +116,11 @@ const data: DataItem[] = [
       points: convertPoints([
         [-8, 1],
         [-4, 1],
-        [-6, 5]
+        [-6, 5],
       ]),
-      closed: true
-    }
-  }
+      closed: true,
+    },
+  },
 ];
 
 const updateCircle = (el: any, scale: Scale, { pos, r }: { pos: Vertex; r: Fraction }) => {
@@ -134,7 +134,7 @@ const updateCircle = (el: any, scale: Scale, { pos, r }: { pos: Vertex; r: Fract
 const updateText = (
   el: any,
   scale: Scale,
-  { style = {}, bounds, pos, text }: { style: any; bounds: Bounds; pos: Vertex; text: string }
+  { style = {}, bounds, pos, text }: { style: any; bounds: Bounds; pos: Vertex; text: string },
 ) => {
   const anchor = style['text-anchor'] ?? 'middle';
   let [x = 0, y = 0] = [];
@@ -182,7 +182,7 @@ const updateRect = (el: any, scale: Scale, { bounds, style }: { bounds: Bounds; 
 const updatePath = (
   el: any,
   scale: Scale,
-  { points, curve, closed }: { points: Vertex[]; curve: string; closed: boolean }
+  { points, curve, closed }: { points: Vertex[]; curve: string; closed: boolean },
 ) => {
   const p = points.map((p) => scale.model.toPoint(p));
   let line;

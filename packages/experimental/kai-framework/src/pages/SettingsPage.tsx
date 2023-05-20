@@ -10,8 +10,9 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
+import { Checkbox, InputRoot } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Checkbox, Input } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 import { useConfig, useKeyStore } from '@dxos/react-client';
 
 import { bool, botKeys, optionsKeys, useAppState } from '../hooks';
@@ -48,7 +49,7 @@ const SettingsPage = () => {
             <div className='text-sm'>
               v{config.values.runtime?.app?.build?.version} [
               {formatDistance(new Date(config.values.runtime?.app?.build?.timestamp ?? ''), Date.now(), {
-                addSuffix: true
+                addSuffix: true,
               })}
               ]
             </div>
@@ -62,13 +63,14 @@ const SettingsPage = () => {
             <div className='py-4 bg-white'>
               {Array.from(options.entries()).map(([key, value]) => (
                 <div key={key} className='flex px-4 py-2 items-center'>
-                  <Checkbox
-                    labelId={key}
-                    checked={bool(value)}
-                    onCheckedChange={(value) => {
-                      handleUpdateOption(key, !!value);
-                    }}
-                  />
+                  <InputRoot id={key}>
+                    <Checkbox
+                      checked={bool(value)}
+                      onCheckedChange={(value) => {
+                        handleUpdateOption(key, !!value);
+                      }}
+                    />
+                  </InputRoot>
                   <div className='px-2'>{key}</div>
                 </div>
               ))}

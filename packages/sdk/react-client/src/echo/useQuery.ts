@@ -20,18 +20,18 @@ export const useQuery: UseQuery = <T extends TypedObject>(
   space?: Space,
   filter?: TypeFilter<T> | Filter<T>,
   options?: QueryOptions,
-  deps?: any[]
+  deps?: any[],
 ) => {
   const query = useMemo(
     () => space?.db.query(filter ?? {}, options) as Query<T> | undefined,
-    [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]
+    [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])],
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   return (
     useSyncExternalStore<T[] | undefined>(
       (cb) => query?.subscribe?.(cb) ?? cb,
-      () => query?.objects
+      () => query?.objects,
     ) ?? []
   );
 };

@@ -10,7 +10,7 @@ import {
   EditableListItem,
   EditableListItemSlots,
   EditableListProps,
-  useEditableListKeyboardInteractions
+  useEditableListKeyboardInteractions,
 } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
@@ -55,7 +55,7 @@ export const TaskList = observer(({ id, tasks, onCreateItem, onDeleteItem, onMov
       nextItemTitle={title}
       slots={{
         root: hostAttrs as ComponentPropsWithoutRef<'div'>,
-        addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
+        addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } },
       }}
       onMoveItem={onMoveItem}
       onChangeNextItemTitle={({ target: { value } }) => setTitle(value)}
@@ -85,8 +85,8 @@ export const TaskItem = observer(({ slots, task, onDelete }: TaskItemProps) => {
         ...slots,
         selectableCheckbox: {
           className:
-            'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600'
-        }
+            'radix-state-checked:bg-white radix-state-unchecked:bg-white radix-state-checked:border radix-state-unchecked:border border-primary-600 text-primary-600',
+        },
       }}
       onChangeCompleted={(completed) => (task.completed = completed)}
       onChangeTitle={({ target: { value } }) => {

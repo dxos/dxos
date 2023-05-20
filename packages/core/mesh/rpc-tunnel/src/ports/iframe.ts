@@ -101,7 +101,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
 
       window.addEventListener('message', handler);
       return () => window.removeEventListener('message', handler);
-    }
+    },
   };
 };
 
@@ -133,11 +133,11 @@ export const createIFrame = (source: string, id: string, { hidden = true, allow 
 
     console.log(
       `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
-      cssStyle
+      cssStyle,
     );
     console.log(
       `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
-      cssStyle
+      cssStyle,
     );
   }
 

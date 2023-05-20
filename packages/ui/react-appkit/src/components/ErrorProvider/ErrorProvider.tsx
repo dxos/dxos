@@ -7,8 +7,9 @@ import React, { createContext, PropsWithChildren, useCallback, useContext, useEf
 
 import { useTranslation, Button, DensityProvider } from '@dxos/aurora';
 import { valenceColorText, getSize } from '@dxos/aurora-theme';
-import { SystemStatus, ClientContext } from '@dxos/react-client';
+import { SystemStatus, ClientContext, Config } from '@dxos/react-client';
 import { captureException } from '@dxos/sentry';
+import { Provider } from '@dxos/util';
 
 import { ResetDialog } from '../ResetDialog';
 import { Tooltip } from '../Tooltip';
@@ -22,13 +23,18 @@ export interface ErrorContextState {
 export const ErrorContext = createContext<ErrorContextState>({
   errors: [],
   addError: () => {},
-  resetErrors: () => {}
+  resetErrors: () => {},
 });
 
 // TODO(burdon): Override if dev-only?
 const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
-export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ isDev?: boolean }>) => {
+export type ErrorProviderProps = PropsWithChildren<{
+  config?: Config | Provider<Promise<Config>>;
+  isDev?: boolean;
+}>;
+
+export const ErrorProvider = ({ children, config, isDev = true }: ErrorProviderProps) => {
   const { t } = useTranslation('appkit');
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
@@ -50,7 +56,7 @@ export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ is
       error && addError(error);
       return true; // Prevent default.
     },
-    []
+    [],
   );
 
   // Register global error handlers.
@@ -76,7 +82,7 @@ export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ is
                   <Button
                     variant='ghost'
                     onClick={() => setErrorDialogOpen(true)}
-                    className={valenceColorText('warning')}
+                    classNames={valenceColorText('warning')}
                   >
                     <Warning weight='duotone' className={getSize(6)} />
                   </Button>
@@ -84,7 +90,7 @@ export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ is
               ) : (
                 <Button
                   variant='ghost'
-                  className={
+                  classNames={
                     clientContextValue?.status === SystemStatus.ACTIVE
                       ? valenceColorText('success')
                       : !clientContextValue?.status
@@ -98,7 +104,7 @@ export const ErrorProvider = ({ children, isDev = true }: PropsWithChildren<{ is
               )}
             </DensityProvider>
           </div>
-          <ResetDialog errors={errors} open={errorDialogOpen} onOpenChange={setErrorDialogOpen} />
+          <ResetDialog config={config} errors={errors} open={errorDialogOpen} onOpenChange={setErrorDialogOpen} />
         </>
       )}
     </ErrorContext.Provider>

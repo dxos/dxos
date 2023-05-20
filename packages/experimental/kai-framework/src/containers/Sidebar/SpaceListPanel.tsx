@@ -5,9 +5,8 @@
 import { CaretCircleDoubleDown, PlusCircle, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, Checkbox, InputRoot } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Checkbox } from '@dxos/react-appkit'; // TODO(burdon): Move to aurora?
 import { ShellLayout, useClient, useSpaces } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
@@ -59,18 +58,16 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
       <div className='flex flex-col px-4 py-2'>
         {/* TODO(burdon): Not aligned with buttons. Checkbox not part of Aurora? */}
         <div className='flex px-0.5 py-1 items-center'>
-          <Checkbox
-            labelId='sidebar.showDeleted'
-            checked={showDeletedObjects}
-            onCheckedChange={setShowDeletedObjects}
-          />
+          <InputRoot id='sidebar.showDeleted'>
+            <Checkbox checked={showDeletedObjects} onCheckedChange={setShowDeletedObjects} />
+          </InputRoot>
           <span className='px-2.5 pt-0.5 text-sm'>Show deleted objects</span>
         </div>
         <Separator />
 
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Create new space'
           data-testid='sidebar.createSpace'
           onClick={handleCreateSpace}
@@ -80,7 +77,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
         </Button>
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Join a space'
           data-testid='sidebar.joinSpace'
           onClick={handleJoinSpace}
@@ -90,7 +87,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
         </Button>
         <Button
           variant='ghost'
-          className='flex p-0 justify-start'
+          classNames='flex p-0 justify-start'
           title='Close settings'
           data-testid='sidebar.closeSettings'
           onClick={onClose}

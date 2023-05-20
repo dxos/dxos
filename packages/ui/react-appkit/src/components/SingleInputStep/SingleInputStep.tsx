@@ -38,13 +38,13 @@ export const SingleInputStep = ({
   cancelPendingLabel,
   loadingLabel,
   inputPlaceholder,
-  inputProps
+  inputProps,
 }: SingleInputStepProps) => {
   const { t } = useTranslation('appkit');
   const onKeyUp = useCallback((e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onNext(), [onNext]);
   const inputSlots = useMemo(
     () => ({ ...inputProps?.slots, input: { onKeyUp, autoFocus: true, ...inputProps?.slots?.input } }),
-    [onKeyUp, inputProps?.slots]
+    [onKeyUp, inputProps?.slots],
   );
   return (
     <>
@@ -58,7 +58,7 @@ export const SingleInputStep = ({
         slots={inputSlots}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
-        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} className='order-last'>
+        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} classNames='order-last'>
           {nextLabel ?? t('next label')}
         </Button>
         {onBack && (

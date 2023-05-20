@@ -30,10 +30,10 @@ export const FrameList = () => {
             <ListItem
               id={id}
               key={id}
-              className={['flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200']}
+              classNames={['flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200']}
             >
               <Link key={id} className='flex w-full items-center' to={createPath({ spaceKey: space.key, frame: id })}>
-                <ListItemEndcap className='items-center'>
+                <ListItemEndcap classNames='items-center'>
                   <Icon className={getSize(6)} />
                 </ListItemEndcap>
                 <div className='pl-1'>{displayName}</div>

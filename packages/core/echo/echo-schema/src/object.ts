@@ -8,6 +8,7 @@ import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
@@ -66,9 +67,9 @@ export abstract class EchoObject<T extends Model = any> {
         return {
           feedKey: PublicKey.from('00'),
           seq: 0,
-          waitToBeProcessed: () => Promise.resolve()
+          waitToBeProcessed: () => Promise.resolve(),
         };
-      }
+      },
     );
   }
 
@@ -161,8 +162,13 @@ export abstract class EchoObject<T extends Model = any> {
     } else {
       assert(this._database);
       return this._database._backend.mutate(
-        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation))
+        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation)),
       );
     }
   }
 }
+
+export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
+  assert(obj[base]._stateMachine);
+  obj[base]._stateMachine.reset(snapshot);
+};

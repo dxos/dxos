@@ -18,7 +18,7 @@ import {
   Fallback,
   ResetDialog,
   ServiceWorkerToast,
-  ThemeProvider
+  ThemeProvider,
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
@@ -35,12 +35,12 @@ export const App = withProfiler(() => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
       log.error(err);
-    }
+    },
   });
 
   return (
@@ -49,7 +49,7 @@ export const App = withProfiler(() => {
       resourceExtensions={[appkitTranslations, osTranslations, tasksTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={ClientFallback}>

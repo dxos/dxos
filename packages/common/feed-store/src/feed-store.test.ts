@@ -25,7 +25,7 @@ describe('FeedStore', () => {
         const feedKey = PublicKey.random();
         await feedStore.openFeed(feedKey);
         return feedKey;
-      })
+      }),
     );
 
     {
@@ -100,7 +100,7 @@ describe('FeedStore', () => {
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append({
           id: String(i),
-          value: faker.lorem.sentence()
+          value: faker.lorem.sentence(),
         });
       }
 

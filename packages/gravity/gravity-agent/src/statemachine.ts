@@ -70,7 +70,7 @@ export class GenericStateMachine extends AgentStateMachine {
       const space = this.spaces.get(id)!;
       await space.createInvitation({
         authMethod: Invitation.AuthMethod.NONE,
-        swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
+        swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey),
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
@@ -81,7 +81,7 @@ export class GenericStateMachine extends AgentStateMachine {
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey),
-        state: Invitation.State.INIT
+        state: Invitation.State.INIT,
       });
     }
     // --- SYNC CHANNEL: SRV ---

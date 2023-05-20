@@ -6,7 +6,7 @@ import minimatch from 'minimatch';
 
 export const filterIncludeExclude = <T>(
   collection: T[],
-  options?: { include?: (string | RegExp)[]; exclude?: (string | RegExp)[]; transform?: (element: T) => string }
+  options?: { include?: (string | RegExp)[]; exclude?: (string | RegExp)[]; transform?: (element: T) => string },
 ): T[] => {
   const { include, exclude, transform } = { transform: (x: any) => x.toString(), ...options };
   const matches = (pattern: string | RegExp, value: string) =>
@@ -14,6 +14,6 @@ export const filterIncludeExclude = <T>(
   return collection.filter(
     (value) =>
       (include?.length ? include.some((pattern) => matches(pattern, transform(value))) : true) &&
-      !(exclude ?? []).some((pattern) => matches(pattern, transform(value)))
+      !(exclude ?? []).some((pattern) => matches(pattern, transform(value))),
   );
 };

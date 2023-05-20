@@ -44,7 +44,7 @@ export const AppMenu = () => {
         <DensityProvider density='coarse'>
           <Button
             variant='ghost'
-            className='p-2'
+            classNames='p-2'
             onClick={() => {
               setChat(!chat);
               setNewChat(false);
@@ -54,13 +54,13 @@ export const AppMenu = () => {
               <Chat className={getSize(6)} />
             )}
           </Button>
-          <Button variant='ghost' className='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
+          <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
             <User className={getSize(6)} />
           </Button>
           <DropdownMenu
             slots={{ content: { className: 'z-50' } }}
             trigger={
-              <Button variant='ghost' className='p-2'>
+              <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(6)} />
               </Button>
             }

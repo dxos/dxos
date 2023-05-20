@@ -11,7 +11,7 @@ const timeout = 500;
 export const queryCredentials = async (
   client: Client,
   type?: string,
-  predicate?: (value: Credential) => boolean
+  predicate?: (value: Credential) => boolean,
 ): Promise<Credential[]> => {
   const credentialsQuery = client.halo.queryCredentials({ type });
   const trigger = new Trigger<Credential[]>();
@@ -26,7 +26,7 @@ export const queryCredentials = async (
     },
     onError: (err) => {
       throw err;
-    }
+    },
   });
   setTimeout(() => {
     trigger.wake(result);

@@ -6,9 +6,10 @@ import { Article, Image, ListChecks, Table as TableIcon, Trash } from '@phosphor
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
 import { TypedObject, Space, Config } from '@dxos/client';
-import { Contact, Document, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
+import { Contact, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { Dialog } from '@dxos/react-appkit';
 import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
@@ -33,19 +34,19 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         id: Document.type.name,
         label: 'Text',
         Icon: Article,
-        onAction: (stack, section) => insert(stack, section, new Document())
+        onAction: (stack, section) => insert(stack, section, new Document()),
       },
       {
         id: TaskList.type.name,
         label: 'Tasks',
         Icon: ListChecks,
-        onAction: (stack, section) => insert(stack, section, new TaskList())
+        onAction: (stack, section) => insert(stack, section, new TaskList()),
       },
       {
         id: Table.type.name,
         label: 'Table',
         Icon: TableIcon,
-        onAction: (stack, section) => insert(stack, section, new Table({ type: Contact.type.name }))
+        onAction: (stack, section) => insert(stack, section, new Table({ type: Contact.type.name })),
       },
       {
         id: File.type.name,
@@ -55,9 +56,9 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         onAction: (stack, section, object) => {
           const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
           stack.sections.splice(idx, 0, new DocumentStack.Section({ object }));
-        }
-      }
-    ]
+        },
+      },
+    ],
   ];
 
   if (section) {
@@ -69,8 +70,8 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         onAction: (stack, section) => {
           const idx = stack.sections.findIndex(({ id }) => id === section!.id);
           stack.sections.splice(idx, 1);
-        }
-      }
+        },
+      },
     ]);
   }
 
@@ -93,8 +94,8 @@ export const StackSection: FC<{ section: DocumentStack.Section }> = ({ section }
           text={object.content}
           slots={{
             editor: {
-              spellCheck: false // TODO(burdon): Config.
-            }
+              spellCheck: false, // TODO(burdon): Config.
+            },
           }}
         />
       );
@@ -141,7 +142,7 @@ const TableContainer: FC<{ space: Space; table: Table }> = ({ space, table }) =>
       columns={type.columns.filter((column) => column.Header === 'name' || column.Header === 'email')}
       data={objects}
       slots={{
-        header: { className: 'bg-paper-bg' }
+        header: { className: 'bg-paper-bg' },
       }}
     />
   );

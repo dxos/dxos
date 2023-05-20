@@ -57,7 +57,7 @@ export class AwarenessProvider extends Observable<any> {
     encoding.writeVarUint(encoderAwarenessState, messageAwareness);
     encoding.writeVarUint8Array(
       encoderAwarenessState,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._doc.clientID])
+      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this._doc.clientID]),
     );
     void this._remoteUpdate.emit(encoding.toUint8Array(encoderAwarenessState));
   }
@@ -81,7 +81,7 @@ export class AwarenessProvider extends Observable<any> {
     encoding.writeVarUint(encoderAwareness, messageAwareness);
     encoding.writeVarUint8Array(
       encoderAwareness,
-      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients)
+      awarenessProtocol.encodeAwarenessUpdate(this._awareness, changedClients),
     );
     this._remoteUpdate.emit(encoding.toUint8Array(encoderAwareness));
   }
@@ -117,7 +117,7 @@ export class AwarenessProvider extends Observable<any> {
         encoding.writeVarUint(encoder, messageAwareness);
         encoding.writeVarUint8Array(
           encoder,
-          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys()))
+          awarenessProtocol.encodeAwarenessUpdate(this._awareness, Array.from(this._awareness.getStates().keys())),
         );
         sendReply = true;
         break;
@@ -160,7 +160,7 @@ export class Replicator {
     provider.awareness.setLocalStateField('user', {
       name: 'Anonymous ' + Math.floor(Math.random() * 100),
       color: cursorColor.color,
-      colorLight: cursorColor.light
+      colorLight: cursorColor.light,
     });
 
     // TODO(burdon): Create concrete class that implements SyncModel?
@@ -168,7 +168,7 @@ export class Replicator {
       id: doc.guid,
       content: this._kind === TextKind.PLAIN ? doc.getText('content') : doc.getXmlFragment('content'),
       provider,
-      peer: { id }
+      peer: { id },
     };
 
     this._peers.push(model);

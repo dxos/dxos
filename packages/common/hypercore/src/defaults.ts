@@ -9,7 +9,7 @@ import type { HypercoreOptions, ReadStreamOptions, ReplicationOptions, WriteStre
  */
 export const defaultFeedOptions: HypercoreOptions = {
   createIfMissing: true,
-  valueEncoding: 'binary'
+  valueEncoding: 'binary',
 };
 
 /**
@@ -23,14 +23,14 @@ export const defaultReadStreamOptions: ReadStreamOptions = {
   live: false,
   timeout: 0,
   wait: true,
-  batch: 1
+  batch: 1,
 };
 
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
  */
 export const defaultWriteStreamOptions: WriteStreamOptions = {
-  maxBlockSize: Infinity
+  maxBlockSize: Infinity,
 };
 
 /**
@@ -42,5 +42,5 @@ export const defaultReplicateOptions: ReplicationOptions = {
   download: true,
   upload: true,
   encrypted: true,
-  noise: true
+  noise: true,
 };

@@ -50,12 +50,12 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
               <Button variant='primary' onClick={() => props.updateServiceWorker()}>
                 {t('refresh label')}
               </Button>
-            )
-          }
-        ]
+            ),
+          },
+        ],
       })}
       {...(variant === 'offlineReady' && {
-        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>
+        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>,
       })}
     />
   );

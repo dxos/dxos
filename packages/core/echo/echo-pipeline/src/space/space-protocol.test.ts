@@ -51,12 +51,12 @@ describe('space/space-protocol', () => {
       swarmIdentity: {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: async () => false // Reject everyone.
+        credentialAuthenticator: async () => false, // Reject everyone.
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
-        transportFactory: MemoryTransportFactory
-      })
+        transportFactory: MemoryTransportFactory,
+      }),
     });
 
     const protocol2 = new SpaceProtocol({
@@ -64,12 +64,12 @@ describe('space/space-protocol', () => {
       swarmIdentity: {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
-        transportFactory: MemoryTransportFactory
-      })
+        transportFactory: MemoryTransportFactory,
+      }),
     });
 
     await protocol1.start();

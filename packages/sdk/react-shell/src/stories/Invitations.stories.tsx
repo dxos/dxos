@@ -18,7 +18,7 @@ import { IdentityListItem, SpaceListItem } from '../components';
 import { DevicesPanel, JoinPanel, SpacePanel } from '../panels';
 
 export default {
-  title: 'Invitations'
+  title: 'Invitations',
 };
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
@@ -146,7 +146,7 @@ const Invitations = ({ id }: { id: number }) => {
       <Button
         onClick={() =>
           client.mesh.updateConfig(
-            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE
+            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE,
           )
         }
         data-testid='invitations.toggle-network'
@@ -185,5 +185,5 @@ const Invitations = ({ id }: { id: number }) => {
 
 export const Default = {
   render: (args: { id: number }) => <Invitations {...args} />,
-  decorators: [ClientDecorator({ count: 3 })]
+  decorators: [ClientDecorator({ count: 3 })],
 };

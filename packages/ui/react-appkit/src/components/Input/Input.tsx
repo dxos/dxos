@@ -13,7 +13,7 @@ import {
   TextArea,
   TextAreaProps,
   TextInput,
-  Validation
+  Validation,
 } from '@dxos/aurora';
 
 import { InputProps as AppkitInputProps } from './InputProps';
@@ -44,9 +44,9 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
       variant = 'default',
       elevation,
       density,
-      slots = {}
+      slots = {},
     }: InputProps,
-    forwardedRef
+    forwardedRef,
   ) => {
     const { id, ...inputSlot } = slots.input ?? {};
 
@@ -60,7 +60,7 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
       onChange,
       variant,
       elevation,
-      density
+      density,
     };
 
     const bareInput =
@@ -80,11 +80,11 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
           </Label>
           {bareInput}
           {(description || validationMessage) && (
-            <DescriptionAndValidation className={slots.description?.className}>
+            <DescriptionAndValidation classNames={slots.description?.className}>
               {validationMessage && (
-                <Validation className={slots.validation?.className}>{validationMessage} </Validation>
+                <Validation classNames={slots.validation?.className}>{validationMessage} </Validation>
               )}
-              <Description srOnly={descriptionVisuallyHidden} className={slots.description?.className}>
+              <Description srOnly={descriptionVisuallyHidden} classNames={slots.description?.className}>
                 {description}
               </Description>
             </DescriptionAndValidation>
@@ -92,5 +92,5 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
         </InputRoot>
       </div>
     );
-  }
+  },
 );

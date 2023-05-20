@@ -23,8 +23,8 @@ describe('Presence stress-test ', () => {
     for (const _ in range(amountOfPeers)) {
       peers.push(
         builder.createPeer({
-          factory: () => new TestAgent({ announceInterval: 500, offlineTimeout: 5_000 })
-        })
+          factory: () => new TestAgent({ announceInterval: 500, offlineTimeout: 5_000 }),
+        }),
       );
     }
 

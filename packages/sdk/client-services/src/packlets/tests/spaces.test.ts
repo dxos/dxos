@@ -67,7 +67,7 @@ describe('Spaces', () => {
       // TODO(burdon): API (client.echo/client.halo).
       const space = await client.createSpace();
       const {
-        objectsUpdated: [item]
+        objectsUpdated: [item],
       } = await testSpace(space.internal.db);
       itemId = item.id;
       expect(space.members.get()).to.be.length(1);
@@ -118,7 +118,7 @@ describe('Spaces', () => {
     const space1 = await client1.createSpace();
     log('createSpace', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2 })
+      performInvitation({ host: space1 as SpaceProxy, guest: client2 }),
     );
     const space2 = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
 

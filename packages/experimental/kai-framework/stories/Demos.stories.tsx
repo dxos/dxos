@@ -15,7 +15,7 @@ const Frame: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 export default {
-  component: Frame
+  component: Frame,
 };
 
 type Item = { id: string; label: string; expanded: boolean; selected: boolean };
@@ -26,7 +26,7 @@ const createItem = (n: MinMax): Item[] =>
     id: faker.datatype.uuid(),
     label: faker.lorem.word(8),
     expanded: faker.datatype.boolean(),
-    selected: faker.datatype.boolean()
+    selected: faker.datatype.boolean(),
   }));
 
 //
@@ -45,7 +45,7 @@ const Card: FC<CardProps> = ({ className, square, selected, ...props }) => {
         'flex m-1 p-2 rounded border',
         selected ? 'bg-blue-100' : 'bg-paper-bg',
         square ? 'w-[160px] h-[160px]' : 'w-[160px]',
-        className
+        className,
       )}
       {...props}
     />

@@ -25,7 +25,7 @@ export class TravelBot extends Bot {
   override async onInit() {
     this._amadeus = new Amadeus({
       clientId: process.env[COM_AMADEUS_CLIENT_ID] ?? getKey(this.config, 'com.amadeus.client_id')!,
-      clientSecret: process.env[COM_AMADEUS_CLIENT_SECRET] ?? getKey(this.config, 'com.amadeus.client_secret')!
+      clientSecret: process.env[COM_AMADEUS_CLIENT_SECRET] ?? getKey(this.config, 'com.amadeus.client_secret')!,
     });
   }
 
@@ -49,7 +49,7 @@ export class TravelBot extends Bot {
 
           await this.updateTrip(trip);
         }
-      })
+      }),
     );
   }
 
@@ -74,8 +74,8 @@ export class TravelBot extends Bot {
             destinationLocationCode: destination.address.cityCode,
             departureDateTimeRange: {
               // TODO(burdon): Range?
-              date: formatISO9075(new Date(destination.dateStart!), { representation: 'date' })
-            }
+              date: formatISO9075(new Date(destination.dateStart!), { representation: 'date' }),
+            },
           };
         }),
 
@@ -87,18 +87,18 @@ export class TravelBot extends Bot {
               ? [
                   {
                     cabin: trip.profile.cabin,
-                    originDestinationIds: destinations.map((_, i) => String(i + 1))
-                  }
+                    originDestinationIds: destinations.map((_, i) => String(i + 1)),
+                  },
                 ]
               : [],
             carrierRestrictions: {
               // TODO(burdon): Echo array coerced to array of objects.
               // https://www.iata.org/en/about/members/airline-list
-              includedCarrierCodes: trip.profile?.carriers?.map((carrier) => String(carrier))
-            }
-          }
-        }
-      })
+              includedCarrierCodes: trip.profile?.carriers?.map((carrier) => String(carrier)),
+            },
+          },
+        },
+      }),
     );
 
     // Each offer represents a potential booking.
@@ -108,24 +108,24 @@ export class TravelBot extends Bot {
       const ticket: Ticket = {
         source: {
           resolver: offer.source,
-          guid: offer.id
+          guid: offer.id,
         },
 
         itineraries: offer.itineraries.map((itinerary) => ({
           segments: itinerary.segments.map((segment) => ({
             departure: {
               iataCode: segment.departure.iataCode,
-              at: segment.departure.at
+              at: segment.departure.at,
             },
             arrival: {
               iataCode: segment.arrival.iataCode,
-              at: segment.arrival.at
+              at: segment.arrival.at,
             },
             duration: segment.duration,
             carrier: segment.carrierCode,
-            number: segment.number
-          }))
-        }))
+            number: segment.number,
+          })),
+        })),
       };
 
       // TODO(burdon): Create single QueryResponse object?
@@ -134,9 +134,9 @@ export class TravelBot extends Bot {
           tickets: [ticket],
           transaction: {
             currency: offer.price.currency,
-            total: offer.price.total
-          }
-        })
+            total: offer.price.total,
+          },
+        }),
       );
     });
   }

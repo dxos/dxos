@@ -23,7 +23,7 @@ describe('GossipExtension', () => {
     const extension1 = new GossipExtension({
       onAnnounce: async (message: GossipMessage) => {
         trigger1.wake(message);
-      }
+      },
     });
     connection1.teleport.addExtension('dxos.mesh.teleport.gossip', extension1);
 
@@ -31,7 +31,7 @@ describe('GossipExtension', () => {
     const extension2 = new GossipExtension({
       onAnnounce: async (message: GossipMessage) => {
         trigger2.wake(message);
-      }
+      },
     });
     connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
@@ -43,8 +43,8 @@ describe('GossipExtension', () => {
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
         connections: [peer2.peerId],
-        identityKey: PublicKey.random()
-      }
+        identityKey: PublicKey.random(),
+      },
     });
 
     await extension2.sendAnnounce({
@@ -55,8 +55,8 @@ describe('GossipExtension', () => {
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
         connections: [peer1.peerId],
-        identityKey: PublicKey.random()
-      }
+        identityKey: PublicKey.random(),
+      },
     });
 
     expect((await trigger1.wait({ timeout: 50 })).peerId).toEqual(peer2.peerId);

@@ -21,13 +21,13 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
   constructor(
     protected readonly _context: SVGContext,
     protected readonly _ref: RefObject<SVGGElement>,
-    options?: Partial<OPTIONS>
+    options?: Partial<OPTIONS>,
   ) {
     this._options = Object.assign(
       {
-        idAccessor: defaultIdAccessor
+        idAccessor: defaultIdAccessor,
       },
-      options
+      options,
     ) as OPTIONS;
   }
 

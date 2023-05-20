@@ -12,14 +12,14 @@ import { Avatar } from '../Avatar';
 import { Popover } from './Popover';
 
 export default {
-  component: Popover
+  component: Popover,
 };
 
 export const Default = {
   args: {
     openTrigger: <Button>Open popover</Button>,
-    children: 'Popover content'
-  }
+    children: 'Popover content',
+  },
 };
 
 export const AvatarTrigger = {
@@ -29,14 +29,14 @@ export const AvatarTrigger = {
         slots={{
           root: {
             tabIndex: 0,
-            className: mx('shadow-md cursor-pointer rounded-md', defaultHover, defaultFocus, defaultActive)
-          }
+            className: mx('shadow-md cursor-pointer rounded-md', defaultHover, defaultFocus, defaultActive),
+          },
         }}
         label={<span className='sr-only'>Open popover</span>}
         fallbackValue='open popover'
       />
     ),
     closeLabel: 'Close',
-    children: 'Popover content'
-  }
+    children: 'Popover content',
+  },
 };

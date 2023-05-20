@@ -55,7 +55,7 @@ export class FeedStateMachine {
       key: credential.subject.id,
       credential,
       assertion,
-      parent: fromFeed
+      parent: fromFeed,
     };
 
     this._feeds.set(credential.subject.id, info);

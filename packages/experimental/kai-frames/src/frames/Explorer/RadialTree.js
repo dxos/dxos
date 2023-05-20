@@ -44,7 +44,7 @@ export const RadialTree = (data, options = {}) => {
     strokeLinecap, // stroke line cap for links
 
     halo = '#fff', // color of label halo
-    haloWidth = 3 // padding around the labels
+    haloWidth = 3, // padding around the labels
   } = options;
 
   // If id and parentId options are specified, or the path option, use d3.stratify
@@ -98,7 +98,7 @@ export const RadialTree = (data, options = {}) => {
       d3
         .linkRadial()
         .angle((d) => d.x)
-        .radius((d) => d.y)
+        .radius((d) => d.y),
     );
 
   const node = svg

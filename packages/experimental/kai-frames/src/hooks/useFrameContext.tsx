@@ -23,12 +23,12 @@ const FrameRegistryContext: Context<FrameRegistryContextType | undefined> = crea
 
 export const FrameRegistryContextProvider: FC<{ children: ReactNode; frameDefs?: FrameDef<any>[] }> = ({
   children,
-  frameDefs = []
+  frameDefs = [],
 }) => {
   return (
     <FrameRegistryContext.Provider
       value={{
-        frameRegistry: new FrameRegistry(frameDefs)
+        frameRegistry: new FrameRegistry(frameDefs),
       }}
     >
       {children}

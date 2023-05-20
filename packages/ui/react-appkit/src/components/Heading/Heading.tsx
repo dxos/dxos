@@ -17,13 +17,13 @@ const levelClassNameMap = new Map<number, string>([
   [3, 'text-3xl'],
   [4, 'text-2xl'],
   [5, 'text-xl'],
-  [6, 'text-lg']
+  [6, 'text-lg'],
 ]);
 
 export const Heading = ({ level, ...rootSlot }: PropsWithChildren<HeadingProps>) => {
   const resolvedLevel = level || 1;
   return createElement(`h${resolvedLevel}`, {
     ...rootSlot,
-    className: mx('font-bold font-display', levelClassNameMap.get(resolvedLevel), rootSlot.className)
+    className: mx('font-bold font-display', levelClassNameMap.get(resolvedLevel), rootSlot.className),
   });
 };

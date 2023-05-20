@@ -37,6 +37,6 @@ spawnSync('pnpm', ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`], 
   shell: true,
   stdio: 'inherit',
   env: {
-    ...process.env
-  }
+    ...process.env,
+  },
 });

@@ -11,5 +11,5 @@ const ContactFrame = React.lazy(() => import('./ContactFrame'));
 
 export const ContactFrameRuntime: FrameRuntime<any> = {
   Icon: ContactIcon,
-  Component: ContactFrame
+  Component: ContactFrame,
 };

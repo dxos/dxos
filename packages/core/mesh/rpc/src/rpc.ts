@@ -43,7 +43,7 @@ class PendingRpcRequest {
   constructor(
     public readonly resolve: (response: Response) => void,
     public readonly reject: (error?: Error) => void,
-    public readonly stream: boolean
+    public readonly stream: boolean,
   ) {}
 }
 
@@ -155,8 +155,8 @@ export class RpcPeer {
         await this._sendMessage({
           response: {
             id: decoded.request.id,
-            error: encodeError(new RpcClosedError())
-          }
+            error: encodeError(new RpcClosedError()),
+          },
         });
         return;
       }
@@ -169,7 +169,7 @@ export class RpcPeer {
             method: req.method,
             response: response.payload?.type_url,
             error: response.error,
-            close: response.close
+            close: response.close,
           });
 
           void this._sendMessage({ response }).catch((err) => {
@@ -183,7 +183,7 @@ export class RpcPeer {
         log('sending response', {
           method: req.method,
           response: response.payload?.type_url,
-          error: response.error
+          error: response.error,
         });
         await this._sendMessage({ response });
       }
@@ -268,8 +268,8 @@ export class RpcPeer {
           id,
           method,
           payload: request,
-          stream: false
-        }
+          stream: false,
+        },
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
@@ -342,15 +342,15 @@ export class RpcPeer {
           id,
           method,
           payload: request,
-          stream: true
-        }
+          stream: true,
+        },
       }).catch((err) => {
         close(err);
       });
 
       return () => {
         this._sendMessage({
-          streamClose: { id }
+          streamClose: { id },
         }).catch((err) => {
           log.catch(err);
         });
@@ -371,12 +371,12 @@ export class RpcPeer {
       const response = await this._options.callHandler(req.method, req.payload);
       return {
         id: req.id,
-        payload: response
+        payload: response,
       };
     } catch (err) {
       return {
         id: req.id,
-        error: encodeError(err)
+        error: encodeError(err),
       };
     }
   }
@@ -392,7 +392,7 @@ export class RpcPeer {
       responseStream.onReady(() => {
         callback({
           id: req.id,
-          streamReady: true
+          streamReady: true,
         });
       });
 
@@ -400,29 +400,29 @@ export class RpcPeer {
         (msg) => {
           callback({
             id: req.id,
-            payload: msg
+            payload: msg,
           });
         },
         (error) => {
           if (error) {
             callback({
               id: req.id,
-              error: encodeError(error)
+              error: encodeError(error),
             });
           } else {
             callback({
               id: req.id,
-              close: true
+              close: true,
             });
           }
-        }
+        },
       );
 
       this._localStreams.set(req.id, responseStream);
     } catch (err: any) {
       callback({
         id: req.id,
-        error: encodeError(err)
+        error: encodeError(err),
       });
     }
   }

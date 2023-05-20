@@ -29,7 +29,7 @@ const DevicesPage = () => {
         className='mlb-4'
         heading={{ children: t('devices label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1' onClick={handleCreateInvitation}>
+          <Button variant='primary' classNames='grow flex gap-1' onClick={handleCreateInvitation}>
             <Plus className={getSize(5)} />
             {t('add device label')}
           </Button>

@@ -14,7 +14,7 @@ export interface ServeWithVaultExecutorOptions {
 // Based on https://nx.dev/recipes/executors/creating-custom-executors#using-node-child-process
 export default async function* (
   options: ServeWithVaultExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<{ success: boolean; baseUrl?: string; vaultBaseUrl?: string }> {
   const { serveProject: project = context.projectName, serveTarget: target, watch } = options;
   assert(project, 'serveProject is required');
@@ -25,7 +25,7 @@ export default async function* (
 
   const [vaultExecutor, projectExecutor] = await Promise.all([
     runExecutor<{ success: boolean; baseUrl?: string }>({ project: 'vault', target }, { watch }, context),
-    runExecutor<{ success: boolean; baseUrl?: string }>({ project, target }, { watch }, context)
+    runExecutor<{ success: boolean; baseUrl?: string }>({ project, target }, { watch }, context),
   ]);
   const [vaultResult, projectResult] = await Promise.all([vaultExecutor.next(), projectExecutor.next()]);
 

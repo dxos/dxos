@@ -18,7 +18,7 @@ const DXOSHorizontalType: FC<{ className?: string }> = ({ className = defaultSiz
         fillRule: 'evenodd',
         clipRule: 'evenodd',
         strokeLinejoin: 'round',
-        strokeMiterlimit: 2
+        strokeMiterlimit: 2,
       }}
     >
       <g transform='matrix(0.64,0,0,0.64,62.0285,170.667)'>

@@ -21,7 +21,7 @@ const main = async () => {
       templateDirectory,
       outputDirectory,
       input: { ...config, monorepo: false, name: `${packageJson.name}-${config.name}` },
-      interactive: true
+      interactive: true,
     });
     await results.save();
   });

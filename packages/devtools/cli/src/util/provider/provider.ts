@@ -32,7 +32,7 @@ export interface MachineryProvider {
 export const mapKubes = (kubes: KUBE[]) => {
   return kubes.map((kube) => ({
     key: kube.hostname,
-    ipAddress: kube.ipAddress
+    ipAddress: kube.ipAddress,
   }));
 };
 
@@ -41,14 +41,14 @@ export const printKubes = (kubes: KUBE[], flags = {}) => {
     mapKubes(kubes),
     {
       key: {
-        header: 'Hostname'
+        header: 'Hostname',
       },
       ipAddress: {
-        header: 'IP Address'
-      }
+        header: 'IP Address',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };

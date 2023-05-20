@@ -20,7 +20,7 @@ describe('database (unit)', () => {
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
     peer.proxy.mutate(
-      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
     peer.confirm();
@@ -44,7 +44,7 @@ describe('database (unit)', () => {
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
     peer.proxy.mutate(
-      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
     peer.confirm();
@@ -70,7 +70,7 @@ describe('database (unit)', () => {
     const id = PublicKey.random().toHex();
     peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
     peer1.proxy.mutate(
-      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
     peer1.confirm();
 
@@ -89,7 +89,7 @@ describe('database (unit)', () => {
     peer1.proxy.beginBatch();
     peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
     peer1.proxy.mutate(
-      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
     peer1.confirm();

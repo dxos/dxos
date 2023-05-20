@@ -26,9 +26,16 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case '@typescript-eslint/eslint-plugin': 
+    case '@typescript-eslint/eslint-plugin':
     case '@typescript-eslint/parser': {
       packageJson.dependencies['eslint'] = '^8.0.0'
+      break;
+    }
+
+    // Conflict between web-ext and addons-scanner-utils.
+    // web-ext > addons-linter > addons-scanner-utils.
+    case 'addons-scanner-utils': {
+      delete packageJson.peerDependencies['node-fetch']
       break;
     }
 
@@ -95,7 +102,7 @@ function readPackage(packageJson, context) {
       packageJson.dependencies['vite'] = '^4.3.0'
       break;
     }
-    
+
     // Ensure vuepress uses compatible vite version.
     case '@vitejs/plugin-vue': {
       packageJson.peerDependencies['vite'] = '^4.3.0'

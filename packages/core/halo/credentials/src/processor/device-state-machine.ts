@@ -36,7 +36,7 @@ export class DeviceStateMachine implements CredentialProcessor {
     log('processing credential...', {
       identityKey: this._params.identityKey,
       deviceKey: this._params.deviceKey,
-      credential
+      credential,
     });
 
     // Save device keychain credential when processed by the space state machine.
@@ -53,7 +53,7 @@ export class DeviceStateMachine implements CredentialProcessor {
         log('added device', {
           localDeviceKey: this._params.deviceKey,
           deviceKey: assertion.deviceKey,
-          size: this.authorizedDeviceKeys.size
+          size: this.authorizedDeviceKeys.size,
         });
         this._params.onUpdate?.();
         break;

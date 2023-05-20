@@ -23,7 +23,7 @@ const knownPeerPackages = [
   '@dxos/aurora-theme',
   '@dxos/react-appkit',
   '@dxos/react-shell',
-  '@dxos/react-list'
+  '@dxos/react-list',
 ];
 
 const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {
@@ -43,7 +43,7 @@ const ensureContentHasPeerPackages = (content: string[], rootPath: string) => {
     }
     try {
       const resolved = require.resolve(packageName, {
-        paths: [rootPath]
+        paths: [rootPath],
       });
       if (!resolved) {
         return;
@@ -58,13 +58,13 @@ const ensureContentHasPeerPackages = (content: string[], rootPath: string) => {
 // TODO(zhenyasav): make it easy to override the tailwind config
 // TODO(zhenyasav): make it easy to add postcss plugins?
 export const ThemePlugin = (
-  options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
+  options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] },
 ) => {
   const config: VitePluginTailwindOptions & Pick<typeof options, 'extensions'> = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
     virtualFileId: '@dxosTheme',
-    ...options
+    ...options,
   };
 
   return {
@@ -80,19 +80,19 @@ export const ThemePlugin = (
                   env: env.mode,
                   root,
                   content,
-                  extensions: config.extensions
-                })
+                  extensions: config.extensions,
+                }),
               ),
-              autoprefixer
-            ]
-          }
-        }
+              autoprefixer,
+            ],
+          },
+        },
       };
     },
     resolveId: (id) => {
       if (id === config.virtualFileId) {
         return config.cssPath;
       }
-    }
+    },
   } as Plugin;
 };

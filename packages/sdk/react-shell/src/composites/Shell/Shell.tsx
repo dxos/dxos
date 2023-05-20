@@ -17,7 +17,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   const [{ layout, invitationCode, spaceKey }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
-    spaceKey: runtime.spaceKey
+    spaceKey: runtime.spaceKey,
   });
 
   const client = useClient();

@@ -52,17 +52,17 @@ export class IFrameProxyRuntime {
     this._config = await getAsyncValue(this._configProvider);
 
     this._transportService = new WebRTCTransportService({
-      iceServers: this._config.get('runtime.services.ice')
+      iceServers: this._config.get('runtime.services.ice'),
     });
 
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,
       exposed: iframeServiceBundle,
       handlers: {
-        BridgeService: this._transportService
+        BridgeService: this._transportService,
       },
       port: this._systemPort,
-      timeout: 200
+      timeout: 200,
     });
 
     let lockKey: string | undefined;

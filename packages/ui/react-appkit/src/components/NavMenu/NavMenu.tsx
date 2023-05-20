@@ -5,6 +5,7 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
+import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '@dxos/aurora';
 import {
   defaultFocus,
   defaultHover,
@@ -12,10 +13,8 @@ import {
   mx,
   defaultAppButtonColors,
   primaryAppButtonColors,
-  surfaceElevation
+  surfaceElevation,
 } from '@dxos/aurora-theme';
-
-import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 
 interface NavMenuItemSharedProps {
   children: ReactNode;
@@ -70,7 +69,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
-            defaultHover
+            defaultHover,
           )}
         >
           {children}
@@ -81,14 +80,14 @@ const NavMenuInvokerItem = forwardRef(
             'radix-motion-from-start:animate-enter-from-left',
             'radix-motion-from-end:animate-enter-from-right',
             'radix-motion-to-start:animate-exit-to-left',
-            'radix-motion-to-end:animate-exit-to-right'
+            'radix-motion-to-end:animate-exit-to-right',
           )}
         >
           {content}
         </NavigationMenuPrimitive.Content>
       </NavigationMenuPrimitive.Item>
     );
-  }
+  },
 );
 
 const NavMenuLinkItem = forwardRef(
@@ -103,13 +102,13 @@ const NavMenuLinkItem = forwardRef(
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
           defaultHover,
-          triggerLinkProps.className
+          triggerLinkProps.className,
         )}
       >
         {children}
       </NavigationMenuPrimitive.Link>
     </NavigationMenuPrimitive.Item>
-  )
+  ),
 );
 
 const NavMenuTooltipLinkItem = forwardRef(
@@ -128,7 +127,7 @@ const NavMenuTooltipLinkItem = forwardRef(
               active ? 'font-medium' : 'font-normal',
               defaultFocus,
               defaultHover,
-              triggerLinkProps.className
+              triggerLinkProps.className,
             )}
           >
             {children}
@@ -136,7 +135,7 @@ const NavMenuTooltipLinkItem = forwardRef(
         </NavigationMenuPrimitive.Item>
       </TooltipTrigger>
     </TooltipRoot>
-  )
+  ),
 );
 
 export const NavMenuLink = NavigationMenuPrimitive.Link;
@@ -157,7 +156,7 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
       className={mx(
         'rounded-lg bg-white dark:bg-neutral-750',
         variant === 'vertical' ? 'max-bs-full overflow-y-auto' : 'max-is-full overflow-x-auto',
-        slots.root?.className
+        slots.root?.className,
       )}
     >
       <NavigationMenuPrimitive.List
@@ -166,7 +165,7 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
           surfaceElevation({ elevation: 'group' }),
           'relative flex gap-1 p-1',
           variant === 'vertical' ? 'flex-col items-stretch' : 'flex-row items-center',
-          slots.list?.className
+          slots.list?.className,
         )}
       >
         {items.map((item: NavMenuItem, i) => {
@@ -188,13 +187,13 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
             'radix-state-visible:animate-fade-in',
             'radix-state-hidden:animate-fade-out',
             'transition-[width_transform] duration-[250ms] ease-[ease]',
-            slots.indicator?.className
+            slots.indicator?.className,
           )}
         >
           <div
             className={mx(
               'top-1 relative bg-white dark:bg-neutral-750 w-2 h-2 rotate-45',
-              slots.indicatorIcon?.className
+              slots.indicatorIcon?.className,
             )}
           />
         </NavigationMenuPrimitive.Indicator>
@@ -203,7 +202,7 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
       <div
         className={mx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
         style={{
-          perspective: '2000px'
+          perspective: '2000px',
         }}
       >
         <NavigationMenuPrimitive.Viewport
@@ -215,7 +214,7 @@ export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuPr
             'radix-state-open:animate-scale-in-content',
             'radix-state-closed:animate-scale-out-content',
             'origin-[top_center] transition-[width_height] duration-300 ease-[ease]',
-            slots.viewport?.className
+            slots.viewport?.className,
           )}
         />
       </div>

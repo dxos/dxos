@@ -21,7 +21,7 @@ import {
   performInvitation,
   PerformInvitationParams,
   Result,
-  TestBuilder
+  TestBuilder,
 } from '../testing';
 
 chai.use(chaiAsPromised);
@@ -35,7 +35,7 @@ const successfulInvitation = async ({
   host,
   guest,
   hostResult: { invitation: hostInvitation, error: hostError },
-  guestResult: { invitation: guestInvitation, error: guestError }
+  guestResult: { invitation: guestInvitation, error: guestError },
 }: {
   host: ServiceContext;
   guest: ServiceContext;
@@ -87,8 +87,8 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET }
-      })
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
     );
 
     await successfulInvitation({ host, guest, hostResult, guestResult });
@@ -113,10 +113,10 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
               }
 
               return false;
-            }
-          }
-        }
-      })
+            },
+          },
+        },
+      }),
     );
 
     expect(attempt).to.eq(1);
@@ -136,9 +136,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
             void invitation.authenticate('000000');
             attempt++;
             return true;
-          }
-        }
-      }
+          },
+        },
+      },
     });
     const guestResult = await guestPromise;
 
@@ -152,8 +152,8 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
-        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 }
-      })
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET, timeout: 1 },
+      }),
     );
 
     expect(hostResult.invitation?.state).to.eq(Invitation.State.TIMEOUT);
@@ -171,10 +171,10 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
             onConnected: (invitation) => {
               void invitation.cancel();
               return true;
-            }
-          }
-        }
-      })
+            },
+          },
+        },
+      }),
     );
 
     expect(hostResult.invitation?.state).to.eq(Invitation.State.CANCELLED);
@@ -191,9 +191,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
           onConnected: (invitation) => {
             void invitation.cancel();
             return true;
-          }
-        }
-      }
+          },
+        },
+      },
     });
     const guestResult = await guestPromise;
 
@@ -212,9 +212,9 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
           onConnected: () => {
             void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
             return true;
-          }
-        }
-      }
+          },
+        },
+      },
     });
     const guestResult = await guestPromise;
 
@@ -244,9 +244,9 @@ describe('Invitations', () => {
         () => ({
           host,
           guest,
-          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key }
+          options: { kind: Invitation.Kind.SPACE, spaceKey: space.key },
         }),
-        () => [host, guest]
+        () => [host, guest],
       );
     });
 
@@ -263,7 +263,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest, options: { kind: Invitation.Kind.DEVICE } }),
-        () => [host, guest]
+        () => [host, guest],
       );
     });
   });
@@ -284,10 +284,10 @@ describe('Invitations', () => {
         assert(guestContext.dataSpaceManager);
 
         const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation)
+          hostContext.getInvitationHandler(invitation),
         );
         const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation)
+          guestContext.getInvitationHandler(invitation),
         );
 
         space = await hostContext.dataSpaceManager.createSpace();
@@ -299,7 +299,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext]
+        () => [hostContext, guestContext],
       );
     });
 
@@ -317,11 +317,11 @@ describe('Invitations', () => {
         await hostContext.identityManager.createIdentity();
 
         const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation)
+          hostContext.getInvitationHandler(invitation),
         );
 
         const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation)
+          guestContext.getInvitationHandler(invitation),
         );
 
         host = new InvitationsProxy(hostService, () => ({ kind: Invitation.Kind.DEVICE }));
@@ -330,7 +330,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext]
+        () => [hostContext, guestContext],
       );
     });
   });
@@ -357,8 +357,8 @@ describe('Invitations', () => {
       () => ({ host: host.halo, guest: guest.halo }),
       () => [
         (host.services as LocalClientServices).host._serviceContext,
-        (guest.services as LocalClientServices).host._serviceContext
-      ]
+        (guest.services as LocalClientServices).host._serviceContext,
+      ],
     );
   });
 
@@ -386,8 +386,8 @@ describe('Invitations', () => {
       () => ({ host: space as SpaceProxy, guest }),
       () => [
         (host.services as LocalClientServices).host._serviceContext,
-        (guest.services as LocalClientServices).host._serviceContext
-      ]
+        (guest.services as LocalClientServices).host._serviceContext,
+      ],
     );
   });
 });
