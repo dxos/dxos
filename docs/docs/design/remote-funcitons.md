@@ -1,12 +1,13 @@
 # Remote Functions
 
+Remote functions are part of the DXOS extenisbility framework that enables developers to deploy long-running agents and invoke short-lived functions that have access to Spaces.
+
 ## Spec
 
 - Run long-lived functions that operate over users' ECHO spaces and interace with external systems.
 - Isolation of individual functions.
 - Controlled access to resources (e.g., storage, network). Enables "pure" stateless funcitons.
-- Funcitons triggered by external events (e.g., signaling, HALO/ECHO mutations, timers, other functions).
-- Support multiple runtimes (e.g., WASI; potential to run within browser).
+- Functions triggered by external events (e.g., signaling, HALO/ECHO mutations, timers, other functions).
 - Global registration and discovery (DMG).
 - Life cycle management (i.e., install, start, pause, stop, destory).
 
@@ -23,16 +24,27 @@
 
 - Reuse of existing open source systems.
 - Memory efficient runtime enabling high density.
+- Support multiple runtimes (e.g., WASI; potential to run within browser).
+- Local testing environment.
+- Ability to self-host (e.g., not require require complex K8s infrastructure)
 
 
 ## Non-Goals
 
 - Coordination of funtions (or function state) runtime across multiple VMs (i.e., homogenous network).
+- Scale-on-demand: Functions run within the context of a deployed agent; it is not expected to support running 100s of function invocations. "Heavy lifting" might be achieved via external systems, which are out of bound.
 
 
 ## Issues
 
+- Access control via KUBE credentials.
+- Agent identity (HALO). Agents create credentials that enable either direct control by a user -- or via user's with access to credentials within a Space.
+- Agent's with multiple "devices" -- corresponding to multiple VM deployments (engable migration).
 - Support for low-spec machines (e.g., Raspberry PI, IoT).
+- Access control for inbound events.
+- Asynchronous functions (e.g., async external function calls); implement via chaining?
+- Security, isolation. 
+- KMS (HALO + external keys: e.g., OAuth tokens; token renewal via public DNS endpoint).
 
 
 ## Archiecture
@@ -60,6 +72,14 @@
 
 ### Schematic
 
-<br/>
-
 ![d](./diagrams/remote-functions.drawio.svg)
+
+
+### Research
+
+- OpenFaas, `faasd`
+- Fission.codes (IPVM)
+- Fission.io
+- Up: https://github.com/apex/up
+- Serverless: https://www.serverless.com/framework
+- https://aws.amazon.com/blogs/opensource/24-open-source-tools-for-the-serverless-developer-part-1/
