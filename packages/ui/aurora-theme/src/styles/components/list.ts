@@ -44,8 +44,8 @@ export const listTheme: Theme<ListStyleProps> = {
     dragHandle: listItemAppDragHandle,
     dragHandleIcon: listItemDragHandleIcon,
     openTrigger: listItemAppOpenTrigger,
-    openTriggerIcon: listItemOpenTriggerIcon
-  }
+    openTriggerIcon: listItemOpenTriggerIcon,
+  },
 };
 
 export const listOsTheme: Theme<ListStyleProps> = {
@@ -53,6 +53,6 @@ export const listOsTheme: Theme<ListStyleProps> = {
   item: {
     ...listTheme.item,
     dragHandle: listItemOsDragHandle,
-    openTrigger: listItemOsOpenTrigger
-  }
+    openTrigger: listItemOsOpenTrigger,
+  },
 };

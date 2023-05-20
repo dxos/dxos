@@ -65,7 +65,7 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
           scope: __listScope,
           variant,
           selectable,
-          toggleOpenLabel
+          toggleOpenLabel,
         }}
       >
         {variant === 'ordered-draggable' ? (

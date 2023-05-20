@@ -13,7 +13,7 @@ import { useSpaces } from '@dxos/react-client';
 export enum Section {
   DMG = 'metagraph',
   FRAME = 'frame',
-  BOTS = 'bots'
+  BOTS = 'bots',
 }
 
 const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);
@@ -28,7 +28,7 @@ export const createPath = ({
   spaceKey,
   section,
   frame,
-  objectId
+  objectId,
 }: {
   spaceKey?: PublicKey;
   section?: string;

@@ -23,9 +23,9 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Todos /> },
       { path: ':spaceKey', element: <Todos /> },
-      { path: ':spaceKey/:state', element: <Todos /> }
-    ]
-  }
+      { path: ':spaceKey/:state', element: <Todos /> },
+    ],
+  },
 ]);
 
 const App = withProfiler(() => <RouterProvider router={router} />);
@@ -34,5 +34,5 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );

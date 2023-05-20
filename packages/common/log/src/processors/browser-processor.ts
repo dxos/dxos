@@ -26,11 +26,11 @@ const CONFIG: Config =
   typeof mochaExecutor !== 'undefined'
     ? {
         useTestProcessor: true,
-        printFileLinks: true
+        printFileLinks: true,
       }
     : {
         useTestProcessor: false,
-        printFileLinks: false
+        printFileLinks: false,
       };
 
 /**
@@ -71,7 +71,7 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   const levels: any = {
     [LogLevel.ERROR]: console.error,
     [LogLevel.WARN]: console.warn,
-    [LogLevel.DEBUG]: console.log
+    [LogLevel.DEBUG]: console.log,
   };
 
   if (CONFIG.printFileLinks) {
@@ -114,7 +114,7 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   const levels: any = {
     [LogLevel.ERROR]: console.error,
     [LogLevel.WARN]: console.warn,
-    [LogLevel.DEBUG]: console.log
+    [LogLevel.DEBUG]: console.log,
   };
 
   if (CONFIG.printFileLinks) {

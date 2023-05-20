@@ -64,7 +64,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         // https://esbuild.github.io/api/#log-override
         logOverride: {
           // The log transform was generating this warning.
-          'this-is-undefined-in-esm': 'info'
+          'this-is-undefined-in-esm': 'info',
         },
         plugins: [
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
@@ -92,11 +92,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 const module = args.path.replace(/^node:/, '');
                 return { external: true, path: `@dxos/node-std/${module}` };
               });
-            }
+            },
           },
           nodeExternalsPlugin({
             packagePath,
-            allowList: options.bundlePackages
+            allowList: options.bundlePackages,
           }),
           logTransformer.createPlugin(),
           RawPlugin(),
@@ -107,17 +107,17 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
               onResolve({ filter: /\?url$/ }, (args) => {
                 return {
                   path: args.path.replace(/\?url$/, '/empty-url'),
-                  namespace: 'url'
+                  namespace: 'url',
                 };
               });
 
               onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
                 return { contents: 'export default ""' };
               });
-            }
+            },
           },
-          yamlPlugin({})
-        ]
+          yamlPlugin({}),
+        ],
       });
 
       await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
@@ -127,7 +127,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       }
 
       return result.errors;
-    })
+    }),
   );
 
   if (options.watch) {

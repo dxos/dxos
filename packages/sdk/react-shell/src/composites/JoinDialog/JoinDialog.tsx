@@ -27,7 +27,7 @@ export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
             ...joinPanelProps,
             titleId,
             exitActionParent: <Cancel asChild />,
-            doneActionParent: <Action asChild />
+            doneActionParent: <Action asChild />,
           }}
         />
       </ThemeContext.Provider>

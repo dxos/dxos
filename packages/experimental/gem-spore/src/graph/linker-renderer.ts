@@ -23,7 +23,7 @@ export const linkerRenderer = (
   root: SVGGElement,
   source?: GraphLayoutNode<any>,
   target?: GraphLayoutNode<any>,
-  point?: Point
+  point?: Point,
 ) => {
   d3.select(root)
     .selectAll('g.linker')
@@ -41,8 +41,8 @@ export const linkerRenderer = (
           [source.x, source.y],
           target ? [target.x, target.y] : point,
           source.r,
-          target ? target.r : 1
-        )
+          target ? target.r : 1,
+        ),
       );
     });
 };

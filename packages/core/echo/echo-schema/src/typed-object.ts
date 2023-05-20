@@ -6,10 +6,11 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, schema } from './defs';
+import { base, data, proxy, readOnly, schema } from './defs';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
@@ -36,7 +37,7 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => ({ '@id': id })
+  onRef: (id, obj) => ({ '@id': id }),
 };
 
 /**
@@ -62,7 +63,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   // prettier-ignore
   constructor(
     initialProps?: T,
-    private readonly _schemaType?: EchoSchemaType
+    private readonly _schemaType?: EchoSchemaType,
+    private readonly _opts?: TypedObjectOpts
   ) {
     super(DocumentModel);
 
@@ -113,6 +115,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]?._schemaType;
   }
 
+  /**
+   * Returns boolean. If `true`, read only access is activated.
+   */
+  get [readOnly](): boolean {
+    return !!this[base]?._opts?.readOnly;
+  }
+
   /** Deletion. */
   get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
@@ -132,8 +141,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
       ...this[base]._convert({
-        onRef: (id, obj?) => obj ?? { '@id': id }
-      })
+        onRef: (id, obj?) => obj ?? { '@id': id },
+      }),
     };
   }
 
@@ -168,14 +177,14 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@id': this.id,
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
-      ...convert(this._model?.toObject())
+      ...convert(this._model?.toObject()),
     };
   }
 
   [inspect.custom](
     depth: number,
     options: InspectOptionsStylized,
-    inspect_: (value: any, options?: InspectOptionsStylized) => string
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
@@ -322,7 +331,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         // TODO(burdon): Return other properties?
         return {
           enumerable: true,
-          configurable: true
+          configurable: true,
         };
       },
 
@@ -348,13 +357,17 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
+        if (this._opts?.readOnly) {
+          log.warn('Read only access');
+          return false;
+        }
         if (!isValidKey(property)) {
           return Reflect.set(this, property, value, receiver);
         }
 
         this._set(getProperty(property as string), value);
         return true;
-      }
+      },
     });
   }
 
@@ -406,6 +419,10 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
  */
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
+export type TypedObjectOpts = {
+  readOnly?: boolean;
+};
+
 type TypedObjectConstructor = {
   /**
    * Create a new document.
@@ -414,7 +431,8 @@ type TypedObjectConstructor = {
    */
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    _schemaType?: EchoSchemaType
+    _schemaType?: EchoSchemaType,
+    opts?: TypedObjectOpts,
   ): TypedObject<T>;
 };
 

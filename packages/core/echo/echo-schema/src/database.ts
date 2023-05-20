@@ -35,7 +35,7 @@ export class EchoDatabase {
      */
     public readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _router: DatabaseRouter
+    private readonly _router: DatabaseRouter,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
     this._update([]);
@@ -66,7 +66,7 @@ export class EchoDatabase {
   }
 
   /**
-   * Add object to th database.
+   * Add object to the database.
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
@@ -80,11 +80,11 @@ export class EchoDatabase {
             objectId: obj[base]._id,
             mutations: [
               {
-                action: EchoObjectProto.Mutation.Action.RESTORE
-              }
-            ]
-          }
-        ]
+                action: EchoObjectProto.Mutation.Action.RESTORE,
+              },
+            ],
+          },
+        ],
       });
       return obj;
     }
@@ -104,14 +104,14 @@ export class EchoDatabase {
           {
             objectId: obj[base]._id,
             genesis: {
-              modelType: obj[base]._modelConstructor.meta.type
+              modelType: obj[base]._modelConstructor.meta.type,
             },
             snapshot: {
               // TODO(dmaretskyi): Parent id, deleted flag.
-              model: snapshot
-            }
-          }
-        ]
+              model: snapshot,
+            },
+          },
+        ],
       });
       assert(result.objectsUpdated.length === 1);
 
@@ -135,11 +135,11 @@ export class EchoDatabase {
           objectId: obj[base]._id,
           mutations: [
             {
-              action: EchoObjectProto.Mutation.Action.DELETE
-            }
-          ]
-        }
-      ]
+              action: EchoObjectProto.Mutation.Action.DELETE,
+            },
+          ],
+        },
+      ],
     });
   }
 

@@ -21,7 +21,7 @@ export const fileTypes: {
   '.htm': HTMLFile,
   '.css': CSSFile,
   '.scss': CSSFile,
-  '.less': CSSFile
+  '.less': CSSFile,
 };
 
 export const getFileType = (path: string) => {

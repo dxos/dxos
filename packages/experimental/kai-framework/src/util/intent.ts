@@ -4,7 +4,7 @@
 
 export enum IntentAction {
   SPACE_SELECT,
-  SPACE_SHARE
+  SPACE_SHARE,
 }
 
 /**

@@ -4,46 +4,33 @@
 
 import { Root as PortalRoot } from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import { Portal as TooltipPortal } from '@radix-ui/react-tooltip';
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import type {
+import React, { ComponentProps, ReactNode, useState, forwardRef, ForwardRefExoticComponent } from 'react';
+
+import {
+  useId,
+  TooltipRootProps,
+  TooltipRoot,
   TooltipContentProps,
+  TooltipPortal,
+  TooltipContent as AuroraTooltipContent,
+  TooltipArrow,
   TooltipTriggerProps,
-  TooltipProps as RadixTooltipProps
-} from '@radix-ui/react-tooltip';
-import React, { ComponentProps, ReactNode, useState, forwardRef } from 'react';
+  TooltipTrigger,
+} from '@dxos/aurora';
 
-import { useId } from '@dxos/aurora';
-import { defaultTooltip, mx } from '@dxos/aurora-theme';
-
-type TooltipRootProps = RadixTooltipProps;
-
-export const TooltipRoot = TooltipPrimitive.Root;
-
-export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
-  ({ children, className, ...props }, forwardedRef) => {
-    return (
-      <TooltipPrimitive.Portal>
-        <TooltipPrimitive.Content
-          forceMount
-          {...props}
-          className={mx(
-            'inline-flex items-center rounded-md plb-2 pli-3',
-            'shadow-lg bg-white dark:bg-neutral-800',
-            defaultTooltip,
-            className
-          )}
-          ref={forwardedRef}
-        >
-          <TooltipPrimitive.Arrow className='fill-white dark:fill-neutral-800' />
-          {children}
-        </TooltipPrimitive.Content>
-      </TooltipPrimitive.Portal>
-    );
-  }
-);
-
-export const TooltipTrigger = TooltipPrimitive.Trigger;
+export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = forwardRef<
+  HTMLDivElement,
+  TooltipContentProps
+>(({ children, ...props }, forwardedRef) => {
+  return (
+    <TooltipPortal>
+      <AuroraTooltipContent forceMount {...props} ref={forwardedRef}>
+        <TooltipArrow />
+        {children}
+      </AuroraTooltipContent>
+    </TooltipPortal>
+  );
+});
 
 export type { TooltipContentProps, TooltipTriggerProps, TooltipRootProps };
 
@@ -63,6 +50,9 @@ type TooltipProps = {
   slots?: TooltipSlots;
 };
 
+/**
+ * @deprecated please use Tooltip from @dxos/aurora directly.
+ */
 export const Tooltip = ({
   content,
   children,
@@ -72,7 +62,7 @@ export const Tooltip = ({
   mountAsSibling,
   triggerIsInToolbar,
   zIndex = 'z-[2]',
-  slots = {}
+  slots = {},
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
@@ -82,7 +72,7 @@ export const Tooltip = ({
       forceMount
       {...slots.content}
       side={side ?? slots.content?.side ?? 'top'}
-      className={mx(zIndex, !compact && 'px-4 py-2.5', !isOpen && 'sr-only', defaultTooltip, slots.content?.className)}
+      classNames={[zIndex, !compact && 'px-4 py-2.5', !isOpen && 'sr-only', slots.content?.classNames]}
     >
       {content}
     </TooltipContent>
@@ -114,3 +104,5 @@ export const Tooltip = ({
     </TooltipRoot>
   );
 };
+
+export { TooltipRoot, TooltipTrigger };

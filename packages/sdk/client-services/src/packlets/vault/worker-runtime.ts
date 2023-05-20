@@ -54,7 +54,7 @@ export class WorkerRuntime {
         signalManager: signals
           ? new WebsocketSignalManager(signals)
           : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-        transportFactory: this._transportFactory
+        transportFactory: this._transportFactory,
       });
 
       await this._clientServices.open();
@@ -80,7 +80,7 @@ export class WorkerRuntime {
       appPort,
       systemPort,
       shellPort,
-      readySignal: this._ready
+      readySignal: this._ready,
     });
 
     // When tab is closed.

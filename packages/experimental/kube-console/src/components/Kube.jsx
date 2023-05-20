@@ -19,21 +19,21 @@ export const defaultConfig = {
   rotation: 0.0003, // Angular velocity.
   mask: {
     color: 0x000000,
-    opacity: 0
+    opacity: 0,
   },
   frame: {
-    color: 0xaa0044
+    color: 0xaa0044,
   },
   node: {
     color: 0xaa0044,
-    size: 0
+    size: 0,
   },
   camera: {
     perspective: 45,
-    z: 1800
+    z: 1800,
     // perspective: 15,
     // z: 500 // TODO(burdon): Zoom in.
-  }
+  },
 };
 
 /**
@@ -68,7 +68,7 @@ class KubeRenderer {
       this._config.camera.perspective,
       window.innerWidth / window.innerHeight,
       1,
-      4000
+      4000,
     );
     this._camera.position.z = this._config.camera.z;
 
@@ -105,21 +105,21 @@ class KubeRenderer {
 
         this._particlesData.push({
           velocity: new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2),
-          numConnections: 0
+          numConnections: 0,
         });
       }
 
       this._particles.setDrawRange(0, particleCount);
       this._particles.setAttribute(
         'position',
-        new THREE.BufferAttribute(this._particlePositions, 3).setUsage(THREE.DynamicDrawUsage)
+        new THREE.BufferAttribute(this._particlePositions, 3).setUsage(THREE.DynamicDrawUsage),
       );
 
       const material = new THREE.PointsMaterial({
         size: this._config.node.size,
         color: this._config.node.color,
         blending: THREE.AdditiveBlending,
-        transparent: true
+        transparent: true,
       });
 
       this._pointCloud = new THREE.Points(this._particles, material);
@@ -137,7 +137,7 @@ class KubeRenderer {
       const material = new THREE.LineBasicMaterial({
         blending: THREE.AdditiveBlending,
         vertexColors: true,
-        transparent: true
+        transparent: true,
       });
 
       this._linesMesh = new THREE.LineSegments(geometry, material);
@@ -307,7 +307,7 @@ export const Kube = ({ config = {} }) => {
     <div
       className={mx(
         'flex flex-1 overflow-hidden opacity-0 transition duration-[1s]',
-        width === 0 || height === 0 ? 'invisible' : 'opacity-100'
+        width === 0 || height === 0 ? 'invisible' : 'opacity-100',
       )}
       ref={ref}
     />

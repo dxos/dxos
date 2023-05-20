@@ -42,12 +42,12 @@ export const getSpaceBackup = async (space: Space, defaultDocumentTitle: string)
   return {
     origin: {
       key: space.key.toHex(),
-      ...(space.properties.name && { name: space.properties.name })
+      ...(space.properties.name && { name: space.properties.name }),
     },
     items: itemsQuery.objects.map((document) => ({
       origin: { id: document.id, title: document.title },
-      fileName: `${getFileName(document.title)}.md`
-    }))
+      fileName: `${getFileName(document.title)}.md`,
+    })),
   };
 };
 
@@ -81,7 +81,7 @@ export const restoreSpace = async (space: Space, backupBlob: Blob) => {
             targetDoc.title = title;
           }
         }
-      })
+      }),
     );
   } catch (err) {
     log.catch(err);

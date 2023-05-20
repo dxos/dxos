@@ -11,7 +11,7 @@ export type ClipboardContextValue = {
 
 export const ClipboardContext = createContext<ClipboardContextValue>({
   textValue: '',
-  setTextValue: async (_) => {}
+  setTextValue: async (_) => {},
 });
 
 export const useClipboardContext = () => useContext(ClipboardContext);

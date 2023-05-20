@@ -11,7 +11,7 @@ import { group, getSize, mx } from '@dxos/aurora-theme';
 import { Button, DensityProvider, ElevationProvider } from '../components';
 
 export default {
-  component: DensityProvider
+  component: DensityProvider,
 };
 
 const ScenarioContent = (_props: {}) => (
@@ -52,5 +52,5 @@ const Scenario = (_props: {}) => (
 
 export const Default = {
   args: {},
-  render: (_args: {}) => <Scenario />
+  render: (_args: {}) => <Scenario />,
 };

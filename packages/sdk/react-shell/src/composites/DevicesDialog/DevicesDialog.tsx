@@ -23,7 +23,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
     <PanelDialog
       {...{
         slots: { ...slots, root: { onOpenChange: (open) => open || devicesDialogProps.onDone?.(), ...slots?.root } },
-        titleId
+        titleId,
       }}
     >
       <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
@@ -31,7 +31,7 @@ export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogPro
           {...{
             ...devicesDialogProps,
             titleId,
-            doneActionParent: <Close asChild />
+            doneActionParent: <Close asChild />,
           }}
         />
       </ThemeContext.Provider>

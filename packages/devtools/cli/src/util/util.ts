@@ -22,9 +22,9 @@ export const selectSpace = async (spaces: Space[]) => {
       message: 'Select a space:',
       choices: spaces.map((space) => ({
         name: `[${truncateKey(space.key)}] ${space.properties.name}`,
-        value: space.key
-      }))
-    }
+        value: space.key,
+      })),
+    },
   ]);
 
   return key;

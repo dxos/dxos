@@ -5,7 +5,7 @@
 export function logMethod(
   target: any,
   propertyName: string,
-  descriptor: TypedPropertyDescriptor<(...args: any) => any>
+  descriptor: TypedPropertyDescriptor<(...args: any) => any>,
 ) {
   const method = descriptor.value!;
   descriptor.value = function (this: any, ...args: any) {

@@ -18,7 +18,7 @@ export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
   const typesToQnType: { [k: string]: inquirer.Question['type'] } = {
     ZodString: 'input',
     ZodNumber: 'number',
-    ZodBoolean: 'confirm'
+    ZodBoolean: 'confirm',
   };
   let next = shape;
   while (next && next?._def) {
@@ -49,7 +49,7 @@ export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
 
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
-  key: string
+  key: string,
 ) => inquirer.DistinctQuestion | undefined;
 
 export type InquirablePrimitive = z.ZodString | z.ZodNumber | z.ZodBoolean;
@@ -78,7 +78,7 @@ export type InquireOptions<T extends InquirableZodType = InquirableZodType> = {
 
 export const getQuestions = async <TShape extends InquirableZodType = InquirableZodType>(
   shape: TShape,
-  options?: InquireOptions<TShape>
+  options?: InquireOptions<TShape>,
 ): Promise<Question[]> => {
   const questions: { [k: string]: Question } = {};
   const extractFromObject = (shape: InquirableZodObject) => {
@@ -130,7 +130,7 @@ const noUndefined = <T extends object>(o: T) => {
 
 export const inquire = async <TShape extends InquirableZodType = InquirableZodType>(
   shape: TShape,
-  options?: InquireOptions<TShape>
+  options?: InquireOptions<TShape>,
 ): Promise<z.infer<TShape>> => {
   const questions = await getQuestions(shape, options);
   const responses = (await inquirer.prompt(questions, options?.initialAnswers)) ?? {};

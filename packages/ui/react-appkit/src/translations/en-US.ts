@@ -101,5 +101,5 @@ export const appkit = {
   'new list item input label': 'New list item title',
   'new list item input placeholder': 'Enter text…',
   'reset client label': 'Reset',
-  'reset client confirm label': 'Yes, confirm reset'
+  'reset client confirm label': 'Yes, confirm reset',
 };

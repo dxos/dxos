@@ -19,7 +19,7 @@ export const exec = (command: string, options?: Partial<ExecOptions>): Promise<s
   return new Promise((resolve, reject) => {
     const subprocess = spawn(first, rest, {
       shell: true,
-      cwd
+      cwd,
     });
     const stdout: string[] = [];
     const stderr: string[] = [];

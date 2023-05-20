@@ -36,7 +36,7 @@ const encodeStructValue = (structValue: any): any => {
 };
 
 const encodeStruct = (struct: Struct): any => ({
-  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value)]))
+  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value)])),
 });
 
 const decodeStructValue = (structValue: any): any => {
@@ -71,6 +71,6 @@ const decodeStruct = (struct: any): Struct =>
 export const structSubstitutions = {
   'google.protobuf.Struct': {
     encode: (value: Struct): any => encodeStruct(value),
-    decode: (value: any): Struct => decodeStruct(value)
-  }
+    decode: (value: any): Struct => decodeStruct(value),
+  },
 };

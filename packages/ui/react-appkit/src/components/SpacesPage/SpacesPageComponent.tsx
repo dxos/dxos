@@ -54,11 +54,11 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
               dialogProps={{
                 defaultOpen: Boolean(invitationParam),
                 openTrigger: (
-                  <Button className='grow flex gap-1'>
+                  <Button classNames='grow flex gap-1'>
                     <Rocket className={getSize(5)} />
                     {t('join space label', { ns: 'appkit' })}
                   </Button>
-                )
+                ),
               }}
             />
             <Button
@@ -67,7 +67,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
                 const space = await client.createSpace();
                 onSpaceCreated?.(space);
               }}
-              className='grow flex gap-1'
+              classNames='grow flex gap-1'
             >
               <Plus className={getSize(5)} />
               {t('create space label', { ns: 'appkit' })}
@@ -75,7 +75,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
           </>
         }
         heading={{
-          children: t('spaces label')
+          children: t('spaces label'),
         }}
       />
 

@@ -21,7 +21,7 @@ import { SVGContextProvider } from './SVGContextProvider';
 // - Requires external provider.
 
 export default {
-  title: 'gem-core/SvgContextProvider'
+  title: 'gem-core/SvgContextProvider',
 };
 
 interface ComponentProps {

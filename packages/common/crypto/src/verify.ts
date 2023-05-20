@@ -18,10 +18,10 @@ export const verifySignature = async (key: PublicKey, message: Uint8Array, signa
       key.asUint8Array(),
       {
         name: 'ECDSA',
-        namedCurve: 'P-256'
+        namedCurve: 'P-256',
       },
       true,
-      ['verify']
+      ['verify'],
     );
   } catch {
     return false;
@@ -30,10 +30,10 @@ export const verifySignature = async (key: PublicKey, message: Uint8Array, signa
   return subtleCrypto.verify(
     {
       name: 'ECDSA',
-      hash: 'SHA-256'
+      hash: 'SHA-256',
     },
     publicKey,
     signature,
-    message
+    message,
   );
 };

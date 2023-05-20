@@ -42,7 +42,7 @@ describe('SignalRPCClient', () => {
     const stream1 = await client1.receiveMessages(peerId1);
     const payload: Any = {
       type_url: 'example.testing.data.TestPayload',
-      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' })
+      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' }),
     };
 
     const received: Promise<SignalMessage> = new Promise((resolve) => {
@@ -55,14 +55,14 @@ describe('SignalRPCClient', () => {
             log.catch(error);
             throw error;
           }
-        }
+        },
       );
     });
 
     await client2.sendMessage({
       author: peerId2,
       recipient: peerId1,
-      payload
+      payload,
     });
 
     expect((await received).author).toEqual(peerId2.asUint8Array());
@@ -93,7 +93,7 @@ describe('SignalRPCClient', () => {
             log.error(error);
             throw error;
           }
-        }
+        },
       );
     });
     const stream2 = await client2.join({ topic, peerId: peerId2 });

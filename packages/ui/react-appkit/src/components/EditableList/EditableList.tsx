@@ -24,7 +24,7 @@ import {
   useListContext,
   LIST_NAME,
   MockListItemDragHandle,
-  InputRoot
+  InputRoot,
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
@@ -91,8 +91,8 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
     (event: KeyboardEvent<Element>) => {
       const inputsInScope = Array.from(
         document.querySelectorAll<HTMLInputElement>(
-          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`
-        )
+          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`,
+        ),
       );
       const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
       switch (event.key) {
@@ -113,7 +113,7 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
         }
       }
     },
-    [hostId]
+    [hostId],
   );
 
   return { onListItemInputKeyDown, hostAttrs, itemAttrs };
@@ -130,7 +130,7 @@ export const EditableList = ({
   itemIdOrder,
   onMoveItem,
   density: propsDensity,
-  slots = {}
+  slots = {},
 }: EditableListProps) => {
   const { t } = useTranslation('appkit');
   const density = useListDensity({ density: propsDensity, variant });
@@ -158,7 +158,7 @@ export const EditableList = ({
       <div className='flex'>
         <DensityProvider density={density}>
           {variant === 'ordered-draggable' && <MockListItemDragHandle />}
-          {completable && <ListItemEndcap className='invisible' />}
+          {completable && <ListItemEndcap classNames='invisible' />}
           <Input
             variant='subdued'
             label={t('new list item input label')}
@@ -167,14 +167,14 @@ export const EditableList = ({
             {...{
               value: nextItemTitle,
               defaultValue: defaultNextItemTitle,
-              onChange: onChangeNextItemTitle
+              onChange: onChangeNextItemTitle,
             }}
             slots={{
               ...slots.addItemInput,
               root: {
                 ...slots.addItemInput?.root,
-                className: mx('grow', slots.addItemInput?.root?.className)
-              }
+                className: mx('grow', slots.addItemInput?.root?.className),
+              },
             }}
           />
           <ListItemEndcap>
@@ -191,7 +191,7 @@ export const EditableList = ({
               <Button
                 variant='ghost'
                 {...slots.addItemButton}
-                className={['p-1', slots.addItemButton?.className]}
+                classNames={['p-1', slots.addItemButton?.classNames]}
                 onClick={onClickAdd}
               >
                 <Plus className={getSize(4)} />
@@ -216,9 +216,9 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
       title,
       onChangeTitle,
       onClickDelete,
-      slots = {}
+      slots = {},
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const { t } = useTranslation('appkit');
     const { variant, selectable } = useListContext(LIST_NAME, __listScope);
@@ -229,15 +229,15 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
-          onSelectedChange: onChangeCompleted
+          onSelectedChange: onChangeCompleted,
         }}
       >
         {variant === 'ordered-draggable' && <ListItemDragHandle />}
         {selectable && (
-          <ListItemEndcap className='items-center'>
+          <ListItemEndcap classNames='items-center'>
             <InputRoot id={`${id}__checkbox`}>
               <Checkbox
-                className={slots?.selectableCheckbox?.className}
+                classNames={slots?.selectableCheckbox?.className}
                 checked={completed}
                 defaultChecked={defaultCompleted}
                 onCheckedChange={onChangeCompleted}
@@ -245,7 +245,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
             </InputRoot>
           </ListItemEndcap>
         )}
-        <ListItemHeading className='sr-only'>{title}</ListItemHeading>
+        <ListItemHeading classNames='sr-only'>{title}</ListItemHeading>
         <Input
           {...{
             variant: 'subdued',
@@ -256,12 +256,12 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
               ...slots.input,
               root: {
                 ...slots.input?.root,
-                className: mx('grow', slots.input?.root?.className)
-              }
+                className: mx('grow', slots.input?.root?.className),
+              },
             },
             value: title,
             defaultValue: defaultTitle,
-            onChange: onChangeTitle
+            onChange: onChangeTitle,
           }}
         >
           {title ?? defaultTitle}
@@ -269,7 +269,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         {onClickDelete && (
           <ListItemEndcap>
             <Tooltip content={t('delete list item label')} side='left' tooltipLabelsTrigger>
-              <Button variant='ghost' className='p-1' onClick={onClickDelete}>
+              <Button variant='ghost' classNames='p-1' onClick={onClickDelete}>
                 <X className={getSize(4)} />
               </Button>
             </Tooltip>
@@ -277,5 +277,5 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
         )}
       </ListItem>
     );
-  }
+  },
 );

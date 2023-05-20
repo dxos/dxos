@@ -12,7 +12,7 @@ import { TidyTree } from './TidyTree';
 
 export enum TreeType {
   DENDROGRAM = 0,
-  RADIAL = 1
+  RADIAL = 1,
 }
 
 // TODO(burdon): Define EchoNode.
@@ -27,13 +27,13 @@ export const mapGraphToTreeData = <N,>(model: GraphModel<N>, maxDepth = 5): Tree
   const mapNode = (node: N, depth = 0): TreeNode => {
     const treeNode: TreeNode = {
       id: model.idAccessor(node),
-      label: model.idAccessor(node).slice(0, 8) // TODO(burdon): ???
+      label: model.idAccessor(node).slice(0, 8), // TODO(burdon): ???
     };
 
     const links = model.graph.links.filter((link) => link.source === treeNode.id);
     if (depth < maxDepth) {
       treeNode.children = links.map((link) =>
-        mapNode(model.graph.nodes.find((node) => model.idAccessor(node) === link.target)!, depth + 1)
+        mapNode(model.graph.nodes.find((node) => model.idAccessor(node) === link.target)!, depth + 1),
       );
     }
 
@@ -76,7 +76,7 @@ export const TreeComponent = <N,>({ model, type = TreeType.RADIAL }: TreeCompone
     marginRight: (width - radius * 2) / 2,
     marginTop: (height - radius * 2) / 2,
     marginBottom: (height - radius * 2) / 2,
-    label: (d: any) => d.label
+    label: (d: any) => d.label,
   };
 
   // TODO(burdon): Update Tree when data changes.

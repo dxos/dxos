@@ -22,7 +22,7 @@ describe('Stream', () => {
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },
-      { closed: true }
+      { closed: true },
     ]);
   });
 
@@ -45,7 +45,7 @@ describe('Stream', () => {
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },
-      { closed: true }
+      { closed: true },
     ]);
   });
 
@@ -67,7 +67,7 @@ describe('Stream', () => {
     const received: string[] = [];
     stream.subscribe(
       (msg) => received.push(msg),
-      () => {}
+      () => {},
     );
     nextCb('second');
     expect(received).to.deep.equal(['first', 'second']);
@@ -95,7 +95,7 @@ describe('Stream', () => {
       () => {},
       (err) => {
         error = err!;
-      }
+      },
     );
     expect(error.message).to.equal('test');
   });

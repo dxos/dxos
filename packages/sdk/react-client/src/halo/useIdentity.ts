@@ -21,7 +21,7 @@ export const useIdentity = (options?: { login?: boolean }) => {
       const subscription = client.halo.identity.subscribe(listener);
       return () => subscription.unsubscribe();
     },
-    () => client.halo.identity.get()
+    () => client.halo.identity.get(),
   );
 
   useEffect(() => {

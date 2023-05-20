@@ -29,8 +29,8 @@ describe('Streams', () => {
           log('received', { data: String(data) });
           incProcessed();
           next();
-        }
-      })
+        },
+      }),
     );
 
     {

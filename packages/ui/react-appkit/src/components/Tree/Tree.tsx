@@ -17,7 +17,7 @@ import {
   ListItemProps,
   ListProps,
   ListScopedProps,
-  useListItemContext
+  useListItemContext,
 } from '@dxos/aurora';
 
 type TreeProps = ListProps;
@@ -27,7 +27,7 @@ type TreeItemProps = ListItemProps;
 const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListElement, TreeProps>(
   (props, forwardedRef) => {
     return <List {...props} ref={forwardedRef} />;
-  }
+  },
 );
 
 type TreeBranchProps = ListScopedProps<TreeProps>;
@@ -36,13 +36,13 @@ const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOL
   ({ __listScope, ...props }, forwardedRef) => {
     const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
     return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
-  }
+  },
 );
 
 const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
   (props, forwardedRef) => {
     return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
-  }
+  },
 );
 
 type TreeItemHeadingProps = ListItemHeadingProps;
@@ -57,7 +57,7 @@ export {
   TreeItem,
   ListItemHeading as TreeItemHeading,
   ListItemCollapsibleContent as TreeItemBody,
-  ListItemOpenTrigger as TreeItemOpenTrigger
+  ListItemOpenTrigger as TreeItemOpenTrigger,
 };
 
 export type { TreeProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };

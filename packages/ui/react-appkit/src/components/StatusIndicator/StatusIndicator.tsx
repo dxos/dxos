@@ -45,7 +45,7 @@ export const StatusIndicator = () => {
         role='none'
         className={mx(
           'fixed bottom-4 right-4',
-          valenceColorText(swarm && swarm === ConnectionState.ONLINE ? 'success' : 'error')
+          valenceColorText(swarm && swarm === ConnectionState.ONLINE ? 'success' : 'error'),
         )}
       >
         <Tooltip content={toggleButton}>{swarm && swarm === ConnectionState.ONLINE ? onlineBall : offlineBall}</Tooltip>

@@ -103,7 +103,7 @@ export class WebRTCTransportProxy implements Transport {
     this._params.bridgeService
       .sendSignal({
         proxyId: this._proxyId,
-        signal
+        signal,
       })
       .catch((err) => this.errors.raise(err));
   }
@@ -161,7 +161,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
 
     const transport = new WebRTCTransportProxy({
       ...options,
-      bridgeService: this._bridgeService
+      bridgeService: this._bridgeService,
     });
 
     this._connections.add(transport);

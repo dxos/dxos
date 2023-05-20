@@ -14,7 +14,7 @@ export type PluginProps = { space: Space; onSelect?: (objectId: string | undefin
 /**
  * Dynamically loaded metadata for frame.
  */
-// TODO(burdon): Remove generic type?
+// TODO(burdon): Plugin.
 export type FrameRuntime<T extends TypedObject> = {
   Icon: FC<any>;
   Component: FC<any>;
@@ -37,7 +37,6 @@ export type FrameRuntime<T extends TypedObject> = {
   onCreate?: (space: Space) => Promise<T>;
 };
 
-// TODO(burdon): Rename.
 // TODO(burdon): Remove generic type.
 export type FrameDef<T extends TypedObject> = {
   module: Module;

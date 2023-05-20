@@ -33,7 +33,7 @@ export type FeedSetIteratorOptions = {
 };
 
 export const defaultFeedSetIteratorOptions = {
-  stallTimeout: 1000
+  stallTimeout: 1000,
 };
 
 /**
@@ -49,7 +49,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
   constructor(
     private readonly _selector: FeedBlockSelector<T>,
-    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions
+    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions,
   ) {
     super();
     assert(_selector);
@@ -64,7 +64,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     return {
       open: this.isOpen,
       running: this.isRunning,
-      indexes: this.indexes
+      indexes: this.indexes,
     };
   }
 
@@ -79,7 +79,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   get indexes(): FeedIndex[] {
     return Array.from(this._feedQueues.values()).map((feedQueue) => ({
       feedKey: feedQueue.feed.key,
-      index: feedQueue.index
+      index: feedQueue.index,
     }));
   }
 
@@ -94,11 +94,11 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._subscriptions.add(
       queue.updated.on(() => {
         this._trigger.wake();
-      })
+      }),
     );
 
     await queue.open({
-      start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index
+      start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index,
     });
 
     // Wake when feed added or queue updated.

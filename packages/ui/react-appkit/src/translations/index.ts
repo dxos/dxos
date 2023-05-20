@@ -5,5 +5,5 @@
 import * as enUS from './en-US';
 
 export const appkitTranslations = {
-  'en-US': enUS
+  'en-US': enUS,
 };

@@ -14,7 +14,7 @@ import {
   osActive,
   defaultFocus,
   osFocus,
-  contentElevation
+  contentElevation,
 } from '../fragments';
 
 export const primaryAppButtonColors =
@@ -46,7 +46,7 @@ const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
     props.density === 'fine' ? buttonFine : buttonCoarse,
     // Register all radix states
     'group',
-    props.disabled && defaultDisabled
+    props.disabled && defaultDisabled,
   ];
 };
 
@@ -69,7 +69,7 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
     !props.disabled && defaultFocus,
     defaultActive,
     ...sharedButtonStyles(props),
-    ...etc
+    ...etc,
   );
 };
 
@@ -84,20 +84,24 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
     !props.disabled && osFocus,
     ...osActive({ side: props.sideInset ?? 'be' }),
     ...sharedButtonStyles(props),
-    ...etc
+    ...etc,
   );
 };
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
-  return mx('rounded-md overflow-hidden', contentElevation({ elevation: props.elevation }), ...etc);
+  return mx(
+    'rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
+    contentElevation({ elevation: props.elevation }),
+    ...etc,
+  );
 };
 
 export const buttonTheme: Theme<AppButtonStyleProps> = {
   root: buttonAppRoot,
-  group: buttonGroup
+  group: buttonGroup,
 };
 
 export const buttonOsTheme: Theme<OsButtonStyleProps> = {
   ...buttonTheme,
-  root: buttonOsRoot
+  root: buttonOsRoot,
 };

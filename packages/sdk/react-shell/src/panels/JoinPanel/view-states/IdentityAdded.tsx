@@ -32,7 +32,7 @@ const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
     <Button
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
-      className='grow flex items-center gap-2 pli-2'
+      classNames='grow flex items-center gap-2 pli-2'
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
@@ -78,7 +78,7 @@ export const IdentityAdded = ({
         <div className='flex gap-2'>
           <Button
             disabled={disabled || !addedIdentity}
-            className='grow flex items-center gap-2 pli-2 order-2'
+            classNames='grow flex items-center gap-2 pli-2 order-2'
             onClick={() => addedIdentity && joinSend({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
@@ -89,7 +89,7 @@ export const IdentityAdded = ({
           <Button
             disabled={disabled}
             onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-            className='flex items-center gap-2 pis-2 pie-4'
+            classNames='flex items-center gap-2 pis-2 pie-4'
           >
             <CaretLeft weight='bold' className={getSize(4)} />
             <span>{t('deselect identity label')}</span>

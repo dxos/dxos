@@ -15,12 +15,12 @@ export type ClientRpcServerParams = {
   handleCall?: (
     method: string,
     params: Any,
-    handler: (method: string, params: Any) => MaybePromise<Any>
+    handler: (method: string, params: Any) => MaybePromise<Any>,
   ) => Promise<Any>;
   handleStream?: (
     method: string,
     params: Any,
-    handler: (method: string, params: Any) => Stream<Any>
+    handler: (method: string, params: Any) => Stream<Any>,
   ) => MaybePromise<Stream<Any>>;
 } & Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>;
 
@@ -59,7 +59,7 @@ export class ClientRpcServer {
         } else {
           return handler(methodName, params);
         }
-      }
+      },
     });
   }
 
@@ -75,7 +75,7 @@ export class ClientRpcServer {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
         Object.entries(this._serviceRegistry.descriptors).find(
-          ([key, descriptor]) => descriptor.name === serviceName
+          ([key, descriptor]) => descriptor.name === serviceName,
         ) ?? raise(new Error(`Service not available: ${serviceName}`));
 
       const service = this._serviceRegistry.services[key as keyof ClientServices];

@@ -14,7 +14,7 @@ const weights = new Map<IconWeight, ReactElement>([
         fillRule: 'evenodd',
         clipRule: 'evenodd',
         strokeLinejoin: 'round',
-        strokeMiterlimit: 2
+        strokeMiterlimit: 2,
       }}
     >
       <g transform='matrix(0.239925,0,0,0.239925,0,0)'>
@@ -35,8 +35,8 @@ const weights = new Map<IconWeight, ReactElement>([
       <g transform='matrix(0.239925,0,0,0.239925,0,0)'>
         <path d='M533.327,553.328L247.004,821.745L227.057,800.466L523.353,522.7L543.301,522.7L722.435,690.626L702.487,711.905L533.327,553.328Z' />
       </g>
-    </g>
-  ]
+    </g>,
+  ],
 ]);
 
 const DXNSIcon: Icon = forwardRef((props, ref) => <IconBase ref={ref} {...props} weights={weights} />);

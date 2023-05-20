@@ -23,5 +23,5 @@ export const styles = {
         stroke: red;
       }
     }
-  `
+  `,
 };

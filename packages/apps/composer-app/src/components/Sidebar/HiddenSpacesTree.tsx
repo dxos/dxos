@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight, Eye } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItemScopedProps, useId, useListItemContext, useTranslation } from '@dxos/aurora';
+import { Button, ListItemScopedProps, useId, useListItemContext, useSidebar, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
 import {
@@ -15,12 +15,12 @@ import {
   TreeItemBody,
   TreeItemHeading,
   TreeItemOpenTrigger,
-  TreeRoot
+  TreeRoot,
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useIdentity } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from '../../util/getSpaceDisplayName';
+import { getSpaceDisplayName } from '../../util';
 
 export type HiddenSpacesTreeProps = {
   hiddenSpaces?: Space[];
@@ -31,15 +31,17 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
   const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
+  const { sidebarOpen } = useSidebar();
   return (
-    <TreeItem className='flex mis-1 mie-1.5'>
-      <TreeItemHeading className='grow'>{spaceDisplayName}</TreeItemHeading>
+    <TreeItem classNames='flex mis-1 mie-1.5'>
+      <TreeItemHeading classNames='grow'>{spaceDisplayName}</TreeItemHeading>
       <Tooltip content={t('unhide space label')} tooltipLabelsTrigger side='top' zIndex='z-[31]'>
         <Button
           variant='ghost'
           data-testid='composer.unhideSpace'
-          className='shrink-0 pli-1'
+          classNames='shrink-0 pli-1'
           onClick={() => handleUnhideSpace(space)}
+          {...(!sidebarOpen && { tabIndex: -1 })}
         >
           <Eye className={getSize(4)} />
         </Button>
@@ -52,6 +54,7 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
   const { t } = useTranslation('composer');
   const { open } = useListItemContext('HiddenSpacesBranch', __listItemScope);
   const identity = useIdentity();
+  const { sidebarOpen } = useSidebar();
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
@@ -63,21 +66,21 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
           ...space.properties.members,
           [identityHex]: {
             ...space.properties.members?.[identityHex],
-            hidden: false
-          }
+            hidden: false,
+          },
         };
       }
     },
-    [identity]
+    [identity],
   );
 
   return (
     <>
       <div role='none' className='flex'>
-        <TreeItemOpenTrigger>
+        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon />
         </TreeItemOpenTrigger>
-        <TreeItemHeading className='grow break-words pbs-1.5 text-sm font-system-medium'>
+        <TreeItemHeading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
           {t('hidden spaces tree label')}
         </TreeItemHeading>
       </div>
@@ -100,8 +103,8 @@ export const HiddenSpacesTree = (props: HiddenSpacesTreeProps) => {
       <span className='sr-only' id={treeLabel}>
         {t('hidden spaces tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' className='shrink-0'>
-        <TreeItem collapsible className='mis-1 block'>
+      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' classNames='shrink-0'>
+        <TreeItem collapsible classNames='mis-1 block'>
           <HiddenSpacesBranch {...props} />
         </TreeItem>
       </TreeRoot>

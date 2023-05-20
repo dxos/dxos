@@ -18,7 +18,7 @@ export const useNetworkStatus = (): NetworkStatus => {
       const subscription = client.mesh.networkStatus.subscribe(listener);
       return () => subscription.unsubscribe();
     },
-    () => client.mesh.networkStatus.get()
+    () => client.mesh.networkStatus.get(),
   );
 
   return networkStatus;

@@ -24,11 +24,11 @@ export const createMeshMenu = (): MenuItem => {
                 <Panel>
                   <Text>MESH</Text>
                 </Panel>
-              )
-            }
+              ),
+            },
           ]}
         />
       );
-    }
+    },
   };
 };

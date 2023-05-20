@@ -23,7 +23,7 @@ const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }:
   timestamp: startTimestamp,
   width: strokeWidth,
   color: strokeColor,
-  points: paths
+  points: paths,
 });
 
 const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath =>
@@ -31,14 +31,14 @@ const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath 
     drawMode: true,
     strokeWidth: width,
     strokeColor: color,
-    paths: points
+    paths: points,
   } as CanvasPath);
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
   { weight: 'light', width: 4 },
   { weight: 'regular', width: 8 },
-  { weight: 'bold', width: 16 }
+  { weight: 'bold', width: 16 },
 ];
 
 const dimensions = { width: 900, height: 600 };

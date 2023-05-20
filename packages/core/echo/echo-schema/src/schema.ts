@@ -69,7 +69,7 @@ export class EchoSchemaType {
   createFilter(opts?: any): TypeFilter<any> {
     return {
       ...stripKeys(opts),
-      '@type': this.name
+      '@type': this.name,
     };
   }
 }
@@ -131,7 +131,7 @@ export class EchoSchema {
 const filterNamespaces = ({
   base,
   toFilter,
-  namespacesToRemove = ['.dxos.schema']
+  namespacesToRemove = ['.dxos.schema'],
 }: {
   base: pb.Root;
   toFilter: pb.Root;
@@ -158,7 +158,7 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
   return type.fieldsArray.map((field) => {
     const echoField: EchoSchemaField = {
       name: field.name,
-      type: getEchoType(field)
+      type: getEchoType(field),
     };
     if (field.options) {
       echoField.options = field.options;
@@ -191,13 +191,13 @@ const getComplexType = (type: pb.Type | pb.Enum): EchoType => {
       return {
         kind: 'ref',
         objectType: type.fullName.slice(1),
-        modelType: TextModel.meta.type
+        modelType: TextModel.meta.type,
       };
     } else if (type.options && type.options['(object)']) {
       return {
         kind: 'ref',
         objectType: type.fullName.slice(1),
-        modelType: DocumentModel.meta.type
+        modelType: DocumentModel.meta.type,
       };
     } else {
       return { kind: 'record', objectType: type.fullName.slice(1) };

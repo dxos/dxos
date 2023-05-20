@@ -68,13 +68,13 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
       {object.team?.length > 0 && (
         <div className='pt-2'>
           <h2 className='pl-2 text-xs'>Team</h2>
-          <List aria-labelledby='todo' className='mlb-1'>
+          <List aria-labelledby='todo' classNames='mlb-1'>
             {object.team?.map((contact) => (
               <ListItem key={contact.id}>
-                <ListItemEndcap className={getSize(6)}>
+                <ListItemEndcap classNames={getSize(6)}>
                   <User className={mx(getSize(4), 'mbs-1')} />
                 </ListItemEndcap>
-                <ListItemHeading className='text-sm mbs-0.5'>{contact.name}</ListItemHeading>
+                <ListItemHeading classNames='text-sm mbs-0.5'>{contact.name}</ListItemHeading>
               </ListItem>
             ))}
           </List>

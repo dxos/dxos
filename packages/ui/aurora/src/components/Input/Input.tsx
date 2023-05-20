@@ -5,7 +5,7 @@ import { Check, IconWeight, Minus } from '@phosphor-icons/react';
 import {
   Root as CheckboxPrimitive,
   CheckboxProps as CheckboxPrimitiveProps,
-  Indicator as CheckboxIndicatorPrimitive
+  Indicator as CheckboxIndicatorPrimitive,
 } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, ForwardRefExoticComponent, Fragment, useCallback } from 'react';
@@ -22,7 +22,7 @@ import {
   TextAreaProps as TextAreaPrimitiveProps,
   useInputContext,
   INPUT_NAME,
-  InputScopedProps
+  InputScopedProps,
 } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
@@ -48,7 +48,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       variant,
       ...props
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
@@ -66,30 +66,30 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             disabled: props.disabled,
             density,
             elevation,
-            validationValence
+            validationValence,
           },
-          propsSegmentClassName
+          propsSegmentClassName,
         ),
-      [tx, props.disabled, elevation, propsElevation, density]
+      [tx, props.disabled, elevation, propsElevation, density],
     );
     return (
       <PinInputPrimitive
         {...{
           ...props,
           segmentClassName,
-          ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })
+          ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
         inputClassName={tx('input.inputWithSegments', 'input input--pin', { disabled: props.disabled }, inputClassName)}
         ref={forwardedRef}
       />
     );
-  }
+  },
 );
 
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
-  ({ __inputScope, className, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -107,21 +107,21 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
             disabled: props.disabled,
             density,
             elevation,
-            validationValence
+            validationValence,
           },
-          className
+          classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
       />
     );
-  }
+  },
 );
 
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
-  ({ __inputScope, className, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -139,15 +139,15 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
             disabled: props.disabled,
             density,
             elevation,
-            validationValence
+            validationValence,
           },
-          className
+          classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
       />
     );
-  }
+  },
 );
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
@@ -164,15 +164,15 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
       onCheckedChange: propsOnCheckedChange,
       size,
       weight = 'bold',
-      className,
+      classNames,
       ...props
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked,
-      onChange: propsOnCheckedChange
+      onChange: propsOnCheckedChange,
     });
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
     const { tx } = useThemeContext();
@@ -187,9 +187,9 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
           'aria-describedby': descriptionId,
           ...(validationValence === 'error' && {
             'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId
+            'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', 'input--checkbox', { size }, className)
+          className: tx('input.checkbox', 'input--checkbox', { size }, classNames),
         }}
         ref={forwardedRef}
       >
@@ -198,7 +198,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
         </CheckboxIndicatorPrimitive>
       </CheckboxPrimitive>
     );
-  }
+  },
 );
 
 export { InputRoot, PinInput, TextInput, TextArea, Checkbox };

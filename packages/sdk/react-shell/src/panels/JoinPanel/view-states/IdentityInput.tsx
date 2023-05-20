@@ -33,7 +33,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
       (error) => {
         log.catch(error);
         setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
-      }
+      },
     );
   };
   return (
@@ -50,8 +50,8 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           root: { className: 'm-0' },
           input: {
             'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
+          } as ComponentPropsWithoutRef<'input'>,
         }}
         {...(validationMessage.length && { validationValence: 'error', validationMessage })}
         data-testid='identity-input'
@@ -60,7 +60,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
+          classNames='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
@@ -71,7 +71,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         <Button
           disabled={disabled}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-          className='flex items-center gap-2 pis-2 pie-4'
+          classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />

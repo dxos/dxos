@@ -26,8 +26,8 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
         strict: false,
         target: 'es5',
         module: 'commonjs',
-        ...options?.compilerOptions
-      }
+        ...options?.compilerOptions,
+      },
     });
     tsnodeRegistered = true;
   }
@@ -39,7 +39,7 @@ export const safeLoadModule = async (p: string, options?: LoadModuleOptions) => 
   try {
     return {
       module: await loadModule(p, options),
-      success: true
+      success: true,
     };
   } catch (err) {
     return { error: err, success: false };

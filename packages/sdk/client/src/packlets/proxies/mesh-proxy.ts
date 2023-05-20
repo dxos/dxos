@@ -20,7 +20,7 @@ export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
   private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
     swarm: ConnectionState.OFFLINE,
-    signaling: []
+    signaling: [],
   });
 
   private _ctx?: Context;
@@ -38,7 +38,7 @@ export class MeshProxy {
 
   toJSON() {
     return {
-      networkStatus: this._networkStatus.get()
+      networkStatus: this._networkStatus.get(),
     };
   }
 

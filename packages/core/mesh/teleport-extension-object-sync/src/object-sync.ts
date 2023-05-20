@@ -77,7 +77,7 @@ export class ObjectSync {
             extension.pushInASeparateTask(obj);
           }
         }
-      }
+      },
     });
     return extension;
   }

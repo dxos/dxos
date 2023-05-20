@@ -34,10 +34,10 @@ export const MemberList = ({ onNavigate }: MemberListProps) => {
         async () => {
           await space.postMessage('currentLocation', {
             identityKey: client.halo.identity.get()?.identityKey.toHex(),
-            location: window.location.pathname
+            location: window.location.pathname,
           });
         },
-        500
+        500,
       );
 
       ctx.onDispose(
@@ -45,7 +45,7 @@ export const MemberList = ({ onNavigate }: MemberListProps) => {
           if (!membersLocations.has(identityKey) || membersLocations.get(identityKey) !== location) {
             membersLocations.set(identityKey, location);
           }
-        })
+        }),
       );
       return () => {
         void ctx.dispose();

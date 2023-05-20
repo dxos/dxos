@@ -35,7 +35,7 @@ const PureViewStateInvitation = ({
   halted,
   cursor,
   label,
-  resolvedColor
+  resolvedColor,
 }: {
   halted?: boolean;
   cursor: number;
@@ -51,7 +51,7 @@ const PureViewStateInvitation = ({
           className={mx(
             stripe,
             !halted && cursor === 1 && strongShimmer,
-            cursor === 2 ? (halted ? resolvedColor : activeBgColor) : cursor > 1 ? resolvedColor : inactiveBgColor
+            cursor === 2 ? (halted ? resolvedColor : activeBgColor) : cursor > 1 ? resolvedColor : inactiveBgColor,
           )}
         />
         <div
@@ -59,7 +59,7 @@ const PureViewStateInvitation = ({
           className={mx(
             stripe,
             !halted && cursor === 3 && strongShimmer,
-            cursor === 3 ? (halted ? resolvedColor : activeBgColor) : cursor > 3 ? resolvedColor : inactiveBgColor
+            cursor === 3 ? (halted ? resolvedColor : activeBgColor) : cursor > 3 ? resolvedColor : inactiveBgColor,
           )}
         />
         <div
@@ -94,21 +94,21 @@ const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Au
           <>
             <X weight='bold' className={mx(getSize(4), 'text-error-600 dark:text-error-400')} />
             <span>{t('error status label')}</span>
-          </>
+          </>,
         ],
         [
           Invitation.State.TIMEOUT,
           <>
             <HourglassSimple weight='fill' className={mx(getSize(4), 'text-warning-600 dark:text-warning-400')} />
             <span>{t('timeout status label')}</span>
-          </>
+          </>,
         ],
         [
           Invitation.State.CANCELLED,
           <>
             <X weight='bold' className={mx(getSize(4), 'text-warning-600 dark:text-warning-400')} />
             <span>{t('cancelled status label')}</span>
-          </>
+          </>,
         ],
         [Invitation.State.INIT, t('init status label')],
         [Invitation.State.CONNECTING, t('connecting status label')],
@@ -119,10 +119,10 @@ const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Au
           <>
             <CheckCircle weight='fill' className={mx(getSize(4), 'text-success-600 dark:text-success-400')} />
             <span>{t('success status label')}</span>
-          </>
-        ]
+          </>,
+        ],
       ]),
-    [t]
+    [t],
   );
 
   return (
@@ -131,7 +131,7 @@ const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Au
         label: statusLabelMap.get(status)!,
         resolvedColor,
         cursor,
-        halted
+        halted,
       }}
     />
   );

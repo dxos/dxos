@@ -23,7 +23,7 @@ export const FilePreview: FC<FilePreviewProps> = ({ url, image = false }) => {
     `background-image: url(${url})`,
     'background-repeat: no-repeat',
     'background-position: center center',
-    'background-size: contain'
+    'background-size: contain',
   ];
 
   const doc = `<html><body style="${styles.join(';')}" /></html>`;

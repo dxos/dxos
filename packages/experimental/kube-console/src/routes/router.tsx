@@ -18,13 +18,13 @@ export const createRouter = (): Router => {
       children: [
         {
           path: '/',
-          element: <LandingPage />
+          element: <LandingPage />,
         },
         {
           path: '/module/:module',
-          element: <ModuleContainer />
-        }
-      ]
-    }
+          element: <ModuleContainer />,
+        },
+      ],
+    },
   ]);
 };

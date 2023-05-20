@@ -57,7 +57,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           createInvitationUrl={createInvitationUrl}
         />
         <Button
-          className='is-full flex gap-2 mbs-2'
+          classNames='is-full flex gap-2 mbs-2'
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {
@@ -94,7 +94,7 @@ export const SpacePanel = (props: SpacePanelProps) => {
   };
 
   const [panelState] = useReducer(reducer, {
-    activeView: 'current space'
+    activeView: 'current space',
   });
 
   // TODO(wittjosiah): Use ViewState or similar.

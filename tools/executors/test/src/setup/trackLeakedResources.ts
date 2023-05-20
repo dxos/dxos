@@ -15,5 +15,5 @@ export const mochaHooks: MochaHooks = {
       console.log('\n\n');
       wtf.dump();
     }, 1000);
-  }
+  },
 };

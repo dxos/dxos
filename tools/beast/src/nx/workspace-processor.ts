@@ -67,7 +67,7 @@ export class WorkspaceProcessor {
         package: packageJson,
         dependencies: new Set<Project>(),
         descendents: new Set<string>(),
-        cycles: []
+        cycles: [],
       };
 
       this._projectsByName.set(name, project);
@@ -89,7 +89,7 @@ export class WorkspaceProcessor {
    */
   private processProject(project: Project, visited: Set<string>, chain: string[] = [project.package.name]): void {
     const {
-      package: { dependencies: dependencyMap = {} }
+      package: { dependencies: dependencyMap = {} },
     } = project;
     if (this._options.verbose) {
       console.log('Processing:', project.package.name);

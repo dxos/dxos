@@ -23,7 +23,7 @@ type TestServices = {
 };
 
 const serviceBundle = createServiceBundle<TestServices>({
-  InvitationsService: schema.getService('dxos.client.services.InvitationsService')
+  InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
 });
 
 describe('service registry', () => {
@@ -37,8 +37,8 @@ describe('service registry', () => {
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       InvitationsService: new InvitationsServiceImpl(serviceContext.invitations, (invitation) =>
-        serviceContext.getInvitationHandler(invitation)
-      )
+        serviceContext.getInvitationHandler(invitation),
+      ),
     });
 
     const [proxyPort, serverPort] = createLinkedPorts();
@@ -47,13 +47,13 @@ describe('service registry', () => {
       requested: serviceRegistry.descriptors,
       exposed: {},
       handlers: {},
-      port: proxyPort
+      port: proxyPort,
     });
 
     const server = createProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
       handlers: serviceRegistry.services as ClientServices,
-      port: serverPort
+      port: serverPort,
     });
 
     log('opening...');
@@ -65,7 +65,7 @@ describe('service registry', () => {
     {
       const spaceInvitationsProxy = new InvitationsProxy(proxy.rpc.InvitationsService, () => ({
         kind: Invitation.Kind.SPACE,
-        spaceKey: space.key
+        spaceKey: space.key,
       }));
       const observer = spaceInvitationsProxy.createInvitation();
       observer.subscribe((invitation: Invitation) => {

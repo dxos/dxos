@@ -78,7 +78,7 @@ export class Stream<T> {
             items.push({ closed: true });
           }
           resolve(items);
-        }
+        },
       );
     });
   }
@@ -111,7 +111,7 @@ export class Stream<T> {
         },
         (err) => {
           close(err);
-        }
+        },
       );
       return () => {
         streamPromise.then(
@@ -119,7 +119,7 @@ export class Stream<T> {
           // eslint-disable-next-line n/handle-callback-err
           (err) => {
             /* already handled */
-          }
+          },
         );
       };
     });
@@ -158,7 +158,7 @@ export class Stream<T> {
         this._producerCleanup?.(err);
         this._closeHandler?.(err);
         void this._ctx.dispose();
-      }
+      },
     });
     this._ctx.onDispose(() => {
       this.close();
@@ -208,7 +208,7 @@ export class Stream<T> {
             throwUnhandledRejection(err);
           }
           void this._ctx.dispose();
-        }
+        },
       });
 
       if (producerCleanup) {

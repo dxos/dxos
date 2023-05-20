@@ -21,10 +21,14 @@ export class MapEntry<K, V, U> {
     return this._map.get(this._key) as V | U;
   }
 
-  orInsert<U1 extends V>(value: U1): MapEntry<K, V, U1> {
+  orInsert(value: V): MapEntry<K, V, never> {
     if (!this._map.has(this._key)) {
-      this._map.set(this._key, value as V);
+      this._map.set(this._key, value);
     }
     return this as any;
+  }
+
+  deep<K1, V1>(this: MapEntry<K, Map<K1, V1>, Map<K1, V1>>, key: K1): MapEntry<K1, V1, undefined> {
+    return entry(this.value, key);
   }
 }
