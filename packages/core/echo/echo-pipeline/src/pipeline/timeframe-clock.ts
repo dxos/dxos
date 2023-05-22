@@ -70,7 +70,7 @@ export class TimeframeClock {
 
   @timed(5_000)
   async waitUntilReached(target: Timeframe) {
-    log.info('waitUntilReached', { target, current: this._timeframe });
+    log('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => {
       log('check if reached', {
         target,

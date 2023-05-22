@@ -9,6 +9,7 @@ import { CredentialGenerator } from '@dxos/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -121,5 +122,48 @@ describe('space/space', () => {
     await builder.close();
     expect(space1.isOpen).toBeFalsy();
     expect(space2.isOpen).toBeFalsy();
+  });
+
+  test('open & close', async () => {
+    const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
+    const agent = await builder.createPeer();
+    const space1 = await agent.createSpace();
+
+    await space1.open();
+
+    expect(space1.isOpen).toBeTruthy();
+    afterTest(() => space1.close());
+
+    await agent.spaceGenesis(space1);
+    
+    await space1.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
+    await space1.initializeDataPipeline();
+    await space1.dataPipeline.ensureEpochInitialized();
+
+    assert(space1.dataPipeline.databaseHost);
+    await testLocalDatabase(space1.dataPipeline);
+
+    const objectCount = space1.dataPipeline.itemManager.entities.size;
+
+    await space1.close();
+    expect(space1.isOpen).toBeFalsy();
+
+    // Re-open.
+    const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
+
+    await space2.open();
+
+    await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
+    await space2.initializeDataPipeline();
+    await space2.dataPipeline.ensureEpochInitialized();
+
+    space2.dataPipeline.setTargetTimeframe(space2.dataPipeline.pipelineState!.endTimeframe);
+    await space2.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
+
+    assert(space2.dataPipeline.databaseHost);
+    expect(space2.dataPipeline.itemManager.entities.size).toEqual(objectCount);
+
+    await testLocalDatabase(space2.dataPipeline);
   });
 });

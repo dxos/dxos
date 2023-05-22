@@ -58,11 +58,6 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
 /**
- * Flag to disable automatic local snapshots.
- */
-const DISABLE_SNAPSHOT_CACHE = true;
-
-/**
  * Controls data pipeline in the space.
  * Consumes the pipeline and updates the database.
  * Reacts to new epochs to restart the pipeline.
@@ -82,7 +77,7 @@ export class DataPipeline {
 
   constructor(private readonly _params: DataPipelineParams) { }
 
-  public _itemManager!: ItemManager;
+  public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
 
   public currentEpoch?: Credential;
@@ -136,11 +131,6 @@ export class DataPipeline {
       return;
     }
 
-    if (this._params.snapshotId && !DISABLE_SNAPSHOT_CACHE) {
-      this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
-      this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
-    }
-
     this._pipeline = new Pipeline();
     await this._params.onPipelineCreated(this._pipeline);
     await this._pipeline.start();
@@ -160,10 +150,10 @@ export class DataPipeline {
     }
 
     this.databaseHost = new DatabaseHost(feedWriter, this._snapshot?.database);
-    this._itemManager = new ItemManager(this._params.modelFactory);
+    this.itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
-    await this.databaseHost.open(this._itemManager, this._params.modelFactory);
+    await this.databaseHost.open(this.itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -195,7 +185,7 @@ export class DataPipeline {
     }
 
     await this.databaseHost?.close();
-    await this._itemManager?.destroy();
+    await this.itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
 
@@ -203,7 +193,7 @@ export class DataPipeline {
     assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
-      log('processing message', { msg });
+      log('processing message', { feedKey, seq });
 
       try {
         if (data.payload.data) {
@@ -252,7 +242,7 @@ export class DataPipeline {
 
     try {
       // Add properties to cache.
-      const propertiesItem = this._itemManager.items.find(
+      const propertiesItem = this.itemManager.items.find(
         (item) =>
           item.modelMeta?.type === 'dxos:model/document' &&
           (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
