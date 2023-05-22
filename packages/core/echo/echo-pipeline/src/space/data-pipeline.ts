@@ -8,6 +8,7 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -15,10 +16,9 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
-import { FeedWriter } from '@dxos/feed-store';
-import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DatabaseHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
@@ -74,7 +74,7 @@ export class DataPipeline {
   private _lastTimeframeSaveTime = 0;
   private _lastSnapshotSaveTime = 0;
 
-  constructor(private readonly _params: DataPipelineParams) { }
+  constructor(private readonly _params: DataPipelineParams) {}
 
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
@@ -134,11 +134,11 @@ export class DataPipeline {
     // Create database backend.
     const feedWriter: FeedWriter<DataMessage> = {
       write: (data, options) => {
-        assert(this._pipeline, 'Pipeline is not initialized.')
-        assert(this.currentEpoch, 'Epoch is not initialized.')
+        assert(this._pipeline, 'Pipeline is not initialized.');
+        assert(this.currentEpoch, 'Epoch is not initialized.');
         return this._pipeline.writer.write({ data }, options);
       },
-    }
+    };
 
     this.databaseHost = new DatabaseHost(feedWriter);
     this.itemManager = new ItemManager(this._params.modelFactory);
@@ -250,6 +250,8 @@ export class DataPipeline {
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
+
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
       this._lastTimeframeSaveTime = Date.now();
 
@@ -260,13 +262,13 @@ export class DataPipeline {
       Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
       timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
     ) {
-
+      await this._saveCache();
     }
   }
 
   @synchronized
   private async _processEpoch(epoch: Epoch) {
-    assert(this._isOpen) // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
+    assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
     if (epoch.snapshotCid) {
@@ -289,7 +291,7 @@ export class DataPipeline {
   @synchronized
   async createEpoch(): Promise<Epoch> {
     assert(this._pipeline);
-    assert(this.currentEpoch)
+    assert(this.currentEpoch);
 
     await this._pipeline.pause();
 
@@ -301,7 +303,7 @@ export class DataPipeline {
       timeframe: this._pipeline.state.timeframe,
       number: (this.currentEpoch.subject.assertion as Epoch).number + 1,
       snapshotCid,
-    }
+    };
 
     await this._pipeline.unpause();
 
@@ -312,10 +314,3 @@ export class DataPipeline {
     await this.onNewEpoch.waitForCondition(() => !!this.currentEpoch);
   }
 }
-
-/**
- * Increase all indexes by one so that we start processing the next mutation after the one in the snapshot.
- */
-const snapshotTimeframeToStartingTimeframe = (snapshotTimeframe: Timeframe) => {
-  return snapshotTimeframe.map(([key, seq]) => [key, seq + 1]);
-};

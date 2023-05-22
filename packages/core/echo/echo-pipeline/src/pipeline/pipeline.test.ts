@@ -7,7 +7,6 @@ import * as fc from 'fast-check';
 import { inspect } from 'util';
 
 import { asyncTimeout } from '@dxos/async';
-import { checkType } from '@dxos/debug';
 import { FeedStore, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,7 +22,7 @@ import { Pipeline } from './pipeline';
 const TEST_MESSAGE: FeedMessage = {
   timeframe: new Timeframe(),
   payload: {},
-}
+};
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
@@ -35,13 +34,13 @@ describe('pipeline/Pipeline', () => {
     // Remote feeds from other peers.
     const numFeeds = 5;
     const messagesPerFeed = 10;
-    for (const feedIdx in range(numFeeds)) {
+    for (const _ in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
       void pipeline.addFeed(feed);
 
       setTimeout(async () => {
-        for (const msgIdx in range(messagesPerFeed)) {
+        for (const _ in range(messagesPerFeed)) {
           await feed.append(TEST_MESSAGE);
         }
       });
@@ -53,14 +52,14 @@ describe('pipeline/Pipeline', () => {
     void pipeline.addFeed(feed);
     pipeline.setWriteFeed(feed);
 
-    for (const msgIdx in range(messagesPerFeed)) {
+    for (const _ in range(messagesPerFeed)) {
       await pipeline.writer!.write({});
     }
 
-    await pipeline.start()
+    await pipeline.start();
 
     let msgCount = 0;
-    for await (const block of pipeline.consume()) {
+    for await (const _ of pipeline.consume()) {
       if (++msgCount === numFeeds * messagesPerFeed) {
         void pipeline.stop();
       }
@@ -78,8 +77,8 @@ describe('pipeline/Pipeline', () => {
     await pipeline.addFeed(feed);
 
     const numMessages = 30;
-    const sequenceNumbers: number[] = []
-    for(const _ of range(numMessages)) {
+    const sequenceNumbers: number[] = [];
+    for (const _ of range(numMessages)) {
       const { seq } = await feed.appendWithReceipt(TEST_MESSAGE);
       sequenceNumbers.push(seq);
     }
@@ -87,10 +86,7 @@ describe('pipeline/Pipeline', () => {
     const processedSequenceNumbers: number[] = [];
 
     // skip first 10, process the rest, and the repeat the last 10.
-    const expectedSequenceNumbers = [
-      ...sequenceNumbers.slice(10, 30),
-      ...sequenceNumbers.slice(20, 30),
-    ]
+    const expectedSequenceNumbers = [...sequenceNumbers.slice(10, 30), ...sequenceNumbers.slice(20, 30)];
 
     await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
     await pipeline.start();
@@ -98,20 +94,20 @@ describe('pipeline/Pipeline', () => {
     for await (const block of pipeline.consume()) {
       processedSequenceNumbers.push(block.seq);
 
-      if(processedSequenceNumbers.length === 20) {
+      if (processedSequenceNumbers.length === 20) {
         // not awaited to avoid a deadlock.
-        pipeline.pause().then(async () => {
+        void pipeline.pause().then(async () => {
           await pipeline.setCursor(new Timeframe([[feed.key, 19]]));
           await pipeline.unpause();
-        })
+        });
       }
-      if(processedSequenceNumbers.length === 30) {
+      if (processedSequenceNumbers.length === 30) {
         void pipeline.stop();
       }
     }
 
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
-  })
+  });
 
   test
     .skip('stress', async () => {

@@ -228,8 +228,6 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
-
-    
     await this._dataPipelineCredentialConsumer?.close();
     this._dataPipelineCredentialConsumer = undefined;
 

@@ -118,7 +118,7 @@ export class FeedWrapper<T extends {}> {
     const receipt: WriteReceipt = {
       feedKey: this.key,
       seq,
-    }
+    };
     return receipt;
   }
 

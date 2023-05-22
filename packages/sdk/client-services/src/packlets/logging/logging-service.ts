@@ -66,7 +66,7 @@ const jsonify = (value: any, handles = new WeakSet<any>()): any => {
     handles.add(value);
 
     if (Array.isArray(value)) {
-      return value.map(x => jsonify(x, handles));
+      return value.map((x) => jsonify(x, handles));
     } else {
       if (typeof value.toJSON === 'function') {
         return value.toJSON();

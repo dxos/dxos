@@ -64,31 +64,29 @@ export class DatabaseTestPeer {
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseHost(
-      {
-        write: async (message) => {
-          const seq =
-            this.feedMessages.push({
-              timeframe: this.timeframe,
-              payload: {
-                data: message,
-              },
-            }) - 1;
+    this.host = new DatabaseHost({
+      write: async (message) => {
+        const seq =
+          this.feedMessages.push({
+            timeframe: this.timeframe,
+            payload: {
+              data: message,
+            },
+          }) - 1;
 
-          await this._onConfirm.waitFor(() => this.confirmed >= seq);
-          return {
-            seq,
-            feedKey: this.key,
-          };
-        },
+        await this._onConfirm.waitFor(() => this.confirmed >= seq);
+        return {
+          seq,
+          feedKey: this.key,
+        };
       },
-    );
-    
+    });
+
     await this.host.open(this.hostItems, this.modelFactory);
-    if(this.snapshot) {
-      this.host._itemDemuxer.restoreFromSnapshot(this.snapshot.database)
+    if (this.snapshot) {
+      this.host._itemDemuxer.restoreFromSnapshot(this.snapshot.database);
     }
-    
+
     this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), SPACE_KEY);
     this.items = new ItemManager(this.modelFactory);
     await this.proxy.open(this.items, this.modelFactory);

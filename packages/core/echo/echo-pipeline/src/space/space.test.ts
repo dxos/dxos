@@ -4,13 +4,13 @@
 
 import expect from 'expect';
 import assert from 'node:assert';
+import { promisify } from 'node:util';
 
-import { createCredential, createCredentialMessage, CredentialGenerator } from '@dxos/credentials';
+import { createCredential, CredentialGenerator } from '@dxos/credentials';
+import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
-import { log } from '@dxos/log';
-import { promisify } from 'node:util';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -54,7 +54,6 @@ describe('space/space', () => {
       await space.open();
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
-
 
       await agent.spaceGenesis(space);
 
@@ -197,19 +196,19 @@ describe('space/space', () => {
           issuer: agent.identityKey,
           subject: space1.key,
           assertion: {
-            '@type': "dxos.halo.credentials.Epoch",
+            '@type': 'dxos.halo.credentials.Epoch',
             ...epoch,
           },
           signer: agent.keyring,
-        })
-      }
+        }),
+      },
     });
 
     await space1.close();
     expect(space1.isOpen).toBeFalsy();
 
     // Clear the data feed - epoch snapshot should have the data.
-    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!)
+    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!);
     await promisify(feed.core.clear.bind(feed.core))(0, feed.length);
 
     log.break();

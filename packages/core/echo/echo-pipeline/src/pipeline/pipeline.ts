@@ -6,18 +6,18 @@ import assert from 'node:assert';
 
 import { Event, sleep, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
+import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
+import { ComplexMap } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
-import { failUndefined } from '@dxos/debug';
-import { ComplexMap } from '@dxos/util';
 
 export type WaitUntilReachedTargetParams = {
   /**
@@ -227,7 +227,7 @@ export class Pipeline implements PipelineAccessor {
   // which might be opening feeds during the mutation processing, which w
   async addFeed(feed: FeedWrapper<FeedMessage>) {
     this._feeds.set(feed.key, feed);
-    if(this._feedSetIterator) {
+    if (this._feedSetIterator) {
       await this._feedSetIterator.addFeed(feed);
     }
   }
@@ -277,7 +277,7 @@ export class Pipeline implements PipelineAccessor {
 
     this._timeframeClock.setTimeframe(timeframe);
 
-    if(this._feedSetIterator) {
+    if (this._feedSetIterator) {
       await this._feedSetIterator.close();
       await this._initIterator();
       await this._feedSetIterator.open();
@@ -290,7 +290,7 @@ export class Pipeline implements PipelineAccessor {
   @synchronized
   async pause() {
     assert(this._isStarted, 'Pipeline is not open.');
-    if(this._isPaused) {
+    if (this._isPaused) {
       return;
     }
 
@@ -320,18 +320,18 @@ export class Pipeline implements PipelineAccessor {
     let lastFeedSetIterator = this._feedSetIterator;
     let iterable = lastFeedSetIterator[Symbol.asyncIterator]();
 
-    while(!this._isStopping) {
+    while (!this._isStopping) {
       await this._pauseTrigger.wait();
 
       // Iterator might have been changed while we were waiting for the processing to complete.
-      if(lastFeedSetIterator !== this._feedSetIterator) {
+      if (lastFeedSetIterator !== this._feedSetIterator) {
         assert(this._feedSetIterator, 'Iterator not initialized.');
         lastFeedSetIterator = this._feedSetIterator;
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
       const { done, value } = await iterable.next();
-      if(done) {
+      if (done) {
         continue;
       }
 
@@ -358,7 +358,7 @@ export class Pipeline implements PipelineAccessor {
       this._state.stalled.emit();
     });
 
-    for(const feed of this._feeds.values()) {
+    for (const feed of this._feeds.values()) {
       await this._feedSetIterator.addFeed(feed);
     }
   }

@@ -7,7 +7,6 @@ import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -18,7 +17,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotManager, SnapshotStore } from '../dbhost';
+import { SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
@@ -27,19 +26,19 @@ export type NetworkManagerProvider = () => NetworkManager;
 
 export const MemoryNetworkManagerProvider =
   (signalContext: MemorySignalManagerContext): NetworkManagerProvider =>
-    () =>
-      new NetworkManager({
-        signalManager: new MemorySignalManager(signalContext),
-        transportFactory: MemoryTransportFactory,
-      });
+  () =>
+    new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory,
+    });
 
 export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
-    () =>
-      new NetworkManager({
-        signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-        transportFactory: createWebRTCTransportFactory(),
-      });
+  () =>
+    new NetworkManager({
+      signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
+      transportFactory: createWebRTCTransportFactory(),
+    });
 
 export type TestAgentBuilderOptions = {
   storage?: Storage;
@@ -96,15 +95,14 @@ export class TestAgent {
   public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
 
-
   private _metadataStore?: MetadataStore;
   get metadataStore() {
-    return this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata'));
+    return (this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
 
   private _snapshotStore?: SnapshotStore;
   get snapshotStore() {
-    return this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots'));
+    return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
   }
 
   public modelFactory = new ModelFactory().registerModel(DocumentModel);
@@ -134,13 +132,13 @@ export class TestAgent {
 
   private _spaceManager?: SpaceManager;
   get spaceManager() {
-    return this._spaceManager ??= new SpaceManager({
+    return (this._spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this._networkManagerProvider(),
       modelFactory: this.modelFactory,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
-    });
+    }));
   }
 
   async createSpace(
@@ -159,7 +157,7 @@ export class TestAgent {
     }
 
     const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
-    const dataFeed = await this.feedStore.openFeed(dataKey ?? await this.keyring.createKey(), { writable: true });
+    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), { writable: true });
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
@@ -167,7 +165,7 @@ export class TestAgent {
       controlFeedKey: controlFeed.key,
       dataFeedKey: dataFeed.key,
     };
-    if(saveMetadata) {
+    if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }
 
@@ -185,7 +183,7 @@ export class TestAgent {
           'dxos.mesh.teleport.gossip',
           this.createGossip().createExtension({ remotePeerId: session.remotePeerId }),
         );
-      }
+      },
     });
     space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
