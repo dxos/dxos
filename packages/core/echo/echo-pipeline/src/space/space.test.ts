@@ -5,11 +5,12 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { CredentialGenerator } from '@dxos/credentials';
+import { createCredential, createCredentialMessage, CredentialGenerator } from '@dxos/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
 import { log } from '@dxos/log';
+import { promisify } from 'node:util';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -27,7 +28,7 @@ describe('space/space', () => {
     afterTest(() => space.close());
 
     await agent.spaceGenesis(space);
-    
+
     await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     await space.initializeDataPipeline();
     await space.dataPipeline.ensureEpochInitialized();
@@ -136,7 +137,7 @@ describe('space/space', () => {
     afterTest(() => space1.close());
 
     await agent.spaceGenesis(space1);
-    
+
     await space1.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
     await space1.initializeDataPipeline();
     await space1.dataPipeline.ensureEpochInitialized();
@@ -148,6 +149,70 @@ describe('space/space', () => {
 
     await space1.close();
     expect(space1.isOpen).toBeFalsy();
+
+    // Re-open.
+    const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
+
+    await space2.open();
+
+    await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
+    await space2.initializeDataPipeline();
+    await space2.dataPipeline.ensureEpochInitialized();
+
+    space2.dataPipeline.setTargetTimeframe(space2.dataPipeline.pipelineState!.endTimeframe);
+    await space2.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
+
+    assert(space2.dataPipeline.databaseHost);
+    expect(space2.dataPipeline.itemManager.entities.size).toEqual(objectCount);
+
+    await testLocalDatabase(space2.dataPipeline);
+  });
+
+  test('create epoch', async () => {
+    const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
+    const agent = await builder.createPeer();
+    const space1 = await agent.createSpace();
+
+    await space1.open();
+
+    expect(space1.isOpen).toBeTruthy();
+    afterTest(() => space1.close());
+
+    await agent.spaceGenesis(space1);
+
+    await space1.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
+    await space1.initializeDataPipeline();
+    await space1.dataPipeline.ensureEpochInitialized();
+
+    assert(space1.dataPipeline.databaseHost);
+    await testLocalDatabase(space1.dataPipeline);
+
+    const objectCount = space1.dataPipeline.itemManager.entities.size;
+
+    const epoch = await space1.dataPipeline.createEpoch();
+    await space1.controlPipeline.writer.write({
+      credential: {
+        credential: await createCredential({
+          issuer: agent.identityKey,
+          subject: space1.key,
+          assertion: {
+            '@type': "dxos.halo.credentials.Epoch",
+            ...epoch,
+          },
+          signer: agent.keyring,
+        })
+      }
+    });
+
+    await space1.close();
+    expect(space1.isOpen).toBeFalsy();
+
+    // Clear the data feed - epoch snapshot should have the data.
+    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!)
+    await promisify(feed.core.clear.bind(feed.core))(0, feed.length);
+
+    log.break();
 
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);

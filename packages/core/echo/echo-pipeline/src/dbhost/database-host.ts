@@ -24,7 +24,6 @@ export class DatabaseHost {
 
   constructor(
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
-    private readonly _snapshot?: EchoSnapshot,
   ) {}
 
   get isReadOnly(): boolean {
@@ -41,10 +40,6 @@ export class DatabaseHost {
 
     this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     this._echoProcessor = this._itemDemuxer.open();
-
-    if (this._snapshot) {
-      this._itemDemuxer.restoreFromSnapshot(this._snapshot);
-    }
   }
 
   async close() {}

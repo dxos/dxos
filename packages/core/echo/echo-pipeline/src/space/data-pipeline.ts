@@ -66,7 +66,6 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 export class DataPipeline {
   private _ctx = new Context();
   private _pipeline?: Pipeline;
-  private _snapshot?: SpaceSnapshot;
   private _targetTimeframe?: Timeframe;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
@@ -93,14 +92,6 @@ export class DataPipeline {
 
   get pipelineState() {
     return this._pipeline?.state;
-  }
-
-  get snapshotTimeframe() {
-    return this._snapshot?.timeframe;
-  }
-
-  getStartTimeframe(): Timeframe {
-    return snapshotTimeframeToStartingTimeframe(this.snapshotTimeframe ?? new Timeframe());
   }
 
   setTargetTimeframe(timeframe: Timeframe) {
@@ -149,7 +140,7 @@ export class DataPipeline {
       },
     }
 
-    this.databaseHost = new DatabaseHost(feedWriter, this._snapshot?.database);
+    this.databaseHost = new DatabaseHost(feedWriter);
     this.itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
@@ -278,7 +269,12 @@ export class DataPipeline {
     assert(this._isOpen) // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
-    // TODO(dmaretskyi): Reset db to snapshot.
+    if (epoch.snapshotCid) {
+      const snapshot = await this._params.snapshotManager.load(epoch.snapshotCid);
+
+      // TODO(dmaretskyi): Clearing old items + events.
+      this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
+    }
 
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);

@@ -82,10 +82,13 @@ export class DatabaseTestPeer {
           };
         },
       },
-      this.snapshot?.database,
     );
+    
     await this.host.open(this.hostItems, this.modelFactory);
-
+    if(this.snapshot) {
+      this.host._itemDemuxer.restoreFromSnapshot(this.snapshot.database)
+    }
+    
     this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), SPACE_KEY);
     this.items = new ItemManager(this.modelFactory);
     await this.proxy.open(this.items, this.modelFactory);
