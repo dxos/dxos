@@ -62,7 +62,9 @@ export class Space {
   private readonly _controlPipeline: ControlPipeline;
   private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
-  private readonly _dataPipelineCredentialConsumer: CredentialConsumer<any>;
+
+  // Processes epoch credentials.
+  private _dataPipelineCredentialConsumer?: CredentialConsumer<any> = undefined;
 
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
@@ -75,7 +77,6 @@ export class Space {
     this._feedProvider = params.feedProvider;
     this._snapshotManager = params.snapshotManager;
 
-    // TODO(dmaretskyi): Maybe reuse createPipeline method.
     this._controlPipeline = new ControlPipeline({
       spaceKey: params.spaceKey,
       genesisFeed: params.genesisFeed,
@@ -131,12 +132,8 @@ export class Space {
             }
           }
         });
-        await pipeline.start();
       },
     });
-    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(
-      this._dataPipeline.createCredentialProcessor(),
-    );
   }
 
   @logInfo
@@ -217,6 +214,10 @@ export class Space {
     await this._controlPipeline.start();
     await this.protocol.start();
 
+    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(
+      this._dataPipeline.createCredentialProcessor(),
+    );
+
     this._isOpen = true;
     log('opened');
   }
@@ -227,8 +228,9 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
+    await this._dataPipelineCredentialConsumer?.close();
+    this._dataPipelineCredentialConsumer = undefined;
 
-    await this._dataPipelineCredentialConsumer.close();
     await this._dataPipeline.close();
 
     // Closes in reverse order to open.
@@ -240,8 +242,9 @@ export class Space {
   }
 
   async initializeDataPipeline() {
+    log.info('initializeDataPipeline');
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
     await this._dataPipeline.open();
-    await this._dataPipelineCredentialConsumer.open();
+    await this._dataPipelineCredentialConsumer!.open();
   }
 }

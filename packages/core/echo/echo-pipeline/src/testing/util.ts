@@ -16,7 +16,7 @@ import { DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
-  const backend = new DatabaseHost(feed, undefined);
+  const backend = new DatabaseHost(feed);
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({
@@ -72,7 +72,7 @@ export const testLocalDatabase = async (create: DataPipeline, check: DataPipelin
   });
 
   await asyncTimeout(
-    check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check.itemManager.entities.has(objectId)),
     500,
   );
 };
