@@ -77,8 +77,8 @@ export const StandaloneLayout = () => {
             <SidebarContent />
           </Sidebar>
           <Main classNames='min-bs-full'>
-            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
             <SidebarToggle />
+            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
           </Main>
         </MainRoot>
       </OctokitProvider>

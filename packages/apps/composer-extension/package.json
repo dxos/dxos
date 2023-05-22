@@ -2,7 +2,7 @@
   "name": "@dxos/composer-extension",
   "version": "0.1.41",
   "private": true,
-  "description": "Composer Web Extension",
+  "description": "DXOS Composer Web Extension",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
