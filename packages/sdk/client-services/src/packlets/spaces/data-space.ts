@@ -198,7 +198,7 @@ export class DataSpace {
     await this._inner.initializeDataPipeline();
 
     // Wait for the first epoch.
-    await cancelWithContext(this._ctx, this._inner.dataPipeline.onNewEpoch.waitForCondition(() => !!this._inner.dataPipeline.currentEpoch));
+    await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
 
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.

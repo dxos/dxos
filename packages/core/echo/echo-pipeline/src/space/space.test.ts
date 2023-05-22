@@ -46,6 +46,7 @@ describe('space/space', () => {
     }
 
     await space.initializeDataPipeline();
+    await space.dataPipeline.ensureEpochInitialized();
 
     assert(space.dataPipeline.databaseHost);
     await testLocalDatabase(space.dataPipeline);
@@ -88,6 +89,7 @@ describe('space/space', () => {
       }
 
       await space.initializeDataPipeline();
+      await space.dataPipeline.ensureEpochInitialized();
 
       return [agent, space];
     });
@@ -130,6 +132,7 @@ describe('space/space', () => {
     }
 
     await space2.initializeDataPipeline();
+    await space2.dataPipeline.ensureEpochInitialized();
 
     {
       // Initial data exchange.
