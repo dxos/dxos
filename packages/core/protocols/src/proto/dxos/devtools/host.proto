@@ -34,8 +34,9 @@ service DevtoolsHost {
   // Get client config.
   rpc GetConfig(google.protobuf.Empty) returns (GetConfigResponse);
 
+  rpc GetStorageInfo(google.protobuf.Empty) returns (StorageInfo);
   rpc ResetStorage(ResetStorageRequest) returns (google.protobuf.Empty);
-
+  
   // TODO(burdon): Single RPC with action.
   rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
   rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
@@ -82,6 +83,13 @@ message ReadyEvent {}
 message GetConfigResponse {
   // JSON-encoded configuration object.
   string config = 1;
+}
+
+message StorageInfo {
+  string type = 1;
+  uint32 storage_usage = 2;
+  uint32 origin_usage = 3;
+  uint32 usage_quota = 4; 
 }
 
 //

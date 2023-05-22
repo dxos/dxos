@@ -14,9 +14,18 @@ export enum StorageType {
   WEBFS = 'webfs',
 }
 
+export type DiskInfo = {
+  /**
+   * Bytes.
+   */
+  used: number
+}
+
 export interface Storage {
   readonly type: StorageType;
   readonly size: number;
+
+  getDiskInfo?(): Promise<DiskInfo>
 
   // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory;

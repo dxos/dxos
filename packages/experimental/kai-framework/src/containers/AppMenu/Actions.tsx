@@ -55,8 +55,19 @@ export const Actions = () => {
     navigate('/settings');
   };
 
-  const handleGenerateData = async () => {
-    await generator?.generate();
+  const handleGenerateData: React.MouseEventHandler = async (e) => {
+    let count = 1;
+
+    if(e.shiftKey) {
+      count *= 10;
+    } 
+    if(e.altKey) {
+      count *= 10;
+    }
+
+    for(let i = 0; i < count; i++) {
+      await generator?.generate();
+    }
   };
 
   const handleReset = async () => {

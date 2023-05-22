@@ -10,7 +10,7 @@ import { RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { Directory, File, Storage, StorageType, getFullPath } from '../common';
+import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 
 /**
  * Web file systems.
@@ -21,7 +21,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(private readonly path: string) {}
+  constructor(private readonly path: string) { }
 
   public get size() {
     return this._files.size;
@@ -100,6 +100,35 @@ export class WebFS implements Storage {
       return getFullPath(path, filename).split('/').join('_');
     } else {
       return path.split('/').join('_');
+    }
+  }
+
+  async getDiskInfo(): Promise<DiskInfo> {
+    let used = 0;
+
+    const recurse = async (handle: FileSystemDirectoryHandle) => {
+      const promises = [];
+
+      for await (const entry of (handle as any).values()) {
+        promises.push((async () => {
+          switch (entry.kind) {
+            case 'file':
+              used += await (entry as FileSystemFileHandle).getFile().then((f) => used += f.size);
+              break;
+            case 'directory':
+              await recurse(entry as FileSystemDirectoryHandle);
+              break;
+          }
+        })());
+
+      }
+      await Promise.all(promises);
+    }
+
+    await recurse(this._root!);
+
+    return {
+      used,
     }
   }
 }
@@ -186,7 +215,7 @@ export class WebFile extends EventEmitter implements File {
     };
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 
   @synchronized
   async destroy() {
