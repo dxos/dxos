@@ -5,8 +5,6 @@
 import { Flags } from '@oclif/core';
 import { Proc } from 'pm2';
 
-import { log } from '@dxos/log';
-
 import { BaseCommand } from '../../base-command';
 import { getPm2 } from '../../daemon/pm2';
 
@@ -18,6 +16,7 @@ export default class Start extends BaseCommand {
     ...BaseCommand.flags,
     profile: Flags.string({
       description: 'Profile name.',
+      default: 'default',
     }),
   };
 
@@ -51,7 +50,7 @@ export default class Start extends BaseCommand {
     if (proc.length === 0) {
       throw new Error('Daemon is not started');
     }
-    log.info('Started:', { id: proc[0].pm_id, name: proc[0].name });
+    this.log('Started:', { id: proc[0].pm_id, name: proc[0].name });
     pm2.disconnect();
   }
 }
