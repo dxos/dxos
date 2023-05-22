@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CredentialGenerator } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -10,11 +11,13 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotManager, SnapshotStore } from '../dbhost';
+import { SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
@@ -88,8 +91,21 @@ export class TestAgentBuilder {
 export class TestAgent {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
 
+  public readonly storage: Storage;
   public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
+
+  private _metadataStore?: MetadataStore;
+  get metadataStore() {
+    return (this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
+  }
+
+  private _snapshotStore?: SnapshotStore;
+  get snapshotStore() {
+    return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
+  }
+
+  public modelFactory = new ModelFactory().registerModel(DocumentModel);
 
   constructor(
     private readonly _networkManagerProvider: NetworkManagerProvider,
@@ -97,6 +113,7 @@ export class TestAgent {
     public readonly identityKey: PublicKey,
     public readonly deviceKey: PublicKey,
   ) {
+    this.storage = this._feedBuilder.storage;
     this.keyring = this._feedBuilder.keyring;
     this.feedStore = this._feedBuilder.createFeedStore();
   }
@@ -113,50 +130,65 @@ export class TestAgent {
     return this._spaces.get(spaceKey);
   }
 
-  createSpaceManager() {
-    return new SpaceManager({
-      feedStore: this._feedBuilder.createFeedStore(),
+  private _spaceManager?: SpaceManager;
+  get spaceManager() {
+    return (this._spaceManager ??= new SpaceManager({
+      feedStore: this.feedStore,
       networkManager: this._networkManagerProvider(),
-      modelFactory: new ModelFactory().registerModel(DocumentModel),
-      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
-      snapshotStore: new SnapshotStore(createStorage().createDirectory('snapshots')),
-    });
+      modelFactory: this.modelFactory,
+      metadataStore: this.metadataStore,
+      snapshotStore: this.snapshotStore,
+    }));
   }
 
   async createSpace(
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey,
+    dataKey?: PublicKey,
   ): Promise<Space> {
+    let saveMetadata = false;
     if (!spaceKey) {
+      saveMetadata = true;
       spaceKey = await this.keyring.createKey();
     }
+    if (!genesisKey) {
+      genesisKey = await this.keyring.createKey();
+    }
 
-    const dataFeedKey = await this.keyring.createKey();
-    const dataFeed = await this.feedStore.openFeed(dataFeedKey, { writable: true });
+    const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
+    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), { writable: true });
 
-    const controlFeedKey = await this.keyring.createKey();
-    const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
-    const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
-    const snapshotManager = new SnapshotManager(new SnapshotStore(createStorage().createDirectory('snapshots')));
+    const metadata: SpaceMetadata = {
+      key: spaceKey,
+      genesisFeedKey: genesisKey,
+      controlFeedKey: controlFeed.key,
+      dataFeedKey: dataFeed.key,
+    };
+    if (saveMetadata) {
+      await this.metadataStore.addSpace(metadata);
+    }
 
-    const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
-    await metadataStore.addSpace({ key: spaceKey });
-    const space = new Space({
-      spaceKey,
-      protocol: this.createSpaceProtocol(spaceKey),
-      genesisFeed,
-      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      modelFactory: new ModelFactory().registerModel(DocumentModel),
-      metadataStore,
-      snapshotManager,
+    await this.spaceManager.open();
+    const space = await this.spaceManager.constructSpace({
+      metadata,
+      swarmIdentity: {
+        peerKey: this.deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
+      },
       memberKey: identityKey,
-      snapshotId: undefined,
-    })
-      .setControlFeed(controlFeed)
-      .setDataFeed(dataFeed);
+      onNetworkConnection: (session) => {
+        session.addExtension(
+          'dxos.mesh.teleport.gossip',
+          this.createGossip().createExtension({ remotePeerId: session.remotePeerId }),
+        );
+      },
+    });
+    space.setControlFeed(controlFeed);
+    space.setDataFeed(dataFeed);
+
     await space.open();
-    await space.initializeDataPipeline();
 
     this._spaces.set(spaceKey, space);
     return space;
@@ -193,5 +225,20 @@ export class TestAgent {
       identityKey: this.identityKey,
       gossip: gossip ?? this.createGossip(),
     });
+  }
+
+  async spaceGenesis(space: Space) {
+    const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
+    const credentials = [
+      ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createEpochCredential(space.key),
+    ];
+
+    for (const credential of credentials) {
+      await space.controlPipeline.writer.write({
+        credential: { credential },
+      });
+    }
   }
 }

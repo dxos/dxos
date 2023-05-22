@@ -45,7 +45,6 @@ describe('space/control-pipeline', () => {
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      initialTimeframe: new Timeframe(),
       feedProvider: (key) => feedStore.openFeed(key),
     });
 
