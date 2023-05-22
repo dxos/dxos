@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CredentialGenerator } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -11,7 +12,8 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceMetadata } from '@dxos/protocols/src/proto/gen/dxos/echo/metadata';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
@@ -25,19 +27,19 @@ export type NetworkManagerProvider = () => NetworkManager;
 
 export const MemoryNetworkManagerProvider =
   (signalContext: MemorySignalManagerContext): NetworkManagerProvider =>
-  () =>
-    new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory,
-    });
+    () =>
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory,
+      });
 
 export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
-  () =>
-    new NetworkManager({
-      signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createWebRTCTransportFactory(),
-    });
+    () =>
+      new NetworkManager({
+        signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
+        transportFactory: createWebRTCTransportFactory(),
+      });
 
 export type TestAgentBuilderOptions = {
   storage?: Storage;
@@ -149,7 +151,7 @@ export class TestAgent {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
-    if(!genesisKey) {
+    if (!genesisKey) {
       genesisKey = await this.keyring.createKey();
     }
 
@@ -220,5 +222,20 @@ export class TestAgent {
       identityKey: this.identityKey,
       gossip: gossip ?? this.createGossip(),
     });
+  }
+
+  async spaceGenesis(space: Space) {
+    const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
+    const credentials = [
+      ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createEpochCredential(space.key),
+    ];
+
+    for (const credential of credentials) {
+      await space.controlPipeline.writer.write({
+        credential: { credential },
+      });
+    }
   }
 }

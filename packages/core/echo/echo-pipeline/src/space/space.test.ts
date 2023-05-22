@@ -6,8 +6,7 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
 
@@ -26,25 +25,9 @@ describe('space/space', () => {
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
-    {
-      // Genesis
-      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
-      const credentials = [
-        ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-        await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
-        await generator.createEpochCredential(space.key),
-      ];
-
-      for (const credential of credentials) {
-        await space.controlPipeline.writer.write({
-          credential: { credential },
-        });
-      }
-
-      // TODO(burdon): Debugging only.
-      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
-    }
-
+    await agent.spaceGenesis(space);
+    
+    await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     await space.initializeDataPipeline();
     await space.dataPipeline.ensureEpochInitialized();
 
@@ -70,24 +53,10 @@ describe('space/space', () => {
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
-      {
-        // Genesis
-        const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
-        const credentials = [
-          ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-          await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
-          await generator.createEpochCredential(space.key),
-        ];
 
-        for (const credential of credentials) {
-          await space.controlPipeline.writer.write({
-            credential: { credential },
-          });
-        }
+      await agent.spaceGenesis(space);
 
-        await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
-      }
-
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       await space.initializeDataPipeline();
       await space.dataPipeline.ensureEpochInitialized();
 
