@@ -7,7 +7,7 @@
 import { Flags } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
-import { runDaemon } from '../../daemon/run';
+import { runDaemon } from '../../daemon';
 
 export default class Run extends BaseCommand {
   static override enableJsonFlag = true;

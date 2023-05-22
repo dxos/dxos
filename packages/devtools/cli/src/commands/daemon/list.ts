@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import { log } from '@dxos/log';
 
 import { BaseCommand } from '../../base-command';
-import { getPm2 } from '../../daemon/pm2';
+import { getPm2 } from '../../daemon';
 
 export default class List extends BaseCommand {
   static override enableJsonFlag = true;

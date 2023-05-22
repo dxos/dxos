@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import { Proc } from 'pm2';
 
 import { BaseCommand } from '../../base-command';
-import { getPm2 } from '../../daemon/pm2';
+import { getPm2 } from '../../daemon';
 
 export default class Start extends BaseCommand {
   static override enableJsonFlag = true;
