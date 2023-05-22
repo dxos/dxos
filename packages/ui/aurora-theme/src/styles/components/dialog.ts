@@ -9,11 +9,13 @@ import { defaultFocus } from '../fragments';
 
 export type DialogStyleProps = {};
 
+const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
+
 export const dialogAppOverlay: ComponentFunction<DialogStyleProps> = (props, ...etc) =>
-  mx('fixed inset-0 z-20 bg-transparent', ...etc);
+  mx('fixed inset-0 z-20', dialogLayoutFragment, ...etc);
 
 export const dialogOsOverlay: ComponentFunction<DialogStyleProps> = (props, ...etc) =>
-  mx('fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8', ...etc);
+  mx('fixed inset-0 z-50 backdrop-blur', dialogLayoutFragment, ...etc);
 
 export const dialogAppContent: ComponentFunction<DialogStyleProps> = (props, ...etc) =>
   mx(
@@ -21,7 +23,7 @@ export const dialogAppContent: ComponentFunction<DialogStyleProps> = (props, ...
     'fixed z-50',
     'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
     'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
+    'shadow-2xl bg-white dark:bg-neutral-800',
     defaultFocus,
     ...etc,
   );

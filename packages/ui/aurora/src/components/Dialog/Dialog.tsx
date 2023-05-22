@@ -11,6 +11,12 @@ import {
   DialogPortalProps as DialogPortalPrimitiveProps,
   DialogOverlay as DialogOverlayPrimitive,
   DialogOverlayProps as DialogOverlayPrimitiveProps,
+  DialogTitle as DialogTitlePrimitive,
+  DialogTitleProps as DialogTitlePrimitiveProps,
+  DialogDescription as DialogDescriptionPrimitive,
+  DialogDescriptionProps as DialogDescriptionPrimitiveProps,
+  DialogClose as DialogClosePrimitive,
+  DialogCloseProps as DialogClosePrimitiveProps,
   DialogContent as DialogContentPrimitive,
   DialogContentProps as DialogContentPrimitiveProps,
 } from '@radix-ui/react-dialog';
@@ -18,6 +24,7 @@ import React, { forwardRef, ForwardRefExoticComponent, FunctionComponent } from 
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
 
 type DialogRootProps = DialogRootPrimitiveProps;
 
@@ -30,6 +37,18 @@ const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogTriggerPrimit
 type DialogPortalProps = DialogPortalPrimitiveProps;
 
 const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPortalPrimitive;
+
+type DialogTitleProps = DialogTitlePrimitiveProps;
+
+const DialogTitle: FunctionComponent<DialogTitleProps> = DialogTitlePrimitive;
+
+type DialogDescriptionProps = DialogDescriptionPrimitiveProps;
+
+const DialogDescription: FunctionComponent<DialogDescriptionProps> = DialogDescriptionPrimitive;
+
+type DialogCloseProps = DialogClosePrimitiveProps;
+
+const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 
 type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps>;
 
@@ -49,18 +68,34 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps>;
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogContentPrimitive
-        {...props}
-        className={tx('dialog.content', 'dialog', {}, classNames)}
-        ref={forwardedRef}
-      />
+      <DialogContentPrimitive {...props} className={tx('dialog.content', 'dialog', {}, classNames)} ref={forwardedRef}>
+        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      </DialogContentPrimitive>
     );
   },
 );
 
-export { DialogRoot, DialogTrigger, DialogPortal, DialogOverlay, DialogContent };
+export {
+  DialogRoot,
+  DialogTrigger,
+  DialogPortal,
+  DialogOverlay,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+};
 
-export type { DialogRootProps, DialogTriggerProps, DialogPortalProps, DialogOverlayProps, DialogContentProps };
+export type {
+  DialogRootProps,
+  DialogTriggerProps,
+  DialogPortalProps,
+  DialogOverlayProps,
+  DialogContentProps,
+  DialogTitleProps,
+  DialogDescriptionProps,
+  DialogCloseProps,
+};
