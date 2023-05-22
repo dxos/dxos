@@ -12,7 +12,8 @@ const generateManifest = () => {
   const packageJson = readJsonFile(resolve(__dirname, 'package.json'));
 
   return {
-    name: packageJson.name,
+    name: 'DXOS Composer',
+    author: 'DXOS.org',
     description: packageJson.description,
     version: packageJson.version,
     ...manifest
