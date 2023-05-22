@@ -22,7 +22,7 @@ import {
   DialogTitleProps,
   DialogTrigger,
 } from '@dxos/aurora';
-import { defaultDescription, defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
+import { defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -80,24 +80,11 @@ export const Dialog = ({
         {...slots.content}
         classNames={slots.content?.classNames}
       >
-        <DialogTitle
-          {...slots.title}
-          className={mx(
-            'shrink-0',
-            'text-xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
-            titleVisuallyHidden && 'sr-only',
-            defaultFocus,
-            slots?.title?.className,
-          )}
-          tabIndex={0}
-        >
+        <DialogTitle {...slots.title} classNames={slots?.title?.classNames}>
           {title}
         </DialogTitle>
         {description && (
-          <DialogDescription
-            {...slots.description}
-            className={mx('mt-2', defaultDescription, slots.description?.className)}
-          >
+          <DialogDescription {...slots.description} classNames={slots.description?.classNames}>
             {description}
           </DialogDescription>
         )}
