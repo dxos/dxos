@@ -58,9 +58,6 @@ message SpaceMetadata {
   // Latest data timeframe reached while processing space messages.
   optional timeframe.TimeframeVector data_timeframe = 5;
 
-  optional string snapshot = 7;
-
-
   optional SpaceCache cache = 9;
 }
 

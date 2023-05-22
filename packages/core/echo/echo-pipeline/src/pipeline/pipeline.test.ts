@@ -7,7 +7,6 @@ import * as fc from 'fast-check';
 import { inspect } from 'util';
 
 import { asyncTimeout } from '@dxos/async';
-import { checkType } from '@dxos/debug';
 import { FeedStore, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -20,10 +19,14 @@ import { range } from '@dxos/util';
 import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
 
+const TEST_MESSAGE: FeedMessage = {
+  timeframe: new Timeframe(),
+  payload: {},
+};
+
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
-    const pipeline = new Pipeline(new Timeframe());
-    afterTest(() => pipeline.stop());
+    const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
     const feedStore = builder.createFeedStore();
@@ -31,29 +34,14 @@ describe('pipeline/Pipeline', () => {
     // Remote feeds from other peers.
     const numFeeds = 5;
     const messagesPerFeed = 10;
-    for (const feedIdx in range(numFeeds)) {
+    for (const _ in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
       void pipeline.addFeed(feed);
 
       setTimeout(async () => {
-        for (const msgIdx in range(messagesPerFeed)) {
-          await feed.append(
-            checkType<FeedMessage>({
-              timeframe: new Timeframe(),
-              payload: {
-                data: {
-                  batch: {
-                    objects: [
-                      {
-                        objectId: `${feedIdx}-${msgIdx}`,
-                      },
-                    ],
-                  },
-                },
-              },
-            }),
-          );
+        for (const _ in range(messagesPerFeed)) {
+          await feed.append(TEST_MESSAGE);
         }
       });
     }
@@ -64,19 +52,11 @@ describe('pipeline/Pipeline', () => {
     void pipeline.addFeed(feed);
     pipeline.setWriteFeed(feed);
 
-    for (const msgIdx in range(messagesPerFeed)) {
-      await pipeline.writer!.write({
-        data: {
-          batch: {
-            objects: [
-              {
-                objectId: `local-${msgIdx}`,
-              },
-            ],
-          },
-        },
-      });
+    for (const _ in range(messagesPerFeed)) {
+      await pipeline.writer!.write({});
     }
+
+    await pipeline.start();
 
     let msgCount = 0;
     for await (const _ of pipeline.consume()) {
@@ -84,6 +64,49 @@ describe('pipeline/Pipeline', () => {
         void pipeline.stop();
       }
     }
+  });
+
+  test('reading and writing with cursor changes', async () => {
+    const pipeline = new Pipeline();
+    afterTest(() => pipeline.stop());
+
+    const builder = new TestFeedBuilder();
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+    await pipeline.addFeed(feed);
+
+    const numMessages = 30;
+    const sequenceNumbers: number[] = [];
+    for (const _ of range(numMessages)) {
+      const { seq } = await feed.appendWithReceipt(TEST_MESSAGE);
+      sequenceNumbers.push(seq);
+    }
+
+    const processedSequenceNumbers: number[] = [];
+
+    // skip first 10, process the rest, and the repeat the last 10.
+    const expectedSequenceNumbers = [...sequenceNumbers.slice(10, 30), ...sequenceNumbers.slice(20, 30)];
+
+    await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
+    await pipeline.start();
+
+    for await (const block of pipeline.consume()) {
+      processedSequenceNumbers.push(block.seq);
+
+      if (processedSequenceNumbers.length === 20) {
+        // not awaited to avoid a deadlock.
+        void pipeline.pause().then(async () => {
+          await pipeline.setCursor(new Timeframe([[feed.key, 19]]));
+          await pipeline.unpause();
+        });
+      }
+      if (processedSequenceNumbers.length === 30) {
+        void pipeline.stop();
+      }
+    }
+
+    expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
   });
 
   test
@@ -108,7 +131,8 @@ describe('pipeline/Pipeline', () => {
         }
 
         async start() {
-          this.pipeline = new Pipeline(this.startingTimeframe);
+          this.pipeline = new Pipeline();
+          await this.pipeline.setCursor(this.startingTimeframe);
 
           await this.pipeline.start();
 

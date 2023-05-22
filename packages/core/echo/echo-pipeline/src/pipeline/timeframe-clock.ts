@@ -48,6 +48,12 @@ export class TimeframeClock {
     return this._pendingTimeframe;
   }
 
+  setTimeframe(timeframe: Timeframe) {
+    this._timeframe = timeframe;
+    this._pendingTimeframe = timeframe;
+    this.update.emit(this._timeframe);
+  }
+
   updatePendingTimeframe(key: PublicKey, seq: number) {
     this._pendingTimeframe = Timeframe.merge(this._pendingTimeframe, new Timeframe([[key, seq]]));
   }
@@ -64,7 +70,7 @@ export class TimeframeClock {
 
   @timed(5_000)
   async waitUntilReached(target: Timeframe) {
-    log.info('waitUntilReached', { target, current: this._timeframe });
+    log('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => {
       log('check if reached', {
         target,
