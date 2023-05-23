@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import pm2, { ProcessDescription } from 'pm2';
+import pm2 from 'pm2';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -17,7 +17,9 @@ type Pm2Params = {
   machine_name?: string; // * @param {String}  [opts.machine_name=null]     pm2 plus instance name
 };
 
-const Pm2Api: new (params?: Pm2Params) => typeof pm2 = (pm2 as any).custom;
+export type Pm2 = typeof pm2;
+
+const Pm2Api: new (params?: Pm2Params) => Pm2 = (pm2 as any).custom;
 
 export const getPm2 = async () => {
   const instance = new Pm2Api({
@@ -38,30 +40,4 @@ export const getPm2 = async () => {
   log.info('PM2 connected.');
 
   return instance;
-};
-
-export const isDaemonRunning = async (profile = 'default'): Promise<boolean> => {
-  const pm2 = await getPm2();
-
-  const proc = await new Promise<ProcessDescription[]>((resolve, reject) => {
-    pm2.describe(profile, (err, proc) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(proc);
-      }
-    });
-  });
-
-  pm2.disconnect();
-
-  if (proc.length === 0) {
-    return false;
-  }
-
-  if (!proc[0].monit || !proc[0].monit.cpu || !proc[0].monit.memory) {
-    return false;
-  }
-
-  return true;
 };

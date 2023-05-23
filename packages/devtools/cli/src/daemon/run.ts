@@ -12,12 +12,12 @@ import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-export type RunDaemonParams = {
+export type RunServicesParams = {
   profile: string;
   listen: string;
 };
 
-export const runServices = async (params: RunDaemonParams) => {
+export const runServices = async (params: RunServicesParams) => {
   const config = new Config({
     runtime: {
       services: {
