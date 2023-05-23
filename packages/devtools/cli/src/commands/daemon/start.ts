@@ -14,7 +14,6 @@ export default class Start extends BaseCommand {
     ...BaseCommand.flags,
     profile: Flags.string({
       description: 'Profile name.',
-      default: 'default',
       env: 'DX_PROFILE',
     }),
   };

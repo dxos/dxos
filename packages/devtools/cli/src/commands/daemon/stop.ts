@@ -14,7 +14,6 @@ export default class Stop extends BaseCommand {
     ...BaseCommand.args,
     name: Args.string({
       name: 'Process name.',
-      default: 'default',
     }),
   };
 
