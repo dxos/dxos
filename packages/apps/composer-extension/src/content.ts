@@ -95,6 +95,9 @@ const setupComposer = () => {
             body.value = event.data.content;
           }
           updateButton?.click();
+          if (stale) {
+            composer.contentWindow?.postMessage({ type: 'comment-stale' }, baseUrl.origin);
+          }
           break;
         }
       }
