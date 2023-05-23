@@ -15,7 +15,6 @@ import {
   AlertDialogTrigger,
   AlertDialogCancel,
   AlertDialogAction,
-  AlertDialogPortal,
 } from './AlertDialog';
 
 type StorybookAlertDialogProps = Partial<{
@@ -40,21 +39,19 @@ const StorybookAlertDialog = ({
       <AlertDialogTrigger asChild>
         <Button>{openTrigger}</Button>
       </AlertDialogTrigger>
-      <AlertDialogPortal>
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogTitle>{title}</AlertDialogTitle>
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-            <p className='mbs-2 mbe-4'>{body}</p>
-            <AlertDialogCancel asChild>
-              <Button>{cancelTrigger}</Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button variant='primary'>{actionTrigger}</Button>
-            </AlertDialogAction>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialogPortal>
+      <AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <p className='mbs-2 mbe-4'>{body}</p>
+          <AlertDialogCancel asChild>
+            <Button>{cancelTrigger}</Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button variant='primary'>{actionTrigger}</Button>
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
     </AlertDialogRoot>
   );
 };

@@ -14,7 +14,6 @@ import {
   DialogOverlay,
   DialogTrigger,
   DialogClose,
-  DialogPortal,
 } from './Dialog';
 
 type StorybookDialogProps = Partial<{
@@ -31,18 +30,16 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger }
       <DialogTrigger asChild>
         <Button>{openTrigger}</Button>
       </DialogTrigger>
-      <DialogPortal>
-        <DialogOverlay>
-          <DialogContent>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-            <p className='mbs-2 mbe-4'>{body}</p>
-            <DialogClose asChild>
-              <Button variant='primary'>{closeTrigger}</Button>
-            </DialogClose>
-          </DialogContent>
-        </DialogOverlay>
-      </DialogPortal>
+      <DialogOverlay>
+        <DialogContent>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+          <p className='mbs-2 mbe-4'>{body}</p>
+          <DialogClose asChild>
+            <Button variant='primary'>{closeTrigger}</Button>
+          </DialogClose>
+        </DialogContent>
+      </DialogOverlay>
     </DialogRoot>
   );
 };
