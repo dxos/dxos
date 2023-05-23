@@ -6,7 +6,7 @@ Public API for MESH services.
 
 
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L34)
+### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L35)
 
 
 
@@ -18,12 +18,20 @@ Arguments:
 
 
 ## Properties
-### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L44)
-Type: <code>MulticastObservable&lt;object&gt;</code>
+### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L45)
+Type: <code>MulticastObservable&lt;NetworkStatus&gt;</code>
 
 
 ## Methods
-### [setConnectionState(state)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L48)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L39)
+
+
+
+Returns: <code>object</code>
+
+Arguments: none
+
+### [updateConfig(swarm)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L49)
 
 
 
@@ -31,12 +39,4 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`state`: <code>ConnectionState</code>
-
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L38)
-
-
-
-Returns: <code>object</code>
-
-Arguments: none
+`swarm`: <code>ConnectionState</code>

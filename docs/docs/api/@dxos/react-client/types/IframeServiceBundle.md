@@ -8,7 +8,3 @@
 ## Properties
 ### [BridgeService]()
 Type: <code>BridgeService</code>
-
-
-### [IframeService]()
-Type: <code>IframeService</code>

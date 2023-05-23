@@ -11,7 +11,7 @@ Type: <code>string</code>
 
 
 ### [options]()
-Type: <code>object</code>
+Type: <code>Record&lt;string, any&gt;</code>
 
 
 ### [type]()
