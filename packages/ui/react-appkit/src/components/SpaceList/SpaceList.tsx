@@ -35,7 +35,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
               group({ elevation: 'group' }),
               'rounded p-2 flex items-stretch gap-2 mbe-2',
               defaultHover,
-              defaultFocus
+              defaultFocus,
             )}
           >
             <Heading level={2} className='grow flex items-center mbe-0'>
@@ -43,7 +43,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 size={12}
                 fallbackValue={keyHex}
                 label={<p className='text-lg grow'>{title}</p>}
-                slots={{ root: { className: 'flex gap-1 items-center pr-2 rounded' } }}
+                slots={{ root: { classNames: 'flex gap-1 items-center pr-2 rounded' } }}
               />
             </Heading>
           </Link>
@@ -52,11 +52,11 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
     </>
   ) : (
     <Group
-      className='mlb-4'
+      className='mlb-4 p-2 rounded'
       label={{
         level: 2,
         children: t('empty spaces label'),
-        className: mx('text-xl', defaultDisabled)
+        className: mx('text-xl', defaultDisabled),
       }}
       elevation='base'
     >

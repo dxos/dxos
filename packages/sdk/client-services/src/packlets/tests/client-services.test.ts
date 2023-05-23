@@ -119,8 +119,8 @@ describe('Client services', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-      })
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
     );
 
     // Check same identity.
@@ -160,26 +160,26 @@ describe('Client services', () => {
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
-    log('initialized');
+    log.info('initialized');
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
     const hostSpace = await client1.createSpace();
-    log('createSpace', { key: hostSpace.key });
+    log.info('createSpace', { key: hostSpace.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: hostSpace as SpaceProxy,
         guest: client2,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET }
-      })
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
     );
 
     expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
-    log('Invitation complete');
+    log.info('Invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
@@ -199,20 +199,20 @@ describe('Client services', () => {
             identity: {
               identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 1'
-              }
+                displayName: 'Peer 1',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
+            presence: SpaceMember.PresenceState.ONLINE,
           },
           {
             identity: {
               identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 2'
-              }
+                displayName: 'Peer 2',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
-          }
+            presence: SpaceMember.PresenceState.ONLINE,
+          },
         ]);
       }, 3_000);
     }

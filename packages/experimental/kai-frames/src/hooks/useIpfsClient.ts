@@ -40,7 +40,7 @@ export const useIpfsClient = () => {
   const config = useConfig();
   const ipfsClient = create({
     url: config.values.runtime?.services?.ipfs?.server, // TODO(burdon): Assert.
-    timeout: 30_000
+    timeout: 30_000,
   });
 
   log('ipfs client', { config: ipfsClient.getEndpointConfig() });

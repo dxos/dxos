@@ -12,9 +12,8 @@ import {
   valueEncoding,
   MetadataStore,
   SpaceManager,
-  SigningContext,
   DataServiceSubscriptions,
-  SnapshotStore
+  SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -33,9 +32,9 @@ import {
   DeviceInvitationProtocol,
   InvitationsHandler,
   InvitationProtocol,
-  SpaceInvitationProtocol
+  SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager } from '../spaces';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
@@ -88,7 +87,10 @@ export class ServiceContext {
 
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: this.modelFactory,
+      snapshotStore: this.snapshotStore,
     });
 
     this.identityManager = new IdentityManager(
@@ -172,7 +174,7 @@ export class ServiceContext {
       profile: identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
-      }
+      },
     };
 
     this.dataSpaceManager = new DataSpaceManager(
@@ -181,9 +183,7 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory,
       this.feedStore,
-      this.snapshotStore
     );
     await this.dataSpaceManager.open();
 
@@ -216,12 +216,12 @@ export class ServiceContext {
           log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
             spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey
+            genesisFeedKey: assertion.genesisFeedKey,
           });
         } catch (err) {
           log.catch(err);
         }
-      }
+      },
     });
     await this._deviceSpaceSync.open();
   }

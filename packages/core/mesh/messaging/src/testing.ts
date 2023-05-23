@@ -12,7 +12,7 @@ import {
   SignalManager,
   MemorySignalManager,
   MemorySignalManagerContext,
-  WebsocketSignalManager
+  WebsocketSignalManager,
 } from './signal-manager';
 import { Message } from './signal-methods';
 
@@ -75,7 +75,7 @@ export class TestPeer {
       (msg) =>
         msg.author.equals(message.author) &&
         msg.recipient.equals(message.recipient) &&
-        msg.payload.value.every((value, index) => value === message.payload.value[index])
+        msg.payload.value.every((value, index) => value === message.payload.value[index]),
     );
   }
 
@@ -87,7 +87,7 @@ export class TestPeer {
         peerId: this.peerId,
         onMessage: async (msg) => {
           this.defaultReceived.emit(msg);
-        }
+        },
       })
       .catch((err) => log.catch(err));
   }

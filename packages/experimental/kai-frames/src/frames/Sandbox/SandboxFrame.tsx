@@ -30,7 +30,7 @@ export const SandboxFrame = observer(() => {
       setTimeout(async () => {
         const frame = new Frame({
           name: 'Frame.tsx',
-          content: new Text()
+          content: new Text(),
         });
 
         await space?.db.add(frame);

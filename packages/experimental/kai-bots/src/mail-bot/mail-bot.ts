@@ -70,8 +70,8 @@ export class MailBot extends Bot {
       tls: process.env.COM_PROTONMAIL_TLS ? process.env.COM_PROTONMAIL_TLS === 'true' : true,
       tlsOptions: {
         // ca: process.env.COM_PROTONMAIL_CERT ?? getKey(this.config, 'com.protonmail.ca'),
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+      },
     });
   }
 

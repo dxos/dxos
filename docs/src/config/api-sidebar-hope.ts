@@ -15,7 +15,7 @@ const apiPath = path.resolve(__dirname, '../../docs/api');
 export const link = {
   package: (name: string) => `/api/${name}`,
   sectionItem: (pkg: string, section: string, name: string) => `${link.package(pkg)}/${section}/${name}`,
-  packageItem: (name: string, item: string) => path.join(link.package(name), item)
+  packageItem: (name: string, item: string) => path.join(link.package(name), item),
 };
 
 type AnySidebarItem = SidebarItem;
@@ -54,11 +54,11 @@ const sidebarItem: {
                   collapsible: true,
                   children: (await fs.readdir(path.resolve(apiPath, pkg, section))).filter(isMarkdown).map((file) => ({
                     text: fileName(file),
-                    link: link.sectionItem(pkg, section, fileName(file))
-                  }))
+                    link: link.sectionItem(pkg, section, fileName(file)),
+                  })),
                 } as AnySidebarItem)
-              : null
-          )
+              : null,
+          ),
         )
       ).filter((s) => s),
       ...(await Promise.all(
@@ -77,26 +77,26 @@ const sidebarItem: {
             const matters = matter(filecontents);
             return {
               text: matters?.data?.title ?? file,
-              link: link.packageItem(pkg, file)
+              link: link.packageItem(pkg, file),
             };
-          })
-      ))
-    ]
-  })
+          }),
+      )),
+    ],
+  }),
 };
 
 export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
   const allscopes = (await fs.readdir(apiPath, { withFileTypes: true })).filter(
-    (s) => /^@/.test(s.name) && s.isDirectory()
+    (s) => /^@/.test(s.name) && s.isDirectory(),
   );
   const packagesByScope = await Promise.all(
     allscopes.map(async (scope) => {
       const dircontents = await fs.readdir(path.resolve(apiPath, scope.name), {
-        withFileTypes: true
+        withFileTypes: true,
       });
       const folders = dircontents.filter((entry) => entry.isDirectory());
       return folders.map((pkg) => `${scope.name}/${pkg.name}`);
-    })
+    }),
   );
   const flatPackages = packagesByScope.flat();
   const otherPackages = flatPackages.filter((p) => !!p && !PINNED_PACKAGES.includes(p));
@@ -107,9 +107,9 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
           {
             text: 'Other packages',
             collapsible: true,
-            children: await Promise.all(otherPackages.map(sidebarItem.package))
-          }
+            children: await Promise.all(otherPackages.map(sidebarItem.package)),
+          },
         ]
-      : [])
+      : []),
   ];
 };

@@ -30,8 +30,8 @@ const start = async () => {
         result[key] = value;
         return result;
       }, {}),
-      { deep: true }
-    )
+      { deep: true },
+    ),
   );
 
   // TODO(burdon): Set logging from client.
@@ -41,7 +41,7 @@ const start = async () => {
 
   const client = new Client({
     config,
-    services: fromHost(config)
+    services: fromHost(config),
   });
 
   await client.initialize();
@@ -61,9 +61,9 @@ const start = async () => {
         },
         onClose: async () => {
           log.info('close', { id });
-        }
+        },
       };
-    }
+    },
   });
 
   await server.open();
@@ -104,8 +104,8 @@ const start = async () => {
       spaces: client.spaces.get().map((space) => ({
         key: space.key,
         title: space.properties.name,
-        members: space.members.get()
-      }))
+        members: space.members.get(),
+      })),
     });
   };
 
@@ -132,7 +132,7 @@ const botRegistry: { [id: string]: new (botId: string) => Bot } = {
   'dxos.module.bot.kai': KaiBot,
   'dxos.module.bot.mail': MailBot,
   'dxos.module.bot.store': StoreBot,
-  'dxos.module.bot.travel': TravelBot
+  'dxos.module.bot.travel': TravelBot,
 };
 
 // TODO(burdon): Create class.

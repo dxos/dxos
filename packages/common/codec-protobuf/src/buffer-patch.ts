@@ -10,5 +10,5 @@ import type { Codec } from './codec';
  */
 export const patchBufferCodec = (codec: Codec<any>) => ({
   encode: (x: any) => Buffer.from(codec.encode(x)),
-  decode: codec.decode.bind(codec)
+  decode: codec.decode.bind(codec),
 });

@@ -12,7 +12,7 @@ import {
   AuthenticationRequest,
   Invitation,
   InvitationsService,
-  QueryInvitationsResponse
+  QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationProtocol } from './invitation-protocol';
@@ -31,7 +31,7 @@ export class InvitationsServiceImpl implements InvitationsService {
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
-    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol
+    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol,
   ) {}
 
   // TODO(burdon): Guest/host label.
@@ -65,7 +65,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._createInvitations.delete(invitation.get().invitationId);
-        }
+        },
       );
     });
   }
@@ -94,7 +94,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._acceptInvitations.delete(invitation.get().invitationId);
-        }
+        },
       );
     });
   }
@@ -135,7 +135,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         next({
           action: QueryInvitationsResponse.Action.ADDED,
           type: QueryInvitationsResponse.Type.CREATED,
-          invitations: [invitation]
+          invitations: [invitation],
         });
       });
 
@@ -143,7 +143,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         next({
           action: QueryInvitationsResponse.Action.ADDED,
           type: QueryInvitationsResponse.Type.ACCEPTED,
-          invitations: [invitation]
+          invitations: [invitation],
         });
       });
 
@@ -152,7 +152,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         next({
           action: QueryInvitationsResponse.Action.REMOVED,
           type: QueryInvitationsResponse.Type.CREATED,
-          invitations: [invitation]
+          invitations: [invitation],
         });
       });
 
@@ -160,7 +160,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         next({
           action: QueryInvitationsResponse.Action.REMOVED,
           type: QueryInvitationsResponse.Type.ACCEPTED,
-          invitations: [invitation]
+          invitations: [invitation],
         });
       });
 
@@ -168,13 +168,13 @@ export class InvitationsServiceImpl implements InvitationsService {
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.CREATED,
-        invitations: Array.from(this._createInvitations.values()).map((invitation) => invitation.get())
+        invitations: Array.from(this._createInvitations.values()).map((invitation) => invitation.get()),
       });
 
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.ACCEPTED,
-        invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get())
+        invitations: Array.from(this._acceptInvitations.values()).map((invitation) => invitation.get()),
       });
     });
   }

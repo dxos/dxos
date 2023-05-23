@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Robot, Ghost, X } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowLineDown, Broom, HandPalm, Ghost, Play, Robot, X } from '@phosphor-icons/react';
 import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -38,35 +38,35 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotR
         <Ghost className={mx(getSize(6), 'text-gray-400')} />
       ),
     accessor: (record) => record.state,
-    width: 48
+    width: 48,
   },
   {
     Header: 'name',
     accessor: (record) => record.name,
-    width: 200
+    width: 200,
   },
   {
     Header: 'port',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => record.port,
-    width: 80
+    width: 80,
   },
   {
     Header: 'container',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => PublicKey.from(record.id).toHex().slice(0, 12),
-    width: 120
+    width: 120,
   },
   {
     Header: 'image',
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (record) => PublicKey.from(record.image.split(':')[1]).toHex().slice(0, 12),
-    width: 120
+    width: 120,
   },
   {
     Header: 'created',
     accessor: (record) => formatDistance(new Date(record.created), Date.now(), { addSuffix: true }),
-    width: 160
+    width: 160,
   },
   {
     id: '__delete',
@@ -77,8 +77,8 @@ const columns = ({ onStop }: { onStop: (id: string) => void }): TableColumn<BotR
           <X />
         </Button>
       );
-    }
-  }
+    },
+  },
 ];
 
 export const BotManager = () => {
@@ -118,13 +118,13 @@ export const BotManager = () => {
         name: record.Labels['dxos.bot.name'],
         port: record.Ports[0]?.PublicPort,
         created: new Date(record.Created * 1000).getTime(),
-        state: record.State
+        state: record.State,
       }));
 
       setRecords(records);
       setStatus('');
     }),
-    [botClient]
+    [botClient],
   );
 
   const handleFlush = async () => {
@@ -154,6 +154,9 @@ export const BotManager = () => {
     <div className='flex flex-1 flex-col px-2 overflow-hidden'>
       <Toolbar className='justify-between'>
         <div className='flex items-center space-x-2'>
+          <Button onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
+            <Play className={getSize(5)} />
+          </Button>
           <Select value={botId} onValueChange={setBotId}>
             {botModules.map(({ id, displayName }) => (
               <Select.Item key={id} value={id!}>
@@ -161,15 +164,20 @@ export const BotManager = () => {
               </Select.Item>
             ))}
           </Select>
-          <Button className='mr-2' onClick={() => botId && botClient.startBot(botId, getBotEnvs(keyMap))}>
-            Start
-          </Button>
         </div>
         <div className='flex items-center space-x-2'>
-          <Button onClick={() => botId && botClient.fetchImage()}>Pull Image</Button>
-          <Button onClick={handleStopAll}>Stop</Button>
-          <Button onClick={handleFlush}>Flush</Button>
-          <Button onClick={() => refresh}>Refresh</Button>
+          <Button onClick={() => botId && botClient.fetchImage()} title='Pull docker image'>
+            <ArrowLineDown className={getSize(5)} />
+          </Button>
+          <Button onClick={handleStopAll} title='Stop all containers'>
+            <HandPalm className={getSize(5)} />
+          </Button>
+          <Button onClick={handleFlush} title='Flush stopped containers'>
+            <Broom className={getSize(5)} />
+          </Button>
+          <Button onClick={() => refresh} title='Refresh list'>
+            <ArrowClockwise className={getSize(5)} />
+          </Button>
         </div>
       </Toolbar>
 
@@ -179,7 +187,7 @@ export const BotManager = () => {
           data={records}
           slots={{
             header: { className: 'bg-paper-1-bg' },
-            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+            row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' },
           }}
         />
       </div>

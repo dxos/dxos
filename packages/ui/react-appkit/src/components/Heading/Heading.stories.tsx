@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Heading } from './Heading';
 
 export default {
-  component: Heading
+  component: Heading,
 };
 
 export const Default = { args: { level: 1, children: 'Hello' } };

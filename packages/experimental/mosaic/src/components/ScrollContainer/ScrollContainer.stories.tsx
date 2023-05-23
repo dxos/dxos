@@ -48,17 +48,17 @@ export default {
       <div className='flex flex-col w-full h-screen justify-center items-center bg-white'>
         <Story />
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Vertical = {
-  render: () => <List />
+  render: () => <List />,
 };
 
 export const Horizontal = {
-  render: () => <Lists />
+  render: () => <Lists />,
 };

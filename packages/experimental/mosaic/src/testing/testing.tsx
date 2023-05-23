@@ -16,9 +16,9 @@ export const createItem = (location?: Location): Item<TestData> => ({
   id: faker.datatype.uuid(),
   data: {
     title: faker.lorem.words(3),
-    description: faker.lorem.sentences(faker.datatype.number(8))
+    description: faker.lorem.sentences(faker.datatype.number(8)),
   },
-  location
+  location,
 });
 
 export const SeedDecorator = (seed = 0) => {

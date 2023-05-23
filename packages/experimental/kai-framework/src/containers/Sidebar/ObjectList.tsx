@@ -18,7 +18,7 @@ import { useAppRouter } from '../../hooks';
 export enum ObjectActionType {
   SELECT = 1,
   DELETE = 2,
-  RESTORE = 3
+  RESTORE = 3,
 }
 
 /**
@@ -41,7 +41,7 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
   const objects = useQuery(
     space,
     frameDef.filter?.(),
-    showDeleted ? { deleted: ShowDeletedOption.SHOW_DELETED } : undefined
+    showDeleted ? { deleted: ShowDeletedOption.SHOW_DELETED } : undefined,
   );
   if (!space || !frame || !frameDef.filter) {
     return null;

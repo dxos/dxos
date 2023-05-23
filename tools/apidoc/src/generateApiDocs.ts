@@ -21,9 +21,9 @@ export const generateApiDocs = async (config: Config) => {
     input: api,
     overwrite: true,
     compilerOptions: {
-      module: 'esnext'
+      module: 'esnext',
     },
-    moduleLoaderFunction: (p: string) => import(p)
+    moduleLoaderFunction: (p: string) => import(p),
   });
   void files.save();
 };

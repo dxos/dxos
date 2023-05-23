@@ -16,7 +16,7 @@ test.describe('Smoke test', () => {
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: 'http://localhost:3967',
-      waitFor: async (page) => page.isVisible(':has-text("HALO")')
+      waitFor: async (page) => page.isVisible(':has-text("HALO")'),
     });
 
     page = result.page;

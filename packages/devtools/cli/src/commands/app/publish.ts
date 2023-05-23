@@ -16,22 +16,22 @@ export default class Publish extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     configPath: Flags.string({
-      description: 'Path to dx.yml'
+      description: 'Path to dx.yml',
     }),
     accessToken: Flags.string({
-      description: 'Access token for publishing'
+      description: 'Access token for publishing',
     }),
     skipExisting: Flags.boolean({
       description: 'Do not update content on KUBE if version already exists',
-      default: false
+      default: false,
     }),
     verbose: Flags.boolean({
       description: 'Verbose output',
-      default: false
+      default: false,
     }),
     version: Flags.string({
-      description: 'Version of modules to publish'
-    })
+      description: 'Version of modules to publish',
+    }),
   };
 
   async run(): Promise<any> {
@@ -47,7 +47,7 @@ export default class Publish extends BaseCommand {
         await build({ verbose }, { log: (...args) => this.log(...args), module });
         const cid = await publish(
           { verbose },
-          { log: (...args) => this.log(...args), module, config: this.clientConfig }
+          { log: (...args) => this.log(...args), module, config: this.clientConfig },
         );
         module.bundle = cid.bytes;
 
@@ -59,8 +59,8 @@ export default class Publish extends BaseCommand {
       this.addToTelemetryContext({
         totalBundleSize: moduleConfig.values.package!.modules?.reduce(
           (sum, { bundle }) => sum + (bundle?.length ?? 0),
-          0
-        )
+          0,
+        ),
       });
 
       this.log('Publishing to KUBE...');
@@ -69,7 +69,7 @@ export default class Publish extends BaseCommand {
         const result = await publisher.rpc.publish({
           package: moduleConfig.values.package!,
           skipExisting,
-          accessToken
+          accessToken,
         });
 
         result?.modules?.forEach(({ module, urls }) => {

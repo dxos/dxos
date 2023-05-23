@@ -35,7 +35,7 @@ export const Join: FC<{
       },
       (err: Error) => {
         setStatus({ error: err as Error });
-      }
+      },
     );
   };
 

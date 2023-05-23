@@ -23,7 +23,7 @@ export const TestFrameContainer = <T extends TypedObject>({
   children,
   onCreate,
   slots,
-  state = {}
+  state = {},
 }: {
   children: ReactNode;
   onCreate: (space: Space) => Promise<T>;
@@ -31,7 +31,7 @@ export const TestFrameContainer = <T extends TypedObject>({
   state?: Partial<FrameContextType>;
 }) => {
   const metagraphContext = {
-    client: new MetagraphClientFake([])
+    client: new MetagraphClientFake([]),
   };
 
   const [object, setObject] = useState<TypedObject>();

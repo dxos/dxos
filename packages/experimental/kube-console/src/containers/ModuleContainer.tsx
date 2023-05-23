@@ -31,7 +31,7 @@ export const ModuleContainer = () => {
       <SidebarRoot>
         <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} />
       </SidebarRoot>
-      <Main className='flex overflow-hidden'>
+      <Main classNames='flex overflow-hidden'>
         <Component />
       </Main>
     </MainRoot>

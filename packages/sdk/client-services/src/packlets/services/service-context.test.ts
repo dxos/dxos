@@ -53,8 +53,8 @@ describe('services/ServiceContext', () => {
       performInvitation({
         host: identity2,
         guest: device1,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key }
-      })
+        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+      }),
     );
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);

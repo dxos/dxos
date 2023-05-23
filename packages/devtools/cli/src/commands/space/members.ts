@@ -14,7 +14,7 @@ export default class Members extends BaseCommand {
   static override description = 'List space members.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags()
+    ...ux.table.flags(),
   };
 
   static override args = { key: Args.string({ required: true }) };

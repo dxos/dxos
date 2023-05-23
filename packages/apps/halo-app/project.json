@@ -57,7 +57,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/halo-app/**/*.{ts,js}"
+          "packages/apps/halo-app/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [

@@ -16,7 +16,7 @@ import { maybeTruncateKey } from './util';
 export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
   return spaces.map((space) => ({
     key: maybeTruncateKey(space.key, truncateKeys),
-    name: space.properties.name
+    name: space.properties.name,
   }));
 };
 
@@ -25,15 +25,15 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
     mapSpaces(spaces, true),
     {
       key: {
-        header: 'Space key'
+        header: 'Space key',
       },
       name: {
-        header: 'Name'
-      }
+        header: 'Name',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };
 
@@ -45,7 +45,7 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
 export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
-    name: member.identity.profile?.displayName
+    name: member.identity.profile?.displayName,
   }));
 };
 
@@ -54,15 +54,15 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
     mapMembers(members, true),
     {
       key: {
-        header: 'Identity key'
+        header: 'Identity key',
       },
       name: {
-        header: 'Display name'
-      }
+        header: 'Display name',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };
 
@@ -75,7 +75,7 @@ export const mapCredentials = (credentials: Credential[], truncateKeys = false) 
     id: maybeTruncateKey(credential.id!, truncateKeys),
     issuer: maybeTruncateKey(credential.issuer!, truncateKeys),
     subject: maybeTruncateKey(credential.subject!.id!, truncateKeys),
-    type: credential.subject.assertion['@type']
+    type: credential.subject.assertion['@type'],
   }));
 };
 
@@ -84,20 +84,20 @@ export const printCredentials = (credentials: Credential[], flags = {}) => {
     mapCredentials(credentials, true),
     {
       id: {
-        header: 'Id'
+        header: 'Id',
       },
       issuer: {
-        header: 'Issuer'
+        header: 'Issuer',
       },
       subject: {
-        header: 'Subject'
+        header: 'Subject',
       },
       type: {
-        header: 'Type'
-      }
+        header: 'Type',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };

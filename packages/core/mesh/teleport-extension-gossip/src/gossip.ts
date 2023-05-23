@@ -25,7 +25,7 @@ export class Gossip {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
-    }
+    },
   });
 
   private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
@@ -63,7 +63,7 @@ export class Gossip {
           this._connections.delete(remotePeerId);
         }
         this.connectionClosed.emit(remotePeerId);
-      }
+      },
     });
     this._connections.set(remotePeerId, extension);
 
@@ -83,10 +83,10 @@ export class Gossip {
             messageId: PublicKey.random(),
             channelId: channel,
             timestamp: new Date(),
-            payload
+            payload,
           })
-          .catch((err) => log.warn(err))
-      )
+          .catch((err) => log.warn(err)),
+      ),
     );
   }
 
@@ -99,7 +99,7 @@ export class Gossip {
     return {
       unsubscribe: () => {
         this._listeners.get(channel)!.delete(callback);
-      }
+      },
     };
   }
 
@@ -118,7 +118,7 @@ export class Gossip {
           return;
         }
         return extension.sendAnnounce(message).catch((err) => log.warn(err));
-      })
+      }),
     );
   }
 }

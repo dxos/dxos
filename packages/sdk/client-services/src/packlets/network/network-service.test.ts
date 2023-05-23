@@ -28,7 +28,7 @@ describe('NetworkService', () => {
 
   test('setNetworkOptions changes network status', async () => {
     await networkService.updateConfig({
-      swarm: ConnectionState.OFFLINE
+      swarm: ConnectionState.OFFLINE,
     });
 
     expect(serviceContext.networkManager.connectionState).to.equal(ConnectionState.OFFLINE);
@@ -45,7 +45,7 @@ describe('NetworkService', () => {
 
     result = new Trigger<ConnectionState | undefined>();
     await networkService.updateConfig({
-      swarm: ConnectionState.OFFLINE
+      swarm: ConnectionState.OFFLINE,
     });
     expect(await result.wait()).to.equal(ConnectionState.OFFLINE);
   });

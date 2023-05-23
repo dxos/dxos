@@ -38,7 +38,7 @@ const windowPort = (): RpcPort => ({
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }
+  },
 });
 
 const waitForRpc = async () =>

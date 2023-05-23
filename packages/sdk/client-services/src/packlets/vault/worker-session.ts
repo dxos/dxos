@@ -62,18 +62,18 @@ export class WorkerSession {
         }
 
         return handler(method, params);
-      }
+      },
     };
 
     this._clientRpc = new ClientRpcServer({
       serviceRegistry: this._serviceHost.serviceRegistry,
       port: appPort,
-      ...middleware
+      ...middleware,
     });
     this._shellClientRpc = new ClientRpcServer({
       serviceRegistry: this._serviceHost.serviceRegistry,
       port: shellPort,
-      ...middleware
+      ...middleware,
     });
 
     this._iframeRpc = createProtoRpcPeer({
@@ -95,11 +95,11 @@ export class WorkerSession {
                 log.catch(err);
               }
             });
-          }
-        }
+          },
+        },
       },
       port: systemPort,
-      timeout: 1000 // With low timeout heartbeat may fail if the tab's thread is saturated.
+      timeout: 1000, // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
     this.bridgeService = this._iframeRpc.rpc.BridgeService;

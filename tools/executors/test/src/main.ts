@@ -40,7 +40,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     outputPath: resolve(context.root, options.outputPath),
     resultsPath: resolve(context.root, options.resultsPath),
     coveragePath: resolve(context.root, options.coveragePath),
-    headless: options.stayOpen ? false : options.headless
+    headless: options.stayOpen ? false : options.headless,
   };
 
   const includesBrowserEnv =
@@ -50,7 +50,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 
   const [skipBrowserTests] = await Promise.all([
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
-    resolvedOptions.setup && runSetup(resolvedOptions.setup)
+    resolvedOptions.setup && runSetup(resolvedOptions.setup),
   ]);
 
   let success = false;
@@ -62,7 +62,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     for await (const { success: _, ...executorResult } of await runExecutor(
       { project, target },
       options.serveOptions ?? {},
-      context
+      context,
     )) {
       try {
         success = await runTests({ ...resolvedOptions, skipBrowserTests, executorResult }, context);

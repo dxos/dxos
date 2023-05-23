@@ -46,6 +46,9 @@ export class WebsocketSignalManager implements SignalManager {
   ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
+      if (this._servers.has(host.server)) {
+        continue;
+      }
       const server = new SignalClient(
         host.server,
         async (message) => this.onMessage.emit(message),
@@ -107,7 +110,7 @@ export class WebsocketSignalManager implements SignalManager {
   async sendMessage({
     author,
     recipient,
-    payload
+    payload,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -137,7 +140,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   private _initContext() {
     this._ctx = new Context({
-      onError: (err) => log.catch(err)
+      onError: (err) => log.catch(err),
     });
   }
 

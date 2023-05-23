@@ -15,7 +15,7 @@ export const processSyncServer: processCommand = async (command: Command) => {
     id: cmd.id,
     host: cmd.host,
     port: cmd.port,
-    verbose: cmd.verbose
+    verbose: cmd.verbose,
   };
   const server = new Server(config, srvMethods);
   await server.start();
@@ -29,7 +29,7 @@ export const processSyncClient: processCommand = async (command: Command) => {
     id: cmd.srvId,
     host: cmd.host,
     port: cmd.port,
-    verbose: cmd.verbose
+    verbose: cmd.verbose,
   };
   const client = new Client(config);
   const res = client

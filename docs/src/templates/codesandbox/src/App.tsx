@@ -14,9 +14,9 @@ const config = new Config({
     client: {
       // CodeSandbox exposes local ports like this: https://b6x0h7-5173.csb.app/,
       // where "b6x0h7" is the sandbox ID and "5173" is the local port.
-      remoteSource: window.location.origin.replace('5173', '3967') + '/vault.html'
-    }
-  }
+      remoteSource: window.location.origin.replace('5173', '3967') + '/vault.html',
+    },
+  },
 });
 
 const App = () => {

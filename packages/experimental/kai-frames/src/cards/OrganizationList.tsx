@@ -40,7 +40,7 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
           value={organization.name}
           onChange={({ target: { value } }) => (organization.name = value)}
           slots={{
-            input: { spellCheck: false }
+            input: { spellCheck: false },
           }}
         />
         <div>
@@ -48,13 +48,13 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
 
           {/* Contacts */}
           {organization.people?.length > 0 && (
-            <List density='fine' aria-labelledby='todo' className='mlb-1'>
+            <List density='fine' aria-labelledby='todo' classNames='mlb-1'>
               {organization.people?.map((contact) => (
                 <ListItem key={contact.id}>
-                  <ListItemEndcap className='flex items-center'>
+                  <ListItemEndcap classNames='flex items-center'>
                     <User className={getSize(5)} />
                   </ListItemEndcap>
-                  <ListItemHeading className='text-sm pbs-1.5'>{contact.name}</ListItemHeading>
+                  <ListItemHeading classNames='text-sm pbs-1.5'>{contact.name}</ListItemHeading>
                 </ListItem>
               ))}
             </List>

@@ -21,7 +21,7 @@ const InvitationActions = ({
   disabled,
   joinSend,
   joinState,
-  Kind
+  Kind,
 }: {
   invitationState?: Invitation.State;
   disabled?: boolean;
@@ -38,14 +38,14 @@ const InvitationActions = ({
           <ViewStateHeading className={defaultDescription}>{t('connecting status label')}</ViewStateHeading>
           <div role='none' className='grow' />
           <div className='flex gap-2'>
-            <Button disabled className='grow flex items-center gap-2 pli-2 order-2' data-testid='next'>
+            <Button disabled classNames='grow flex items-center gap-2 pli-2 order-2' data-testid='next'>
               <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
               <span className='grow'>{t('next label')}</span>
               <CaretRight weight='bold' className={getSize(4)} />
             </Button>
             <Button
               disabled={disabled}
-              className='flex items-center gap-2 pis-2 pie-4'
+              classNames='flex items-center gap-2 pis-2 pie-4'
               onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
               data-testid='invitation-rescuer-cancel'
             >
@@ -67,13 +67,13 @@ const InvitationActions = ({
                 ? 'timeout status label'
                 : invitationState === Invitation.State.CANCELLED
                 ? 'cancelled status label'
-                : 'error status label'
+                : 'error status label',
             )}
           </ViewStateHeading>
           <div role='none' className='grow' />
           <Button
             disabled={disabled}
-            className='flex items-center gap-2 pli-2'
+            classNames='flex items-center gap-2 pli-2'
             onClick={() => joinSend({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
@@ -98,7 +98,7 @@ export const InvitationRescuer = ({ Kind, ...viewStateProps }: InvitationConnect
           <div role='none' className='grow' />
           <Button
             disabled={disabled}
-            className='flex items-center gap-2 pli-2'
+            classNames='flex items-center gap-2 pli-2'
             data-autofocus={`inputting${Kind}InvitationCode`}
             data-testid='invitation-rescuer-blank-reset'
             onClick={() => joinSend({ type: `reset${Kind}Invitation` })}

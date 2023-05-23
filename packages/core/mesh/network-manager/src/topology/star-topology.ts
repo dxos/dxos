@@ -56,7 +56,7 @@ export class StarTopology implements Topology {
     log('offer', {
       peer,
       isCentral: peer.equals(this._centralPeer),
-      isSelfCentral: ownPeerId.equals(this._centralPeer)
+      isSelfCentral: ownPeerId.equals(this._centralPeer),
     });
     return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
   }

@@ -80,15 +80,15 @@ export const storageBenchmark = (testGroupName: StorageType, createStorage: () =
           NUM_THREADS,
           NUM_READS,
           NUM_WRITES,
-          RUN_TIME
+          RUN_TIME,
         },
         result: {
           numReads,
           numWrites,
           realRunTime,
           avgReadTime: reads.reduce((a, b) => a + b, 0) / reads.length,
-          avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length
-        }
+          avgWriteTime: writes.reduce((a, b) => a + b, 0) / writes.length,
+        },
       });
 
       // console.log('>>>>>>>>>>>>>>>>>>>>>>>')

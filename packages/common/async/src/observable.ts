@@ -145,7 +145,7 @@ export class MulticastObservable<T> extends Observable<T> {
     },
     complete: () => {
       this._observers.forEach((observer) => observer.complete?.());
-    }
+    },
   };
 }
 

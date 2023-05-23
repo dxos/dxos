@@ -43,8 +43,8 @@ export class BotClient {
     private readonly _config: Config,
     private readonly _space: Space,
     options: BotClientOptions = {
-      proxy: `http://127.0.0.1:${DX_BOT_SERVICE_PORT}`
-    }
+      proxy: `http://127.0.0.1:${DX_BOT_SERVICE_PORT}`,
+    },
   ) {
     this._botServiceEndpoint = this._config.values.runtime?.services?.bot?.proxy ?? options.proxy!;
   }
@@ -93,7 +93,7 @@ export class BotClient {
   async fetchImage() {
     await fetch(`${this._botServiceEndpoint}/docker/images/create?fromImage=${BOT_IMAGE}`, {
       method: 'POST',
-      body: JSON.stringify({}) // Empty body required.
+      body: JSON.stringify({}), // Empty body required.
     });
   }
 
@@ -120,9 +120,9 @@ export class BotClient {
         DX_BOT_NAME: botName,
         // Access container directly.
         COM_PROTONMAIL_HOST: 'protonmail-bridge',
-        COM_PROTONMAIL_PORT: '143'
+        COM_PROTONMAIL_PORT: '143',
         // COM_PROTONMAIL_HOST: 'host.docker.internal' // NOTE: Docker Desktop only (for development).
-      }
+      },
     );
 
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerCreate
@@ -134,9 +134,9 @@ export class BotClient {
           [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: [
             {
               HostAddr: '127.0.0.1', // Only expose on loop-back interface.
-              HostPort: `${proxyPort}`
-            }
-          ]
+              HostPort: `${proxyPort}`,
+            },
+          ],
         },
 
         // Use host's network
@@ -145,25 +145,25 @@ export class BotClient {
 
         // Maps the named container's name to the container IP address.
         // TODO(burdon): Generalize links to other containers (e.g., Protonmail bridge.)
-        Links: ['protonmail-bridge:protonmail-bridge']
+        Links: ['protonmail-bridge:protonmail-bridge'],
       },
       ExposedPorts: {
-        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {}
+        [`${DX_BOT_CONTAINER_RPC_PORT}/tcp`]: {},
       },
       Env: Object.entries(envs).map(([key, value]) => `${key}=${String(value)}`),
       Labels: {
         'dxos.bot.name': botName,
-        'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`
-      }
+        'dxos.kube.proxy': `/rpc:${DX_BOT_CONTAINER_RPC_PORT}`,
+      },
     };
 
     log('creating bot', { request, botInstanceId });
     const response = await fetch(`${this._botServiceEndpoint}/docker/containers/create?name=${botInstanceId}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
     });
     const { Id: containerId } = await response.json();
 
@@ -171,7 +171,7 @@ export class BotClient {
     // https://docs.docker.com/engine/api/v1.42/#tag/Container/operation/ContainerStart
     await fetch(`${this._botServiceEndpoint}/docker/containers/${containerId}/start`, {
       method: 'POST',
-      body: JSON.stringify({}) // Empty body required.
+      body: JSON.stringify({}), // Empty body required.
     });
 
     // Poll proxy until container starts.
@@ -220,7 +220,7 @@ export class BotClient {
   private async inviteBotToSpace(botClient: Client) {
     const connected = new Trigger();
     const invitation = this._space.createInvitation({
-      authMethod: Invitation.AuthMethod.NONE
+      authMethod: Invitation.AuthMethod.NONE,
     });
 
     invitation.subscribe(
@@ -243,7 +243,7 @@ export class BotClient {
                   }
                 }
               },
-              (err: Error) => console.error(new Error(err.message))
+              (err: Error) => console.error(new Error(err.message)),
             );
             break;
           }
@@ -264,7 +264,7 @@ export class BotClient {
           }
         }
       },
-      (err: Error) => console.error(new Error(err.message))
+      (err: Error) => console.error(new Error(err.message)),
     );
 
     await connected.wait();
@@ -279,7 +279,7 @@ const fromRemote = (url: string): ClientServicesProvider => {
     url,
     requested: clientServiceBundle,
     exposed: {},
-    handlers: {}
+    handlers: {},
   });
 
   return {
@@ -292,6 +292,6 @@ const fromRemote = (url: string): ClientServicesProvider => {
     },
 
     open: () => dxRpcClient.open(),
-    close: () => dxRpcClient.close()
+    close: () => dxRpcClient.close(),
   };
 };

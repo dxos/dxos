@@ -48,7 +48,7 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
           {displayName ?? identity.identityKey.truncate()}
         </h2>
         <TooltipRoot>
-          <TooltipContent className='z-50'>{t('close label')}</TooltipContent>
+          <TooltipContent classNames='z-50'>{t('close label')}</TooltipContent>
           <TooltipTrigger asChild>
             {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
           </TooltipTrigger>
@@ -61,7 +61,7 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
           createInvitationUrl={createInvitationUrl}
         />
         <Button
-          className='is-full flex gap-2 mbs-2'
+          classNames='is-full flex gap-2 mbs-2'
           onClick={() => client.halo.createInvitation()}
           data-testid='devices-panel.create-invitation'
         >
@@ -94,7 +94,7 @@ export const DevicesPanel = (props: DevicesPanelProps) => {
   };
 
   const [panelState] = useReducer(reducer, {
-    activeView: 'device list'
+    activeView: 'device list',
   });
 
   // TODO(wittjosiah): Use ViewState or similar.

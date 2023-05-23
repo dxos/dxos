@@ -9,3 +9,4 @@ export * from './serializer';
 export * from './service-definitions';
 export * from './service-proxy';
 export * from './utils';
+export * from './cli-env';

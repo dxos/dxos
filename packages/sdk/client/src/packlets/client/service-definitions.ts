@@ -10,7 +10,7 @@ import {
   LoggingService,
   NetworkService,
   SpacesService,
-  SystemService
+  SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -64,7 +64,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   LoggingService: schema.getService('dxos.client.services.LoggingService'),
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost')
+  DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
 });
 
 export type IframeServiceBundle = {
@@ -72,7 +72,7 @@ export type IframeServiceBundle = {
 };
 
 export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
-  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
 };
 
 export type WorkerServiceBundle = {
@@ -80,7 +80,7 @@ export type WorkerServiceBundle = {
 };
 
 export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
-  WorkerService: schema.getService('dxos.iframe.WorkerService')
+  WorkerService: schema.getService('dxos.iframe.WorkerService'),
 };
 
 export type AppServiceBundle = {
@@ -88,7 +88,7 @@ export type AppServiceBundle = {
 };
 
 export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
-  AppService: schema.getService('dxos.iframe.AppService')
+  AppService: schema.getService('dxos.iframe.AppService'),
 };
 
 export type ShellServiceBundle = {
@@ -96,5 +96,5 @@ export type ShellServiceBundle = {
 };
 
 export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
-  ShellService: schema.getService('dxos.iframe.ShellService')
+  ShellService: schema.getService('dxos.iframe.ShellService'),
 };

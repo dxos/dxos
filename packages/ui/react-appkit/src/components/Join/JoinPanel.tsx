@@ -9,7 +9,7 @@ import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   Invitation,
-  InvitationEncoder
+  InvitationEncoder,
 } from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
@@ -47,7 +47,7 @@ const JoinStep1 = ({
   error,
   parseInvitation = (code) => code,
   initialInvitationCode,
-  acceptInvitation
+  acceptInvitation,
 }: JoinStep1Props) => {
   const { t } = useTranslation('appkit');
 
@@ -75,12 +75,12 @@ const JoinStep1 = ({
           slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
-            validationValence: 'error' as const
-          })
+            validationValence: 'error' as const,
+          }),
         },
         onChange: ({ target: { value } }) => setInvitationCode(value),
         onNext: onConnectNext,
-        onCancelPending: cancel
+        onCancelPending: cancel,
       }}
     />
   );
@@ -101,7 +101,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
       setInvitationSecret(value);
       value.length === pinLength && onAuthenticateNext(value);
     },
-    [onAuthenticateNext]
+    [onAuthenticateNext],
   );
 
   return (
@@ -116,12 +116,12 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           slots: { input: { autoFocus: true, inputMode: 'numeric', pattern: '\\d*' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
-            validationValence: 'error' as const
-          })
+            validationValence: 'error' as const,
+          }),
         },
         onChange,
         onNext: () => onAuthenticateNext(invitationSecret),
-        onCancelPending: cancel
+        onCancelPending: cancel,
       }}
     />
   );

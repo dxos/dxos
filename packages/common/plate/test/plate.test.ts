@@ -18,9 +18,9 @@ describe('executeDirectoryTemplate', () => {
     const results = await executeDirectoryTemplate({
       templateDirectory: path.resolve(__dirname, 'template'),
       input: {
-        name: 'foo'
+        name: 'foo',
       },
-      interactive: false
+      interactive: false,
     });
     expect(results).to.exist;
     expect(results.files.length).to.eq(2);
@@ -31,9 +31,9 @@ describe('executeDirectoryTemplate', () => {
       templateDirectory: path.resolve(__dirname, 'inherited'),
       input: {
         name: 'foo',
-        bar: true
+        bar: true,
       },
-      interactive: false
+      interactive: false,
     });
     expect(results).to.exist;
     expect(results.files.length).to.eq(3);

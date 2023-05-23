@@ -13,7 +13,12 @@ type Valence = 'success' | 'info' | 'warning' | 'error' | 'neutral';
 
 type InputScopedProps<P> = P & { __inputScope?: Scope };
 
-type InputRootProps = PropsWithChildren<{ id?: string; validationValence?: Valence }>;
+type InputRootProps = PropsWithChildren<{
+  id?: string;
+  validationValence?: Valence;
+  descriptionId?: string;
+  errorMessageId?: string;
+}>;
 
 const [createInputContext, createInputScope] = createContextScope(INPUT_NAME, []);
 
@@ -27,14 +32,16 @@ type InputContextValue = {
 const [InputProvider, useInputContext] = createInputContext<InputContextValue>(INPUT_NAME);
 
 const InputRoot = ({
-  id: propsId,
-  validationValence = 'neutral',
   __inputScope,
-  children
+  id: propsId,
+  descriptionId: propsDescriptionId,
+  errorMessageId: propsErrorMessageId,
+  validationValence = 'neutral',
+  children,
 }: InputScopedProps<InputRootProps>) => {
   const id = useId('input', propsId);
-  const descriptionId = useId('input__description');
-  const errorMessageId = useId('input__error-message');
+  const descriptionId = useId('input__description', propsDescriptionId);
+  const errorMessageId = useId('input__error-message', propsErrorMessageId);
   return (
     <InputProvider {...{ id, descriptionId, errorMessageId, validationValence }} scope={__inputScope}>
       {children}

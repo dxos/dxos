@@ -32,17 +32,17 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
     {
       Header: 'module',
       accessor: ({ name }) => name,
-      width: 120
+      width: 120,
     },
     {
       Header: 'version',
       accessor: ({ build }) => build?.version,
-      width: 80
+      width: 80,
     },
     {
       Header: 'type',
       accessor: ({ type }) => type,
-      width: 80
+      width: 80,
     },
     {
       Header: 'link',
@@ -54,14 +54,14 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
             {...{
               copyLabel: 'copy space invite code short label',
               displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
-              value: `https://${value}.${host}`
+              value: `https://${value}.${host}`,
             }}
           />
           <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
             <ArrowSquareOut className={getSize(6)} />
           </a>
         </div>
-      )
+      ),
     },
     {
       Header: 'tags',
@@ -75,14 +75,14 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
             </div>
           ))}
         </div>
-      )
+      ),
     },
     // TODO(burdon): Column property (monospace, etc.)
     {
       Header: 'description',
       accessor: ({ description }) => description,
-      width: 240
-    }
+      width: 240,
+    },
   ];
 
   if (!host) {
@@ -124,7 +124,7 @@ export const RegistryPage = () => {
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin p-0 m-1' }
+          cell: { className: 'align-start font-mono font-thin p-0 m-1' },
         }}
       />
     </div>

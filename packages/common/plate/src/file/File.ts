@@ -80,7 +80,7 @@ export class File<D = string, Meta extends Record<string, any> = {}> {
     const clone = new Ctor({
       path,
       transform,
-      content: JSON.parse(JSON.stringify(content)) // TODO: make better clone?
+      content: JSON.parse(JSON.stringify(content)), // TODO: make better clone?
     });
     return clone;
   }

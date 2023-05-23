@@ -7,7 +7,7 @@ import { log, logInfo } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
 
 enum Message {
-  ACQUIRING = 'acquiring'
+  ACQUIRING = 'acquiring',
 }
 
 export type VaultResourceLockOptions = {
@@ -37,7 +37,7 @@ export class VaultResourceLock {
 
   async acquire() {
     this._broadcastChannel.postMessage({
-      message: Message.ACQUIRING
+      message: Message.ACQUIRING,
     });
 
     try {

@@ -47,7 +47,7 @@ describe('Database', () => {
       '@type': undefined,
       '@model': 'dxos:model/document',
       title: 'Test title',
-      description: 'Test description'
+      description: 'Test description',
     });
   });
 
@@ -128,7 +128,7 @@ describe('Database', () => {
     const task = new TypedObject({
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: new TypedObject({ name: 'Bob' })
+      assignee: new TypedObject({ name: 'Bob' }),
     });
     db.add(task);
     await db.flush();
@@ -140,8 +140,8 @@ describe('Database', () => {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
-        '@id': task.assignee.id
-      }
+        '@id': task.assignee.id,
+      },
     });
   });
 
@@ -151,7 +151,7 @@ describe('Database', () => {
     const task = new TypedObject({
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: new TypedObject({ name: 'Bob' })
+      assignee: new TypedObject({ name: 'Bob' }),
     });
     db.add(task);
     await db.flush();

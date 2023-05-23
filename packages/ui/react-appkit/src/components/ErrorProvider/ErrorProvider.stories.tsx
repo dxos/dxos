@@ -10,7 +10,7 @@ import { Button } from '@dxos/aurora';
 import { ErrorProvider } from './ErrorProvider';
 
 export default {
-  component: ErrorProvider
+  component: ErrorProvider,
 };
 
 const UnhandledRejectionThrower = () => {
@@ -34,5 +34,5 @@ export const Default = {
         <UnhandledRejectionThrower />
       </div>
     </ErrorProvider>;
-  }
+  },
 };

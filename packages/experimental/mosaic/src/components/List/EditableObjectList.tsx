@@ -46,7 +46,7 @@ export const EditableObjectList = <T extends Object>({
   slots = {},
   onSelect,
   onUpdate,
-  onCreate
+  onCreate,
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
@@ -66,13 +66,13 @@ export const EditableObjectList = <T extends Object>({
             <ListItem
               id={object.id}
               key={object.id}
-              className={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
+              classNames={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
             >
               <ListItemEndcap>
                 <Button
                   variant='ghost'
                   onClick={() => onSelect?.(object.id)}
-                  className={isSelected && 'text-selection-text'}
+                  classNames={isSelected && 'text-selection-text'}
                 >
                   <Icon className={getSize(6)} />
                 </Button>
@@ -86,7 +86,7 @@ export const EditableObjectList = <T extends Object>({
                 // TODO(burdon): Input classname not propagated.
                 slots={{
                   root: { className: 'flex w-full overflow-hidden pl-1' },
-                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length }
+                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length },
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}

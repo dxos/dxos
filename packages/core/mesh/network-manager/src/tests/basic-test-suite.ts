@@ -107,7 +107,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId)
+      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId),
     ]);
   }).tag('flaky');
 
@@ -125,7 +125,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     // Wait until both peers are disconnected.
     await Promise.all([
       swarm1.protocol.disconnected.waitForCondition(() => swarm1.protocol.connections.size === 0),
-      swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0)
+      swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0),
     ]);
 
     await exchangeMessages(swarm1, swarm2);
@@ -151,7 +151,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
     const peerLeft = peer2._signalManager.swarmEvent.waitFor(
-      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
+      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer),
     );
 
     await peer1.goOffline();
@@ -196,14 +196,14 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
               const swarm = peer.createSwarm(topic);
 
               swarmsAllPeersConnected.push(
-                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1)
+                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1),
               );
               await swarm.join();
-            })
+            }),
           );
-        })
+        }),
       ),
-      2_000
+      2_000,
     );
 
     await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);

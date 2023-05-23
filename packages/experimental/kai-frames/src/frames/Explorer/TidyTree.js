@@ -35,7 +35,7 @@ export const TidyTree = (data, options = {}) => {
     strokeLinejoin, // stroke line join for links
     strokeLinecap, // stroke line cap for links
     halo = '#fff', // color of label halo
-    haloWidth = 3 // padding around the labels
+    haloWidth = 3, // padding around the labels
   } = options;
 
   // If id and parentId options are specified, or the path option, use d3.stratify
@@ -111,7 +111,7 @@ export const TidyTree = (data, options = {}) => {
       d3
         .link(curve)
         .x((d) => d.y)
-        .y((d) => d.x)
+        .y((d) => d.x),
     );
 
   const node = svg

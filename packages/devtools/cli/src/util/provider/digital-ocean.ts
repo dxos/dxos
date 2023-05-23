@@ -118,7 +118,7 @@ export class DigitalOceanProvider implements MachineryProvider {
       image: 'ubuntu-22-10-x64',
       ssh_keys: sshKeys,
       user_data: cloudConfigScript,
-      tags: [KUBE_TAG]
+      tags: [KUBE_TAG],
     };
 
     const result = await this._session.droplets.create(createParameters);
@@ -131,7 +131,7 @@ export class DigitalOceanProvider implements MachineryProvider {
         return undefined;
       },
       0,
-      1000
+      1000,
     );
 
     const ipAddress = droplet.networks.v4.find((net: any) => net.type === 'public').ip_address;
@@ -139,7 +139,7 @@ export class DigitalOceanProvider implements MachineryProvider {
     return {
       hostname: droplet.name,
       createdAt: droplet.created_at,
-      ipAddress
+      ipAddress,
     };
   }
 }

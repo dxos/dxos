@@ -22,11 +22,11 @@ export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove
   const empty = !invitations || invitations.length < 1;
   return (
     <Group
-      className='mlb-4'
+      className='mlb-4 p-2 rounded'
       label={{
         level: 2,
         children: !empty ? t('invitations label') : t('empty invitations message'),
-        className: mx('text-xl', empty && defaultDisabled)
+        className: mx('text-xl', empty && defaultDisabled),
       }}
       elevation='base'
     >

@@ -43,7 +43,7 @@ export enum ConnectionState {
   /**
    * Connection closed.
    */
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
 }
 
 /**
@@ -68,7 +68,7 @@ export class Connection {
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
-    private readonly _transportFactory: TransportFactory
+    private readonly _transportFactory: TransportFactory,
   ) {}
 
   get state() {
@@ -114,8 +114,8 @@ export class Connection {
           recipient: this.remoteId,
           sessionId: this.sessionId,
           topic: this.topic,
-          data: { signal }
-        })
+          data: { signal },
+        }),
     });
 
     this._transport.connected.once(() => {

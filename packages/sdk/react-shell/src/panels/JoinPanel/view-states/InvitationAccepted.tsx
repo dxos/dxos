@@ -23,7 +23,7 @@ const PureInvitationAcceptedContent = ({
   result,
   Kind,
   doneActionParent,
-  active
+  active,
 }: InvitationAcceptedProps & { result: InvitationResult | null }) => {
   const disabled = !active;
   const { t } = useTranslation('os');
@@ -32,7 +32,7 @@ const PureInvitationAcceptedContent = ({
     <Button
       onClick={() => onDone?.(result)}
       disabled={disabled}
-      className='flex items-center gap-2 pli-2'
+      classNames='flex items-center gap-2 pli-2'
       data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
       data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
     >
@@ -52,7 +52,7 @@ const PureInvitationAcceptedContent = ({
 };
 
 const InvitationAcceptedContent = (
-  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable }
+  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable },
 ) => {
   const { result } = useInvitationStatus(props.activeInvitation);
   return <PureInvitationAcceptedContent {...props} result={result} />;

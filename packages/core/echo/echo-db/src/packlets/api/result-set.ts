@@ -33,7 +33,7 @@ export class ResultSet<T> {
       this._itemUpdate.on(() => {
         this._results = this._getter();
         this._resultsUpdate.emit(this._results);
-      })
+      }),
     );
   }
 

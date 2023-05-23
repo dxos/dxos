@@ -10,7 +10,7 @@ import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { EchoMetadata, SpaceMetadata, IdentityRecord } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -30,7 +30,7 @@ const emptyEchoMetadata = (): EchoMetadata => ({
   version: STORAGE_VERSION,
   spaces: [],
   created: new Date(),
-  updated: new Date()
+  updated: new Date(),
 });
 
 export class MetadataStore {
@@ -95,7 +95,7 @@ export class MetadataStore {
       ...this._metadata,
       version: STORAGE_VERSION,
       created: this._metadata.created ?? new Date(),
-      updated: new Date()
+      updated: new Date(),
     };
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
@@ -117,6 +117,12 @@ export class MetadataStore {
     } finally {
       await file.close();
     }
+  }
+
+  _getSpace(spaceKey: PublicKey): SpaceMetadata {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+    return space;
   }
 
   /**
@@ -141,7 +147,7 @@ export class MetadataStore {
   async addSpace(record: SpaceMetadata) {
     assert(
       !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
-      'Cannot overwrite existing space in metadata'
+      'Cannot overwrite existing space in metadata',
     );
 
     (this._metadata.spaces ??= []).push(record);
@@ -149,25 +155,17 @@ export class MetadataStore {
   }
 
   async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
-    space.dataTimeframe = timeframe;
+    this._getSpace(spaceKey).dataTimeframe = timeframe;
     await this._save();
   }
 
-  async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
-    space.snapshot = snapshot;
+  async setCache(spaceKey: PublicKey, cache: SpaceCache) {
+    this._getSpace(spaceKey).cache = cache;
     await this._save();
   }
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
-    const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
-
+    const space = this._getSpace(spaceKey);
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();

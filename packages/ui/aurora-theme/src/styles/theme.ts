@@ -6,34 +6,48 @@ import get from 'lodash.get';
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import {
-  listTheme,
-  listOsTheme,
+  avatarTheme,
   buttonTheme,
   buttonOsTheme,
+  dialogTheme,
+  dialogOsTheme,
   dropdownMenuTheme,
   inputTheme,
   inputOsTheme,
-  mainTheme
+  listTheme,
+  listOsTheme,
+  mainTheme,
+  messageTheme,
+  tooltipTheme,
+  tagTheme,
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
+
+  avatar: avatarTheme,
   button: buttonTheme,
+  dialog: dialogTheme,
   dropdownMenu: dropdownMenuTheme,
   input: inputTheme,
   list: listTheme,
-  main: mainTheme
+  main: mainTheme,
+  message: messageTheme,
+  tag: tagTheme,
+  tooltip: tooltipTheme,
 };
 
 export const osTheme: Theme<Record<string, any>> = {
   ...theme,
   themeName: () => 'dxos',
+
   button: buttonOsTheme,
+  dialog: dialogOsTheme,
   input: inputOsTheme,
-  list: listOsTheme
+  list: listOsTheme,
 };
 
-export const tx = <P extends Record<string, any>>(
+export const appTx = <P extends Record<string, any>>(
   path: string,
   defaultClassName: string,
   styleProps: P,
