@@ -13,8 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: nrwl/nx-set-shas@v3
-
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
 
