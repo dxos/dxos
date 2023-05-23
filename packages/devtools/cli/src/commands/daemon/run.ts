@@ -17,9 +17,11 @@ export default class Run extends BaseCommand {
     ...BaseCommand.flags,
     listen: Flags.string({
       description: 'Expose services.',
+      required: true,
     }),
     profile: Flags.string({
       description: 'Profile to use.',
+      required: true,
     }),
   };
 
@@ -27,7 +29,7 @@ export default class Run extends BaseCommand {
     const {
       flags: { listen, profile },
     } = await this.parse(Run);
-    await runServices({ listen: listen!, profile: profile! });
+    await runServices({ listen, profile });
 
     this.log('daemon started');
   }
