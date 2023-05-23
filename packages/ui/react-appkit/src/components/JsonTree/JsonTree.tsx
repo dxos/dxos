@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { TreeItem, TreeItemBody, TreeItemHeading, TreeRoot, TreeProps, TreeBranch } from './Tree';
+import { TreeItem, TreeItemBody, TreeItemHeading, TreeRoot, TreeProps, TreeBranch } from '@dxos/aurora';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
