@@ -195,7 +195,7 @@ export abstract class BaseCommand extends Command {
   async getClient() {
     await this.execWithDaemon(async (daemon) => {
       if (!(await daemon.isRunning(process.env.DX_PROFILE))) {
-        await daemon.start();
+        await daemon.start(process.env.DX_PROFILE);
       }
     });
 
