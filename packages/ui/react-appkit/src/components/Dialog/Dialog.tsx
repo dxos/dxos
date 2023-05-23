@@ -53,7 +53,6 @@ export interface DialogProps extends Pick<DialogRootProps, 'open' | 'defaultOpen
  */
 export const Dialog = ({
   title,
-  titleVisuallyHidden,
   description,
   openTrigger,
   closeTriggers,
@@ -72,9 +71,8 @@ export const Dialog = ({
   });
 
   const dialogOverlayAndContent = (
-    <DialogOverlay forceMount {...slots.overlay} classNames={slots.overlay?.classNames}>
+    <DialogOverlay {...slots.overlay} classNames={slots.overlay?.classNames}>
       <DialogContent
-        forceMount
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         {...slots.content}
@@ -133,7 +131,7 @@ export const Dialog = ({
   return (
     <DialogRoot open={open} onOpenChange={setOpen}>
       {openTrigger && <DialogTrigger asChild>{openTrigger}</DialogTrigger>}
-      {mountAsSibling ? dialogOverlayAndContent : <DialogPortal forceMount>{dialogOverlayAndContent}</DialogPortal>}
+      {mountAsSibling ? dialogOverlayAndContent : <DialogPortal>{dialogOverlayAndContent}</DialogPortal>}
     </DialogRoot>
   );
 };

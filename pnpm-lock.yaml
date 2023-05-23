@@ -4243,7 +4243,6 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-accordion': ^1.1.1
       '@radix-ui/react-alert-dialog': ^1.0.3
-      '@radix-ui/react-dialog': ^1.0.3
       '@radix-ui/react-radio-group': ^1.1.2
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
@@ -4273,7 +4272,6 @@ importers:
       '@dxos/util': link:../../common/util
       '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4

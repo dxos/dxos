@@ -14,21 +14,24 @@ export type DialogStyleProps = {
 
 const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
 
-export const dialogAppOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed inset-0 z-20', dialogLayoutFragment, ...etc);
+export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+  mx('fixed z-20 inset-0', dialogLayoutFragment, ...etc);
 
 export const dialogOsOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed inset-0 z-50 backdrop-blur', dialogLayoutFragment, ...etc);
+  mx('fixed z-40 inset-0 backdrop-blur', dialogLayoutFragment, ...etc);
 
-export const dialogAppContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout }, ...etc) =>
+export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout }, ...etc) =>
   mx(
     'flex flex-col',
-    !inOverlayLayout && 'fixed z-50 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
+    !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
+    'is-[95vw] md:is-full max-is-md rounded-xl p-4',
     'shadow-2xl bg-white dark:bg-neutral-800',
     defaultFocus,
     ...etc,
   );
+
+export const dialogOsContent: ComponentFunction<DialogStyleProps> = (props, ...etc) =>
+  mx('is-full min-is-[260px] max-is-[320px] rounded-md shadow-md backdrop-blur-md', ...etc);
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx(
@@ -41,12 +44,9 @@ export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...
 export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('mlb-2', defaultDescription, srOnly && 'sr-only', ...etc);
 
-export const dialogOsContent: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('is-full min-is-[260px] max-is-[320px] rounded-md shadow-md backdrop-blur-md', ...etc);
-
 export const dialogTheme: Theme<DialogStyleProps> = {
-  overlay: dialogAppOverlay,
-  content: dialogAppContent,
+  overlay: dialogOverlay,
+  content: dialogContent,
   title: dialogTitle,
   description: dialogDescription,
 };

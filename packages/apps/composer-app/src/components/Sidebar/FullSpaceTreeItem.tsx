@@ -227,7 +227,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         open={restoreDialogOpen}
         onOpenChange={setRestoreDialogOpen}
         title={t('confirm restore title')}
-        slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+        slots={{ overlay: { classNames: 'backdrop-blur-sm' } }}
       >
         <p className='mlb-4'>{t('confirm restore body')}</p>
         <FileUploader

@@ -378,8 +378,8 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
             const key = { source: 'com.github', id: ghId };
             // TODO(wittjosiah): Stop overwriting document.meta.
             document.meta = { keys: [key] };
-            setGhBindOpen(nextOpen);
           }
+          setGhBindOpen(nextOpen);
         }}
         closeTriggers={[
           <Button key='done' variant='primary'>
