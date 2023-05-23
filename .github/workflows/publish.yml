@@ -12,6 +12,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: nrwl/nx-set-shas@v3
+
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
 
@@ -45,7 +47,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm nx run-many --target=build --skip-nx-cache
+        run: pnpm nx run-many --target=build --parallel 3
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           NODE_ENV: production
@@ -55,7 +57,7 @@ jobs:
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
       - name: Bundle Vault
-        run: pnpm nx run-many --target=bundle --projects=vault --skip-nx-cache
+        run: pnpm nx bundle vault --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
@@ -72,7 +74,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bundle
-        run: pnpm nx run-many --target=bundle --projects=devtools-extension
+        run: pnpm nx bundle devtools-extension --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production

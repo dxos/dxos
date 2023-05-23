@@ -71,6 +71,9 @@
           "env": "DX_ENVIRONMENT"
         },
         {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
           "env": "DX_SENTRY_DESTINATION"
         },
         {
