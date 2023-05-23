@@ -44,7 +44,7 @@ export const reflectionsOfKind = (p, ...kind) => {
     var _a;
     return [
         ...((Array.isArray(kind) ? kind : [kind]).indexOf(p.kind) >= 0 ? [p] : []),
-        ...(((_a = p.children) === null || _a === void 0 ? void 0 : _a.length) ? p.children.map((c) => reflectionsOfKind(c, ...kind)).flat() : [])
+        ...(((_a = p.children) === null || _a === void 0 ? void 0 : _a.length) ? p.children.map((c) => reflectionsOfKind(c, ...kind)).flat() : []),
     ];
 };
 export const packagesInProject = (p) => {

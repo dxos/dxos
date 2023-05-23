@@ -1,5 +1,5 @@
 # Class `DatabaseRouter`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database-router.d.ts:18]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/router.d.ts:19]()</sub>
 
 
 Manages cross-space databases.

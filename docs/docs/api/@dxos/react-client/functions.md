@@ -36,6 +36,19 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
+### [fromCliEnv(\[options\])]()
+
+
+
+Connects to locally running CLI daemon.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`options`: <code>[FromCliEnvOptions](/api/@dxos/react-client/types/FromCliEnvOptions)</code>
+
 ### [fromIFrame(\[config\], \[options\])]()
 
 
@@ -76,7 +89,7 @@ Arguments:
 
 
 
-Returns: <code>object is [TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+Returns: <code>object is [TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
 
 Arguments: 
 
@@ -94,6 +107,18 @@ Returns: <code>FunctionComponent&lt;P&gt;</code>
 Arguments: 
 
 `baseComponent`: <code>FunctionComponent&lt;P&gt;</code>
+
+### [setStateFromSnapshot(obj, snapshot)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`obj`: <code>[EchoObject](/api/@dxos/react-client/classes/EchoObject)&lt;any&gt;</code>
+
+`snapshot`: <code>ObjectSnapshot</code>
 
 ### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
 
@@ -232,20 +257,24 @@ Returns: <code>NetworkStatus</code>
 
 Arguments: none
 
-### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
+### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 
 
 Create subscription.
 
 
-Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;[]</code>
 
 Arguments: 
 
 `space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 `filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)&lt;T&gt;</code>
+
+`options`: <code>[QueryOptions](/api/@dxos/react-client/types/QueryOptions)</code>
+
+`deps`: <code>any[]</code>
 
 ### [useResultSet(resultSet)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/util/useResultSet.ts#L17)
 

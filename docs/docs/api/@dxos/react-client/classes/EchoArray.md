@@ -1,8 +1,8 @@
 # Class `EchoArray`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/echo-array.d.ts:5]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/array.d.ts:5]()</sub>
 
 
-
+Array of complex or scalar values.
 
 
 ## Constructors
