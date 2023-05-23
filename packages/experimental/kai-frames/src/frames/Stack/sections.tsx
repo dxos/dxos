@@ -175,7 +175,7 @@ export const FileSelector: ActionDialog = ({ stack, section, onAction, onClose }
       onOpenChange={() => onClose()}
       title='Select image'
       closeLabel='Close'
-      slots={{ content: { className: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[400px] md:max-h-[640px]' } }}
+      slots={{ content: { classNames: 'overflow-hidden max-w-full max-h-[50vh] md:max-w-[400px] md:max-h-[640px]' } }}
     >
       <FilePlugin space={space} onSelect={handleSelect} disableDownload fileTypes={imageTypes} />
     </Dialog>

@@ -5,9 +5,9 @@
 import React, { useContext } from 'react';
 
 import { Button, DensityProvider, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
-import { mx, osTx } from '@dxos/aurora-theme';
+import { osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
-import { defaultDialogContent, defaultOverlay, useShell } from '@dxos/react-shell';
+import { useShell } from '@dxos/react-shell';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { ResolverTree } from './ResolverTree';
@@ -23,8 +23,11 @@ export const ResolverDialog = () => {
   return (
     <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
       <DensityProvider density='fine'>
-        <div role='none' className={mx(defaultOverlay, 'static bs-full')}>
-          <div role='none' className={mx(defaultDialogContent, 'p-2 bs-64 shadow-none bg-transparent')}>
+        <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+          <div
+            role='none'
+            className={osTx('dialog.content', 'dialog--resolver__content', {}, 'p-2 bs-64 shadow-none bg-transparent')}
+          >
             {!space ? (
               <ResolverTree />
             ) : (
