@@ -159,11 +159,6 @@ export class MetadataStore {
     await this._save();
   }
 
-  async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
-    this._getSpace(spaceKey).snapshot = snapshot;
-    await this._save();
-  }
-
   async setCache(spaceKey: PublicKey, cache: SpaceCache) {
     this._getSpace(spaceKey).cache = cache;
     await this._save();
