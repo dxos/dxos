@@ -37,8 +37,25 @@ export const createAccessObserver = () => {
 export const logObjectAccess = (obj: ObservableObject) => {
   ACCESS_OBSERVER_STACK.at(-1)?.accessed.add(obj);
   // TODO(wittjosiah): Print a helpful warning if we're accessing data without observing it.
+  //   Needs to only print once per component.
+  // if (this._accessObserverStack.length === 0) {
+  //   const currentComponent = getCurrentReactComponent();
+  //   if (currentComponent) {
+  //     log.warn(
+  //       `Warning: Data access in a React component without \`observer\`. Component will not update correctly.\n  at ${currentComponent.fileName}:${currentComponent.lineNumber}`
+  //     );
+  //   }
+  // }
 };
 
+/**
+ * Subscribe to database updates.
+ * Calls the callback when any object from the selection changes.
+ * Calls the callback when the selection changes.
+ * Always calls the callback on the first `selection.update` call.
+ */
+// TODO(burdon): Add filter?
+// TODO(burdon): Immediately trigger callback.
 export const createSubscription = (
   observer: AccessObserver,
   onUpdate: (info: UpdateInfo) => void,

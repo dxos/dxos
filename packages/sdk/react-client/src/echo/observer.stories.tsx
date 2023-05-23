@@ -7,9 +7,9 @@ import React, { useMemo } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/client';
+import { observer } from '@dxos/observable-object/react';
 
 import { ClientDecorator, setupPeersInSpace } from '../testing';
-import { observer } from './observer';
 import { useSpace } from './useSpaces';
 
 export default {

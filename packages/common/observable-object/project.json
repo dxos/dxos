@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/observable-object/src/index.ts"
+          "packages/common/observable-object/src/index.ts",
+          "packages/common/observable-object/src/react/index.ts"
         ],
         "outputPath": "packages/common/observable-object/dist/lib"
       },
