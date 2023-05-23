@@ -100,13 +100,13 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   return (
     <TreeItem
       collapsible
-      open={open}
-      onOpenChange={setOpen}
+      open={!disabled && open}
+      onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
       classNames={['mbe-1 block', disabled && defaultDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
+        <TreeItemOpenTrigger disabled={disabled} {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon
             {...(hasActiveDocument && !open && { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' })}
           />
