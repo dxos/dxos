@@ -1,7 +1,7 @@
 # @dxos/composer-extension
 
 ```bash
-pnpm -w nx bundle composer-extension --watch --mode development
+pnpm -w nx serve composer-extension
 ```
 
 Set `TARGET=firefox` to run in Firefox.
