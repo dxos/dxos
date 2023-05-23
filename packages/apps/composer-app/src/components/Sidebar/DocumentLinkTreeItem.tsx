@@ -15,10 +15,12 @@ import {
   TooltipTrigger,
   Button,
   TooltipRoot,
+  TreeItem,
+  TreeItemHeading,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
-import { DropdownMenu, DropdownMenuItem, TooltipContent, TreeItem, TreeItemHeading } from '@dxos/react-appkit';
+import { DropdownMenu, DropdownMenuItem, TooltipContent } from '@dxos/react-appkit';
 import { observer, Space } from '@dxos/react-client';
 
 import { getPath } from '../../router';

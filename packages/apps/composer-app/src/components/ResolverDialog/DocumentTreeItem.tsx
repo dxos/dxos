@@ -6,10 +6,9 @@ import { Article, ArticleMedium } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation, TreeItem, TreeItemHeading } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { TreeItem, TreeItemHeading } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
 export const DocumentTreeItem = observer(({ document }: { document: Document }) => {

@@ -79,12 +79,14 @@ export const Collapsible = {
     return (
       <List {...args}>
         {items.map(({ id, text, body }, index) => (
-          <ListItem key={id} id={id} collapsible={index !== 2}>
-            {index !== 2 ? <ListItemOpenTrigger /> : <MockListItemOpenTrigger />}
-            <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
-            <ListItemEndcap>
-              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItemEndcap>
+          <ListItem key={id} id={id} collapsible={index !== 2} defaultOpen={index % 2 === 0}>
+            <div role='none' className='grow flex'>
+              {index !== 2 ? <ListItemOpenTrigger /> : <MockListItemOpenTrigger />}
+              <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
+              <ListItemEndcap>
+                <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+              </ListItemEndcap>
+            </div>
             {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
           </ListItem>
         ))}

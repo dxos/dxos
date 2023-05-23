@@ -4,8 +4,7 @@
 
 import React, { useContext } from 'react';
 
-import { Button, useId, useTranslation } from '@dxos/aurora';
-import { TreeRoot } from '@dxos/react-appkit';
+import { Button, TreeRoot, useId, useTranslation } from '@dxos/aurora';
 import { observer, useClient, useSpaces } from '@dxos/react-client';
 
 import { bindSpace } from '../../util';
