@@ -4,10 +4,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
 import { Contact, DocumentStack, Message } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
 import { observer, useConfig } from '@dxos/react-client';
-import { Button } from '@dxos/react-components';
 
 import { AddressSection, CardProps } from '../../cards';
 import { formatShortDate, sortMessage } from '../Message';
@@ -79,8 +79,8 @@ export const ContactStack = observer(({ space, object }: CardProps<Contact>) => 
           <Stack<DocumentStack.Section>
             slots={{
               section: {
-                className: 'py-4'
-              }
+                className: 'py-4',
+              },
             }}
             sections={stack.sections}
             StackSection={StackSection}

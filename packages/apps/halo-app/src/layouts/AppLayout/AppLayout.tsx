@@ -5,9 +5,9 @@
 import React, { ReactNode, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { Button, useTranslation } from '@dxos/aurora';
 import { Menubar, useSafeSpaceKey, Separator, ProfileMenu, SpacesLink } from '@dxos/react-appkit';
 import { useClient, useIdentity, useSpace } from '@dxos/react-client';
-import { Button, useTranslation } from '@dxos/react-components';
 
 export interface AppLayoutProps {
   spacesPath?: string;
@@ -52,7 +52,7 @@ export const AppLayout = ({ spacesPath = '/spaces', manageProfilePath, menubarCo
           </ProfileMenu>
         )}
       </Menubar>
-      {/* todo(thure): multiple Menubars messes up keyboard a11y */}
+      {/* TODO(thure): multiple Menubars messes up keyboard a11y */}
       <Menubar>
         <Separator className='grow' />
         {menubarContent}

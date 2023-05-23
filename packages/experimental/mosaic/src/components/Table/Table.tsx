@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { MutableRefObject, useMemo } from 'react';
 import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Think about re-exports.
 export type TableCellProps<T extends object = {}> = CellProps<T>;
@@ -23,9 +23,9 @@ const getStyles = (props: any, align = 'left') => [
     style: {
       display: 'flex',
       alignItems: 'start',
-      justifyContent: align === 'right' ? 'flex-end' : 'flex-start' // TODO(burdon): items-center row.
-    }
-  }
+      justifyContent: align === 'right' ? 'flex-end' : 'flex-start', // TODO(burdon): items-center row.
+    },
+  },
 ];
 
 const headerProps = (props: any, { column }: { column: any }) => getStyles(props, column.align);
@@ -33,8 +33,9 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
 export type TableSlots = {
-  root?: { className: string };
-  header?: { className: string };
+  root?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
+  header?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
+  body?: { className?: string; ref?: MutableRefObject<HTMLDivElement | null> };
   row?: { className: string };
   cell?: { className: string };
   selected?: { className: string };
@@ -59,23 +60,23 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
       // When using the useFlexLayout:
       minWidth: 30, // minWidth is only used as a limit for resizing
       width: 240, // width is used for both the flex-basis and flex-grow
-      maxWidth: 240 // maxWidth is only used as a limit for resizing
+      maxWidth: 240, // maxWidth is only used as a limit for resizing
     }),
-    []
+    [],
   );
 
   const { getTableProps, headerGroups, prepareRow, rows } = useTable<T>(
     { columns, data, defaultColumn },
     useResizeColumns,
-    useFlexLayout
+    useFlexLayout,
   );
 
   return (
-    <div className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
+    <div ref={slots.root?.ref} className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         {/* TODO(burdon): Header is transparent. */}
-        <div className='thead sticky top-0'>
+        <div ref={slots.header?.ref} className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
             <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2rem] border-b'>
@@ -99,7 +100,7 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-auto'>
+        <div ref={slots.body?.ref} className={mx('tbody overflow-y-auto', slots.body?.className)}>
           {rows.map((row) => {
             prepareRow(row);
 

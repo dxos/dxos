@@ -6,11 +6,12 @@ import { DownloadSimple } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
+import { Button, useMediaQuery } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { EditableObjectList } from '@dxos/mosaic';
 import { Space, useConfig, useQuery } from '@dxos/react-client';
-import { useMediaQuery } from '@dxos/react-components';
 
 import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
@@ -51,8 +52,7 @@ export const FilePlugin: FC<FileListProps> = ({ space, disableDownload, fileType
   };
 
   // TODO(burdon): Factor out (ipfs hook/wrapper).
-  const handleDownload = async (objectId: string) => {
-    const object = objects.find((object) => object.id === objectId);
+  const handleDownload = async (object: File) => {
     if (object?.cid) {
       const url = urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid);
       const response = await fetch(url);
@@ -68,16 +68,21 @@ export const FilePlugin: FC<FileListProps> = ({ space, disableDownload, fileType
     }
   };
 
+  const DownloadAction = ({ object }: { object: File }) => (
+    <Button variant='ghost' onClick={() => handleDownload(object)}>
+      <DownloadSimple className={getSize(6)} />
+    </Button>
+  );
+
   return (
     <div className='flex flex-col w-full'>
       <EditableObjectList<File>
         objects={objects}
         // selected={objectId}
         Icon={FileFrameRuntime.Icon}
+        Action={disableDownload ? undefined : DownloadAction}
         getTitle={(object) => object.name}
-        Action={DownloadSimple}
         onSelect={onSelect}
-        onAction={disableDownload ? undefined : handleDownload}
         onUpdate={handleUpdate}
       />
 

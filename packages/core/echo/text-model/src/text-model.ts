@@ -45,7 +45,7 @@ class TextModelStateMachine implements StateMachine<TextModelState, TextMutation
     return {
       data: encodeStateAsUpdate(this._text.doc),
       kind: this._text.kind,
-      field: this._text.field
+      field: this._text.field,
     };
   }
 
@@ -62,7 +62,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     type: 'dxos:model/text',
     stateMachine: () => new TextModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.text.TextMutation'),
-    snapshotCodec: schema.getCodecForType('dxos.echo.model.text.TextSnapshot')
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.text.TextSnapshot'),
   };
 
   private _unsubscribe: (() => void) | undefined;
@@ -125,14 +125,14 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     if (!remote) {
       await this.write({
         clientId: this.doc.clientID,
-        update
+        update,
       });
     }
   }
 
   private _transact(fn: () => void) {
     return this.doc.transact(fn, {
-      docClientId: this.doc.clientID
+      docClientId: this.doc.clientID,
     });
   }
 
@@ -201,7 +201,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   }
 
   /**
-   * Creates a new <paragrapgh> element with the given text content and inserts it at the given index.
+   * Creates a new `&lt;paragraph&gt;` element with the given text content and inserts it at the given index.
    *
    * Throws if the `Text` instance is plain text.
    */

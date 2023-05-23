@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -21,9 +22,8 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
@@ -42,14 +42,15 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@sentry/vite-plugin": "^0.4.0",
+    "@dxos/aurora-theme": "workspace:*",
+    "@sentry/vite-plugin": "^0.7.2",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "typescript": "^4.8.4",
-    "vite": "^4.2.0",
+    "vite": "^4.3.0",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }

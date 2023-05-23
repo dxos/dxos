@@ -4,7 +4,7 @@
 
 import React, { ReactNode } from 'react';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Remove.
 import { styles } from './util';
@@ -35,7 +35,7 @@ export const Card = ({ slots = {}, children }: CardProps) => {
         styles.frame,
         styles.body,
         styles.divide,
-        slots.root?.className
+        slots.root?.className,
       )}
     >
       {children}

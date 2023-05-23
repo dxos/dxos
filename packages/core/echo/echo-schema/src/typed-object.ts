@@ -6,10 +6,11 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
-import { base, data, proxy, schema } from './defs';
-import { EchoArray } from './echo-array';
+import { EchoArray } from './array';
+import { base, data, proxy, readOnly, schema } from './defs';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
@@ -36,7 +37,7 @@ export type ConvertVisitors = {
 };
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
-  onRef: (id, obj) => ({ '@id': id })
+  onRef: (id, obj) => ({ '@id': id }),
 };
 
 /**
@@ -62,7 +63,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   // prettier-ignore
   constructor(
     initialProps?: T,
-    private readonly _schemaType?: EchoSchemaType
+    private readonly _schemaType?: EchoSchemaType,
+    private readonly _opts?: TypedObjectOpts
   ) {
     super(DocumentModel);
 
@@ -113,6 +115,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]?._schemaType;
   }
 
+  /**
+   * Returns boolean. If `true`, read only access is activated.
+   */
+  get [readOnly](): boolean {
+    return !!this[base]?._opts?.readOnly;
+  }
+
   /** Deletion. */
   get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
@@ -132,8 +141,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
       ...this[base]._convert({
-        onRef: (id, obj?) => obj ?? { '@id': id }
-      })
+        onRef: (id, obj?) => obj ?? { '@id': id },
+      }),
     };
   }
 
@@ -168,14 +177,14 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       '@id': this.id,
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
-      ...convert(this._model?.toObject())
+      ...convert(this._model?.toObject()),
     };
   }
 
   [inspect.custom](
     depth: number,
     options: InspectOptionsStylized,
-    inspect_: (value: any, options?: InspectOptionsStylized) => string
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
@@ -270,6 +279,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
         } else {
           const sub = this._createProxy({}, key);
+          this._mutate(this._model.builder().set(key, {}).build());
           for (const [subKey, subValue] of Object.entries(value)) {
             sub[subKey] = subValue;
           }
@@ -321,7 +331,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         // TODO(burdon): Return other properties?
         return {
           enumerable: true,
-          configurable: true
+          configurable: true,
         };
       },
 
@@ -347,20 +357,24 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
+        if (this._opts?.readOnly) {
+          log.warn('Read only access');
+          return false;
+        }
         if (!isValidKey(property)) {
           return Reflect.set(this, property, value, receiver);
         }
 
         this._set(getProperty(property as string), value);
         return true;
-      }
+      },
     });
   }
 
   override _beforeBind() {
     assert(this._linkCache);
     for (const obj of this._linkCache.values()) {
-      this._database!.add(obj);
+      this._database!.add(obj as TypedObject);
     }
     this._linkCache = undefined;
   }
@@ -371,7 +385,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   _linkObject(obj: EchoObject) {
     if (this._database) {
-      this._database.add(obj);
+      this._database.add(obj as TypedObject);
     } else {
       assert(this._linkCache);
       this._linkCache.set(obj.id, obj);
@@ -401,9 +415,13 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 //
 
 /**
- * Base class for generated document types and dynamic objects.
+ * Base class for generated document types and expando objects.
  */
-export type TypedObject<T extends Record<string, any> = { [key: string]: any }> = TypedObjectImpl<T> & T;
+export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
+
+export type TypedObjectOpts = {
+  readOnly?: boolean;
+};
 
 type TypedObjectConstructor = {
   /**
@@ -411,9 +429,10 @@ type TypedObjectConstructor = {
    * @param initialProps Initial properties.
    * @param _schemaType Schema type for generated types.
    */
-  new <T extends Record<string, any> = { [key: string]: any }>(
+  new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    _schemaType?: EchoSchemaType
+    _schemaType?: EchoSchemaType,
+    opts?: TypedObjectOpts,
   ): TypedObject<T>;
 };
 
@@ -428,11 +447,10 @@ type ExpandoConstructor = {
   /**
    * Create a new document.
    * @param initialProps Initial properties.
-   * @param _schemaType Schema type for generated types.
    */
   new (initialProps?: Record<string, any>): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
 
-export type Expando = TypedObject<{ [key: string]: any }>;
+export type Expando = TypedObject;

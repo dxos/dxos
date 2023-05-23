@@ -3,34 +3,49 @@
 //
 
 import { Event } from '@dxos/async';
-import { Item } from '@dxos/echo-db';
+import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 
 import { EchoObject } from './object';
-import { TypedObject, isTypedObject } from './typed-object';
+import { isTypedObject, TypedObject } from './typed-object';
 
-export type PropertiesFilter = Record<string, any>;
-export type OperatorFilter<T extends TypedObject> = (document: T) => boolean;
-export type Filter<T extends TypedObject> = PropertiesFilter | OperatorFilter<T>;
+// TODO(burdon): Test suite.
+// TODO(burdon): Reconcile with echo-db/database/selection.
 
-// NOTE: `__phantom` property forces type.
+// TODO(burdon): Multi-sort option.
+export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
+
+// TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
+export type PropertyFilter = Record<string, any>;
+
+export type OperatorFilter<T extends TypedObject> = (object: T) => boolean;
+
+export type Filter<T extends TypedObject> = PropertyFilter | OperatorFilter<T>;
+
+// NOTE: `__phantom` property forces TS type check.
 export type TypeFilter<T extends TypedObject> = { __phantom: T } & Filter<T>;
 
 export type Subscription = () => void;
 
-// TODO(burdon): Create general base class for this.
+/**
+ * Predicate based query.
+ */
 export class Query<T extends TypedObject = TypedObject> {
-  constructor(
-    private readonly _dbObjects: Map<string, EchoObject>,
-    private readonly _updateEvent: Event<Item[]>,
-    private readonly _filter: Filter<any>
-  ) {}
-
+  private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined;
+
+  constructor(
+    private readonly _objects: Map<string, EchoObject>,
+    private readonly _updateEvent: Event<Item[]>,
+    filter: Filter<any> | Filter<any>[],
+    options?: QueryOptions,
+  ) {
+    this._filters.push(filterDeleted(options?.deleted));
+    this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
+  }
 
   get objects(): T[] {
     if (!this._cache) {
-      // TODO(burdon): Sort.
-      this._cache = Array.from(this._dbObjects.values()).filter((obj): obj is T => filterMatcher(this._filter, obj));
+      this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
     }
 
     return this._cache;
@@ -39,8 +54,8 @@ export class Query<T extends TypedObject = TypedObject> {
   subscribe(callback: (query: Query<T>) => void): Subscription {
     return this._updateEvent.on((updated) => {
       const changed = updated.some((object) => {
-        if (this._dbObjects.has(object.id)) {
-          const match = filterMatcher(this._filter, this._dbObjects.get(object.id)!);
+        if (this._objects.has(object.id)) {
+          const match = this._match(this._objects.get(object.id)! as T);
           const exists = this._cache?.find((obj) => obj.id === object.id);
           return match || (exists && !match);
         } else {
@@ -54,29 +69,39 @@ export class Query<T extends TypedObject = TypedObject> {
       }
     });
   }
+
+  _match(object: T) {
+    return isTypedObject(object) && this._filters.every((filter) => match(object, filter));
+  }
 }
 
-// TODO(burdon): Create separate test.
-const filterMatcher = (filter: Filter<any>, object: EchoObject): object is TypedObject => {
-  if (!isTypedObject(object)) {
-    return false;
-  }
+const filterDeleted = (option?: ShowDeletedOption) => (object: TypedObject) => {
   if (object.__deleted) {
-    return false;
+    if (option === undefined || option === ShowDeletedOption.HIDE_DELETED) {
+      return false;
+    }
+  } else {
+    if (option === ShowDeletedOption.SHOW_DELETED_ONLY) {
+      return false;
+    }
   }
 
-  if (typeof filter === 'object' && filter['@type'] && object.__typename !== filter['@type']) {
-    return false;
-  }
+  return true;
+};
 
+const match = (object: TypedObject, filter: Filter<any>): object is TypedObject => {
   if (typeof filter === 'function') {
     return filter(object);
-  } else if (typeof filter === 'object' && filter !== null) {
+  }
+
+  if (typeof filter === 'object') {
     for (const key in filter) {
+      const value = filter[key];
       if (key === '@type') {
-        continue;
-      }
-      if ((object as any)[key] !== filter[key]) {
+        if (object.__typename !== value) {
+          return false;
+        }
+      } else if ((object as any)[key] !== value) {
         return false;
       }
     }

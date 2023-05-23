@@ -5,10 +5,10 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useTranslation } from '@dxos/aurora';
 import { Identity } from '@dxos/client';
-import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
+import { Heading, useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const SpacePage = () => {
   const { t } = useTranslation('halo');
@@ -18,7 +18,7 @@ const SpacePage = () => {
   const members = useMembers(spaceKey);
   const memberProfiles = useMemo(
     () => members.map(({ identity }) => identity).filter((identity): identity is Identity => !!identity),
-    [members]
+    [members],
   );
 
   return (

@@ -6,7 +6,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Bounds, Location, Point, serializeLocation } from '../../layout';
 
@@ -52,7 +52,7 @@ export const Cell = ({ children, location, bounds, slots = {}, onCreate }: CellP
           'group relative flex w-full h-full justify-center items-center snap-center',
           'rounded-lg cursor-pointer select-none border border-gray-300 border-dashed',
           slots.root?.className,
-          isOver && mx('transition ease-in-out duration-500', slots?.over?.className ?? 'bg-gray-200 border-solid')
+          isOver && mx('transition ease-in-out duration-500', slots?.over?.className ?? 'bg-gray-200 border-solid'),
         )}
       >
         {children || (

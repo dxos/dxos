@@ -5,7 +5,8 @@
 import { ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { PageNumber, Pager } from './Pager';
 import { Presenter } from './Presenter';
@@ -24,7 +25,7 @@ export const Deck = ({
   slide: controlledSlide = 1,
   fullscreen,
   onSlideChange,
-  onToggleFullscreen
+  onToggleFullscreen,
 }: DeckProps) => {
   const [slide, setSlide] = useState(controlledSlide); // TODO(burdon): Move up.
   useEffect(() => {
@@ -43,7 +44,7 @@ export const Deck = ({
 
   const Expand = () => {
     return (
-      <Button variant='ghost' className='mx-2 my-4 text-gray-400' onClick={() => onToggleFullscreen?.(!fullscreen)}>
+      <Button variant='ghost' classNames='mx-2 my-4 text-gray-400' onClick={() => onToggleFullscreen?.(!fullscreen)}>
         <ArrowsOut className={mx(getSize(8))} />
       </Button>
     );

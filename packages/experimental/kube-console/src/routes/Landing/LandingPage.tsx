@@ -6,7 +6,7 @@ import { Target } from '@phosphor-icons/react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { DXOSHorizontalType } from '@dxos/react-icons';
 
 import { Kube } from '../../components';

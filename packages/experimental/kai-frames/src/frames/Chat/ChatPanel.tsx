@@ -7,7 +7,7 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Message } from '@dxos/kai-types';
-import { Input } from '@dxos/react-components';
+import { Input } from '@dxos/react-appkit';
 
 import { ChatMessage } from './ChatMessage';
 
@@ -46,7 +46,7 @@ export const ChatPanel = ({ messages = [], onCreate, onSelect, onDelete }: ChatP
       if (gap > 5) {
         blocks.push({
           messages: [message],
-          start: new Date(message.date)
+          start: new Date(message.date),
         });
       } else {
         current.messages.push(message);
@@ -54,7 +54,7 @@ export const ChatPanel = ({ messages = [], onCreate, onSelect, onDelete }: ChatP
 
       return blocks;
     },
-    [{ messages: [], start: new Date() }]
+    [{ messages: [], start: new Date() }],
   );
 
   return (
@@ -100,8 +100,8 @@ export const ChatPanel = ({ messages = [], onCreate, onSelect, onDelete }: ChatP
             input: {
               autoFocus: true,
               className: 'w-full bg-white py-2',
-              onKeyDown: (event) => event.key === 'Enter' && handleCreateMessage(text)
-            }
+              onKeyDown: (event) => event.key === 'Enter' && handleCreateMessage(text),
+            },
           }}
           value={text}
           onChange={(event) => setText(event.target.value)}

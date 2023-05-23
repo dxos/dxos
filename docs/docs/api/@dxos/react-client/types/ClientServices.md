@@ -26,6 +26,10 @@ Type: <code>IdentityService</code>
 Type: <code>InvitationsService</code>
 
 
+### [LoggingService]()
+Type: <code>LoggingService</code>
+
+
 ### [NetworkService]()
 Type: <code>NetworkService</code>
 
@@ -36,7 +40,3 @@ Type: <code>SpacesService</code>
 
 ### [SystemService]()
 Type: <code>SystemService</code>
-
-
-### [TracingService]()
-Type: <code>TracingService</code>

@@ -25,7 +25,7 @@ const createPair = () => {
     sendSignal: async (signal) => {
       await connection2.signal(signal);
     },
-    initiator: true
+    initiator: true,
   });
 
   afterTest(() => connection1.destroy());
@@ -37,7 +37,7 @@ const createPair = () => {
     sendSignal: async (signal) => {
       await connection1.signal(signal);
     },
-    initiator: false
+    initiator: false,
   });
 
   afterTest(() => connection2.destroy());
@@ -50,7 +50,7 @@ const createPair = () => {
     stream2,
     peer1Id,
     peer2Id,
-    topic
+    topic,
   };
 };
 
@@ -65,7 +65,7 @@ describe('MemoryTransport', () => {
       range(10).map(async () => {
         const { stream1, stream2 } = createPair();
         await TestStream.assertConnectivity(stream1, stream2);
-      })
+      }),
     );
   });
 });

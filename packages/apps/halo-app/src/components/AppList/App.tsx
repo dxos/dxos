@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { Avatar, Group } from '@dxos/react-components';
+import { Avatar, Group } from '@dxos/react-appkit';
 
 export interface AppProps {
   module: Module;
@@ -21,7 +21,7 @@ export const App = (props: AppProps) => {
       href={props.launchUrl}
     >
       <Group
-        className='mbe-2'
+        className='mbe-2 p-2 rounded'
         label={{
           level: 2,
           className: 'text-lg font-body flex gap-2 items-center',

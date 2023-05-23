@@ -19,8 +19,8 @@ export const useResultSet = <T>(resultSet: ResultSet<T>): T[] =>
     useMemo(
       () => ({
         getCurrentValue: () => resultSet.value,
-        subscribe: (cb: any) => resultSet.subscribe(cb)
+        subscribe: (cb: any) => resultSet.subscribe(cb),
       }),
-      [resultSet]
-    )
+      [resultSet],
+    ),
   );

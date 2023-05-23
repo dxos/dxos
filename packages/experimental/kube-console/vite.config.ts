@@ -5,11 +5,11 @@
 // import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
@@ -23,7 +23,14 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   server: {
     host: true,
-    https: process.env.HTTPS === 'true'
+    https: process.env.HTTPS === 'true',
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
 
   build: {
@@ -43,8 +50,9 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, consoleThemeExtension]
     }),
@@ -59,7 +67,7 @@ export default defineConfig({
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
-        families: ['Roboto', 'Roboto Mono', 'DM Sans', 'DM Mono', 'Montserrat']
+        families: ['DM Sans', 'DM Mono']
       },
 
       custom: {
@@ -74,20 +82,18 @@ export default defineConfig({
       }
     }),
 
-    // TODO(burdon): Disabled due to permissions issue.
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    /*
-    ...(process.env.NODE_ENV === 'production'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'console',
-            include: './out/console',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : []),
-    */
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    // TODO(wittjosiah): Create sentry project.
+    // sentryVitePlugin({
+    //   org: 'dxos',
+    //   project: 'kube-console',
+    //   sourcemaps: {
+    //     assets: './packages/experimental/kube-console/out/console/**'
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   dryRun: !process.env.CI
+    // }),
 
     // https://www.bundle-buddy.com/rollup
     {

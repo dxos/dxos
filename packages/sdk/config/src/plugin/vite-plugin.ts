@@ -20,9 +20,9 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
         define[key] = JSON.stringify(value);
         return define;
       },
-      {} as { [key: string]: string }
+      {} as { [key: string]: string },
     );
 
     return { define };
-  }
+  },
 });

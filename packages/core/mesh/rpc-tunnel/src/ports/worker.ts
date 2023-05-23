@@ -8,8 +8,8 @@ import { RpcPort } from '@dxos/rpc';
 import { MessageData } from '../message';
 
 export type WorkerPortOptions = {
-  channel: string;
   port: MessagePort;
+  channel?: string;
   subscribe?: RpcPort['subscribe'];
 };
 
@@ -20,6 +20,7 @@ export type WorkerPortOptions = {
  * @param options.subscribe
  * @returns RPC port for messaging.
  */
+// TODO(wittjosiah): Rename for more general purpose MessagePort.
 export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions): RpcPort => ({
   send: async (message) => {
     // Based on https://stackoverflow.com/a/54646864/2804332.
@@ -27,9 +28,9 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
     port.postMessage(
       {
         channel,
-        payload
+        payload,
       },
-      [payload]
+      [payload],
     );
   },
 
@@ -38,7 +39,7 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
     ((callback) => {
       const handler = (event: MessageEvent<MessageData>) => {
         const message = event.data;
-        if (message.channel !== channel) {
+        if (channel && message.channel !== channel) {
           return;
         }
 
@@ -50,5 +51,5 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
       return () => {
         port.onmessage = null;
       };
-    })
+    }),
 });

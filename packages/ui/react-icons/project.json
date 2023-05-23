@@ -1,0 +1,59 @@
+{
+  "sourceRoot": "packages/ui/react-icons/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/ui/react-icons/src/index.ts",
+        "outputPath": "packages/ui/react-icons/dist/types",
+        "tsConfig": "packages/ui/react-icons/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-icons/src/index.ts"
+        ],
+        "outputPath": "packages/ui/react-icons/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/react-icons/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-icons/.storybook",
+        "uiFramework": "@storybook/react"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

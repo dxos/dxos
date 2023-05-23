@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sentry",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "Provides a common interface for Sentry node & browser",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@sentry/browser": "^7.45.0",
     "@sentry/integrations": "7.45.0",
     "@sentry/node": "^7.45.0",

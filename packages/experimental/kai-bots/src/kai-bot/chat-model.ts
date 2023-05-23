@@ -28,7 +28,7 @@ export class ChatModel {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({
       organization: this._options.organization,
-      apiKey: this._options.apiKey
+      apiKey: this._options.apiKey,
     });
 
     // Hack to workaround error when running in browser: Refused to set unsafe header "User-Agent".
@@ -46,14 +46,14 @@ export class ChatModel {
         messages: [
           {
             role: 'system',
-            content: 'you are a helpful assistant.'
+            content: 'you are a helpful assistant.',
           },
-          ...messages
-        ]
+          ...messages,
+        ],
       });
 
       const {
-        data: { usage, choices }
+        data: { usage, choices },
       } = response;
       log(JSON.stringify({ usage, choices: choices.length }));
 

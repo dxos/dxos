@@ -15,7 +15,7 @@ let initializePromise;
 
 export const compile = async (frame: Frame) => {
   await (initializePromise ??= initialize({
-    wasmURL: esbuildWasmURL
+    wasmURL: esbuildWasmURL,
   }));
 
   const source = frame.content.doc!.getText('monaco').toString();
@@ -37,19 +37,19 @@ export const compile = async (frame: Frame) => {
             if (args.path === 'main.tsx') {
               return {
                 contents: source,
-                loader: 'tsx'
+                loader: 'tsx',
               };
             }
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
 
   frame.compiled = {
     sourceHash: Buffer.from(sha256(source), 'hex'),
     bundle: output.outputFiles![0].text,
-    imports: analyzeImports(output)
+    imports: analyzeImports(output),
   };
 };
 
@@ -76,7 +76,7 @@ const analyzeImports = (build: BuildResult): Artifact.Import[] => {
     return {
       moduleUrl: entry.path,
       defaultImport: !!parsedImport?.[1],
-      namedImports
+      namedImports,
     };
   });
 };

@@ -59,7 +59,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
         handle: null,
         timeout: null,
         mounted: false,
-        updateBeforeMount: false
+        updateBeforeMount: false,
       };
     }
 

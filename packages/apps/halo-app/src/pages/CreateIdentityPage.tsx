@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { SingleInputStep } from '@dxos/react-appkit';
+import { Heading, SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
@@ -24,7 +24,7 @@ const CreateIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
 
   const onNext = useCallback(() => {
@@ -51,7 +51,7 @@ const CreateIdentityPage = () => {
           inputPlaceholder: t('displayName placeholder'),
           onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
-          onBack: () => history.back()
+          onBack: () => history.back(),
         }}
       />
     </main>

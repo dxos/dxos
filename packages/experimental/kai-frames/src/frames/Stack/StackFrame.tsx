@@ -6,8 +6,8 @@ import React from 'react';
 
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
+import { Input } from '@dxos/react-appkit';
 import { observer, useConfig } from '@dxos/react-client';
-import { Input } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { CustomActionMenu } from './CustomActionMenu';
@@ -41,12 +41,12 @@ export const StackFrame = observer(() => {
               placeholder='Title'
               slots={{
                 root: {
-                  className: 'py-4'
+                  className: 'py-4',
                 },
                 input: {
                   className: 'border-0 text-2xl text-black',
-                  spellCheck: false // TODO(burdon): Config.
-                }
+                  spellCheck: false, // TODO(burdon): Config.
+                },
               }}
               value={stack.title ?? ''}
               onChange={(event) => {
@@ -58,8 +58,8 @@ export const StackFrame = observer(() => {
           <Stack<DocumentStack.Section>
             slots={{
               section: {
-                className: 'py-4'
-              }
+                className: 'py-4',
+              },
             }}
             sections={stack.sections}
             onMoveSection={handleMoveSection}

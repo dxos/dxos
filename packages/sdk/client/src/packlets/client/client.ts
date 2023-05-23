@@ -82,6 +82,14 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol !== 'https:' &&
+      !window.location.origin.includes('localhost')
+    ) {
+      console.warn(`DXOS Client will not work in non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`);
+    }
+
     this._config = config ?? new Config();
     // TODO(wittjosiah): Useful default when not in browser?
     this._services = services ?? fromIFrame(this._config);
@@ -113,7 +121,7 @@ export class Client {
       initialized: this.initialized,
       echo: this._echo,
       halo: this._halo,
-      mesh: this._mesh
+      mesh: this._mesh,
     };
   }
 
@@ -209,7 +217,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     await this._services.open();
 
@@ -236,7 +244,7 @@ export class Client {
       (err) => {
         trigger.wake(err);
         this._statusUpdate.emit(null);
-      }
+      },
     );
 
     const err = await trigger.wait();
@@ -250,6 +258,7 @@ export class Client {
     await this._mesh._open();
 
     this._initialized = true;
+    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -271,8 +280,6 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
-
-    log.trace('dxos.sdk.client', trace.end({ id: this._instanceId }));
   }
 
   /**

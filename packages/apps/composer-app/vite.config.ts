@@ -5,12 +5,12 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
+const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,7 +22,14 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
   build: {
     sourcemap: true
@@ -40,17 +47,19 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension]
     }),
     ReactPlugin(),
     VitePWA({
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -73,15 +82,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'composer-app',
-            include: './out/composer',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : [])
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'composer-app',
+      sourcemaps: {
+        assets: './packages/apps/composer-app/out/composer/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: !process.env.CI
+    })
   ]
 });

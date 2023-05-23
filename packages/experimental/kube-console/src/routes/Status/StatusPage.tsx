@@ -4,9 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
 import { TableColumn, Table } from '@dxos/mosaic';
-import { Button } from '@dxos/react-components';
-import { alphabeticalByKey } from '@dxos/util';
+import { compareObject, compareString } from '@dxos/util';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -23,17 +23,17 @@ const columns: TableColumn<Service>[] = [
   {
     Header: 'service',
     accessor: ({ name }) => name,
-    width: 100
+    width: 100,
   },
   {
     Header: 'type',
     accessor: ({ type }) => type,
-    width: 80
+    width: 80,
   },
   {
     Header: 'status',
     accessor: ({ status }) => status,
-    width: 80
+    width: 80,
   },
   {
     Header: 'addresses',
@@ -45,14 +45,14 @@ const columns: TableColumn<Service>[] = [
           <div key={i}>{address}</div>
         ))}
       </div>
-    )
-  }
+    ),
+  },
 ];
 
 export const StatusPage = () => {
   const kube = useKube();
   const [services, setServices] = useState<Service[]>([]);
-  const soredServices = services.sort(alphabeticalByKey('name'));
+  const soredServices = services.sort(compareObject('name', compareString()));
 
   useEffect(() => {
     void handleRefresh();
@@ -76,7 +76,7 @@ export const StatusPage = () => {
         data={soredServices}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin' }
+          cell: { className: 'align-start font-mono font-thin' },
         }}
       />
     </div>

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,7 +41,9 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@dxos/timeouts": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.3.3",
     "lodash.isequal": "^4.5.0",

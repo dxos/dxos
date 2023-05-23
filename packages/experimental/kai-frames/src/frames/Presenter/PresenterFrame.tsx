@@ -5,9 +5,10 @@
 import { Eye, Pen, SquareSplitHorizontal } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Presentation } from '@dxos/kai-types';
 import { observer } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { DeckContainer } from './DeckContainer';
@@ -21,7 +22,7 @@ import { DeckEditor } from './DeckEditor';
 enum View {
   EDITOR = 1,
   MARKDOWN = 2,
-  SPLIT = 3
+  SPLIT = 3,
 }
 
 export const PresenterFrame = observer(() => {

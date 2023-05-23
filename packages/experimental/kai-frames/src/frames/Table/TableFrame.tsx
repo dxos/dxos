@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react';
 
 import { TypedObject } from '@dxos/echo-schema';
 import { Table, Toolbar } from '@dxos/mosaic';
+import { Searchbar, Select } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
-import { Searchbar, Select } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { ColumnType, getColumnType, schemaTypes } from './util';
@@ -54,7 +54,7 @@ export const TableFrame = () => {
             data={objects}
             slots={{
               header: { className: 'bg-paper-1-bg' },
-              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' },
             }}
           />
         </div>

@@ -5,9 +5,10 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { observer, Space, useQuery } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext, useFrameRegistry } from '../../hooks';
@@ -178,7 +179,7 @@ const Row: FC<{ children?: ReactNode; gutter?: ReactNode; className?: string; wi
   gutter,
   children,
   className,
-  wide
+  wide,
 }) => {
   return (
     <div className={mx('flex overflow-hidden', className)}>

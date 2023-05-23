@@ -18,7 +18,7 @@
 
 export const devtoolsFormatter = Symbol.for('devtoolsFormatter');
 
-export type JsonML = [string, { [key: string]: any }?, ...(JsonML | string)[]];
+export type JsonML = [string, Record<string, any>?, ...(JsonML | string)[]];
 
 export interface DevtoolsFormatter {
   /**
@@ -58,7 +58,7 @@ const register = () => {
         }
 
         return formatter.body();
-      }
+      },
     });
   }
 };

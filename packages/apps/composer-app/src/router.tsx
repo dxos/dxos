@@ -8,8 +8,8 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { PublicKey, Space } from '@dxos/client';
 
-import { Root } from './layouts';
-import { DocumentPage, FirstRunPage } from './pages';
+import { StandaloneLayout, EmbeddedLayout, Root } from './layouts';
+import { DocumentPage, FirstRunPage, EmbeddedFirstRunPage } from './pages';
 
 export const namespace = 'composer-app';
 
@@ -29,17 +29,37 @@ export const createRouter = (): Router =>
       element: <Root />,
       children: [
         {
+          path: 'embedded',
+          element: <EmbeddedLayout />,
+          children: [
+            {
+              path: '*',
+              element: <DocumentPage />,
+            },
+            {
+              path: '',
+              element: <EmbeddedFirstRunPage />,
+            },
+          ],
+        },
+        {
           path: '/',
-          element: <FirstRunPage />
+          element: <StandaloneLayout />,
+          children: [
+            {
+              path: '/:spaceKey/:docKey',
+              element: <DocumentPage />,
+            },
+            {
+              path: '/:spaceKey',
+              element: <FirstRunPage />,
+            },
+            {
+              path: '/',
+              element: <FirstRunPage />,
+            },
+          ],
         },
-        {
-          path: '/:spaceKey',
-          element: <FirstRunPage />
-        },
-        {
-          path: '/:spaceKey/:docKey',
-          element: <DocumentPage />
-        }
-      ]
-    }
+      ],
+    },
   ]);

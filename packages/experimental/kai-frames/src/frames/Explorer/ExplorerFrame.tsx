@@ -5,9 +5,10 @@
 import { AsteriskSimple, Graph, Leaf, Tree } from '@phosphor-icons/react';
 import React, { FC, useMemo, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { GraphModel } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
-import { getSize, mx, Button } from '@dxos/react-components';
 
 import { GraphComponent } from './GraphComponent';
 import { PlexusComponent } from './PlexusComponent';
@@ -17,7 +18,7 @@ enum ViewType {
   GRAPH = 1,
   PLEX = 2,
   TREE = 3,
-  RADIAL = 4
+  RADIAL = 4,
 }
 
 type View = {
@@ -32,26 +33,26 @@ const views: View[] = [
     type: ViewType.GRAPH,
     label: 'Graph',
     Icon: Graph,
-    Component: GraphComponent
+    Component: GraphComponent,
   },
   {
     type: ViewType.PLEX,
     label: 'Brane',
     Icon: AsteriskSimple,
-    Component: PlexusComponent
+    Component: PlexusComponent,
   },
   {
     type: ViewType.RADIAL,
     label: 'Radial',
     Icon: Tree,
-    Component: (args: any) => <TreeComponent type={TreeType.RADIAL} {...args} />
+    Component: (args: any) => <TreeComponent type={TreeType.RADIAL} {...args} />,
   },
   {
     type: ViewType.TREE,
     label: 'Tree',
     Icon: Leaf,
-    Component: (args: any) => <TreeComponent type={TreeType.DENDROGRAM} {...args} />
-  }
+    Component: (args: any) => <TreeComponent type={TreeType.DENDROGRAM} {...args} />,
+  },
 ];
 
 export const ExplorerFrame = () => {
@@ -97,7 +98,7 @@ export const ExplorerFrame = () => {
             variant='ghost'
             key={type}
             title={label}
-            className={mx('mx-1', view === type && 'text-black')}
+            classNames={['mx-1', view === type && 'text-black']}
             onClick={() => setView(type)}
           >
             <Icon className={getSize(6)} />

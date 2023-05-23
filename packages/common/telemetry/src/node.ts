@@ -21,7 +21,7 @@ export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
 
     analytics = new Analytics(apiKey, {
       flushAt: batchSize,
-      enable
+      enable,
     });
   } catch (err) {
     log.catch('Failed to initialize telemetry', err);
@@ -40,7 +40,7 @@ export const page = ({ installationId: anonymousId, identityId: userId, ...optio
     analytics?.page({
       ...options,
       userId,
-      anonymousId
+      anonymousId,
     });
   } catch (err) {
     log.catch('Failed to track page', err);
@@ -60,7 +60,7 @@ export const event = ({ installationId: anonymousId, identityId: userId, name: e
       ...options,
       userId,
       anonymousId,
-      event
+      event,
     });
   } catch (err) {
     log.catch('Failed to track event', err);

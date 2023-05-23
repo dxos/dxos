@@ -30,7 +30,7 @@ export class Messenger {
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
   private readonly _listeners = new ComplexMap<{ peerId: PublicKey; payloadType: string }, Set<OnMessage>>(
-    ({ peerId, payloadType }) => peerId.toHex() + payloadType
+    ({ peerId, payloadType }) => peerId.toHex() + payloadType,
   );
 
   // peerId => listeners set
@@ -44,8 +44,6 @@ export class Messenger {
   private _closed = true;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
-  private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -59,17 +57,19 @@ export class Messenger {
     if (!this._closed) {
       return;
     }
-    log.trace('dxos.mesh.messenger', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.mesh.messenger.open', trace.begin({ id: traceId }));
     this._ctx = new Context({
-      onError: (err) => log.catch(err)
+      onError: (err) => log.catch(err),
     });
     this._ctx.onDispose(
       this._signalManager.onMessage.on(async (message) => {
         log('received message', { from: message.author });
         await this._handleMessage(message);
-      })
+      }),
     );
     this._closed = false;
+    log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
 
   async close() {
@@ -78,7 +78,6 @@ export class Messenger {
     }
     this._closed = true;
     await this._ctx.dispose();
-    log.trace('dxos.mesh.messenger', trace.end({ id: this._instanceId }));
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
@@ -86,7 +85,7 @@ export class Messenger {
 
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
-      payload
+      payload,
     };
 
     log('sent message', { messageId: reliablePayload.messageId, author, recipient });
@@ -129,7 +128,7 @@ export class Messenger {
   async listen({
     peerId,
     payloadType,
-    onMessage
+    onMessage,
   }: {
     peerId: PublicKey;
     payloadType?: string;
@@ -159,14 +158,14 @@ export class Messenger {
     return {
       unsubscribe: async () => {
         listeners!.delete(onMessage);
-      }
+      },
     };
   }
 
   private async _encodeAndSend({
     author,
     recipient,
-    reliablePayload
+    reliablePayload,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -179,8 +178,8 @@ export class Messenger {
         type_url: 'dxos.mesh.messaging.ReliablePayload',
         value: schema
           .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-          .encode(reliablePayload, { preserveAny: true })
-      }
+          .encode(reliablePayload, { preserveAny: true }),
+      },
     });
   }
 
@@ -212,27 +211,27 @@ export class Messenger {
     await this._sendAcknowledgement({
       author,
       recipient,
-      messageId: reliablePayload.messageId
+      messageId: reliablePayload.messageId,
     });
 
     await this._callListeners({
       author,
       recipient,
-      payload: reliablePayload.payload
+      payload: reliablePayload.payload,
     });
   }
 
   private async _handleAcknowledgement({ payload }: { payload: Any }) {
     assert(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(
-      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId
+      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId,
     )?.();
   }
 
   private async _sendAcknowledgement({
     author,
     recipient,
-    messageId
+    messageId,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -245,8 +244,8 @@ export class Messenger {
       recipient: author,
       payload: {
         type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId })
-      }
+        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId }),
+      },
     });
   }
 
@@ -263,7 +262,7 @@ export class Messenger {
     {
       const listenerMap = this._listeners.get({
         peerId: message.recipient,
-        payloadType: message.payload.type_url
+        payloadType: message.payload.type_url,
       });
       if (listenerMap) {
         for (const listener of listenerMap) {

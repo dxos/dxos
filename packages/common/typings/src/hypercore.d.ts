@@ -206,6 +206,9 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
     has(start: number, end?: number): boolean;
 
+    // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedclearstart-end-callback
+    clear (start: number, end?: number, cb?: Callback<void>): void;
+
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
     /** @deprecated remove in v10 */
     head(options: any, cb: Callback<T>): void;

@@ -20,19 +20,19 @@ export const useModules = (): Module[] => {
       id: 'config',
       label: 'Config',
       Icon: Sliders,
-      Component: ConfigPage
+      Component: ConfigPage,
     },
     {
       id: 'status',
       label: 'Status',
       Icon: Info,
-      Component: StatusPage
+      Component: StatusPage,
     },
     {
       id: 'registry',
       label: 'Registry',
       Icon: Database,
-      Component: RegistryPage
-    }
+      Component: RegistryPage,
+    },
   ];
 };

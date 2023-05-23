@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DndContext, MouseSensor, useSensor } from '@dnd-kit/core';
+import { DndContext, MouseSensor, useSensor, DragEndEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { FC, useEffect, useRef } from 'react';
 
-import { DragEndEvent, mx } from '@dxos/react-components';
+import { mx } from '@dxos/aurora-theme';
 
 import { StackFooter, DraggableStackRow } from './StackSection';
 import { StackSectionContext } from './context';
@@ -48,7 +48,7 @@ export const Stack = <T extends SectionType>({
   ActionButton,
   onMoveSection,
   showFooter = true,
-  slots = {}
+  slots = {},
 }: StackProps<T>) => {
   const selectedRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -59,8 +59,8 @@ export const Stack = <T extends SectionType>({
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 8 // Move 10px before activating.
-    }
+      distance: 8, // Move 10px before activating.
+    },
   });
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -85,7 +85,7 @@ export const Stack = <T extends SectionType>({
             ...(sections.map((section) => {
               return section.id!;
             }) ?? []),
-            footerId
+            footerId,
           ]}
         >
           <div>
@@ -99,8 +99,8 @@ export const Stack = <T extends SectionType>({
                       ActionButton={ActionButton}
                       slots={{
                         root: {
-                          className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className)
-                        }
+                          className: mx('bg-white', i < sections.length - 1 && 'border-b', slots?.section?.className),
+                        },
                       }}
                     >
                       <div className={mx('flex flex-col w-full overflow-x-hidden')}>

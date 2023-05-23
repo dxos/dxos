@@ -2,17 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { data, DocumentModel, TypedObject, TextModel } from '@dxos/client';
+import { DocumentModel, TypedObject, TextModel } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
-import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 
 import { DetailsTable, JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-import { Cube, TextT } from '@phosphor-icons/react';
 // TODO(burdon): Factor out.
 
 const textFilter = (text?: string) => {
@@ -28,7 +28,7 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: TypedObject) => doc.toJSON()['@model'] === TextModel.meta.type ? 'Text' : doc.__typename;
+const getItemType = (doc: TypedObject) => (doc.toJSON()['@model'] === TextModel.meta.type ? 'Text' : doc.__typename);
 const getItemDetails = (item: TypedObject) => ({
   id: truncateKey(item.id),
   type: item.__typename,
@@ -46,14 +46,14 @@ const getObjectIcon = (item: TypedObject) => {
     default:
       return undefined;
   }
-}
+};
 
 const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   id: item.id,
   title: getItemType(item) || 'Unknown type',
   value: item,
-  Icon: getObjectIcon(item),
-})
+  Icon: getObjectIcon(item)
+});
 
 const ItemsPanel = () => {
   const { space } = useDevtoolsState();

@@ -20,13 +20,13 @@ import { ComplexMap } from '@dxos/util';
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
   private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
-    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`
+    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`,
   );
 
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<DataMessage>
+    private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
   /**
@@ -38,8 +38,8 @@ export class DataServiceHost {
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
       next({
         batch: {
-          objects
-        }
+          objects,
+        },
       });
 
       // subscribe to mutations
@@ -65,7 +65,7 @@ export class DataServiceHost {
           clientTag,
           feedKey: message.meta.feedKey,
           seq: message.meta.seq,
-          batch
+          batch,
         });
       });
     });
@@ -83,11 +83,11 @@ export class DataServiceHost {
           ...object,
           mutations: object.mutations?.map((mutation) => ({
             ...mutation,
-            meta: undefined
+            meta: undefined,
           })),
-          meta: undefined
-        }))
-      }
+          meta: undefined,
+        })),
+      },
     };
     const receipt = await this._writeStream.write(message, {
       afterWrite: async (receipt) => {
@@ -96,7 +96,7 @@ export class DataServiceHost {
           log('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
           this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
         }
-      }
+      },
     });
 
     return receipt;

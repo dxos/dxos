@@ -47,10 +47,10 @@ export class TestBuilder<M extends Model<any>> {
       this._modelConstructor.meta.type,
       id,
       {
-        objectId: 'test'
+        objectId: 'test',
       },
       key,
-      writer
+      writer,
     );
 
     const peer = new TestPeer(stateManager, key) as any;
@@ -80,9 +80,9 @@ export class TestBuilder<M extends Model<any>> {
         feedKey: peerKey,
         memberKey: peerKey,
         seq,
-        timeframe
+        timeframe,
       },
-      mutation
+      mutation,
     };
 
     peer.mutations.push(message);
@@ -100,7 +100,7 @@ export class TestBuilder<M extends Model<any>> {
 
     return {
       feedKey: peerKey,
-      seq
+      seq,
     };
   }
 
@@ -146,7 +146,7 @@ export class TestPeer<M extends Model> {
     this.stateManager.processMessage(message.meta, message.mutation);
     this.timeframe = Timeframe.merge(
       this.timeframe,
-      new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]])
+      new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]]),
     );
   }
 }

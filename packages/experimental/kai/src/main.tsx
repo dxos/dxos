@@ -9,6 +9,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import '@dxosTheme';
 import { Config, Defaults } from '@dxos/config';
+import { AppState } from '@dxos/kai-framework';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
@@ -16,7 +17,6 @@ import { captureException } from '@dxos/sentry';
 
 import '../style.css';
 
-import { AppState } from './hooks';
 import { createRouter } from './router';
 
 void initializeAppTelemetry({ namespace: 'kai', config: new Config(Defaults()) });
@@ -31,7 +31,7 @@ const initialState: Partial<AppState> = {
   // @ts-ignore
   debug: bool(import.meta.env.VITE_DEBUG),
   // @ts-ignore
-  pwa: bool(import.meta.env.VITE_PWA)
+  pwa: bool(import.meta.env.VITE_PWA),
 };
 /* eslint-enable @typescript-eslint/ban-ts-comment */
 
@@ -43,12 +43,12 @@ const PWA = () => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err: any) => {
       captureException(err);
       log.error(err);
-    }
+    },
   });
 
   return needRefresh ? (

@@ -5,9 +5,9 @@
 import { Article as DocumentIcon } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Document } from '@braneframe/types';
 import { Space } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
-import { Document } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { FrameRuntime } from '../../registry';
@@ -21,5 +21,5 @@ export const DocumentFrameRuntime: FrameRuntime<Document> = {
   filter: () => Document.filter(),
   onCreate: async (space: Space) => {
     return space.db.add(new Document({ content: new Text('', TextKind.RICH) }));
-  }
+  },
 };

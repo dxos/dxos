@@ -3,65 +3,42 @@
 //
 
 import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-icons/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Tooltip } from '@dxos/react-appkit';
-import { observer, ShellLayout, useClient, useIdentity, useSpaces } from '@dxos/react-client';
+import { Document } from '@braneframe/types';
 import {
-  Avatar,
   Button,
   DensityProvider,
-  Dialog,
   ElevationProvider,
-  getSize,
-  Input,
-  mx,
   ThemeContext,
-  TreeRoot,
-  useId,
-  useTranslation
-} from '@dxos/react-components';
-import { PanelSidebarContext, useShell } from '@dxos/react-ui';
+  useThemeContext,
+  useTranslation,
+  useSidebar,
+} from '@dxos/aurora';
+import { getSize, mx, osTx } from '@dxos/aurora-theme';
+import { Tooltip, Avatar, Dialog, Input } from '@dxos/react-appkit';
+import { ShellLayout, useClient, useIdentity } from '@dxos/react-client';
+import { useShell } from '@dxos/react-shell';
 
-import { ComposerDocument } from '../../proto';
 import { getPath } from '../../router';
 import { useOctokitContext } from '../OctokitProvider';
 import { Separator } from '../Separator';
-import { SpaceTreeItem } from './SpaceTreeItem';
+import { SidebarTree } from './SidebarTree';
 
-const DocumentTree = observer(() => {
-  // TODO(wittjosiah): Fetch all spaces and render pending spaces differently.
-  const spaces = useSpaces({ all: true });
-  const treeLabel = useId('treeLabel');
-  const { t } = useTranslation('composer');
-  const identity = useIdentity();
-  return (
-    <div className='grow plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
-      <span className='sr-only' id={treeLabel}>
-        {t('sidebar tree label')}
-      </span>
-      <TreeRoot labelId={treeLabel} data-testid='composer.sidebarTree'>
-        {spaces
-          .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
-          .map((space) => {
-            return <SpaceTreeItem key={space.key.toHex()} space={space} />;
-          })}
-      </TreeRoot>
-    </div>
-  );
-});
+const SIDEBAR_CONTENT_NAME = 'SidebarContent';
 
 const SidebarContent = () => {
   const client = useClient();
   const shell = useShell();
   const navigate = useNavigate();
   const { t } = useTranslation('composer');
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { sidebarOpen, closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
+  const themeContext = useThemeContext();
 
   useEffect(() => {
     setPatValue(pat);
@@ -69,7 +46,7 @@ const SidebarContent = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.createSpace();
-    const document = await space.db.add(new ComposerDocument());
+    const document = await space.db.add(new Document());
     return navigate(getPath(space.key, document.id));
   };
 
@@ -78,36 +55,35 @@ const SidebarContent = () => {
   };
 
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-      <ElevationProvider elevation='chrome'>
-        <DensityProvider density='fine'>
-          <Dialog
-            title={t('profile settings label')}
-            open={settingsDialogOpen}
-            onOpenChange={(nextOpen) => {
-              setSettingsDialogOpen(nextOpen);
-              if (!nextOpen) {
-                void setPat(patValue);
-              }
+    <ElevationProvider elevation='chrome'>
+      <DensityProvider density='fine'>
+        <Dialog
+          title={t('profile settings label')}
+          open={settingsDialogOpen}
+          onOpenChange={(nextOpen) => {
+            setSettingsDialogOpen(nextOpen);
+            if (!nextOpen) {
+              void setPat(patValue);
+            }
+          }}
+          closeTriggers={[
+            <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
+              {t('done label', { ns: 'os' })}
+            </Button>,
+          ]}
+        >
+          <Input
+            label={t('github pat label')}
+            value={patValue}
+            data-testid='composer.githubPat'
+            onChange={({ target: { value } }) => setPatValue(value)}
+            slots={{
+              root: { className: 'mlb-2' },
+              input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
             }}
-            slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
-            closeTriggers={[
-              <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
-                {t('done label', { ns: 'os' })}
-              </Button>
-            ]}
-          >
-            <Input
-              label={t('github pat label')}
-              value={patValue}
-              data-testid='composer.githubPat'
-              onChange={({ target: { value } }) => setPatValue(value)}
-              slots={{
-                root: { className: 'mlb-2' },
-                input: { autoFocus: true, spellCheck: false, className: 'font-mono' }
-              }}
-            />
-          </Dialog>
+          />
+        </Dialog>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div role='none' className='flex flex-col bs-full'>
             <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
@@ -121,7 +97,8 @@ const SidebarContent = () => {
                   variant='ghost'
                   data-testid='composer.createSpace'
                   onClick={handleCreateSpace}
-                  className='pli-1'
+                  classNames='pli-2 pointer-fine:pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <Planet className={getSize(4)} />
                 </Button>
@@ -132,7 +109,13 @@ const SidebarContent = () => {
                 side='bottom'
                 tooltipLabelsTrigger
               >
-                <Button variant='ghost' data-testid='composer.joinSpace' onClick={handleJoinSpace} className='pli-1'>
+                <Button
+                  variant='ghost'
+                  data-testid='composer.joinSpace'
+                  onClick={handleJoinSpace}
+                  classNames='pli-2 pointer-fine:pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
+                >
                   <Intersect className={getSize(4)} />
                 </Button>
               </Tooltip>
@@ -145,18 +128,19 @@ const SidebarContent = () => {
                 <Button
                   variant='ghost'
                   data-testid='composer.toggleSidebarWithinSidebar'
-                  onClick={() => setDisplayState(displayState === 'show' ? 'hide' : 'show')}
-                  className='pli-1'
+                  onClick={closeSidebar}
+                  classNames='pli-2 pointer-fine:pli-1'
+                  {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <ArrowLineLeft className={getSize(4)} />
                 </Button>
               </Tooltip>
             </div>
             <Separator flush />
-            <DocumentTree />
+            <SidebarTree />
             <Separator flush />
             {identity && (
-              <div role='none' className='shrink-0 flex items-center gap-1 pli-3 plb-1.5'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 pointer-fine:pie-3 plb-1.5'>
                 <Avatar
                   size={6}
                   variant='circle'
@@ -171,7 +155,8 @@ const SidebarContent = () => {
                     variant='ghost'
                     data-testid='composer.openUserSettingsDialog'
                     onClick={() => setSettingsDialogOpen(true)}
-                    className='pli-1'
+                    classNames='pli-2 pointer-fine:pli-1'
+                    {...(!sidebarOpen && { tabIndex: -1 })}
                   >
                     <GearSix className={mx(getSize(4), 'rotate-90')} />
                   </Button>
@@ -179,31 +164,35 @@ const SidebarContent = () => {
               </div>
             )}
           </div>
-        </DensityProvider>
-      </ElevationProvider>
-    </ThemeContext.Provider>
+        </ThemeContext.Provider>
+      </DensityProvider>
+    </ElevationProvider>
   );
 };
 
+SidebarContent.displayName = SIDEBAR_CONTENT_NAME;
+
+const SIDEBAR_TOGGLE_NAME = 'SidebarToggle';
+
 const SidebarToggle = () => {
-  const { displayState, setDisplayState } = useContext(PanelSidebarContext);
+  const { openSidebar, sidebarOpen } = useSidebar(SIDEBAR_TOGGLE_NAME);
   const { t } = useTranslation('os');
-  const open = displayState === 'show';
+  const themeContext = useThemeContext();
   const button = (
-    <Button data-testid='composer.toggleSidebar' onClick={() => setDisplayState('show')} className='p-0 is-[40px]'>
+    <Button data-testid='composer.toggleSidebar' onClick={openSidebar} classNames='p-0 is-[40px]'>
       <Sidebar weight='light' className={getSize(6)} />
     </Button>
   );
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
       <div
         role='none'
         className={mx(
-          'fixed block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200',
-          open ? 'inline-start-sidebar opacity-0 pointer-events-none' : 'inline-start-0 opacity-100'
+          'fixed block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          sidebarOpen && 'opacity-0 pointer-events-none',
         )}
       >
-        {open ? (
+        {sidebarOpen ? (
           button
         ) : (
           <Tooltip content={t('open sidebar label')} tooltipLabelsTrigger side='right'>
@@ -214,5 +203,7 @@ const SidebarToggle = () => {
     </ThemeContext.Provider>
   );
 };
+
+SidebarToggle.displayName = SIDEBAR_TOGGLE_NAME;
 
 export { SidebarContent, SidebarToggle };

@@ -7,9 +7,10 @@ import assert from 'assert';
 import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { useQuery, observer } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 
@@ -110,10 +111,10 @@ const Play: FC<{
 
       <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
-          <Button className='ml-2' onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
+          <Button classNames='ml-2' onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
           </Button>
-          <Button className='ml-1' onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
+          <Button classNames='ml-1' onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
             <CaretRight weight='thin' className={getSize(6)} />
           </Button>
         </div>
@@ -128,7 +129,7 @@ const Play: FC<{
 const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: () => void }> = ({
   pieces,
   onSelect,
-  onCreate
+  onCreate,
 }) => {
   const { space } = useFrameContext();
   const games = useQuery(space, Game.filter());

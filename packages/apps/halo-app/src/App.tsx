@@ -17,10 +17,10 @@ import {
   Fallback,
   ResetDialog,
   ServiceWorkerToast,
-  useTelemetry
+  useTelemetry,
+  ThemeProvider,
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 
@@ -51,19 +51,19 @@ const Routes = () => {
   return useRoutes([
     {
       path: '/',
-      element: <LockPage />
+      element: <LockPage />,
     },
     {
       path: '/identity/create',
-      element: <CreateIdentityPage />
+      element: <CreateIdentityPage />,
     },
     {
       path: '/identity/recover',
-      element: <RecoverIdentityPage />
+      element: <RecoverIdentityPage />,
     },
     {
       path: '/identity/join',
-      element: <JoinIdentityPage />
+      element: <JoinIdentityPage />,
     },
     {
       path: '/',
@@ -78,11 +78,11 @@ const Routes = () => {
             { path: '/spaces', element: <SpacesPage /> },
             { path: '/contacts', element: <ContactsPage /> },
             { path: '/apps', element: <AppsPage /> },
-            { path: '/spaces/:space', element: <SpacePage /> }
-          ]
-        }
-      ]
-    }
+            { path: '/spaces/:space', element: <SpacePage /> },
+          ],
+        },
+      ],
+    },
   ]);
 };
 
@@ -90,12 +90,12 @@ export const App = withProfiler(() => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
       console.error(err);
-    }
+    },
   });
 
   return (
@@ -104,7 +104,7 @@ export const App = withProfiler(() => {
       fallback={<Fallback message='Loading...' />}
       appNs='halo'
     >
-      <ErrorProvider>
+      <ErrorProvider config={configProvider}>
         {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <ResetDialog error={error} config={configProvider} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>

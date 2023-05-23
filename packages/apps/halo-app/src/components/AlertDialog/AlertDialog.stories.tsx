@@ -5,12 +5,12 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
 
 import { AlertDialog } from './AlertDialog';
 
 export default {
-  component: AlertDialog
+  component: AlertDialog,
 };
 
 export const Default = {
@@ -20,8 +20,8 @@ export const Default = {
     confirmTrigger: <Button variant='primary'>GO</Button>,
     destructiveConfirmString: "I've definitely had my coffee",
     destructiveConfirmInputProps: {
-      label: "Type “I've definitely had my coffee” to confirm"
+      label: "Type “I've definitely had my coffee” to confirm",
     },
-    title: 'Reset your device'
-  }
+    title: 'Reset your device',
+  },
 };

@@ -2,20 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
+import { LinkBreak, LinkSimple, LinkSimpleBreak, ShareNetwork } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { useDevtools, useStream } from '@dxos/react-client';
-
-import { SwarmDetails } from '../../components';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { TreeView, TreeViewItem } from '@dxos/react-components';
-import { LinkBreak, LinkSimple, LinkSimpleBreak, LinkSimpleHorizontal, ShareNetwork } from '@phosphor-icons/react';
+import { TreeView, TreeViewItem } from '@dxos/react-appkit';
+import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
+
 import { ConnectionInfoView } from '../../components/ConnectionInfoView';
 
-
 const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
-  swarms.map(swarm => ({
+  swarms.map((swarm) => ({
     id: swarm.id.toHex(),
     Element: (
       <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
@@ -24,7 +22,7 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
       </div>
     ),
     Icon: ShareNetwork,
-    items: swarm.connections?.map(connection => ({
+    items: swarm.connections?.map((connection) => ({
       id: connection.sessionId.toHex(),
       Element: (
         <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
@@ -32,13 +30,14 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
           <span className='text-gray-400'>{connection.state}</span>
         </div>
       ),
-      Icon: {
-        CONNECTED: LinkSimple,
-        CLOSED: LinkBreak
-      }[connection.state] ?? LinkSimpleBreak,
+      Icon:
+        {
+          CONNECTED: LinkSimple,
+          CLOSED: LinkBreak
+        }[connection.state] ?? LinkSimpleBreak,
       value: connection
     }))
-  }))
+  }));
 
 const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
@@ -65,7 +64,7 @@ const SwarmPanel = () => {
         </div>
       )}
     </div>
-  )
+  );
 };
 
 export default SwarmPanel;

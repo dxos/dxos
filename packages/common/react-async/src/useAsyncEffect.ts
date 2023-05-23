@@ -34,7 +34,7 @@ import { useEffect } from 'react';
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
-  deps?: any[]
+  deps?: any[],
 ) => {
   const [effectDestructor, effectDeps] =
     typeof destructor === 'function' ? [destructor, deps] : [undefined, destructor];

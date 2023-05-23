@@ -34,9 +34,9 @@ export class Serializer {
     const data = {
       objects: objects.map((object) => {
         return stripKeys({
-          ...object[base].toJSON() // TODO(burdon): Not working unless schema.
+          ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
         });
-      })
+      }),
     };
 
     return data;
@@ -44,7 +44,7 @@ export class Serializer {
 
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
-      objects: [properties]
+      objects: [properties],
     } = database.query({ '@type': 'dxos.sdk.client.Properties' });
     const { objects } = data;
     for (const object of objects) {
@@ -68,9 +68,9 @@ export class Serializer {
 
           const obj = new Prototype(
             {
-              ...data
+              ...data,
             },
-            echoSchema
+            echoSchema,
           );
           obj[base]._id = id;
           database.add(obj);

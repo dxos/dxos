@@ -26,8 +26,8 @@ describe.skip('IMAP processor', () => {
       tls: false,
       tlsOptions: {
         ca: process.env.COM_PROTONMAIL_CERT ?? getKey(config, 'com.protonmail.ca'),
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+      },
     });
 
     const messages = await processor.requestMessages();
@@ -38,7 +38,7 @@ describe.skip('IMAP processor', () => {
         to: message.to[0]?.email,
         from: message.from?.email,
         subject: message.subject,
-        body: message.body?.length
+        body: message.body?.length,
       }))
       .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 

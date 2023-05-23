@@ -5,7 +5,9 @@
 import { DotsThreeCircle } from '@phosphor-icons/react';
 import React, { FC, useContext } from 'react';
 
-import { Button, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, getSize } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
+import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '@dxos/react-appkit';
 
 import { StackSectionContext } from './context';
 
@@ -22,7 +24,7 @@ export type StackMenuProps = {
 
 export const StackAction = ({
   action,
-  onAction
+  onAction,
 }: {
   action: StackAction;
   onAction?: (action: StackAction, section?: any) => void;
@@ -48,7 +50,7 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
       slots={{ content: { className: 'z-50', align: 'end' } }}
       trigger={
         <div className='flex'>
-          <Button variant='ghost' density='fine' className='p-0'>
+          <Button variant='ghost' density='fine' classNames='p-0'>
             <DotsThreeCircle className={getSize(6)} />
           </Button>
         </div>

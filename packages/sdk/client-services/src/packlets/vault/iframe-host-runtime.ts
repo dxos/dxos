@@ -6,9 +6,9 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
-import { getAsyncValue, Provider } from '@dxos/util';
+import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
 import { LocalClientServices } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
@@ -17,7 +17,8 @@ import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
 export type IFrameHostRuntimeParams = {
-  configProvider: Config | Provider<Promise<Config>>;
+  config: Config | Provider<MaybePromise<Config>>;
+  origin: string;
   appPort: RpcPort;
   shellPort?: RpcPort;
 };
@@ -29,21 +30,13 @@ export type IFrameHostRuntimeParams = {
  * This should only be used when SharedWorker is not available.
  */
 export class IFrameHostRuntime {
-  private readonly _configProvider: Config | Provider<Promise<Config>>;
-  private readonly _transportFactory = createWebRTCTransportFactory({
-    iceServers: [
-      { urls: 'stun:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
-      { urls: 'turn:dev.kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
-      { urls: 'stun:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' },
-      { urls: 'turn:kube.dxos.org:3478', username: 'dxos', credential: 'dxos' }
-    ]
-  });
-
+  private readonly _configProvider: IFrameHostRuntimeParams['config'];
   private readonly _ready = new Trigger<Error | undefined>();
 
   private readonly _appPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private _config!: Config;
+  private _transportFactory!: TransportFactory;
 
   // TODO(dmaretskyi):  Replace with host and figure out how to return services provider here.
   private _clientServices!: LocalClientServices;
@@ -51,10 +44,11 @@ export class IFrameHostRuntime {
   private _shellRuntime?: ShellRuntimeImpl;
 
   @logInfo
-  public origin?: string;
+  public origin: string;
 
-  constructor({ configProvider, appPort, shellPort }: IFrameHostRuntimeParams) {
-    this._configProvider = configProvider;
+  constructor({ config, origin, appPort, shellPort }: IFrameHostRuntimeParams) {
+    this._configProvider = config;
+    this.origin = origin;
     this._appPort = appPort;
     this._shellPort = shellPort;
 
@@ -75,17 +69,17 @@ export class IFrameHostRuntime {
     log('starting...');
     try {
       this._config = await getAsyncValue(this._configProvider);
+      this._transportFactory = createWebRTCTransportFactory({
+        iceServers: this._config.get('runtime.services.ice'),
+      });
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,
-        networkManager: new NetworkManager({
-          log: true,
-          signalManager: signals
-            ? new WebsocketSignalManager(signals)
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory: this._transportFactory
-        })
+        signalManager: signals
+          ? new WebsocketSignalManager(signals)
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        transportFactory: this._transportFactory,
       });
 
       const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
@@ -104,13 +98,13 @@ export class IFrameHostRuntime {
           }
 
           return handler(method, params);
-        }
+        },
       };
 
       this._clientRpc = new ClientRpcServer({
         serviceRegistry: this._clientServices.host.serviceRegistry,
         port: this._appPort,
-        ...middleware
+        ...middleware,
       });
 
       await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);

@@ -12,14 +12,14 @@ import {
   valueEncoding,
   MetadataStore,
   SpaceManager,
-  SigningContext,
   DataServiceSubscriptions,
-  SnapshotStore
+  SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -32,9 +32,9 @@ import {
   DeviceInvitationProtocol,
   InvitationsHandler,
   InvitationProtocol,
-  SpaceInvitationProtocol
+  SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager } from '../spaces';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
@@ -67,9 +67,9 @@ export class ServiceContext {
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
+    public readonly signalManager: SignalManager,
     public readonly modelFactory: ModelFactory
   ) {
-    networkManager._traceParent = this._instanceId;
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -87,9 +87,11 @@ export class ServiceContext {
 
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: this.modelFactory,
+      snapshotStore: this.snapshotStore,
     });
-    this.spaceManager._traceParent = this._instanceId;
 
     this.identityManager = new IdentityManager(
       this.metadataStore,
@@ -97,24 +99,27 @@ export class ServiceContext {
       this.feedStore,
       this.spaceManager
     );
-    this.identityManager._traceParent = this._instanceId;
 
     this.invitations = new InvitationsHandler(this.networkManager);
-    this.invitations._traceParent = this._instanceId;
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this._handlerFactories.set(Invitation.Kind.DEVICE, () => new DeviceInvitationProtocol(
-      this.keyring,
-      () => this.identityManager.identity ?? failUndefined(),
-      this._acceptIdentity.bind(this)
-    ));
+    this._handlerFactories.set(
+      Invitation.Kind.DEVICE,
+      () =>
+        new DeviceInvitationProtocol(
+          this.keyring,
+          () => this.identityManager.identity ?? failUndefined(),
+          this._acceptIdentity.bind(this)
+        )
+    );
   }
 
   async open() {
-    log.trace('dxos.sdk.service-context', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     log('opening...');
+    await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
     await this.identityManager.open();
@@ -122,6 +127,7 @@ export class ServiceContext {
       await this._initialize();
     }
     log('opened');
+    log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -132,10 +138,9 @@ export class ServiceContext {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.networkManager.close();
+    await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
-
-    log.trace('dxos.sdk.service-context', trace.end({ id: this._instanceId }));
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
@@ -169,7 +174,7 @@ export class ServiceContext {
       profile: identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
-      }
+      },
     };
 
     this.dataSpaceManager = new DataSpaceManager(
@@ -178,11 +183,8 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory,
       this.feedStore,
-      this.snapshotStore
     );
-    this.dataSpaceManager._traceParent = this._instanceId;
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
@@ -214,12 +216,12 @@ export class ServiceContext {
           log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
             spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey
+            genesisFeedKey: assertion.genesisFeedKey,
           });
         } catch (err) {
           log.catch(err);
         }
-      }
+      },
     });
     await this._deviceSpaceSync.open();
   }

@@ -5,8 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { ConfigProto } from '@dxos/config';
+import { JsonTree } from '@dxos/react-appkit';
 import { useConfig } from '@dxos/react-client';
-import { JsonTree } from '@dxos/react-components';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -32,11 +32,11 @@ export const ConfigPage = () => {
     <div className='flex flex-col flex-1 overflow-y-scroll'>
       <div>
         <Toolbar>Console App</Toolbar>
-        <JsonTree data={config.values} labelId='client_config' />
+        <JsonTree data={config.values} aria-labelledby='client_config' />
       </div>
       <div>
         <Toolbar>KUBE Server</Toolbar>
-        <JsonTree data={results} labelId='server_config' />
+        <JsonTree data={results} aria-labelledby='server_config' />
       </div>
     </div>
   );

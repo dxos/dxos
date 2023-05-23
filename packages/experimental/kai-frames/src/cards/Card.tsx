@@ -4,10 +4,10 @@
 
 import React, { FC, ReactNode } from 'react';
 
+import { mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { TypedObject } from '@dxos/echo-schema';
 import { Address } from '@dxos/kai-types';
-import { mx } from '@dxos/react-components';
 
 // TODO(burdon): Factor out Sections.
 
@@ -45,7 +45,7 @@ export const Card: FC<{ slots?: CardSlots; children: ReactNode }> = ({ slots = {
     <div
       className={mx(
         'flex flex-col overflow-hidden p-1 py-2 space-y-2 bg-white border-b md:border md:rounded',
-        slots.root?.className
+        slots.root?.className,
       )}
     >
       {children}
@@ -57,7 +57,7 @@ export const CardRow: FC<{ children: ReactNode; className?: string; gutter?: Rea
   children,
   className,
   gutter,
-  action
+  action,
 }) => {
   return (
     <div className={mx('flex overflow-hidden items-center', className)}>

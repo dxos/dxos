@@ -5,14 +5,16 @@
 import { Activity, Eraser } from '@phosphor-icons/react';
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
+import { useTranslation, Button } from '@dxos/aurora';
+import { getSize, group } from '@dxos/aurora-theme';
+import { Input, Avatar } from '@dxos/react-appkit';
 import {
   BASE_TELEMETRY_PROPERTIES,
   getTelemetryIdentifier,
   isTelemetryDisabled,
-  storeTelemetryDisabled
+  storeTelemetryDisabled,
 } from '@dxos/react-appkit/telemetry';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
@@ -44,7 +46,7 @@ const IdentityPage = () => {
         identity.profile.displayName = value;
       }
     },
-    [identity]
+    [identity],
   );
 
   return (
@@ -55,7 +57,7 @@ const IdentityPage = () => {
         variant='circle'
         fallbackValue={identityHex}
         label={identity?.profile?.displayName ?? humanize(identityHex)}
-        slots={{ root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) } }}
+        slots={{ root: { classNames: [group({ elevation: 'group' }), 'p-1 rounded-full'] } }}
       />
       <Input
         label={t('displayName label', { ns: 'appkit' })}
@@ -76,7 +78,7 @@ const IdentityPage = () => {
         title={telemetryDisabled ? t('enable telemetry label') : t('disable telemetry label')}
         description={telemetryDisabled ? t('enable telemetry description') : t('disable telemetry description')}
         openTrigger={
-          <Button variant='outline' className='flex gap-1 w-full'>
+          <Button variant='outline' classNames='flex gap-1 w-full'>
             <Activity className={getSize(5)} />
             {telemetryDisabled ? t('enable telemetry label') : t('disable telemetry label')}
           </Button>
@@ -90,13 +92,13 @@ const IdentityPage = () => {
                 name: 'halo-app:telemetry:toggle',
                 properties: {
                   ...BASE_TELEMETRY_PROPERTIES,
-                  value: !telemetryDisabled
-                }
+                  value: !telemetryDisabled,
+                },
               });
-              storeTelemetryDisabled(namespace, String(!telemetryDisabled));
+              void storeTelemetryDisabled(namespace, String(!telemetryDisabled));
               window.location.reload();
             }}
-            className='text-error-700 dark:text-error-400'
+            classNames='text-error-700 dark:text-error-400'
           >
             {telemetryDisabled ? t('enable telemetry label') : t('disable telemetry label')}
           </Button>
@@ -105,14 +107,14 @@ const IdentityPage = () => {
       <AlertDialog
         title={t('reset device label')}
         openTrigger={
-          <Button variant='outline' className='flex gap-1 w-full'>
+          <Button variant='outline' classNames='flex gap-1 w-full'>
             <Eraser className={getSize(5)} />
             {t('reset device label')}
           </Button>
         }
         destructiveConfirmString={confirmString}
         destructiveConfirmInputProps={{
-          label: t('confirm reset device label', { confirmString })
+          label: t('confirm reset device label', { confirmString }),
         }}
         cancelTrigger={<Button>{t('cancel label', { ns: 'appkit' })}</Button>}
         confirmTrigger={
@@ -121,7 +123,7 @@ const IdentityPage = () => {
               await client.reset();
               window.location.reload();
             }}
-            className='text-error-700 dark:text-error-400'
+            classNames='text-error-700 dark:text-error-400'
           >
             {t('reset device label')}
           </Button>

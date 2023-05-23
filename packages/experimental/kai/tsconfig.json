@@ -18,31 +18,13 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
-      "path": "../../apps/patterns/react-composer"
-    },
-    {
-      "path": "../../apps/patterns/react-icons"
-    },
-    {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
       "path": "../../common/context"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -54,19 +36,10 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../core/mesh/rpc"
@@ -78,31 +51,37 @@
       "path": "../../core/mesh/websocket-rpc"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../sdk/vault"
     },
     {
-      "path": "../chess-app"
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-icons"
     },
     {
       "path": "../kai-frames"
     },
     {
-      "path": "../kai-sandbox"
+      "path": "../kai-framework"
     },
     {
       "path": "../kai-types"
@@ -112,9 +91,6 @@
     },
     {
       "path": "../mosaic"
-    },
-    {
-      "path": "../plexus"
     },
     {
       "path": "../react-metagraph"

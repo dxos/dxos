@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { PanelSidebarProvider } from '@dxos/react-ui';
+import { MainRoot, Main, Sidebar as SidebarRoot, MainOverlay } from '@dxos/aurora';
 
 import { Sidebar } from '../components';
 import { useModules } from '../hooks';
@@ -26,13 +26,14 @@ export const ModuleContainer = () => {
   const { Component } = active;
 
   return (
-    <PanelSidebarProvider
-      slots={{
-        content: { children: <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} /> },
-        main: { className: 'flex overflow-hidden' }
-      }}
-    >
-      <Component />
-    </PanelSidebarProvider>
+    <MainRoot>
+      <MainOverlay />
+      <SidebarRoot>
+        <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} />
+      </SidebarRoot>
+      <Main classNames='flex overflow-hidden'>
+        <Component />
+      </Main>
+    </MainRoot>
   );
 };

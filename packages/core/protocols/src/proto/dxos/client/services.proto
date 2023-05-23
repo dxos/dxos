@@ -10,6 +10,7 @@ import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
+import "dxos/echo/metadata.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -196,7 +197,7 @@ message Space {
 
   repeated SpaceMember members = 10;
 
-  // TODO(dmaretskyi): Inline a snapshot of space.properties here so that inactive spaces still display their title.
+  optional dxos.echo.metadata.SpaceCache cache = 20;
 }
 
 message UpdateSpaceRequest {
@@ -227,6 +228,10 @@ message QueryCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message CreateEpochRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
@@ -241,6 +246,8 @@ service SpacesService {
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
+
+  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
 }
 
 //
@@ -360,22 +367,70 @@ service InvitationsService {
 // MESH
 //
 
+// TODO(wittjosiah): Rename to SwarnState?
 enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
 }
 
 message NetworkStatus {
-  ConnectionState state = 1;
+  message Signal {
+    string server = 1;
+    dxos.mesh.signal.SignalState state = 2;
+  }
+
+  ConnectionState swarm = 1;
+  repeated Signal signaling = 2;
 }
 
-message SetNetworkOptionsRequest {
-  ConnectionState state = 1;
+message UpdateConfigRequest {
+  ConnectionState swarm = 1;
 }
 
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
-  // TODO(wittjosiah): Align verbs with other services.
-  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
+  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+}
+
+//
+// Development Tooling
+//
+
+// NOTE: Keep aligned with LogLevel in @dxos/log.
+enum LogLevel {
+  TRACE = 5;
+
+  DEBUG = 10;
+  INFO = 11;
+  WARN = 12;
+  ERROR = 13;
+}
+
+message QueryLogsRequest {
+  message Filter {
+    LogLevel level = 1;
+    optional string pattern = 2;
+  }
+
+  /// Explicitly specify all desired log levels.
+  repeated Filter filters = 1;
+}
+
+message LogEntry {
+  message Meta {
+    string file = 1;
+    int32 line = 2;
+    optional google.protobuf.Struct scope = 3;
+  }
+
+  LogLevel level = 1;
+  string message = 2;
+  optional google.protobuf.Struct context = 3;
+  optional Meta meta = 4;
+  optional dxos.rpc.Error error = 5;
+}
+
+service LoggingService {
+  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }

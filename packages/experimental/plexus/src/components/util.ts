@@ -29,6 +29,6 @@ export const useTimeout = (delay: number, onChange?: (pending: boolean) => void)
       setPending(true);
       onChange?.(true);
       trigger();
-    }
+    },
   ];
 };

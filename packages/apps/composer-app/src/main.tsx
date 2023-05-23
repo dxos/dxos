@@ -22,5 +22,5 @@ const App = withProfiler(() => <RouterProvider router={router} />);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );

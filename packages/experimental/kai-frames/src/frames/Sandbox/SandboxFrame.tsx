@@ -5,11 +5,12 @@
 import { PlayCircle } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';
 import { useQuery, observer } from '@dxos/react-client';
-import { getSize, Button } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 import { sampleCode } from './sample';
@@ -29,7 +30,7 @@ export const SandboxFrame = observer(() => {
       setTimeout(async () => {
         const frame = new Frame({
           name: 'Frame.tsx',
-          content: new Text()
+          content: new Text(),
         });
 
         await space?.db.add(frame);

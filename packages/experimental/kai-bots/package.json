@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-bots",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "description": "Experimental bots.",
   "homepage": "https://dxos.org",
@@ -15,6 +15,7 @@
     "dist"
   ],
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",

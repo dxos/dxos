@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-template",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "An application template demonstrating a working Task List using the ECHO database",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,10 +19,11 @@
     "@dxos/plate": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

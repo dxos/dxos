@@ -10,5 +10,5 @@ import util from 'node:util';
 // TODO(burdon): Replace pify everywhere.
 export const createBinder = (obj: any) => ({
   fn: (fn: Function) => fn.bind(obj),
-  async: (fn: Function) => util.promisify(fn.bind(obj))
+  async: (fn: Function) => util.promisify(fn.bind(obj)),
 });

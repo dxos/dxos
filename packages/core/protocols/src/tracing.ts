@@ -6,7 +6,7 @@ export type Command = 'begin' | 'end' | 'update';
 
 export type TraceStatus = 'ok' | 'error';
 
-export type DataType = { [key: string]: any };
+export type DataType = Record<string, any>;
 
 export type TracingContext = {
   span?: {
@@ -32,8 +32,8 @@ export const trace: Trace = {
         command: 'begin',
         id,
         parent: parentId,
-        data
-      }
+        data,
+      },
     };
   },
 
@@ -42,9 +42,9 @@ export const trace: Trace = {
       span: {
         command: 'end',
         id,
-        status,
-        data
-      }
+        status: status ?? 'ok',
+        data,
+      },
     };
   },
 
@@ -53,8 +53,8 @@ export const trace: Trace = {
       span: {
         command: 'update',
         id,
-        data
-      }
+        data,
+      },
     };
   },
 
@@ -68,9 +68,9 @@ export const trace: Trace = {
           errorMessage: error.message,
           errorName: error.name,
           errorStack: error.stack,
-          ...data
-        }
-      }
+          ...data,
+        },
+      },
     };
-  }
+  },
 };

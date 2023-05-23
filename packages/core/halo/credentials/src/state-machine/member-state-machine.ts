@@ -57,14 +57,14 @@ export class MemberStateMachine {
     const info: MemberInfo = {
       key: credential.subject.id,
       credential,
-      assertion
+      assertion,
     };
     this._members.set(credential.subject.id, info);
     log('member added', {
       member: credential.subject.id,
       space: this._spaceKey,
       role: assertion.role,
-      profile: assertion.profile
+      profile: assertion.profile,
     });
     await this.onMemberAdmitted.callIfSet(info);
   }

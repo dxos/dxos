@@ -13,5 +13,5 @@ const KanbanFrame = React.lazy(() => import('./KanbanFrame'));
 
 export const KanbanFrameRuntime: FrameRuntime<Kanban> = {
   Icon: KanbanIcon,
-  Component: KanbanFrame
+  Component: KanbanFrame,
 };

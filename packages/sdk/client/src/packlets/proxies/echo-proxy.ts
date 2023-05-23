@@ -70,7 +70,7 @@ export class EchoProxy implements Echo {
 
   toJSON() {
     return {
-      spaces: this._spacesMap.size
+      spaces: this._spacesMap.size,
     };
   }
 
@@ -103,13 +103,13 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
-    log.trace('dxos.sdk.echo-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.echo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context();
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.SPACE
+      kind: Invitation.Kind.SPACE,
     }));
     await this._invitationProxy.open();
 
@@ -153,6 +153,7 @@ export class EchoProxy implements Echo {
     this._ctx.onDispose(() => spacesStream.close());
 
     await gotInitialUpdate.wait();
+    log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -167,7 +168,6 @@ export class EchoProxy implements Echo {
 
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
-    log.trace('dxos.sdk.echo-proxy', trace.end({ id: this._instanceId }));
   }
 
   addSchema(schema: EchoSchema) {
@@ -187,6 +187,8 @@ export class EchoProxy implements Echo {
    */
   async createSpace(meta?: PropertiesProps): Promise<Space> {
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.sdk.echo-proxy.create-space', trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
@@ -199,6 +201,7 @@ export class EchoProxy implements Echo {
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
+    log.trace('dxos.sdk.echo-proxy.create-space', trace.end({ id: traceId }));
     return spaceProxy;
   }
 

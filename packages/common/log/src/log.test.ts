@@ -23,7 +23,7 @@ class LogError extends Error {
 }
 
 log.config({
-  filter: LogLevel.DEBUG
+  filter: LogLevel.DEBUG,
 });
 
 /* eslint-disable @stayradiated/prefer-arrow-functions/prefer-arrow-functions */
@@ -55,7 +55,7 @@ describe('log', function () {
 
   test('config', function () {
     log.config({
-      filter: LogLevel.INFO
+      filter: LogLevel.INFO,
     });
 
     log.debug('Debug level log message');
@@ -65,7 +65,7 @@ describe('log', function () {
 
   test('config file', function () {
     log.config({
-      file: path.join('packages/common/log/test-config.yml')
+      file: path.join('packages/common/log/test-config.yml'),
     });
 
     log.debug('Debug level log message');
@@ -84,7 +84,7 @@ describe('log', function () {
   test('context', function () {
     log.info('Message with context', {
       title: 'test',
-      context: 123
+      context: 123,
     });
   });
 });

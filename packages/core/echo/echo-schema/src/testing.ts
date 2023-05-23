@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';
-import { DatabaseRouter } from './database-router';
+import { DatabaseRouter } from './router';
 
 // TODO(burdon): Builder pattern.
 // TODO(burdon): Rename createMemoryDatabase.

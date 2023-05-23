@@ -194,7 +194,7 @@ describe.skip('DocumentModel', () => {
 
       const array = [
         { foo: 'bar' },
-        { nested: { foo: 'bar', bar: 2, ref: new Reference('123'), none: null, zero: 0 } } // TODO(mykola): new Date() fails.
+        { nested: { foo: 'bar', bar: 2, ref: new Reference('123'), none: null, zero: 0 } }, // TODO(mykola): new Date() fails.
       ];
       await peer1.model.set('tags', OrderedArray.fromValues(array));
       expect(peer1.model.get('tags').toArray()).toEqual(array);

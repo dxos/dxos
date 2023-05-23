@@ -3,23 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run prebuild && vite",
+    "build": "npm run prebuild && tsc && vite build",
     "preview": "vite preview",
-    "postinstall": "patch-package"
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@dxos/react-client": "0.1.23",
+    "@dxos/react-client": "latest",
+    "@dxos/echo-schema": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@dxos/echo-typegen": "latest",
+    "@dxos/vault": "latest",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
-    "patch-package": "^6.5.0",
-    "postinstall-postinstall": "^2.1.0",
     "typescript": "^4.8.4",
-    "vite": "^4.2.0"
+    "vite": "^4.3.0"
   }
 }

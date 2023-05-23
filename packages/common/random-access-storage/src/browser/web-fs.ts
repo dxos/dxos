@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Directory, File, Storage, StorageType, getFullPath } from '../common';
 
 /**
- *
+ * Web file systems.
  */
 export class WebFS implements Storage {
   readonly type = StorageType.WEBFS;
@@ -30,7 +30,7 @@ export class WebFS implements Storage {
   private _getFiles(path: string): Map<string, File> {
     const fullName = this._getFullFilename(this.path, path);
     return new Map(
-      [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true)
+      [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true),
     );
   }
 
@@ -50,7 +50,7 @@ export class WebFS implements Storage {
       getFullPath(this.path, sub),
       () => this._getFiles(sub),
       (...args) => this.getOrCreateFile(...args),
-      () => this._delete(sub)
+      () => this._delete(sub),
     );
   }
 
@@ -72,7 +72,7 @@ export class WebFS implements Storage {
         this._files.delete(fullName);
         const root = await this._initialize();
         return root.removeEntry(fullName);
-      }
+      },
     });
   }
 
@@ -81,7 +81,7 @@ export class WebFS implements Storage {
       Array.from(this._getFiles(path)).map(async ([path, file]) => {
         await file.destroy().catch((err: any) => log.warn(err));
         this._files.delete(path);
-      })
+      }),
     );
   }
 
@@ -136,7 +136,7 @@ export class WebFile extends EventEmitter implements File {
     del: callbackify(this.del.bind(this)),
     stat: callbackify(this.stat.bind(this)),
     destroy: callbackify(this.destroy.bind(this)),
-    truncate: callbackify(this.truncate?.bind(this))
+    truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
   @synchronized
@@ -182,7 +182,7 @@ export class WebFile extends EventEmitter implements File {
     const fileHandle: any = await this._fileHandle;
     const file = await fileHandle.getFile();
     return {
-      size: file.size
+      size: file.size,
     };
   }
 

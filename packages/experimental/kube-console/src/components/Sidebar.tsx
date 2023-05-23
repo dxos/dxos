@@ -5,8 +5,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { List, ListItemEndcap } from '@dxos/aurora';
 import { useConfig } from '@dxos/react-client';
-import { List, ListItemEndcap } from '@dxos/react-components';
 import { DXOS } from '@dxos/react-icons';
 
 import { Toolbar } from '../components';
@@ -34,7 +34,7 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
         </div>
       </Toolbar>
 
-      <List labelId='modules'>
+      <List aria-labelledby='modules'>
         {modules.map(({ id, label, Icon }) => (
           <ListItemButton key={id} selected={id === active} onClick={() => onActiveChange(id)}>
             <ListItemEndcap asChild>

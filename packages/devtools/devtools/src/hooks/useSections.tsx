@@ -12,6 +12,7 @@ import {
   Key,
   PaperPlane,
   Queue,
+  Receipt,
   Users,
   UsersThree
 } from '@phosphor-icons/react';
@@ -38,6 +39,11 @@ export const useSections = (): SectionItem[] => {
           id: '/client/config',
           title: 'Config',
           Icon: Gear
+        },
+        {
+          id: '/client/logs',
+          title: 'Logs',
+          Icon: Receipt
         }
         // {
         //   id: '/client/storage',

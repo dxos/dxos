@@ -19,5 +19,5 @@ export const NoteFrameRuntime: FrameRuntime<NoteBoard> = {
   filter: () => NoteBoard.filter(),
   onCreate: async (space: Space) => {
     return space.db.add(new NoteBoard());
-  }
+  },
 };

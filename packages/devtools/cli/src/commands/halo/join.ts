@@ -17,8 +17,8 @@ export default class Join extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
-      description: 'Invitation code'
-    })
+      description: 'Invitation code',
+    }),
   };
 
   async run(): Promise<any> {
@@ -67,7 +67,7 @@ export default class Join extends BaseCommand {
           },
           (err) => {
             throw err;
-          }
+          },
         );
 
         ux.action.start('Waiting for peer to connect');

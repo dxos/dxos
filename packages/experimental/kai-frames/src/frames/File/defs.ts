@@ -23,5 +23,5 @@ export const FileFrameRuntime: FrameRuntime<File> = {
   Component: FileFrame,
   Plugin: FilePlugin,
   title: 'name',
-  filter: () => File.filter()
+  filter: () => File.filter(),
 };

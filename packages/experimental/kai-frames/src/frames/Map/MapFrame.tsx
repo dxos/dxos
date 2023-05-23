@@ -10,9 +10,10 @@ import { LatLngExpression } from 'leaflet';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
+import { getSize, mx } from '@dxos/aurora-theme';
 import { GeoLocation, Organization } from '@dxos/kai-types';
+import { NavMenu } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
-import { getSize, mx, NavMenu } from '@dxos/react-components';
 
 import { useFrameContext } from '../../hooks';
 
@@ -22,7 +23,7 @@ import { useFrameContext } from '../../hooks';
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 13
+  zoom: 13,
 };
 
 export const MapFrame = () => {
@@ -50,7 +51,7 @@ export const MapControl = () => {
   const getter: MapPropsGetter<Organization> = {
     id: (object: Organization) => object.id,
     label: (object: Organization) => object.name,
-    coordinates: (object: Organization) => object.address?.coordinates
+    coordinates: (object: Organization) => object.address?.coordinates,
   };
 
   const [selected, setSelected] = useState<string>();
@@ -127,7 +128,7 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
         onSelect(items?.find((item) => getter.id(item) === objectId));
       }
     },
-    [items]
+    [items],
   );
 
   return (
@@ -145,8 +146,8 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
           ),
           triggerLinkProps: {
             className: '!text-current cursor-pointer pointer-events-auto flex items-center gap-2',
-            onClick: () => handleSelect(getter.id(item))
-          }
+            onClick: () => handleSelect(getter.id(item)),
+          },
         };
       })}
     />
