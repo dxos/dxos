@@ -186,6 +186,7 @@ message SubscribeToFeedsResponse {
   message Feed {
     dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
+    int32 disk_usage = 3;
   }
 
   repeated Feed feeds = 1;
