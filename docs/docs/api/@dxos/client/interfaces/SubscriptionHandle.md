@@ -1,5 +1,5 @@
 # Interface `SubscriptionHandle`
-> Declared in [`packages/core/echo/echo-schema/dist/types/src/database-router.d.ts`]()
+> Declared in [`packages/core/echo/echo-schema/dist/types/src/router.d.ts`]()
 
 
 

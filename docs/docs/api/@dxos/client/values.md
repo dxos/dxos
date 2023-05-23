@@ -39,7 +39,7 @@ Type: "dxos:type/schema"
 ### [`TypedObject`]()
 Type: TypedObjectConstructor
 
-### [`appServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L92)
+### [`appServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L90)
 Type: ServiceBundle&lt;[AppServiceBundle](/api/@dxos/client/types/AppServiceBundle)&gt;
 
 ### [`base`]()
@@ -59,17 +59,20 @@ Type: unique symbol
 ### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L15)
 Type: ConfigProto
 
-### [`iframeServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L75)
+### [`iframeServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L74)
 Type: ServiceBundle&lt;[IframeServiceBundle](/api/@dxos/client/types/IframeServiceBundle)&gt;
 
 ### [`proxy`]()
 Type: unique symbol
 
+### [`readOnly`]()
+Type: unique symbol
+
 ### [`schema`]()
 Type: unique symbol
 
-### [`shellServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L100)
+### [`shellServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L98)
 Type: ServiceBundle&lt;[ShellServiceBundle](/api/@dxos/client/types/ShellServiceBundle)&gt;
 
-### [`workerServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L84)
+### [`workerServiceBundle`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L82)
 Type: ServiceBundle&lt;[WorkerServiceBundle](/api/@dxos/client/types/WorkerServiceBundle)&gt;

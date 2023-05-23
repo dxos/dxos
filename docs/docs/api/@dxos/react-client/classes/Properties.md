@@ -6,7 +6,7 @@
 
 
 ## Constructors
-### [constructor(\[opts\])]()
+### [constructor(\[initValues\], \[opts\])]()
 
 
 
@@ -14,7 +14,9 @@ Returns: <code>[Properties](/api/@dxos/react-client/classes/Properties)</code>
 
 Arguments: 
 
-`opts`: <code>Partial&lt;[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)&gt;</code>
+`initValues`: <code>Partial&lt;[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)&gt;</code>
+
+`opts`: <code>[TypedObjectOpts](/api/@dxos/react-client/types/TypedObjectOpts)</code>
 
 
 ## Properties
@@ -36,6 +38,11 @@ Type: <code>any</code>
 Type: <code>undefined | [EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 
 Database reference if bound.
+
+### [[readOnly]]()
+Type: <code>boolean</code>
+
+Returns boolean. If  `true` , read only access is activated.
 
 ### [[schema]]()
 Type: <code>undefined | [EchoSchemaType](/api/@dxos/react-client/classes/EchoSchemaType)</code>
