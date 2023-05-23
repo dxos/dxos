@@ -35,7 +35,10 @@ export const StandaloneDocumentPage = observer(
           role='none'
           className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
         >
-          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-0 pointer-fine:pis-8 lg:pis-0'>
+          <div
+            role='none'
+            className='flex items-center gap-2 bg-neutral-500/20 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'
+          >
             <Input
               key={document.id}
               variant='subdued'
