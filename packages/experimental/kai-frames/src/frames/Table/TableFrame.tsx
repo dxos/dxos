@@ -54,7 +54,7 @@ export const TableFrame = () => {
             data={objects}
             slots={{
               header: { className: 'bg-paper-1-bg' },
-              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' }
+              row: { className: 'hover:bg-hover-bg odd:bg-table-rowOdd even:bg-table-rowEven' },
             }}
           />
         </div>

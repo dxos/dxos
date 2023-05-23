@@ -82,20 +82,17 @@ export class NetworkManager {
   public readonly topicsUpdated = new Event<void>();
 
   private readonly _instanceId = PublicKey.random().toHex();
-  public _traceParent?: string;
 
   constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
-    (signalManager as any)._traceParent = this._instanceId;
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
-    this._messenger._traceParent = this._instanceId;
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
-      leave: (opts) => this._signalManager.leave(opts)
+      leave: (opts) => this._signalManager.leave(opts),
     };
 
     // TODO(burdon): Inject listener (generic pattern).
@@ -107,11 +104,6 @@ export class NetworkManager {
   // TODO(burdon): Remove access (Devtools only).
   get connectionLog() {
     return this._connectionLog;
-  }
-
-  // TODO(burdon): Remove access (Devtools only).
-  get signalManager() {
-    return this._signalManager;
   }
 
   get connectionState() {
@@ -132,9 +124,10 @@ export class NetworkManager {
   }
 
   async open() {
-    log.trace('dxos.mesh.network-manager', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
+    log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -146,7 +139,6 @@ export class NetworkManager {
 
     await this._messenger.close();
     await this._signalManager.close();
-    log.trace('dxos.mesh.network-manager', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -157,7 +149,7 @@ export class NetworkManager {
     peerId,
     topology,
     protocolProvider: protocol,
-    label
+    label,
   }: SwarmOptions): Promise<SwarmConnection> {
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
@@ -182,7 +174,7 @@ export class NetworkManager {
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
-      close: () => this.leaveSwarm(topic)
+      close: () => this.leaveSwarm(topic),
     };
   }
 
@@ -191,7 +183,7 @@ export class NetworkManager {
    */
   async leaveSwarm(topic: PublicKey) {
     if (!this._swarms.has(topic)) {
-      log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
+      // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
       return;
     }
 

@@ -5,11 +5,12 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, getSize, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { ConfigProto } from '@dxos/config';
 import { TableColumn, Table } from '@dxos/mosaic';
 import { CompactQrCode } from '@dxos/react-appkit';
-import { alphabetical, alphabeticalByKey } from '@dxos/util';
+import { compareObject, compareString } from '@dxos/util';
 
 import { Toolbar } from '../../components';
 import { useKube } from '../../hooks';
@@ -31,17 +32,17 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
     {
       Header: 'module',
       accessor: ({ name }) => name,
-      width: 120
+      width: 120,
     },
     {
       Header: 'version',
       accessor: ({ build }) => build?.version,
-      width: 80
+      width: 80,
     },
     {
       Header: 'type',
       accessor: ({ type }) => type,
-      width: 80
+      width: 80,
     },
     {
       Header: 'link',
@@ -53,14 +54,14 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
             {...{
               copyLabel: 'copy space invite code short label',
               displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
-              value: `https://${value}.${host}`
+              value: `https://${value}.${host}`,
             }}
           />
           <a target='_blank' rel='noreferrer' href={`https://${value}.${host}`}>
             <ArrowSquareOut className={getSize(6)} />
           </a>
         </div>
-      )
+      ),
     },
     {
       Header: 'tags',
@@ -68,20 +69,20 @@ const columns: (t: any, host: string | undefined) => TableColumn<Module>[] = (t,
       width: 100,
       Cell: ({ value }: { value: string[] }) => (
         <div>
-          {value.sort(alphabetical()).map((tag, i) => (
+          {value.sort(compareString()).map((tag, i) => (
             <div key={i} className='pr-1'>
               <span className='rounded-md p-1 text-xs bg-secondary-bg dark:bg-dark-secondary-bg'>{tag}</span>
             </div>
           ))}
         </div>
-      )
+      ),
     },
     // TODO(burdon): Column property (monospace, etc.)
     {
       Header: 'description',
       accessor: ({ description }) => description,
-      width: 240
-    }
+      width: 240,
+    },
   ];
 
   if (!host) {
@@ -95,7 +96,7 @@ export const RegistryPage = () => {
   const kube = useKube();
   const [config, setConfig] = useState<ConfigProto>({});
   const [modules, setModules] = useState<Module[]>([]);
-  const sortedModules = modules.sort(alphabeticalByKey('name'));
+  const sortedModules = modules.sort(compareObject('name', compareString()));
   const { t } = useTranslation('appkit');
 
   useEffect(() => {
@@ -123,7 +124,7 @@ export const RegistryPage = () => {
         data={sortedModules}
         slots={{
           header: { className: 'bg-paper-bg dark:bg-dark-paper-bg' },
-          cell: { className: 'align-start font-mono font-thin p-0 m-1' }
+          cell: { className: 'align-start font-mono font-thin p-0 m-1' },
         }}
       />
     </div>

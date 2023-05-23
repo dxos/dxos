@@ -6,7 +6,13 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDirs": [
+      "./src"
+    ]
+  },
+  "ts-node": {
+    "transpileOnly": true
   },
   "include": [
     "src",

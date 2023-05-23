@@ -33,7 +33,7 @@ export const configPalettes = {
     800: '#660017',
     850: '#520010',
     900: '#3f0006',
-    950: '#280300'
+    950: '#280300',
   },
   orange: {
     50: '#ffede3',
@@ -54,7 +54,7 @@ export const configPalettes = {
     800: '#650300',
     850: '#4f0800',
     900: '#380b00',
-    950: '#220800'
+    950: '#220800',
   },
   amber: {
     50: '#ffeed7',
@@ -75,7 +75,7 @@ export const configPalettes = {
     800: '#5a1800',
     850: '#471300',
     900: '#340f00',
-    950: '#200a00'
+    950: '#200a00',
   },
   yellow: {
     50: '#fff1b3',
@@ -96,7 +96,7 @@ export const configPalettes = {
     800: '#541f00',
     850: '#431700',
     900: '#311200',
-    950: '#1f0b00'
+    950: '#1f0b00',
   },
   lime: {
     50: '#e4fb8c',
@@ -117,7 +117,7 @@ export const configPalettes = {
     800: '#253500',
     850: '#1e2900',
     900: '#171e00',
-    950: '#0e1200'
+    950: '#0e1200',
   },
   green: {
     50: '#e0f9c8',
@@ -138,7 +138,7 @@ export const configPalettes = {
     800: '#003909',
     850: '#022d07',
     900: '#072005',
-    950: '#031402'
+    950: '#031402',
   },
   emerald: {
     50: '#c5ffc9',
@@ -159,7 +159,7 @@ export const configPalettes = {
     800: '#00391c',
     850: '#002c15',
     900: '#00210e',
-    950: '#001507'
+    950: '#001507',
   },
   teal: {
     50: '#d4fae1',
@@ -180,7 +180,7 @@ export const configPalettes = {
     800: '#00382a',
     850: '#002c21',
     900: '#002018',
-    950: '#00140e'
+    950: '#00140e',
   },
   cyan: {
     50: '#d4f9f7',
@@ -201,7 +201,7 @@ export const configPalettes = {
     800: '#00363e',
     850: '#002a31',
     900: '#001f25',
-    950: '#001417'
+    950: '#001417',
   },
   sky: {
     50: '#e9f2ff',
@@ -222,7 +222,7 @@ export const configPalettes = {
     800: '#003355',
     850: '#002844',
     900: '#001d34',
-    950: '#001222'
+    950: '#001222',
   },
   blue: {
     50: '#edf1ff',
@@ -243,7 +243,7 @@ export const configPalettes = {
     800: '#002d77',
     850: '#002261',
     900: '#00184c',
-    950: '#000d39'
+    950: '#000d39',
   },
   indigo: {
     50: '#f1f0ff',
@@ -264,7 +264,7 @@ export const configPalettes = {
     800: '#002984',
     850: '#001f6b',
     900: '#08174d',
-    950: '#0e0d2b'
+    950: '#0e0d2b',
   },
   violet: {
     50: '#f2efff',
@@ -285,7 +285,7 @@ export const configPalettes = {
     800: '#251997',
     850: '#100b8a',
     900: '#0e066a',
-    950: '#150638'
+    950: '#150638',
   },
   purple: {
     50: '#f7eeff',
@@ -306,7 +306,7 @@ export const configPalettes = {
     800: '#3f1384',
     850: '#310477',
     900: '#250656',
-    950: '#19072d'
+    950: '#19072d',
   },
   fuchsia: {
     50: '#fdecff',
@@ -327,7 +327,7 @@ export const configPalettes = {
     800: '#57006a',
     850: '#450056',
     900: '#350042',
-    950: '#24002c'
+    950: '#24002c',
   },
   pink: {
     50: '#ffecf5',
@@ -348,7 +348,7 @@ export const configPalettes = {
     800: '#61003e',
     850: '#4e0031',
     900: '#3c0025',
-    950: '#290018'
+    950: '#290018',
   },
   rose: {
     50: '#ffedee',
@@ -369,7 +369,7 @@ export const configPalettes = {
     800: '#650024',
     850: '#51001c',
     900: '#3e0013',
-    950: '#2b0007'
+    950: '#2b0007',
   },
   neutral: {
     // Key color #707076
@@ -395,7 +395,7 @@ export const configPalettes = {
     100: '#e2e2e7',
     75: '#eaeaee',
     50: '#f1f1f4',
-    25: '#f8f8fa'
+    25: '#f8f8fa',
   },
   primary: {
     // Key color #00e0e0
@@ -419,15 +419,15 @@ export const configPalettes = {
     200: '#00dedf',
     150: '#3cede4',
     100: '#69fae8',
-    50: '#b9ffee'
-  }
+    50: '#b9ffee',
+  },
 };
 
 export const tailwindConfig = ({
   env = 'production',
   root = './',
   content = [],
-  extensions = []
+  extensions = [],
 }: {
   env?: string;
   root?: string;
@@ -439,10 +439,14 @@ export const tailwindConfig = ({
     fontFamily: {
       body: ['Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
       display: ['Space GroteskVariable', 'Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
-      mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono]
+      mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono],
     },
     extend: merge(
       {
+        screens: {
+          'pointer-fine': { raw: '(pointer: fine)' },
+          'hover-hover': { raw: '(hover: hover)' },
+        },
         colors: {
           ...configPalettes,
           slate: tailwindColors.slate,
@@ -456,7 +460,7 @@ export const tailwindConfig = ({
           transparent: 'transparent',
           current: 'currentColor',
           white: '#ffffff',
-          black: '#000000'
+          black: '#000000',
         },
         fontSize: {
           // Base size 16px
@@ -473,120 +477,120 @@ export const tailwindConfig = ({
           '6xl': ['2.281rem', { lineHeight: '2.5rem' }],
           '7xl': ['2.566rem', { lineHeight: '2.75rem' }],
           '8xl': ['2.887rem', { lineHeight: '3rem' }],
-          '9xl': ['3.247rem', { lineHeight: '3.25rem' }]
+          '9xl': ['3.247rem', { lineHeight: '3.25rem' }],
         },
         outlineWidth: {
-          3: '3px'
+          3: '3px',
         },
         boxShadow: {
-          slider: '0 0 0 5px rgba(0, 0, 0, 0.3)'
+          slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
         },
         keyframes: {
           // Dropdown menu
           'scale-in': {
             '0%': { opacity: '0', transform: 'scale(0)' },
-            '100%': { opacity: '1', transform: 'scale(1)' }
+            '100%': { opacity: '1', transform: 'scale(1)' },
           },
           'slide-down': {
             '0%': { opacity: '0', transform: 'translateY(-10px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' }
+            '100%': { opacity: '1', transform: 'translateY(0)' },
           },
           'slide-up': {
             '0%': { opacity: '0', transform: 'translateY(10px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' }
+            '100%': { opacity: '1', transform: 'translateY(0)' },
           },
           // Tooltip
           'slide-up-fade': {
             '0%': { opacity: '0', transform: 'translateY(2px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' }
+            '100%': { opacity: '1', transform: 'translateY(0)' },
           },
           'slide-right-fade': {
             '0%': { opacity: '0', transform: 'translateX(-2px)' },
-            '100%': { opacity: '1', transform: 'translateX(0)' }
+            '100%': { opacity: '1', transform: 'translateX(0)' },
           },
           'slide-down-fade': {
             '0%': { opacity: '0', transform: 'translateY(-2px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' }
+            '100%': { opacity: '1', transform: 'translateY(0)' },
           },
           'slide-left-fade': {
             '0%': { opacity: '0', transform: 'translateX(2px)' },
-            '100%': { opacity: '1', transform: 'translateX(0)' }
+            '100%': { opacity: '1', transform: 'translateX(0)' },
           },
           // Navigation menu
           'enter-from-right': {
             '0%': { transform: 'translateX(200px)', opacity: '0' },
-            '100%': { transform: 'translateX(0)', opacity: '1' }
+            '100%': { transform: 'translateX(0)', opacity: '1' },
           },
           'enter-from-left': {
             '0%': { transform: 'translateX(-200px)', opacity: '0' },
-            '100%': { transform: 'translateX(0)', opacity: '1' }
+            '100%': { transform: 'translateX(0)', opacity: '1' },
           },
           'exit-to-right': {
             '0%': { transform: 'translateX(0)', opacity: '1' },
-            '100%': { transform: 'translateX(200px)', opacity: '0' }
+            '100%': { transform: 'translateX(200px)', opacity: '0' },
           },
           'exit-to-left': {
             '0%': { transform: 'translateX(0)', opacity: '1' },
             '100%': {
               transform: 'translateX(-200px)',
-              opacity: '0'
-            }
+              opacity: '0',
+            },
           },
           'scale-in-content': {
             '0%': {
               transform: 'rotateX(-30deg) scale(0.9)',
-              opacity: '0'
+              opacity: '0',
             },
             '100%': {
               transform: 'rotateX(0deg) scale(1)',
-              opacity: '1'
-            }
+              opacity: '1',
+            },
           },
           'scale-out-content': {
             '0%': {
               transform: 'rotateX(0deg) scale(1)',
-              opacity: '1'
+              opacity: '1',
             },
             '100%': {
               transform: 'rotateX(-10deg) scale(0.95)',
-              opacity: '0'
-            }
+              opacity: '0',
+            },
           },
           'fade-in': {
             '0%': { opacity: '0' },
-            '100%': { opacity: '1' }
+            '100%': { opacity: '1' },
           },
           'fade-out': {
             '0%': { opacity: '1' },
-            '100%': { opacity: '0' }
+            '100%': { opacity: '0' },
           },
           // Toast
           'toast-hide': {
             '0%': { opacity: '1' },
-            '100%': { opacity: '0' }
+            '100%': { opacity: '0' },
           },
           'toast-slide-in-right': {
             '0%': { transform: 'translateX(calc(100% + 1rem))' },
-            '100%': { transform: 'translateX(0)' }
+            '100%': { transform: 'translateX(0)' },
           },
           'toast-slide-in-bottom': {
             '0%': { transform: 'translateY(calc(100% + 1rem))' },
-            '100%': { transform: 'translateY(0)' }
+            '100%': { transform: 'translateY(0)' },
           },
           'toast-swipe-out': {
             '0%': {
-              transform: 'translateX(var(--radix-toast-swipe-end-x))'
+              transform: 'translateX(var(--radix-toast-swipe-end-x))',
             },
             '100%': {
-              transform: 'translateX(calc(100% + 1rem))'
-            }
+              transform: 'translateX(calc(100% + 1rem))',
+            },
           },
           // Shimmer
           'shimmer-loop': {
             '100%': {
-              transform: 'translateX(100%)'
-            }
-          }
+              transform: 'translateX(100%)',
+            },
+          },
         },
         animation: {
           // Dropdown menu
@@ -613,16 +617,16 @@ export const tailwindConfig = ({
           'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
           // Shimmer
-          shimmer: 'shimmer-loop 2s infinite'
-        }
+          shimmer: 'shimmer-loop 2s infinite',
+        },
       },
-      ...extensions
-    )
+      ...extensions,
+    ),
   },
   plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
   content,
   future: {
-    hoverOnlyWhenSupported: true
-  }
+    hoverOnlyWhenSupported: true,
+  },
 });

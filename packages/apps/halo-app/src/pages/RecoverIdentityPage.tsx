@@ -23,7 +23,7 @@ const RecoverIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
 
   const onNext = useCallback(() => {
@@ -48,7 +48,7 @@ const RecoverIdentityPage = () => {
           inputPlaceholder: t('seed phrase placeholder'),
           onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
-          onBack: () => history.back()
+          onBack: () => history.back(),
         }}
       />
     </main>

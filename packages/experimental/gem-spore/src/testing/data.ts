@@ -17,7 +17,7 @@ export const seed = (seed: number) => faker.seed(seed);
 export const createNode = (type: string = undefined): TestNode => ({
   id: faker.datatype.uuid(),
   type,
-  label: faker.lorem.words(3).replace(/ /g, '-')
+  label: faker.lorem.words(3).replace(/ /g, '-'),
 });
 
 export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(createNode);
@@ -25,7 +25,7 @@ export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(
 export const createLink = (source: TestNode, target: TestNode): GraphLink => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
-  target: target.id
+  target: target.id,
 });
 
 /**
@@ -66,7 +66,7 @@ export const convertTreeToGraph = (root: TestNode): GraphData<TestNode> => {
 
   return traverse(root, {
     nodes: [],
-    links: []
+    links: [],
   });
 };
 
@@ -95,7 +95,7 @@ export const createGraph = (numNodes = 0, numLinks = 0): GraphData<TestNode> => 
 
   return {
     nodes,
-    links: Array.from(links.values())
+    links: Array.from(links.values()),
   };
 };
 

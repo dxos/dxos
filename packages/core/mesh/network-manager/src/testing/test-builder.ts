@@ -3,7 +3,12 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  SignalManager,
+  WebsocketSignalManager,
+} from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -17,7 +22,7 @@ import {
   TransportFactory,
   WebRTCTransport,
   WebRTCTransportProxyFactory,
-  WebRTCTransportService
+  WebRTCTransportService,
 } from '../transport';
 import { TestWireProtocol } from './test-wire-protocol';
 
@@ -61,12 +66,18 @@ export class TestPeer {
   /**
    * @internal
    */
+  readonly _signalManager: SignalManager;
+
+  /**
+   * @internal
+   */
   readonly _networkManager: NetworkManager;
 
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
   constructor(private readonly testBuilder: TestBuilder) {
+    this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager();
   }
 
@@ -82,37 +93,37 @@ export class TestPeer {
         this._proxy = createProtoRpcPeer({
           port: proxyPort,
           requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         this._service = createProtoRpcPeer({
           port: servicePort,
           exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           handlers: { BridgeService: new WebRTCTransportService() },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
       } else {
         transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params)
+          createTransport: (params) => new WebRTCTransport(params),
         };
       }
     }
 
     return new NetworkManager({
-      signalManager: this.testBuilder.createSignalManager(),
-      transportFactory
+      signalManager: this._signalManager,
+      transportFactory,
     });
   }
 
@@ -177,7 +188,7 @@ export class TestSwarmConnection {
       topic: this.topic,
       peerId: this.peer.peerId,
       protocolProvider: this.protocol.factory,
-      topology
+      topology,
     });
 
     return this;

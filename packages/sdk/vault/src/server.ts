@@ -31,7 +31,7 @@ export const startVault = async ({ config: configOptions = {} }: StartVaultOptio
 
   server.get('/.well-known/dx/config', async (req, reply) => {
     void reply.headers({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     });
     void reply.send(JSON.stringify(config));
   });

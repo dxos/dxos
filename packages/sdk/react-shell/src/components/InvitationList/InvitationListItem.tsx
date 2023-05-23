@@ -6,7 +6,8 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
 
-import { Button, getSize, mx, useId, useTranslation } from '@dxos/aurora';
+import { Button, useId, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 
@@ -25,7 +26,7 @@ export const InvitationListItem = ({
   invitation,
   value,
   onClickRemove,
-  createInvitationUrl
+  createInvitationUrl,
 }: InvitationListItemProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('qrLabel');
@@ -48,7 +49,7 @@ export const InvitationListItem = ({
         {showShare && invitationUrl ? (
           <>
             <AccordionPrimitive.Trigger asChild>
-              <Button className='grow flex gap-1' data-testid='show-qrcode'>
+              <Button classNames='grow flex gap-1' data-testid='show-qrcode'>
                 <span>{t('open share panel label')}</span>
                 <QrCode className={getSize(4)} weight='bold' />
               </Button>
@@ -61,12 +62,12 @@ export const InvitationListItem = ({
           <span role='none' className='grow' />
         )}
         {isCancellable ? (
-          <Button variant='ghost' className='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
+          <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
             <span className='sr-only'>{t('cancel invitation label')}</span>
             <ProhibitInset className={getSize(4)} weight='bold' />
           </Button>
         ) : (
-          <Button variant='ghost' className='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
+          <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
             <span className='sr-only'>{t('remove invitation label')}</span>
             <X className={getSize(4)} weight='bold' />
           </Button>

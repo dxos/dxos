@@ -6,15 +6,15 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
-import { DatabaseRouter } from './database-router';
 import { base, db } from './defs';
 import { EchoObject } from './object';
 import { Filter, Query, TypeFilter } from './query';
+import { DatabaseRouter } from './router';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -35,7 +35,7 @@ export class EchoDatabase {
      */
     public readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _router: DatabaseRouter
+    private readonly _router: DatabaseRouter,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
     this._update([]);
@@ -45,12 +45,15 @@ export class EchoDatabase {
     return Array.from(this._objects.values());
   }
 
+  /**
+   * @deprecated
+   */
   get router() {
     return this._router;
   }
 
   // TODO(burdon): Return type via generic?
-  getObjectById<T extends EchoObject>(id: string): T | undefined {
+  getObjectById<T extends TypedObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
@@ -63,7 +66,7 @@ export class EchoDatabase {
   }
 
   /**
-   * Add object to th database.
+   * Add object to the database.
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
@@ -77,11 +80,11 @@ export class EchoDatabase {
             objectId: obj[base]._id,
             mutations: [
               {
-                action: EchoObjectProto.Mutation.Action.RESTORE
-              }
-            ]
-          }
-        ]
+                action: EchoObjectProto.Mutation.Action.RESTORE,
+              },
+            ],
+          },
+        ],
       });
       return obj;
     }
@@ -101,14 +104,14 @@ export class EchoDatabase {
           {
             objectId: obj[base]._id,
             genesis: {
-              modelType: obj[base]._modelConstructor.meta.type
+              modelType: obj[base]._modelConstructor.meta.type,
             },
             snapshot: {
               // TODO(dmaretskyi): Parent id, deleted flag.
-              model: snapshot
-            }
-          }
-        ]
+              model: snapshot,
+            },
+          },
+        ],
       });
       assert(result.objectsUpdated.length === 1);
 
@@ -125,18 +128,18 @@ export class EchoDatabase {
   /**
    * Remove object.
    */
-  remove<T extends TypedObject>(obj: T) {
+  remove<T extends EchoObject>(obj: T) {
     this._backend.mutate({
       objects: [
         {
           objectId: obj[base]._id,
           mutations: [
             {
-              action: EchoObjectProto.Mutation.Action.DELETE
-            }
-          ]
-        }
-      ]
+              action: EchoObjectProto.Mutation.Action.DELETE,
+            },
+          ],
+        },
+      ],
     });
   }
 
@@ -151,10 +154,10 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>): Query<T>;
-  query(filter?: Filter<any>): Query;
-  query(filter: Filter<any>): Query {
-    return new Query(this._objects, this._updateEvent, filter);
+  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
+  query(filter?: Filter<any>, options?: QueryOptions): Query;
+  query(filter: Filter<any>, options?: QueryOptions): Query {
+    return new Query(this._objects, this._updateEvent, filter, options);
   }
 
   /**

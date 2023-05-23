@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, ForwardRefExoticComponent } from 'react';
 
 import {
   List,
@@ -12,50 +12,52 @@ import {
   ListItemCollapsibleContentProps,
   ListItemHeading,
   ListItemHeadingProps,
+  ListItemOpenTrigger,
+  ListItemOpenTriggerProps,
   ListItemProps,
   ListProps,
   ListScopedProps,
-  useListItemContext
-} from '../List';
+  useListItemContext,
+} from '@dxos/aurora';
 
 type TreeProps = ListProps;
 
 type TreeItemProps = ListItemProps;
 
-const TreeRoot = (props: TreeProps) => {
-  return <List {...props} collapsible slots={{ ...props.slots, root: { ...props.slots?.root, role: 'tree' } }} />;
-};
-
-type TreeBranchProps = ListScopedProps<Omit<TreeProps, 'labelId'>>;
-
-const TreeBranch = forwardRef<HTMLOListElement, TreeBranchProps>(
-  ({ __listScope, ...props }: TreeBranchProps, forwardedRef) => {
-    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
-
-    return (
-      <List
-        collapsible
-        {...props}
-        labelId={headingId}
-        slots={{ ...props.slots, root: { ...props.slots?.root, role: 'none' } }}
-        ref={forwardedRef}
-      />
-    );
-  }
+const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListElement, TreeProps>(
+  (props, forwardedRef) => {
+    return <List {...props} ref={forwardedRef} />;
+  },
 );
 
-const TreeItem = (props: ListItemProps) => {
-  return <ListItem {...props} slots={{ ...props.slots, root: { ...props.slots?.root, role: 'treeitem' } }} />;
-};
+type TreeBranchProps = ListScopedProps<TreeProps>;
+
+const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOListElement, TreeBranchProps>(
+  ({ __listScope, ...props }, forwardedRef) => {
+    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
+    return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
+  },
+);
+
+const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
+  (props, forwardedRef) => {
+    return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
+  },
+);
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 
-const TreeItemHeading = ListItemHeading;
+type TreeItemOpenTriggerProps = ListItemOpenTriggerProps;
 
 type TreeItemBodyProps = ListItemCollapsibleContentProps;
 
-const TreeItemBody = ListItemCollapsibleContent;
+export {
+  TreeRoot,
+  TreeBranch,
+  TreeItem,
+  ListItemHeading as TreeItemHeading,
+  ListItemCollapsibleContent as TreeItemBody,
+  ListItemOpenTrigger as TreeItemOpenTrigger,
+};
 
-export { TreeRoot, TreeBranch, TreeItem, TreeItemHeading, TreeItemBody };
-
-export type { TreeProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps };
+export type { TreeProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };

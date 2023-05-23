@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, Plus } from '@phosphor-icons/react';
+import { Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { getSize, Button, mx } from '@dxos/aurora';
-import { List, ListItem, Input, ListItemEndcap } from '@dxos/react-appkit';
+import { Button, List, ListItem, ListItemEndcap } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
+import { Input } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.
 export type Object = { id: string };
@@ -28,18 +29,14 @@ export type EditableObjectListProps<T extends Object> = {
   selected?: string;
   getTitle: (object: T) => string;
   Icon: FC<any>;
-  Action?: FC<any>;
+  Action?: FC<{ object: T }>;
   slots?: EditableObjectListSlots;
   onSelect?: (id: string) => void;
-  onAction?: (id: string) => void;
   onUpdate?: (id: string, text: string) => Promise<void>;
   onCreate?: () => Promise<string | undefined>;
 };
 
 // TODO(burdon): Replace with react-components list.
-// TODO(burdon): onCreate, onUpdate title.
-// TODO(burdon): Focus on create.
-// TODO(burdon): Delete.
 export const EditableObjectList = <T extends Object>({
   objects,
   selected,
@@ -48,9 +45,8 @@ export const EditableObjectList = <T extends Object>({
   Action,
   slots = {},
   onSelect,
-  onAction,
   onUpdate,
-  onCreate
+  onCreate,
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
@@ -61,35 +57,25 @@ export const EditableObjectList = <T extends Object>({
     }
   };
 
-  const ActionIcon = Action ?? Circle;
-
   return (
-    <div role='none' className={mx('is-full', slots.root?.className)}>
-      <List labelId='objects'>
+    <div role='none' className={mx('flex flex-col overflow-hidden is-full', slots.root?.className)}>
+      <List aria-labelledby='objects'>
         {objects.map((object) => {
           const isSelected = object.id === selected;
           return (
             <ListItem
               id={object.id}
               key={object.id}
-              slots={{
-                root: {
-                  className: selected === object.id ? slots?.selected?.className : undefined
-                },
-                mainContent: { className: 'flex w-full px-3 items-center' }
-              }}
+              classNames={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
             >
-              <ListItemEndcap asChild>
-                {/* TODO(burdon): Why is div required? */}
-                <div>
-                  <Button
-                    variant='ghost'
-                    onClick={() => onSelect?.(object.id)}
-                    className={mx(isSelected ? 'text-selection-text' : '')}
-                  >
-                    <Icon className={getSize(6)} />
-                  </Button>
-                </div>
+              <ListItemEndcap>
+                <Button
+                  variant='ghost'
+                  onClick={() => onSelect?.(object.id)}
+                  classNames={isSelected && 'text-selection-text'}
+                >
+                  <Icon className={getSize(6)} />
+                </Button>
               </ListItemEndcap>
 
               <Input
@@ -97,20 +83,19 @@ export const EditableObjectList = <T extends Object>({
                 label='Title'
                 labelVisuallyHidden
                 placeholder='Title'
+                // TODO(burdon): Input classname not propagated.
                 slots={{
-                  root: { className: 'grow pl-1' },
-                  input: { autoFocus: !getTitle(object)?.length }
+                  root: { className: 'flex w-full overflow-hidden pl-1' },
+                  input: { className: 'flex w-full', autoFocus: !getTitle(object)?.length },
                 }}
                 value={getTitle(object) ?? ''}
                 onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
               />
 
-              {onAction && (
+              {Action && (
                 <ListItemEndcap asChild>
                   <div className='flex justify-center items-center'>
-                    <Button variant='ghost' className='p-0' onClick={() => onAction?.(object.id)}>
-                      <ActionIcon className={getSize(6)} />
-                    </Button>
+                    <Action object={object} />
                   </div>
                 </ListItemEndcap>
               )}

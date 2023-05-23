@@ -25,7 +25,7 @@ export class AppManager {
 
     const { page } = await setupPage(this._browser, {
       waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
-      bridgeLogs: true
+      bridgeLogs: true,
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));

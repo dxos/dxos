@@ -27,9 +27,9 @@ export const getPersistentContext = (browserType: BrowserType) => {
       process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
         ? [
             `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
-            `--load-extension=${process.env.EXTENSION_PATH}`
+            `--load-extension=${process.env.EXTENSION_PATH}`,
           ]
-        : undefined
+        : undefined,
   };
 
   return getBrowser(browserType).launchPersistentContext(`/tmp/playwright/${v4()}`, options);
@@ -102,24 +102,24 @@ const getProject = (browser: BrowserType | MobileType): Project => {
       return {
         name: browser,
         use: {
-          browserName: browser
-        }
+          browserName: browser,
+        },
       };
 
     case 'android':
       return {
         name: 'android',
         use: {
-          ...devices['Pixel 5']
-        }
+          ...devices['Pixel 5'],
+        },
       };
 
     case 'ios':
       return {
         name: 'ios',
         use: {
-          ...devices['iPhone SE']
-        }
+          ...devices['iPhone SE'],
+        },
       };
   }
 };
@@ -138,7 +138,7 @@ export const defaultPlaywrightConfig: PlaywrightTestConfig = {
       : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
   },
-  projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType))
+  projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType)),
 };

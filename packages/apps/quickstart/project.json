@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/quickstart/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/quickstart/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
@@ -68,9 +68,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/common/react-components/.storybook"
-        },
+        "configDir": "packages/ui/aurora/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

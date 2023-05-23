@@ -16,11 +16,11 @@ export default class Join extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
-      description: 'Invitation code'
+      description: 'Invitation code',
     }),
     secret: Flags.string({
-      description: 'Invitation secret'
-    })
+      description: 'Invitation secret',
+    }),
   };
 
   async run(): Promise<any> {
@@ -49,7 +49,7 @@ export default class Join extends BaseCommand {
       return {
         key: space.key.toHex(),
         name: space.properties.name,
-        members: mapMembers(members)
+        members: mapMembers(members),
       };
     });
   }

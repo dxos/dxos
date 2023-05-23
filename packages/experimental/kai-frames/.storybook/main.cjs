@@ -28,7 +28,7 @@ module.exports = {
             resolve(__dirname, '../node_modules/@dxos/mosaic/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/react-appkit/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+            resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/react-list/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/react-shell/dist/**/*.mjs')

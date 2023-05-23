@@ -2,19 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-export const alphabetical = (direction = 1) => {
-  return (v1: string, v2: string) => {
-    const a = v1?.toLowerCase();
-    const b = v2?.toLowerCase();
-    return a < b ? direction * -1 : a > b ? direction : 0;
-  };
-};
+// TODO(burdon): Unique.
+// TODO(burdon): Options for undefined to end.
 
-// TODO(burdon): Specify array of [key, direction] tuples (different types).
-export const alphabeticalByKey = (key: string, direction = 1) => {
-  return (v1: any, v2: any) => {
-    const a = v1[key]?.toLowerCase();
-    const b = v2[key]?.toLowerCase();
-    return a < b ? direction * -1 : a > b ? direction : 0;
+type Compare<T> = (a: T, b: T) => number;
+
+export const compareScalar =
+  (inc = true) =>
+  (a: any, b: any) =>
+    (inc ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
+
+export const compareString =
+  (inc = true, caseInsensitive = true) =>
+  (a: string, b: string) => {
+    if (caseInsensitive) {
+      a = a?.toLowerCase();
+      b = b?.toLowerCase();
+    }
+    return (inc ? 1 : -1) * (a < b ? -1 : a > b ? 1 : 0);
   };
-};
+
+export const compareObject =
+  <T extends Record<string, any>>(prop: string, sorter: Compare<any>, inc = true): Compare<any> =>
+  (a: T, b: T) =>
+    (inc ? 1 : -1) * sorter(a[prop], b[prop]);
+
+export const compareMulti =
+  <T extends Record<string, any>>(sorters: Compare<T>[]) =>
+  (a: T, b: T) => {
+    const sort = (i = 0): number => {
+      const s = sorters[i](a, b);
+      if (s === 0 && i < sorters.length - 1) {
+        return sort(i + 1);
+      } else {
+        return s;
+      }
+    };
+
+    return sort();
+  };

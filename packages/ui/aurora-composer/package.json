@@ -27,6 +27,7 @@
     "@codemirror/theme-one-dark": "^6.1.1",
     "@codemirror/view": "^6.9.2",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",

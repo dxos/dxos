@@ -17,7 +17,7 @@ void initializeAppTelemetry({
   namespace,
   config: new Config(Defaults()),
   sentryOptions: { tracing: false, replay: false },
-  telemetryOptions: { enable: false }
+  telemetryOptions: { enable: false },
 });
 
 const workerRuntime = new WorkerRuntime(async () => {
@@ -28,7 +28,7 @@ const workerRuntime = new WorkerRuntime(async () => {
 
 // Allow to access host from console.
 (globalThis as any).__DXOS__ = {
-  host: workerRuntime.host
+  host: workerRuntime.host,
 };
 
 const start = Date.now();
@@ -38,7 +38,7 @@ void workerRuntime.start().then(
   },
   (err) => {
     log.catch(err);
-  }
+  },
 );
 
 onconnect = async (event) => {
@@ -56,15 +56,15 @@ onconnect = async (event) => {
       payload: {
         systemPort: systemChannel.port1,
         shellPort: shellChannel.port1,
-        appPort: appChannel.port1
-      }
+        appPort: appChannel.port1,
+      },
     },
-    [systemChannel.port1, shellChannel.port1, appChannel.port1]
+    [systemChannel.port1, shellChannel.port1, appChannel.port1],
   );
 
   await workerRuntime.createSession({
     systemPort: createWorkerPort({ port: systemChannel.port2 }),
     shellPort: createWorkerPort({ port: shellChannel.port2 }),
-    appPort: createWorkerPort({ port: appChannel.port2 })
+    appPort: createWorkerPort({ port: appChannel.port2 }),
   });
 };

@@ -5,7 +5,8 @@
 import { CaretLeft, Planet } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, getSize, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 
 import { Tooltip } from '../Tooltip';
 
@@ -17,7 +18,7 @@ export const SpacesLink = ({ onClickGoToSpaces }: SpacesLinkProps) => {
   const { t } = useTranslation('appkit');
   return (
     <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger triggerIsInToolbar>
-      <Button onClick={onClickGoToSpaces} className='pointer-events-auto flex gap-1'>
+      <Button onClick={onClickGoToSpaces} classNames='pointer-events-auto flex gap-1'>
         <CaretLeft className={getSize(4)} />
         <Planet className={getSize(4)} />
       </Button>

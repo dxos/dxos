@@ -12,7 +12,7 @@ import {
   GraphLayoutNode,
   GraphLink,
   Projector,
-  ProjectorOptions
+  ProjectorOptions,
 } from '@dxos/gem-spore';
 
 export type TreeProjectorOptions = ProjectorOptions &
@@ -41,21 +41,21 @@ export type TreeProjectorOptions = ProjectorOptions &
 const defaultOptions: Partial<TreeProjectorOptions> = {
   show: {
     parents: true,
-    lateral: true
+    lateral: true,
   },
   classes: {
     node: {
-      circle: 'fill-gray-100'
-    }
-  }
+      circle: 'fill-gray-100',
+    },
+  },
 };
 
 export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, TreeProjectorOptions> {
   _layout: GraphLayout<N> = {
     graph: {
       nodes: [],
-      links: []
-    }
+      links: [],
+    },
   };
 
   constructor(context: SVGContext, options?: Partial<TreeProjectorOptions>) {
@@ -71,8 +71,8 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       return {
         graph: {
           nodes: [],
-          links: []
-        }
+          links: [],
+        },
       };
     }
 
@@ -85,7 +85,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       x: center[0],
       y: center[1],
       r: (this.options.nodeRadius ?? 16) * 3, // TODO(burdon): Factor out default.
-      data: rootNode // TODO(burdon): Merge Deep defaults for root class..
+      data: rootNode, // TODO(burdon): Merge Deep defaults for root class..
     });
 
     // Create or update nodes.
@@ -164,7 +164,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
               target,
               sourceStart: source.last,
               targetStart: target.last,
-              classes: this.options.classes?.link
+              classes: this.options.classes?.link,
             };
           }
 
@@ -181,8 +181,8 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
           cy: 0,
           r: outer,
           classes: {
-            circle: this.options.classes?.guide?.circle
-          }
+            circle: this.options.classes?.guide?.circle,
+          },
         },
         {
           id: 'g1',
@@ -191,14 +191,14 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
           cy: 0,
           r: inner,
           classes: {
-            circle: this.options.classes?.guide?.circle
-          }
-        }
+            circle: this.options.classes?.guide?.circle,
+          },
+        },
       ],
       graph: {
         nodes,
-        links
-      }
+        links,
+      },
     };
   }
 
@@ -215,7 +215,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
         x: center[0] + Math.sin(a) * rx,
         y: center[1] - Math.cos(a) * ry,
         r: this.options.nodeRadius,
-        className: this.options.classes?.node
+        className: this.options.classes?.node,
       });
 
       a += da;
@@ -234,7 +234,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       initialized: true,
       last: [0, 0],
       data: dataNode,
-      classes: this.options.classes?.node
+      classes: this.options.classes?.node,
     };
   }
 }

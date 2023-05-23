@@ -18,39 +18,39 @@ const modules: Module[] = [
   {
     type: 'test',
     name: 'test-1',
-    displayName: 'App 1'
+    displayName: 'App 1',
   },
   {
     type: 'test',
     name: 'test-2',
     displayName: 'App 2',
-    tags: ['prod']
+    tags: ['prod'],
   },
   {
     type: 'test',
     name: 'test-3',
     displayName: 'App 3',
-    tags: ['test']
+    tags: ['test'],
   },
   {
     type: 'test',
     name: 'test-4',
     displayName: 'App 4',
-    tags: ['prod']
+    tags: ['prod'],
   },
   {
     type: 'test',
     name: 'test-5',
     displayName: 'App 5',
-    tags: ['prod', 'demo']
-  }
+    tags: ['prod', 'demo'],
+  },
 ];
 
 describe('Metagraph queries', () => {
   const testServer = new TestServer({ modules });
 
   beforeAll(() => {
-    testServer.start();
+    testServer.start(7777);
   });
 
   afterAll(() => {
@@ -66,11 +66,11 @@ describe('Metagraph queries', () => {
             dxns: {
               // TODO(burdon): dmg.
               // Test with https://dev.kube.dxos.org/.well-known/dx/registry
-              server: 'http://localhost:8080/modules'
-            }
-          }
-        }
-      })
+              server: 'http://localhost:7777/modules',
+            },
+          },
+        },
+      }),
     );
 
     {
@@ -85,7 +85,7 @@ describe('Metagraph queries', () => {
       const unsubscribe = observable.subscribe({
         onUpdate: (modules: Module[]) => {
           trigger.wake(modules.length);
-        }
+        },
       });
 
       const results = observable.results;

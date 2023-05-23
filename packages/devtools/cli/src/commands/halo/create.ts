@@ -12,7 +12,7 @@ export default class Create extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Create HALO.';
   static override args = {
-    displayName: Args.string({ description: 'Display name' })
+    displayName: Args.string({ description: 'Display name' }),
   };
 
   async run(): Promise<any> {

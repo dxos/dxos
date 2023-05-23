@@ -5,7 +5,8 @@
 import { Check, Copy } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { useClipboardContext } from './ClipboardProvider';
 
@@ -21,7 +22,7 @@ export const CopyButton = ({ value }: CopyButtonProps) => {
   const isCopied = textValue === value;
   return (
     <Button
-      className='inline-flex flex-col justify-center'
+      classNames='inline-flex flex-col justify-center'
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >

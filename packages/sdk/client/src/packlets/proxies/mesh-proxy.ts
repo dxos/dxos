@@ -19,7 +19,8 @@ import { ClientServicesProvider } from '../client';
 export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
   private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
-    state: ConnectionState.OFFLINE
+    swarm: ConnectionState.OFFLINE,
+    signaling: [],
   });
 
   private _ctx?: Context;
@@ -37,7 +38,7 @@ export class MeshProxy {
 
   toJSON() {
     return {
-      networkStatus: this._networkStatus.get()
+      networkStatus: this._networkStatus.get(),
     };
   }
 
@@ -45,20 +46,20 @@ export class MeshProxy {
     return this._networkStatus;
   }
 
-  async setConnectionState(state: ConnectionState) {
+  async updateConfig(swarm: ConnectionState) {
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
+    return this._serviceProvider.services.NetworkService.updateConfig({ swarm });
   }
 
   /**
    * @internal
    */
   async _open() {
-    log.trace('dxos.sdk.mesh-proxy', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.mesh-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
+    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatusUpdated.emit(networkStatus);
     });
@@ -66,6 +67,7 @@ export class MeshProxy {
     this._ctx.onDispose(() => {
       networkStatusStream.close();
     });
+    log.trace('dxos.sdk.mesh-proxy.open', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -73,6 +75,5 @@ export class MeshProxy {
    */
   async _close() {
     await this._ctx?.dispose();
-    log.trace('dxos.sdk.mesh-proxy', trace.end({ id: this._instanceId }));
   }
 }

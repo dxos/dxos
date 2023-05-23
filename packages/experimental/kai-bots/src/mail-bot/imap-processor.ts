@@ -58,7 +58,7 @@ export class ImapProcessor {
     // https://github.com/mscdex/node-imap
     const messages = await this._connection!.search(['ALL', ['SINCE', sub(Date.now(), { days })]], {
       bodies: [''],
-      markSeen: false
+      markSeen: false,
     });
 
     const parsedMessage = await this.parseMessages(messages);
@@ -87,12 +87,12 @@ export class ImapProcessor {
         const message = new Message({
           source: {
             resolver: this._id,
-            guid: messageId
+            guid: messageId,
           },
           date: date.toISOString(),
           from: convertToContact(from.value[0]),
           to: toArray(to).map((to) => convertToContact(to.value[0])),
-          subject
+          subject,
         });
 
         // Skip bulk mail.
@@ -107,8 +107,8 @@ export class ImapProcessor {
           let str = convert(textAsHtml, {
             selectors: [
               { selector: 'a', format: 'skip' },
-              { selector: 'img', format: 'skip' }
-            ]
+              { selector: 'img', format: 'skip' },
+            ],
           });
 
           // TODO(burdon): Heuristics.
@@ -138,7 +138,7 @@ export class ImapProcessor {
 
         message.body = body;
         return message;
-      })
+      }),
     );
 
     return messages.filter(Boolean) as Message[];

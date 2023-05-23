@@ -11,5 +11,5 @@ const ChessFrame = React.lazy(() => import('./ChessFrame'));
 
 export const ChessFrameRuntime: FrameRuntime<any> = {
   Icon: ChessIcon,
-  Component: ChessFrame
+  Component: ChessFrame,
 };

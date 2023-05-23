@@ -15,13 +15,13 @@ import {
   GraphRenderer,
   createMarkers,
   createSimulationDrag,
-  linkerRenderer
+  linkerRenderer,
 } from '../graph';
 import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
 import { defaultGraphStyles, defaultMarkerStyles } from './styles';
 
 export default {
-  title: 'gem-spore/hooks'
+  title: 'gem-spore/hooks',
 };
 
 // TODO(burdon): Dynamic classname for nodes (e.g., based on selection).
@@ -44,16 +44,16 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
         forces: {
           link: {
             distance: 20,
-            iterations: 3
+            iterations: 3,
           },
           manyBody: {
-            strength: -10
-          }
-        }
+            strength: -10,
+          },
+        },
       }),
-      renderer: new GraphRenderer(context, graphRef)
+      renderer: new GraphRenderer(context, graphRef),
     }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -115,12 +115,12 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       guides: true,
       forces: {
         link: {
-          distance: 40
+          distance: 40,
         },
         manyBody: {
-          strength: -80
-        }
-      }
+          strength: -80,
+        },
+      },
     });
 
     // TODO(burdon): Create class?
@@ -138,13 +138,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
           // TODO(burdon): Set start position.
           model.createNodes(parent);
         }
-      }
+      },
     });
 
     const renderer = new GraphRenderer<TestNode>(context, zoom.ref, {
       drag,
       labels: {
-        text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4)
+        text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
       },
       onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
         renderer.fireBullet(node);
@@ -155,13 +155,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
         }
       },
       arrows: {
-        end: true
-      }
+        end: true,
+      },
     });
 
     return {
       projector,
-      renderer
+      renderer,
     };
   }, []);
 
@@ -212,7 +212,7 @@ const Info = () => (
       left: 8,
       bottom: 8,
       fontFamily: 'sans-serif',
-      color: '#333'
+      color: '#333',
     }}
   >
     ⌘-DRAG to link or create node; ⌘-CLICK to delete link.

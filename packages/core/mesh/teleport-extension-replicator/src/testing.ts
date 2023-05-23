@@ -26,7 +26,7 @@ export class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
   public keyring = new Keyring(this.storage.createDirectory('keyring'));
   public feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring })
+    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
   });
 
   async createWriteFeed(numBlocks = 0) {

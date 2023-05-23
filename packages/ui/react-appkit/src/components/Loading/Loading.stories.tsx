@@ -11,13 +11,13 @@ export default {
   argTypes: {
     size: {
       control: 'select',
-      options: ['sm', 'md', 'lg', 'xl']
+      options: ['sm', 'md', 'lg', 'xl'],
     },
     color: {
       control: 'select',
-      options: ['primary', 'neutral']
-    }
-  }
+      options: ['primary', 'neutral'],
+    },
+  },
 };
 
 export const Default = { args: { label: 'Loading', size: 'md', color: 'primary' } };

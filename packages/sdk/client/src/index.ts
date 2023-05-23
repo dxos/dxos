@@ -10,12 +10,13 @@ export { generateSeedPhrase } from '@dxos/credentials';
 export {
   TYPE_SCHEMA,
   Item,
-  ItemFilterDeleted,
   ResultSet,
   Schema,
+  ShowDeletedOption,
+  type QueryOptions,
   type SchemaDef,
   type SchemaField,
-  type SchemaRef
+  type SchemaRef,
 } from '@dxos/echo-db';
 
 // TODO(burdon): Tighten export.
@@ -34,7 +35,7 @@ export {
   Invitation,
   SpaceMember,
   SpaceState,
-  SystemStatus
+  SystemStatus,
 } from '@dxos/protocols/proto/dxos/client/services';
 export type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';

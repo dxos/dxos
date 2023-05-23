@@ -16,6 +16,7 @@ export type ComposerSlots = {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
+    placeholder?: string;
     spellCheck?: boolean;
     tabIndex?: number;
     markdownTheme?: Parameters<typeof EditorView.theme>[0];
@@ -74,8 +75,8 @@ export const useTextModel = ({ identity, space, text }: UseTextModelOptions): Co
     peer: identity
       ? {
           id: identity.identityKey.toHex(),
-          name: identity.profile?.displayName
+          name: identity.profile?.displayName,
         }
-      : undefined
+      : undefined,
   };
 };

@@ -2,32 +2,80 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { Density, Elevation } from '@dxos/aurora-types';
 
-import { useButtonShadow, useDensityContext, useThemeContext } from '../../hooks';
-import { ButtonProps } from './ButtonProps';
-import { buttonStyles } from './buttonStyles';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, density: propsDensity, elevation, variant = 'default', ...rootSlot }, ref) => {
-    const { themeVariant } = useThemeContext();
-    const shadow = useButtonShadow();
+interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
+  variant?: 'default' | 'primary' | 'outline' | 'ghost';
+  density?: Density;
+  elevation?: Elevation;
+  asChild?: boolean;
+}
+
+type ButtonGroupContextValue = { inGroup?: boolean };
+const BUTTON_GROUP_NAME = 'ButtonGroup';
+const BUTTON_NAME = 'Button';
+const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
+  inGroup: false,
+});
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    { classNames, children, density: propsDensity, elevation: propsElevation, variant = 'default', asChild, ...props },
+    ref,
+  ) => {
+    const { inGroup } = useButtonGroupContext(BUTTON_NAME);
+    const { tx } = useThemeContext();
+    const elevation = useElevationContext(propsElevation);
     const density = useDensityContext(propsDensity);
+    const Root = asChild ? Slot : Primitive.button;
     return (
-      <button
+      <Root
         ref={ref}
-        {...rootSlot}
-        className={mx(
-          buttonStyles({ density, variant, disabled: rootSlot.disabled }, themeVariant),
-          !rootSlot.disabled && (variant === 'default' || variant === 'primary') && shadow,
-          rootSlot.className
+        {...props}
+        className={tx(
+          'button.root',
+          'button',
+          {
+            variant,
+            inGroup,
+            disabled: props.disabled,
+            density,
+            elevation,
+          },
+          classNames,
         )}
-        {...(rootSlot.disabled && { disabled: true })}
+        {...(props.disabled && { disabled: true })}
       >
         {children}
-      </button>
+      </Root>
     );
-  }
+  },
 );
+
+Button.displayName = BUTTON_NAME;
+
+type ButtonGroupProps = ComponentPropsWithoutRef<'div'> & { elevation?: Elevation };
+
+const ButtonGroup = ({ children, elevation: propsElevation, ...divProps }: ButtonGroupProps) => {
+  const { tx } = useThemeContext();
+  const elevation = useElevationContext(propsElevation);
+  return (
+    <div role='none' {...divProps} className={tx('button.group', 'button-group', { elevation }, divProps.className)}>
+      <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
+    </div>
+  );
+};
+
+ButtonGroup.displayName = BUTTON_GROUP_NAME;
+
+export { Button, ButtonGroup, BUTTON_GROUP_NAME, useButtonGroupContext };
+
+export type { ButtonProps, ButtonGroupProps };

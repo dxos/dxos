@@ -5,7 +5,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
@@ -22,7 +22,14 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
   build: {
     sourcemap: true,
@@ -68,15 +75,15 @@ export default defineConfig({
       }
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    ...(process.env.NODE_ENV === 'production' && process.env.CI === 'true'
-      ? [
-          sentryVitePlugin({
-            org: 'dxos',
-            project: 'tasks-app',
-            include: './out/tasks',
-            authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN
-          })
-        ]
-      : [])
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'tasks-app',
+      sourcemaps: {
+        assets: './packages/apps/tasks-app/out/tasks/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: !process.env.CI
+    })
   ]
 });

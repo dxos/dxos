@@ -6,7 +6,7 @@ import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import assert from 'assert';
 import React, { FC, useState } from 'react';
 
-import { getSize } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
@@ -23,7 +23,7 @@ const num = 8;
 const stackAction = {
   id: 'delete',
   label: 'Delete',
-  Icon: X
+  Icon: X,
 };
 
 const sectionMenuActions = (section?: any): StackAction[][] => {
@@ -32,9 +32,9 @@ const sectionMenuActions = (section?: any): StackAction[][] => {
       {
         id: 'insert',
         label: 'Insert',
-        Icon: Plus
-      }
-    ]
+        Icon: Plus,
+      },
+    ],
   ];
 
   if (section) {
@@ -42,8 +42,8 @@ const sectionMenuActions = (section?: any): StackAction[][] => {
       {
         id: 'delete',
         label: 'Delete',
-        Icon: Trash
-      }
+        Icon: Trash,
+      },
     ]);
   }
 
@@ -133,13 +133,13 @@ export default {
           <Story />
         </div>
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

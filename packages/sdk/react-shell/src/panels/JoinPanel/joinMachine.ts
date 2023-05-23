@@ -72,14 +72,14 @@ type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitat
 
 const getInvitationSubscribable = (
   Kind: 'Space' | 'Halo',
-  invitation: AuthenticatingInvitationObservable
+  invitation: AuthenticatingInvitationObservable,
 ): Subscribable<InvitationEvent> => {
   log('[subscribing to invitation]', invitation);
   return {
     subscribe: (
       next: (value: InvitationEvent) => void,
       onError?: (error: any) => void,
-      complete?: () => void
+      complete?: () => void,
     ): Subscription =>
       invitation.subscribe(
         (invitation: Invitation) => {
@@ -125,8 +125,8 @@ const getInvitationSubscribable = (
           log.error('[invitation errored]', { Kind, error });
           next({ type: `fail${Kind}Invitation`, reason: 'error' });
           return onError?.(error);
-        }
-      )
+        },
+      ),
   } as Subscribable<InvitationEvent>;
 };
 
@@ -138,24 +138,24 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
         always: [
           {
             cond: ({ mode }) => mode === 'halo-only' && Kind === 'Space',
-            target: '#join.finishingJoiningHalo'
+            target: '#join.finishingJoiningHalo',
           },
           {
             // cond: `no${Kind}Invitation`,
             target: `inputting${Kind}InvitationCode`,
-            actions: 'log'
-          }
-          // todo(thure): Restore this transition that redeems the invitation code on init.
+            actions: 'log',
+          },
+          // TODO(thure): Restore this transition that redeems the invitation code on init.
           // {
           //   target: `acceptingRedeemed${Kind}Invitation`,
           //   actions: [`redeem${Kind}InvitationCode`, 'log']
           // }
-        ]
+        ],
       },
       [`inputting${Kind}InvitationCode`]: {},
       [`acceptingRedeemed${Kind}Invitation`]: {
         invoke: {
-          src: (context) => context[Kind.toLowerCase() as 'space' | 'halo'].invitationSubscribable!
+          src: (context) => context[Kind.toLowerCase() as 'space' | 'halo'].invitationSubscribable!,
         },
         initial: `unknown${Kind}Invitation`,
         states: {
@@ -167,13 +167,13 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
                 target: `connecting${Kind}Invitation`,
-                actions: 'log'
+                actions: 'log',
               },
               {
                 target: `inputting${Kind}VerificationCode`,
-                actions: 'log'
-              }
-            ]
+                actions: 'log',
+              },
+            ],
           },
           [`connecting${Kind}Invitation`]: {},
           [`inputting${Kind}VerificationCode`]: {},
@@ -181,34 +181,34 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             on: {
               [`readyForAuthentication${Kind}Invitation`]: {
                 target: `authenticationFailing${Kind}VerificationCode`,
-                actions: ['setInvitation', 'log']
-              }
-            }
+                actions: ['setInvitation', 'log'],
+              },
+            },
           },
           [`authenticationFailing${Kind}VerificationCode`]: {},
           [`failing${Kind}Invitation`]: {},
-          [`success${Kind}Invitation`]: {}
+          [`success${Kind}Invitation`]: {},
         },
         on: {
           [`reset${Kind}Invitation`]: {
             target: `#join${Kind === 'Halo' ? '.choosingIdentity' : ''}.accepting${Kind}Invitation.unknown${Kind}`,
-            actions: ['resetInvitation', 'log']
+            actions: ['resetInvitation', 'log'],
           },
           [`connecting${Kind}Invitation`]: {
             target: `.connecting${Kind}Invitation`,
-            actions: ['setInvitation', 'log']
+            actions: ['setInvitation', 'log'],
           },
           [`connected${Kind}Invitation`]: {
             target: `.connecting${Kind}Invitation`,
-            actions: ['setInvitation', 'log']
+            actions: ['setInvitation', 'log'],
           },
           [`readyForAuthentication${Kind}Invitation`]: {
             target: `.inputting${Kind}VerificationCode`,
-            actions: ['setInvitation', 'log']
+            actions: ['setInvitation', 'log'],
           },
           [`authenticating${Kind}Invitation`]: {
             target: `.authenticating${Kind}VerificationCode`,
-            actions: ['setInvitation', 'log']
+            actions: ['setInvitation', 'log'],
           },
           [`success${Kind}Invitation`]: { target: successTarget, actions: ['setInvitation', 'log'] },
           [`fail${Kind}Invitation`]: {
@@ -217,17 +217,17 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
               assign({
                 [Kind.toLowerCase() as 'space' | 'halo']: (
                   context: JoinMachineContext,
-                  event: FailInvitationEvent
+                  event: FailInvitationEvent,
                 ) => ({
                   ...context[Kind.toLowerCase() as 'space' | 'halo'],
-                  failReason: event.reason
-                })
+                  failReason: event.reason,
+                }),
               }),
-              'log'
-            ]
-          }
-        }
-      }
+              'log',
+            ],
+          },
+        },
+      },
     },
     on: {
       [`set${Kind}InvitationCode`]: {
@@ -236,14 +236,14 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
           assign({
             [Kind.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
               ...context[Kind.toLowerCase() as 'space' | 'halo'],
-              unredeemedCode: event.code
-            })
+              unredeemedCode: event.code,
+            }),
           }),
           `redeem${Kind}InvitationCode`,
-          'log'
-        ]
-      }
-    }
+          'log',
+        ],
+      },
+    },
   };
   return config as StateNodeConfig<JoinMachineContext, typeof config, JoinEvent>;
 };
@@ -268,15 +268,15 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       mode: 'default',
       identity: null,
       halo: {},
-      space: {}
+      space: {},
     },
     initial: 'unknown',
     states: {
       unknown: {
         always: [
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
-          { target: 'acceptingSpaceInvitation', actions: 'log' }
-        ]
+          { target: 'acceptingSpaceInvitation', actions: 'log' },
+        ],
       },
       choosingIdentity: {
         initial: 'choosingAuthMethod',
@@ -285,7 +285,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           recoveringIdentity: {},
           creatingIdentity: {},
           acceptingHaloInvitation: acceptingInvitationTemplate('Halo', '#join.acceptingSpaceInvitation'),
-          confirmingAddedIdentity: {}
+          confirmingAddedIdentity: {},
         },
         on: {
           recoverIdentity: { target: '.recoveringIdentity', actions: 'log' },
@@ -294,32 +294,32 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           addIdentity: { target: '.confirmingAddedIdentity', actions: 'log' },
           selectIdentity: {
             target: 'acceptingSpaceInvitation',
-            actions: ['setIdentity', 'log']
+            actions: ['setIdentity', 'log'],
           },
-          deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' }
-        }
+          deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' },
+        },
       },
       acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
       finishingJoiningSpace: {
-        type: 'final'
+        type: 'final',
       },
       finishingJoiningHalo: {
-        type: 'final'
-      }
-    }
+        type: 'final',
+      },
+    },
   },
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
       noHaloInvitation: ({ halo }, _event) => !halo.invitation && !halo.unredeemedCode,
-      noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode
+      noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },
     actions: {
       setIdentity: assign<JoinMachineContext, SelectIdentityEvent>({
-        identity: (context, event) => event.identity
+        identity: (context, event) => event.identity,
       }),
       unsetIdentity: assign<JoinMachineContext>({
-        identity: () => null
+        identity: () => null,
       }),
       resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
         halo: (context, event) => {
@@ -335,7 +335,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
             ...context.halo,
             invitation: undefined,
             invitationObservable: undefined,
-            invitationSubscribable: undefined
+            invitationSubscribable: undefined,
           };
         },
         space: (context, event) => {
@@ -351,25 +351,25 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
             ...context.space,
             invitation: undefined,
             invitationObservable: undefined,
-            invitationSubscribable: undefined
+            invitationSubscribable: undefined,
           };
-        }
+        },
       }),
       setInvitation: assign<JoinMachineContext, SetInvitationEvent>({
         halo: (context, event) =>
           event.type.includes('Halo') ? { ...context.halo, invitation: event.invitation } : context.halo,
         space: (context, event) =>
-          event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space
+          event.type.includes('Space') ? { ...context.space, invitation: event.invitation } : context.space,
       }),
       log: (context, event) => {
         log('[transition]', {
           event,
           haloInvitation: context.halo.invitation,
-          spaceInvitation: context.space.invitation
+          spaceInvitation: context.space.invitation,
         });
-      }
-    }
-  }
+      },
+    },
+  },
 );
 
 type JoinMachine = typeof joinMachine;
@@ -398,36 +398,36 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
         const invitationObservable = client.halo.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode))
+          InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
         );
         return {
           ...halo,
           invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable)
+          invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
         };
       } else {
         return halo;
       }
     },
-    [client]
+    [client],
   );
 
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
         const invitationObservable = client.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode))
+          InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
         );
         return {
           ...space,
           invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Space', invitationObservable)
+          invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
         };
       } else {
         return space;
       }
     },
-    [client]
+    [client],
   );
 
   return useMachine(joinMachine, {
@@ -435,8 +435,8 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
     actions: {
       ...options?.actions,
       redeemHaloInvitationCode: assign<JoinMachineContext>({ halo: redeemHaloInvitationCode }),
-      redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode })
-    }
+      redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode }),
+    },
   });
 };
 

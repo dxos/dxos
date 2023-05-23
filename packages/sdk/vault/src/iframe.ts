@@ -6,7 +6,7 @@ import { StrictMode } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
-import { fromHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
+import { ClientServicesHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
@@ -32,9 +32,9 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
         ThemeProvider,
         { themeVariant: 'os', resourceExtensions: [osTranslations] },
         // NOTE: Using context provider directly to avoid duplicate banners being logged.
-        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
-      )
-    )
+        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin })),
+      ),
+    ),
   );
 };
 
@@ -76,18 +76,18 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
         channel: DEFAULT_INTERNAL_CHANNEL,
         payload: {
           command: 'init',
-          port: messageChannel.port1
-        }
+          port: messageChannel.port1,
+        },
       },
       origin,
-      [messageChannel.port1]
+      [messageChannel.port1],
     );
 
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
       config,
       origin,
       appPort: createWorkerPort({ port: messageChannel.port2 }),
-      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
+      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' }),
     });
 
     await iframeRuntime.start();
@@ -114,11 +114,11 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
         channel: DEFAULT_INTERNAL_CHANNEL,
         payload: {
           command: 'init',
-          port: appPort
-        }
+          port: appPort,
+        },
       },
       origin,
-      [appPort]
+      [appPort],
     );
 
     let shellClientProxy: ClientServicesProvider | undefined;
@@ -130,7 +130,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
       config,
       systemPort: createWorkerPort({ port: systemPort }),
-      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
+      shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' }),
     });
 
     await iframeRuntime.open(origin);
@@ -150,13 +150,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 const forceClientReset = async () => {
   const config = new Config(Defaults());
 
-  // TODO(wittjosiah): This doesn't work with WebFS adapter because files aren't loaded yet.
-  // const services = new ClientServicesHost({ config });
-  // await services.reset();
-
-  const client = new Client({ config, services: fromHost(config) });
-  await client.initialize();
-  await client.reset();
+  const services = new ClientServicesHost({ config });
+  await services.reset();
 
   // TODO(wittjosiah): Make this look nicer.
   const message = document.createElement('div');

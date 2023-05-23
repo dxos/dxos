@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/composer-app",
+  "name": "@braneframe/composer-app",
   "version": "0.1.41",
   "private": true,
   "description": "DXOS composer application.",
@@ -8,16 +8,13 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
@@ -29,6 +26,7 @@
     "@sentry/react": "^7.41.0",
     "isomorphic-fetch": "^3.0.0",
     "jszip": "^3.10.1",
+    "lodash.update": "^4.10.2",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -39,18 +37,18 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@octokit/openapi-types": "^16.0.0",
     "@remix-run/router": "^1.0.2",
-    "@sentry/vite-plugin": "^0.4.0",
+    "@sentry/vite-plugin": "^0.7.2",
+    "@types/lodash.update": "^4.10.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/showdown": "^2.0.0",
     "@types/turndown": "^5.0.1",
     "@vitejs/plugin-react": "^3.0.1",
     "react-is": "^18.2.0",
-    "vite": "^4.2.0",
+    "vite": "^4.3.0",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }

@@ -4,7 +4,7 @@
 
 import React, { ReactNode, useEffect, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { Space, TypedObject, useSpaces } from '@dxos/react-client';
 import { MetagraphProvider } from '@dxos/react-metagraph';
@@ -23,7 +23,7 @@ export const TestFrameContainer = <T extends TypedObject>({
   children,
   onCreate,
   slots,
-  state = {}
+  state = {},
 }: {
   children: ReactNode;
   onCreate: (space: Space) => Promise<T>;
@@ -31,7 +31,7 @@ export const TestFrameContainer = <T extends TypedObject>({
   state?: Partial<FrameContextType>;
 }) => {
   const metagraphContext = {
-    client: new MetagraphClientFake([])
+    client: new MetagraphClientFake([]),
   };
 
   const [object, setObject] = useState<TypedObject>();

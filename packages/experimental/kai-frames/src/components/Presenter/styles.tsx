@@ -4,15 +4,14 @@
 
 // TODO(burdon): Compute styles/sizes.
 export const defaultClasses = {
-  h1: 'text-[120px] text-blue-600',
-  h2: 'text-[100px] text-blue-600',
-  h3: 'text-[80px] text-blue-600',
-  ul: 'list-dash ml-12',
-  li: 'text-[60px] pl-6',
-  p: 'text-[60px] pb-12',
-  pre: 'w-full text-[40px] my-[16px] p-[32px] bg-zinc-100',
-  img: 'absolute h-full right-0 top-0 bottom-0'
+  h1: 'pb-6 text-[120px] text-cyan-600',
+  h2: 'pb-6 text-[80px] text-cyan-600',
+  h3: 'pb-6 text-[60px] text-cyan-600',
+  ul: 'ml-12 list-square',
+  li: 'pl-6 text-[60px]',
+  p: 'pb-12 text-[60px]',
+  pre: 'w-full my-[16px] p-[32px] text-[40px] bg-zinc-100',
 };
 
+export const defaultSlideClasses = 'bg-white leading-relaxed font-mono';
 export const defaultPadding = 'px-32 py-20';
-export const defaultStyles = 'overflow-hidden bg-white leading-relaxed font-mono';

@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 
@@ -13,7 +13,7 @@ import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 const Icon = () => null;
 
 export default {
-  component: Icon
+  component: Icon,
 };
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
@@ -50,5 +50,5 @@ export const Default = {
         </div>
       </div>
     );
-  }
+  },
 };

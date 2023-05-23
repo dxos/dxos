@@ -30,25 +30,25 @@ const setupPeers = () => {
   return {
     peer1,
     peer2,
-    unpipe
+    unpipe,
   };
 };
 
 const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
   createProtoRpcPeer({
     requested: {
-      TestService: schema.getService('example.testing.rpc.TestService')
+      TestService: schema.getService('example.testing.rpc.TestService'),
     },
     exposed: {
-      TestService: schema.getService('example.testing.rpc.TestService')
+      TestService: schema.getService('example.testing.rpc.TestService'),
     },
     handlers: {
       TestService: {
         testCall: handler,
-        voidCall: async () => {}
-      }
+        voidCall: async () => {},
+      },
     },
-    port
+    port,
   });
 
 describe('Muxer', () => {
@@ -60,9 +60,9 @@ describe('Muxer', () => {
     for (const peer of [peer1, peer2]) {
       const client = createRpc(
         peer.createPort('example.extension/rpc', {
-          contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+          contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
         }),
-        async ({ data }) => ({ data })
+        async ({ data }) => ({ data }),
       );
 
       setTimeout(async () => {
@@ -94,9 +94,9 @@ describe('Muxer', () => {
       {
         const client = createRpc(
           peer.createPort('example.extension/rpc1', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
-          async ({ data }) => ({ data: data + '-rpc1' })
+          async ({ data }) => ({ data: data + '-rpc1' }),
         );
 
         setTimeout(async () => {
@@ -108,9 +108,9 @@ describe('Muxer', () => {
       {
         const client = createRpc(
           peer.createPort('example.extension/rpc2', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
-          async ({ data }) => ({ data: data + '-rpc2' })
+          async ({ data }) => ({ data: data + '-rpc2' }),
         );
 
         setTimeout(async () => {
@@ -128,14 +128,14 @@ describe('Muxer', () => {
     const { peer1, peer2 } = setupPeers();
 
     const stream2 = peer2.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream'
+      contentType: 'application/octet-stream',
     });
 
     // Buffer data before remote peer opens.
     stream2.write('hello');
 
     const stream1 = peer1.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream'
+      contentType: 'application/octet-stream',
     });
 
     pipeline(
@@ -143,10 +143,10 @@ describe('Muxer', () => {
       new Transform({
         transform: (chunk, encoding, callback) => {
           callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
-        }
+        },
       }),
       stream1,
-      () => {}
+      () => {},
     );
 
     let received = '';
@@ -165,11 +165,11 @@ describe('Muxer', () => {
     const { peer1, peer2 } = setupPeers();
 
     const stream1 = peer1.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream'
+      contentType: 'application/octet-stream',
     });
 
     const stream2 = peer2.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream'
+      contentType: 'application/octet-stream',
     });
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });

@@ -11,7 +11,7 @@ import {
   getNamespaceName,
   getRelativeName,
   getSafeNamespaceIdentifier,
-  namesEqual
+  namesEqual,
 } from '../namespaces';
 import { SubstitutionsMap } from '../parser';
 
@@ -22,10 +22,10 @@ const createSubstitutionsReference = (type: string): ts.TypeNode =>
     f.createIndexedAccessTypeNode(
       f.createIndexedAccessTypeNode(
         f.createTypeQueryNode(f.createIdentifier('substitutions')),
-        f.createLiteralTypeNode(f.createStringLiteral(type))
+        f.createLiteralTypeNode(f.createStringLiteral(type)),
       ),
-      f.createLiteralTypeNode(f.createStringLiteral('decode'))
-    )
+      f.createLiteralTypeNode(f.createStringLiteral('decode')),
+    ),
   ]);
 
 const getPrimitiveType = (type: string): ts.TypeNode => {

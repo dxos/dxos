@@ -4,7 +4,7 @@
 
 import React, { createContext, PropsWithChildren } from 'react';
 
-import { Elevation } from '@dxos/aurora-theme';
+import { Elevation } from '@dxos/aurora-types';
 
 export interface ElevationContextValue {
   elevation?: Elevation;

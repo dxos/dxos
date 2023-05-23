@@ -15,8 +15,8 @@ import '@dxosTheme';
 export default {
   component: FrameContextProvider,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 const TestFrame = () => {
@@ -53,5 +53,5 @@ const TestApp = () => {
 
 export const Default = {
   decorators: [ClientSpaceDecorator()],
-  render: () => <TestApp />
+  render: () => <TestApp />,
 };

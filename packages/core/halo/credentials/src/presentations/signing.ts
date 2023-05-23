@@ -12,8 +12,8 @@ export const getPresentationProofPayload = (credentials: Credential[], proof: Pr
     proof: {
       ...proof,
       value: new Uint8Array(),
-      chain: undefined
-    }
+      chain: undefined,
+    },
   };
 
   return Buffer.from(canonicalStringify(copy));

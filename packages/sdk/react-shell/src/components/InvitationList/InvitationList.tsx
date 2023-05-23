@@ -4,7 +4,8 @@
 import { Root as AccordionRoot } from '@radix-ui/react-accordion';
 import React from 'react';
 
-import { defaultDescription, DensityProvider, mx, useTranslation } from '@dxos/aurora';
+import { DensityProvider, useTranslation } from '@dxos/aurora';
+import { defaultDescription, mx } from '@dxos/aurora-theme';
 import type { CancellableInvitationObservable } from '@dxos/client';
 
 import { ClipboardProvider } from '../Clipboard';

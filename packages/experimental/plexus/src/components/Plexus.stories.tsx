@@ -12,14 +12,14 @@ import {
   Notepad,
   Plus,
   User,
-  Users
+  Users,
 } from '@phosphor-icons/react';
 import faker from 'faker';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Markers, GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
@@ -33,7 +33,7 @@ faker.seed(1);
 const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
-  component: Plexus
+  component: Plexus,
 };
 
 // TODO(burdon): Factor testing out of gem-spore/testing
@@ -119,38 +119,38 @@ const Test = () => {
   const slots = dark
     ? {
         grid: {
-          className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40'
+          className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40',
         },
         plexus: {
           thorax: {
             // TODO(burdon): Reconcile classes vs. slots/className.
-            className: '[&>*]:stroke-slate-500'
+            className: '[&>*]:stroke-slate-500',
           },
           renderer: {
             labels: {
-              text: (node: GraphLayoutNode<TestNode>) => node.data!.label
-            }
+              text: (node: GraphLayoutNode<TestNode>) => node.data!.label,
+            },
           },
           projector: {
             radius: 192,
             nodeRadius: 16,
             classes: {
               guide: {
-                circle: 'fill-transparent stroke-[1px] stroke-slate-700'
+                circle: 'fill-transparent stroke-[1px] stroke-slate-700',
               },
               node: {
                 circle: 'fill-slate-800 stroke-[1px] stroke-slate-500',
                 // TODO(burdon): Restructure slots to support other props (e.g., font-size).
-                text: 'fill-slate-400'
+                text: 'fill-slate-400',
               },
               link: {
-                path: 'stroke-[2px] stroke-slate-700'
-              }
-            }
-          }
+                path: 'stroke-[2px] stroke-slate-700',
+              },
+            },
+          },
         },
         panel: 'border-slate-500 bg-slate-800 text-slate-400',
-        root: 'bg-slate-800'
+        root: 'bg-slate-800',
       }
     : {};
 
@@ -207,5 +207,5 @@ const Test = () => {
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

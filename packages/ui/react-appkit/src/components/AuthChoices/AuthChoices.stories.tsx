@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
 
 import { Group } from '../Group';
 import { AuthChoices, AuthChoicesProps } from './AuthChoices';
@@ -15,8 +15,8 @@ export default {
   argTypes: {
     onCreate: { action: 'create' },
     onRecover: { action: 'recover' },
-    onJoin: { action: 'join' }
-  }
+    onJoin: { action: 'join' },
+  },
 };
 export const Default = {
   render: (args: AuthChoicesProps) => {
@@ -26,12 +26,12 @@ export const Default = {
         label={{
           level: 1,
           className: 'mb-4 text-3xl',
-          children: t('auth choices label')
+          children: t('auth choices label'),
         }}
-        className={mx('p-5 rounded-xl max-w-md mx-auto my-4')}
+        className='p-5 rounded-xl max-w-md mx-auto my-4'
       >
         <AuthChoices {...args} />
       </Group>
     );
-  }
+  },
 };

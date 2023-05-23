@@ -19,7 +19,7 @@ describe('Error reporting', () => {
     Sentry.init({
       destination: MOCK_DESTINATION,
       release: 'test',
-      transport: sentryTransport
+      transport: sentryTransport,
     });
   });
 

@@ -6,12 +6,7 @@ import { ClientServicesProvider } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import {
-  createWebRTCTransportFactory,
-  MemoryTransportFactory,
-  NetworkManager,
-  NetworkManagerOptions
-} from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManagerOptions } from '@dxos/network-manager';
 
 import { LocalClientServices } from './local-client-services';
 
@@ -21,33 +16,37 @@ import { LocalClientServices } from './local-client-services';
 export const fromHost = (config: Config = new Config()): ClientServicesProvider => {
   return new LocalClientServices({
     config,
-    networkManager: createNetworkManager(config)
+    ...setupNetworking(config),
   });
 };
 
 /**
- * Creates a WebRTC network manager connected to the specified signal server.
+ * Creates signal manager and transport factory based on config.
+ * These are used to create a WebRTC network manager connected to the specified signal server.
  */
-// TODO(burdon): Move to client-services and remove dependencies from here.
-const createNetworkManager = (config: Config, options: Partial<NetworkManagerOptions> = {}): NetworkManager => {
+const setupNetworking = (config: Config, options: Partial<NetworkManagerOptions> = {}) => {
   const signals = config.get('runtime.services.signaling');
   if (signals) {
     const {
-      log = true,
       signalManager = new WebsocketSignalManager(signals),
       transportFactory = createWebRTCTransportFactory({
-        iceServers: config.get('runtime.services.ice')
-      })
+        iceServers: config.get('runtime.services.ice'),
+      }),
     } = options;
 
-    return new NetworkManager({ log, signalManager, transportFactory });
+    return {
+      signalManager,
+      transportFactory,
+    };
   }
 
   // TODO(burdon): Should not provide a memory signal manager since no shared context.
   //  Use TestClientBuilder for shared memory tests.
   log.warn('P2P network is not configured.');
-  return new NetworkManager({
-    signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
-    transportFactory: MemoryTransportFactory
-  });
+  const signalManager = new MemorySignalManager(new MemorySignalManagerContext());
+  const transportFactory = MemoryTransportFactory;
+  return {
+    signalManager,
+    transportFactory,
+  };
 };

@@ -4,7 +4,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
-import { Button, defaultDescription, getSize, mx, useId, useTranslation } from '@dxos/aurora';
+import { Button, useId, useTranslation } from '@dxos/aurora';
+import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
 import { Heading } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client';
 
@@ -26,7 +27,7 @@ export interface JoinSpaceHeadingProps {
 export const JoinHeading = forwardRef(
   (
     { mode, titleId, joinState, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
-    ref: ForwardedRef<HTMLDivElement>
+    ref: ForwardedRef<HTMLDivElement>,
   ) => {
     const { t } = useTranslation('os');
 
@@ -40,7 +41,7 @@ export const JoinHeading = forwardRef(
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        className={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2 z-[1]')}
+        classNames={mx(defaultDescription, 'plb-0 pli-2 absolute block-start-1.5 inline-end-2 z-[1]')}
         data-testid='join-exit'
       >
         <X weight='bold' className={getSize(4)} />
@@ -58,7 +59,7 @@ export const JoinHeading = forwardRef(
           className={mx(
             defaultDescription,
             'font-body font-system-normal text-center text-sm grow pbe-2',
-            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0')
+            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0'),
           )}
           id={titleId}
         >
@@ -70,5 +71,5 @@ export const JoinHeading = forwardRef(
         </div>
       </div>
     );
-  }
+  },
 );

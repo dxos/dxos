@@ -5,7 +5,7 @@
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import React, { ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type ScrollContainerSlots = {
   root?: {
@@ -26,21 +26,21 @@ export type ScrollContainerSlots = {
 // TODO(burdon): Is this right? Merge?
 export const defaultSlots: ScrollContainerSlots = {
   scrollbar: {
-    className: 'bg-neutral-50 hover:bg-neutral-100'
+    className: 'bg-neutral-50 hover:bg-neutral-100',
   },
   thumb: {
-    className: 'bg-neutral-400'
-  }
+    className: 'bg-neutral-400',
+  },
 };
 
 export const defaultRoundedSlots: ScrollContainerSlots = {
   scrollbar: {
-    className: 'w-3 p-[2px] bg-neutral-100 hover:bg-neutral-200'
+    className: 'w-3 p-[2px] bg-neutral-100 hover:bg-neutral-200',
   },
   thumb: {
     className:
-      'rounded-[10px] bg-neutral-500 before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]'
-  }
+      'rounded-[10px] bg-neutral-500 before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]',
+  },
 };
 
 export type ScrollContainerProps = {
@@ -60,7 +60,7 @@ export const ScrollContainer = ({
   slots = defaultSlots,
   vertical = false,
   horizontal = false,
-  children
+  children,
 }: ScrollContainerProps) => {
   // TODO(burdon): Outer div required since doesn't work if external div has flex-col.
   return (
@@ -72,7 +72,7 @@ export const ScrollContainer = ({
             orientation='vertical'
             className={mx(
               'flex w-1 select-none touch-none transition-colors duration-[160ms] ease-out',
-              slots.scrollbar?.className
+              slots.scrollbar?.className,
             )}
           >
             <ScrollArea.Thumb
@@ -87,7 +87,7 @@ export const ScrollContainer = ({
             orientation='horizontal'
             className={mx(
               'flex h-1 select-none touch-none transition-colors duration-[160ms] ease-out',
-              slots.scrollbar?.className
+              slots.scrollbar?.className,
             )}
           >
             <ScrollArea.Thumb

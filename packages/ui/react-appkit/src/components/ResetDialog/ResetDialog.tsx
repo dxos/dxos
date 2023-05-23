@@ -5,12 +5,11 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { Button, Message, MessageTitle, useTranslation } from '@dxos/aurora';
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { getAsyncValue, Provider } from '@dxos/util';
 
-import { Alert } from '../Alert';
 import { Dialog, DialogProps } from '../Dialog';
 import { DropdownMenu, DropdownMenuItem } from '../DropdownMenu';
 import { Tooltip } from '../Tooltip';
@@ -44,11 +43,10 @@ export const ResetDialog = ({
   error,
   errors: propsErrors,
   config: configProvider,
-  // TODO(wittjosiah): Don't use process.env.
-  isDev = process.env.NODE_ENV === 'development',
+  isDev = false,
   defaultOpen,
   open,
-  onOpenChange
+  onOpenChange,
 }: FatalErrorProps) => {
   const { t } = useTranslation('appkit');
 
@@ -62,21 +60,17 @@ export const ResetDialog = ({
   return (
     <Dialog
       title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label', { count: errors.length })}
-      slots={{ content: { className: 'block' } }}
+      slots={{ content: { classNames: 'block' } }}
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
       {isDev && errors.length > 0 ? (
         errors.map(({ message, stack }, index) => (
-          <Alert
-            key={`${index}--${message}`}
-            title={message}
-            valence={'error'}
-            slots={{ root: { className: 'mlb-4 overflow-auto max-bs-72' } }}
-          >
+          <Message key={`${index}--${message}`} valence='error' className='mlb-4 overflow-auto max-bs-72'>
+            <MessageTitle>{message}</MessageTitle>
             <pre className='text-xs'>{stack}</pre>
-          </Alert>
+          </Message>
         ))
       ) : (
         <p>{t(errors.length > 0 ? 'fatal error message' : 'reset dialog message')}</p>

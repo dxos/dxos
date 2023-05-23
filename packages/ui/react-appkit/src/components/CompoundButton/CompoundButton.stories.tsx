@@ -9,7 +9,7 @@ import React, { PropsWithChildren } from 'react';
 import { CompoundButton, CompoundButtonProps } from './CompoundButton';
 
 export default {
-  component: CompoundButton
+  component: CompoundButton,
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => <div className='flex gap-4'>{children}</div>;
@@ -26,8 +26,8 @@ export const Default = {
     description: 'This is a compound button',
     before: <ClockCounterClockwise className='w-5 h-5' />,
     after: <ArrowRight className='w-5 h-5' />,
-    disabled: false
-  }
+    disabled: false,
+  },
 };
 
 export const Primary = {
@@ -38,6 +38,6 @@ export const Primary = {
     before: <ClockCounterClockwise className='w-5 h-5' />,
     after: <ArrowRight className='w-5 h-5' />,
     disabled: false,
-    variant: 'primary'
-  }
+    variant: 'primary',
+  },
 };

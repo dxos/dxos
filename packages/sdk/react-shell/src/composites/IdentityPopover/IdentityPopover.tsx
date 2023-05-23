@@ -4,7 +4,7 @@
 
 import React, { ComponentProps } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 
@@ -43,9 +43,9 @@ export const IdentityPopover = ({
           ...slots?.trigger,
           className: mx(
             'flex justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full',
-            slots?.trigger?.className
-          )
-        }
+            slots?.trigger?.className,
+          ),
+        },
       }}
       triggerIsInToolbar={triggerIsInToolbar}
     >

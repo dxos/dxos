@@ -64,27 +64,28 @@ export class DatabaseTestPeer {
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseHost(
-      {
-        write: async (message) => {
-          const seq =
-            this.feedMessages.push({
-              timeframe: this.timeframe,
-              payload: {
-                data: message
-              }
-            }) - 1;
+    this.host = new DatabaseHost({
+      write: async (message) => {
+        const seq =
+          this.feedMessages.push({
+            timeframe: this.timeframe,
+            payload: {
+              data: message,
+            },
+          }) - 1;
 
-          await this._onConfirm.waitFor(() => this.confirmed >= seq);
-          return {
-            seq,
-            feedKey: this.key
-          };
-        }
+        await this._onConfirm.waitFor(() => this.confirmed >= seq);
+        return {
+          seq,
+          feedKey: this.key,
+        };
       },
-      this.snapshot?.database
-    );
+    });
+
     await this.host.open(this.hostItems, this.modelFactory);
+    if (this.snapshot) {
+      this.host._itemDemuxer.restoreFromSnapshot(this.snapshot.database);
+    }
 
     this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), SPACE_KEY);
     this.items = new ItemManager(this.modelFactory);
@@ -109,7 +110,7 @@ export class DatabaseTestPeer {
   replicate(to?: Timeframe) {
     const toTimeframe = Timeframe.merge(
       to ?? new Timeframe(Array.from(this.rig.peers.values()).map((peer) => [peer.key, peer.confirmed])),
-      this.timeframe
+      this.timeframe,
     );
     toTimeframe.set(this.key, this.confirmed);
 
@@ -133,7 +134,7 @@ export class DatabaseTestPeer {
     this.snapshot = {
       spaceKey: SPACE_KEY.asUint8Array(),
       database: this.host.createSnapshot(),
-      timeframe: this.timeframe
+      timeframe: this.timeframe,
     };
     return this.snapshot;
   }
@@ -151,7 +152,7 @@ export class DatabaseTestPeer {
           message && {
             feedKey: peer.key,
             seq: seq + 1,
-            data: message
+            data: message,
           }
         );
       })
@@ -186,8 +187,8 @@ export class DatabaseTestPeer {
             feedKey: candidate.feedKey,
             seq: candidate.seq,
             memberKey: candidate.feedKey,
-            timeframe: candidate.data.timeframe
-          }
+            timeframe: candidate.data.timeframe,
+          },
         });
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }

@@ -15,6 +15,6 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
 
   return {
     name: 'dxos-config',
-    banner: contents
+    banner: contents,
   };
 };

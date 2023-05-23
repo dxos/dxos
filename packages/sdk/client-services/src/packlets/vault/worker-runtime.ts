@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
@@ -51,13 +51,10 @@ export class WorkerRuntime {
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
-        networkManager: new NetworkManager({
-          log: true,
-          signalManager: signals
-            ? new WebsocketSignalManager(signals)
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory: this._transportFactory
-        })
+        signalManager: signals
+          ? new WebsocketSignalManager(signals)
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        transportFactory: this._transportFactory,
       });
 
       await this._clientServices.open();
@@ -83,7 +80,7 @@ export class WorkerRuntime {
       appPort,
       systemPort,
       shellPort,
-      readySignal: this._ready
+      readySignal: this._ready,
     });
 
     // When tab is closed.
@@ -102,6 +99,7 @@ export class WorkerRuntime {
    * Selects one of the existing session fro WebRTC networking.
    */
   private _reconnectWebrtc() {
+    log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
       if (!this.sessions.has(this._sessionForNetworking)) {

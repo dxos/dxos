@@ -13,7 +13,7 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
 
   // Verify all credentials.
   const credentialsVerifications = await Promise.all(
-    presentation.credentials?.map((credential) => verifyCredential(credential)) ?? []
+    presentation.credentials?.map((credential) => verifyCredential(credential)) ?? [],
   );
   for (const verification of credentialsVerifications) {
     if (verification.kind === 'fail') {
@@ -33,7 +33,7 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
         return signatureVerification;
       }
       return { kind: 'pass' } as VerificationResult;
-    }) ?? []
+    }) ?? [],
   );
   for (const verification of proofVerification) {
     if (verification.kind === 'fail') {
@@ -47,21 +47,21 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
   {
     return {
       kind: 'fail',
-      errors
+      errors,
     };
   }
 };
 
 export const verifyPresentationChain = async (
   presentation: Presentation,
-  proof: Proof
+  proof: Proof,
 ): Promise<VerificationResult> => {
   for (const credential of presentation.credentials ?? []) {
     if (!credential.issuer.equals(proof.signer)) {
       if (!proof.chain) {
         return {
           kind: 'fail',
-          errors: ['Delegated credential is missing credential chain.']
+          errors: ['Delegated credential is missing credential chain.'],
         };
       }
 
@@ -81,12 +81,12 @@ export const verifyPresentationChain = async (
  */
 export const verifyPresentationSignature = async (
   presentation: Presentation,
-  proof: Proof
+  proof: Proof,
 ): Promise<VerificationResult> => {
   if (proof.type !== SIGNATURE_TYPE_ED25519) {
     return {
       kind: 'fail',
-      errors: [`Invalid signature type: ${proof.type}`]
+      errors: [`Invalid signature type: ${proof.type}`],
     };
   }
 

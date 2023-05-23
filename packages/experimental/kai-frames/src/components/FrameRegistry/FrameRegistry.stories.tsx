@@ -18,8 +18,8 @@ import '@dxosTheme';
 export default {
   component: FrameRegistry,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 const Test = () => {
@@ -30,8 +30,8 @@ const Test = () => {
       frames={frameRegistry.frames}
       slots={{
         tile: {
-          className: 'bg-white'
-        }
+          className: 'bg-white',
+        },
       }}
     />
   );
@@ -40,7 +40,7 @@ const Test = () => {
 const TestContainer = () => {
   // TODO(burdon): Clean-up.
   const metagraphContext = {
-    client: new MetagraphClientFake([])
+    client: new MetagraphClientFake([]),
   };
 
   return (
@@ -54,5 +54,5 @@ const TestContainer = () => {
 
 export const Default = {
   decorators: [FullscreenDecorator('items-center'), ClientSpaceDecorator()],
-  render: () => <TestContainer />
+  render: () => <TestContainer />,
 };

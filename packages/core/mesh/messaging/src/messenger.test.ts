@@ -8,7 +8,7 @@ import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
@@ -20,26 +20,26 @@ import { TestBuilder } from './testing';
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example1',
-  value: Buffer.from('1')
+  value: Buffer.from('1'),
 };
 
 const PAYLOAD_2: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example2',
-  value: Buffer.from('2')
+  value: Buffer.from('2'),
 };
 
 const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example3',
-  value: Buffer.from('3')
+  value: Buffer.from('3'),
 };
 
 describe('Messenger', () => {
-  let broker: TestBroker;
+  let broker: SignalServerRunner;
 
   beforeAll(async () => {
-    broker = await createTestBroker();
+    broker = await runTestSignalServer();
   });
 
   afterAll(() => {
@@ -57,7 +57,7 @@ describe('Messenger', () => {
     const message: Message = {
       author: peer1.peerId,
       recipient: peer2.peerId,
-      payload: PAYLOAD_1
+      payload: PAYLOAD_1,
     };
 
     const promise = peer2.waitTillReceive(message);
@@ -81,7 +81,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer1.peerId,
         recipient: peer2.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       };
 
       const promise = peer2.waitTillReceive(message);
@@ -93,7 +93,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer1.peerId,
         recipient: peer3.peerId,
-        payload: PAYLOAD_2
+        payload: PAYLOAD_2,
       };
 
       const promise = peer3.waitTillReceive(message);
@@ -105,7 +105,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer2.peerId,
         recipient: peer1.peerId,
-        payload: PAYLOAD_3
+        payload: PAYLOAD_3,
       };
 
       const promise = peer1.waitTillReceive(message);
@@ -127,7 +127,7 @@ describe('Messenger', () => {
     await peer2.messenger.listen({
       peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
-      onMessage: onMessage1
+      onMessage: onMessage1,
     });
 
     // Subscribe first listener for second messenger.
@@ -135,7 +135,7 @@ describe('Messenger', () => {
     await peer2.messenger.listen({
       peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
-      onMessage: onMessage2
+      onMessage: onMessage2,
     });
 
     // Subscribe third listener for second messenger.
@@ -143,7 +143,7 @@ describe('Messenger', () => {
     await peer2.messenger.listen({
       peerId: peer2.peerId,
       payloadType: PAYLOAD_2.type_url,
-      onMessage: onMessage3
+      onMessage: onMessage3,
     });
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
@@ -151,7 +151,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer1.peerId,
         recipient: peer2.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       };
       await peer1.messenger.sendMessage(message);
 
@@ -179,7 +179,7 @@ describe('Messenger', () => {
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages1.push(message);
-      }
+      },
     });
 
     // Subscribe first listener for second messenger.
@@ -189,7 +189,7 @@ describe('Messenger', () => {
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages2.push(message);
-      }
+      },
     });
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
@@ -197,7 +197,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer1.peerId,
         recipient: peer2.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       };
 
       const receivePromise = peer2.waitTillReceive(message);
@@ -217,7 +217,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peer1.peerId,
         recipient: peer2.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       };
 
       const receivePromise = peer2.waitTillReceive(message);
@@ -244,7 +244,7 @@ describe('Messenger', () => {
     const message: Message = {
       author: peer1.peerId,
       recipient: peer2.peerId,
-      payload: PAYLOAD_1
+      payload: PAYLOAD_1,
     };
 
     {
@@ -280,7 +280,7 @@ describe('Messenger', () => {
     const message: Message = {
       author: peer1.peerId,
       recipient: peer2.peerId,
-      payload: PAYLOAD_1
+      payload: PAYLOAD_1,
     };
 
     {
@@ -305,7 +305,7 @@ describe('Messenger', () => {
 
       const builder = new TestBuilder({
         signalHosts: [{ server: broker.url() }],
-        messageDisruption: unreliableConnection
+        messageDisruption: unreliableConnection,
       });
       afterTest(() => builder.close());
       const peer1 = builder.createPeer();
@@ -316,7 +316,7 @@ describe('Messenger', () => {
       const message = {
         author: peer2.peerId,
         recipient: peer1.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       };
 
       const receivePromise = peer1.defaultReceived.waitForCount(3);
@@ -351,7 +351,7 @@ describe('Messenger', () => {
       await peer2.messenger.sendMessage({
         author: peer2.peerId,
         recipient: peer1.peerId,
-        payload: PAYLOAD_1
+        payload: PAYLOAD_1,
       });
       // expect to receive 1 message.
       await asyncTimeout(promise(), 1000);
@@ -378,7 +378,7 @@ describe('Messenger', () => {
           peerId,
           onMessage: async (msg) => {
             console.log(++numReceived);
-          }
+          },
         });
 
         void messenger.sendMessage({
@@ -386,8 +386,8 @@ describe('Messenger', () => {
           recipient: peerId,
           payload: {
             type_url: 'dxos.test',
-            value: Buffer.from('TEST')
-          }
+            value: Buffer.from('TEST'),
+          },
         });
       });
 

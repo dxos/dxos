@@ -13,7 +13,7 @@ import {
   GraphModel,
   GraphLayoutNode,
   GraphRenderer,
-  LabelOptions
+  LabelOptions,
 } from '../graph';
 import { defaultGraphStyles } from './styles';
 
@@ -40,7 +40,7 @@ export const Graph = ({
   arrows,
   labels,
   attributes,
-  onSelect
+  onSelect,
 }: GraphProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
@@ -50,16 +50,16 @@ export const Graph = ({
     const renderer = new GraphRenderer(context, graphRef, {
       drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {
-        end: arrows
+        end: arrows,
       },
       labels,
       attributes,
-      onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined
+      onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined,
     });
 
     return {
       projector,
-      renderer
+      renderer,
     };
   }, []);
 

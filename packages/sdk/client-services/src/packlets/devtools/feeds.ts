@@ -10,14 +10,14 @@ import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,
   SubscribeToFeedBlocksRequest,
-  SubscribeToFeedBlocksResponse
+  SubscribeToFeedBlocksResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
 export const subscribeToFeeds = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKeys }: SubscribeToFeedsRequest
+  { feedKeys }: SubscribeToFeedsRequest,
 ) => {
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
     if (feedKeys?.length === 0) {
@@ -40,7 +40,7 @@ export const subscribeToFeeds = (
         });
 
       next({
-        feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length }))
+        feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length })),
       });
     };
 
@@ -55,7 +55,7 @@ export const subscribeToFeeds = (
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest
+  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
 ) => {
   return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {
@@ -81,7 +81,7 @@ export const subscribeToFeedBlocks = (
         }
 
         next({
-          blocks: blocks.slice(-maxBlocks)
+          blocks: blocks.slice(-maxBlocks),
         });
 
         await iterator.close();

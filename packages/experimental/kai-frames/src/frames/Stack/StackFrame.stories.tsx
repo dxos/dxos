@@ -16,8 +16,8 @@ import '@dxosTheme';
 export default {
   component: StackFrame,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 // TODO(burdon): Decorator to enable bots to auto-join (fixed topic).
@@ -31,5 +31,5 @@ export const Default = {
     >
       <StackFrame />
     </TestFrameContainer>
-  )
+  ),
 };

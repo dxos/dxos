@@ -160,7 +160,7 @@ export class MdTypeStringifier implements AllStringifiers {
       head,
       ...tail.map(([type, text]) => {
         return '${' + this.type(type) + '}' + text;
-      })
+      }),
     ].join('');
   }
 

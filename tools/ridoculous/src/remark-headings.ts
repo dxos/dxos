@@ -85,7 +85,7 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
           }
 
           const listItem = u('listItem', { spread: false }, [
-            u('paragraph', {}, [u('link', { url: `#${link}` }, [u('text', { value: node.value })])])
+            u('paragraph', {}, [u('link', { url: `#${link}` }, [u('text', { value: node.value })])]),
           ]);
 
           list.children.push(listItem);

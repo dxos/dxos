@@ -28,7 +28,7 @@ export interface ObservableValue<Events, Value = unknown> {
 export class ObservableProvider<Events extends {}, Value = unknown> implements ObservableValue<Events, Value> {
   protected readonly _handlers = new Set<Events>();
   private readonly _proxy = createSetDispatch<Events>({
-    handlers: this._handlers
+    handlers: this._handlers,
   });
 
   private _value?: Value;
@@ -76,7 +76,7 @@ export interface CancellableObservable<Events extends CancellableObservableEvent
  * @deprecated
  */
 export class CancellableObservableProvider<
-  Events extends CancellableObservableEvents
+  Events extends CancellableObservableEvents,
 > extends ObservableProvider<Events> {
   private _cancelled = false;
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 
@@ -13,7 +13,7 @@ import { DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 const Icon = () => null;
 
 export default {
-  component: Icon
+  component: Icon,
 };
 
 export const Default = {
@@ -31,5 +31,5 @@ export const Default = {
         </div>
       </div>
     );
-  }
+  },
 };

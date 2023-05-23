@@ -5,8 +5,9 @@
 import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { mx, getSize, Button } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
 import { Composer } from '@dxos/aurora-composer';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { DropdownMenu, DropdownMenuItem, Input } from '@dxos/react-appkit';
@@ -17,7 +18,7 @@ export const colors: { id: string; color: string; border: string }[] = [
   { id: 'yellow', color: 'bg-amber-100', border: 'border-amber-200' },
   { id: 'cyan', color: 'bg-sky-100', border: 'border-sky-200' },
   { id: 'green', color: 'bg-emerald-100', border: 'border-emerald-200' },
-  { id: 'violet', color: 'bg-violet-100', border: 'border-violet-200' }
+  { id: 'violet', color: 'bg-violet-100', border: 'border-violet-200' },
 ];
 
 const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = ({ onDelete, onColorChange }) => {
@@ -59,7 +60,7 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
         <div className='order-1'>
           <DropdownMenu
             trigger={
-              <Button variant='ghost' className='p-2'>
+              <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(5)} />
               </Button>
             }
@@ -77,12 +78,12 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
           placeholder='Title'
           slots={{
             root: {
-              className: 'w-full'
+              className: 'w-full',
             },
             input: {
               className: 'p-1 w-full border-0 text-xl',
-              autoFocus: true // TODO(burdon): Use ref.
-            }
+              autoFocus: true, // TODO(burdon): Use ref.
+            },
           }}
           value={note.title ?? ''}
           onChange={(event) => {

@@ -22,6 +22,18 @@
   "references": [
     {
       "path": "../aurora-theme"
+    },
+    {
+      "path": "../aurora-types"
+    },
+    {
+      "path": "../primitives/react-hooks"
+    },
+    {
+      "path": "../primitives/react-input"
+    },
+    {
+      "path": "../primitives/react-list"
     }
   ]
 }

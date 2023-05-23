@@ -15,7 +15,7 @@ export class ErrorStream {
   assertNoUnhandledErrors() {
     if (this._unhandledErrors > 0) {
       throw new Error(
-        `Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.`
+        `Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.`,
       );
     }
   }

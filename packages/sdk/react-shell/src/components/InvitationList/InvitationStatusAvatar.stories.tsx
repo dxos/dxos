@@ -4,7 +4,8 @@
 import { StoryFn } from '@storybook/react';
 import React from 'react';
 
-import { mx, ThemeContext } from '@dxos/aurora';
+import { ThemeContext, useThemeContext } from '@dxos/aurora';
+import { mx, osTx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
 import { defaultSurface } from '../../styles';
@@ -20,18 +21,19 @@ const statuses = [
   Invitation.State.SUCCESS,
   Invitation.State.CANCELLED,
   Invitation.State.TIMEOUT,
-  Invitation.State.ERROR
+  Invitation.State.ERROR,
 ];
 
 export default {
-  component: InvitationStatusAvatar
+  component: InvitationStatusAvatar,
 };
 
 export const Default = {
   decorators: [
     (Story: StoryFn) => {
+      const themeContext = useThemeContext();
       return (
-        <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div
             className={mx(defaultSurface, 'max-is-md mli-auto rounded-md p-2 backdrop-blur-md flex flex-wrap gap-4')}
           >
@@ -47,6 +49,6 @@ export const Default = {
           </div>
         </ThemeContext.Provider>
       );
-    }
-  ]
+    },
+  ],
 };

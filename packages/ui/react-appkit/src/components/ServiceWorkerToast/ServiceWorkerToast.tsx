@@ -5,7 +5,8 @@
 import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation, Button, getSize, mx, useTranslationsContext } from '@dxos/aurora';
+import { useTranslation, Button, useTranslationsContext } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Toast } from '../Toast';
 
@@ -49,12 +50,12 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
               <Button variant='primary' onClick={() => props.updateServiceWorker()}>
                 {t('refresh label')}
               </Button>
-            )
-          }
-        ]
+            ),
+          },
+        ],
       })}
       {...(variant === 'offlineReady' && {
-        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>
+        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>,
       })}
     />
   );

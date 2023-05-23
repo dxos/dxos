@@ -110,7 +110,7 @@ export const Module: FC<{
         setActiveItem(items[Math.min(items.length - 1, i + 1)].id);
       }
     },
-    { isActive: isFocused }
+    { isActive: isFocused },
   );
 
   return (

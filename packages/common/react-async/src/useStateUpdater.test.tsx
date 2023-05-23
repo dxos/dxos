@@ -16,8 +16,8 @@ import { useStateUpdater } from './useStateUpdater';
 // Expensive object to copy.
 const complex = {
   data: Array.from({ length: 100 }).map((_, i) => ({
-    title: String(i)
-  }))
+    title: String(i),
+  })),
 };
 
 const Test = () => {
@@ -26,8 +26,8 @@ const Test = () => {
     // https://github.com/kolodny/immutability-helper
     updateValue({
       items: {
-        $push: [1, 2, 3]
-      }
+        $push: [1, 2, 3],
+      },
     });
   }, []);
 

@@ -39,7 +39,7 @@ describe('Multiplexing', () => {
         plex1.addFeed(core1, true);
         plex2.addFeed(core2);
         return [core1, core2];
-      })
+      }),
     );
 
     feeds.forEach(([core1, core2]) => {
@@ -105,7 +105,7 @@ describe('Multiplexing', () => {
         transform: (data: Buffer, next: (err: Error | null, data: Buffer) => void) => {
           log(label, { length: data.length });
           next(null, data);
-        }
+        },
       });
 
     const [pipelineClosed, onStreamClose] = latch({ count: 2 });
