@@ -43,7 +43,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 size={12}
                 fallbackValue={keyHex}
                 label={<p className='text-lg grow'>{title}</p>}
-                slots={{ root: { className: 'flex gap-1 items-center pr-2 rounded' } }}
+                slots={{ root: { classNames: 'flex gap-1 items-center pr-2 rounded' } }}
               />
             </Heading>
           </Link>
