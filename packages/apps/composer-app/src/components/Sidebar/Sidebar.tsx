@@ -55,36 +55,35 @@ const SidebarContent = () => {
   };
 
   return (
-    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-      <ElevationProvider elevation='chrome'>
-        <DensityProvider density='fine'>
-          <Dialog
-            title={t('profile settings label')}
-            open={settingsDialogOpen}
-            onOpenChange={(nextOpen) => {
-              setSettingsDialogOpen(nextOpen);
-              if (!nextOpen) {
-                void setPat(patValue);
-              }
+    <ElevationProvider elevation='chrome'>
+      <DensityProvider density='fine'>
+        <Dialog
+          title={t('profile settings label')}
+          open={settingsDialogOpen}
+          onOpenChange={(nextOpen) => {
+            setSettingsDialogOpen(nextOpen);
+            if (!nextOpen) {
+              void setPat(patValue);
+            }
+          }}
+          closeTriggers={[
+            <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
+              {t('done label', { ns: 'os' })}
+            </Button>,
+          ]}
+        >
+          <Input
+            label={t('github pat label')}
+            value={patValue}
+            data-testid='composer.githubPat'
+            onChange={({ target: { value } }) => setPatValue(value)}
+            slots={{
+              root: { className: 'mlb-2' },
+              input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
             }}
-            slots={{ overlay: { className: 'z-40 backdrop-blur' } }}
-            closeTriggers={[
-              <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
-                {t('done label', { ns: 'os' })}
-              </Button>,
-            ]}
-          >
-            <Input
-              label={t('github pat label')}
-              value={patValue}
-              data-testid='composer.githubPat'
-              onChange={({ target: { value } }) => setPatValue(value)}
-              slots={{
-                root: { className: 'mlb-2' },
-                input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
-              }}
-            />
-          </Dialog>
+          />
+        </Dialog>
+        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div role='none' className='flex flex-col bs-full'>
             <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
@@ -165,9 +164,9 @@ const SidebarContent = () => {
               </div>
             )}
           </div>
-        </DensityProvider>
-      </ElevationProvider>
-    </ThemeContext.Provider>
+        </ThemeContext.Provider>
+      </DensityProvider>
+    </ElevationProvider>
   );
 };
 

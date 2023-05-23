@@ -72,7 +72,7 @@ export const StandaloneDocumentPage = observer(
               open={fileImportDialogOpen}
               onOpenChange={setFileImportDialogOpen}
               title={t('confirm import title')}
-              slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+              slots={{ overlay: { classNames: 'backdrop-blur-sm' } }}
             >
               <p className='mlb-4'>{t('confirm import body')}</p>
               <FileUploader

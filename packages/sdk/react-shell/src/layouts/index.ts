@@ -3,5 +3,3 @@
 //
 
 export * from './PanelPopover';
-export * from './PanelAlertDialog';
-export * from './PanelDialog';
