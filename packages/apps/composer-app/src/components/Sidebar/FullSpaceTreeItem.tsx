@@ -112,8 +112,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           />
         </TreeItemOpenTrigger>
         <TreeItemHeading
-          classNames='grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium'
+          classNames={[
+            'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+            !disabled && 'cursor-pointer',
+          ]}
           data-testid='composer.spaceTreeItemHeading'
+          onClick={() => setOpen(!open)}
         >
           {spaceDisplayName}
         </TreeItemHeading>
@@ -208,7 +212,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         {documents.length > 0 ? (
           <TreeBranch>
             {documents.map((document) => (
-              <DocumentLinkTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
+              <DocumentLinkTreeItem
+                key={document.id}
+                document={document}
+                space={space}
+                linkTo={getPath(space.key, document.id)}
+              />
             ))}
           </TreeBranch>
         ) : (
