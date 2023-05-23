@@ -7,35 +7,37 @@ import { X, Plus } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
-  mx,
   Button,
-  getSize,
+  Checkbox,
   useTranslation,
-  defaultDescription,
   ButtonProps,
   Density,
-  DensityProvider
-} from '@dxos/aurora';
-
-import { Input, InputProps } from '../Input';
-import {
+  DensityProvider,
   List,
   ListItem,
   ListItemHeading,
   ListItemEndcap,
-  ListItemDragHandle,
-  ListProps,
+  useListDensity,
   ListItemProps,
-  useListDensity
-} from '../List';
+  ListScopedProps,
+  ListItemDragHandle,
+  useListContext,
+  LIST_NAME,
+  MockListItemDragHandle,
+  InputRoot,
+} from '@dxos/aurora';
+import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
+
+import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
 
 export interface EditableListItemSlots {
-  listItem?: ListItemProps['slots'];
+  root?: { className?: string };
+  selectableCheckbox?: { className?: string };
   input?: InputProps['slots'];
 }
 
-export interface EditableListItemProps {
+export type EditableListItemProps = ListItemProps & {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;
@@ -45,12 +47,12 @@ export interface EditableListItemProps {
   onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   onClickDelete?: () => void;
   slots?: EditableListItemSlots;
-}
+};
 
 export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
-  list?: ListProps['slots'];
+  list?: { className?: string };
   addItemInput?: InputProps['slots'];
   addItemButton?: ButtonProps;
 }
@@ -89,8 +91,8 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
     (event: KeyboardEvent<Element>) => {
       const inputsInScope = Array.from(
         document.querySelectorAll<HTMLInputElement>(
-          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`
-        )
+          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`,
+        ),
       );
       const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
       switch (event.key) {
@@ -111,7 +113,7 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
         }
       }
     },
-    [hostId]
+    [hostId],
   );
 
   return { onListItemInputKeyDown, hostAttrs, itemAttrs };
@@ -119,7 +121,6 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
 
 export const EditableList = ({
   children,
-  labelId,
   completable,
   variant = 'ordered-draggable',
   onClickAdd,
@@ -129,7 +130,7 @@ export const EditableList = ({
   itemIdOrder,
   onMoveItem,
   density: propsDensity,
-  slots = {}
+  slots = {},
 }: EditableListProps) => {
   const { t } = useTranslation('appkit');
   const density = useListDensity({ density: propsDensity, variant });
@@ -146,20 +147,18 @@ export const EditableList = ({
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
-        labelId={labelId}
         variant={variant}
         selectable={completable}
         onDragEnd={handleDragEnd}
         listItemIds={itemIdOrder ?? []}
-        slots={slots.list}
         density={density}
       >
         {children}
       </List>
       <div className='flex'>
         <DensityProvider density={density}>
-          <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
-          <ListItemEndcap className='invisible' />
+          {variant === 'ordered-draggable' && <MockListItemDragHandle />}
+          {completable && <ListItemEndcap classNames='invisible' />}
           <Input
             variant='subdued'
             label={t('new list item input label')}
@@ -168,14 +167,14 @@ export const EditableList = ({
             {...{
               value: nextItemTitle,
               defaultValue: defaultNextItemTitle,
-              onChange: onChangeNextItemTitle
+              onChange: onChangeNextItemTitle,
             }}
             slots={{
               ...slots.addItemInput,
               root: {
                 ...slots.addItemInput?.root,
-                className: mx('grow', slots.addItemInput?.root?.className)
-              }
+                className: mx('grow', slots.addItemInput?.root?.className),
+              },
             }}
           />
           <ListItemEndcap>
@@ -192,7 +191,7 @@ export const EditableList = ({
               <Button
                 variant='ghost'
                 {...slots.addItemButton}
-                className={mx('p-1', slots.addItemButton?.className)}
+                classNames={['p-1', slots.addItemButton?.classNames]}
                 onClick={onClickAdd}
               >
                 <Plus className={getSize(4)} />
@@ -205,9 +204,10 @@ export const EditableList = ({
   );
 };
 
-export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>(
+export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<EditableListItemProps>>(
   (
     {
+      __listScope,
       id,
       defaultCompleted,
       completed,
@@ -216,11 +216,12 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
       title,
       onChangeTitle,
       onClickDelete,
-      slots = {}
-    }: EditableListItemProps,
-    forwardedRef
+      slots = {},
+    },
+    forwardedRef,
   ) => {
     const { t } = useTranslation('appkit');
+    const { variant, selectable } = useListContext(LIST_NAME, __listScope);
     return (
       <ListItem
         ref={forwardedRef}
@@ -229,10 +230,22 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           defaultSelected: defaultCompleted,
           selected: completed,
           onSelectedChange: onChangeCompleted,
-          slots: slots.listItem
         }}
       >
-        <ListItemHeading className='sr-only'>{title}</ListItemHeading>
+        {variant === 'ordered-draggable' && <ListItemDragHandle />}
+        {selectable && (
+          <ListItemEndcap classNames='items-center'>
+            <InputRoot id={`${id}__checkbox`}>
+              <Checkbox
+                classNames={slots?.selectableCheckbox?.className}
+                checked={completed}
+                defaultChecked={defaultCompleted}
+                onCheckedChange={onChangeCompleted}
+              />
+            </InputRoot>
+          </ListItemEndcap>
+        )}
+        <ListItemHeading classNames='sr-only'>{title}</ListItemHeading>
         <Input
           {...{
             variant: 'subdued',
@@ -243,12 +256,12 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
               ...slots.input,
               root: {
                 ...slots.input?.root,
-                className: mx('grow', slots.input?.root?.className)
-              }
+                className: mx('grow', slots.input?.root?.className),
+              },
             },
             value: title,
             defaultValue: defaultTitle,
-            onChange: onChangeTitle
+            onChange: onChangeTitle,
           }}
         >
           {title ?? defaultTitle}
@@ -256,7 +269,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
         {onClickDelete && (
           <ListItemEndcap>
             <Tooltip content={t('delete list item label')} side='left' tooltipLabelsTrigger>
-              <Button variant='ghost' className='p-1' onClick={onClickDelete}>
+              <Button variant='ghost' classNames='p-1' onClick={onClickDelete}>
                 <X className={getSize(4)} />
               </Button>
             </Tooltip>
@@ -264,5 +277,5 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
         )}
       </ListItem>
     );
-  }
+  },
 );

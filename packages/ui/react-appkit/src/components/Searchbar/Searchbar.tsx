@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { Input, InputProps } from '../Input';
 
@@ -50,13 +50,13 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         variant={slots.root?.variant ?? 'default'}
         slots={{
           root: {
-            className: 'w-full'
+            className: 'flex w-full overflow-hidden',
           },
           input: {
             onKeyDown: ({ key }) => key === 'Escape' && handleReset(),
             spellCheck: false,
-            ...slots.input
-          }
+            ...slots.input,
+          },
         }}
         value={text}
         onChange={({ target }) => handleChange(target.value)}

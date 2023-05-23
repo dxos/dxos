@@ -93,7 +93,7 @@ describe('space/space-protocol', () => {
   test('replicates a feed through a webrtc connection', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
-      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
+      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
     afterTest(async () => await builder.close());
 

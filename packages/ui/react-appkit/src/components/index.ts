@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Alert';
 export * from './AuthChoices';
 export * from './Avatar';
-export * from './Checkbox';
 export * from './CompoundButton';
 export * from './DeviceList';
 export * from './Dialog';
@@ -20,7 +18,6 @@ export * from './Input';
 export * from './InvitationList';
 export * from './InvitationStatus';
 export * from './Join';
-export * from './List';
 export * from './Loading';
 export * from './ManageSpacePage';
 export * from './Menubar';
@@ -37,7 +34,6 @@ export * from './SingleInputStep';
 export * from './SpaceList';
 export * from './SpacesPage';
 export * from './StatusIndicator';
-export * from './Tag';
 export * from './ThemeProvider';
 export * from './Tile';
 export * from './Toast';

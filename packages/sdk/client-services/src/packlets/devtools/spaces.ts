@@ -16,13 +16,13 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
     const update = async () => {
       const spaces: Space[] = [...context.spaceManager!.spaces.values()];
       const filteredSpaces = spaces.filter(
-        (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key))
+        (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key)),
       );
 
       next({
         spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
           const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
-            spaceMetadata.key.equals(space.key)
+            spaceMetadata.key.equals(space.key),
           );
 
           return {
@@ -31,9 +31,9 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
             timeframe: spaceMetadata?.dataTimeframe,
             genesisFeed: space.genesisFeedKey,
             controlFeed: space.controlFeedKey!, // TODO(dmaretskyi): Those keys may be missing.
-            dataFeed: space.dataFeedKey!
+            dataFeed: space.dataFeedKey!,
           };
-        })
+        }),
       });
     };
 

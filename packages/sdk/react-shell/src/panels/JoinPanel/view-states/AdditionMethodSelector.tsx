@@ -5,7 +5,8 @@
 import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getSize, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { CompoundButton } from '@dxos/react-appkit';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
@@ -21,7 +22,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
   const sharedButtonProps = {
     disabled,
     after: <CaretRight className={getSize(4)} weight='bold' />,
-    slots: { label: { className: 'text-sm' } }
+    slots: { label: { className: 'text-sm' } },
   };
 
   return (

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useStateWithRef } from '../src';
 
 export default {
-  title: 'react-async/stale-callback'
+  title: 'react-async/stale-callback',
 };
 
 export const Primary = () => {
@@ -27,7 +27,7 @@ export const Primary = () => {
     const t = setTimeout(() => {
       setResult({
         value, // Value will be 0.
-        ref: valueRef.current // Ref will be 5.
+        ref: valueRef.current, // Ref will be 5.
       });
     }, 5000);
 

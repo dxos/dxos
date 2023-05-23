@@ -13,7 +13,7 @@ import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
@@ -26,11 +26,11 @@ export const testConfigWithLocalSignal = new Config({
       signaling: [
         {
           // TODO(burdon): Port numbers and global consts?
-          server: 'ws://localhost:4000/.well-known/dx/signal'
-        }
-      ]
-    }
-  }
+          server: 'ws://localhost:4000/.well-known/dx/signal',
+        },
+      ],
+    },
+  },
 });
 
 /**
@@ -57,24 +57,22 @@ export class TestBuilder {
   /**
    * Get network manager using local shared memory or remote signal manager.
    */
-  get networkManager() {
+  private get networking() {
     const signals = this._config.get('runtime.services.signaling');
     if (signals) {
-      return new NetworkManager({
-        log: true,
+      return {
         signalManager: new WebsocketSignalManager(signals),
         transportFactory: createWebRTCTransportFactory({
-          iceServers: this._config.get('runtime.services.ice')
-        })
-      });
+          iceServers: this._config.get('runtime.services.ice'),
+        }),
+      };
     }
 
     // Memory transport with shared context.
-    return new NetworkManager({
-      log: true,
+    return {
       signalManager: new MemorySignalManager(this._signalManagerContext),
-      transportFactory: MemoryTransportFactory
-    });
+      transportFactory: MemoryTransportFactory,
+    };
   }
 
   /**
@@ -84,8 +82,8 @@ export class TestBuilder {
     return new ClientServicesHost({
       config: this._config,
       modelFactory: this._modelFactory,
-      networkManager: this.networkManager,
-      storage: this.storage
+      storage: this.storage,
+      ...this.networking,
     });
   }
 
@@ -96,8 +94,8 @@ export class TestBuilder {
     return new LocalClientServices({
       config: this._config,
       modelFactory: this._modelFactory,
-      networkManager: this.networkManager,
-      storage: this.storage
+      storage: this.storage,
+      ...this.networking,
     });
   }
 
@@ -109,7 +107,7 @@ export class TestBuilder {
     const server = createProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
-      port: hostPort
+      port: hostPort,
     });
     // TODO(dmaretskyi): Refactor.
 
@@ -129,7 +127,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
 
   await asyncTimeout(
     check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000
+    1000,
   );
 
   return result;
@@ -171,7 +169,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
                     }
                   }
                 },
-                (err) => raise(err)
+                (err) => raise(err),
               );
               break;
             }
@@ -182,11 +180,11 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
             }
           }
         },
-        (err) => raise(err)
+        (err) => raise(err),
       );
 
       await Promise.all([hostDone.wait(), guestDone.wait()]);
-    })
+    }),
   );
 
   return rootSpace.key;

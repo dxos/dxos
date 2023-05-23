@@ -4,6 +4,7 @@
 
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
+import assert from 'node:assert';
 
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -19,8 +20,9 @@ export const configureTracing = () => {
     // Configure root transaction.
     TX = getCurrentHub().startTransaction({
       name: 'DXOS Core Tracing',
-      op: 'dxos'
+      op: 'dxos',
     });
+    assert(TX, 'Failed to create trace');
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
         finish();
@@ -58,7 +60,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
     if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
       setUser({
         id: context.identityKey,
-        username: context.displayName
+        username: context.displayName,
       });
     }
 
@@ -88,8 +90,8 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
             op: entry.message,
             data: {
               ...context.span.data,
-              '@dxos/log': logContext
-            }
+              '@dxos/log': logContext,
+            },
           });
           SPAN_MAP.set(context.span.id, span);
           break;

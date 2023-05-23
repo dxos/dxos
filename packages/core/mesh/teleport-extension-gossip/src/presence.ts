@@ -47,7 +47,7 @@ export class Presence {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
-    }
+    },
   });
 
   private readonly _peerStates = new ComplexMap<PublicKey, GossipMessage>(PublicKey.hash);
@@ -57,7 +57,7 @@ export class Presence {
   constructor(private readonly _params: PresenceParams) {
     assert(
       this._params.announceInterval < this._params.offlineTimeout,
-      'Announce interval should be less than offline timeout.'
+      'Announce interval should be less than offline timeout.',
     );
 
     this._params.gossip.listen(PRESENCE_CHANNEL_ID, (message) => {
@@ -71,11 +71,11 @@ export class Presence {
         const peerState: WithTypeUrl<PeerState> = {
           '@type': 'dxos.mesh.presence.PeerState',
           identityKey: this._params.identityKey,
-          connections: this._params.gossip.getConnections()
+          connections: this._params.gossip.getConnections(),
         };
         await this._params.gossip.postMessage(PRESENCE_CHANNEL_ID, peerState);
       },
-      _params.announceInterval
+      _params.announceInterval,
     );
 
     // Emit updated event in case some peers went offline.
@@ -84,7 +84,7 @@ export class Presence {
       async () => {
         this.updated.emit();
       },
-      _params.offlineTimeout
+      _params.offlineTimeout,
     );
 
     // Remove peer state when connection is closed.

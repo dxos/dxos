@@ -11,5 +11,5 @@ const ExplorerFrame = React.lazy(() => import('./ExplorerFrame'));
 
 export const ExplorerFrameRuntime: FrameRuntime<any> = {
   Icon: ExplorerIcon,
-  Component: ExplorerFrame
+  Component: ExplorerFrame,
 };

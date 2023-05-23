@@ -20,12 +20,12 @@ const eslint = new ESLint();
 const prettierConfig = {
   parser: 'typescript',
   singleQuote: true,
-  jsxSingleQuote: true
+  jsxSingleQuote: true,
 };
 const tsConfig = {
   target: ts.ScriptTarget.ESNext,
   allowJs: true,
-  jsx: ts.JsxEmit.Preserve
+  jsx: ts.JsxEmit.Preserve,
 };
 
 /**
@@ -42,7 +42,7 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       const tsSource = rawSource.trim().split('\n').slice(4, -1).join('\n');
       const transpiledSource = prettier.format(ts.transpile(tsSource, tsConfig), prettierConfig);
       const [{ messages }] = await eslint.lintText(transpiledSource, {
-        filePath: filePath.replace('.tsx', '.jsx')
+        filePath: filePath.replace('.tsx', '.jsx'),
       });
       const jsSource = messages
         .filter(({ ruleId }) => ruleId !== '@dxos/rules/header')
@@ -57,9 +57,9 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       return {
         name,
         tsSource,
-        jsSource
+        jsSource,
       };
-    })
+    }),
   );
 
   // Based on https://github.com/BuptStEve/vuepress-plugin-demo-code/blob/master/src/node/index.js.
@@ -79,8 +79,8 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       JSON.stringify({
         ...demo,
         tsSource: highlight(demo.tsSource, 'typescript'),
-        jsSource: highlight(demo.jsSource, 'javascript')
-      })
+        jsSource: highlight(demo.jsSource, 'javascript'),
+      }),
     );
 
     return `<Showcase demoJson="${demoJson}">\n`;
@@ -90,6 +90,6 @@ export const showcasePlugin = async (): Promise<Plugin> => {
     name: 'showcase-plugin',
     extendsMarkdown: (md) => {
       md.use(markdownItContainer, 'showcase', { render });
-    }
+    },
   };
 };

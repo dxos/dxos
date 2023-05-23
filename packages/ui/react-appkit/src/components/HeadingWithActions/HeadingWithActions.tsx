@@ -4,7 +4,7 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import { Heading, HeadingProps } from '../Heading';
 

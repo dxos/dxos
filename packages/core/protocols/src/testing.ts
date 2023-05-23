@@ -17,7 +17,7 @@ export const createTestItemMutation = (
   objectId: ItemID,
   key: string,
   value: string,
-  timeframe = new Timeframe()
+  timeframe = new Timeframe(),
 ): FeedMessage => ({
   timeframe,
   payload: {
@@ -31,13 +31,13 @@ export const createTestItemMutation = (
                 model: {
                   '@type': 'google.protobuf.Any',
                   typeUrl: 'todo',
-                  value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
-                }
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
+                  value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value }),
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
 });

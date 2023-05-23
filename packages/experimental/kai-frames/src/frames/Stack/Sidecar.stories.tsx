@@ -17,14 +17,14 @@ const actions = ['summarize', 'translate', 'list people', 'convert to records', 
 
 const sections: Section[] = Array.from({ length: 16 }).map(() => ({
   text: faker.lorem.sentences(2 + faker.datatype.number(4)),
-  actions: faker.random.arrayElements(actions, faker.datatype.number(3))
+  actions: faker.random.arrayElements(actions, faker.datatype.number(3)),
 }));
 
 export default {
   component: Sidecar,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 // TODO(burdon): Decorator to enable bots to auto-join (fixed topic).
@@ -35,5 +35,5 @@ export const Default = {
     <TestFrameContainer onCreate={StackFrameRuntime.onCreate!} slots={{ root: { className: 'w-[500px]' } }}>
       <SidecarStack sections={sections} />
     </TestFrameContainer>
-  )
+  ),
 };

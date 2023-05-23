@@ -40,13 +40,13 @@ export const createHaloMenu = (client: Client): MenuItem => {
                           }}
                         />
                       );
-                    }
+                    },
                   },
                   {
                     id: 'recover-profile',
                     label: 'Recover Identity',
-                    component: () => <RecoverProfile />
-                  }
+                    component: () => <RecoverProfile />,
+                  },
                 ]
               : [
                   {
@@ -56,7 +56,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Identity />
                       </Panel>
-                    )
+                    ),
                   },
                   {
                     id: 'keychain',
@@ -65,7 +65,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Keychain />
                       </Panel>
-                    )
+                    ),
                   },
                   {
                     id: 'contacts',
@@ -74,7 +74,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Contacts />
                       </Panel>
-                    )
+                    ),
                   },
                   {
                     id: 'devices',
@@ -83,7 +83,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Devices />
                       </Panel>
-                    )
+                    ),
                   },
                   {
                     id: 'share',
@@ -96,17 +96,17 @@ export const createHaloMenu = (client: Client): MenuItem => {
                           }}
                         />
                       </Panel>
-                    )
+                    ),
                   },
                   {
                     id: 'join',
                     label: 'Auth Device',
-                    component: () => <Join />
-                  }
+                    component: () => <Join />,
+                  },
                 ]
           }
         />
       );
-    }
+    },
   };
 };

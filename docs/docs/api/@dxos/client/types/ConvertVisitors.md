@@ -1,5 +1,5 @@
 # Type `ConvertVisitors`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/typed-object.d.ts:10]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/typed-object.d.ts:8]()</sub>
 
 
 

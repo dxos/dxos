@@ -3,14 +3,15 @@
 //
 import React from 'react';
 
-import { mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { Identity, SpaceMember } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 
 export const IdentityListItem = ({
   identity,
   presence,
-  onClick
+  onClick,
 }: {
   identity: Identity;
   presence?: SpaceMember['presence'];
@@ -38,10 +39,10 @@ export const IdentityListItem = ({
               >
                 {t('identity offline description')}
               </p>
-            )
+            ),
           }),
           ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
-          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } }
+          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } },
         }}
       />
     </li>

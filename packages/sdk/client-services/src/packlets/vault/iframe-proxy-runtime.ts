@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { Config, iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client';
 import { RemoteServiceConnectionError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -23,9 +24,11 @@ export type IFrameProxyRuntimeParams = {
  * Manages the client connection to the shared worker.
  */
 export class IFrameProxyRuntime {
+  private readonly _id = String(Math.floor(Math.random() * 1000000));
   private readonly _configProvider: IFrameProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
   private readonly _shellPort?: RpcPort;
+  private _release = new Trigger();
   private _config!: Config;
   private _transportService!: BridgeService;
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
@@ -49,7 +52,7 @@ export class IFrameProxyRuntime {
     this._config = await getAsyncValue(this._configProvider);
 
     this._transportService = new WebRTCTransportService({
-      iceServers: this._config.get('runtime.services.ice')
+      iceServers: this._config.get('runtime.services.ice'),
     });
 
     this._systemRpc = createProtoRpcPeer({
@@ -57,19 +60,26 @@ export class IFrameProxyRuntime {
       exposed: iframeServiceBundle,
       handlers: {
         BridgeService: this._transportService,
-        IframeService: {
-          async heartbeat() {
-            // Ok.
-          }
-        }
       },
       port: this._systemPort,
-      timeout: 200
+      timeout: 200,
     });
+
+    let lockKey: string | undefined;
+    if (typeof navigator !== 'undefined') {
+      lockKey = this._lockKey(origin);
+      this._release = new Trigger();
+      const ready = new Trigger();
+      void navigator.locks.request(lockKey, async () => {
+        ready.wake();
+        await this._release.wait();
+      });
+      await ready.wait();
+    }
 
     try {
       await this._systemRpc.open();
-      await this._systemRpc.rpc.WorkerService.start({ origin });
+      await this._systemRpc.rpc.WorkerService.start({ origin, lockKey });
     } catch (err) {
       log.catch(err);
       throw new RemoteServiceConnectionError('Failed to connect to worker');
@@ -78,8 +88,13 @@ export class IFrameProxyRuntime {
   }
 
   async close() {
+    this._release.wake();
     await this._shellRuntime?.close();
     await this._systemRpc.rpc.WorkerService.stop();
     await this._systemRpc.close();
+  }
+
+  private _lockKey(origin: string) {
+    return `${origin}-${this._id}`;
   }
 }

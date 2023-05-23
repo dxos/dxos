@@ -12,9 +12,9 @@ const initialNs = 'dxos-common';
 export const resources = {
   [initialLng]: {
     [initialNs]: {
-      'loading translations': 'Loading translations…'
-    }
-  }
+      'loading translations': 'Loading translations…',
+    },
+  },
 } as const;
 
 void i18Next.use(initReactI18next).init({
@@ -22,8 +22,8 @@ void i18Next.use(initReactI18next).init({
   lng: initialLng,
   defaultNS: initialNs,
   interpolation: {
-    escapeValue: false
-  }
+    escapeValue: false,
+  },
 });
 
 export interface TranslationsProviderProps {
@@ -34,7 +34,7 @@ export interface TranslationsProviderProps {
 }
 
 export const TranslationsContext = createContext({
-  appNs: initialNs
+  appNs: initialNs,
 });
 
 export const TranslationsProvider = ({ fallback, resourceExtensions, children, appNs }: TranslationsProviderProps) => {

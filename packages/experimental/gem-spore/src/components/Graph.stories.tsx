@@ -12,7 +12,7 @@ import { Graph } from './Graph';
 import { Markers } from './Markers';
 
 export default {
-  title: 'gem-spore/Graph'
+  title: 'gem-spore/Graph',
 };
 
 seed(1);
@@ -44,22 +44,22 @@ export const Secondary = () => {
         guides: true,
         forces: {
           manyBody: {
-            strength: -80
+            strength: -80,
           },
           link: {
             distance: 40,
-            iterations: 5
+            iterations: 5,
           },
           radial: {
             radius: 100,
-            strength: 0.02
-          }
+            strength: 0.02,
+          },
         },
         attributes: {
-          radius: (node, count) => 6 + Math.log(count + 1) * 4
-        }
+          radius: (node, count) => 6 + Math.log(count + 1) * 4,
+        },
       }),
-    []
+    [],
   );
 
   return (
@@ -99,12 +99,12 @@ export const Tertiary = ({ graph = true }) => {
               labels={{
                 text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
                   return highlight || selected.has(node.id) ? node.data.label : undefined;
-                }
+                },
               }}
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
-                  class: selected.has(node.id) ? 'selected' : undefined
-                })
+                  class: selected.has(node.id) ? 'selected' : undefined,
+                }),
               }}
               onSelect={(node: GraphLayoutNode<TestNode>) => {
                 if (selected.has(node.id)) {

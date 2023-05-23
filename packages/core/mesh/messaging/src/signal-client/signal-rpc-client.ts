@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, trace } from '@dxos/protocols';
 import { Message as SignalMessage, Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
@@ -45,13 +45,15 @@ export class SignalRPCClient {
   private readonly _callbacks: SignalCallbacks;
 
   constructor({ url, callbacks = {} }: SignalRPCClientParams) {
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.begin({ id: traceId }));
     this._url = url;
     this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        Signal: schema.getService('dxos.mesh.signal.Signal')
+        Signal: schema.getService('dxos.mesh.signal.Signal'),
       },
       noHandshake: true,
       port: {
@@ -74,11 +76,11 @@ export class SignalRPCClient {
               cb(msg.data as any);
             }
           };
-        }
+        },
       },
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
 
     this._socket.onopen = async () => {
@@ -116,6 +118,8 @@ export class SignalRPCClient {
 
       log.warn(event.message ?? 'Socket error', { url: this._url });
     };
+
+    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
   }
 
   async close() {
@@ -135,7 +139,7 @@ export class SignalRPCClient {
     assert(this._rpc, 'Rpc is not initialized');
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
-      peer: peerId.asUint8Array()
+      peer: peerId.asUint8Array(),
     });
     await swarmStream.waitUntilReady();
     return swarmStream;
@@ -147,7 +151,7 @@ export class SignalRPCClient {
     await this._connectTrigger.wait();
     assert(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
-      peer: peerId.asUint8Array()
+      peer: peerId.asUint8Array(),
     });
     await messageStream.waitUntilReady();
     return messageStream;
@@ -161,7 +165,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload
+      payload,
     });
   }
 }

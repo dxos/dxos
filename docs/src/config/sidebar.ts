@@ -16,7 +16,7 @@ const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const item = attributes.label
     ? {
         text: attributes.label,
-        link
+        link,
       }
     : link;
 
@@ -47,8 +47,8 @@ export const sidebarSection = (path: string) =>
         {
           text: sectionInfo.label ?? file,
           collapsible: true,
-          children
-        }
+          children,
+        },
       ];
     })
     .filter((section): section is NumberedSidebarObject => !!section)

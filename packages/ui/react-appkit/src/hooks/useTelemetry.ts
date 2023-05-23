@@ -31,8 +31,8 @@ export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) 
       properties: {
         ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
-        loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart
-      }
+        loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+      },
     });
 
     return setupTelemetryListeners(namespace, client);
@@ -41,7 +41,7 @@ export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) 
   useEffect(() => {
     Telemetry.page({
       identityId: getTelemetryIdentifier(client),
-      properties: BASE_TELEMETRY_PROPERTIES
+      properties: BASE_TELEMETRY_PROPERTIES,
     });
   }, [location]);
 };

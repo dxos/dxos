@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../aurora"
+      "path": "../aurora-theme"
     }
   ]
 }

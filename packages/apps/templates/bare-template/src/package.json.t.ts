@@ -54,14 +54,14 @@ export namespace Features {
       storybook: 'start-storybook -p 9009 --no-open'
     },
     devDependencies: {
-      '@storybook/addon-essentials': '7.0.0-beta.48',
-      '@storybook/addon-interactions': '7.0.0-beta.48',
-      '@storybook/addon-links': '7.0.0-beta.48',
-      '@storybook/builder-vite': '7.0.0-beta.48',
-      '@storybook/core-server': '7.0.0-beta.48',
-      '@storybook/mdx2-csf': '^0.0.3',
-      '@storybook/react': '7.0.0-beta.48',
-      '@storybook/react-vite': '7.0.0-beta.48'
+      "@storybook/addon-essentials": "^7.0.6",
+      "@storybook/addon-interactions": "^7.0.6",
+      "@storybook/addon-links": "^7.0.6",
+      "@storybook/builder-vite": "^7.0.6",
+      "@storybook/core-server": "^7.0.6",
+      "@storybook/mdx2-csf": "^1.0.0",
+      "@storybook/react": "^7.0.6",
+      "@storybook/react-vite": "^7.0.6"
     }
   });
 
@@ -94,7 +94,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^4.8.4',
-      vite: '^4.2.0'
+      vite: '^4.3.0'
     }
   };
 };

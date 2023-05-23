@@ -4,17 +4,27 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
-import { useId, useThemeContext, defaultDescription, valenceColorText, mx } from '@dxos/aurora';
+import {
+  Description,
+  DescriptionAndValidation,
+  InputRoot,
+  Label,
+  PinInput,
+  TextArea,
+  TextAreaProps,
+  TextInput,
+  Validation,
+} from '@dxos/aurora';
 
-import { BarePinInput } from './BarePinInput';
-import { BareTextInput } from './BareTextInput';
-import { BareTextareaInput, BareTextareaInputProps } from './BareTextareaInput';
-import { InputProps as NaturalInputProps, InputSize } from './InputProps';
+import { InputProps as AppkitInputProps } from './InputProps';
 
-export type InputProps = NaturalInputProps;
+export type InputProps = AppkitInputProps;
 
 // TODO(burdon): Support input ref for programmatic focus.
 // TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
+/**
+ * @deprecated use Input subcomponents from @dxos/aurora
+ */
 export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
   (
     {
@@ -34,94 +44,53 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
       variant = 'default',
       elevation,
       density,
-      slots = {}
+      slots = {},
     }: InputProps,
-    forwardedRef
+    forwardedRef,
   ) => {
-    const internalInputId = useId('input');
-    const descriptionId = useId('input-description');
-    const validationId = useId('input-validation');
-    const { hasIosKeyboard } = useThemeContext();
-
-    const inputId = slots.input?.id ?? internalInputId;
-
-    const isInvalid = !!validationMessage && validationValence === 'error';
-
-    const { autoFocus, ...inputSlot } = slots.input ?? {};
+    const { id, ...inputSlot } = slots.input ?? {};
 
     const bareInputBaseProps = {
       ...inputSlot,
-      id: inputId,
       ...(slots.input?.required && { required: true }),
-      ...(description && { 'aria-describedby': descriptionId }),
-      ...(isInvalid && {
-        'aria-invalid': 'true' as const,
-        'aria-errormessage': validationId
-      }),
-      ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
       disabled,
       placeholder,
       value,
       defaultValue,
       onChange,
-      validationMessage,
-      validationValence,
       variant,
       elevation,
-      density
+      density,
     };
 
     const bareInput =
       size === 'pin' ? (
-        <BarePinInput {...bareInputBaseProps} length={length} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
+        <PinInput {...bareInputBaseProps} length={length} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
       ) : size === 'textarea' ? (
-        <BareTextareaInput
-          {...(bareInputBaseProps as BareTextareaInputProps)}
-          ref={forwardedRef as ForwardedRef<HTMLTextAreaElement>}
-        />
+        <TextArea {...(bareInputBaseProps as TextAreaProps)} ref={forwardedRef as ForwardedRef<HTMLTextAreaElement>} />
       ) : (
-        <BareTextInput
-          {...bareInputBaseProps}
-          size={size as Exclude<InputSize, 'pin' | 'textarea'>}
-          ref={forwardedRef as ForwardedRef<HTMLInputElement>}
-        />
+        <TextInput {...bareInputBaseProps} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
       );
 
     return (
       <div role='none' className={slots.root?.className}>
-        <label
-          {...slots.label}
-          htmlFor={inputId}
-          className={mx(
-            'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
-            labelVisuallyHidden && 'sr-only',
-            slots.label?.className
+        <InputRoot {...{ validationValence, id }}>
+          <Label {...slots?.label} srOnly={labelVisuallyHidden}>
+            {label}
+          </Label>
+          {bareInput}
+          {(description || validationMessage) && (
+            <DescriptionAndValidation classNames={slots.description?.className}>
+              {validationMessage && (
+                <Validation classNames={slots.validation?.className}>{validationMessage} </Validation>
+              )}
+              <Description srOnly={descriptionVisuallyHidden} classNames={slots.description?.className}>
+                {description}
+              </Description>
+            </DescriptionAndValidation>
           )}
-        >
-          {label}
-        </label>
-
-        {bareInput}
-
-        {(description || validationMessage) && (
-          <p
-            {...(!isInvalid && { id: descriptionId })}
-            className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only', slots.description?.className)}
-          >
-            {validationMessage && (
-              <span id={validationId} className={mx(valenceColorText(validationValence), slots.validation?.className)}>
-                {validationMessage}{' '}
-              </span>
-            )}
-            <span
-              {...(isInvalid && { id: descriptionId })}
-              className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
-            >
-              {description}
-            </span>
-          </p>
-        )}
+        </InputRoot>
       </div>
     );
-  }
+  },
 );

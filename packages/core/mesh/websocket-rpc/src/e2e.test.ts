@@ -12,7 +12,7 @@ import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';
 
 const services = createServiceBundle({
-  TestService: schema.getService('example.testing.rpc.TestService')
+  TestService: schema.getService('example.testing.rpc.TestService'),
 });
 
 describe('e2e', () => {
@@ -27,21 +27,21 @@ describe('e2e', () => {
             TestService: {
               testCall: async (request) => {
                 return {
-                  data: request.data
+                  data: request.data,
                 };
               },
-              voidCall: async () => {}
-            }
-          }
+              voidCall: async () => {},
+            },
+          },
         };
-      }
+      },
     });
 
     const client = new WebsocketRpcClient<ServiceTypesOf<typeof services>, {}>({
       url: 'ws://localhost:12342',
       requested: services,
       exposed: {},
-      handlers: {}
+      handlers: {},
     });
 
     await server.open();

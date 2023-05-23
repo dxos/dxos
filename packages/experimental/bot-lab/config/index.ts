@@ -14,32 +14,32 @@ const defaults = {
     client: {
       storage: {
         persistent: true,
-        path: './dxos_client_storage'
-      }
+        path: './dxos_client_storage',
+      },
     },
     services: {
       signaling: [
         {
-          server: 'wss://kube.dxos.org/.well-known/dx/signal'
+          server: 'wss://kube.dxos.org/.well-known/dx/signal',
         },
         {
-          server: 'wss://dev.kube.dxos.org/.well-known/dx/signal'
-        }
+          server: 'wss://dev.kube.dxos.org/.well-known/dx/signal',
+        },
       ],
       ice: [
         {
           urls: 'stun:kube.dxos.org:3478',
           username: 'dxos',
-          credential: 'dxos'
+          credential: 'dxos',
         },
         {
           urls: 'turn:kube.dxos.org:3478',
           username: 'dxos',
-          credential: 'dxos'
-        }
-      ]
-    }
-  }
+          credential: 'dxos',
+        },
+      ],
+    },
+  },
 };
 
 // TODO(burdon): Allow overrides.

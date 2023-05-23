@@ -18,12 +18,12 @@ export const combineSourceMaps = (prevMap: string, nextMap: string) => {
     const generated = loadSync('/new', {
       content: {
         '/new': newMap.sourcesContent[0],
-        '/prev': prev.sourcesContent[0]
+        '/prev': prev.sourcesContent[0],
       },
       sourcemaps: {
         '/new': newMap,
-        '/prev': prev
-      }
+        '/prev': prev,
+      },
     }).apply();
 
     generated.sources[0] = '/' + generated.sources[0];

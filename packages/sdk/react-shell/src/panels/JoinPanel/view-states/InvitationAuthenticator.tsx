@@ -5,7 +5,8 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Input } from '@dxos/react-appkit';
 import { useInvitationStatus } from '@dxos/react-client';
@@ -27,7 +28,7 @@ const PureInvitationAuthenticatorContent = ({
   joinState,
   Kind,
   onChange,
-  onAuthenticate
+  onAuthenticate,
 }: {
   disabled?: boolean;
   joinSend: JoinSend;
@@ -58,19 +59,19 @@ const PureInvitationAuthenticatorContent = ({
             'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
             'data-prevent-ios-autofocus': true,
             'data-testid': `${invitationType}-auth-code-input`,
-            'data-1p-ignore': true
-          } as ComponentPropsWithoutRef<'input'>
+            'data-1p-ignore': true,
+          } as ComponentPropsWithoutRef<'input'>,
         }}
         {...(failed && {
           validationValence: 'error',
-          validationMessage: t('failed to authenticate message')
+          validationMessage: t('failed to authenticate message'),
         })}
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
+          classNames='grow flex items-center gap-2 pli-2 order-2'
           onClick={onAuthenticate}
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
@@ -81,7 +82,7 @@ const PureInvitationAuthenticatorContent = ({
         </Button>
         <Button
           disabled={disabled}
-          className='flex items-center gap-2 pis-2 pie-4'
+          classNames='flex items-center gap-2 pis-2 pie-4'
           onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
@@ -99,7 +100,7 @@ const InvitationAuthenticatorContent = ({
   disabled,
   invitation,
   Kind,
-  failed
+  failed,
 }: {
   joinSend: JoinSend;
   joinState?: JoinState;
@@ -122,7 +123,7 @@ const InvitationAuthenticatorContent = ({
         (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
       }
     },
-    [authenticate, pinValue]
+    [authenticate, pinValue],
   );
   return (
     <PureInvitationAuthenticatorContent

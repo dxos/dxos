@@ -47,7 +47,7 @@ export class MessageRouter implements SignalMessenger {
   async receiveMessage({
     author,
     recipient,
-    payload
+    payload,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -80,21 +80,21 @@ export class MessageRouter implements SignalMessenger {
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
-      message
+      message,
     });
   }
 
   async offer(message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
-      messageId: PublicKey.random()
+      messageId: PublicKey.random(),
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
       return this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
-        message: networkMessage
+        message: networkMessage,
       });
     });
   }
@@ -102,7 +102,7 @@ export class MessageRouter implements SignalMessenger {
   private async _sendReliableMessage({
     author,
     recipient,
-    message
+    message,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -111,7 +111,7 @@ export class MessageRouter implements SignalMessenger {
     const networkMessage: SwarmMessage = {
       ...message,
       // Setting unique message_id if it not specified yet.
-      messageId: message.messageId ?? PublicKey.random()
+      messageId: message.messageId ?? PublicKey.random(),
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
@@ -121,7 +121,7 @@ export class MessageRouter implements SignalMessenger {
   private async _encodeAndSend({
     author,
     recipient,
-    message
+    message,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -132,8 +132,8 @@ export class MessageRouter implements SignalMessenger {
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message)
-      }
+        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message),
+      },
     });
   }
 
@@ -151,7 +151,7 @@ export class MessageRouter implements SignalMessenger {
   private async _handleOffer({
     author,
     recipient,
-    message
+    message,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -162,7 +162,7 @@ export class MessageRouter implements SignalMessenger {
       author,
       recipient,
       ...message,
-      data: { offer: message.data.offer }
+      data: { offer: message.data.offer },
     };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
@@ -172,15 +172,15 @@ export class MessageRouter implements SignalMessenger {
       message: {
         topic: message.topic,
         sessionId: message.sessionId,
-        data: { answer }
-      }
+        data: { answer },
+      },
     });
   }
 
   private async _handleSignal({
     author,
     recipient,
-    message
+    message,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -192,7 +192,7 @@ export class MessageRouter implements SignalMessenger {
       author,
       recipient,
       ...message,
-      data: { signal: message.data.signal }
+      data: { signal: message.data.signal },
     };
 
     await this._onSignal(signalMessage);

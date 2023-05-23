@@ -34,7 +34,7 @@ import {
   SubscribeToSpacesResponse,
   SubscribeToSignalStatusResponse,
   SignalResponse,
-  SubscribeToSwarmInfoResponse
+  SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
@@ -88,7 +88,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToCredentialMessages(
-    request: SubscribeToCredentialMessagesRequest
+    request: SubscribeToCredentialMessagesRequest,
   ): Stream<SubscribeToCredentialMessagesResponse> {
     throw new Error();
   }
@@ -130,11 +130,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus({ networkManager: this.params.context.networkManager });
+    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSignal(): Stream<SignalResponse> {
-    return subscribeToSignal({ networkManager: this.params.context.networkManager });
+    return subscribeToSignal({ signalManager: this.params.context.signalManager });
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {

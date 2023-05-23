@@ -79,8 +79,12 @@ export class Swarm {
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
-    private readonly _label: string | undefined
+    private readonly _label: string | undefined,
   ) {
+    log.trace(
+      'dxos.mesh.swarm.constructor',
+      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } }),
+    );
     log('creating swarm', { peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
@@ -88,21 +92,18 @@ export class Swarm {
       sendMessage: async (msg) => await this._messenger.sendMessage(msg),
       onSignal: async (msg) => await this.onSignal(msg),
       onOffer: async (msg) => await this.onOffer(msg),
-      topic: this._topic
+      topic: this._topic,
     });
 
     this._messenger
       .listen({
         peerId: this._ownPeerId,
         payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: async (message) => await this._swarmMessenger.receiveMessage(message)
+        onMessage: async (message) => await this._swarmMessenger.receiveMessage(message),
       })
       .catch((error) => log.catch(error));
 
-    log.trace(
-      'dxos.mesh.swarm',
-      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } })
-    );
+    log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
 
   get connections() {
@@ -135,7 +136,6 @@ export class Swarm {
     await this._topology.destroy();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
     log('destroyed');
-    log.trace('dxos.mesh.swarm', trace.end({ id: this._instanceId }));
   }
 
   async setTopology(topology: Topology) {
@@ -145,7 +145,7 @@ export class Swarm {
     }
     log('setting topology', {
       previous: getClassName(this._topology),
-      topology: getClassName(topology)
+      topology: getClassName(topology),
     });
 
     await this._topology.destroy();
@@ -218,7 +218,7 @@ export class Swarm {
     }
     assert(
       message.recipient?.equals(this._ownPeerId),
-      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
+      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`,
     );
     assert(message.topic?.equals(this._topic));
     assert(message.author);
@@ -280,10 +280,9 @@ export class Swarm {
           },
           onPeerAvailable: () => {
             this._topology.update();
-          }
-        }
+          },
+        },
       );
-      peer._traceParent = this._instanceId;
       this._peers.set(peerId, peer);
     }
 
@@ -305,7 +304,7 @@ export class Swarm {
           .map((peer) => peer.id),
         candidates: Array.from(this._peers.values())
           .filter((peer) => !peer.connection && peer.advertizing && peer.availableToConnect)
-          .map((peer) => peer.id)
+          .map((peer) => peer.id),
       }),
       connect: (peer) => {
         if (this._ctx.disposed) {
@@ -331,7 +330,7 @@ export class Swarm {
           await this._closeConnection(peer);
           this._topology.update();
         });
-      }
+      },
     };
   }
 

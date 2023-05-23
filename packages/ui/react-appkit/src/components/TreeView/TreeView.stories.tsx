@@ -8,24 +8,24 @@ import { TreeView, mapJsonToHierarchy } from './TreeView';
 import '@dxosTheme';
 
 export default {
-  component: TreeView
+  component: TreeView,
 };
 
 const data = {
   foo: 100,
   bar: {
-    zoo: 200
+    zoo: 200,
   },
   tags: ['a', 'b', 'c'],
   items: [
     {
       a: true,
-      b: 100
+      b: 100,
     },
     {
-      c: 200
-    }
-  ]
+      c: 200,
+    },
+  ],
 };
 
 export const Default = () => <TreeView items={mapJsonToHierarchy(data)} />;

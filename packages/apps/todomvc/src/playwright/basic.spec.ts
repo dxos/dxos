@@ -14,7 +14,7 @@ enum Groceries {
   Eggnog = 'eggnog',
   Milk = 'milk',
   Butter = 'butter',
-  Flour = 'flour'
+  Flour = 'flour',
 }
 
 test.describe('Basic test', () => {
@@ -65,7 +65,7 @@ test.describe('Basic test', () => {
       await guest.openJoinSpace();
       const [authCode] = await Promise.all([
         host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode)
+        guest.shell.acceptSpaceInvitation(invitationCode),
       ]);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();

@@ -44,12 +44,12 @@ describe.skip('TravelBot', () => {
           if (trip && trip.bookings.length) {
             trigger.wake(trip);
           }
-        }, 100)
+        }, 100),
       );
 
       const profile: TravelProfile = {
         cabin: 'BUSINESS',
-        carriers: ['AA', 'AF', 'LH', 'SQ']
+        carriers: ['AA', 'AF', 'LH', 'SQ'],
       };
 
       const now = new Date();
@@ -62,29 +62,29 @@ describe.skip('TravelBot', () => {
           destinations: [
             {
               address: {
-                cityCode: 'NYC' // TODO(burdon): From user profile.
-              }
+                cityCode: 'NYC', // TODO(burdon): From user profile.
+              },
             },
             {
               dateStart: formatISO9075(add(now, { days: 7 }), { representation: 'date' }),
               address: {
-                cityCode: 'MUC'
-              }
+                cityCode: 'MUC',
+              },
             },
             {
               dateStart: formatISO9075(add(now, { days: 10 }), { representation: 'date' }),
               address: {
-                cityCode: 'BER'
-              }
+                cityCode: 'BER',
+              },
             },
             {
               dateStart: formatISO9075(add(now, { days: 18 }), { representation: 'date' }),
               address: {
-                cityCode: 'NYC'
-              }
-            }
-          ]
-        })
+                cityCode: 'NYC',
+              },
+            },
+          ],
+        }),
       );
 
       const trip = await trigger.wait();

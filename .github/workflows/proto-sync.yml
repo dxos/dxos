@@ -54,7 +54,7 @@ jobs:
           sudo mv protoc-gen-go-dxrpc /usr/local/bin/protoc-gen-go-dxrpc
 
           # Update protos & gen defs.
-          cp -r ../packages/core/protocols/src/proto/. proto/
+          rsync -avm --include='*/' --include='*.proto' --exclude='*' ../packages/core/protocols/src/proto/ proto/
           go generate ./...
 
           # Setup Git.

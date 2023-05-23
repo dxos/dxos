@@ -5,7 +5,7 @@
 import React, { MutableRefObject, useMemo } from 'react';
 import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Think about re-exports.
 export type TableCellProps<T extends object = {}> = CellProps<T>;
@@ -23,9 +23,9 @@ const getStyles = (props: any, align = 'left') => [
     style: {
       display: 'flex',
       alignItems: 'start',
-      justifyContent: align === 'right' ? 'flex-end' : 'flex-start' // TODO(burdon): items-center row.
-    }
-  }
+      justifyContent: align === 'right' ? 'flex-end' : 'flex-start', // TODO(burdon): items-center row.
+    },
+  },
 ];
 
 const headerProps = (props: any, { column }: { column: any }) => getStyles(props, column.align);
@@ -60,15 +60,15 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
       // When using the useFlexLayout:
       minWidth: 30, // minWidth is only used as a limit for resizing
       width: 240, // width is used for both the flex-basis and flex-grow
-      maxWidth: 240 // maxWidth is only used as a limit for resizing
+      maxWidth: 240, // maxWidth is only used as a limit for resizing
     }),
-    []
+    [],
   );
 
   const { getTableProps, headerGroups, prepareRow, rows } = useTable<T>(
     { columns, data, defaultColumn },
     useResizeColumns,
-    useFlexLayout
+    useFlexLayout,
   );
 
   return (

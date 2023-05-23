@@ -14,7 +14,7 @@ export const signPresentation = async ({
   signer,
   signerKey,
   chain,
-  nonce
+  nonce,
 }: {
   presentation: Presentation;
   signer: Signer;
@@ -27,7 +27,7 @@ export const signPresentation = async ({
     value: new Uint8Array(),
     creationDate: new Date(),
     signer: signerKey,
-    nonce
+    nonce,
   };
 
   const signedPayload = getPresentationProofPayload(presentation.credentials ?? [], proof);
@@ -38,6 +38,6 @@ export const signPresentation = async ({
 
   return {
     credentials: presentation.credentials,
-    proofs: [...(presentation.proofs ?? []), proof]
+    proofs: [...(presentation.proofs ?? []), proof],
   };
 };

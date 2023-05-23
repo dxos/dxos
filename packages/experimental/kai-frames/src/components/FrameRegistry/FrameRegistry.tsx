@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { getSize, mx } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { ScrollContainer } from '@dxos/mosaic';
 
 import { FrameDef } from '../../registry';
@@ -14,7 +14,7 @@ import { FrameDef } from '../../registry';
 const len = (array?: any[]) => array?.length ?? 0;
 const sorter = (
   { module: { displayName: a, tags: t1 } }: FrameDef<any>,
-  { module: { displayName: b, tags: t2 } }: FrameDef<any>
+  { module: { displayName: b, tags: t2 } }: FrameDef<any>,
 ) => (len(t1) < len(t2) ? -1 : len(t1) > len(t2) ? 1 : a! < b! ? -1 : a! > b! ? 1 : 0);
 
 export type FrameRegistrySlots = {
@@ -41,7 +41,7 @@ const FrameTile: FC<{
         'flex flex-col w-[200px] h-[200px] border-0 rounded px-3 py-2',
         'cursor-pointer bg-paper-1-bg hover:bg-hover-bg border',
         active && 'border-selection-border !bg-selection-bg',
-        slots.tile?.className
+        slots.tile?.className,
       )}
       onClick={() => onSelect?.(id)}
     >

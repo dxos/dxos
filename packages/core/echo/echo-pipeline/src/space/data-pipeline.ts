@@ -4,19 +4,21 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { FeedInfo } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
-import { ItemManager } from '@dxos/echo-db';
+import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
+import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
-import { createMappedFeedWriter } from '../common';
 import { DatabaseHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
@@ -33,6 +35,11 @@ export type DataPipelineParams = {
   spaceKey: PublicKey;
   feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined;
   snapshotId: string | undefined;
+
+  /**
+   * Called once.
+   */
+  onPipelineCreated: (pipeline: Pipeline) => Promise<void>;
 };
 
 /**
@@ -51,11 +58,6 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
 /**
- * Flag to disable automatic local snapshots.
- */
-const DISABLE_SNAPSHOT_CACHE = true;
-
-/**
  * Controls data pipeline in the space.
  * Consumes the pipeline and updates the database.
  * Reacts to new epochs to restart the pipeline.
@@ -63,9 +65,7 @@ const DISABLE_SNAPSHOT_CACHE = true;
 @trackLeaks('open', 'close')
 export class DataPipeline {
   private _ctx = new Context();
-  private _spaceContext!: PipelineFactory;
   private _pipeline?: Pipeline;
-  private _snapshot?: SpaceSnapshot;
   private _targetTimeframe?: Timeframe;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
@@ -76,23 +76,22 @@ export class DataPipeline {
 
   constructor(private readonly _params: DataPipelineParams) {}
 
-  public _itemManager!: ItemManager;
-  public databaseBackend?: DatabaseHost;
+  public itemManager!: ItemManager;
+  public databaseHost?: DatabaseHost;
+
+  public currentEpoch?: Credential;
+  public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
     return this._isOpen;
   }
 
+  get pipeline() {
+    return this._pipeline;
+  }
+
   get pipelineState() {
     return this._pipeline?.state;
-  }
-
-  get snapshotTimeframe() {
-    return this._snapshot?.timeframe;
-  }
-
-  getStartTimeframe(): Timeframe {
-    return snapshotTimeframeToStartingTimeframe(this.snapshotTimeframe ?? new Timeframe());
   }
 
   setTargetTimeframe(timeframe: Timeframe) {
@@ -100,34 +99,52 @@ export class DataPipeline {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
+  createCredentialProcessor(): CredentialProcessor {
+    return {
+      process: async (credential) => {
+        const assertion = getCredentialAssertion(credential);
+        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+          return;
+        }
+
+        log('new epoch', { credential });
+        await this._processEpoch(assertion);
+
+        this.currentEpoch = credential;
+        this.onNewEpoch.emit(credential);
+      },
+    };
+  }
+
   @synchronized
-  async open(spaceContext: PipelineFactory) {
+  async open() {
     if (this._isOpen) {
       return;
     }
 
-    this._spaceContext = spaceContext;
-    if (this._params.snapshotId && !DISABLE_SNAPSHOT_CACHE) {
-      this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
-      this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
-    }
+    this._pipeline = new Pipeline();
+    await this._params.onPipelineCreated(this._pipeline);
+    await this._pipeline.start();
+    await this._pipeline.pause(); // Start paused until we have the first epoch.
 
-    this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
     }
 
     // Create database backend.
-    const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
-      (data: DataMessage) => ({ data }),
-      this._pipeline.writer ?? failUndefined()
-    );
+    const feedWriter: FeedWriter<DataMessage> = {
+      write: (data, options) => {
+        assert(this._pipeline, 'Pipeline is not initialized.');
+        assert(this.currentEpoch, 'Epoch is not initialized.');
+        return this._pipeline.writer.write({ data }, options);
+      },
+    };
 
-    this.databaseBackend = new DatabaseHost(feedWriter, this._snapshot?.database);
-    this._itemManager = new ItemManager(this._params.modelFactory);
+    this.databaseHost = new DatabaseHost(feedWriter);
+    this.itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
-    await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
+    await this.databaseHost.open(this.itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -150,18 +167,16 @@ export class DataPipeline {
 
     // NOTE: Make sure the processing is stopped BEFORE we save the snapshot.
     try {
+      await this._saveCache();
       if (this._pipeline) {
         await this._saveTargetTimeframe(this._pipeline.state.timeframe);
-        if (!DISABLE_SNAPSHOT_CACHE) {
-          await this._saveSnapshot(this._pipeline.state.timeframe);
-        }
       }
     } catch (err) {
       log.catch(err);
     }
 
-    await this.databaseBackend?.close();
-    await this._itemManager?.destroy();
+    await this.databaseHost?.close();
+    await this.itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
 
@@ -169,7 +184,7 @@ export class DataPipeline {
     assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
-      log('processing message', { msg });
+      log('processing message', { feedKey, seq });
 
       try {
         if (data.payload.data) {
@@ -179,14 +194,14 @@ export class DataPipeline {
             continue;
           }
 
-          await this.databaseBackend!.echoProcessor({
+          await this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
               seq,
               timeframe: data.timeframe,
-              memberKey: feedInfo.assertion.identityKey
-            }
+              memberKey: feedInfo.assertion.identityKey,
+            },
           });
 
           // Timeframe clock is not updated yet
@@ -198,20 +213,13 @@ export class DataPipeline {
     }
   }
 
-  private _createSnapshot(timeframe: Timeframe): SpaceSnapshot {
-    assert(this.databaseBackend, 'Database backend is not initialized.');
+  private _createSnapshot(): SpaceSnapshot {
+    assert(this.databaseHost, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
-      timeframe,
-      database: this.databaseBackend!.createSnapshot()
+      timeframe: this._pipeline!.state.timeframe,
+      database: this.databaseHost!.createSnapshot(),
     };
-  }
-
-  private async _saveSnapshot(timeframe: Timeframe) {
-    const snapshot = await this._createSnapshot(timeframe);
-    const snapshotKey = await this._params.snapshotManager.store(snapshot);
-    await this._params.metadataStore.setSpaceSnapshot(this._params.spaceKey, snapshotKey);
-    return snapshot;
   }
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
@@ -220,7 +228,30 @@ export class DataPipeline {
     this._targetTimeframe = newTimeframe;
   }
 
+  private async _saveCache() {
+    const cache: SpaceCache = {};
+
+    try {
+      // Add properties to cache.
+      const propertiesItem = this.itemManager.items.find(
+        (item) =>
+          item.modelMeta?.type === 'dxos:model/document' &&
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+      );
+      if (propertiesItem) {
+        cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
+      }
+    } catch (err) {
+      log.warn('Failed to cache properties', err);
+    }
+
+    // Save cache.
+    await this._params.metadataStore.setCache(this._params.spaceKey, cache);
+  }
+
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
+
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
       this._lastTimeframeSaveTime = Date.now();
 
@@ -228,27 +259,58 @@ export class DataPipeline {
     }
 
     if (
-      !DISABLE_SNAPSHOT_CACHE &&
       Date.now() - this._lastSnapshotSaveTime > AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL &&
       timeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT
     ) {
-      this._lastSnapshotSaveTime = Date.now();
-
-      const snapshot = await this._saveSnapshot(timeframe);
-      this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-      log('save', { snapshot });
+      await this._saveCache();
     }
+  }
+
+  @synchronized
+  private async _processEpoch(epoch: Epoch) {
+    assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
+    assert(this._pipeline);
+
+    if (epoch.snapshotCid) {
+      const snapshot = await this._params.snapshotManager.load(epoch.snapshotCid);
+
+      // TODO(dmaretskyi): Clearing old items + events.
+      this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
+    }
+
+    await this._pipeline.pause();
+    await this._pipeline.setCursor(epoch.timeframe);
+    await this._pipeline.unpause();
   }
 
   async waitUntilTimeframe(timeframe: Timeframe) {
     assert(this._pipeline, 'Pipeline is not initialized.');
     await this._pipeline.state.waitUntilTimeframe(timeframe);
   }
-}
 
-/**
- * Increase all indexes by one so that we start processing the next mutation after the one in the snapshot.
- */
-const snapshotTimeframeToStartingTimeframe = (snapshotTimeframe: Timeframe) => {
-  return snapshotTimeframe.map(([key, seq]) => [key, seq + 1]);
-};
+  @synchronized
+  async createEpoch(): Promise<Epoch> {
+    assert(this._pipeline);
+    assert(this.currentEpoch);
+
+    await this._pipeline.pause();
+
+    const snapshot = await this._createSnapshot();
+    const snapshotCid = await this._params.snapshotManager.store(snapshot);
+
+    const epoch: Epoch = {
+      previousId: this.currentEpoch.id,
+      timeframe: this._pipeline.state.timeframe,
+      number: (this.currentEpoch.subject.assertion as Epoch).number + 1,
+      snapshotCid,
+    };
+
+    await this._pipeline.unpause();
+
+    return epoch;
+  }
+
+  async ensureEpochInitialized() {
+    await this.onNewEpoch.waitForCondition(() => !!this.currentEpoch);
+  }
+}

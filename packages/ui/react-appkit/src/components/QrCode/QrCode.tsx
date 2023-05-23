@@ -3,13 +3,15 @@
 //
 
 import { QrCode as QrCodeIcon, CopySimple } from '@phosphor-icons/react';
+import type { PopoverContentProps } from '@radix-ui/react-popover';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
 
-import { mx, Button, ButtonGroup, ButtonProps, getSize, Size, useId } from '@dxos/aurora';
+import { Button, ButtonGroup, ButtonProps, Size, useId } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Popover } from '../Popover';
-import { TooltipContent, TooltipContentProps, TooltipRoot, TooltipTrigger } from '../Tooltip';
+import { TooltipContent, TooltipRoot, TooltipTrigger, TooltipContentProps } from '../Tooltip';
 
 interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
   value: string;
@@ -30,9 +32,9 @@ export interface FullQrCodeProps extends SharedQrCodeProps {
 export type QrCodeProps = FullQrCodeProps;
 
 interface CompactQrCodeSlots {
-  qrTooltipContent?: Omit<TooltipContentProps, 'children'>;
+  qrTooltipContent?: Omit<PopoverContentProps, 'children'>;
   qrButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
-  copyTooltipContent?: Omit<TooltipContentProps, 'children'>;
+  copyTooltipContent?: Omit<PopoverContentProps, 'children'>;
   copyButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
@@ -55,7 +57,7 @@ export const FullQrCode = ({ value, label, size, density, elevation, slots = {} 
         <Button
           {...{ density, elevation }}
           {...slots.button}
-          className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
+          classNames={['overflow-hidden p-0', getSize(size ?? 32), slots.button?.className]}
           onClick={copyValue}
         >
           <QRCodeSVG
@@ -80,7 +82,7 @@ export const CompactQrCode = ({
   copyLabel,
   density,
   elevation,
-  slots = {}
+  slots = {},
 }: CompactQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
@@ -99,7 +101,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.qrButton}
-              className={mx('border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+              classNames={['border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className]}
               aria-labelledby={labelId}
             >
               <QrCodeIcon className={getSize(5)} />
@@ -107,7 +109,7 @@ export const CompactQrCode = ({
           }
           slots={{
             content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'bottom' },
-            trigger: { asChild: true }
+            trigger: { asChild: true },
           }}
         >
           <div role='none' className='overflow-hidden rounded-md'>
@@ -126,7 +128,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.copyButton}
-              className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
+              classNames={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
               onClick={copyValue}
             >
               <CopySimple className={getSize(5)} />
@@ -140,7 +142,7 @@ export const CompactQrCode = ({
             <Button
               {...{ density, elevation }}
               {...slots.qrButton}
-              className={mx('border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+              classNames={['border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className]}
             >
               <QrCodeIcon className={getSize(5)} />
               {displayQrLabel}
@@ -148,7 +150,7 @@ export const CompactQrCode = ({
           }
           slots={{
             content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' },
-            trigger: { asChild: true }
+            trigger: { asChild: true },
           }}
         >
           <div role='none' className='overflow-hidden rounded-md'>
@@ -164,7 +166,7 @@ export const CompactQrCode = ({
         <Button
           {...{ density, elevation }}
           {...slots.copyButton}
-          className={mx('flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className)}
+          classNames={['flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className]}
           onClick={copyValue}
         >
           <CopySimple className={getSize(5)} />

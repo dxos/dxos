@@ -8,24 +8,24 @@ import { JsonTree } from './JsonTree';
 import '@dxosTheme';
 
 export default {
-  component: JsonTree
+  component: JsonTree,
 };
 
 const data = {
   foo: 100,
   bar: {
-    zoo: 200
+    zoo: 200,
   },
   tags: ['a', 'b', 'c'],
   items: [
     {
       a: true,
-      b: 100
+      b: 100,
     },
     {
-      c: 200
-    }
-  ]
+      c: 200,
+    },
+  ],
 };
 
-export const Json = () => <JsonTree data={data} labelId='storybook__json-tree' />;
+export const Json = () => <JsonTree data={data} />;

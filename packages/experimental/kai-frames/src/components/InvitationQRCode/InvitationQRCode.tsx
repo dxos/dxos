@@ -27,8 +27,8 @@ export const InvitationQRCode: FC<{ space?: Space }> = ({ space }) => {
       connect(
         space.createInvitation({
           type: Invitation.Type.MULTIUSE,
-          authMethod: Invitation.AuthMethod.NONE
-        })
+          authMethod: Invitation.AuthMethod.NONE,
+        }),
       );
     }
   }, [space]);

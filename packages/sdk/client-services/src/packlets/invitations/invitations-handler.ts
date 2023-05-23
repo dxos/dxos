@@ -10,7 +10,7 @@ import {
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY
+  ON_CLOSE_DELAY,
 } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
@@ -59,7 +59,6 @@ export class InvitationsHandler {
   /**
    * @internal
    */
-  public _traceParent?: string;
   constructor(private readonly _networkManager: NetworkManager) {}
 
   createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
@@ -69,7 +68,7 @@ export class InvitationsHandler {
       authMethod = Invitation.AuthMethod.SHARED_SECRET,
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random()
+      swarmKey = PublicKey.random(),
     } = options ?? {};
     const authCode =
       options?.authCode ??
@@ -84,7 +83,7 @@ export class InvitationsHandler {
       swarmKey,
       authCode,
       timeout,
-      ...protocol.getInvitationContext()
+      ...protocol.getInvitationContext(),
     };
 
     const stream = new PushStream<Invitation>();
@@ -92,7 +91,7 @@ export class InvitationsHandler {
       onError: (err) => {
         void ctx.dispose();
         stream.error(err);
-      }
+      },
     });
 
     ctx.onDispose(() => {
@@ -111,7 +110,7 @@ export class InvitationsHandler {
         introduce: async ({ profile }) => {
           log('guest introduced itself', {
             guestProfile: profile,
-            ...protocol.toJSON()
+            ...protocol.toJSON(),
           });
 
           guestProfile = profile;
@@ -123,7 +122,7 @@ export class InvitationsHandler {
           //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
           return {
             spaceKey: authMethod === Invitation.AuthMethod.NONE ? protocol.getInvitationContext().spaceKey : undefined,
-            authMethod
+            authMethod,
           };
         },
 
@@ -186,10 +185,7 @@ export class InvitationsHandler {
           scheduleTask(ctx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
-              log.trace(
-                'dxos.sdk.invitations-handler.host.onOpen',
-                trace.begin({ id: traceId, parentId: this._traceParent })
-              );
+              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await success.wait({ timeout });
@@ -224,9 +220,8 @@ export class InvitationsHandler {
             log.error('failed', err);
             stream.error(err);
           }
-        }
+        },
       });
-      extension._traceParent = this._traceParent;
 
       return extension;
     };
@@ -239,7 +234,7 @@ export class InvitationsHandler {
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
-        topology: new StarTopology(topic)
+        topology: new StarTopology(topic),
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -253,7 +248,7 @@ export class InvitationsHandler {
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation.State.CANCELLED });
         await ctx.dispose();
-      }
+      },
     });
 
     return observable;
@@ -283,7 +278,7 @@ export class InvitationsHandler {
           stream.error(err);
         }
         void ctx.dispose();
-      }
+      },
     });
 
     ctx.onDispose(() => {
@@ -306,10 +301,7 @@ export class InvitationsHandler {
           scheduleTask(ctx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
-              log.trace(
-                'dxos.sdk.invitations-handler.guest.onOpen',
-                trace.begin({ id: traceId, parentId: this._traceParent })
-              );
+              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
               // TODO(burdon): Bug where guest may create multiple connections.
               if (++connectionCount > 1) {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
@@ -323,7 +315,7 @@ export class InvitationsHandler {
               // 1. Introduce guest to host.
               log('introduce', { ...protocol.toJSON() });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce(
-                protocol.createIntroduction()
+                protocol.createIntroduction(),
               );
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
@@ -396,7 +388,7 @@ export class InvitationsHandler {
             log('auth failed', err);
             stream.error(err);
           }
-        }
+        },
       });
 
       return extension;
@@ -411,7 +403,7 @@ export class InvitationsHandler {
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
-        topology: new StarTopology(topic)
+        topology: new StarTopology(topic),
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -428,7 +420,7 @@ export class InvitationsHandler {
       onAuthenticate: async (code: string) => {
         // TODO(burdon): Reset creates a race condition? Event?
         authenticated.wake(code);
-      }
+      },
     });
 
     return observable;

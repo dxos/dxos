@@ -40,10 +40,10 @@ export class ShellController {
             log('set context', request);
             this._display = request.display;
             this.contextUpdate.emit(request);
-          }
-        }
+          },
+        },
       },
-      port: this._port
+      port: this._port,
     });
 
     await this._shellRpc.open();

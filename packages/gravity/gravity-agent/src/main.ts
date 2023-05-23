@@ -20,7 +20,7 @@ import { testStateMachineFactory } from './statemachine';
 
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
-  filter: 'info'
+  filter: 'info',
 });
 
 const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => codec.fromObject(yaml.load(yamlSource));
@@ -29,19 +29,19 @@ const main = () => {
   yargs(hideBin(process.argv))
     .scriptName('agent')
     .option('json', {
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('verbose', {
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('config', {
       type: 'string',
-      default: join(process.cwd(), './config/config.yml')
+      default: join(process.cwd(), './config/config.yml'),
     })
     // TODO(burdon): Define protobuf type.
     .option('spec', {
       type: 'string',
-      default: join(process.cwd(), './config/spec.yml')
+      default: join(process.cwd(), './config/spec.yml'),
     })
 
     .command({
@@ -49,7 +49,7 @@ const main = () => {
       handler: async ({
         verbose,
         config: configFilepath,
-        spec: specFilepath
+        spec: specFilepath,
       }: {
         verbose?: boolean;
         config: string;
@@ -63,7 +63,7 @@ const main = () => {
 
           const spec: AgentSpec = parseYamlWithSchema(
             schema.getCodecForType('dxos.gravity.AgentSpec'),
-            fs.readFileSync(specFilepath).toString()
+            fs.readFileSync(specFilepath).toString(),
           );
           if (verbose) {
             log.info('spec', { spec });
@@ -81,7 +81,7 @@ const main = () => {
           log.error(err);
           process.exit(1);
         }
-      }
+      },
     }).argv;
   // parser.parse();
   log('Tests are running...');

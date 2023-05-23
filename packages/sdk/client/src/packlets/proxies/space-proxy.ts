@@ -10,7 +10,7 @@ import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback 
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase } from '@dxos/echo-schema';
+import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,6 +25,9 @@ import { Properties } from '../proto';
 
 interface Internal {
   get db(): DatabaseProxy;
+
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -121,11 +124,7 @@ export class SpaceProxy implements Space {
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  // TODO(dmaretskyi): Cache properties in the metadata.
-  private _cachedProperties = new Properties({
-    name: 'Loading...'
-  });
-
+  private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
   // prettier-ignore
@@ -147,7 +146,8 @@ export class SpaceProxy implements Space {
 
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
     this._internal = {
-      db: this._dbBackend
+      db: this._dbBackend,
+      createEpoch: this._createEpoch.bind(this),
     };
 
     databaseRouter.register(this.key, this._db);
@@ -156,6 +156,11 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+
+    this._cachedProperties = new Properties({}, { readOnly: true });
+    if (this._data.cache?.properties) {
+      setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
+    }
   }
 
   get key() {
@@ -347,7 +352,7 @@ export class SpaceProxy implements Space {
     await this._clientServices.services.SpacesService.postMessage({
       spaceKey: this.key,
       channel,
-      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' }
+      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
     });
   }
 
@@ -385,6 +390,10 @@ export class SpaceProxy implements Space {
     //   spaceKey: this.key,
     //   open
     // });
+  }
+
+  private async _createEpoch() {
+    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key });
   }
 }
 

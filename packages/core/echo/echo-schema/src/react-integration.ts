@@ -6,6 +6,12 @@ declare global {
   const __REACT_DEVTOOLS_GLOBAL_HOOK__: any;
 }
 
+export type ReactComponentInfo = {
+  fileName?: string;
+  lineNumber?: number;
+  columnNumber?: number;
+};
+
 /**
  * Uses react internals to check if we're in the middle of rendering a react component.
  *
@@ -25,16 +31,10 @@ export const getCurrentReactComponent = (): ReactComponentInfo | undefined => {
       return {
         fileName: typeof fileName === 'string' ? fileName : undefined,
         lineNumber: typeof lineNumber === 'number' ? lineNumber : undefined,
-        columnNumber: typeof columnNumber === 'number' ? columnNumber : undefined
+        columnNumber: typeof columnNumber === 'number' ? columnNumber : undefined,
       };
     }
-  } catch (e) {
+  } catch (err) {
     return undefined;
   }
-};
-
-export type ReactComponentInfo = {
-  fileName?: string;
-  lineNumber?: number;
-  columnNumber?: number;
 };

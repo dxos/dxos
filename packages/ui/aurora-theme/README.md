@@ -32,7 +32,7 @@ export default defineConfig({
     // ...
     ThemePlugin({content: [
         resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+        resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
         './index.html', './src/**/*.{js,ts,jsx,tsx}'
       ]}),
     // ...
@@ -81,7 +81,7 @@ void build({
       resolve(__dirname, '../index.html'),
       resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
       resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
+      resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
       // other sources to scan
     ]
   })

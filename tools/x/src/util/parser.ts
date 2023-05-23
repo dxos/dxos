@@ -81,7 +81,7 @@ export class LogParser {
           project,
           target,
           text: [],
-          buildErrors: []
+          buildErrors: [],
         };
 
         sections.push(section);
@@ -101,7 +101,7 @@ export class LogParser {
           file,
           code,
           err,
-          text: []
+          text: [],
         };
 
         section.buildErrors.push(buildError);
@@ -124,7 +124,7 @@ export class LogParser {
         testSuite = {
           passing: parseInt(passing),
           failing: failing ? parseInt(failing) : 0,
-          tests: []
+          tests: [],
         };
 
         section.testSuite = testSuite;
@@ -141,7 +141,7 @@ export class LogParser {
             num: testSuite.tests.length + 1,
             group,
             test: lines[i++].trim(),
-            text: []
+            text: [],
           };
 
           testSuite.tests.push(test);

@@ -5,6 +5,7 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { SignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import {
   GetNetworkPeersRequest,
@@ -12,38 +13,38 @@ import {
   SubscribeToNetworkTopicsResponse,
   SubscribeToSignalStatusResponse,
   SignalResponse,
-  SubscribeToSwarmInfoResponse
+  SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-export const subscribeToNetworkStatus = ({ networkManager }: { networkManager: NetworkManager }) =>
+export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
-        const status = networkManager.signalManager.getStatus();
+        const status = signalManager.getStatus();
         next({ servers: status });
       } catch (err: any) {
         close(err);
       }
     };
 
-    networkManager.signalManager.statusChanged.on(update);
+    signalManager.statusChanged.on(() => update());
     update();
   });
 
-export const subscribeToSignal = ({ networkManager }: { networkManager: NetworkManager }) =>
+export const subscribeToSignal = ({ signalManager }: { signalManager: SignalManager }) =>
   new Stream<SignalResponse>(({ next }) => {
     const ctx = new Context();
-    networkManager.signalManager.onMessage.on(ctx, (message) => {
+    signalManager.onMessage.on(ctx, (message) => {
       next({
         message: {
           author: message.author.asUint8Array(),
           recipient: message.recipient.asUint8Array(),
-          payload: message.payload
+          payload: message.payload,
         },
-        receivedAt: new Date()
+        receivedAt: new Date(),
       });
     });
-    networkManager.signalManager.swarmEvent.on(ctx, (swarmEvent) => {
+    signalManager.swarmEvent.on(ctx, (swarmEvent) => {
       next({ swarmEvent: swarmEvent.swarmEvent, receivedAt: new Date() });
     });
     return () => {
@@ -58,7 +59,7 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: N
         const topics = networkManager.topics;
         const labeledTopics = topics.map((topic) => ({
           topic,
-          label: networkManager.getSwarm(topic)?.label ?? topic.toHex()
+          label: networkManager.getSwarm(topic)?.label ?? topic.toHex(),
         }));
         next({ topics: labeledTopics });
       } catch (err: any) {
@@ -84,7 +85,7 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Netwo
 
 export const getNetworkPeers = (
   { networkManager }: { networkManager: NetworkManager },
-  request: GetNetworkPeersRequest
+  request: GetNetworkPeersRequest,
 ): GetNetworkPeersResponse => {
   if (!request.topic) {
     throw new Error('Expected a network topic');
@@ -94,7 +95,7 @@ export const getNetworkPeers = (
   return {
     peers: map?.peers.map((peer) => ({
       ...peer,
-      connections: peer.connections.map((connection) => connection.asUint8Array())
-    }))
+      connections: peer.connections.map((connection) => connection.asUint8Array()),
+    })),
   };
 };

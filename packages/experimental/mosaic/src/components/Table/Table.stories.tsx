@@ -19,12 +19,12 @@ const columns: TableColumn<Item<TestData>>[] = [
     Header: 'id',
     accessor: (record) => record.id.slice(0, 8),
     Cell: ({ value }: any) => <div className='font-mono font-xs'>{value}</div>,
-    width: 80
+    width: 80,
   },
   {
     Header: 'title',
-    accessor: (record) => record.data?.title
-  }
+    accessor: (record) => record.data?.title,
+  },
 ];
 
 const Test = () => {
@@ -47,13 +47,13 @@ export default {
           <Story />
         </div>
       </div>
-    )
+    ),
   ],
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

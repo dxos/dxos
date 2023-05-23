@@ -69,7 +69,7 @@ describe('database', () => {
       const id = PublicKey.random().toHex();
       database.backend.mutate(genesisMutation(id, DocumentModel.meta.type));
       const result = database.backend.mutate(
-        createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build()))
+        createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
       );
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
 

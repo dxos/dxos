@@ -11,5 +11,5 @@ const MessageFrame = React.lazy(() => import('./MessageFrame'));
 
 export const MessageFrameRuntime: FrameRuntime<any> = {
   Icon: MessageIcon,
-  Component: MessageFrame
+  Component: MessageFrame,
 };
