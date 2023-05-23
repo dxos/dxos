@@ -68,6 +68,9 @@ Type: ServiceBundle&lt;[IframeServiceBundle](/api/@dxos/react-client/types/Ifram
 ### [`proxy`]()
 Type: unique symbol
 
+### [`readOnly`]()
+Type: unique symbol
+
 ### [`schema`]()
 Type: unique symbol
 

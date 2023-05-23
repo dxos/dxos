@@ -22,6 +22,19 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
+### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L17)
+
+
+
+Connects to locally running CLI daemon.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`options`: <code>[FromCliEnvOptions](/api/@dxos/client/types/FromCliEnvOptions)</code>
+
 ### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L14)
 
 
@@ -62,11 +75,23 @@ Arguments:
 
 
 
-Returns: <code>object is [TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;</code>
+Returns: <code>object is [TypedObject](/api/@dxos/client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
 
 Arguments: 
 
 `object`: <code>unknown</code>
+
+### [setStateFromSnapshot(obj, snapshot)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`obj`: <code>[EchoObject](/api/@dxos/client/classes/EchoObject)&lt;any&gt;</code>
+
+`snapshot`: <code>ObjectSnapshot</code>
 
 ### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L73)
 
