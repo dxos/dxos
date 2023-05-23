@@ -12,8 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: nrwl/nx-set-shas@v3
-
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
 
@@ -74,7 +72,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bundle
-        run: pnpm nx bundle devtools-extension --parallel 3
+        run: |
+          pnpm nx bundle devtools-extension --parallel 3
+          pnpm nx bundle composer-extension --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
@@ -85,6 +85,7 @@ jobs:
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1
