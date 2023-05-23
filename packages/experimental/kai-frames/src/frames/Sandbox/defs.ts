@@ -11,5 +11,5 @@ const SandboxFrame = React.lazy(() => import('./SandboxFrame'));
 
 export const SandboxFrameRuntime: FrameRuntime<any> = {
   Icon: SandboxIcon,
-  Component: SandboxFrame
+  Component: SandboxFrame,
 };

@@ -2,38 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
-import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
+import {
+  DialogClose,
+  DialogContent,
+  DialogContentProps,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  ThemeContext,
+  useId,
+  useThemeContext,
+} from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 
-import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { SpacePanel, SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
-  extends Omit<PanelDialogProps, 'titleId' | 'children'>,
+  extends Omit<DialogContentProps, 'children'>,
     Omit<SpacePanelProps, 'doneActionParent'> {}
 
-export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => {
+export const SpaceDialog = ({ ...spacePanelProps }: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
   const themeContextValue = useThemeContext();
 
   return (
-    <PanelDialog
-      {...{
-        slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(), ...slots?.root } },
-        titleId
-      }}
-    >
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
-        <SpacePanel
-          {...{
-            ...spacePanelProps,
-            titleId,
-            doneActionParent: <Close asChild />
-          }}
-        />
-      </ThemeContext.Provider>
-    </PanelDialog>
+    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
+      <DialogRoot defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
+        <DialogPortal>
+          <DialogOverlay>
+            <DialogContent>
+              <SpacePanel
+                {...{
+                  ...spacePanelProps,
+                  titleId,
+                  doneActionParent: <DialogClose asChild />,
+                }}
+              />
+            </DialogContent>
+          </DialogOverlay>
+        </DialogPortal>
+      </DialogRoot>
+    </ThemeContext.Provider>
   );
 };

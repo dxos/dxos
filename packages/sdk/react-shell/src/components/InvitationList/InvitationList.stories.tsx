@@ -7,7 +7,8 @@ import '@dxosTheme';
 import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { mx, ThemeContext } from '@dxos/aurora';
+import { ThemeContext, useThemeContext } from '@dxos/aurora';
+import { mx, osTx } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Client, Invitation } from '@dxos/client';
 import { TestBuilder } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
@@ -19,7 +20,7 @@ import { defaultSurface } from '../../styles';
 import { InvitationList } from './InvitationList';
 
 export default {
-  component: InvitationList
+  component: InvitationList,
 };
 
 export const Default = {
@@ -31,6 +32,8 @@ export const Default = {
       }, []);
 
       const [invitations, setInvitations] = useState<CancellableInvitationObservable[]>([]);
+
+      const themeContext = useThemeContext();
 
       useAsyncEffect(async () => {
         await Promise.all(clients.map((client) => client.initialize()));
@@ -54,13 +57,13 @@ export const Default = {
 
       return (
         <ClientProvider client={clients[0]} fallback={() => <Loading label='Loading client…' />}>
-          <ThemeContext.Provider value={{ themeVariant: 'os' }}>
+          <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
             <div className={mx(defaultSurface, 'max-is-xs mli-auto rounded-md p-2 backdrop-blur-md')}>
               <Story args={{ invitations, createInvitationUrl: (code: string) => code }} />
             </div>
           </ThemeContext.Provider>
         </ClientProvider>
       );
-    }
-  ]
+    },
+  ],
 };

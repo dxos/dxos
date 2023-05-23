@@ -12,7 +12,7 @@ import {
   EchoProxy,
   HaloProxy,
   InvitationsProxy,
-  SpaceProxy
+  SpaceProxy,
 } from '@dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -29,7 +29,7 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
     authMethod: invitation.authMethod,
     swarmKey: invitation.swarmKey,
     state: invitation.state,
-    timeout: invitation.timeout
+    timeout: invitation.timeout,
   };
 };
 
@@ -60,7 +60,7 @@ export const performInvitation = ({
   host,
   guest,
   options,
-  hooks
+  hooks,
 }: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
   const hostComplete = new Trigger<Result>();
   const guestComplete = new Trigger<Result>();
@@ -133,7 +133,7 @@ export const performInvitation = ({
                 return;
               }
               guestComplete.wake({ error });
-            }
+            },
           );
           break;
         }
@@ -188,7 +188,7 @@ export const performInvitation = ({
         return;
       }
       hostComplete.wake({ error });
-    }
+    },
   );
 
   return [hostComplete.wait(), guestComplete.wait()];
@@ -196,11 +196,11 @@ export const performInvitation = ({
 
 const createInvitation = (
   host: ServiceContext | InvitationsProxy | HaloProxy | SpaceProxy,
-  options?: Partial<Invitation>
+  options?: Partial<Invitation>,
 ): CancellableInvitationObservable => {
   options ??= {
     authMethod: Invitation.AuthMethod.NONE,
-    ...(options ?? {})
+    ...(options ?? {}),
   };
 
   if (host instanceof InvitationsProxy || host instanceof HaloProxy || host instanceof SpaceProxy) {
@@ -213,7 +213,7 @@ const createInvitation = (
 
 const acceptInvitation = (
   guest: ServiceContext | InvitationsProxy | HaloProxy | EchoProxy | Client,
-  invitation: Invitation
+  invitation: Invitation,
 ): AuthenticatingInvitationObservable => {
   invitation = sanitizeInvitation(invitation);
 

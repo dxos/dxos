@@ -5,7 +5,8 @@
 import { Gear, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, defaultInlineSeparator, getSize, mx, buttonStyles, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { defaultInlineSeparator, getSize, mx, appTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
 
@@ -32,12 +33,19 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
       }
       slots={{
         content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },
-        trigger: { className: mx(buttonStyles(), 'pointer-events-auto flex items-center gap-1') }
+        trigger: {
+          className: appTx(
+            'button.root',
+            'button button--popover-trigger',
+            {},
+            'pointer-events-auto flex items-center gap-1',
+          ),
+        },
       }}
       triggerIsInToolbar
     >
       {onClickManageSpace && (
-        <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
+        <Button classNames='flex w-full gap-2' onClick={onClickManageSpace}>
           <Gear className={getSize(5)} />
           <span>{t('manage space label')}</span>
         </Button>

@@ -42,9 +42,9 @@ void (async () => {
               return { path: args.path, external: true };
             });
           });
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
 
   await writeFile(
@@ -53,8 +53,8 @@ void (async () => {
       name: 'dxos-bot',
       version: '0.0.1',
       description: 'DXOS Bot',
-      dependencies: externalDeps
-    })
+      dependencies: externalDeps,
+    }),
   );
 
   console.log('external deps', externalDeps);

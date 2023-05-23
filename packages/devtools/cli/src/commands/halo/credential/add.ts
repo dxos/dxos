@@ -13,7 +13,7 @@ import { BaseCommand } from '../../../base-command';
 export default class Add extends BaseCommand {
   static override description = 'Import credential into HALO.';
   static override args = {
-    credential: Args.string({ description: 'credential', required: false })
+    credential: Args.string({ description: 'credential', required: false }),
   };
 
   async run(): Promise<any> {

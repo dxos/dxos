@@ -4,7 +4,8 @@
 
 import React, { ComponentProps } from 'react';
 
-import { useId, mx } from '@dxos/aurora';
+import { useId } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -26,7 +27,7 @@ const sizeMap = new Map<LoadingSize, string>([
   ['sm', 'w-4 h-4'],
   ['md', 'w-8 h-8'],
   ['lg', 'w-12 h-12'],
-  ['xl', 'w-16 h-16']
+  ['xl', 'w-16 h-16'],
 ]);
 
 export const Loading = ({ size, color, label, slots = {} }: LoadingProps) => {
@@ -45,7 +46,7 @@ export const Loading = ({ size, color, label, slots = {} }: LoadingProps) => {
           sizeClassName,
           'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
           color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400',
-          slots.svg?.className
+          slots.svg?.className,
         )}
         viewBox='0 0 100 101'
         fill='none'

@@ -30,5 +30,5 @@ export const Composer = memo(
     } else {
       return <MarkdownComposer ref={forwardedRef as Ref<MarkdownComposerRef>} model={model} slots={slots} />;
     }
-  })
+  }),
 );

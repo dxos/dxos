@@ -10,7 +10,7 @@ export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
   new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
     const update = () => {
       next({
-        keys: keyring.list()
+        keys: keyring.list(),
       });
     };
     const unsubscribe = keyring.keysUpdate.on(update);

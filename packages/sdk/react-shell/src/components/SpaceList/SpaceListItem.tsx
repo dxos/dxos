@@ -4,7 +4,7 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import type { Space } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
@@ -24,10 +24,10 @@ export const SpaceListItem = forwardRef(
             size: 9,
             fallbackValue: space.key.toHex(),
             label: <p className='text-sm truncate'>{space.properties.name ?? humanize(space.key)}</p>,
-            slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } }
+            slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } },
           }}
         />
       </li>
     );
-  }
+  },
 );

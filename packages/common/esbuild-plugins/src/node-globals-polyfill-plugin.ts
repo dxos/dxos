@@ -14,12 +14,12 @@ export const NodeGlobalsPolyfillPlugin = (): Plugin => ({
     const polyfills = [
       // TODO: Use `buffer` module from NPM.
       resolve(__dirname, '../../polyfills/process.js'),
-      resolve(__dirname, '../../polyfills/Buffer.js')
+      resolve(__dirname, '../../polyfills/Buffer.js'),
     ];
     if (initialOptions.inject) {
       initialOptions.inject.push(...polyfills);
     } else {
       initialOptions.inject = [...polyfills];
     }
-  }
+  },
 });

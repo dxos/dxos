@@ -12,7 +12,7 @@ import {
   SwarmConnection,
   WireProtocol,
   WireProtocolParams,
-  WireProtocolProvider
+  WireProtocolProvider,
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
@@ -101,7 +101,7 @@ export class SpaceProtocol {
     const topologyConfig = {
       originateConnections: 4,
       maxPeers: 10,
-      sampleSize: 20
+      sampleSize: 20,
     };
 
     log('starting...');
@@ -110,7 +110,7 @@ export class SpaceProtocol {
       peerId: this._swarmIdentity.peerKey,
       topic: this._topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._topic}`
+      label: `Protocol swarm: ${this._topic}`,
     });
 
     log('started');
@@ -129,7 +129,7 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        onSessionAuth: this._onSessionAuth
+        onSessionAuth: this._onSessionAuth,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -155,7 +155,7 @@ export type SpaceProtocolSessionParams = {
 export enum AuthStatus {
   INITIAL = 'INITIAL',
   SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE'
+  FAILURE = 'FAILURE',
 }
 
 // TODO(dmaretskyi): Move to a separate file.
@@ -210,8 +210,8 @@ export class SpaceProtocolSession implements WireProtocol {
         onAuthFailure: () => {
           log.warn('Auth failed');
           this._authStatus = AuthStatus.FAILURE;
-        }
-      })
+        },
+      }),
     );
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }

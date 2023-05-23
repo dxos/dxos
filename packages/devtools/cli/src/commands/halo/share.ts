@@ -42,7 +42,7 @@ export default class Share extends BaseCommand {
           },
           (err) => {
             throw err;
-          }
+          },
         );
 
         await connecting.wait();

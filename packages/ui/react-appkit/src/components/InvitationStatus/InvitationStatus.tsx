@@ -4,7 +4,8 @@
 
 import React, { ComponentProps, useMemo } from 'react';
 
-import { strongShimmer, getSize, mx, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
+import { strongShimmer, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
 const pip = mx('rounded-full flex-none', getSize(2));
@@ -23,7 +24,7 @@ const statusValueMap = new Map<Invitation.State, number>([
   [Invitation.State.CONNECTING, 1],
   [Invitation.State.CONNECTED, 2],
   [Invitation.State.AUTHENTICATING, 3],
-  [Invitation.State.SUCCESS, 4]
+  [Invitation.State.SUCCESS, 4],
 ]);
 
 export const InvitationStatus = ({
@@ -46,9 +47,9 @@ export const InvitationStatus = ({
         [Invitation.State.CONNECTING, t('connecting status label')],
         [Invitation.State.CONNECTED, t('connected status label')],
         [Invitation.State.AUTHENTICATING, t('authenticating status label')],
-        [Invitation.State.SUCCESS, t('success status label')]
+        [Invitation.State.SUCCESS, t('success status label')],
       ]),
-    [t]
+    [t],
   );
 
   const halted =
@@ -80,7 +81,7 @@ export const InvitationStatus = ({
           className={mx(
             pip,
             'relative',
-            cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor
+            cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor,
           )}
         />
       </div>
@@ -89,7 +90,7 @@ export const InvitationStatus = ({
         className={mx(
           stripe,
           !halted && cursor === 1 && strongShimmer,
-          cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
+          cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor,
         )}
       />
       <div role='none' className={mx(pip, 'relative')}>
@@ -102,7 +103,7 @@ export const InvitationStatus = ({
           className={mx(
             pip,
             'relative',
-            cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor
+            cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor,
           )}
         />
       </div>
@@ -111,7 +112,7 @@ export const InvitationStatus = ({
         className={mx(
           stripe,
           !halted && cursor === 3 && strongShimmer,
-          cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
+          cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor,
         )}
       />
       <div role='none' className={mx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />

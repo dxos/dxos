@@ -26,7 +26,7 @@ export class Context {
 
       // Will generate an unhandled rejection.
       throw error;
-    }
+    },
   }: CreateContextParams = {}) {
     this._onError = onError;
   }
@@ -80,7 +80,7 @@ export class Context {
           } catch (error: any) {
             log.catch(error);
           }
-        })()
+        })(),
       );
     }
     this._disposeCallbacks.length = 0;
@@ -95,7 +95,8 @@ export class Context {
    */
   raise(error: Error): void {
     if (this._isDisposed) {
-      log.warn('Error in disposed context', error);
+      // TODO(dmaretskyi): Don't log those.
+      // log.warn('Error in disposed context', error);
       return;
     }
 
@@ -119,7 +120,7 @@ export class Context {
             this.raise(error);
           }
         }
-      }
+      },
     });
     this.onDispose(() => newCtx.dispose());
     return newCtx;

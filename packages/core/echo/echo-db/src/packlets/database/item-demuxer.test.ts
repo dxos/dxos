@@ -33,8 +33,8 @@ describe('Item demuxer', () => {
     feedWriter.written.on(([msg, meta]) =>
       inboundStream({
         batch: msg.batch,
-        meta: { ...meta, memberKey }
-      } as any)
+        meta: { ...meta, memberKey },
+      } as any),
     );
 
     //
@@ -55,11 +55,11 @@ describe('Item demuxer', () => {
           {
             objectId,
             genesis: {
-              modelType: TestModel.meta.type
-            }
-          }
-        ]
-      }
+              modelType: TestModel.meta.type,
+            },
+          },
+        ],
+      },
     };
 
     await feedWriter.write(message);
@@ -112,9 +112,9 @@ describe('Item demuxer', () => {
           feedKey: PublicKey.random(),
           memberKey: PublicKey.random(),
           seq: 0,
-          timeframe: new Timeframe()
+          timeframe: new Timeframe(),
         },
-        batch: message.batch
+        batch: message.batch,
       });
 
     void processEchoMessage(
@@ -124,12 +124,12 @@ describe('Item demuxer', () => {
             {
               objectId: 'foo',
               genesis: {
-                modelType: TestModel.meta.type
-              }
-            }
-          ]
-        }
-      })
+                modelType: TestModel.meta.type,
+              },
+            },
+          ],
+        },
+      }),
     );
 
     void processEchoMessage(
@@ -139,12 +139,12 @@ describe('Item demuxer', () => {
             {
               objectId: 'bar',
               genesis: {
-                modelType: DocumentModel.meta.type
-              }
-            }
-          ]
-        }
-      })
+                modelType: DocumentModel.meta.type,
+              },
+            },
+          ],
+        },
+      }),
     );
 
     // {

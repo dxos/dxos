@@ -2,38 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
-import { ThemeContext, useId, useThemeContext } from '@dxos/aurora';
+import {
+  DialogClose,
+  DialogContent,
+  DialogContentProps,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  ThemeContext,
+  useId,
+  useThemeContext,
+} from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 
-import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
 
 export interface DevicesDialogProps
-  extends Omit<PanelDialogProps, 'titleId' | 'children'>,
+  extends Omit<DialogContentProps, 'children'>,
     Omit<DevicesPanelProps, 'doneActionParent'> {}
 
-export const DevicesDialog = ({ slots, ...devicesDialogProps }: DevicesDialogProps) => {
+export const DevicesDialog = ({ ...devicesDialogProps }: DevicesDialogProps) => {
   const titleId = useId('spaceDialog__title');
   const themeContextValue = useThemeContext();
 
   return (
-    <PanelDialog
-      {...{
-        slots: { ...slots, root: { onOpenChange: (open) => open || devicesDialogProps.onDone?.(), ...slots?.root } },
-        titleId
-      }}
-    >
-      <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
-        <DevicesPanel
-          {...{
-            ...devicesDialogProps,
-            titleId,
-            doneActionParent: <Close asChild />
-          }}
-        />
-      </ThemeContext.Provider>
-    </PanelDialog>
+    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
+      <DialogRoot defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
+        <DialogPortal>
+          <DialogOverlay>
+            <DialogContent>
+              <DevicesPanel
+                {...{
+                  ...devicesDialogProps,
+                  titleId,
+                  doneActionParent: <DialogClose asChild />,
+                }}
+              />
+            </DialogContent>
+          </DialogOverlay>
+        </DialogPortal>
+      </DialogRoot>
+    </ThemeContext.Provider>
   );
 };

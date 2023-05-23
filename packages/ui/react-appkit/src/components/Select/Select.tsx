@@ -6,7 +6,8 @@ import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { ReactNode } from 'react';
 
-import { Button, mx } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type SelectItemProps = SelectPrimitive.SelectItemProps;
 
@@ -18,7 +19,7 @@ const Item = (props: SelectItemProps) => {
         'relative flex items-center px-8 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 font-medium focus:bg-gray-100 dark:focus:bg-gray-900',
         'radix-disabled:opacity-50',
         'focus:outline-none select-none',
-        className
+        className,
       )}
       {...restProps}
     >

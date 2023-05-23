@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from '@dxos/aurora-theme';
+export type { TFunction } from 'i18next';
 export { useTranslation, Trans } from 'react-i18next';
+export * from '@dxos/aurora-types';
+export * from '@dxos/react-hooks';
 
 export * from './components';
 export * from './hooks';

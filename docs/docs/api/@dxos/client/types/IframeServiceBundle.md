@@ -6,9 +6,5 @@
 
 
 ## Properties
-### [BridgeService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L72)
+### [BridgeService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L71)
 Type: <code>BridgeService</code>
-
-
-### [IframeService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L71)
-Type: <code>IframeService</code>

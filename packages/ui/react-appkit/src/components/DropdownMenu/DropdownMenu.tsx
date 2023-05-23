@@ -5,13 +5,12 @@ import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import {
   DropdownMenuCheckboxItemProps,
   DropdownMenuItemProps,
-  DropdownMenuSubContentProps
+  DropdownMenuSubContentProps,
 } from '@radix-ui/react-dropdown-menu';
 import React, { ComponentPropsWithoutRef, forwardRef, ReactNode } from 'react';
 
-import { useThemeContext, dataDisabled, mx } from '@dxos/aurora';
-
-import { defaultDropdownMenuItem } from './dropdownMenuStyles';
+import { useThemeContext } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export interface DropdownMenuSlots {
   root?: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>;
@@ -27,15 +26,15 @@ export interface DropdownMenuProps {
 
 export const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
   ({ className, ...props }: DropdownMenuItemProps, forwardedRef) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
     return (
       <DropdownMenuPrimitive.Item
         ref={forwardedRef}
         {...props}
-        className={mx(defaultDropdownMenuItem(themeVariant), dataDisabled, className)}
+        className={tx('dropdownMenu.item', 'dropdownMenu__item', {}, className)}
       />
     );
-  }
+  },
 );
 
 export const DropdownMenuSeparator = ({
@@ -64,24 +63,27 @@ export const DropdownMenuLabel = ({
 
 export const DropdownMenuCheckboxItem = forwardRef<HTMLDivElement, DropdownMenuCheckboxItemProps>(
   ({ className, ...props }: DropdownMenuCheckboxItemProps, forwardedRef) => {
-    const { themeVariant } = useThemeContext();
+    const { tx } = useThemeContext();
     return (
       <DropdownMenuPrimitive.CheckboxItem
         ref={forwardedRef}
         {...props}
-        className={mx(defaultDropdownMenuItem(themeVariant), className)}
+        className={tx('dropdownMenu.item', 'dropdownMenu__item--checkbox', {}, className)}
       />
     );
-  }
+  },
 );
 
 export const DropdownMenuSubTrigger = ({
   className,
   ...props
 }: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>) => {
-  const { themeVariant } = useThemeContext();
+  const { tx } = useThemeContext();
   return (
-    <DropdownMenuPrimitive.SubTrigger {...props} className={mx(defaultDropdownMenuItem(themeVariant), className)} />
+    <DropdownMenuPrimitive.SubTrigger
+      {...props}
+      className={tx('dropdownMenu.item', 'dropdownMenu__item--sub-trigger', {}, className)}
+    />
   );
 };
 
@@ -96,12 +98,12 @@ export const DropdownMenuSubContent = forwardRef<HTMLDivElement, DropdownMenuSub
             'origin-radix-dropdown-menu radix-side-right:animate-scale-in',
             'w-full rounded-md px-1 py-1 text-sm shadow-md',
             'bg-white dark:bg-neutral-800',
-            className
+            className,
           )}
         />
       </DropdownMenuPrimitive.Portal>
     );
-  }
+  },
 );
 
 export const DropdownMenuItemIndicator = DropdownMenuPrimitive.ItemIndicator;
@@ -124,7 +126,7 @@ export const DropdownMenu = ({ trigger, children, slots = {} }: DropdownMenuProp
             'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
             'w-48 rounded-lg p-1 shadow-md md:w-56',
             'bg-white dark:bg-neutral-800',
-            slots.content?.className
+            slots.content?.className,
           )}
         >
           {children}

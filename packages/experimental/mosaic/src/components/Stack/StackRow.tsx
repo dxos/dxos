@@ -4,7 +4,7 @@
 
 import React, { FC, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type StackRowSlots = {
   root?: {
@@ -36,9 +36,9 @@ export const StackRow = forwardRef(
       dragging,
       showControls,
       style,
-      slots = {}
+      slots = {},
     }: StackRowProps,
-    ref: ForwardedRef<HTMLDivElement>
+    ref: ForwardedRef<HTMLDivElement>,
   ) => {
     return (
       <section
@@ -47,14 +47,19 @@ export const StackRow = forwardRef(
         className={mx(
           'group flex overflow-hidden mx-6 md:mx-0',
           slots?.root?.className,
-          dragging && 'border-t border-b relative z-10'
+          dragging && 'border-t border-b relative z-10',
         )}
       >
-        <div className={mx('hidden md:flex shrink-0 w-24 h-[32px] items-center', !showControls && 'invisible')}>
+        <div
+          className={mx(
+            'hidden md:flex shrink-0 w-24 h-[32px] items-center',
+            !showControls && 'invisible group-hover:visible',
+          )}
+        >
           {!dragging && (
             // TODO(burdon): Don't hide menu when selected.
             // TODO(burdon): Menu popup triggers scrollbar.
-            <div className={mx('flex group-hover:visible ml-4 text-gray-400')}>
+            <div className={mx('flex ml-4 text-gray-400')}>
               <div className='flex justify-center w-8'>{ContextMenu && <ContextMenu section={section} />}</div>
               <div className='flex justify-center w-8'>{DragHandle}</div>
             </div>
@@ -66,7 +71,7 @@ export const StackRow = forwardRef(
         <div
           className={mx(
             'hidden md:flex shrink-0 group-hover:visible w-20 h-[32px] justify-end items-center',
-            !showControls && 'invisible'
+            !showControls && 'invisible',
           )}
         >
           {ActionButton && (
@@ -77,5 +82,5 @@ export const StackRow = forwardRef(
         </div>
       </section>
     );
-  }
+  },
 );

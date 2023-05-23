@@ -7,7 +7,8 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup, getSize } from '@dxos/aurora';
+import { Button, ButtonGroup } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { Group } from '@dxos/react-appkit';
 import { Space, SpaceProxy, useClient, useIdentity, useNetworkStatus, useSpaces } from '@dxos/react-client';
@@ -17,7 +18,7 @@ import { IdentityListItem, SpaceListItem } from '../components';
 import { DevicesPanel, JoinPanel, SpacePanel } from '../panels';
 
 export default {
-  title: 'Invitations'
+  title: 'Invitations',
 };
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
@@ -96,9 +97,9 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   }
 };
 
-const render = ({ id }: { id: number }) => {
+const Invitations = ({ id }: { id: number }) => {
   const client = useClient();
-  const networkStatus = useNetworkStatus().state;
+  const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
   const [panel, setPanel] = useState<PanelType>();
 
@@ -144,8 +145,8 @@ const render = ({ id }: { id: number }) => {
       {/* <ToolTip content='Toggle Network'> */}
       <Button
         onClick={() =>
-          client.mesh.setConnectionState(
-            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE
+          client.mesh.updateConfig(
+            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE,
           )
         }
         data-testid='invitations.toggle-network'
@@ -183,6 +184,6 @@ const render = ({ id }: { id: number }) => {
 };
 
 export const Default = {
-  render,
-  decorators: [ClientDecorator({ count: 3 })]
+  render: (args: { id: number }) => <Invitations {...args} />,
+  decorators: [ClientDecorator({ count: 3 })],
 };

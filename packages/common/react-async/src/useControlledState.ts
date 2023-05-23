@@ -21,7 +21,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 export const useControlledState = <T>(
   controlledValue: T,
   onChange?: (value: T) => void,
-  deps?: any[]
+  deps?: any[],
 ): [T, Dispatch<SetStateAction<T>>] => {
   const [value, setValue] = useState<T>(controlledValue);
   useEffect(() => {
@@ -34,6 +34,6 @@ export const useControlledState = <T>(
       const newValue = typeof callback === 'function' ? (callback as Function)(value) : callback;
       setValue(newValue);
       onChange?.(newValue);
-    }
+    },
   ];
 };

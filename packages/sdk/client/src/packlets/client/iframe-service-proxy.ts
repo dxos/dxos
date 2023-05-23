@@ -4,7 +4,7 @@
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { RemoteServiceConnectionError, RemoteServiceConnectionTimeout } from '@dxos/errors';
+import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log, parseFilter } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -12,6 +12,7 @@ import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
+import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
@@ -19,7 +20,7 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   DEFAULT_CLIENT_ORIGIN,
   DEFAULT_INTERNAL_CHANNEL,
-  DEFAULT_SHELL_CHANNEL
+  DEFAULT_SHELL_CHANNEL,
 } from './config';
 import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
@@ -32,7 +33,7 @@ const shellStyles = Object.entries({
   width: '100vw',
   height: '100vh',
   border: 0,
-  'z-index': 60
+  'z-index': 60,
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
 export type IFrameClientServicesProxyOptions = {
@@ -70,7 +71,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     logFilter = 'error,warn',
-    timeout = 3000
+    timeout = DEFAULT_TIMEOUT,
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
     this._options = { source, channel, shell, vault, logFilter, timeout };
@@ -132,7 +133,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     await this._clientServicesProxy.open();
 
     this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs({
-      filters: parseFilter(this._options.logFilter)
+      filters: parseFilter(this._options.logFilter),
     });
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
@@ -168,7 +169,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     const haloInvitationCode = searchParams.get('haloInvitationCode');
     if (haloInvitationCode) {
       await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
-        invitationCode: haloInvitationCode ?? undefined
+        invitationCode: haloInvitationCode ?? undefined,
       });
     }
   }
@@ -192,14 +193,17 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
     const source = new URL(
       typeof this._options.shell === 'string' ? this._options.source : `${this._options.source}#disableshell`,
-      window.location.origin
+      window.location.origin,
     );
 
     if (!this._iframe) {
-      const res = await fetch(source);
-      if (res.status >= 400) {
-        throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
-      }
+      // TODO(wittjosiah): This doesn't work with generated service worker when offline. Remove?
+      //   Is there an easy way to respond to this without a lot of custom work inside the service worker?
+      //   Is getting an http response here helpful information or just overhead?
+      // const res = await fetch(source);
+      // if (res.status >= 400) {
+      //   throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
+      // }
 
       let interval: NodeJS.Timer | undefined;
       const loaded = new Trigger();
@@ -228,7 +232,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         await asyncTimeout(
           loaded.wait(),
           this._options.timeout,
-          new RemoteServiceConnectionTimeout('Vault failed to load')
+          new RemoteServiceConnectionTimeout('Vault failed to load'),
         );
 
         interval = setInterval(() => {
@@ -238,7 +242,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
         const port = await asyncTimeout(
           ready.wait(),
           this._options.timeout,
-          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort')
+          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort'),
         );
 
         this._appPort = createWorkerPort({ port });
@@ -246,7 +250,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
           this._shellPort = createIFramePort({
             origin: source.origin,
             channel: this._options.shell,
-            iframe: this._iframe
+            iframe: this._iframe,
           });
         }
       } finally {

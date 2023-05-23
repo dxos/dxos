@@ -63,7 +63,7 @@ test.describe('Basic test', () => {
       await guest.joinSpace();
       const [authCode] = await Promise.all([
         host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode)
+        guest.shell.acceptSpaceInvitation(invitationCode),
       ]);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
@@ -79,11 +79,11 @@ test.describe('Basic test', () => {
 
       const hostLinks = await Promise.all([
         host.getDocumentLinks().nth(0).getAttribute('href'),
-        host.getDocumentLinks().nth(1).getAttribute('href')
+        host.getDocumentLinks().nth(1).getAttribute('href'),
       ]);
       const guestLinks = await Promise.all([
         guest.getDocumentLinks().nth(0).getAttribute('href'),
-        guest.getDocumentLinks().nth(1).getAttribute('href')
+        guest.getDocumentLinks().nth(1).getAttribute('href'),
       ]);
       expect(hostLinks[0]).to.equal(guestLinks[0]);
       expect(hostLinks[1]).to.equal(guestLinks[1]);
@@ -96,7 +96,7 @@ test.describe('Basic test', () => {
         host.getDocumentLinks().nth(0).click(),
         guest.getDocumentLinks().nth(0).click(),
         host.waitForMarkdownTextbox(),
-        guest.waitForMarkdownTextbox()
+        guest.waitForMarkdownTextbox(),
       ]);
       await waitForExpect(async () => {
         expect(await host.getCollaboratorCursors().count()).to.equal(0);
@@ -116,7 +116,7 @@ test.describe('Basic test', () => {
       const parts = [
         'Lorem ipsum dolor sit amet,',
         ' consectetur adipiscing elit,',
-        ' sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        ' sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
       ];
       const allParts = parts.join('');
 
@@ -128,7 +128,7 @@ test.describe('Basic test', () => {
       await host.getMarkdownTextbox().press('End');
       await host.getMarkdownTextbox().type(parts[2]);
       await guest.getMarkdownTextbox().getByText(allParts).waitFor();
-      // todo(thure): Just pressing 'End' was not enough to move the cursor to the end of the test string on my local device; validate that these presses work in CI.
+      // TODO(thure): Just pressing 'End' was not enough to move the cursor to the end of the test string on my local device; validate that these presses work in CI.
       await Promise.all([host.getMarkdownTextbox().press('End'), guest.getMarkdownTextbox().press('End')]);
       await Promise.all([host.getMarkdownTextbox().press('ArrowDown'), guest.getMarkdownTextbox().press('ArrowDown')]);
       // await Promise.all([host.page.pause(), guest.page.pause()]);

@@ -22,10 +22,10 @@ describe('Halo', () => {
         client: {
           storage: {
             persistent: true, // TODO(burdon): Note required if path set.
-            path: `/tmp/dxos/client/${PublicKey.random().toHex()}`
-          }
-        }
-      }
+            path: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
+          },
+        },
+      },
     });
 
     const testBuilder = new TestBuilder(config);

@@ -30,7 +30,7 @@ const config: UserConfig = defineUserConfig({
     '!contributing',
     '!design',
     '!legacy',
-    '!specs'
+    '!specs',
   ],
   extendsMarkdown: (md) => {
     md.use(MarkdownIt.apiDocRenderDirective);
@@ -47,22 +47,22 @@ const config: UserConfig = defineUserConfig({
     docsDir: 'docs/docs',
     sidebar: sidebar({
       '/guide/': 'structure',
-      '/api/': await apiSidebar()
+      '/api/': await apiSidebar(),
     }),
     navbarLayout: {
       start: ['Brand', 'Links'],
       center: [],
-      end: ['Search', 'Outlook', 'Repo']
+      end: ['Search', 'Outlook', 'Repo'],
     },
     navbar: [
       {
         text: 'Guide',
-        link: '/guide/'
+        link: '/guide/',
       },
       {
         text: 'API',
-        link: '/api/'
-      }
+        link: '/api/',
+      },
     ],
     plugins: {
       mdEnhance: {
@@ -71,34 +71,34 @@ const config: UserConfig = defineUserConfig({
         sup: true,
         attrs: true,
         figure: true,
-        imgMark: true
-      }
-    }
+        imgMark: true,
+      },
+    },
   }),
   plugins: [
     // Config: https://vuepress.github.io/reference/plugin/register-components.html
     registerComponentsPlugin({
       components: {
-        Showcase: resolve(__dirname, './src/components/Showcase.vue')
-      }
+        Showcase: resolve(__dirname, './src/components/Showcase.vue'),
+      },
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
-    telemetryPlugin()
+    telemetryPlugin(),
   ],
   bundler: viteBundler({
     viteOptions: {
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
-        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY)
+        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY),
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: ['@dxos/client', '@dxos/client-services/testing', '@dxos/react-client', '@dxos/echo-schema']
-      }
-    }
-  })
+        external: ['@dxos/client', '@dxos/client-services/testing', '@dxos/react-client', '@dxos/echo-schema'],
+      },
+    },
+  }),
 });
 
 export default config;

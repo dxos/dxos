@@ -37,9 +37,9 @@ describe('Memory transport', () => {
             peer2,
             topic,
             swarm1,
-            swarm2
+            swarm2,
           };
-        })
+        }),
       );
 
       const message = randomBytes(PACKET_SIZE / 2).toString('hex');
@@ -49,14 +49,14 @@ describe('Memory transport', () => {
         await Promise.all(
           pairs.map(async ({ swarm1, swarm2 }) => {
             await exchangeMessages(swarm1, swarm2, message);
-          })
+          }),
         );
       }
 
       await Promise.all(
         pairs.map(async ({ peer1, peer2, topic }) => {
           await leaveSwarm([peer1, peer2], topic);
-        })
+        }),
       );
     })
     .timeout(1_000_000);

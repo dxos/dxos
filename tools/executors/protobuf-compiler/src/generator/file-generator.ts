@@ -22,7 +22,7 @@ const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context
     [],
     [],
     ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
-    ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
+    ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context)),
   );
 
 export const createNamespaceSourceFile = (
@@ -31,12 +31,12 @@ export const createNamespaceSourceFile = (
   outDir: string,
   namespace: string,
   substitutionsModule: ModuleSpecifier | undefined,
-  otherNamespaces: string[]
+  otherNamespaces: string[],
 ) => {
   const outFile = join(outDir, getFileNameForNamespace(namespace));
   const ctx: GeneratorContext = {
     outputFilename: outFile,
-    subs: substitutions
+    subs: substitutions,
   };
 
   const declarations: ts.Statement[] = Array.from(createDeclarations(types, ctx));
@@ -46,7 +46,7 @@ export const createNamespaceSourceFile = (
   const otherNamespaceImports = createNamespaceImports(
     otherNamespaces.filter((ns) => ns !== namespace),
     outDir,
-    dirname(outFile)
+    dirname(outFile),
   );
 
   return ts.factory.createSourceFile(
@@ -54,10 +54,10 @@ export const createNamespaceSourceFile = (
       createStreamImport(),
       ...(substitutionsImport ? [substitutionsImport] : []),
       ...otherNamespaceImports,
-      ...declarations
+      ...declarations,
     ],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None
+    ts.NodeFlags.None,
   );
 };
 
@@ -66,13 +66,13 @@ export const createIndexSourceFile = (
   root: pb.Root,
   outDirPath: string,
   namespaces: string[],
-  compress: boolean
+  compress: boolean,
 ) => {
   const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(
     substitutionsModule,
     root,
     outDirPath,
-    compress
+    compress,
   );
 
   const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);
@@ -85,10 +85,10 @@ export const createIndexSourceFile = (
       ...(substitutionsImport ? [substitutionsImport] : []),
       createTypeDictionary(root),
       createServicesDictionary(root),
-      ...schemaExports
+      ...schemaExports,
     ],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None
+    ts.NodeFlags.None,
   );
 };
 
@@ -102,12 +102,12 @@ const createNamespaceImports = (namespaces: string[], outDirPath: string, contex
         f.createImportClause(
           false,
           undefined,
-          f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))
+          f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns)))),
         ),
         f.createStringLiteral(
-          ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context)
-        )
-      )
+          ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context),
+        ),
+      ),
     );
 
 export const getFileNameForNamespace = (namespace: string) => {
@@ -122,7 +122,7 @@ const createStreamImport = () =>
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))])
+      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))]),
     ),
-    f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
+    f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
   );

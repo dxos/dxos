@@ -5,7 +5,8 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback, useReducer } from 'react';
 
-import { Button, DensityProvider, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useSpaceInvitations, observer } from '@dxos/react-client';
 
@@ -56,7 +57,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           createInvitationUrl={createInvitationUrl}
         />
         <Button
-          className='is-full flex gap-2 mbs-2'
+          classNames='is-full flex gap-2 mbs-2'
           onClick={() => {
             const invitation = space?.createInvitation();
             if (process.env.NODE_ENV !== 'production') {
@@ -93,7 +94,7 @@ export const SpacePanel = (props: SpacePanelProps) => {
   };
 
   const [panelState] = useReducer(reducer, {
-    activeView: 'current space'
+    activeView: 'current space',
   });
 
   // TODO(wittjosiah): Use ViewState or similar.

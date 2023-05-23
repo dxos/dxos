@@ -5,7 +5,8 @@
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React from 'react';
 
-import { valenceColorText, mx, Button } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { valenceColorText, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 
@@ -14,17 +15,17 @@ import { Tooltip } from '../Tooltip';
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.
 export const StatusIndicator = () => {
-  const { state } = useNetworkStatus();
+  const { swarm } = useNetworkStatus();
   const client = useClient();
   const handleStateToggle = async () => {
-    void (state === ConnectionState.ONLINE
-      ? client.mesh.setConnectionState(ConnectionState.OFFLINE)
-      : client.mesh.setConnectionState(ConnectionState.ONLINE));
+    void (swarm === ConnectionState.ONLINE
+      ? client.mesh.updateConfig(ConnectionState.OFFLINE)
+      : client.mesh.updateConfig(ConnectionState.ONLINE));
   };
 
   const toggleButton = (
     <Button onClick={handleStateToggle}>
-      {state && state === ConnectionState.ONLINE ? <WifiHigh /> : <WifiSlash />}
+      {swarm && swarm === ConnectionState.ONLINE ? <WifiHigh /> : <WifiSlash />}
     </Button>
   );
   const onlineBall = (
@@ -44,10 +45,10 @@ export const StatusIndicator = () => {
         role='none'
         className={mx(
           'fixed bottom-4 right-4',
-          valenceColorText(state && state === ConnectionState.ONLINE ? 'success' : 'error')
+          valenceColorText(swarm && swarm === ConnectionState.ONLINE ? 'success' : 'error'),
         )}
       >
-        <Tooltip content={toggleButton}>{state && state === ConnectionState.ONLINE ? onlineBall : offlineBall}</Tooltip>
+        <Tooltip content={toggleButton}>{swarm && swarm === ConnectionState.ONLINE ? onlineBall : offlineBall}</Tooltip>
       </div>
     </div>
   );

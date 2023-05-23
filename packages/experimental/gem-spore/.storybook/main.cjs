@@ -25,7 +25,7 @@ module.exports = {
           content: [
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
             resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
+            resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
           ]
         })
       ]

@@ -4,5 +4,5 @@
 
 export enum Channels {
   ONE = 'dxos:channel-one',
-  TWO = 'dxos:channel-two'
+  TWO = 'dxos:channel-two',
 }

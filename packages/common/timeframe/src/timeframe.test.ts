@@ -29,7 +29,7 @@ describe('spacetime', () => {
       const tf1 = new Timeframe();
       const tf2 = new Timeframe([
         [feedKey1, 2],
-        [feedKey2, 1]
+        [feedKey2, 1],
       ]);
       const tf3 = Timeframe.merge(tf1, tf2);
       expect(tf3.frames()).to.be.lengthOf(2);
@@ -39,11 +39,11 @@ describe('spacetime', () => {
       // Merge (no change).
       const tf1 = new Timeframe([
         [feedKey1, 1],
-        [feedKey2, 1]
+        [feedKey2, 1],
       ]);
       const tf2 = new Timeframe([
         [feedKey1, 2],
-        [feedKey3, 1]
+        [feedKey3, 1],
       ]);
       const tf3 = Timeframe.merge(tf1, tf2);
       expect(tf3.frames()).to.be.lengthOf(3);
@@ -64,7 +64,7 @@ describe('spacetime', () => {
       // Remove keys.
       const tf1 = new Timeframe([
         [feedKey1, 1],
-        [feedKey2, 2]
+        [feedKey2, 2],
       ]);
       const tf2 = tf1.withoutKeys([feedKey1, feedKey3]);
       expect(tf2.frames()).to.be.lengthOf(1);
@@ -89,7 +89,7 @@ describe('spacetime', () => {
       const tf1 = new Timeframe();
       const tf2 = new Timeframe([
         [feedKey1, 10],
-        [feedKey2, 11]
+        [feedKey2, 11],
       ]);
       const tf3 = Timeframe.dependencies(tf1, tf2);
       log(tf3.toString());
@@ -99,7 +99,7 @@ describe('spacetime', () => {
     {
       const tf1 = new Timeframe([
         [feedKey1, 10],
-        [feedKey2, 10]
+        [feedKey2, 10],
       ]);
       const tf2 = new Timeframe();
       const tf3 = Timeframe.dependencies(tf1, tf2);
@@ -129,11 +129,11 @@ describe('spacetime', () => {
     {
       const tf1 = new Timeframe([
         [feedKey1, 10],
-        [feedKey2, 10]
+        [feedKey2, 10],
       ]);
       const tf2 = new Timeframe([
         [feedKey1, 10],
-        [feedKey2, 11]
+        [feedKey2, 11],
       ]);
       const tf3 = Timeframe.dependencies(tf1, tf2);
       log(tf3.toString());
@@ -144,11 +144,11 @@ describe('spacetime', () => {
       const tf1 = new Timeframe([
         [feedKey1, 10],
         [feedKey2, 10],
-        [feedKey3, 10]
+        [feedKey3, 10],
       ]);
       const tf2 = new Timeframe([
         [feedKey1, 10],
-        [feedKey2, 9]
+        [feedKey2, 9],
       ]);
       const tf3 = Timeframe.dependencies(tf1, tf2);
       log(tf3.toString());

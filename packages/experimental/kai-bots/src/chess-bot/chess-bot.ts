@@ -21,7 +21,7 @@ export class ChessBot extends Bot {
       await Promise.all(
         query.objects.map(async (object) => {
           await this.onUpdate(object);
-        })
+        }),
       );
     });
   }

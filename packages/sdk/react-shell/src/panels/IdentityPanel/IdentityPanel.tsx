@@ -4,13 +4,14 @@
 import React from 'react';
 
 import { Button, DensityProvider, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 import type { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
 export const IdentityPanel = ({
   identity,
-  onClickManageProfile
+  onClickManageProfile,
 }: {
   identity: Identity;
   onClickManageProfile?: () => void;
@@ -25,7 +26,7 @@ export const IdentityPanel = ({
     tab?.focus();
   };
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, themeVariant: 'os' }}>
+    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
       <DensityProvider density='fine'>
         <div className='flex flex-col gap-2 justify-center items-center'>
           <Avatar
@@ -34,7 +35,7 @@ export const IdentityPanel = ({
             fallbackValue={identity.identityKey.toHex()}
             label={identity.profile?.displayName ?? ''}
           />
-          <Button onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
+          <Button onClick={onClickManageProfile ?? defaultManageProfile} classNames='is-full'>
             {t('manage profile label')}
           </Button>
         </div>

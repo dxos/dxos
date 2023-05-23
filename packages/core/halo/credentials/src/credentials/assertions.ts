@@ -11,7 +11,7 @@ export const getCredentialAssertion = (credential: Credential): TypedMessage => 
 export const isValidAuthorizedDeviceCredential = (
   credential: Credential,
   identityKey: PublicKey,
-  deviceKey: PublicKey
+  deviceKey: PublicKey,
 ): boolean => {
   const assertion = getCredentialAssertion(credential);
   return (

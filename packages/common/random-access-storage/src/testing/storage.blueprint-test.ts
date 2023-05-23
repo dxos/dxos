@@ -205,7 +205,7 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await assert.rejects(
         async () => await file.read(buffer1.length, buffer2.length),
         Error,
-        'Could not satisfy length'
+        'Could not satisfy length',
       );
     }).onlyEnvironments('nodejs'); // File.del() throws 'Not deletable' error for IDb.
 

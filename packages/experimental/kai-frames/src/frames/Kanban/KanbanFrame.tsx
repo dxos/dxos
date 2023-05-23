@@ -30,15 +30,15 @@ const types: Type[] = [
     label: 'Contacts',
     filter: Contact.filter(),
     getTitle: (object) => object.name,
-    Card: ContactCard
+    Card: ContactCard,
   },
   {
     name: 'dxos.experimental.kai.Project',
     label: 'Projects',
     filter: Project.filter(),
     getTitle: (object) => object.title,
-    Card: ProjectCard
-  }
+    Card: ProjectCard,
+  },
 ];
 
 // TODO(burdon): Generalize type and field.
@@ -51,7 +51,7 @@ export const KanbanFrame: FC = () => {
   // TODO(burdon): Chain filters.
   const objects = useQuery(space, type.filter).filter(
     // TODO(burdon): Generalize search (by default all text; use schema annotations).
-    (object: TypedObject) => !text?.length || type.getTitle(object).toLowerCase().indexOf(text) !== -1
+    (object: TypedObject) => !text?.length || type.getTitle(object).toLowerCase().indexOf(text) !== -1,
   );
 
   // TODO(burdon): Pass in filter.
@@ -61,7 +61,7 @@ export const KanbanFrame: FC = () => {
     // TODO(burdon): Reconcile KanbanColumnDef and type above.
     title: (object) => type.getTitle(object),
     filter: (object) => (object as Project).tag === tag,
-    Card: type.Card
+    Card: type.Card,
   }));
 
   const handleCreate = async (column: KanbanColumnDef) => {

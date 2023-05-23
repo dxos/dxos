@@ -5,7 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, useTranslation, getSize } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable } from '@dxos/client';
 import { Heading, DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
@@ -28,7 +29,7 @@ const DevicesPage = () => {
         className='mlb-4'
         heading={{ children: t('devices label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1' onClick={handleCreateInvitation}>
+          <Button variant='primary' classNames='grow flex gap-1' onClick={handleCreateInvitation}>
             <Plus className={getSize(5)} />
             {t('add device label')}
           </Button>

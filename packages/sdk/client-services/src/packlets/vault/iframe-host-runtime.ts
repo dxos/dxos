@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
@@ -70,19 +70,16 @@ export class IFrameHostRuntime {
     try {
       this._config = await getAsyncValue(this._configProvider);
       this._transportFactory = createWebRTCTransportFactory({
-        iceServers: this._config.get('runtime.services.ice')
+        iceServers: this._config.get('runtime.services.ice'),
       });
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices = new LocalClientServices({
         lockKey: LOCK_KEY,
         config: this._config,
-        networkManager: new NetworkManager({
-          log: true,
-          signalManager: signals
-            ? new WebsocketSignalManager(signals)
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory: this._transportFactory
-        })
+        signalManager: signals
+          ? new WebsocketSignalManager(signals)
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        transportFactory: this._transportFactory,
       });
 
       const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
@@ -101,13 +98,13 @@ export class IFrameHostRuntime {
           }
 
           return handler(method, params);
-        }
+        },
       };
 
       this._clientRpc = new ClientRpcServer({
         serviceRegistry: this._clientServices.host.serviceRegistry,
         port: this._appPort,
-        ...middleware
+        ...middleware,
       });
 
       await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);

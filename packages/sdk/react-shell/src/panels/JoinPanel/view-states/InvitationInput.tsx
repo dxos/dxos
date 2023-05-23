@@ -5,7 +5,8 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
-import { Button, getSize, mx, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
@@ -30,7 +31,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
   const handleNext = () =>
     joinSend({
       type: `set${Kind}InvitationCode`,
-      code: inputValue
+      code: inputValue,
     });
 
   return (
@@ -45,15 +46,15 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
           input: {
             'data-autofocus': `inputting${Kind}InvitationCode`,
             'data-testid': `${Kind.toLowerCase()}-invitation-input`,
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext()
-          } as ComponentPropsWithoutRef<'input'>
+            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
+          } as ComponentPropsWithoutRef<'input'>,
         }}
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          className='grow flex items-center gap-2 pli-2 order-2'
+          classNames='grow flex items-center gap-2 pli-2 order-2'
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
@@ -64,7 +65,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
         <Button
           disabled={disabled || Kind === 'Space'}
           onClick={() => joinSend({ type: 'deselectAuthMethod' })}
-          className='flex items-center gap-2 pis-2 pie-4'
+          classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />

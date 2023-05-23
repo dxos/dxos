@@ -78,14 +78,14 @@ export class SwarmMapper {
     this._peers.set(this._swarm.ownPeerId, {
       id: this._swarm.ownPeerId,
       state: 'ME', // TODO(burdon): Enum (rename "local").
-      connections: []
+      connections: [],
     });
 
     for (const connection of this._swarm.connections) {
       this._peers.set(connection.remoteId, {
         id: connection.remoteId,
         state: connection.state,
-        connections: [this._swarm.ownPeerId]
+        connections: [this._swarm.ownPeerId],
       });
     }
 
@@ -115,7 +115,7 @@ export class SwarmMapper {
 
     log('graph changed', {
       directConnections: this._swarm.connections.length,
-      totalPeersInSwarm: this._peers.size
+      totalPeersInSwarm: this._peers.size,
     });
 
     this.mapUpdated.emit(Array.from(this._peers.values()));

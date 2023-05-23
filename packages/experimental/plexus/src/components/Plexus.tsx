@@ -7,7 +7,7 @@ import * as d3 from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { useSvgContext } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphRenderer, GraphRendererOptions } from '@dxos/gem-spore';
 
@@ -59,10 +59,10 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
       new TreeProjector<N>(
         context,
         defaulstDeep({}, slots?.projector, {
-          idAccessor: model.idAccessor
-        })
+          idAccessor: model.idAccessor,
+        }),
       ),
-    []
+    [],
   );
 
   // Graph renderer.
@@ -75,15 +75,15 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
           idAccessor: model.idAccessor,
           transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
           labels: {
-            text: (node: GraphLayoutNode<N>) => node.id.slice(0, 8) // + `[${node.data.label}]`
+            text: (node: GraphLayoutNode<N>) => node.id.slice(0, 8), // + `[${node.data.label}]`
           },
           arrows: { end: true },
           onNodeClick: (node: GraphLayoutNode<N>) => {
             onSelect?.(node.data!);
-          }
-        })
+          },
+        }),
       ),
-    []
+    [],
   );
 
   // Subscribe to model.
@@ -110,7 +110,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
         className={mx(
           'visible',
           invisible && 'invisible',
-          spin ? 'animate-[spin_2s] __animate-[ping_2s]' : 'animate-none' // TODO(burdon): Ping on start.
+          spin ? 'animate-[spin_2s] __animate-[ping_2s]' : 'animate-none', // TODO(burdon): Ping on start.
         )}
       >
         <Aperture

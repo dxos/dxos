@@ -5,7 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useRef, useEffect } from 'react';
 
-import { Button, getSize } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Loading } from '@dxos/react-appkit';
 
 import { setCaretPosition } from '../utils/setCaretPosition';
@@ -116,13 +117,13 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                     goUp();
                   }
                 }
-              }
+              },
             }}
           />
         ))}
       </List>
       <div role='none' className='my-5'>
-        <Button className='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
+        <Button classNames='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
           <Plus className={getSize(5)} />
         </Button>
       </div>

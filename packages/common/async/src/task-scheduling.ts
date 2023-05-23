@@ -58,7 +58,7 @@ export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<voi
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
   const clearTracking = trackResource({
     name: `task (${fn.name || 'anonymous'})`,
-    openStack: new StackTrace()
+    openStack: new StackTrace(),
   });
 
   const timeout = setTimeout(async () => {
@@ -78,13 +78,16 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
 export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, interval: number) => {
   const clearTracking = trackResource({
     name: `repeating task (${task.name || 'anonymous'})`,
-    openStack: new StackTrace()
+    openStack: new StackTrace(),
   });
 
   let timeoutId: NodeJS.Timeout;
 
   const run = async () => {
     await runInContextAsync(ctx, task);
+    if (ctx.disposed) {
+      return;
+    }
     timeoutId = setTimeout(run, interval);
   };
 

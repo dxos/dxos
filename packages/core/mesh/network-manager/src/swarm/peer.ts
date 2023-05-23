@@ -81,8 +81,6 @@ export class Peer {
 
   public initiating = false;
 
-  public _traceParent?: string;
-
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -90,7 +88,7 @@ export class Peer {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _transportFactory: TransportFactory,
-    private readonly _callbacks: PeerCallbacks
+    private readonly _callbacks: PeerCallbacks,
   ) {}
 
   /**
@@ -107,7 +105,7 @@ export class Peer {
         log("closing local connection and accepting remote peer's offer", {
           id: this.id,
           topic: this.topic,
-          peerId: this.localPeerId
+          peerId: this.localPeerId,
         });
 
         if (this.connection) {
@@ -156,7 +154,7 @@ export class Peer {
         recipient: this.id,
         sessionId,
         topic: this.topic,
-        data: { offer: {} }
+        data: { offer: {} },
       });
       log('received', { answer, topic: this.topic, ownId: this.localPeerId, remoteId: this.id });
       if (connection.state !== ConnectionState.INITIAL) {
@@ -190,7 +188,7 @@ export class Peer {
       peerId: this.localPeerId,
       remoteId: this.id,
       initiator,
-      sessionId
+      sessionId,
     });
     assert(!this.connection, 'Already connected.');
 
@@ -203,9 +201,8 @@ export class Peer {
       this._signalMessaging,
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
-      this._transportFactory
+      this._transportFactory,
     );
-    connection._traceParent = this._traceParent;
     this._callbacks.onInitiated(connection);
 
     void this._connectionCtx?.dispose();
@@ -241,7 +238,7 @@ export class Peer {
               this.availableToConnect = true;
               this._callbacks.onPeerAvailable();
             },
-            this._availableAfter
+            this._availableAfter,
           );
 
           break;

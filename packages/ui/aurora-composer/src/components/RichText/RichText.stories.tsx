@@ -5,7 +5,8 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 
-import { mx, useId } from '@dxos/aurora';
+import { useId } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
@@ -14,16 +15,16 @@ import { Replicator, useYjsModel } from '../../testing';
 import { RichTextComposer, RichTextComposerProps } from './RichText';
 
 export default {
-  component: RichTextComposer
+  component: RichTextComposer,
 };
 
 export const Default = {
   args: {
     model: {
       id: 'editor',
-      content: 'Hello, Storybook!'
-    }
-  }
+      content: 'Hello, Storybook!',
+    },
+  },
 };
 
 const replicator = new Replicator(TextKind.RICH);
@@ -37,7 +38,7 @@ export const WithYjs = {
 
     useDataGenerator({
       generator: generate ? textGenerator : undefined,
-      options: { text: typeof model?.content !== 'string' ? model?.content : undefined }
+      options: { text: typeof model?.content !== 'string' ? model?.content : undefined },
     });
 
     return (
@@ -53,14 +54,14 @@ export const WithYjs = {
             editor: {
               className: mx(
                 'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]',
-                args.slots?.editor?.className
-              )
-            }
+                args.slots?.editor?.className,
+              ),
+            },
           }}
         />
       </main>
     );
   },
   // TODO(wittjosiah): Decorator for doing this without clients being initialized?
-  decorators: [ClientDecorator({ count: 2 })]
+  decorators: [ClientDecorator({ count: 2 })],
 };

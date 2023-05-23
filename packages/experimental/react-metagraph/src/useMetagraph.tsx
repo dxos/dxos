@@ -73,7 +73,7 @@ export const useModules = (query: Query, { polling }: UseModulesOptions = {}): M
           // TODO(burdon): Check still mounted.
           log('modules query', { modules });
           setModules(modules);
-        }
+        },
       });
 
       if (polling) {

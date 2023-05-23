@@ -3,15 +3,15 @@
 //
 
 import '@dxosTheme';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
 
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
-import { Button } from './Button';
-import { ButtonProps } from './ButtonProps';
+import { Button, ButtonGroup, ButtonProps } from './Button';
 
 export default {
-  component: Button
+  component: Button,
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
@@ -42,9 +42,19 @@ export const Default = {
       <Button {...args} disabled>
         Disabled
       </Button>
+      {(args.variant === 'default' || args.variant === 'primary') && (
+        <ButtonGroup>
+          <Button {...args}>
+            <CaretLeft />
+          </Button>
+          <Button {...args}>
+            <CaretRight />
+          </Button>
+        </ButtonGroup>
+      )}
     </Container>
   ),
-  args: { children: 'Hello', disabled: false, variant: 'default' }
+  args: { children: 'Hello', disabled: false, variant: 'default' },
 };
 
 export const Primary = { ...Default, args: { variant: 'primary', children: 'Hello' } };

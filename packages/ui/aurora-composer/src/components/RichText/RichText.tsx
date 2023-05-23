@@ -11,7 +11,7 @@ import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/re
 import StarterKit from '@tiptap/starter-kit';
 import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';
@@ -28,7 +28,7 @@ import {
   paragraph,
   strikethrough,
   unorderedList,
-  codeWithoutMarks
+  codeWithoutMarks,
 } from '../../styles';
 import { cursorColor } from '../../yjs';
 
@@ -49,57 +49,57 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
         // Nodes
         blockquote: {
           HTMLAttributes: {
-            class: blockquote
-          }
+            class: blockquote,
+          },
         },
         bulletList: {
           HTMLAttributes: {
-            class: unorderedList
-          }
+            class: unorderedList,
+          },
         },
         codeBlock: {
           HTMLAttributes: {
-            class: codeBlock
-          }
+            class: codeBlock,
+          },
         },
         heading: false, // (thure): `StarterKit` doesn’t let you configure how headings are rendered, see `Heading` below.
         horizontalRule: {
           HTMLAttributes: {
-            class: horizontalRule
-          }
+            class: horizontalRule,
+          },
         },
         listItem: false, // (thure): `StarterKit` doesn’t let you configure how list items are rendered, see `ListItem` below.
         orderedList: {
           HTMLAttributes: {
-            class: orderedList
-          }
+            class: orderedList,
+          },
         },
         paragraph: {
           HTMLAttributes: {
-            class: paragraph
-          }
+            class: paragraph,
+          },
         },
         // Marks
         bold: {
           HTMLAttributes: {
-            class: bold
-          }
+            class: bold,
+          },
         },
         code: {
           HTMLAttributes: {
-            class: codeWithoutMarks
-          }
+            class: codeWithoutMarks,
+          },
         },
         italic: {
           HTMLAttributes: {
-            class: italic
-          }
+            class: italic,
+          },
         },
         strike: {
           HTMLAttributes: {
-            class: strikethrough
-          }
-        }
+            class: strikethrough,
+          },
+        },
       }),
       Heading.extend({
         renderHTML({ node, HTMLAttributes }) {
@@ -109,21 +109,21 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
           return [
             `h${level}`,
             mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-              class: heading[level]
+              class: heading[level],
             }),
-            0
+            0,
           ];
-        }
+        },
       }),
       ListItem.extend({
         renderHTML: ({ HTMLAttributes }) => [
           'li',
           mergeAttributes(HTMLAttributes, {
             marker: '• ',
-            class: listItem
+            class: listItem,
           }),
-          ['div', { role: 'none' }, 0]
-        ]
+          ['div', { role: 'none' }, 0],
+        ],
       }),
       // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
       ...(model && typeof model.content !== 'string' ? [Collaboration.configure({ fragment: model.content })] : []),
@@ -133,17 +133,17 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
               provider: model.provider,
               user: model.peer && {
                 name: model.peer.name ?? humanize(model.peer.id),
-                color: cursorColor.color
-              }
-            })
+                color: cursorColor.color,
+              },
+            }),
           ]
         : []),
       Placeholder.configure({
         placeholder,
-        emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
-      })
+        emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text',
+      }),
     ],
-    [model?.id]
+    [model?.id],
   );
 
   return useNaturalEditor(
@@ -153,11 +153,11 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
         attributes: {
           class: mx('focus:outline-none focus-visible:outline-none', slots.editor?.className),
           spellcheck: slots.editor?.spellCheck === false ? 'false' : 'true',
-          tabindex: slots.editor?.tabIndex ? String(slots.editor?.tabIndex) : '0'
-        }
-      }
+          tabindex: slots.editor?.tabIndex ? String(slots.editor?.tabIndex) : '0',
+        },
+      },
     },
-    [extensions]
+    [extensions],
   );
 };
 

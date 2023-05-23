@@ -6,7 +6,7 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import throttle from 'lodash.throttle';
 import React, { PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { mx } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 export type MenubarProps = PropsWithChildren<{}>;
 
@@ -39,7 +39,7 @@ export const Menubar = ({ children }: MenubarProps) => {
         className={mx(
           'fixed inset-inline-0 block-start-0 z-[2] transition-[backdrop-filter,background-color]',
           'flex items-center gap-x-2 gap-y-4 pli-4 bs-16',
-          atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20'
+          atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20',
         )}
       >
         {children}

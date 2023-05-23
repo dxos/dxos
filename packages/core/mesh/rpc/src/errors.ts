@@ -50,15 +50,15 @@ export const encodeError = (err: any): ErrorResponse => {
     return {
       name: err.name,
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     };
   } else if (typeof err === 'string') {
     return {
-      message: err
+      message: err,
     };
   } else {
     return {
-      message: JSON.stringify(err)
+      message: JSON.stringify(err),
     };
   }
 };

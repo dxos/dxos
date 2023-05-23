@@ -6,7 +6,8 @@ import { Plus, Rocket } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button, getSize, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { Invitation, Space } from '@dxos/client';
 import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
 import { MaybePromise } from '@dxos/util';
@@ -28,7 +29,7 @@ const invitationCodeFromUrl = (text: string) => {
 
 export const SpacesPage = ({
   onSpaceCreate,
-  spacePath = '/spaces/:space'
+  spacePath = '/spaces/:space',
 }: {
   onSpaceCreate?: (space: Space) => MaybePromise<void>;
   spacePath?: string;
@@ -50,7 +51,7 @@ export const SpacesPage = ({
 
   const handleJoin = useCallback(
     ({ spaceKey }: InvitationResult) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() })),
-    [spacePath]
+    [spacePath],
   );
 
   // TODO(burdon): ???
@@ -68,21 +69,21 @@ export const SpacesPage = ({
               dialogProps={{
                 defaultOpen: Boolean(invitationParam),
                 openTrigger: (
-                  <Button className='grow flex gap-1'>
+                  <Button classNames='grow flex gap-1'>
                     <Rocket className={getSize(5)} />
                     {t('join space label', { ns: 'appkit' })}
                   </Button>
-                )
+                ),
               }}
             />
-            <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+            <Button variant='primary' onClick={handleCreateSpace} classNames='grow flex gap-1'>
               <Plus className={getSize(5)} />
               {t('create space label', { ns: 'appkit' })}
             </Button>
           </>
         }
         heading={{
-          children: t('spaces label')
+          children: t('spaces label'),
         }}
       />
 

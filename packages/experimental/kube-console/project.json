@@ -86,9 +86,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/kube-console/.storybook"
-        },
+        "configDir": "packages/experimental/kube-console/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

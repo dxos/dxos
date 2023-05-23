@@ -17,16 +17,16 @@ describe('space-manager', () => {
   test.skip('invitations', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
-      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
+      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
     afterTest(async () => await builder.close());
 
     const peer1 = await builder.createPeer();
-    const spaceManager1 = peer1.createSpaceManager();
+    const spaceManager1 = peer1.spaceManager;
     await spaceManager1.open();
 
     const peer2 = await builder.createPeer();
-    const spaceManager2 = peer2.createSpaceManager();
+    const spaceManager2 = peer2.spaceManager;
     await spaceManager2.open();
 
     afterTest(() => spaceManager1.close());

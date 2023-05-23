@@ -22,6 +22,6 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
       element.setAttribute('target', 'download');
       element.click();
     },
-    []
+    [],
   );
 };
