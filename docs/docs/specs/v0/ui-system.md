@@ -29,7 +29,7 @@ packages/sdk/react-shell
 
 ## Shared 1P libs:
 > Error boundaries and telemetry harnesses, logos and other visual and non-visual things shared between 1P apps
-@braneframe/react-appkit
+@dxos/react-appkit
 packages/ui/react-appkit
 
 ## Braneframe (Composer v2)
