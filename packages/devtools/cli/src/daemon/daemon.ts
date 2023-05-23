@@ -8,6 +8,8 @@ import { Proc } from 'pm2';
 
 import { Pm2, getPm2 } from './pm2';
 
+const DEFAULT_PROFILE = 'default';
+
 export class Daemon {
   private _pm2?: Pm2;
 
@@ -20,7 +22,7 @@ export class Daemon {
     this._pm2.disconnect();
   }
 
-  async isRunning(profile = 'default') {
+  async isRunning(profile = DEFAULT_PROFILE) {
     assert(this._pm2);
     const description = await promisify(this._pm2.describe.bind(this._pm2))(profile);
     if (
@@ -34,7 +36,7 @@ export class Daemon {
     return true;
   }
 
-  async start(profile = 'default') {
+  async start(profile = DEFAULT_PROFILE) {
     return new Promise<Proc[]>((resolve, reject) => {
       assert(this._pm2);
       this._pm2.start(
@@ -60,7 +62,7 @@ export class Daemon {
     });
   }
 
-  async stop(profile = 'default') {
+  async stop(profile = DEFAULT_PROFILE) {
     assert(this._pm2);
     return promisify(this._pm2.stop.bind(this._pm2))(profile);
   }
