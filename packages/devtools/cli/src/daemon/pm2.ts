@@ -17,7 +17,9 @@ type Pm2Params = {
   machine_name?: string; // * @param {String}  [opts.machine_name=null]     pm2 plus instance name
 };
 
-const Pm2Api: new (params?: Pm2Params) => typeof pm2 = (pm2 as any).custom;
+export type Pm2 = typeof pm2;
+
+const Pm2Api: new (params?: Pm2Params) => Pm2 = (pm2 as any).custom;
 
 export const getPm2 = async () => {
   const instance = new Pm2Api({
