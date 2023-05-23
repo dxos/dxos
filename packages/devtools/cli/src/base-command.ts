@@ -11,14 +11,13 @@ import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { sleep } from '@dxos/async';
-import { Client, Config } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, Config, fromCliEnv } from '@dxos/client';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { Daemon } from './daemon';
 import {
   disableTelemetry,
   getTelemetryContext,
@@ -194,10 +193,16 @@ export abstract class BaseCommand extends Command {
    * Lazily create the client.
    */
   async getClient() {
+    await this.execWithDaemon(async (daemon) => {
+      if (!(await daemon.isRunning(process.env.DX_PROFILE))) {
+        await daemon.start();
+      }
+    });
+
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromHost(this._clientConfig) });
+      this._client = new Client({ config: this._clientConfig, services: fromCliEnv() });
       await this._client.initialize();
       log('Initialized');
     }
@@ -214,10 +219,23 @@ export abstract class BaseCommand extends Command {
       const value = await callback(client);
       log('Destroying...');
       await client.destroy();
-      log('Destroyed');
 
-      // TODO(burdon): Ends with abort signal without sleep (threads still open?)
-      await sleep(3_000);
+      log('Done');
+      return value;
+    } catch (err: any) {
+      Sentry.captureException(err);
+      this.error(err);
+    }
+  }
+
+  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
+    try {
+      const daemon = new Daemon();
+      await daemon.init();
+      const value = await callback(daemon);
+      log('Disconnecting...');
+      daemon.disconnect();
+
       log('Done');
       return value;
     } catch (err: any) {
