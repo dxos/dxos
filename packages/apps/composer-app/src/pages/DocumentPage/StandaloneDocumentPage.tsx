@@ -33,7 +33,7 @@ export const StandaloneDocumentPage = observer(
       <>
         <div
           role='none'
-          className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
+          className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
         >
           <div
             role='none'
