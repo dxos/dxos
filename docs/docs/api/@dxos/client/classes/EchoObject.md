@@ -1,5 +1,5 @@
 # Class `EchoObject`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:8]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:9]()</sub>
 
 
 Base class for all echo objects.
