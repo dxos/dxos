@@ -9,13 +9,12 @@ import { logObjectAccess } from './access-observer';
 
 export const subscribe = Symbol.for('dxos.observable-object.subscribe');
 
-export type ObservableObject = {
+export interface ObservableObject {
   [subscribe]: (callback: (value: any) => void) => UnsubscribeCallback;
   _id: string;
-};
+}
 
-// TODO(wittjosiah): Generic type?
-export class ObservableObjectImpl implements ObservableObject {
+class ObservableObjectImpl<T> implements ObservableObject {
   /**
    * @internal
    */
@@ -23,16 +22,22 @@ export class ObservableObjectImpl implements ObservableObject {
 
   private _callbacks = new Set<(value: any) => void>();
 
-  constructor(initialData: object = {}) {
+  constructor(initialData?: T) {
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        (this as any)[key] = value;
+      });
+    }
+
     return new Proxy(this, {
-      get: (target, property, receiver) => {
+      get: (_target, property, receiver) => {
         logObjectAccess(this);
-        return Reflect.get(target, property, receiver);
+        return Reflect.get(this, property, receiver);
       },
-      set: (target, property, value, receiver) => {
+      set: (_target, property, value, receiver) => {
         logObjectAccess(this);
         this._emitUpdate();
-        return Reflect.set(target, property, value, receiver);
+        return Reflect.set(this, property, value, receiver);
       },
     });
   }
@@ -49,11 +54,13 @@ export class ObservableObjectImpl implements ObservableObject {
   }
 }
 
-export const createStore = (data: object | any[]): ObservableObject => {
+export type TypedObservableObject<T extends Record<string, any> = Record<string, any>> = ObservableObjectImpl<T> & T;
+
+export const createStore = <T extends object | any[]>(data?: T): TypedObservableObject<T> => {
   if (Array.isArray(data)) {
     // TODO(wittjosiah): Implement array as well.
     throw new Error('Not implemented');
   } else {
-    return new ObservableObjectImpl(data);
+    return new ObservableObjectImpl(data) as TypedObservableObject<T>;
   }
 };
