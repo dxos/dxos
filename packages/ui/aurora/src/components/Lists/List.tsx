@@ -173,7 +173,7 @@ const ListItem = forwardRef<HTMLLIElement, ListItemProps>(({ classNames, childre
   return (
     <ListPrimitiveItem
       {...props}
-      className={tx('list.item.root', 'list__listItem', { density }, classNames)}
+      className={tx('list.item.root', 'list__listItem', { density, collapsible: props.collapsible }, classNames)}
       ref={forwardedRef}
     >
       {children}

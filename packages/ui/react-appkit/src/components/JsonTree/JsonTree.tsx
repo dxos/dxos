@@ -3,7 +3,16 @@
 //
 import React from 'react';
 
-import { TreeItem, TreeItemBody, TreeItemHeading, TreeRoot, TreeProps, TreeBranch } from './Tree';
+import {
+  TreeItem,
+  TreeItemBody,
+  TreeItemHeading,
+  TreeRoot,
+  TreeProps,
+  TreeBranch,
+  MockTreeItemOpenTrigger,
+  TreeItemOpenTrigger,
+} from '@dxos/aurora';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
@@ -20,18 +29,17 @@ const JsonTreeBranch = ({ data, prefix }: JsonTreeNodeProps) => {
         const valueIsScalar = isScalar(value);
 
         return (
-          <TreeItem key={id} id={id} collapsible={!valueIsScalar}>
-            {valueIsScalar ? (
-              <TreeItemHeading classNames='flex items-center'>{String(value)}</TreeItemHeading>
-            ) : (
-              <>
-                <TreeItemHeading classNames='flex items-center'>{key}</TreeItemHeading>
-                <TreeItemBody asChild>
-                  <TreeBranch>
-                    <JsonTreeBranch data={value} prefix={id} />
-                  </TreeBranch>
-                </TreeItemBody>
-              </>
+          <TreeItem key={id} id={id} collapsible={!valueIsScalar} defaultOpen>
+            <div role='none' className='grow flex'>
+              {valueIsScalar ? <MockTreeItemOpenTrigger /> : <TreeItemOpenTrigger />}
+              <TreeItemHeading classNames='grow pbs-1'>{valueIsScalar ? String(value) : key}</TreeItemHeading>
+            </div>
+            {!valueIsScalar && (
+              <TreeItemBody className='pis-2'>
+                <TreeBranch>
+                  <JsonTreeBranch data={value} prefix={id} />
+                </TreeBranch>
+              </TreeItemBody>
             )}
           </TreeItem>
         );
