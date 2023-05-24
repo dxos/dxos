@@ -66,4 +66,7 @@ export const composer = {
   'bound members message_one': 'One member uses this space for this repository',
   'bound members message_other': '{{count}} members use this space for this repository',
   'delete document label': 'Delete',
+  'loading preview message': 'Loading preview…',
+  'preview gfm label': 'Preview Markdown',
+  'exit gfm preview label': 'Edit Markdown',
 };
