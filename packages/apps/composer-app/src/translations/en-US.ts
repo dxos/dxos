@@ -58,6 +58,9 @@ export const composer = {
   'resolver no spaces message': 'You aren’t in any spaces yet',
   'resolver create space label': 'Create a space for this repository',
   'save and close label': 'Save & close',
+  'save and close description': 'Save changes to Github and close the editor',
+  'close embed description':
+    'Close the editor without saving changes to Github. Your changes will still persist in Composer.',
   'resolver init document message': 'Syncing this document, one moment…',
   'comment stale title': 'No longer in-sync',
   'comment stale body':

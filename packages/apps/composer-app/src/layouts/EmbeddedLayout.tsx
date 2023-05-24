@@ -3,13 +3,14 @@
 //
 import '../embedded.css';
 
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareOut, CaretDown } from '@phosphor-icons/react';
 import React, { useCallback, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Button, ButtonGroup, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, ButtonGroup, DensityProvider, useTranslation } from '@dxos/aurora';
+import { defaultDescription, getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
+import { DropdownMenu, DropdownMenuItem } from '@dxos/react-appkit';
 import { useShell } from '@dxos/react-shell';
 
 import {
@@ -42,7 +43,7 @@ const EmbeddedLayoutImpl = () => {
   }, [shell, space]);
 
   return (
-    <>
+    <DensityProvider density='fine'>
       <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
         <Button disabled={!space} onClick={handleInvite}>
           {t('create invitation label', { ns: 'appkit' })}
@@ -57,11 +58,27 @@ const EmbeddedLayoutImpl = () => {
             <ArrowSquareOut className={getSize(5)} />
           </a>
         </Button>
-        <ButtonGroup>
-          <Button onClick={handleCloseEmbed}>{t('close label', { ns: 'appkit' })}</Button>
+        <ButtonGroup className='flex'>
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
           </Button>
+          <DropdownMenu
+            slots={{ content: { collisionPadding: 8 } }}
+            trigger={
+              <Button>
+                <CaretDown />
+              </Button>
+            }
+          >
+            <DropdownMenuItem onClick={handleSaveAndCloseEmbed} className='block'>
+              <p>{t('save and close label')}</p>
+              <p className={defaultDescription}>{t('save and close description')}</p>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleCloseEmbed} className='block'>
+              <p>{t('close label', { ns: 'appkit' })}</p>
+              <p className={defaultDescription}>{t('close embed description')}</p>
+            </DropdownMenuItem>
+          </DropdownMenu>
         </ButtonGroup>
       </div>
       {space && document ? (
@@ -71,7 +88,7 @@ const EmbeddedLayoutImpl = () => {
       ) : (
         <EmbeddedFirstRunPage />
       )}
-    </>
+    </DensityProvider>
   );
 };
 
