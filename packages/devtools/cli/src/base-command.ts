@@ -234,7 +234,7 @@ export abstract class BaseCommand extends Command {
       await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');
-      daemon.disconnect();
+      await daemon.disconnect();
 
       log('Done');
       return value;
