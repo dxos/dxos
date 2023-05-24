@@ -4,9 +4,7 @@
 
 import { FunctionComponent, useEffect, useRef, useState } from 'react';
 
-import { SubscriptionHandle } from '@dxos/echo-schema';
-
-import { useClient } from '../client';
+import { SubscriptionHandle, createAccessObserver, createSubscription } from '../access-observer';
 
 type ObserverState = {
   handle: SubscriptionHandle | null;
@@ -46,8 +44,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
 
   // const observerComponent = (props: any, ref: React.Ref<TRef>) => {
   const observerComponent = (props: any) => {
-    const client = useClient();
-    const accessObserver = client.dbRouter.createAccessObserver();
+    const accessObserver = createAccessObserver();
     const [, setState] = useState([]);
     const forceUpdate = () => setState([]);
 
@@ -66,7 +63,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
     const state = stateRef.current!;
     if (!state.handle) {
       // First render or component was not committed.
-      state.handle = client.dbRouter.createSubscription(() => {
+      state.handle = createSubscription(() => {
         // Observable has changed, meaning we want to re-render
         // BUT if we're a component that hasn't yet got to the useEffect()
         // stage, we might be a component that _started_ to render, but
@@ -107,7 +104,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
         // and our reaction got cleaned up.
 
         // Re-create the reaction.
-        state.handle = client.dbRouter.createSubscription(() => {
+        state.handle = createSubscription(() => {
           // We've definitely already been mounted at this point.
           forceUpdate();
         });
