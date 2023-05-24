@@ -64,4 +64,7 @@ export const Default = {
     actionTriggers: [{ altText: 'Press F5 to reload the page', trigger: <Button variant='primary'>Reload</Button> }],
     closeTrigger: <Button>Close</Button>,
   },
+  parameters: {
+    chromatic: { delay: 800 },
+  },
 };
