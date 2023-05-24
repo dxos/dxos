@@ -17,8 +17,9 @@ import {
   ListItemProps,
   ListProps,
   ListScopedProps,
+  MockListItemOpenTrigger,
   useListItemContext,
-} from '@dxos/aurora';
+} from './List';
 
 type TreeProps = ListProps;
 
@@ -30,14 +31,15 @@ const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListEleme
   },
 );
 
-type TreeBranchProps = ListScopedProps<TreeProps>;
+type TreeBranchProps = TreeProps;
 
-const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<HTMLOListElement, TreeBranchProps>(
-  ({ __listScope, ...props }, forwardedRef) => {
-    const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
-    return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
-  },
-);
+const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<
+  HTMLOListElement,
+  ListScopedProps<TreeBranchProps>
+>(({ __listScope, ...props }, forwardedRef) => {
+  const { headingId } = useListItemContext(LIST_ITEM_NAME, __listScope);
+  return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
+});
 
 const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
   (props, forwardedRef) => {
@@ -47,17 +49,18 @@ const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElem
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 
+const TreeItemHeading = ListItemHeading;
+
 type TreeItemOpenTriggerProps = ListItemOpenTriggerProps;
+
+const TreeItemOpenTrigger = ListItemOpenTrigger;
+
+const MockTreeItemOpenTrigger = MockListItemOpenTrigger;
 
 type TreeItemBodyProps = ListItemCollapsibleContentProps;
 
-export {
-  TreeRoot,
-  TreeBranch,
-  TreeItem,
-  ListItemHeading as TreeItemHeading,
-  ListItemCollapsibleContent as TreeItemBody,
-  ListItemOpenTrigger as TreeItemOpenTrigger,
-};
+const TreeItemBody: ForwardRefExoticComponent<TreeItemBodyProps> = ListItemCollapsibleContent;
+
+export { TreeRoot, TreeBranch, TreeItem, TreeItemHeading, TreeItemBody, TreeItemOpenTrigger, MockTreeItemOpenTrigger };
 
 export type { TreeProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };

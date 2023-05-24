@@ -6,6 +6,7 @@ export const composer = {
   'current app name': 'Composer',
   'sidebar tree label': 'Spaces with documents',
   'space options label': 'Configure this space',
+  'document options label': 'Document options',
   'create document label': 'Create new document',
   'untitled document title': 'Untitled document',
   'untitled space title': 'Untitled space',
@@ -64,4 +65,5 @@ export const composer = {
   'open in composer label': 'Open in Composer',
   'bound members message_one': 'One member uses this space for this repository',
   'bound members message_other': '{{count}} members use this space for this repository',
+  'delete document label': 'Delete',
 };

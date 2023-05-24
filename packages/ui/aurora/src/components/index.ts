@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './AlertDialog';
 export * from './Avatar';
 export * from './Button';
-export * from './Dialog';
+export * from './Dialogs';
 export * from './Input';
-export * from './List';
+export * from './Lists';
 export * from './Main';
 export * from './Message';
 export * from './Tag';
