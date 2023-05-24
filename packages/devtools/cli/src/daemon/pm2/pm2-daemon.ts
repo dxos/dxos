@@ -14,6 +14,8 @@ const DEFAULT_PROFILE = 'default';
 
 /**
  * Manager of daemon processes started with PM2.
+ *
+ * @deprecated because stalls process after command finishes
  */
 export class Pm2Daemon implements Daemon {
   private _pm2?: Pm2;
