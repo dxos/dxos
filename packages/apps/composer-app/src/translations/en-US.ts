@@ -32,6 +32,7 @@ export const composer = {
   'profile settings label': 'Profile settings',
   'github pat label': 'Github personal access token',
   'empty github pat message': 'Set a Github personal access token to continue',
+  'set github pat label': 'Set Github token',
   'error github pat message': 'There was a problem authenticating with Github using the personal access token provided',
   'bind to file in github label': 'Connect to a file in Github',
   'unbind to file in github label': 'Disconnect from Github',
@@ -58,6 +59,9 @@ export const composer = {
   'resolver no spaces message': 'You aren’t in any spaces yet',
   'resolver create space label': 'Create a space for this repository',
   'save and close label': 'Save & close',
+  'save and close description': 'Save changes to Github and close the editor',
+  'close embed description':
+    'Close the editor without saving changes to Github. Your changes will still persist in Composer.',
   'resolver init document message': 'Syncing this document, one moment…',
   'comment stale title': 'No longer in-sync',
   'comment stale body':
@@ -66,4 +70,7 @@ export const composer = {
   'bound members message_one': 'One member uses this space for this repository',
   'bound members message_other': '{{count}} members use this space for this repository',
   'delete document label': 'Delete',
+  'loading preview message': 'Loading preview…',
+  'preview gfm label': 'Preview Markdown',
+  'exit gfm preview label': 'Edit Markdown',
 };

@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '../Button';
+import { Button } from '../Buttons';
 import { TooltipRoot, TooltipContent, TooltipArrow, TooltipTrigger, TooltipProvider } from './Tooltip';
 
 type StoryTooltipProps = {
