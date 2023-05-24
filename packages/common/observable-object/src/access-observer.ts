@@ -8,18 +8,14 @@ import { ObservableObject, subscribe } from './observable-object';
 
 export const ACCESS_OBSERVER_STACK: AccessObserver[] = [];
 
-// TODO(burdon): Document or remove. Generic filter function?
-export type SelectionFn = never;
-
-export type SelectionBase = ObservableObject | SelectionFn | undefined | null | false;
-export type Selection = SelectionBase | Selection[];
+export type Selection = any[];
 
 // TODO(dmaretskyi): Convert to class.
 export interface SubscriptionHandle {
-  update: (selection: Selection) => SubscriptionHandle;
+  update: (selection: any) => SubscriptionHandle;
   subscribed: boolean;
   unsubscribe: () => void;
-  selected: Set<SelectionBase>;
+  selected: Set<any>;
 }
 
 export type UpdateInfo = {
@@ -60,7 +56,7 @@ export const logObjectAccess = (obj: ObservableObject) => {
 export const createSubscription = (onUpdate: (info: UpdateInfo) => void): SubscriptionHandle => {
   let subscribed = true;
   let firstUpdate = true;
-  const subscriptions = new Map<SelectionBase, UnsubscribeCallback>();
+  const subscriptions = new Map<any, UnsubscribeCallback>();
 
   const handle = {
     update: (selection: Selection) => {
@@ -88,7 +84,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
       return handle;
     },
     subscribed,
-    selected: new Set<SelectionBase>(),
+    selected: new Set<any>(),
     unsubscribe: () => {
       subscriptions.clear();
       subscribed = false;
@@ -106,13 +102,13 @@ export class AccessObserver {
   constructor(public pop: () => void) {}
 }
 
-const getSetFromSelection = (selection: Selection): Set<SelectionBase> => {
+const getSetFromSelection = (selection: Selection): Set<any> => {
   if (!selection) {
     return new Set();
   } else if (typeof selection === 'function') {
     return new Set(); // TODO(burdon): Traverse function?
   } else if (Array.isArray(selection)) {
-    return selection.flatMap(getSetFromSelection).reduce((acc, item) => new Set([...acc, ...item]));
+    return selection.flatMap(getSetFromSelection).reduce((acc, item) => new Set([...acc, ...item]), new Set());
   } else {
     return new Set([selection]);
   }
